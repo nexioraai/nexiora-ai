@@ -12,12 +12,29 @@ export async function POST(req: Request) {
 
     const response = await anthropic.messages.create({
       model: 'claude-opus-4-5',
-      max_tokens: 1024,
+      max_tokens: 4096,
       messages: [
         {
           role: 'user',
-          content: `Generate a business concept in JSON format for: ${message}. 
-          Return only valid JSON with these fields: name, slogan, services (array of 3), cta`
+          content: `You are an expert web designer AI. Analyze this business request: "${message}"
+
+Detect the business type (restaurant, clothing, auto parts, tech, beauty, etc.) and generate appropriate content.
+
+Return ONLY a valid JSON object with NO markdown:
+{
+  "name": "business name",
+  "slogan": "catchy tagline",
+  "type": "detected business type",
+  "primaryColor": "#hex color matching the brand",
+  "services": ["service 1", "service 2", "service 3"],
+  "pages": ["Home", "About Us", "Services", "Contact"],
+  "cta": "call to action",
+  "socialLinks": {
+    "instagram": "",
+    "whatsapp": "",
+    "facebook": ""
+  }
+}`
         }
       ]
     });
