@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 type AIResponse = {
   name: string;
@@ -67,19 +70,18 @@ export default function Home() {
     });
   };
 
+  const pageRoutes: Record<string, string> = {
+    'Home': '/',
+    'About Us': '/about',
+    'About': '/about',
+    'Services': '/services',
+    'Contact': '/contact',
+  };
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white">
 
-      {/* NAVBAR */}
-      <nav className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-        <div className="text-3xl font-black text-blue-400">NX</div>
-        <div className="flex items-center gap-6">
-          <a href="#" className="text-slate-300 hover:text-white">Features</a>
-          <a href="#" className="text-slate-300 hover:text-white">Pricing</a>
-          <a href="#" className="text-slate-300 hover:text-white">Docs</a>
-          <button className="bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded-full">Login</button>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* HERO */}
       <section className="text-center px-6 pt-24 pb-16">
@@ -162,14 +164,18 @@ export default function Home() {
                 />
               </div>
 
-              {/* Pages */}
+              {/* Pages cliquables */}
               <div className="mb-6">
                 <h4 className="text-lg font-semibold mb-3 text-white">📄 Pages</h4>
                 <div className="flex flex-wrap gap-2">
                   {editedResult.pages.map((page, i) => (
-                    <span key={i} className="bg-white/10 border border-white/20 px-4 py-2 rounded-full text-sm cursor-pointer hover:bg-blue-500/20 transition">
+                    <Link
+                      key={i}
+                      href={pageRoutes[page] || '/'}
+                      className="bg-white/10 border border-white/20 px-4 py-2 rounded-full text-sm hover:bg-blue-500/20 transition"
+                    >
                       {page}
-                    </span>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -233,10 +239,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="border-t border-white/10 py-8 text-center text-slate-500">
-        © 2026 Nexiora AI. All rights reserved.
-      </footer>
+      <Footer />
     </main>
   );
 }
