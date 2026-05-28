@@ -22,12 +22,14 @@ export default function Home() {
   const [result, setResult] = useState<AIResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [editedResult, setEditedResult] = useState<AIResponse | null>(null);
 
   const sendMessage = async () => {
     if (!message.trim()) return;
     setLoading(true);
     setError('');
     setResult(null);
+    setEditedResult(null);
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -37,11 +39,32 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Something went wrong');
       setResult(data);
+      setEditedResult(data);
     } catch (err: any) {
       setError(err.message || 'Failed to generate');
     } finally {
       setLoading(false);
     }
+  };
+
+  const updateField = (field: string, value: string) => {
+    if (!editedResult) return;
+    setEditedResult({ ...editedResult, [field]: value });
+  };
+
+  const updateService = (index: number, value: string) => {
+    if (!editedResult) return;
+    const newServices = [...editedResult.services];
+    newServices[index] = value;
+    setEditedResult({ ...editedResult, services: newServices });
+  };
+
+  const updateSocial = (platform: string, value: string) => {
+    if (!editedResult) return;
+    setEditedResult({
+      ...editedResult,
+      socialLinks: { ...editedResult.socialLinks, [platform]: value },
+    });
   };
 
   return (
@@ -109,23 +132,41 @@ export default function Home() {
             </div>
           )}
 
-          {result && (
+          {editedResult && (
             <div className="mt-8 bg-black/30 border border-white/10 rounded-2xl p-8">
-              
-              {/* Business Header */}
+
+              {/* Badge type */}
               <div className="mb-6">
                 <span className="text-xs bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full uppercase">
-                  {result.type}
+                  {editedResult.type}
                 </span>
-                <h3 className="text-4xl font-black text-blue-400 mt-3 mb-2">{result.name}</h3>
-                <p className="text-slate-300 text-xl">{result.slogan}</p>
+              </div>
+
+              {/* Nom éditable */}
+              <div className="mb-2">
+                <label className="text-xs text-slate-500 uppercase mb-1 block">Nom du business</label>
+                <input
+                  value={editedResult.name}
+                  onChange={(e) => updateField('name', e.target.value)}
+                  className="text-4xl font-black text-blue-400 bg-transparent border-b-2 border-blue-400/30 focus:border-blue-400 outline-none w-full pb-1"
+                />
+              </div>
+
+              {/* Slogan éditable */}
+              <div className="mb-6">
+                <label className="text-xs text-slate-500 uppercase mb-1 block">Slogan</label>
+                <input
+                  value={editedResult.slogan}
+                  onChange={(e) => updateField('slogan', e.target.value)}
+                  className="text-slate-300 text-xl bg-transparent border-b border-white/20 focus:border-white/50 outline-none w-full pb-1"
+                />
               </div>
 
               {/* Pages */}
               <div className="mb-6">
                 <h4 className="text-lg font-semibold mb-3 text-white">📄 Pages</h4>
                 <div className="flex flex-wrap gap-2">
-                  {result.pages.map((page, i) => (
+                  {editedResult.pages.map((page, i) => (
                     <span key={i} className="bg-white/10 border border-white/20 px-4 py-2 rounded-full text-sm cursor-pointer hover:bg-blue-500/20 transition">
                       {page}
                     </span>
@@ -133,44 +174,60 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Services */}
+              {/* Services éditables */}
               <div className="mb-6">
                 <h4 className="text-lg font-semibold mb-3 text-white">⚡ Services</h4>
                 <div className="grid gap-3">
-                  {result.services.map((service, i) => (
-                    <div key={i} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                      ✦ {service}
-                    </div>
+                  {editedResult.services.map((service, i) => (
+                    <input
+                      key={i}
+                      value={service}
+                      onChange={(e) => updateService(i, e.target.value)}
+                      className="bg-white/5 border border-white/10 focus:border-blue-500 rounded-xl px-4 py-3 text-white outline-none w-full"
+                    />
                   ))}
                 </div>
               </div>
 
-              {/* Social Links */}
+              {/* Réseaux Sociaux éditables */}
               <div className="mb-6">
                 <h4 className="text-lg font-semibold mb-3 text-white">🔗 Réseaux Sociaux</h4>
                 <div className="grid gap-3">
                   <input
+                    value={editedResult.socialLinks.instagram}
+                    onChange={(e) => updateSocial('instagram', e.target.value)}
                     placeholder="Instagram URL"
-                    defaultValue={result.socialLinks.instagram}
                     className="bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-blue-500 w-full"
                   />
                   <input
+                    value={editedResult.socialLinks.whatsapp}
+                    onChange={(e) => updateSocial('whatsapp', e.target.value)}
                     placeholder="WhatsApp URL"
-                    defaultValue={result.socialLinks.whatsapp}
                     className="bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-blue-500 w-full"
                   />
                   <input
+                    value={editedResult.socialLinks.facebook}
+                    onChange={(e) => updateSocial('facebook', e.target.value)}
                     placeholder="Facebook URL"
-                    defaultValue={result.socialLinks.facebook}
                     className="bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-blue-500 w-full"
                   />
                 </div>
               </div>
 
-              {/* CTA */}
+              {/* CTA éditable */}
+              <div className="mb-4">
+                <label className="text-xs text-slate-500 uppercase mb-1 block">Bouton CTA</label>
+                <input
+                  value={editedResult.cta}
+                  onChange={(e) => updateField('cta', e.target.value)}
+                  className="w-full bg-black/30 border border-white/10 focus:border-blue-500 rounded-xl px-4 py-3 text-white outline-none"
+                />
+              </div>
+
               <button className="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-semibold text-lg transition">
-                {result.cta}
+                {editedResult.cta}
               </button>
+
             </div>
           )}
         </div>
