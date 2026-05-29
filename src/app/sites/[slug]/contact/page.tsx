@@ -1,14 +1,40 @@
+'use client';
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
-export default async function ContactPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const { data: site } = await supabase.from('sites').select('*').eq('slug', slug).single();
-  if (!site) return notFound();
+export default function ContactPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+  const [site, setSite] = useState<any>(null);
+  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+
+  useEffect(() => {
+    supabase.from('sites').select('*').eq('slug', slug).single().then(({ data }) => setSite(data));
+  }, [slug]);
+
+  if (!site) return <div style={{ padding: '4rem', textAlign: 'center' }}>Loading...</div>;
 
   const color = site.primary_color || '#3b82f6';
   const social = site.social_links || {};
+
+  const handleSubmit = async () => {
+    setStatus('sending');
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ site_slug: slug, ...form }),
+      });
+      if (!res.ok) throw new Error();
+      setStatus('sent');
+      setForm({ name: '', email: '', subject: '', message: '' });
+    } catch {
+      setStatus('error');
+    }
+  };
 
   return (
     <div style={{ fontFamily: 'sans-serif' }}>
@@ -30,13 +56,22 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
       <section style={{ padding: '4rem 2rem', maxWidth: '800px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem' }}>
         <div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem', color: color }}>Send us a message</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <input placeholder="Your Name" style={{ padding: '0.75rem', borderRadius: '8px', border: `1px solid ${color}44`, fontSize: '1rem', outline: 'none' }} />
-            <input placeholder="Your Email" type="email" style={{ padding: '0.75rem', borderRadius: '8px', border: `1px solid ${color}44`, fontSize: '1rem', outline: 'none' }} />
-            <input placeholder="Subject" style={{ padding: '0.75rem', borderRadius: '8px', border: `1px solid ${color}44`, fontSize: '1rem', outline: 'none' }} />
-            <textarea placeholder="Your message..." rows={5} style={{ padding: '0.75rem', borderRadius: '8px', border: `1px solid ${color}44`, fontSize: '1rem', outline: 'none', resize: 'vertical' }} />
-            <button style={{ background: color, color: 'white', border: 'none', padding: '0.9rem', borderRadius: '8px', fontSize: '1rem', fontWeight: '600', cursor: 'pointer' }}>Send Message</button>
-          </div>
+          {status === 'sent' ? (
+            <div style={{ background: '#d1fae5', border: '2px solid #10b981', borderRadius: '12px', padding: '2rem', textAlign: 'center' }}>
+              <p style={{ color: '#065f46', fontWeight: '600', fontSize: '1.1rem' }}>✅ Message sent! We'll get back to you soon.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Your Name" style={{ padding: '0.75rem', borderRadius: '8px', border: `1px solid ${color}44`, fontSize: '1rem', outline: 'none' }} />
+              <input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="Your Email" type="email" style={{ padding: '0.75rem', borderRadius: '8px', border: `1px solid ${color}44`, fontSize: '1rem', outline: 'none' }} />
+              <input value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} placeholder="Subject" style={{ padding: '0.75rem', borderRadius: '8px', border: `1px solid ${color}44`, fontSize: '1rem', outline: 'none' }} />
+              <textarea value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} placeholder="Your message..." rows={5} style={{ padding: '0.75rem', borderRadius: '8px', border: `1px solid ${color}44`, fontSize: '1rem', outline: 'none', resize: 'vertical' }} />
+              {status === 'error' && <p style={{ color: 'red', fontSize: '0.9rem' }}>Something went wrong. Please try again.</p>}
+              <button onClick={handleSubmit} disabled={status === 'sending'} style={{ background: status === 'sending' ? '#aaa' : color, color: 'white', border: 'none', padding: '0.9rem', borderRadius: '8px', fontSize: '1rem', fontWeight: '600', cursor: status === 'sending' ? 'not-allowed' : 'pointer' }}>
+                {status === 'sending' ? 'Sending...' : 'Send Message'}
+              </button>
+            </div>
+          )}
         </div>
 
         <div>
@@ -53,7 +88,6 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
               ))}
             </div>
           )}
-
           <h3 style={{ color: color, marginBottom: '1rem' }}>Follow us</h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
             {social.whatsapp && <a href={`https://wa.me/${social.whatsapp}`} style={{ background: '#25D366', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', textDecoration: 'none', fontSize: '0.9rem' }}>WhatsApp</a>}
