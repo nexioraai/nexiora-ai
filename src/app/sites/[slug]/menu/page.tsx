@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { getPhotos } from '@/lib/pexels';
 
 export default async function MenuPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -8,6 +9,19 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
   if (!site) return notFound();
 
   const color = site.primary_color || '#3b82f6';
+  const menu = site.menu || [];
+
+  const menuWithPhotos = await Promise.all(
+    menu.map(async (category: any) => {
+      const items = await Promise.all(
+        category.items.map(async (item: any) => {
+          const photos = await getPhotos(`${item.name} ${site.type} food`, 1);
+          return { ...item, photo: photos[0] || null };
+        })
+      );
+      return { ...category, items };
+    })
+  );
 
   return (
     <div style={{ fontFamily: 'sans-serif' }}>
@@ -26,18 +40,23 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
         <p style={{ color: '#555', fontSize: '1.1rem' }}>Discover our selection</p>
       </section>
 
-      <section style={{ padding: '4rem 2rem', maxWidth: '1000px', margin: '0 auto' }}>
-        {site.menu && site.menu.map((category: { category: string; items: { name: string; description: string; price: string }[] }, i: number) => (
+      <section style={{ padding: '4rem 2rem', maxWidth: '1100px', margin: '0 auto' }}>
+        {menuWithPhotos.map((category: any, i: number) => (
           <div key={i} style={{ marginBottom: '3rem' }}>
             <h2 style={{ fontSize: '1.8rem', fontWeight: 'bold', color: color, borderBottom: `3px solid ${color}`, paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>{category.category}</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-              {category.items.map((item, j: number) => (
-                <div key={j} style={{ background: 'white', border: `1px solid ${color}22`, borderRadius: '12px', padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-                  <div>
-                    <h3 style={{ margin: '0 0 0.5rem', color: '#333' }}>{item.name}</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+              {category.items.map((item: any, j: number) => (
+                <div key={j} style={{ background: 'white', border: `1px solid ${color}22`, borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
+                  {item.photo && (
+                    <img src={item.photo} alt={item.name} style={{ width: '100%', height: '180px', objectFit: 'cover' }} />
+                  )}
+                  <div style={{ padding: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <h3 style={{ margin: 0, color: '#333', fontSize: '1.1rem' }}>{item.name}</h3>
+                      <span style={{ background: color, color: 'white', padding: '0.25rem 0.75rem', borderRadius: '999px', fontWeight: 'bold', fontSize: '0.9rem' }}>${item.price}</span>
+                    </div>
                     <p style={{ margin: 0, color: '#888', fontSize: '0.9rem' }}>{item.description}</p>
                   </div>
-                  <span style={{ background: color, color: 'white', padding: '0.25rem 0.75rem', borderRadius: '999px', fontWeight: 'bold', whiteSpace: 'nowrap', marginLeft: '1rem' }}>${item.price}</span>
                 </div>
               ))}
             </div>
