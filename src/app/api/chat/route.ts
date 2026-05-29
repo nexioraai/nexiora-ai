@@ -21,27 +21,7 @@ export async function POST(req: Request) {
       messages: [
         {
           role: 'user',
-          content: `You are an expert web designer AI. Analyze this business request and generate a complete business profile.
-
-Detect the business type (restaurant, clothing, auto parts, tech, etc.)
-
-Return ONLY a valid JSON object with NO markdown:
-{
-  "name": "business name",
-  "slogan": "catchy tagline",
-  "type": "detected business type",
-  "primaryColor": "#hex color matching the brand",
-  "services": ["service 1", "service 2", "service 3"],
-  "pages": ["Home", "About Us", "Services", "Contact"],
-  "cta": "call to action",
-  "socialLinks": {
-    "instagram": "",
-    "whatsapp": "",
-    "facebook": ""
-  }
-}
-
-Business request: ${message}`,
+          content: `You are an expert web designer AI. Analyze this business request and generate a complete business profile. Return ONLY a valid JSON object with NO markdown: {"name": "business name", "slogan": "catchy tagline", "type": "detected business type", "primaryColor": "#hex color", "about": "2-3 sentences describing the business", "services": ["service 1", "service 2", "service 3", "service 4", "service 5"], "pages": ["Home", "About Us", "Services", "Contact"], "cta": "call to action text", "socialLinks": {"instagram": "", "whatsapp": "", "facebook": "", "linkedin": "", "tiktok": "", "snapchat": ""}} Business request: ${message}`
         }
       ]
     });
@@ -49,7 +29,6 @@ Business request: ${message}`,
     const text = response.content[0].type === 'text' ? response.content[0].text : '';
     const clean = text.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(clean);
-
     const slug = generateSlug(parsed.name);
 
     await supabase.from('sites').insert({
@@ -58,6 +37,7 @@ Business request: ${message}`,
       slogan: parsed.slogan,
       type: parsed.type,
       primary_color: parsed.primaryColor,
+      about: parsed.about,
       services: parsed.services,
       pages: parsed.pages,
       cta: parsed.cta,
@@ -67,9 +47,6 @@ Business request: ${message}`,
     return NextResponse.json({ ...parsed, slug });
   } catch (error) {
     console.error('API Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to generate business.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to generate business.' }, { status: 500 });
   }
 }
