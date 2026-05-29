@@ -13,6 +13,7 @@ type AIResponse = {
   services: string[];
   pages: string[];
   cta: string;
+  slug: string;
   socialLinks: {
     instagram: string;
     whatsapp: string;
@@ -82,7 +83,6 @@ export default function Home() {
     <main className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
       <Navbar />
 
-      {/* HERO */}
       <section className="text-center px-6 pt-24 pb-16">
         <div className="inline-block px-4 py-2 rounded-full bg-blue-500/20 text-blue-300 text-sm mb-6">
           AI Website &amp; App Builder
@@ -106,7 +106,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* GENERATOR */}
       <section className="max-w-4xl mx-auto px-6 pb-20">
         <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
           <h2 className="text-3xl font-bold mb-4 text-center">Generate Your Business</h2>
@@ -135,6 +134,15 @@ export default function Home() {
 
           {editedResult && (
             <div className="mt-8 bg-black/30 border border-white/10 rounded-2xl p-6 space-y-6">
+
+              <a
+                href={`/sites/${editedResult.slug}`}
+                target="_blank"
+                className="inline-block w-full text-center bg-green-600 hover:bg-green-500 px-6 py-3 rounded-xl font-semibold transition"
+              >
+                🌐 Voir mon site →
+              </a>
+
               <div className="mb-6">
                 <span className="text-xs bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full">
                   {editedResult.type}
