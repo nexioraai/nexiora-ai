@@ -2,41 +2,226 @@ import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { supabase } from '@/lib/supabase';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
 
 function generateSlug(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
+  return (
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '') +
+    '-' +
+    Date.now()
+  );
 }
 
-const PROMPT = 'You are an expert web designer AI. Return ONLY valid JSON with NO markdown: {"name":"business name","slogan":"catchy tagline","type":"business type","primaryColor":"#hex","about":"2-3 sentences","services":["s1","s2","s3","s4","s5"],"menu":[{"category":"Cat","items":[{"name":"Item","description":"desc","price":"9.99"}]}],"team":[{"name":"Name","role":"Role","bio":"bio"}],"hours":{"monday":"9am-6pm","tuesday":"9am-6pm","wednesday":"9am-6pm","thursday":"9am-6pm","friday":"9am-8pm","saturday":"10am-8pm","sunday":"Closed"},"address":"123 Main St, City","pages":["Home","About Us","Menu","Contact"],"cta":"CTA text","socialLinks":{"instagram":"","whatsapp":"","facebook":"","linkedin":"","tiktok":"","snapchat":""}}';
+const PROMPT = `
+You are an expert website builder AI.
+
+Return ONLY valid JSON.
+
+{
+  "name":"",
+  "slogan":"",
+  "type":"",
+  "primaryColor":"#3b82f6",
+
+  "heroTitle":"",
+  "heroSubtitle":"",
+
+  "about":"",
+
+  "services":[
+    "",
+    "",
+    "",
+    "",
+    ""
+  ],
+
+  "testimonials":[
+    {
+      "name":"",
+      "text":""
+    },
+    {
+      "name":"",
+      "text":""
+    },
+    {
+      "name":"",
+      "text":""
+    }
+  ],
+
+  "gallery":[
+    "",
+    "",
+    ""
+  ],
+
+  "contact":{
+    "phone":"",
+    "email":"",
+    "address":""
+  },
+
+  "menu":[],
+
+  "team":[],
+
+  "hours":{},
+
+  "address":"",
+
+  "pages":[
+    "Home",
+    "About",
+    "Contact"
+  ],
+
+  "cta":"",
+
+  "socialLinks":{
+    "instagram":"",
+    "whatsapp":"",
+    "facebook":"",
+    "linkedin":"",
+    "tiktok":"",
+    "snapchat":""
+  }
+}
+`;
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+
     const message = body.message;
+
     const owner_email = body.owner_email || null;
 
+    if (!message) {
+      return NextResponse.json(
+        {
+          error: 'Message is required',
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
     const response = await anthropic.messages.create({
-      model: 'claude-opus-4-5',
-      max_tokens: 4096,
-      messages: [{ role: 'user', content: PROMPT + ' Business request: ' + message }]
+      model: 'claude-opus-4-8',
+
+      max_tokens: 2000,
+
+      messages: [
+        {
+          role: 'user',
+
+          content:
+            PROMPT +
+            '\nBusiness request: ' +
+            message,
+        },
+      ],
     });
 
-    const text = response.content[0].type === 'text' ? response.content[0].text : '';
-    const clean = text.replace(/```json|```/g, '').trim();
+   const text = response.content
+.map((item: any) => {
+if (item.type === 'text') {
+return item.text;
+}
+
+return '';
+})
+.join('');
+
+    const clean = text
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
+
     const parsed = JSON.parse(clean);
+
     const slug = generateSlug(parsed.name);
 
-    await supabase.from('sites').insert({
-      slug, name: parsed.name, slogan: parsed.slogan, type: parsed.type,
-      primary_color: parsed.primaryColor, about: parsed.about, services: parsed.services,
-      menu: parsed.menu, team: parsed.team, hours: parsed.hours, address: parsed.address,
-      pages: parsed.pages, cta: parsed.cta, social_links: parsed.socialLinks, owner_email,
-    });
+    const { error } = await supabase
+      .from('sites')
+      .insert({
+        slug,
 
-    return NextResponse.json({ ...parsed, slug });
+        name: parsed.name,
+
+        slogan: parsed.slogan,
+
+        type: parsed.type,
+
+        primary_color: parsed.primaryColor,
+
+        hero_title: parsed.heroTitle,
+
+        hero_subtitle: parsed.heroSubtitle,
+
+        about: parsed.about,
+
+        services: parsed.services,
+
+        testimonials: parsed.testimonials,
+
+        gallery: parsed.gallery,
+
+        contact: parsed.contact,
+
+        menu: parsed.menu,
+
+        team: parsed.team,
+
+        hours: parsed.hours,
+
+        address: parsed.address,
+
+        pages: parsed.pages,
+
+        cta: parsed.cta,
+
+        social_links: parsed.socialLinks,
+
+        owner_email,
+      });
+
+    if (error) {
+      console.error('SUPABASE ERROR:', error);
+
+      return NextResponse.json(
+        {
+          error: error.message,
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
+    return NextResponse.json({
+      ...parsed,
+
+      slug,
+    });
   } catch (error) {
-    console.error('API Error:', error);
-    return NextResponse.json({ error: 'Failed to generate business.' }, { status: 500 });
+    console.error('API ERROR:', error);
+
+    return NextResponse.json(
+      {
+        error: 'Failed to generate business.',
+      },
+      {
+        status: 500,
+      }
+    );
   }
 }
