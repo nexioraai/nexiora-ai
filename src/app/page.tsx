@@ -220,7 +220,7 @@ export default function Home() {
                       : 'bg-white/5 text-slate-500 cursor-not-allowed'
                   }`}
                 >
-                  {saving ? 'Sauvegarde...' : hasUnsavedChanges ? 'Sauvegarder mes modifications' = : 'Tout est sauvegarde'}
+                  {saving ? 'Sauvegarde...' : hasUnsavedChanges ? 'Sauvegarder mes modifications' : 'Tout est sauvegarde'}
                 </button>
                 <a
                   href={`/sites/${editedResult.slug}`}
