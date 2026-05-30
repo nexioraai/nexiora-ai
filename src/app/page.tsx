@@ -199,7 +199,7 @@ export default function Home() {
             disabled={loading || !userEmail}
             className="w-full mt-5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 py-3 rounded-xl font-semibold transition"
           >
-            {loading ? 'Generating with AI...' : 'Generate My Business'}
+            {loading ? 'Generating with AI...' : !userEmail ? 'Sign in to Generate' : 'Generate My Business'}
           </button>
 
           {error && (
