@@ -81,9 +81,15 @@ export default function Home() {
       let data;
       try { data = await res.json(); } catch { throw new Error('Reponse serveur invalide'); }
       if (!res.ok) throw new Error(data.error || 'Une erreur est survenue');
-      setResult(data);
-      setEditedResult(data);
-      setSavedSnapshot(data);
+      const normalized = {
+        ...data,
+        services: (data.services || []).map((s) =>
+          typeof s === 'string' ? s : (s.title || s.name || JSON.stringify(s))
+        )
+      };
+      setResult(normalized);
+      setEditedResult(normalized);
+      setSavedSnapshot(normalized);
     } catch (err: any) {
       setError(err.message || 'Echec de generation');
     } finally {
