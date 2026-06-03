@@ -152,15 +152,15 @@ export default function Home() {
   );
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
+    <main className="min-h-screen nexiora-bg text-white">
       <Navbar />
       <section className="text-center px-6 pt-24 pb-16">
-        <div className="inline-block px-4 py-2 rounded-full bg-blue-500/20 text-blue-300 text-sm mb-6">
+        <div className="inline-block px-4 py-2 rounded-full bg-[#E07040]/20 text-[#E07040] text-sm mb-6">
           AI Website &amp; App Builder
         </div>
         <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6">
           Build your business <br />
-          <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+          <span className="text-nexiora">
             with AI
           </span>
         </h1>
@@ -171,11 +171,11 @@ export default function Home() {
           {!authLoaded ? (
             <div className="text-slate-500">Chargement...</div>
           ) : userEmail ? (
-            <Link href="/dashboard" className="bg-blue-600 hover:bg-blue-500 px-8 py-3 rounded-xl font-semibold transition">
+            <Link href="/dashboard" className="btn-nexiora px-8 py-3 rounded-xl font-semibold transition">
               My Dashboard
             </Link>
           ) : (
-            <Link href="/login" className="bg-blue-600 hover:bg-blue-500 px-8 py-3 rounded-xl font-semibold transition">
+            <Link href="/login" className="btn-nexiora px-8 py-3 rounded-xl font-semibold transition">
               Sign In
             </Link>
           )}
@@ -186,7 +186,7 @@ export default function Home() {
       </section>
 
       <section className="max-w-4xl mx-auto px-6 pb-20">
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
+        <div className="bg-white/3 border border-white/8 rounded-2xl p-8 backdrop-blur-sm">
           <h2 className="text-3xl font-bold mb-4 text-center">Generate Your Business</h2>
           <p className="text-slate-400 mb-6 text-center">Describe your business idea and let AI generate everything.</p>
           <textarea
@@ -194,7 +194,7 @@ export default function Home() {
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Example: Build a modern Toyota dealership site..."
             maxLength={1000}
-            className="w-full h-40 bg-black/30 border border-white/10 rounded-xl p-4 text-white placeholder-slate-500 resize-none focus:outline-none focus:border-blue-500"
+            className="w-full h-40 bg-black/30 border border-white/10 rounded-xl p-4 text-white placeholder-slate-500 resize-none focus:outline-none focus:border-[#E07040]"
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
             <div>
@@ -203,7 +203,7 @@ export default function Home() {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="ex: Moundou, Tchad"
-                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-[#E07040]"
               />
             </div>
             <div>
@@ -211,7 +211,7 @@ export default function Home() {
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
-                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#E07040]"
               >
                 <option value="fr">Français</option>
                 <option value="en">English</option>
@@ -222,7 +222,7 @@ export default function Home() {
                     <button
             onClick={sendMessage}
             disabled={loading || !userEmail}
-            className="w-full mt-5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 py-3 rounded-xl font-semibold transition"
+            className="w-full mt-5 btn-nexiora disabled:opacity-50 py-3 rounded-xl font-semibold transition"
           >
             {loading ? 'Generating with AI...' : !userEmail ? 'Sign in to Generate' : 'Generate My Business'}
           </button>
@@ -241,7 +241,7 @@ export default function Home() {
                   disabled={!hasUnsavedChanges || saving}
                   className={`flex-1 px-6 py-3 rounded-xl font-semibold transition ${
                     hasUnsavedChanges
-                      ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                      ? 'btn-nexiora text-white'
                       : 'bg-white/5 text-slate-500 cursor-not-allowed'
                   }`}
                 >
@@ -269,7 +269,7 @@ export default function Home() {
               )}
 
               <div className="mb-6">
-                <span className="text-xs bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full">
+                <span className="text-xs bg-blue-500/20 text-[#C9A84C] px-3 py-1 rounded-full">
                   {editedResult.type}
                 </span>
               </div>
@@ -279,7 +279,7 @@ export default function Home() {
                 <input
                   value={editedResult.name}
                   onChange={(e) => updateField('name', e.target.value)}
-                  className="text-4xl font-black text-blue-400 bg-transparent border-b border-white/10 w-full focus:outline-none focus:border-blue-500"
+                  className="text-4xl font-black text-[#E07040] bg-transparent border-b border-white/10 w-full focus:outline-none focus:border-[#E07040]"
                 />
               </div>
 
@@ -288,7 +288,7 @@ export default function Home() {
                 <input
                   value={editedResult.slogan}
                   onChange={(e) => updateField('slogan', e.target.value)}
-                  className="text-slate-300 text-xl bg-transparent border-b border-white/10 w-full focus:outline-none focus:border-blue-500"
+                  className="text-slate-300 text-xl bg-transparent border-b border-white/10 w-full focus:outline-none focus:border-[#E07040]"
                 />
               </div>
 
@@ -299,7 +299,7 @@ export default function Home() {
                     <Link
                       key={i}
                       href={pageRoutes[page as keyof typeof pageRoutes] || '/'}
-                      className="bg-white/10 border border-white/10 px-4 py-1 rounded-full text-sm hover:bg-blue-500/20 transition"
+                      className="bg-white/10 border border-white/10 px-4 py-1 rounded-full text-sm hover:bg-[#E07040]/20 transition"
                     >
                       {page}
                     </Link>
@@ -315,7 +315,7 @@ export default function Home() {
                       key={i}
                       value={service}
                       onChange={(e) => updateService(i, e.target.value)}
-                      className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                      className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#E07040]"
                     />
                   ))}
                 </div>
@@ -328,19 +328,19 @@ export default function Home() {
                     value={editedResult.socialLinks?.instagram || ''}
                     onChange={(e) => updateSocial('instagram', e.target.value)}
                     placeholder="Instagram URL"
-                    className="bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                    className="bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#E07040]"
                   />
                   <input
                     value={editedResult.socialLinks?.whatsapp || ''}
                     onChange={(e) => updateSocial('whatsapp', e.target.value)}
                     placeholder="WhatsApp URL"
-                    className="bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                    className="bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#E07040]"
                   />
                   <input
                     value={editedResult.socialLinks?.facebook || ''}
                     onChange={(e) => updateSocial('facebook', e.target.value)}
                     placeholder="Facebook URL"
-                    className="bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                    className="bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#E07040]"
                   />
                 </div>
               </div>
@@ -350,11 +350,11 @@ export default function Home() {
                 <input
                   value={editedResult.cta}
                   onChange={(e) => updateField('cta', e.target.value)}
-                  className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#E07040]"
                 />
               </div>
 
-              <button className="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-semibold transition">
+              <button className="w-full btn-nexiora py-3 rounded-xl font-semibold transition">
                 {editedResult.cta}
               </button>
 

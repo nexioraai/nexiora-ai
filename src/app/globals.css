@@ -24,3 +24,30 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ===== NEXIORA BRAND IDENTITY ===== */
+.nexiora-bg {
+  background:
+    radial-gradient(ellipse at 15% 15%, rgba(79,110,245,0.35) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 20%, rgba(224,112,64,0.35) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(201,168,76,0.25) 0%, transparent 45%),
+    radial-gradient(ellipse at 20% 85%, rgba(139,34,82,0.25) 0%, transparent 40%),
+    #0a050e;
+}
+.btn-nexiora {
+  background: linear-gradient(135deg, #4F6EF5 0%, #E07040 60%, #C9A84C 100%);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.btn-nexiora:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+.btn-nexiora:disabled {
+  opacity: 0.5;
+}
+.text-nexiora {
+  background: linear-gradient(135deg, #4F6EF5 0%, #E07040 55%, #C9A84C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
