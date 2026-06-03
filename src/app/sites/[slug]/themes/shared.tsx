@@ -1,0 +1,126 @@
+// src/app/sites/[slug]/themes/shared.tsx
+import { createClient } from '@supabase/supabase-js'
+import {
+  Wrench,
+  ShieldCheck,
+  Truck,
+  Headphones,
+  Sparkles,
+  Clock,
+  Award,
+  Zap,
+  Heart,
+  Package,
+  type LucideIcon,
+} from 'lucide-react'
+
+// ---------- Types ----------
+export type Site = {
+  slug: string
+  name: string
+  slogan?: string
+  type?: string
+  primary_color?: string
+  hero_title?: string
+  hero_subtitle?: string
+  about?: string
+  services?: any[]
+  gallery?: string[]
+  testimonials?: any[]
+  products?: any[]
+  contact?: { phone?: string; email?: string; address?: string }
+  social_links?: {
+    instagram?: string
+    facebook?: string
+    whatsapp?: string
+    tiktok?: string
+  }
+  hero_image?: string
+  cta?: string
+  theme?: 'editorial' | 'bold' | string
+}
+
+export type Product = {
+  name: string
+  description: string
+  price: string
+  image?: string
+}
+
+export type Service = {
+  title: string
+  description: string
+  Icon: LucideIcon
+}
+
+export type Testimonial = {
+  name: string
+  role: string
+  content: string
+  rating: number
+}
+
+// ---------- Supabase ----------
+export const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+export async function fetchSite(slug: string): Promise<Site | null> {
+  const { data, error } = await supabase
+    .from('sites')
+    .select('*')
+    .eq('slug', slug)
+    .single()
+  if (error || !data) return null
+  return data as Site
+}
+
+// ---------- Icon pool ----------
+export const SERVICE_ICONS: LucideIcon[] = [
+  Wrench,
+  ShieldCheck,
+  Truck,
+  Headphones,
+  Sparkles,
+  Clock,
+  Award,
+  Zap,
+  Heart,
+  Package,
+]
+
+// ---------- Normalizers ----------
+export function normalizeService(raw: any, index: number): Service {
+  if (typeof raw === 'string') {
+    return {
+      title: raw,
+      description: 'Service professionnel adapté à vos besoins.',
+      Icon: SERVICE_ICONS[index % SERVICE_ICONS.length],
+    }
+  }
+  return {
+    title: raw?.title ?? raw?.name ?? 'Service',
+    description:
+      raw?.description ?? 'Service professionnel adapté à vos besoins.',
+    Icon: SERVICE_ICONS[index % SERVICE_ICONS.length],
+  }
+}
+
+export function normalizeTestimonial(raw: any): Testimonial {
+  return {
+    name: raw?.name ?? 'Client',
+    role: raw?.role ?? raw?.company ?? '',
+    content: raw?.content ?? raw?.text ?? raw?.message ?? '',
+    rating: Number(raw?.rating ?? 5),
+  }
+}
+
+export function normalizeProduct(raw: any): Product {
+  return {
+    name: raw?.name ?? raw?.title ?? 'Produit',
+    description: raw?.description ?? '',
+    price: raw?.price ?? '',
+    image: raw?.image ?? raw?.image_url ?? undefined,
+  }
+}

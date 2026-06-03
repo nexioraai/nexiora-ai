@@ -1,7 +1,19 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
+
 const nextConfig: NextConfig = {
   images: {
-    domains: ['images.pexels.com', 'videos.pexels.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lefumezaxfsttigpmzhr.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.pexels.com',
+      },
+    ],
   },
-};
-export default nextConfig;
+}
+
+export default nextConfig

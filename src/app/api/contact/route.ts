@@ -1,24 +1,58 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
 
 export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const { site_slug, name, email, subject, message } = body;
 
-    const { error } = await supabase.from('messages').insert({
-      site_slug,
-      name,
-      email,
-      subject,
-      message,
-    });
+try {
 
-    if (error) throw error;
+const body = await req.json();
 
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Contact error:', error);
-    return NextResponse.json({ error: 'Failed to send message.' }, { status: 500 });
-  }
+const {
+name,
+email,
+subject,
+message,
+} = body;
+
+if (
+!name ||
+!email ||
+!subject ||
+!message
+) {
+
+return NextResponse.json(
+{
+success: false,
+error: 'Missing fields',
+},
+{
+status: 400,
+}
+);
+}
+
+console.log({
+name,
+email,
+subject,
+message,
+});
+
+return NextResponse.json({
+success: true,
+message: 'Message sent successfully',
+});
+
+} catch (error: any) {
+
+return NextResponse.json(
+{
+success: false,
+error: error.message,
+},
+{
+status: 500,
+}
+);
+}
 }

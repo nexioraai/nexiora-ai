@@ -1,68 +1,99 @@
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+<div className="max-w-2xl mx-auto bg-white shadow-xl rounded-3xl p-10">
 
-export default function Contact() {
-  return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white">
-      <Navbar />
-      
-      <section className="max-w-2xl mx-auto px-6 py-24">
-        <h1 className="text-5xl font-black mb-6">
-          Contact <span className="text-blue-400">Us</span>
-        </h1>
-        <p className="text-slate-400 text-xl mb-12">
-          Have a question? We'd love to hear from you.
-        </p>
+<h1 className="text-5xl font-bold mb-8 text-center">
+Contact Us
+</h1>
 
-        <div className="bg-white/5 border border-white/10 rounded-3xl p-8">
-          <div className="grid gap-6">
-            <div>
-              <label className="text-xs text-slate-500 uppercase mb-2 block">Your Name</label>
-              <input
-                type="text"
-                placeholder="Youssouf"
-                className="w-full bg-black/30 border border-white/10 focus:border-blue-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 outline-none"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-slate-500 uppercase mb-2 block">Email</label>
-              <input
-                type="email"
-                placeholder="you@nexiora.ca"
-                className="w-full bg-black/30 border border-white/10 focus:border-blue-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 outline-none"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-slate-500 uppercase mb-2 block">Message</label>
-              <textarea
-                placeholder="Tell us about your project..."
-                rows={5}
-                className="w-full bg-black/30 border border-white/10 focus:border-blue-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 outline-none resize-none"
-              />
-            </div>
-            <button className="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-semibold text-lg transition">
-              Send Message 🚀
-            </button>
-          </div>
-        </div>
+<div className="space-y-4 text-gray-700 mb-10">
 
-        <div className="mt-12 grid md:grid-cols-3 gap-6 text-center">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <div className="text-3xl mb-3">📧</div>
-            <p className="text-slate-400">contact@nexiora.ca</p>
-          </div>
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <div className="text-3xl mb-3">📍</div>
-            <p className="text-slate-400">Montreal, Quebec</p>
-          </div>
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <div className="text-3xl mb-3">💬</div>
-            <p className="text-slate-400">WhatsApp disponible</p>
-          </div>
-        </div>
-      </section>
+<p>
+📞 +1 (555) 123-4567
+</p>
 
-      <Footer />
-    </main>
-  );
-}
+<p>
+📧 info@macko.com
+</p>
+
+<p>
+📍 123 Main Street,
+Montreal, Canada
+</p>
+
+<a
+href="https://maps.google.com"
+target="_blank"
+className="text-blue-600 underline"
+>
+Open Google Maps
+</a>
+
+</div>
+
+<div className="flex flex-wrap gap-4 mb-10">
+
+<a
+href="#"
+className="bg-pink-500 text-white px-5 py-3 rounded-xl"
+>
+Instagram
+</a>
+
+<a
+href="#"
+className="bg-blue-600 text-white px-5 py-3 rounded-xl"
+>
+Facebook
+</a>
+
+<a
+href="#"
+className="bg-sky-500 text-white px-5 py-3 rounded-xl"
+>
+LinkedIn
+</a>
+
+<a
+href="#"
+className="bg-green-500 text-white px-5 py-3 rounded-xl"
+>
+WhatsApp
+</a>
+
+</div>
+
+<form className="space-y-5">
+
+<input
+type="text"
+placeholder="Your Name"
+className="w-full p-4 border rounded-xl"
+/>
+
+<input
+type="email"
+placeholder="Your Email"
+className="w-full p-4 border rounded-xl"
+/>
+
+<input
+type="text"
+placeholder="Subject"
+className="w-full p-4 border rounded-xl"
+/>
+
+<textarea
+placeholder="Write your message..."
+rows={6}
+className="w-full p-4 border rounded-xl"
+/>
+
+<button
+type="submit"
+className="bg-black text-white px-8 py-4 rounded-xl"
+>
+Send Message
+</button>
+
+</form>
+
+</div>

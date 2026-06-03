@@ -48,6 +48,8 @@ export default function Home() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [authLoaded, setAuthLoaded] = useState(false);
+  const [location, setLocation] = useState('');
+  const [language, setLanguage] = useState('fr');
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -74,7 +76,7 @@ export default function Home() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, owner_email: userEmail }),
+        body: JSON.stringify({ message, owner_email: userEmail, location, language }),
       });
       let data;
       try { data = await res.json(); } catch { throw new Error('Reponse serveur invalide'); }
@@ -194,7 +196,30 @@ export default function Home() {
             maxLength={1000}
             className="w-full h-40 bg-black/30 border border-white/10 rounded-xl p-4 text-white placeholder-slate-500 resize-none focus:outline-none focus:border-blue-500"
           />
-          <button
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label className="text-xs text-slate-400 uppercase tracking-wider mb-2 block">📍 Ville / Pays</label>
+              <input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="ex: Moundou, Tchad"
+                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-slate-400 uppercase tracking-wider mb-2 block">🌐 Langue du site</label>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+              >
+                <option value="fr">Français</option>
+                <option value="en">English</option>
+                <option value="ar">عربي</option>
+              </select>
+            </div>
+          </div>
+                    <button
             onClick={sendMessage}
             disabled={loading || !userEmail}
             className="w-full mt-5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 py-3 rounded-xl font-semibold transition"
