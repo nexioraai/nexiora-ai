@@ -240,6 +240,7 @@ export default function Home() {
           {editedResult && (
             <div className="mt-8 bg-black/30 border border-white/10 rounded-2xl p-6 space-y-6">
               <div className="flex flex-col sm:flex-row gap-3">
+                {hasUnsavedChanges && (
                 <button
                   onClick={saveChanges}
                   disabled={!hasUnsavedChanges || saving}
@@ -251,6 +252,7 @@ export default function Home() {
                 >
                   {saving ? 'Sauvegarde...' : 'Sauvegarder mes modifications'}
                 </button>
+                )}
                 <a
                   href={`/sites/${editedResult.slug}`}
                   target="_blank"
