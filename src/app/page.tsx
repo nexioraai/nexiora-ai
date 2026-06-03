@@ -206,7 +206,7 @@ export default function Home() {
               <input
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="ex: Moundou, Tchad"
+                placeholder="ex: Montréal, Canada"
                 className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-[#E07040]"
               />
             </div>
@@ -249,13 +249,13 @@ export default function Home() {
                       : 'bg-white/5 text-slate-500 cursor-not-allowed'
                   }`}
                 >
-                  {saving ? 'Sauvegarde...' : hasUnsavedChanges ? 'Sauvegarder mes modifications' : 'Tout est sauvegarde'}
+                  {saving ? 'Sauvegarde...' : 'Sauvegarder mes modifications'}
                 </button>
                 <a
                   href={`/sites/${editedResult.slug}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 text-center bg-green-600 hover:bg-green-500 px-6 py-3 rounded-xl font-semibold transition"
+                  className="flex-1 text-center btn-nexiora px-6 py-3 rounded-xl font-semibold text-white transition"
                 >
                   Voir mon site
                 </a>
