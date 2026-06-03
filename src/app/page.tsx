@@ -179,9 +179,7 @@ export default function Home() {
               Sign In
             </Link>
           )}
-          <button className="border border-white/10 px-8 py-3 rounded-xl hover:bg-white/5 transition">
-            Watch Demo
-          </button>
+          
         </div>
       </section>
 

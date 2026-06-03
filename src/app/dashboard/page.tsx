@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Plus, ExternalLink, Pencil, Trash2, LogOut, Globe } from 'lucide-react';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,10 +22,12 @@ export default function DashboardPage() {
         router.push('/login');
       } else {
         setUser(data.user);
-        supabase.from('sites').select('*').eq('owner_email', data.user.email).order('created_at', { ascending: false }).then(({ data: sitesData }) => {
-          setSites(sitesData || []);
-          setLoading(false);
-        });
+        supabase.from('sites').select('*').eq('owner_email', data.user.email)
+          .order('created_at', { ascending: false })
+          .then(({ data: sitesData }) => {
+            setSites(sitesData || []);
+            setLoading(false);
+          });
       }
     });
   }, []);
@@ -35,48 +38,97 @@ export default function DashboardPage() {
   };
 
   const handleDelete = async (slug: string) => {
-    if (!confirm('Delete this site?')) return;
+    if (!confirm('Supprimer ce site ?')) return;
     await supabase.from('sites').delete().eq('slug', slug);
     setSites(sites.filter(s => s.slug !== slug));
   };
 
-  if (loading) return <div style={{ padding: '4rem', textAlign: 'center', fontFamily: 'sans-serif' }}>Loading...</div>;
+  if (loading) return (
+    <div className="min-h-screen nexiora-bg flex items-center justify-center">
+      <div className="text-white/40 text-lg">Chargement...</div>
+    </div>
+  );
 
   return (
-    <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f9f9f9' }}>
-      <nav style={{ background: '#6366f1', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link href="/" style={{ color: 'white', fontSize: '1.5rem', fontWeight: '900', textDecoration: 'none' }}>Nexiora</Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <span style={{ color: 'white', fontSize: '0.9rem' }}>{user?.email}</span>
-          <button onClick={handleLogout} style={{ background: 'white', color: '#6366f1', border: 'none', padding: '0.5rem 1rem', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}>Logout</button>
+    <div className="min-h-screen nexiora-bg text-white">
+
+      <nav className="flex items-center justify-between px-6 py-4 border-b border-white/8 backdrop-blur-md sticky top-0 z-50"
+        style={{ background: 'rgba(10,5,14,0.8)' }}>
+        <Link href="/" className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-lg"
+            style={{ background: 'radial-gradient(circle at 30% 30%, #4F6EF5 0%, transparent 60%), radial-gradient(circle at 70% 70%, #E07040 0%, transparent 60%), #16090e' }}>
+            N
+          </div>
+          <span className="text-xl font-black text-nexiora hidden sm:block">nexiora</span>
+        </Link>
+        <div className="flex items-center gap-4">
+          <span className="text-white/40 text-sm hidden md:block">{user?.email}</span>
+          <button onClick={handleLogout}
+            className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-white/60 hover:text-white hover:border-white/30 text-sm transition-all">
+            <LogOut className="w-4 h-4" />
+            Déconnexion
+          </button>
         </div>
       </nav>
 
-      <div style={{ maxWidth: '1000px', margin: '3rem auto', padding: '0 2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '2rem', fontWeight: '900' }}>My Sites</h1>
-          <Link href="/" style={{ background: '#6366f1', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '8px', textDecoration: 'none', fontWeight: '600' }}>+ New Site</Link>
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="flex items-center justify-between mb-10">
+          <div>
+            <div className="text-xs uppercase tracking-[0.2em] font-medium mb-2" style={{ color: '#E07040' }}>Dashboard</div>
+            <h1 className="text-4xl font-black tracking-tight">Mes sites</h1>
+          </div>
+          <Link href="/" className="btn-nexiora flex items-center gap-2 px-6 py-3 rounded-full text-white font-semibold text-sm">
+            <Plus className="w-4 h-4" />
+            Nouveau site
+          </Link>
         </div>
 
         {sites.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '4rem', background: 'white', borderRadius: '16px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-            <p style={{ fontSize: '1.2rem', color: '#888', marginBottom: '1.5rem' }}>No sites yet. Generate your first one!</p>
-            <Link href="/" style={{ background: '#6366f1', color: 'white', padding: '0.75rem 2rem', borderRadius: '8px', textDecoration: 'none', fontWeight: '600' }}>Generate a Site</Link>
+          <div className="text-center py-24 border border-white/8 rounded-3xl" style={{ background: 'rgba(255,255,255,0.02)' }}>
+            <Globe className="w-14 h-14 mx-auto mb-6" style={{ color: 'rgba(255,255,255,0.15)' }} />
+            <p className="text-white/40 text-xl mb-6">Aucun site pour l'instant.</p>
+            <Link href="/" className="btn-nexiora inline-flex items-center gap-2 px-8 py-3 rounded-full text-white font-semibold">
+              <Plus className="w-4 h-4" />
+              Générer mon premier site
+            </Link>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {sites.map((site) => (
-              <div key={site.slug} style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
-                <div style={{ background: site.primary_color || '#6366f1', padding: '2rem', textAlign: 'center' }}>
-                  <h2 style={{ color: 'white', margin: 0, fontSize: '1.5rem', fontWeight: '900' }}>{site.name}</h2>
-                  <p style={{ color: 'rgba(255,255,255,0.8)', margin: '0.5rem 0 0', fontSize: '0.9rem' }}>{site.type}</p>
+              <div key={site.slug}
+                className="group border border-white/8 rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-300 hover:-translate-y-1"
+                style={{ background: 'rgba(255,255,255,0.03)' }}>
+                <div className="h-28 relative flex items-center justify-center overflow-hidden">
+                  <div className="absolute inset-0"
+                    style={{ background: `radial-gradient(ellipse at 50% 50%, ${site.primary_color || '#E07040'}50 0%, transparent 70%), #0a050e` }} />
+                  <div className="relative text-center px-4">
+                    <h2 className="text-xl font-black text-white">{site.name}</h2>
+                    <span className="text-xs px-3 py-1 rounded-full mt-2 inline-block font-medium"
+                      style={{ background: `${site.primary_color || '#E07040'}25`, color: site.primary_color || '#E07040' }}>
+                      {site.type}
+                    </span>
+                  </div>
                 </div>
-                <div style={{ padding: '1.5rem' }}>
-                  <p style={{ color: '#888', fontSize: '0.9rem', marginBottom: '1rem' }}>{site.slogan}</p>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <Link href={`/sites/${site.slug}`} style={{ flex: 1, background: site.primary_color || '#6366f1', color: 'white', padding: '0.6rem', borderRadius: '8px', textDecoration: 'none', fontWeight: '600', textAlign: 'center', fontSize: '0.9rem' }}>View</Link>
-                    <Link href={`/edit/${site.slug}`} style={{ flex: 1, background: '#dbeafe', color: '#2563eb', padding: '0.6rem', borderRadius: '8px', textDecoration: 'none', fontWeight: '600', textAlign: 'center', fontSize: '0.9rem' }}>Edit</Link>
-                    <button onClick={() => handleDelete(site.slug)} style={{ background: '#fee2e2', color: '#dc2626', border: 'none', padding: '0.6rem 0.9rem', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem' }}>Delete</button>
+                <div className="p-5">
+                  {site.slogan && (
+                    <p className="text-white/40 text-sm mb-4 line-clamp-2">{site.slogan}</p>
+                  )}
+                  <div className="flex gap-2">
+                    <Link href={`/sites/${site.slug}`}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-white text-sm font-semibold transition-opacity hover:opacity-80"
+                      style={{ background: site.primary_color || '#E07040' }}>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      Voir
+                    </Link>
+                    <Link href={`/edit/${site.slug}`}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold border border-white/10 text-white/70 hover:text-white hover:border-white/30 transition-all">
+                      <Pencil className="w-3.5 h-3.5" />
+                      Éditer
+                    </Link>
+                    <button onClick={() => handleDelete(site.slug)}
+                      className="w-10 flex items-center justify-center rounded-xl border border-red-500/20 text-red-400/50 hover:text-red-400 hover:border-red-500/40 transition-all">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </div>
