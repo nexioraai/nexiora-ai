@@ -1,7 +1,7 @@
 // src/app/sites/[slug]/themes/shared.tsx
 import { createClient } from '@supabase/supabase-js'
-import {
 import { supabase } from '@/lib/supabase';
+import {
   Wrench,
   ShieldCheck,
   Truck,
