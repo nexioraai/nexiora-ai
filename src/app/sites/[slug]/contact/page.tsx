@@ -3,6 +3,7 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import { PUBLIC_COLS } from '../themes/shared';
 
 export default function ContactPage() {
   const params = useParams();
@@ -12,7 +13,7 @@ export default function ContactPage() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
 
   useEffect(() => {
-    supabase.from('sites').select('*').eq('slug', slug).single().then(({ data }) => setSite(data));
+    supabase.from('sites').select(PUBLIC_COLS).eq('slug', slug).single().then(({ data }) => setSite(data));
   }, [slug]);
 
   if (!site) return <div style={{ padding: '4rem', textAlign: 'center' }}>Loading...</div>;

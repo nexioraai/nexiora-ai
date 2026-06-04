@@ -1,6 +1,7 @@
 // src/app/sites/[slug]/themes/shared.tsx
 import { createClient } from '@supabase/supabase-js'
 import {
+import { supabase } from '@/lib/supabase';
   Wrench,
   ShieldCheck,
   Truck,
@@ -61,15 +62,14 @@ export type Testimonial = {
 }
 
 // ---------- Supabase ----------
-export const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+
+// Whitelist publique — owner_email exclu, exporte pour reutilisation
+export const PUBLIC_COLS = 'slug,name,slogan,type,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image'
 
 export async function fetchSite(slug: string): Promise<Site | null> {
   const { data, error } = await supabase
     .from('sites')
-    .select('*')
+    .select(PUBLIC_COLS)
     .eq('slug', slug)
     .single()
   if (error || !data) return null

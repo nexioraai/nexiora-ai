@@ -2,10 +2,11 @@ import { supabase } from '@/lib/supabase';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getPhotos } from '@/lib/pexels';
+import { PUBLIC_COLS } from '../themes/shared';
 
 export default async function MenuPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const { data: site } = await supabase.from('sites').select('*').eq('slug', slug).single();
+  const { data: site } = await supabase.from('sites').select(PUBLIC_COLS).eq('slug', slug).single();
   if (!site) return notFound();
 
   const color = site.primary_color || '#3b82f6';

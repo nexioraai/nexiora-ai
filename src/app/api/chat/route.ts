@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { supabase } from '@/lib/supabase';
+import { supabase as supabaseAnon } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+// Service role pour les inserts (bypass RLS — sécurisé car validé via Bearer token avant)
+
+// Client anon pour valider le token utilisateur
 
 function generateSlug(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
@@ -47,9 +52,30 @@ async function fetchPexelsImages(query: string, color?: string): Promise<string[
 
 export async function POST(req: Request) {
   try {
+    // ============ SÉCURITÉ : validation du Bearer token ============
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Unauthorized: missing Bearer token' },
+        { status: 401 }
+      );
+    }
+
+    const { data: authData, error: authError } = await supabaseAnon.auth.getUser(token);
+    if (authError || !authData.user || !authData.user.email) {
+      return NextResponse.json(
+        { error: 'Unauthorized: invalid token' },
+        { status: 401 }
+      );
+    }
+
+    // Email validé depuis le token — pas depuis le body (sinon manipulable)
+    const owner_email = authData.user.email;
+    // ===============================================================
+
     const body = await req.json();
     const message = body.message;
-    const owner_email = body.owner_email || null;
     const location = body.location || '';
     const language = body.language || 'fr';
 
@@ -121,7 +147,8 @@ Return ONLY valid JSON, no markdown:
     const pexelsQuery = `${parsed.type || 'business'} ${parsed.name || ''}`.trim();
     const gallery = await fetchPexelsImages(pexelsQuery, parsed.primaryColor);
 
-    const { error } = await supabase.from('sites').insert({
+    // Insert via service_role (bypass RLS, sécurisé car owner_email vient du token validé)
+    const { error } = await supabaseAdmin.from('sites').insert({
       slug,
       name: parsed.name,
       slogan: parsed.slogan,

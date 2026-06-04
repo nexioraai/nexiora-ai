@@ -1,13 +1,13 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import ThemeSelector from '@/components/edit/ThemeSelector';
+import AIAgentChat from '@/components/edit/AIAgentChat';
+import { supabase } from '@/lib/supabase';
 
 export default function EditPage() {
   const params = useParams();
@@ -26,7 +26,7 @@ export default function EditPage() {
         router.push('/login');
         return;
       }
-      supabase.from('sites').select('*').eq('slug', slug).maybeSingle().then(({ data: siteData }) => {
+      supabase.from('sites').select('*').eq('slug', slug).eq('owner_email', data.user.email!).maybeSingle().then(({ data: siteData }) => {
         setSite(siteData);
         setLoading(false);
       });
@@ -43,7 +43,7 @@ export default function EditPage() {
     setUploading(true);
     setMessage('');
     const ext = file.name.split('.').pop();
-    const path = `${slug}-${Date.now()}.${ext}`;
+    const path = `${slug}/${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage.from('site-images').upload(path, file);
     if (uploadError) {
       setMessage('Upload error: ' + uploadError.message);
@@ -77,83 +77,157 @@ export default function EditPage() {
       setMessage('Error: ' + error.message);
     } else {
       setMessage('Saved!');
+      setTimeout(() => setMessage(''), 3000);
     }
   };
 
-  if (loading) return <div style={{ padding: '4rem', textAlign: 'center', fontFamily: 'sans-serif' }}>Loading...</div>;
-  if (!site) return <div style={{ padding: '4rem', textAlign: 'center', fontFamily: 'sans-serif' }}>Site not found.</div>;
+  if (loading) {
+    return (
+      <main className="min-h-screen nexiora-bg text-white flex items-center justify-center">
+        <div className="text-slate-400">Loading…</div>
+      </main>
+    );
+  }
 
-  const labelStyle = { fontWeight: '600', fontSize: '0.8rem', color: '#555', letterSpacing: '0.03em' } as const;
-  const inputStyle = { padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem', width: '100%', boxSizing: 'border-box' } as const;
+  if (!site) {
+    return (
+      <main className="min-h-screen nexiora-bg text-white">
+        <Navbar />
+        <div className="max-w-3xl mx-auto px-6 py-20 text-center">
+          <h1 className="text-3xl font-bold mb-4">Site not found</h1>
+          <Link href="/dashboard" className="text-[#E07040] hover:underline">← Back to Dashboard</Link>
+        </div>
+        <Footer />
+      </main>
+    );
+  }
+
+  const isError = message.toLowerCase().startsWith('error') || message.toLowerCase().startsWith('upload error');
 
   return (
-    <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f9f9f9' }}>
-      <nav style={{ background: '#6366f1', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link href="/dashboard" style={{ color: 'white', fontSize: '1.1rem', fontWeight: '700', textDecoration: 'none' }}>&larr; Dashboard</Link>
-        <Link href={`/sites/${slug}`} style={{ color: 'white', fontSize: '0.9rem', textDecoration: 'none' }}>View Site &rarr;</Link>
-      </nav>
+    <main className="min-h-screen nexiora-bg text-white">
+      <Navbar />
 
-      <div style={{ maxWidth: '700px', margin: '3rem auto', padding: '0 2rem' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '2rem' }}>Edit {site.name}</h1>
-
-        <div style={{ background: 'white', borderRadius: '16px', padding: '2rem', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <span style={labelStyle}>HERO IMAGE</span>
-            {site.hero_image && (
-              <img src={site.hero_image} alt="hero" style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', borderRadius: '8px', marginBottom: '0.5rem' }} />
-            )}
-            <label style={{ background: '#eef2ff', color: '#4f46e5', padding: '0.75rem', borderRadius: '8px', textAlign: 'center', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem' }}>
-              {uploading ? 'Uploading...' : 'Upload an image'}
-              <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
-            </label>
+      <section className="max-w-3xl mx-auto px-6 pt-12 pb-24">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
+          <div>
+            <Link href="/dashboard" className="text-sm text-slate-400 hover:text-white transition mb-2 inline-block">
+              ← Dashboard
+            </Link>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight">
+              Edit <span className="text-nexiora">{site.name}</span>
+            </h1>
           </div>
+          <Link
+            href={`/sites/${slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="self-start sm:self-auto px-5 py-2.5 rounded-xl text-sm font-semibold bg-white/5 border border-white/10 hover:bg-white/10 transition whitespace-nowrap"
+          >
+            View Site →
+          </Link>
+        </div>
 
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <span style={labelStyle}>BUSINESS NAME</span>
-            <input value={site.name || ''} onChange={(e) => updateField('name', e.target.value)} style={inputStyle} />
-          </label>
+        {/* Form card */}
+        <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm space-y-6">
 
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <span style={labelStyle}>TYPE</span>
-            <input value={site.type || ''} onChange={(e) => updateField('type', e.target.value)} style={inputStyle} />
-          </label>
+          <ThemeSelector slug={slug} currentTheme={site.theme} />
 
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <span style={labelStyle}>SLOGAN</span>
-            <input value={site.slogan || ''} onChange={(e) => updateField('slogan', e.target.value)} style={inputStyle} />
-          </label>
+          <FieldSection label="Hero Image">
+            {site.hero_image && (
+              <img src={site.hero_image} alt="hero" className="w-full max-h-48 object-cover rounded-xl mb-3 border border-white/10" />
+            )}
+            <label className="block w-full text-center bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] py-3 rounded-xl cursor-pointer font-semibold transition border border-[#E07040]/20">
+              {uploading ? 'Uploading…' : 'Upload an image'}
+              <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+            </label>
+          </FieldSection>
 
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <span style={labelStyle}>HERO TITLE</span>
-            <input value={site.hero_title || ''} onChange={(e) => updateField('hero_title', e.target.value)} style={inputStyle} />
-          </label>
+          <Field label="Business Name" value={site.name} onChange={(v) => updateField('name', v)} />
+          <Field label="Type" value={site.type} onChange={(v) => updateField('type', v)} />
+          <Field label="Slogan" value={site.slogan} onChange={(v) => updateField('slogan', v)} />
+          <Field label="Hero Title" value={site.hero_title} onChange={(v) => updateField('hero_title', v)} />
+          <Field label="Hero Subtitle" value={site.hero_subtitle} onChange={(v) => updateField('hero_subtitle', v)} />
+          <TextAreaField label="About" value={site.about} onChange={(v) => updateField('about', v)} rows={4} />
 
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <span style={labelStyle}>HERO SUBTITLE</span>
-            <input value={site.hero_subtitle || ''} onChange={(e) => updateField('hero_subtitle', e.target.value)} style={inputStyle} />
-          </label>
+          <FieldSection label="Primary Color">
+            <input
+              type="color"
+              value={site.primary_color || '#E07040'}
+              onChange={(e) => updateField('primary_color', e.target.value)}
+              className="w-24 h-12 rounded-xl border border-white/10 bg-transparent cursor-pointer"
+            />
+          </FieldSection>
 
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <span style={labelStyle}>ABOUT</span>
-            <textarea value={site.about || ''} onChange={(e) => updateField('about', e.target.value)} rows={4} style={{ ...inputStyle, fontFamily: 'inherit', resize: 'vertical' }} />
-          </label>
-
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <span style={labelStyle}>PRIMARY COLOR</span>
-            <input type="color" value={site.primary_color || '#6366f1'} onChange={(e) => updateField('primary_color', e.target.value)} style={{ width: '80px', height: '44px', borderRadius: '8px', border: '1px solid #ddd', cursor: 'pointer' }} />
-          </label>
-
-          <button onClick={handleSave} disabled={saving} style={{ background: '#6366f1', color: 'white', border: 'none', padding: '0.85rem', borderRadius: '8px', fontWeight: '700', fontSize: '1rem', cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
-            {saving ? 'Saving...' : 'Save Changes'}
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full btn-nexiora py-4 rounded-2xl font-semibold text-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {saving ? 'Saving…' : 'Save Changes'}
           </button>
 
           {message && (
-            <p style={{ textAlign: 'center', fontWeight: '700', color: message.startsWith('Error') || message.startsWith('Upload error') ? '#dc2626' : '#16a34a' }}>{message}</p>
+            <div
+              className={`p-4 rounded-xl text-sm font-medium ${
+                isError
+                  ? 'bg-red-500/10 border border-red-500/20 text-red-400'
+                  : 'bg-green-500/10 border border-green-500/20 text-green-400'
+              }`}
+            >
+              {message}
+            </div>
           )}
-
         </div>
-      </div>
+      </section>
+
+      <Footer />
+      <AIAgentChat slug={slug} onSiteUpdated={setSite} />
+    </main>
+  );
+}
+
+function FieldSection({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">{label}</span>
+      {children}
     </div>
+  );
+}
+
+function Field({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <FieldSection label={label}>
+      <input
+        value={value || ''}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-[#E07040] transition"
+      />
+    </FieldSection>
+  );
+}
+
+function TextAreaField({
+  label,
+  value,
+  onChange,
+  rows = 4,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  rows?: number;
+}) {
+  return (
+    <FieldSection label={label}>
+      <textarea
+        value={value || ''}
+        onChange={(e) => onChange(e.target.value)}
+        rows={rows}
+        className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-[#E07040] transition resize-y"
+      />
+    </FieldSection>
   );
 }

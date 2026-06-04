@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabase as supabaseAnon } from '@/lib/supabase';
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
 // Mapping camelCase (client) -> snake_case (DB)
 const FIELD_MAP: Record<string, string> = {
@@ -21,6 +22,7 @@ const FIELD_MAP: Record<string, string> = {
   pages: 'pages',
   cta: 'cta',
   socialLinks: 'social_links',
+  theme: 'theme',
 };
 
 export async function PATCH(
@@ -35,12 +37,11 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    // Client anon pour valider le token utilisateur
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    // Client service_role pour bypass RLS sur l'update (auth déjà fait au-dessus)
+
+    const { data: { user }, error: userError } = await supabaseAnon.auth.getUser(token);
 
     if (userError || !user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
