@@ -1,202 +1,201 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { ChevronRight, ChevronLeft } from 'lucide-react'
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { LANGUAGES } from '@/lib/languages';
+import { supabase } from '@/lib/supabase';
+import { useTranslation } from '@/lib/translations';
 
-export default function OnboardingFlow({ onComplete }: { onComplete?: (data: any) => void }) {
-  const [step, setStep] = useState(1)
-  const [data, setData] = useState({
-    type: '',
-    name: '',
-    slogan: '',
-    theme: 'EditorialTheme',
-    primary_color: '#d97a4f',
-  })
+type Step = 1 | 2 | 3;
+type Language = string;
 
-  const siteTypes = [
-    { id: 'restaurant', label: '🍽️ Restaurant', icon: '🍽️' },
-    { id: 'shop', label: '🛍️ E-commerce', icon: '🛍️' },
-    { id: 'portfolio', label: '🎨 Portfolio', icon: '🎨' },
-    { id: 'agency', label: '🚀 Agency', icon: '🚀' },
-    { id: 'services', label: '💼 Services', icon: '💼' },
-    { id: 'blog', label: '✍️ Blog', icon: '✍️' },
-  ]
+export default function OnboardingFlow() {
+  const router = useRouter();
+  const { t } = useTranslation();
+  const [step, setStep] = useState<Step>(1);
+  const [prompt, setPrompt] = useState('');
+  const [language, setLanguage] = useState<Language>('auto');
+  const [moreDetails, setMoreDetails] = useState('');
+  const [error, setError] = useState('');
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [authLoaded, setAuthLoaded] = useState(false);
 
-  const themes = [
-    { id: 'EditorialTheme', name: 'Editorial', desc: 'Élégant & minimaliste' },
-    { id: 'BoldTheme', name: 'Bold', desc: 'Audacieux & impactant' },
-    { id: 'MonochromeTheme', name: 'Monochrome', desc: 'Épuré & moderne' },
-  ]
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUserEmail(data.session?.user?.email || null);
+      setAuthLoaded(true);
+    });
+  }, []);
 
-  const colors = [
-    '#d97a4f', '#FF3B1F', '#4F6EF5', '#10B981', '#F59E0B', '#8B5CF6',
-  ]
+  const canContinue = prompt.trim().length > 0 && !!userEmail;
 
-  const handleNext = () => {
-    if (step < 3) setStep(step + 1)
-    else { if (onComplete) onComplete(data); else console.log("Site data:", data); }
-  }
+  const goToDetails = () => {
+    if (!canContinue) return;
+    setError('');
+    setStep(2);
+  };
 
-  const handleBack = () => {
-    if (step > 1) setStep(step - 1)
-  }
+  const generate = async () => {
+    setStep(3);
+    setError('');
 
-  const isStepValid = () => {
-    if (step === 1) return data.type !== ''
-    if (step === 2) return data.name.trim() !== ''
-    if (step === 3) return data.theme && data.primary_color
-    return false
-  }
+    const fullMessage = moreDetails.trim()
+      ? `${prompt}\n\n${t('onboarding.additionalDetailsTag')}: ${moreDetails}`
+      : prompt;
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) {
+        throw new Error(t('onboarding.error.sessionExpired'));
+      }
+
+      const body: Record<string, string> = {
+        message: fullMessage,
+        location: '',
+      };
+      if (language !== 'auto') {
+        body.language = language;
+      }
+
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify(body),
+      });
+
+      let data;
+      try { data = await res.json(); } catch { throw new Error(t('onboarding.error.invalidResponse')); }
+      if (!res.ok) throw new Error(data.error || t('onboarding.error.generationFailed'));
+      if (!data.slug) throw new Error(t('onboarding.error.missingSlug'));
+
+      router.push(`/sites/${data.slug}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : t('onboarding.error.generationFailed');
+      setError(msg);
+      setStep(2);
+    }
+  };
 
   return (
-    <div className="min-h-screen nexiora-bg flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-2xl">
-        {/* Progress */}
-        <div className="mb-12">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-white/60 text-sm">Étape {step} de 3</span>
-            <span className="text-white/40 text-sm">{Math.round((step / 3) * 100)}%</span>
-          </div>
-          <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-[#4F6EF5] to-[#d97a4f] transition-all duration-500"
-              style={{ width: `${(step / 3) * 100}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Step 1 */}
+    <section className="max-w-3xl mx-auto px-6 pb-24">
+      <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-8 md:p-12 backdrop-blur-sm shadow-2xl">
         {step === 1 && (
-          <div className="animate-fade-in">
-            <h2 className="text-4xl font-black text-white mb-4">Quel est ton projet?</h2>
-            <p className="text-white/60 mb-8">Choisis le type de site qui te convient</p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {siteTypes.map((type) => (
-                <button
-                  key={type.id}
-                  onClick={() => setData({ ...data, type: type.id })}
-                  className={`p-6 rounded-2xl border-2 transition-all ${
-                    data.type === type.id
-                      ? 'border-[#d97a4f] bg-[#d97a4f]/10 text-white'
-                      : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20'
-                  }`}
-                >
-                  <div className="text-3xl mb-2">{type.icon}</div>
-                  <div className="text-sm font-semibold">{type.label.split(' ')[1]}</div>
-                </button>
-              ))}
+          <>
+            <p className="text-slate-400 text-center mb-10 text-base md:text-lg">
+              {t('onboarding.step1.subtitle')}
+            </p>
+
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder={t('onboarding.step1.placeholder')}
+              maxLength={1000}
+              autoFocus
+              className="w-full h-44 bg-black/40 border border-white/10 rounded-2xl p-5 text-white text-lg placeholder-slate-500 resize-none focus:outline-none focus:border-[#E07040] transition"
+            />
+
+            <div className="flex items-center gap-3 mt-4 flex-wrap">
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as Language)}
+                className="bg-black/40 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[#E07040]"
+              >
+                <option value="auto">✨ {t('onboarding.step1.languageAuto')}</option>
+                {LANGUAGES.map((lang) => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.flag} {lang.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          </div>
+
+            <button
+              onClick={goToDetails}
+              disabled={!authLoaded || !canContinue}
+              className="w-full mt-8 btn-nexiora py-4 rounded-2xl font-semibold text-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {!authLoaded
+                ? t('onboarding.step1.btnLoading')
+                : !userEmail
+                ? t('onboarding.step1.btnNotLoggedIn')
+                : t('onboarding.step1.btnReady')}
+            </button>
+
+            {!userEmail && authLoaded && (
+              <p className="text-center mt-4 text-sm text-slate-400">
+                <Link href="/login" className="text-[#E07040] hover:underline">
+                  {t('onboarding.step1.signinLink')}
+                </Link>{' '}
+                {t('onboarding.step1.signinOr')}{' '}
+                <Link href="/signup" className="text-[#E07040] hover:underline">
+                  {t('onboarding.step1.signupLink')}
+                </Link>{' '}
+                {t('onboarding.step1.signinSuffix')}
+              </p>
+            )}
+          </>
         )}
 
-        {/* Step 2 */}
         {step === 2 && (
-          <div className="animate-fade-in">
-            <h2 className="text-4xl font-black text-white mb-4">Parlons de ton site</h2>
-            <p className="text-white/60 mb-8">Donne-nous quelques infos de base</p>
-            <div className="space-y-6">
-              <div>
-                <label className="block text-white/80 text-sm font-medium mb-3">
-                  Nom du site *
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ex: Ousma Kintaki"
-                  value={data.name}
-                  onChange={(e) => setData({ ...data, name: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-white/40"
-                />
+          <>
+            <button
+              onClick={() => setStep(1)}
+              className="text-slate-400 hover:text-white text-sm mb-6 inline-flex items-center gap-1 transition"
+            >
+              {t('onboarding.step2.back')}
+            </button>
+
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-3 tracking-tight">
+              {t('onboarding.step2.title')}
+            </h2>
+            <p className="text-slate-400 text-center mb-10 text-base md:text-lg">
+              {t('onboarding.step2.subtitle')} <span className="text-slate-500">{t('onboarding.step2.optional')}</span>
+            </p>
+
+            <textarea
+              value={moreDetails}
+              onChange={(e) => setMoreDetails(e.target.value)}
+              placeholder={t('onboarding.step2.placeholder')}
+              maxLength={2000}
+              autoFocus
+              className="w-full h-44 bg-black/40 border border-white/10 rounded-2xl p-5 text-white text-lg placeholder-slate-500 resize-none focus:outline-none focus:border-[#E07040] transition"
+            />
+
+            {error && (
+              <div className="mt-4 bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-sm">
+                {error}
               </div>
-              <div>
-                <label className="block text-white/80 text-sm font-medium mb-3">
-                  Slogan (optionnel)
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ex: Saveurs authentiques"
-                  value={data.slogan}
-                  onChange={(e) => setData({ ...data, slogan: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-white/40"
-                />
-              </div>
-            </div>
-          </div>
+            )}
+
+            <button
+              onClick={generate}
+              className="w-full mt-6 btn-nexiora py-4 rounded-2xl font-semibold text-lg transition"
+            >
+              {t('onboarding.step2.btn')}
+            </button>
+            <p className="text-center mt-3 text-xs text-slate-500">
+              {t('onboarding.step2.skip')}
+            </p>
+          </>
         )}
 
-        {/* Step 3 */}
         {step === 3 && (
-          <div className="animate-fade-in">
-            <h2 className="text-4xl font-black text-white mb-4">Ton identité visuelle</h2>
-            <p className="text-white/60 mb-8">Thème et couleur primaire</p>
-            <div className="space-y-8">
-              <div>
-                <label className="block text-white/80 text-sm font-medium mb-4">Thème</label>
-                <div className="grid md:grid-cols-3 gap-4">
-                  {themes.map((theme) => (
-                    <button
-                      key={theme.id}
-                      onClick={() => setData({ ...data, theme: theme.id })}
-                      className={`p-5 rounded-xl border-2 transition-all text-left ${
-                        data.theme === theme.id
-                          ? 'border-[#d97a4f] bg-[#d97a4f]/10'
-                          : 'border-white/10 bg-white/5 hover:border-white/20'
-                      }`}
-                    >
-                      <div className="font-semibold text-white mb-1">{theme.name}</div>
-                      <div className="text-sm text-white/60">{theme.desc}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-white/80 text-sm font-medium mb-4">Couleur</label>
-                <div className="flex flex-wrap gap-4">
-                  {colors.map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => setData({ ...data, primary_color: color })}
-                      className={`w-12 h-12 rounded-xl border-2 transition-transform ${
-                        data.primary_color === color
-                          ? 'border-white scale-110'
-                          : 'border-white/20'
-                      }`}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
+          <div className="text-center py-16">
+            <div className="inline-block w-16 h-16 border-4 border-[#E07040]/30 border-t-[#E07040] rounded-full animate-spin mb-6"></div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-3 tracking-tight">
+              {t('onboarding.step3.title')}
+            </h2>
+            <p className="text-slate-400 text-lg">
+              {t('onboarding.step3.subtitle')}
+            </p>
           </div>
         )}
-
-        {/* Buttons */}
-        <div className="flex items-center gap-4 mt-12">
-          <button
-            onClick={handleBack}
-            disabled={step === 1}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl border border-white/20 text-white/70 hover:text-white disabled:opacity-30"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Retour
-          </button>
-          <button
-            onClick={handleNext}
-            disabled={!isStepValid()}
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#4F6EF5] to-[#d97a4f] text-white font-semibold disabled:opacity-50"
-          >
-            {step === 3 ? 'Créer' : 'Suivant'}
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-
-        <style>{`
-          @keyframes fade-in {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          .animate-fade-in { animation: fade-in 0.3s ease-out; }
-        `}</style>
       </div>
-    </div>
-  )
+    </section>
+  );
 }
