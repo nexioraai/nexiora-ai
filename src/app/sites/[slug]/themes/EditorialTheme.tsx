@@ -135,7 +135,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
         <div className="relative max-w-7xl mx-auto px-6 md:px-10 w-full">
           <div className="max-w-3xl text-white ed-rise">
             {site.slogan && (
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-xs font-medium tracking-[0.15em] uppercase">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-xs font-medium tracking-[0.15em] uppercase max-w-full sm:max-w-none flex-wrap">
                 <span
                   className="w-1.5 h-1.5 rounded-full"
                   style={{ backgroundColor: primary }}
