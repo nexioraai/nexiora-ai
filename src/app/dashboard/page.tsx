@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Plus, ExternalLink, Pencil, Trash2, LogOut, Globe } from 'lucide-react';
+import DashboardMobileNav from '@/components/DashboardMobileNav';
 import { supabase } from '@/lib/supabase';
 
 export default function DashboardPage() {
@@ -56,6 +57,7 @@ export default function DashboardPage() {
           </div>
           <span className="text-xl font-black text-nexiora hidden sm:block">nexiora</span>
         </Link>
+        <DashboardMobileNav userEmail={user?.email} onLogout={handleLogout} />
         <div className="flex items-center gap-4">
           <span className="text-white/40 text-sm hidden md:block">{user?.email}</span>
           <button onClick={handleLogout}
