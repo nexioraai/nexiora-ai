@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Phone, Mail, MapPin, Star, Quote, ArrowRight } from 'lucide-react'
 import { Instagram, Facebook, TikTok, WhatsApp } from './BrandIcons'
+import MobileNav from './MobileNav'
 import ContactForm from '../ContactForm'
 import {
   type Site,
@@ -51,6 +52,9 @@ export default function MonochromeTheme({ site }: { site: Site }) {
           </nav>
         </div>
       </header>
+
+      {/* Mobile Navigation */}
+      <MobileNav site={site} cta={cta} ctaHref={ctaHref} />
 
       {/* HERO */}
       <section className="relative min-h-screen flex items-center pt-20 pb-20">

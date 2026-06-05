@@ -11,6 +11,7 @@ import {
   Asterisk,
 } from 'lucide-react'
 import { Instagram, Facebook, TikTok, WhatsApp } from './BrandIcons'
+import MobileNav from './MobileNav'
 import ContactForm from '../ContactForm'
 import { type Site, normalizeService, normalizeTestimonial, normalizeProduct } from './shared'
 
@@ -80,6 +81,9 @@ export default function BoldTheme({ site }: { site: Site }) {
           </nav>
         </div>
       </header>
+
+      {/* Mobile Navigation */}
+      <MobileNav site={site} cta={cta} ctaHref={ctaHref} />
 
       {/* =================== MARQUEE =================== */}
       <div className="border-b-[3px] border-black bg-white py-4 overflow-hidden">
