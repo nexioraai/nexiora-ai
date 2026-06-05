@@ -1,6 +1,22 @@
+'use client';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
+import { useTranslation } from '@/lib/translations';
+import LanguageSwitcher from './LanguageSwitcher';
 
 export default function Navbar() {
+  const { t } = useTranslation();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [authLoaded, setAuthLoaded] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserEmail(data.user?.email || null);
+      setAuthLoaded(true);
+    });
+  }, []);
+
   return (
     <nav className="flex items-center justify-between px-6 py-4 border-b border-white/8 backdrop-blur-md sticky top-0 z-50"
       style={{ background: 'rgba(10,5,14,0.75)' }}>
@@ -19,17 +35,33 @@ export default function Navbar() {
         </span>
       </Link>
 
-      <div className="flex items-center gap-6">
-        <Link href="/" className="text-white/60 hover:text-white text-sm transition-colors">Home</Link>
-        <Link href="/about" className="text-white/60 hover:text-white text-sm transition-colors hidden md:block">About</Link>
-        <Link href="/services" className="text-white/60 hover:text-white text-sm transition-colors hidden md:block">Services</Link>
-        <Link href="/contact" className="text-white/60 hover:text-white text-sm transition-colors hidden md:block">Contact</Link>
-        <Link
-          href="/login"
-          className="btn-nexiora px-5 py-2 rounded-full text-white text-sm font-semibold"
-        >
-          Login
-        </Link>
+      <div className="flex items-center gap-3 sm:gap-4">
+        <LanguageSwitcher />
+        {authLoaded && (
+          userEmail ? (
+            <Link
+              href="/dashboard"
+              className="btn-nexiora px-4 sm:px-5 py-2 rounded-full text-white text-sm font-semibold whitespace-nowrap"
+            >
+              {t('nav.dashboard')}
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-white/70 hover:text-white text-sm font-medium transition-colors hidden sm:inline"
+              >
+                {t('nav.login')}
+              </Link>
+              <Link
+                href="/signup"
+                className="btn-nexiora px-4 sm:px-5 py-2 rounded-full text-white text-sm font-semibold whitespace-nowrap"
+              >
+                {t('nav.signup')}
+              </Link>
+            </>
+          )
+        )}
       </div>
     </nav>
   );

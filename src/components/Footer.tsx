@@ -1,6 +1,10 @@
+'use client';
 import Link from 'next/link';
+import { useTranslation } from '@/lib/translations';
 
 export default function Footer() {
+  const { t } = useTranslation();
+
   return (
     <footer className="border-t border-white/8 py-10 px-6" style={{ background: 'rgba(10,5,14,0.8)' }}>
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
@@ -16,13 +20,12 @@ export default function Footer() {
         </div>
 
         <p className="text-white/30 text-xs text-center">
-          © 2026 Nexiora AI. All rights reserved.
+          {t('footer.copyright')}
         </p>
 
         <div className="flex gap-6 text-xs text-white/40">
-          <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
-          <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
-          <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
+          <Link href="/privacy" className="hover:text-white transition-colors">{t('footer.privacy')}</Link>
+          <Link href="/terms" className="hover:text-white transition-colors">{t('footer.terms')}</Link>
         </div>
 
       </div>
