@@ -23,21 +23,129 @@ export default function LoginPage() {
     }
   };
 
+  const onKey = (e: React.KeyboardEvent) => { if (e.key === 'Enter') handleLogin(); };
+
+  const inputStyle: React.CSSProperties = {
+    padding: '0.9rem 1rem',
+    borderRadius: '12px',
+    border: '1px solid rgba(217, 122, 79, 0.2)',
+    background: 'rgba(10, 7, 5, 0.6)',
+    fontSize: '1rem',
+    outline: 'none',
+    color: '#f5ede1',
+    fontFamily: 'inherit',
+    transition: 'border-color 0.2s',
+  };
+
   return (
-    <div style={{ minHeight: '100vh', background: '#f9f9f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'sans-serif' }}>
-      <div style={{ background: 'white', padding: '3rem', borderRadius: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '0.5rem', textAlign: 'center' }}>Nexiora</h1>
-        <p style={{ color: '#888', textAlign: 'center', marginBottom: '2rem' }}>Sign in to your account</p>
+    <div style={{
+      minHeight: '100vh',
+      background: 'radial-gradient(ellipse at top, #1a1208 0%, #0a0705 60%, #050302 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: 'var(--font-geist-sans), sans-serif',
+      padding: '2rem',
+      color: '#f5ede1',
+    }}>
+      <div style={{
+        background: 'rgba(26, 22, 18, 0.85)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        padding: '3rem 2.5rem',
+        borderRadius: '20px',
+        border: '1px solid rgba(217, 122, 79, 0.15)',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+        width: '100%',
+        maxWidth: '420px',
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+          <h1 style={{
+            fontSize: '2.5rem',
+            fontWeight: 900,
+            margin: 0,
+            letterSpacing: '-0.03em',
+            background: 'linear-gradient(135deg, #f5ede1 0%, #d97a4f 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}>Nexiora</h1>
+          <p style={{ color: '#a89684', fontSize: '0.95rem', margin: '0.75rem 0 0' }}>
+            Connectez-vous à votre compte
+          </p>
+        </div>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" type="email" style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem', outline: 'none' }} />
-          <input value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" type="password" style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem', outline: 'none' }} />
-          {error && <p style={{ color: 'red', fontSize: '0.9rem' }}>{error}</p>}
-          <button onClick={handleLogin} disabled={loading} style={{ background: '#6366f1', color: 'white', border: 'none', padding: '0.9rem', borderRadius: '8px', fontSize: '1rem', fontWeight: '600', cursor: 'pointer' }}>
-            {loading ? 'Signing in...' : 'Sign In'}
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={onKey}
+            placeholder="Email"
+            type="email"
+            autoComplete="email"
+            style={inputStyle}
+            onFocus={(e) => (e.currentTarget.style.borderColor = '#d97a4f')}
+            onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(217, 122, 79, 0.2)')}
+          />
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={onKey}
+            placeholder="Mot de passe"
+            type="password"
+            autoComplete="current-password"
+            style={inputStyle}
+            onFocus={(e) => (e.currentTarget.style.borderColor = '#d97a4f')}
+            onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(217, 122, 79, 0.2)')}
+          />
+
+          {error && (
+            <p style={{
+              color: '#ef6a4a',
+              fontSize: '0.875rem',
+              background: 'rgba(239, 106, 74, 0.08)',
+              border: '1px solid rgba(239, 106, 74, 0.2)',
+              padding: '0.75rem',
+              borderRadius: '8px',
+              margin: 0,
+            }}>{error}</p>
+          )}
+
+          <button
+            onClick={handleLogin}
+            disabled={loading || !email || !password}
+            style={{
+              background: loading || !email || !password
+                ? 'rgba(217, 122, 79, 0.25)'
+                : 'linear-gradient(135deg, #d97a4f 0%, #c0612d 100%)',
+              color: '#fff',
+              border: 'none',
+              padding: '1rem',
+              borderRadius: '12px',
+              fontSize: '1rem',
+              fontWeight: 600,
+              cursor: loading || !email || !password ? 'not-allowed' : 'pointer',
+              marginTop: '0.5rem',
+              transition: 'transform 0.1s, box-shadow 0.2s',
+              boxShadow: loading || !email || !password ? 'none' : '0 4px 20px rgba(217, 122, 79, 0.35)',
+              fontFamily: 'inherit',
+            }}
+          >
+            {loading ? 'Connexion...' : 'Se connecter'}
           </button>
         </div>
-        <p style={{ textAlign: 'center', marginTop: '1.5rem', color: '#888' }}>
-          No account? <Link href="/signup" style={{ color: '#6366f1', fontWeight: '600' }}>Sign Up</Link>
+
+        <p style={{ textAlign: 'center', marginTop: '2rem', color: '#a89684', fontSize: '0.9rem' }}>
+          Pas encore de compte ?{' '}
+          <Link href="/signup" style={{ color: '#d97a4f', fontWeight: 600, textDecoration: 'none' }}>
+            Créer un compte
+          </Link>
+        </p>
+
+        <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.8rem' }}>
+          <Link href="/" style={{ color: '#5a4f42', textDecoration: 'none' }}>
+            ← Retour à l&apos;accueil
+          </Link>
         </p>
       </div>
     </div>
