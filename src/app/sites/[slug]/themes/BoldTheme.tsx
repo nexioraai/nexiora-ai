@@ -129,7 +129,7 @@ export default function BoldTheme({ site }: { site: Site }) {
                 </div>
               )}
               <h1
-                className={`text-6xl md:text-8xl lg:text-[10rem] leading-[0.85] tracking-tighter ${site.hero_image ? 'text-white' : 'text-black'}`}
+                className={`text-4xl sm:text-5xl md:text-8xl lg:text-[10rem] leading-[0.85] tracking-tighter ${site.hero_image ? 'text-white' : 'text-black'}`}
                 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 800 }}
               >
                 {(site.hero_title || site.name).toUpperCase()}
@@ -143,7 +143,7 @@ export default function BoldTheme({ site }: { site: Site }) {
             <div className="md:col-span-3 flex md:justify-end">
               <a
                 href={ctaHref}
-                className="group relative inline-flex items-center gap-3 px-8 py-5 bg-black text-white uppercase tracking-wider font-semibold text-base whitespace-nowrap"
+                className="group relative inline-flex items-center gap-3 px-6 sm:px-8 py-4 sm:py-5 bg-black text-white uppercase tracking-wider font-semibold text-sm sm:text-base whitespace-normal sm:whitespace-nowrap"
               >
                 <span
                   className="absolute inset-0 translate-x-2 translate-y-2 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform"
