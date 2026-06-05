@@ -10,6 +10,7 @@ import {
   ArrowRight,
 } from 'lucide-react'
 import { Instagram, Facebook, TikTok, WhatsApp } from './BrandIcons'
+import MobileNav from './MobileNav'
 import ContactForm from '../ContactForm'
 import {
   type Site,
@@ -112,6 +113,9 @@ export default function EditorialTheme({ site }: { site: Site }) {
           </nav>
         </div>
       </header>
+
+      {/* Mobile Navigation */}
+      <MobileNav site={site} cta={cta} ctaHref={ctaHref} />
 
       {/* =================== HERO =================== */}
       <section className="relative min-h-[92vh] flex items-center pt-20 overflow-hidden">
