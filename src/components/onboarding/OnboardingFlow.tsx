@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LANGUAGES } from '@/lib/languages';
@@ -167,8 +168,13 @@ export default function OnboardingFlow() {
             />
 
             {error && (
-              <div className="mt-4 bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-sm">
-                {error}
+              <div className="mt-4 flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="w-9 h-9 rounded-full flex items-center justify-center text-white flex-shrink-0 shadow-lg" style={{ background: 'linear-gradient(135deg, #4F6EF5 0%, #E07040 100%)' }}>
+                  <Sparkles size={16} />
+                </div>
+                <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm p-4 text-white/90 text-sm leading-relaxed">
+                  {error}
+                </div>
               </div>
             )}
 
