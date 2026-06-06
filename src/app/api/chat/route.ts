@@ -71,32 +71,6 @@ const ERROR_MESSAGES: Record<string, Record<string, string>> = {
   },
 };
 
-// Greetings recognition per language
-const GREETINGS: Record<string, string[]> = {
-  fr: ['bonjour', 'salut', 'coucou', 'bonsoir', 'allo', 'allô', 'hey'],
-  en: ['hi', 'hello', 'hey', 'howdy', 'greetings', 'yo', 'hiya'],
-  ar: ['مرحبا', 'مرحباً', 'السلام عليكم', 'أهلا', 'أهلاً', 'سلام'],
-  es: ['hola', 'buenos días', 'buenas tardes', 'buenas noches', 'qué tal'],
-};
-
-const GREETING_RESPONSES: Record<string, string> = {
-  fr: "Bonjour ! 👋 Que souhaitez-vous créer aujourd'hui ? Décrivez-moi votre business (ex: \"Restaurant marocain à Montréal\" ou \"Salon de coiffure à Paris\")",
-  en: "Hi! 👋 What would you like to create today? Tell me about your business (e.g., \"Moroccan restaurant in Montreal\" or \"Hair salon in Paris\")",
-  ar: "مرحباً! 👋 ماذا تريد إنشاء اليوم؟ أخبرني عن عملك (مثل: \"مطعم مغربي في مونتريال\")",
-  es: "¡Hola! 👋 ¿Qué te gustaría crear hoy? Cuéntame sobre tu negocio (ej: \"Restaurante marroquí en Montreal\")",
-};
-
-function checkGreeting(message: string, lang: string): string | null {
-  const trimmed = message.trim().toLowerCase().replace(/[!?.,\u061B\u061F]/g, '').trim();
-  // Check all languages, not just the detected one
-  for (const [greetingLang, greetings] of Object.entries(GREETINGS)) {
-    if (greetings.includes(trimmed)) {
-      return GREETING_RESPONSES[greetingLang] || GREETING_RESPONSES.en;
-    }
-  }
-  return null;
-}
-
 function detectLanguage(message: string): string {
   if (/[\u0600-\u06FF]/.test(message)) return 'ar';
   if (/\b(el|la|los|las|para|gracias|hola)\b/i.test(message) || /[ñ¿¡]/.test(message)) return 'es';
@@ -201,15 +175,59 @@ export async function POST(req: Request) {
       ? language
       : detectLanguage(message);
 
-    // ============ VÉRIFICATION SALUTATION ============
-    const greetingResponse = checkGreeting(message, detectedLang);
-    if (greetingResponse) {
-      return NextResponse.json({ error: greetingResponse }, { status: 400 });
-    }
+    // ============ PRE-CHECK AI UNIVERSEL (TOUTES LES LANGUES) ============
+    // Claude détecte la langue et comprend le contexte automatiquement
+    const trimmed = message.trim();
+    const wordCount = trimmed.split(/\s+/).filter(w => w.length > 1).length;
+    
+    // Pre-check AI seulement si prompt court/ambigu
+    if (trimmed.length < 40 || wordCount < 5) {
+      try {
+        const preCheck = await anthropic.messages.create({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 250,
+          messages: [{
+            role: 'user',
+            content: `You are Nexiora, a friendly AI website builder. Analyze this user input: "${message}"
 
-    const validation = validatePrompt(message, detectedLang);
-    if (!validation.valid) {
-      return NextResponse.json({ error: validation.reason }, { status: 400 });
+Respond with ONLY a JSON object (no markdown, no code fences):
+
+1. If it's a GREETING in ANY language (hi, bonjour, hola, 你好, مرحبا, नमस्ते, こんにちは, привет, olá, ciao, hallo, etc.):
+{"type": "response", "text": "<friendly greeting in the EXACT same language as the user + ask what kind of business/website they want to create, with 1-2 examples>"}
+
+2. If it's UNCLEAR/GIBBERISH/TOO SHORT (random letters, single words that aren't business descriptions, etc.):
+{"type": "response", "text": "<in the user's language: politely say you didn't understand, ask them to describe their business in more detail with an example>"}
+
+3. If it's a VALID business description (mentions what they want to build, sector, business type, etc.):
+{"type": "valid"}
+
+CRITICAL: Always respond in the EXACT language the user wrote in. Detect language automatically. Examples:
+- "hi" → English response
+- "bonjour" → French response  
+- "你好" → Chinese response
+- "नमस्ते" → Hindi response
+- "مرحبا" → Arabic response
+- "こんにちは" → Japanese response
+- "Hola, como estas" → Spanish response
+
+Return ONLY the JSON.`
+          }]
+        });
+        
+        const checkText = preCheck.content.map((c: any) => c.type === 'text' ? c.text : '').join('').trim();
+        const cleanCheck = checkText.replace(/```json/g, '').replace(/```/g, '').trim();
+        
+        try {
+          const intent = JSON.parse(cleanCheck);
+          if (intent.type === 'response' && intent.text) {
+            return NextResponse.json({ error: intent.text }, { status: 400 });
+          }
+        } catch (e) {
+          console.log('[PreCheck] Parse error, continuing with generation');
+        }
+      } catch (e) {
+        console.log('[PreCheck] AI call failed, continuing with generation');
+      }
     }
 
     // ============ DÉTECTION SECTEUR AUTOMATIQUE ============
