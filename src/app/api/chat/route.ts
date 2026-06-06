@@ -83,7 +83,7 @@ function validatePrompt(message: string, lang: string): { valid: boolean; reason
   const msgs = ERROR_MESSAGES[lang] || ERROR_MESSAGES.fr;
   const trimmed = message.trim();
   if (trimmed.length < 10) return { valid: false, reason: msgs.tooShort };
-  const words = trimmed.split(/\s+/).filter(w => w.length > 1);
+  const words = trimmed.split(/\s+/).filter((w: string) => w.length > 1);
   if (words.length < 3) return { valid: false, reason: msgs.tooShort };
   const hasVowelsLatin = /[aeiouéèàâêîôûáíóúäöü]/i.test(trimmed);
   const hasArabic = /[\u0600-\u06FF]/.test(trimmed);
@@ -178,7 +178,7 @@ export async function POST(req: Request) {
     // ============ PRE-CHECK AI UNIVERSEL (TOUTES LES LANGUES) ============
     // Claude détecte la langue et comprend le contexte automatiquement
     const trimmed = message.trim();
-    const wordCount = trimmed.split(/\s+/).filter(w => w.length > 1).length;
+    const wordCount = trimmed.split(/\s+/).filter((w: string) => w.length > 1).length;
     
     // Pre-check AI seulement si prompt court/ambigu
     if (trimmed.length < 40 || wordCount < 5) {
