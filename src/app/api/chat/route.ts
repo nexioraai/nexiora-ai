@@ -71,6 +71,32 @@ const ERROR_MESSAGES: Record<string, Record<string, string>> = {
   },
 };
 
+// Greetings recognition per language
+const GREETINGS: Record<string, string[]> = {
+  fr: ['bonjour', 'salut', 'coucou', 'bonsoir', 'allo', 'allô', 'hey'],
+  en: ['hi', 'hello', 'hey', 'howdy', 'greetings', 'yo', 'hiya'],
+  ar: ['مرحبا', 'مرحباً', 'السلام عليكم', 'أهلا', 'أهلاً', 'سلام'],
+  es: ['hola', 'buenos días', 'buenas tardes', 'buenas noches', 'qué tal'],
+};
+
+const GREETING_RESPONSES: Record<string, string> = {
+  fr: "Bonjour ! 👋 Que souhaitez-vous créer aujourd'hui ? Décrivez-moi votre business (ex: \"Restaurant marocain à Montréal\" ou \"Salon de coiffure à Paris\")",
+  en: "Hi! 👋 What would you like to create today? Tell me about your business (e.g., \"Moroccan restaurant in Montreal\" or \"Hair salon in Paris\")",
+  ar: "مرحباً! 👋 ماذا تريد إنشاء اليوم؟ أخبرني عن عملك (مثل: \"مطعم مغربي في مونتريال\")",
+  es: "¡Hola! 👋 ¿Qué te gustaría crear hoy? Cuéntame sobre tu negocio (ej: \"Restaurante marroquí en Montreal\")",
+};
+
+function checkGreeting(message: string, lang: string): string | null {
+  const trimmed = message.trim().toLowerCase().replace(/[!?.,\u061B\u061F]/g, '').trim();
+  // Check all languages, not just the detected one
+  for (const [greetingLang, greetings] of Object.entries(GREETINGS)) {
+    if (greetings.includes(trimmed)) {
+      return GREETING_RESPONSES[greetingLang] || GREETING_RESPONSES.en;
+    }
+  }
+  return null;
+}
+
 function detectLanguage(message: string): string {
   if (/[\u0600-\u06FF]/.test(message)) return 'ar';
   if (/\b(el|la|los|las|para|gracias|hola)\b/i.test(message) || /[ñ¿¡]/.test(message)) return 'es';
@@ -174,6 +200,12 @@ export async function POST(req: Request) {
     const detectedLang = (language && language !== 'auto' && ['fr','en','ar','es'].includes(language))
       ? language
       : detectLanguage(message);
+
+    // ============ VÉRIFICATION SALUTATION ============
+    const greetingResponse = checkGreeting(message, detectedLang);
+    if (greetingResponse) {
+      return NextResponse.json({ error: greetingResponse }, { status: 400 });
+    }
 
     const validation = validatePrompt(message, detectedLang);
     if (!validation.valid) {
