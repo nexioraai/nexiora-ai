@@ -116,10 +116,21 @@ export default function OnboardingFlow() {
               </select>
             </div>
 
+            {error && (
+              <div className="mt-6 flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="w-9 h-9 rounded-full flex items-center justify-center text-white flex-shrink-0 shadow-lg" style={{ background: 'linear-gradient(135deg, #4F6EF5 0%, #E07040 100%)' }}>
+                  <Sparkles size={16} />
+                </div>
+                <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm p-4 text-white/90 text-sm leading-relaxed">
+                  {error}
+                </div>
+              </div>
+            )}
+
             <button
               onClick={generate}
               disabled={!authLoaded || !canContinue}
-              className="w-full mt-8 btn-nexiora py-4 rounded-2xl font-semibold text-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full mt-6 btn-nexiora py-4 rounded-2xl font-semibold text-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {!authLoaded
                 ? t('onboarding.step1.btnLoading')
@@ -167,17 +178,6 @@ export default function OnboardingFlow() {
               autoFocus
               className="w-full h-44 bg-black/40 border border-white/10 rounded-2xl p-5 text-white text-lg placeholder-slate-500 resize-none focus:outline-none focus:border-[#E07040] transition"
             />
-
-            {error && (
-              <div className="mt-4 flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div className="w-9 h-9 rounded-full flex items-center justify-center text-white flex-shrink-0 shadow-lg" style={{ background: 'linear-gradient(135deg, #4F6EF5 0%, #E07040 100%)' }}>
-                  <Sparkles size={16} />
-                </div>
-                <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm p-4 text-white/90 text-sm leading-relaxed">
-                  {error}
-                </div>
-              </div>
-            )}
 
             <button
               onClick={generate}
