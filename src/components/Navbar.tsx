@@ -136,7 +136,12 @@ export default function Navbar() {
                   </div>
                 )}
                 <div className="space-y-2">
-                  {['Home', 'About', 'Services', 'Shop', 'Gallery', 'Reviews', 'Contact'].map((section) => (
+                  {(() => {
+                    const sections = ['Home', 'About', 'Services'];
+                    if (site?.products && site.products.length > 0) sections.push('Shop');
+                    sections.push('Gallery', 'Reviews', 'Contact');
+                    return sections;
+                  })().map((section) => (
                     <button key={section} onClick={() => setCurrentSection(section)} disabled={!slug}
                       className="w-full text-left px-4 py-3 rounded-xl bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition font-medium disabled:opacity-40 disabled:cursor-not-allowed">
                       {section}
