@@ -37,7 +37,7 @@ export default function Navbar() {
     }
   }, [slug]);
 
-  // Auto-sync with debounce
+  // Generic auto-sync: update ALL columns automatically
   useEffect(() => {
     if (!site || !slug) return;
     if (initialLoad.current) {
@@ -49,22 +49,19 @@ export default function Navbar() {
     if (saveTimeout.current) clearTimeout(saveTimeout.current);
 
     saveTimeout.current = setTimeout(async () => {
-      const { error } = await supabase
-        .from('sites')
-        .update({
-          hero_title: site.hero_title,
-          slogan: site.slogan,
-          hero_subtitle: site.hero_subtitle,
-          about: site.about,
-          products: site.products,
-          social_links: site.social_links,
-        })
-        .eq('slug', slug);
+      const updates = { ...site };
+      delete updates.id;
+      delete updates.slug;
+      delete updates.owner_email;
+      delete updates.created_at;
+      delete updates.updated_at;
 
+      const { error } = await supabase.from('sites').update(updates).eq('slug', slug);
       if (!error) {
         setSyncStatus('saved');
         setTimeout(() => setSyncStatus('idle'), 2000);
       } else {
+        console.error('Sync error:', error);
         setSyncStatus('idle');
       }
     }, 1500);
@@ -74,33 +71,32 @@ export default function Navbar() {
     };
   }, [site, slug]);
 
-  const updateField = (field: string, value: any) => {
-    setSite({ ...site, [field]: value });
-  };
+  const updateField = (field: string, value: any) => setSite({ ...site, [field]: value });
+  const updateSocialLink = (key: string, value: string) => setSite({ ...site, social_links: { ...(site.social_links || {}), [key]: value } });
 
-  const updateSocialLink = (key: string, value: string) => {
-    setSite({ ...site, social_links: { ...(site.social_links || {}), [key]: value } });
+  // Generic array helpers
+  const updateArrayItem = (field: string, idx: number, key: string, value: any) => {
+    const arr = [...(site[field] || [])];
+    arr[idx] = { ...arr[idx], [key]: value };
+    setSite({ ...site, [field]: arr });
   };
+  const addArrayItem = (field: string, template: any) => setSite({ ...site, [field]: [...(site[field] || []), template] });
+  const removeArrayItem = (field: string, idx: number) => setSite({ ...site, [field]: site[field].filter((_: any, i: number) => i !== idx) });
 
-  const updateProduct = (idx: number, key: string, value: string) => {
-    const products = [...(site.products || [])];
-    products[idx] = { ...products[idx], [key]: value };
-    setSite({ ...site, products });
-  };
-
-  const addProduct = () => {
-    setSite({ ...site, products: [...(site.products || []), { name: '', price: '', description: '' }] });
-  };
-
-  const removeProduct = (idx: number) => {
-    setSite({ ...site, products: site.products.filter((_: any, i: number) => i !== idx) });
+  // Image upload helper
+  const uploadImage = async (file: File): Promise<string | null> => {
+    const ext = file.name.split('.').pop();
+    const path = `${slug}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from('site-images').upload(path, file);
+    if (error) { console.error(error); return null; }
+    const { data } = supabase.storage.from('site-images').getPublicUrl(path);
+    return data.publicUrl;
   };
 
   return (
     <>
       <nav className="flex items-center justify-between px-6 py-4 border-b border-white/8 backdrop-blur-md sticky top-0 z-50"
         style={{ background: 'rgba(10,5,14,0.75)' }}>
-
         <Link href="/" className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-lg"
             style={{ background: 'radial-gradient(circle at 30% 30%, #4F6EF5 0%, transparent 60%), radial-gradient(circle at 70% 70%, #E07040 0%, transparent 60%), #16090e' }}>
@@ -108,7 +104,6 @@ export default function Navbar() {
           </div>
           <span className="text-xl font-black tracking-tight text-nexiora hidden sm:block">nexiora</span>
         </Link>
-
         <div className="flex items-center gap-3 sm:gap-4">
           <LanguageSwitcher />
           {authLoaded && (userEmail ? (
@@ -135,15 +130,13 @@ export default function Navbar() {
                   <h2 className="text-xl font-bold text-white">Sections</h2>
                   <button onClick={() => setMenuOpen(false)} className="text-white/60 hover:text-white p-2"><X size={24} /></button>
                 </div>
-
                 {!slug && (
                   <div className="mb-4 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-300 text-sm">
                     💡 Va sur un de tes sites depuis le Dashboard pour l'éditer
                   </div>
                 )}
-
                 <div className="space-y-2">
-                  {['Home', 'About Us', 'Contact', 'Menu'].map((section) => (
+                  {['Home', 'About Us', 'Contact', 'Menu', 'Galerie', 'Pages'].map((section) => (
                     <button key={section} onClick={() => setCurrentSection(section)} disabled={!slug}
                       className="w-full text-left px-4 py-3 rounded-xl bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition font-medium disabled:opacity-40 disabled:cursor-not-allowed">
                       {section}
@@ -158,24 +151,24 @@ export default function Navbar() {
                     <ArrowLeft size={16} /> Retour
                   </button>
                   <div className="flex items-center gap-3">
-                    {syncStatus === 'saving' && (
-                      <span className="text-xs text-yellow-400 flex items-center gap-1"><Loader2 size={14} className="animate-spin" /> Sync...</span>
-                    )}
-                    {syncStatus === 'saved' && (
-                      <span className="text-xs text-green-400 flex items-center gap-1"><Check size={14} /> Synced</span>
-                    )}
+                    {syncStatus === 'saving' && <span className="text-xs text-yellow-400 flex items-center gap-1"><Loader2 size={14} className="animate-spin" /> Sync...</span>}
+                    {syncStatus === 'saved' && <span className="text-xs text-green-400 flex items-center gap-1"><Check size={14} /> Synced</span>}
                     <button onClick={() => { setMenuOpen(false); setCurrentSection(null); }} className="text-white/60 hover:text-white p-2"><X size={24} /></button>
                   </div>
                 </div>
-
                 <h2 className="text-2xl font-bold text-white mb-6">{currentSection}</h2>
 
                 {/* HOME */}
                 {currentSection === 'Home' && site && (
                   <div className="space-y-4">
+                    <Field label="Business Name" value={site.name || ''} onChange={(v) => updateField('name', v)} />
                     <Field label="Hero Title" value={site.hero_title || ''} onChange={(v) => updateField('hero_title', v)} />
                     <Field label="Slogan" value={site.slogan || ''} onChange={(v) => updateField('slogan', v)} />
                     <Field label="Hero Subtitle" value={site.hero_subtitle || ''} onChange={(v) => updateField('hero_subtitle', v)} />
+                    <div>
+                      <label className="block text-xs text-slate-400 uppercase tracking-wider font-semibold mb-2">Primary Color</label>
+                      <input type="color" value={site.primary_color || '#E07040'} onChange={(e) => updateField('primary_color', e.target.value)} className="w-24 h-12 rounded-xl border border-white/10 bg-transparent cursor-pointer" />
+                    </div>
                   </div>
                 )}
 
@@ -189,11 +182,20 @@ export default function Navbar() {
                 {/* CONTACT */}
                 {currentSection === 'Contact' && site && (
                   <div className="space-y-4">
-                    <Field label="📞 Phone" value={site.social_links?.phone || ''} onChange={(v) => updateSocialLink('phone', v)} />
-                    <Field label="📧 Email" value={site.social_links?.email || ''} onChange={(v) => updateSocialLink('email', v)} />
-                    <Field label="📍 Address" value={site.social_links?.address || ''} onChange={(v) => updateSocialLink('address', v)} />
-                    <Field label="Facebook" value={site.social_links?.facebook || ''} onChange={(v) => updateSocialLink('facebook', v)} />
-                    <Field label="Instagram" value={site.social_links?.instagram || ''} onChange={(v) => updateSocialLink('instagram', v)} />
+                    <Field label="📞 Phone" value={site.phone || ''} onChange={(v) => updateField('phone', v)} />
+                    <Field label="📧 Email" value={site.email || ''} onChange={(v) => updateField('email', v)} />
+                    <Field label="📍 Address" value={site.address || ''} onChange={(v) => updateField('address', v)} />
+                    <div className="pt-4 border-t border-white/10">
+                      <h3 className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-3">Réseaux sociaux</h3>
+                    </div>
+                    <Field label="📘 Facebook" value={site.social_links?.facebook || ''} onChange={(v) => updateSocialLink('facebook', v)} />
+                    <Field label="📸 Instagram" value={site.social_links?.instagram || ''} onChange={(v) => updateSocialLink('instagram', v)} />
+                    <Field label="🎵 TikTok" value={site.social_links?.tiktok || ''} onChange={(v) => updateSocialLink('tiktok', v)} />
+                    <Field label="💬 WhatsApp" value={site.social_links?.whatsapp || ''} onChange={(v) => updateSocialLink('whatsapp', v)} />
+                    <Field label="👻 Snapchat" value={site.social_links?.snapchat || ''} onChange={(v) => updateSocialLink('snapchat', v)} />
+                    <Field label="🐦 Twitter / X" value={site.social_links?.twitter || ''} onChange={(v) => updateSocialLink('twitter', v)} />
+                    <Field label="📺 YouTube" value={site.social_links?.youtube || ''} onChange={(v) => updateSocialLink('youtube', v)} />
+                    <Field label="💼 LinkedIn" value={site.social_links?.linkedin || ''} onChange={(v) => updateSocialLink('linkedin', v)} />
                   </div>
                 )}
 
@@ -204,17 +206,62 @@ export default function Navbar() {
                       <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-slate-400">Item #{idx + 1}</span>
-                          <button onClick={() => removeProduct(idx)} className="text-red-400 hover:text-red-300 p-1">
-                            <Trash2 size={16} />
-                          </button>
+                          <button onClick={() => removeArrayItem('products', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
                         </div>
-                        <input value={product.name || ''} onChange={(e) => updateProduct(idx, 'name', e.target.value)} placeholder="Name" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
-                        <input value={product.price || ''} onChange={(e) => updateProduct(idx, 'price', e.target.value)} placeholder="Price" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
-                        <textarea value={product.description || ''} onChange={(e) => updateProduct(idx, 'description', e.target.value)} placeholder="Description" rows={2} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040] resize-y" />
+                        <input value={product.name || ''} onChange={(e) => updateArrayItem('products', idx, 'name', e.target.value)} placeholder="Name" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
+                        <input value={product.price || ''} onChange={(e) => updateArrayItem('products', idx, 'price', e.target.value)} placeholder="Price" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
+                        <textarea value={product.description || ''} onChange={(e) => updateArrayItem('products', idx, 'description', e.target.value)} placeholder="Description" rows={2} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040] resize-y" />
                       </div>
                     ))}
-                    <button onClick={addProduct} className="w-full px-4 py-3 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold transition border border-[#E07040]/20 flex items-center justify-center gap-2">
+                    <button onClick={() => addArrayItem('products', { name: '', price: '', description: '' })} className="w-full px-4 py-3 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold transition border border-[#E07040]/20 flex items-center justify-center gap-2">
                       <Plus size={18} /> Add Item
+                    </button>
+                  </div>
+                )}
+
+                {/* GALERIE */}
+                {currentSection === 'Galerie' && site && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      {(site.gallery || []).map((img: any, idx: number) => {
+                        const url = typeof img === 'string' ? img : img.url;
+                        return (
+                          <div key={idx} className="relative group">
+                            <img src={url} alt="" className="w-full h-32 object-cover rounded-xl" />
+                            <button onClick={() => removeArrayItem('gallery', idx)} className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-600 text-white p-1.5 rounded-lg">
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <label className="block w-full text-center bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] py-4 rounded-xl cursor-pointer font-semibold transition border border-[#E07040]/20">
+                      <Plus size={18} className="inline mr-2" /> Add Image
+                      <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const url = await uploadImage(file);
+                        if (url) addArrayItem('gallery', url);
+                      }} />
+                    </label>
+                  </div>
+                )}
+
+                {/* PAGES */}
+                {currentSection === 'Pages' && site && (
+                  <div className="space-y-4">
+                    {(site.pages || []).map((page: any, idx: number) => (
+                      <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-slate-400">Page #{idx + 1}</span>
+                          <button onClick={() => removeArrayItem('pages', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
+                        </div>
+                        <input value={page.title || ''} onChange={(e) => updateArrayItem('pages', idx, 'title', e.target.value)} placeholder="Page title (ex: Services, FAQ)" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
+                        <textarea value={page.content || ''} onChange={(e) => updateArrayItem('pages', idx, 'content', e.target.value)} placeholder="Content" rows={4} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040] resize-y" />
+                      </div>
+                    ))}
+                    <button onClick={() => addArrayItem('pages', { title: '', content: '' })} className="w-full px-4 py-3 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold transition border border-[#E07040]/20 flex items-center justify-center gap-2">
+                      <Plus size={18} /> Add Page
                     </button>
                   </div>
                 )}
