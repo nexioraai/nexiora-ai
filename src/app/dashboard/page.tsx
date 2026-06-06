@@ -58,14 +58,6 @@ export default function DashboardPage() {
           <span className="text-xl font-black text-nexiora hidden sm:block">nexiora</span>
         </Link>
         <DashboardMobileNav userEmail={user?.email} onLogout={handleLogout} />
-        <div className="flex items-center gap-4">
-          <span className="text-white/40 text-sm hidden md:block">{user?.email}</span>
-          <button onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-white/60 hover:text-white hover:border-white/30 text-sm transition-all">
-            <LogOut className="w-4 h-4" />
-            Déconnexion
-          </button>
-        </div>
       </nav>
 
       <div className="max-w-6xl mx-auto px-6 py-12">
