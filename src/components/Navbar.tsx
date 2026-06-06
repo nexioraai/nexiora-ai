@@ -147,6 +147,27 @@ export default function Navbar() {
                       {section}
                     </button>
                   ))}
+
+                  {/* Custom Pages */}
+                  {(site?.pages || []).map((page: any, idx: number) => (
+                    <button key={'page-' + idx} onClick={() => setCurrentSection('page:' + idx)}
+                      className="w-full text-left px-4 py-3 rounded-xl bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition font-medium flex items-center justify-between">
+                      <span>{page.title || 'Untitled Page'}</span>
+                      <span className="text-xs text-[#E07040]">Custom</span>
+                    </button>
+                  ))}
+
+                  {/* Add Page Button */}
+                  {slug && (
+                    <button onClick={() => {
+                      const newPages = [...(site?.pages || []), { title: 'Nouvelle Page', content: '' }];
+                      setSite({ ...site, pages: newPages });
+                      setCurrentSection('page:' + (newPages.length - 1));
+                    }}
+                      className="w-full px-4 py-3 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold transition border border-[#E07040]/20 border-dashed flex items-center justify-center gap-2 mt-3">
+                      <Plus size={18} /> Add Page
+                    </button>
+                  )}
                 </div>
               </>
             ) : (
@@ -161,7 +182,11 @@ export default function Navbar() {
                     <button onClick={() => { setMenuOpen(false); setCurrentSection(null); }} className="text-white/60 hover:text-white p-2"><X size={24} /></button>
                   </div>
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-6">{currentSection}</h2>
+                <h2 className="text-2xl font-bold text-white mb-6">
+                  {currentSection?.startsWith('page:') 
+                    ? site?.pages?.[parseInt(currentSection.split(':')[1])]?.title || 'Page'
+                    : currentSection}
+                </h2>
 
                 {/* HOME */}
                 {currentSection === 'Home' && site && (
@@ -256,6 +281,23 @@ export default function Navbar() {
                     </button>
                   </div>
                 )}
+
+                {/* CUSTOM PAGE EDITOR */}
+                {currentSection?.startsWith('page:') && site && (() => {
+                  const pageIdx = parseInt(currentSection.split(':')[1]);
+                  const page = site.pages?.[pageIdx];
+                  if (!page) return <div className="text-white/40">Page not found</div>;
+                  return (
+                    <div className="space-y-4">
+                      <Field label="Page Title" value={page.title || ''} onChange={(v) => updateArrayItem('pages', pageIdx, 'title', v)} />
+                      <TextArea label="Content" value={page.content || ''} onChange={(v) => updateArrayItem('pages', pageIdx, 'content', v)} rows={10} />
+                      <button onClick={() => { removeArrayItem('pages', pageIdx); setCurrentSection(null); }}
+                        className="w-full px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold transition border border-red-500/20 flex items-center justify-center gap-2">
+                        <Trash2 size={16} /> Delete Page
+                      </button>
+                    </div>
+                  );
+                })()}
 
                 {/* CONTACT */}
                 {currentSection === 'Contact' && site && (
