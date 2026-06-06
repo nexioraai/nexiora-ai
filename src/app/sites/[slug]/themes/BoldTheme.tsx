@@ -62,6 +62,7 @@ export default function BoldTheme({ site }: { site: Site }) {
             {site.name.toUpperCase()}
           </Link>
           <nav className="hidden md:flex items-center gap-8">
+            <a href="#home" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">Home</a>
             <a href="#about" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">About</a>
             <a href="#services" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">Services</a>
             {products.length > 0 && (

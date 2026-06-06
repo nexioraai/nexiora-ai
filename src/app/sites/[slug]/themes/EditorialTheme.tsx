@@ -94,6 +94,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
             {site.name}
           </Link>
           <nav className="hidden md:flex items-center gap-10 text-sm font-medium text-neutral-700">
+            <a href="#home" className="hover:text-black transition-colors">Home</a>
             <a href="#about" className="hover:text-black transition-colors">About</a>
             <a href="#services" className="hover:text-black transition-colors">Services</a>
             {products.length > 0 && (

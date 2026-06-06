@@ -41,6 +41,7 @@ export default function MonochromeTheme({ site }: { site: Site }) {
             {site.name}
           </Link>
           <nav className="hidden md:flex items-center gap-10 text-sm font-medium">
+            <a href="#home" className="hover:opacity-60 transition-opacity">Home</a>
             <a href="#about" className="hover:opacity-60 transition-opacity">About</a>
             <a href="#services" className="hover:opacity-60 transition-opacity">Services</a>
             {products.length > 0 && <a href="#shop" className="hover:opacity-60 transition-opacity">Shop</a>}
@@ -284,7 +285,8 @@ export default function MonochromeTheme({ site }: { site: Site }) {
               {site.slogan && <div className="text-white/60 text-sm">{site.slogan}</div>}
             </div>
             <nav className="flex gap-8 text-sm text-white/70">
-              <a href="#about" className="hover:text-white transition-colors">About</a>
+              <a href="#home" className="hover:text-white transition-colors">Home</a>
+            <a href="#about" className="hover:text-white transition-colors">About</a>
               <a href="#services" className="hover:text-white transition-colors">Services</a>
               <a href="#contact" className="hover:text-white transition-colors">Contact</a>
             </nav>
