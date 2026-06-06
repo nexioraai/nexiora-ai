@@ -20,7 +20,7 @@ export const en: Record<TranslationKey, string> = {
 
   // Onboarding step 1
   'onboarding.step1.subtitle': 'Describe your business — AI does the rest.',
-  'onboarding.step1.placeholder': 'Build a modern coffee shop website named COFA in Montréal…',
+  'onboarding.step1.placeholder': 'Just describe your business idea...',
   'onboarding.step1.languageAuto': 'Auto (detected via prompt)',
   'onboarding.step1.btnLoading': 'Loading…',
   'onboarding.step1.btnNotLoggedIn': 'Sign in to generate',

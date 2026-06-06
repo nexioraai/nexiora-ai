@@ -18,7 +18,7 @@ export const fr = {
 
   // Onboarding step 1
   'onboarding.step1.subtitle': "Décrivez votre activité — l'IA fait le reste.",
-  'onboarding.step1.placeholder': 'Crée un site moderne pour mon café nommé COFA à Montréal…',
+  'onboarding.step1.placeholder': 'Décris simplement ton idée…',
   'onboarding.step1.languageAuto': 'Auto (détectée via prompt)',
   'onboarding.step1.btnLoading': 'Chargement…',
   'onboarding.step1.btnNotLoggedIn': 'Se connecter pour générer',
