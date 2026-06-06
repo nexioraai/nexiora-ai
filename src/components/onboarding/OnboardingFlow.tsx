@@ -38,6 +38,7 @@ export default function OnboardingFlow() {
   };
 
   const generate = async () => {
+    const fromStep = step;
     setStep(3);
     setError('');
 
@@ -78,7 +79,7 @@ export default function OnboardingFlow() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t('onboarding.error.generationFailed');
       setError(msg);
-      setStep(2);
+      setStep(fromStep);
     }
   };
 
@@ -116,7 +117,7 @@ export default function OnboardingFlow() {
             </div>
 
             <button
-              onClick={goToDetails}
+              onClick={generate}
               disabled={!authLoaded || !canContinue}
               className="w-full mt-8 btn-nexiora py-4 rounded-2xl font-semibold text-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
