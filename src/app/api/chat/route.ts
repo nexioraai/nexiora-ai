@@ -50,6 +50,95 @@ async function fetchPexelsImages(query: string, color?: string): Promise<string[
   }
 }
 
+// ============ VALIDATION & DETECTION INTELLIGENTE ============
+
+const ERROR_MESSAGES: Record<string, Record<string, string>> = {
+  fr: {
+    tooShort: "Je n'ai pas bien compris. Pouvez-vous décrire votre business plus en détail ? (ex: \"Restaurant marocain à Montréal avec spécialités tagine\")",
+    notClear: "Désolé, je n'arrive pas à comprendre votre demande. Pourriez-vous être plus précis sur le type de business que vous souhaitez créer ?",
+  },
+  en: {
+    tooShort: "I didn't quite understand. Could you describe your business in more detail? (e.g., \"Moroccan restaurant in Montreal with tagine specialties\")",
+    notClear: "Sorry, I can't understand your request. Could you be more specific about what kind of business you want to create?",
+  },
+  ar: {
+    tooShort: "لم أفهم تماماً. هل يمكنك وصف عملك بمزيد من التفصيل؟",
+    notClear: "عذراً، لا أستطيع فهم طلبك. هل يمكنك أن تكون أكثر دقة بشأن نوع العمل الذي تريد إنشاءه؟",
+  },
+  es: {
+    tooShort: "No entendí bien. ¿Podrías describir tu negocio con más detalle?",
+    notClear: "Lo siento, no puedo entender tu solicitud. ¿Podrías ser más específico?",
+  },
+};
+
+function detectLanguage(message: string): string {
+  if (/[\u0600-\u06FF]/.test(message)) return 'ar';
+  if (/\b(el|la|los|las|para|gracias|hola)\b/i.test(message) || /[ñ¿¡]/.test(message)) return 'es';
+  if (/\b(le|la|les|une|des|pour|avec|sans|dans|notre|votre|nos|vos|crée|créer)\b/i.test(message) || /[éèàâêîôûç]/i.test(message)) return 'fr';
+  if (/\b(the|and|for|with|create|build|make|website|business)\b/i.test(message)) return 'en';
+  return 'fr';
+}
+
+function validatePrompt(message: string, lang: string): { valid: boolean; reason?: string } {
+  const msgs = ERROR_MESSAGES[lang] || ERROR_MESSAGES.fr;
+  const trimmed = message.trim();
+  if (trimmed.length < 10) return { valid: false, reason: msgs.tooShort };
+  const words = trimmed.split(/\s+/).filter(w => w.length > 1);
+  if (words.length < 3) return { valid: false, reason: msgs.tooShort };
+  const hasVowelsLatin = /[aeiouéèàâêîôûáíóúäöü]/i.test(trimmed);
+  const hasArabic = /[\u0600-\u06FF]/.test(trimmed);
+  if (!hasVowelsLatin && !hasArabic) return { valid: false, reason: msgs.notClear };
+  if (/^(.)\1{5,}$/.test(trimmed.replace(/\s/g, ''))) return { valid: false, reason: msgs.notClear };
+  if (!/[a-zA-Z\u0600-\u06FF]/.test(trimmed)) return { valid: false, reason: msgs.notClear };
+  return { valid: true };
+}
+
+function detectSector(message: string): string {
+  const lower = message.toLowerCase();
+  if (/\b(restaurant|café|cafe|coffee|bar|brasserie|bistro|pizzeria|fast.?food|food.?truck|cantine|traiteur|boulangerie|pâtisserie|patisserie|cuisine|chef|menu|plat|repas|food)\b/i.test(lower)) return 'restaurant';
+  if (/\b(boutique|shop|store|magasin|épicerie|epicerie|marché|marche|e-commerce|ecommerce|vente|produit|product|vêtement|vetement|mode|clothing)\b/i.test(lower)) return 'shop';
+  if (/\b(service|consulting|conseil|salon|coiffeur|barber|spa|massage|clinique|cabinet|garage|réparation|reparation|nettoyage|plombier|électricien|electricien|avocat|comptable)\b/i.test(lower)) return 'services';
+  if (/\b(portfolio|designer|photograph|artist|artiste|musicien|developer|développeur|developpeur|freelance)\b/i.test(lower)) return 'portfolio';
+  return 'general';
+}
+
+function getSectorPrompt(sector: string): string {
+  if (sector === 'restaurant') {
+    return `
+
+CRITICAL SECTOR - RESTAURANT/CAFE/FOOD:
+- MUST generate "products" array with 6-10 realistic menu items
+- Each item MUST have: {"name": "dish name", "description": "1-sentence description", "price": "amount with currency"}
+- Mix: starters, mains, desserts, drinks
+- Set "type" to specific cuisine (e.g. "Restaurant marocain")
+- Include "Menu" in pages array`;
+  }
+  if (sector === 'shop') {
+    return `
+
+CRITICAL SECTOR - SHOP/BOUTIQUE:
+- MUST generate "products" array with 6-10 realistic products
+- Each MUST have: {"name", "description", "price" with currency}
+- Set "type" to specific store category
+- Include "Shop" in pages array`;
+  }
+  if (sector === 'services') {
+    return `
+
+CRITICAL SECTOR - SERVICES:
+- Generate 5-7 detailed specific services
+- Set "type" to specific service category (e.g. "Salon de coiffure")`;
+  }
+  if (sector === 'portfolio') {
+    return `
+
+CRITICAL SECTOR - PORTFOLIO/CREATIVE:
+- Focus on showcasing work
+- Set "type" to creative profession`;
+  }
+  return '';
+}
+
 export async function POST(req: Request) {
   try {
     // ============ SÉCURITÉ : validation du Bearer token ============
@@ -80,6 +169,21 @@ export async function POST(req: Request) {
     const language = body.language || 'fr';
 
     if (!message) return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+
+    // ============ DÉTECTION LANGUE + VALIDATION ============
+    const detectedLang = (language && language !== 'auto' && ['fr','en','ar','es'].includes(language))
+      ? language
+      : detectLanguage(message);
+
+    const validation = validatePrompt(message, detectedLang);
+    if (!validation.valid) {
+      return NextResponse.json({ error: validation.reason }, { status: 400 });
+    }
+
+    // ============ DÉTECTION SECTEUR AUTOMATIQUE ============
+    const sector = detectSector(message);
+    const sectorPrompt = getSectorPrompt(sector);
+    console.log('[Generation] Detected sector:', sector, '| Lang:', detectedLang);
 
     const phonePrefix = location ? getPhonePrefix(location) : '+1';
     const currency = location ? getCurrency(location) : 'USD';
@@ -134,7 +238,7 @@ Return ONLY valid JSON, no markdown:
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 2500,
-      messages: [{ role: 'user', content: PROMPT + '\n\nBusiness request: ' + message }],
+      messages: [{ role: 'user', content: PROMPT + sectorPrompt + '\n\nBusiness request: ' + message }],
     });
 
     const text = response.content.map((item: any) => item.type === 'text' ? item.text : '').join('');
