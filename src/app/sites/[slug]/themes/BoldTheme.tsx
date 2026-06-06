@@ -110,7 +110,7 @@ export default function BoldTheme({ site }: { site: Site }) {
       </div>
 
       {/* =================== HERO =================== */}
-      <section className="relative overflow-hidden border-b-[3px] border-black">
+      <section id="home" className="relative overflow-hidden border-b-[3px] border-black">
         {site.hero_image && (
           <>
             <Image src={site.hero_image} alt="" fill priority className="object-cover" />

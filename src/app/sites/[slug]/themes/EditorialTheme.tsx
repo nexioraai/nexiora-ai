@@ -119,7 +119,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
       <MobileNav site={site} cta={cta} ctaHref={ctaHref} />
 
       {/* =================== HERO =================== */}
-      <section className="relative min-h-[92vh] flex items-center pt-20 overflow-hidden">
+      <section id="home" className="relative min-h-[92vh] flex items-center pt-20 overflow-hidden">
         {site.hero_image ? (
           <>
             <Image src={site.hero_image} alt="" fill priority className="object-cover" />

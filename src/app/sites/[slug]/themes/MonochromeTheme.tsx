@@ -58,7 +58,7 @@ export default function MonochromeTheme({ site }: { site: Site }) {
       <MobileNav site={site} cta={cta} ctaHref={ctaHref} />
 
       {/* HERO */}
-      <section className="relative min-h-screen flex items-center pt-20 pb-20">
+      <section id="home" className="relative min-h-screen flex items-center pt-20 pb-20">
         <div className="max-w-7xl mx-auto px-6 md:px-10 w-full mono-fade">
           {site.slogan && (
             <div className="inline-block text-xs font-semibold tracking-[0.2em] uppercase mb-8 border-b border-black pb-1">
