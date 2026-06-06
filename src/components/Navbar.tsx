@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/lib/translations';
 import LanguageSwitcher from './LanguageSwitcher';
-import { Menu as MenuIcon, X, ArrowLeft, Plus, Trash2, Check, Loader2 } from 'lucide-react';
+import { Menu as MenuIcon, X, ArrowLeft, Plus, Trash2, Check, Loader2, Upload } from 'lucide-react';
 
 export default function Navbar() {
   const { t } = useTranslation();
@@ -136,7 +136,7 @@ export default function Navbar() {
                   </div>
                 )}
                 <div className="space-y-2">
-                  {['Home', 'About', 'Services', 'Gallery', 'Reviews', 'Menu', 'Contact', 'Pages'].map((section) => (
+                  {['Home', 'About', 'Services', 'Shop', 'Gallery', 'Reviews', 'Contact'].map((section) => (
                     <button key={section} onClick={() => setCurrentSection(section)} disabled={!slug}
                       className="w-full text-left px-4 py-3 rounded-xl bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition font-medium disabled:opacity-40 disabled:cursor-not-allowed">
                       {section}
@@ -169,11 +169,40 @@ export default function Navbar() {
                       <label className="block text-xs text-slate-400 uppercase tracking-wider font-semibold mb-2">Primary Color</label>
                       <input type="color" value={site.primary_color || '#E07040'} onChange={(e) => updateField('primary_color', e.target.value)} className="w-24 h-12 rounded-xl border border-white/10 bg-transparent cursor-pointer" />
                     </div>
+                    <Field label="CTA Button Text" value={site.cta || ''} onChange={(v) => updateField('cta', v)} />
                     <div className="pt-4 border-t border-white/10">
-                      <h3 className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-3">Call to Action (CTA)</h3>
+                      <label className="block text-xs text-slate-400 uppercase tracking-wider font-semibold mb-2">Hero Image</label>
+                      {site.hero_image && (
+                        <div className="relative group rounded-xl overflow-hidden mb-3">
+                          <img src={site.hero_image} alt="hero" className="w-full h-40 object-cover" />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                            <label className="bg-[#E07040] text-white p-2 rounded-lg cursor-pointer" title="Replace">
+                              <Upload size={16} />
+                              <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const newUrl = await uploadImage(file);
+                                if (newUrl) updateField('hero_image', newUrl);
+                              }} />
+                            </label>
+                            <button onClick={() => updateField('hero_image', null)} className="bg-red-500 text-white p-2 rounded-lg">
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {!site.hero_image && (
+                        <label className="block w-full text-center bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] py-4 rounded-xl cursor-pointer font-semibold transition border border-[#E07040]/20">
+                          <Plus size={18} className="inline mr-2" /> Upload Hero Image
+                          <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const newUrl = await uploadImage(file);
+                            if (newUrl) updateField('hero_image', newUrl);
+                          }} />
+                        </label>
+                      )}
                     </div>
-                    <Field label="CTA Text" value={(typeof site.cta === 'object' ? site.cta?.text : site.cta) || ''} onChange={(v) => updateField('cta', { ...(typeof site.cta === 'object' ? site.cta : {}), text: v })} />
-                    <Field label="CTA Link" value={(typeof site.cta === 'object' ? site.cta?.link : '') || ''} onChange={(v) => updateField('cta', { ...(typeof site.cta === 'object' ? site.cta : {}), link: v })} />
                   </div>
                 )}
 
@@ -243,8 +272,8 @@ export default function Navbar() {
                   </div>
                 )}
 
-                {/* MENU */}
-                {currentSection === 'Menu' && site && (
+                {/* SHOP */}
+                {currentSection === 'Shop' && site && (
                   <div className="space-y-4">
                     {(site.products || []).map((product: any, idx: number) => (
                       <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
@@ -270,11 +299,31 @@ export default function Navbar() {
                       {(site.gallery || []).map((img: any, idx: number) => {
                         const url = typeof img === 'string' ? img : img.url;
                         return (
-                          <div key={idx} className="relative group">
-                            <img src={url} alt="" className="w-full h-32 object-cover rounded-xl" />
-                            <button onClick={() => removeArrayItem('gallery', idx)} className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-600 text-white p-1.5 rounded-lg">
-                              <Trash2 size={14} />
-                            </button>
+                          <div key={idx} className="relative group rounded-xl overflow-hidden">
+                            <img src={url} alt="" className="w-full h-36 object-cover" />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                              <label className="bg-[#E07040] hover:bg-[#E07040]/80 text-white p-2 rounded-lg cursor-pointer transition" title="Replace">
+                                <Upload size={16} />
+                                <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  const newUrl = await uploadImage(file);
+                                  if (newUrl) {
+                                    const newGallery = [...site.gallery];
+                                    newGallery[idx] = typeof img === 'string' ? newUrl : { ...img, url: newUrl };
+                                    setSite({ ...site, gallery: newGallery });
+                                  }
+                                }} />
+                              </label>
+                              <button onClick={() => removeArrayItem('gallery', idx)} className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition" title="Delete">
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                            <div className="absolute top-2 right-2 flex gap-1 sm:hidden">
+                              <button onClick={() => removeArrayItem('gallery', idx)} className="bg-red-500/90 text-white p-1.5 rounded-lg">
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
                           </div>
                         );
                       })}
