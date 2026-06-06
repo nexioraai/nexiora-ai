@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/lib/translations';
 import LanguageSwitcher from './LanguageSwitcher';
+import { Menu } from 'lucide-react';
 
 export default function Navbar() {
   const { t } = useTranslation();
@@ -39,12 +40,12 @@ export default function Navbar() {
         <LanguageSwitcher />
         {authLoaded && (
           userEmail ? (
-            <Link
-              href="/dashboard"
-              className="btn-nexiora px-4 sm:px-5 py-2 rounded-full text-white text-sm font-semibold whitespace-nowrap"
+            <button
+              className="btn-nexiora p-2.5 rounded-full text-white flex items-center justify-center"
+              aria-label="Menu"
             >
-              {t('nav.dashboard')}
-            </Link>
+              <Menu size={20} />
+            </button>
           ) : (
             <>
               <Link
