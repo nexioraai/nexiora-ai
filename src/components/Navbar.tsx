@@ -136,7 +136,7 @@ export default function Navbar() {
                   </div>
                 )}
                 <div className="space-y-2">
-                  {['Home', 'About Us', 'Contact', 'Menu', 'Galerie', 'Pages'].map((section) => (
+                  {['Home', 'About', 'Services', 'Gallery', 'Reviews', 'Menu', 'Contact', 'Pages'].map((section) => (
                     <button key={section} onClick={() => setCurrentSection(section)} disabled={!slug}
                       className="w-full text-left px-4 py-3 rounded-xl bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition font-medium disabled:opacity-40 disabled:cursor-not-allowed">
                       {section}
@@ -169,13 +169,57 @@ export default function Navbar() {
                       <label className="block text-xs text-slate-400 uppercase tracking-wider font-semibold mb-2">Primary Color</label>
                       <input type="color" value={site.primary_color || '#E07040'} onChange={(e) => updateField('primary_color', e.target.value)} className="w-24 h-12 rounded-xl border border-white/10 bg-transparent cursor-pointer" />
                     </div>
+                    <div className="pt-4 border-t border-white/10">
+                      <h3 className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-3">Call to Action (CTA)</h3>
+                    </div>
+                    <Field label="CTA Text" value={(typeof site.cta === 'object' ? site.cta?.text : site.cta) || ''} onChange={(v) => updateField('cta', { ...(typeof site.cta === 'object' ? site.cta : {}), text: v })} />
+                    <Field label="CTA Link" value={(typeof site.cta === 'object' ? site.cta?.link : '') || ''} onChange={(v) => updateField('cta', { ...(typeof site.cta === 'object' ? site.cta : {}), link: v })} />
                   </div>
                 )}
 
-                {/* ABOUT US */}
-                {currentSection === 'About Us' && site && (
+                {/* ABOUT */}
+                {currentSection === 'About' && site && (
                   <div className="space-y-4">
                     <TextArea label="About description" value={site.about || ''} onChange={(v) => updateField('about', v)} rows={8} />
+                  </div>
+                )}
+
+                {/* SERVICES */}
+                {currentSection === 'Services' && site && (
+                  <div className="space-y-4">
+                    {(site.services || []).map((service: any, idx: number) => (
+                      <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-slate-400">Service #{idx + 1}</span>
+                          <button onClick={() => removeArrayItem('services', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
+                        </div>
+                        <input value={service.name || service.title || ''} onChange={(e) => updateArrayItem('services', idx, 'name', e.target.value)} placeholder="Service name" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
+                        <textarea value={service.description || ''} onChange={(e) => updateArrayItem('services', idx, 'description', e.target.value)} placeholder="Description" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040] resize-y" />
+                      </div>
+                    ))}
+                    <button onClick={() => addArrayItem('services', { name: '', description: '' })} className="w-full px-4 py-3 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold transition border border-[#E07040]/20 flex items-center justify-center gap-2">
+                      <Plus size={18} /> Add Service
+                    </button>
+                  </div>
+                )}
+
+                {/* REVIEWS */}
+                {currentSection === 'Reviews' && site && (
+                  <div className="space-y-4">
+                    {(site.testimonials || []).map((t: any, idx: number) => (
+                      <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-slate-400">Review #{idx + 1}</span>
+                          <button onClick={() => removeArrayItem('testimonials', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
+                        </div>
+                        <input value={t.name || t.author || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'name', e.target.value)} placeholder="Customer name" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
+                        <textarea value={t.content || t.text || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'content', e.target.value)} placeholder="Review content" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040] resize-y" />
+                        <input type="number" min="1" max="5" value={t.rating || 5} onChange={(e) => updateArrayItem('testimonials', idx, 'rating', parseInt(e.target.value))} placeholder="Rating (1-5)" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
+                      </div>
+                    ))}
+                    <button onClick={() => addArrayItem('testimonials', { name: '', content: '', rating: 5 })} className="w-full px-4 py-3 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold transition border border-[#E07040]/20 flex items-center justify-center gap-2">
+                      <Plus size={18} /> Add Review
+                    </button>
                   </div>
                 )}
 
@@ -219,8 +263,8 @@ export default function Navbar() {
                   </div>
                 )}
 
-                {/* GALERIE */}
-                {currentSection === 'Galerie' && site && (
+                {/* GALLERY */}
+                {currentSection === 'Gallery' && site && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                       {(site.gallery || []).map((img: any, idx: number) => {
