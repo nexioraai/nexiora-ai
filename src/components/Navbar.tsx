@@ -1,15 +1,16 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { Menu as MenuIcon, X } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/lib/translations';
 import LanguageSwitcher from './LanguageSwitcher';
-import { Menu } from 'lucide-react';
 
 export default function Navbar() {
   const { t } = useTranslation();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [authLoaded, setAuthLoaded] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -19,6 +20,7 @@ export default function Navbar() {
   }, []);
 
   return (
+    <>
     <nav className="flex items-center justify-between px-6 py-4 border-b border-white/8 backdrop-blur-md sticky top-0 z-50"
       style={{ background: 'rgba(10,5,14,0.75)' }}>
 
@@ -41,10 +43,11 @@ export default function Navbar() {
         {authLoaded && (
           userEmail ? (
             <button
+              onClick={() => setMenuOpen(true)}
               className="btn-nexiora p-2.5 rounded-full text-white flex items-center justify-center"
               aria-label="Menu"
             >
-              <Menu size={20} />
+              <MenuIcon size={20} />
             </button>
           ) : (
             <>
@@ -65,5 +68,38 @@ export default function Navbar() {
         )}
       </div>
     </nav>
+
+      {/* Hamburger Menu Drawer */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-[100]" onClick={() => setMenuOpen(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div
+            className="absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-[#0a050e] border-l border-white/10 shadow-2xl p-6 overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-xl font-bold text-white">Sections</h2>
+              <button
+                onClick={() => setMenuOpen(false)}
+                className="text-white/60 hover:text-white p-2"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {['Home', 'About Us', 'Contact', 'Menu'].map((section) => (
+                <button
+                  key={section}
+                  className="w-full text-left px-4 py-3 rounded-xl bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition font-medium"
+                >
+                  {section}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
