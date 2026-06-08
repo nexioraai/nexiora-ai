@@ -1,5 +1,7 @@
 import ERPStatCard from '@/components/erp/ERPStatCard'
 import AIInsightsSection from '@/components/erp/AIInsightsSection'
+import AIAgentsSection from '@/components/erp/AIAgentsSection'
+import AutomationsSection from '@/components/erp/AutomationsSection'
 
 export default function ERPDashboard() {
 return (
@@ -57,6 +59,10 @@ change="+3.8%"
 </div>
 
 <AIInsightsSection />
+
+<AIAgentsSection />
+
+<AutomationsSection />
 
 </div>
 )
