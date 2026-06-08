@@ -1,3 +1,5 @@
+import ERPStatCard from '@/components/erp/ERPStatCard'
+
 export default function ERPDashboard() {
 return (
 <div
@@ -22,45 +24,34 @@ Nexiora ERP AI
 <div
 style={{
 display: 'grid',
-gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))',
+gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))',
 gap: '20px'
 }}
 >
 
-{[
-'Revenue',
-'Cash Flow',
-'AI Insights',
-'Predictions',
-'Agents Running',
-'Automations',
-'Alerts',
-'Tasks'
-].map(card => (
+<ERPStatCard
+title="Revenue"
+value="$124,500"
+change="+12.4%"
+/>
 
-<div
-key={card}
-style={{
-background: '#111827',
-padding: '24px',
-borderRadius: '18px',
-border: '1px solid #1F2937'
-}}
->
-<h2>{card}</h2>
+<ERPStatCard
+title="Cash Flow"
+value="$48,200"
+change="+8.1%"
+/>
 
-<p
-style={{
-opacity: 0.6,
-marginTop: '10px'
-}}
->
-Coming Soon
-</p>
+<ERPStatCard
+title="Customers"
+value="1,284"
+change="+24"
+/>
 
-</div>
-
-))}
+<ERPStatCard
+title="Inventory Value"
+value="$312,000"
+change="+3.8%"
+/>
 
 </div>
 
