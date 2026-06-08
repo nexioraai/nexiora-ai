@@ -7,5 +7,12 @@ fields: string[]
 }[]
 
 dashboard?: string[]
+
 reports?: string[]
+
+automations?: string[]
+
+agents?: string[]
+
+workflows?: string[]
 }

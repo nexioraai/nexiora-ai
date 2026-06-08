@@ -38,6 +38,18 @@ Format:
 "reports": [
 "sales",
 "inventory"
+],
+"automations": [
+"auto_reorder",
+"invoice_generation"
+],
+"agents": [
+"sales_agent",
+"inventory_agent"
+],
+"workflows": [
+"order_to_cash",
+"procure_to_pay"
 ]
 }
 
