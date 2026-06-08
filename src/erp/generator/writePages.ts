@@ -18,6 +18,15 @@ process.cwd(),
 
 fs.mkdirSync(baseDir, { recursive: true })
 
+fs.writeFileSync(
+path.join(baseDir, "modules.json"),
+JSON.stringify(
+ erp.modules.map((m: any) => m.name),
+ null,
+ 2
+)
+)
+
 erp.modules.forEach((module: any) => {
 
 const pageDir = path.join(
