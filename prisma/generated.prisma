@@ -1,0 +1,286 @@
+
+model customers {
+id String @id @default(cuid())
+
+customer_id String?
+company_name String?
+contact_name String?
+phone String?
+email String?
+address String?
+city String?
+country String?
+tax_number String?
+customer_type String?
+credit_limit String?
+payment_terms String?
+currency String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model suppliers {
+id String @id @default(cuid())
+
+supplier_id String?
+company_name String?
+contact_name String?
+phone String?
+email String?
+country String?
+address String?
+tax_number String?
+supplier_type String?
+currency String?
+payment_terms String?
+lead_time_days String?
+incoterms String?
+bank_details String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model products {
+id String @id @default(cuid())
+
+part_number String?
+caterpillar_oem_reference String?
+part_name String?
+description String?
+category String?
+compatible_models String?
+unit_of_measure String?
+purchase_price String?
+selling_price String?
+weight_kg String?
+dimensions String?
+country_of_origin String?
+hs_code String?
+minimum_stock String?
+reorder_point String?
+shelf_location String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model inventory {
+id String @id @default(cuid())
+
+inventory_id String?
+part_number String?
+warehouse_location String?
+quantity_on_hand String?
+quantity_reserved String?
+quantity_available String?
+quantity_in_transit String?
+last_received_date String?
+last_sold_date String?
+batch_number String?
+expiry_date String?
+condition String?
+valuation_method String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model purchase_orders {
+id String @id @default(cuid())
+
+po_number String?
+supplier_id String?
+order_date String?
+expected_delivery_date String?
+incoterms String?
+currency String?
+exchange_rate String?
+part_number String?
+quantity_ordered String?
+unit_price String?
+total_amount String?
+shipping_cost String?
+insurance_cost String?
+customs_duties String?
+taxes String?
+total_landed_cost String?
+status String?
+payment_status String?
+notes String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model import_logistics {
+id String @id @default(cuid())
+
+shipment_id String?
+po_number String?
+supplier_id String?
+shipping_method String?
+carrier_name String?
+bill_of_lading String?
+container_number String?
+departure_port String?
+arrival_port String?
+departure_date String?
+estimated_arrival_date String?
+actual_arrival_date String?
+customs_declaration_number String?
+customs_broker String?
+customs_clearance_date String?
+duties_paid String?
+freight_cost String?
+insurance_cost String?
+shipment_status String?
+documents_checklist String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model sales_orders {
+id String @id @default(cuid())
+
+order_number String?
+customer_id String?
+order_date String?
+delivery_date String?
+part_number String?
+quantity String?
+unit_price String?
+discount String?
+tax_rate String?
+total_amount String?
+currency String?
+payment_terms String?
+delivery_address String?
+order_status String?
+invoice_number String?
+payment_status String?
+notes String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model invoices {
+id String @id @default(cuid())
+
+invoice_number String?
+invoice_type String?
+order_number String?
+customer_id String?
+invoice_date String?
+due_date String?
+part_number String?
+quantity String?
+unit_price String?
+subtotal String?
+tax_amount String?
+discount String?
+total_amount String?
+currency String?
+payment_status String?
+payment_date String?
+payment_method String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model payments {
+id String @id @default(cuid())
+
+payment_id String?
+payment_type String?
+reference_number String?
+customer_or_supplier_id String?
+payment_date String?
+amount String?
+currency String?
+exchange_rate String?
+payment_method String?
+bank_account String?
+transaction_reference String?
+notes String?
+status String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model warranties_returns {
+id String @id @default(cuid())
+
+rma_number String?
+customer_id String?
+order_number String?
+part_number String?
+return_date String?
+reason String?
+condition String?
+quantity_returned String?
+refund_amount String?
+replacement_issued String?
+status String?
+notes String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model caterpillar_models {
+id String @id @default(cuid())
+
+model_id String?
+model_name String?
+model_category String?
+serial_number_range String?
+year_range String?
+engine_type String?
+compatible_parts String?
+description String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model employees {
+id String @id @default(cuid())
+
+employee_id String?
+full_name String?
+role String?
+department String?
+phone String?
+email String?
+hire_date String?
+salary String?
+permissions_level String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model expenses {
+id String @id @default(cuid())
+
+expense_id String?
+expense_date String?
+category String?
+description String?
+amount String?
+currency String?
+supplier_id String?
+invoice_reference String?
+payment_method String?
+approved_by String?
+status String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}

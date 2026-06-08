@@ -1,0 +1,10 @@
+
+export default function NewPage() {
+return (
+<div className="p-6">
+<h1 className="text-2xl font-bold">
+Nouveau purchase_order_lines
+</h1>
+</div>
+)
+}
