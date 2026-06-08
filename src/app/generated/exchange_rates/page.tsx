@@ -4,14 +4,14 @@ import CrudTable from '@/components/erp/CrudTable'
 export default function Page() {
 return (
 <CrudTable
-title="employees"
+title="exchange_rates"
 fields={[
-'name',
-'role',
-'department',
-'email',
-'salary',
-'hire_date'
+'rate_id',
+'currency_from',
+'currency_to',
+'rate',
+'date',
+'source'
 ]}
 />
 )

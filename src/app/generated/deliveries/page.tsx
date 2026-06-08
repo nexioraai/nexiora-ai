@@ -4,18 +4,17 @@ import CrudTable from '@/components/erp/CrudTable'
 export default function Page() {
 return (
 <CrudTable
-title="quotations"
+title="deliveries"
 fields={[
-'quote_id',
-'customer_id',
-'quote_date',
-'valid_until',
-'salesperson',
-'currency',
-'total_amount_xaf',
-'status',
-'converted_to_order',
+'delivery_id',
 'order_id',
+'customer_id',
+'delivery_date',
+'delivery_address',
+'transporter',
+'tracking_number',
+'status',
+'signed_by',
 'notes'
 ]}
 />

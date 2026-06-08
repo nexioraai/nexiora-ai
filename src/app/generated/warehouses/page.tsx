@@ -8,13 +8,12 @@ title="warehouses"
 fields={[
 'warehouse_id',
 'warehouse_name',
-'address',
+'location',
 'city',
-'country',
-'manager_name',
+'manager',
 'phone',
-'email',
 'capacity',
+'current_occupancy',
 'type'
 ]}
 />

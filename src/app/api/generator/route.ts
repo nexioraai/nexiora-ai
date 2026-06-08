@@ -3,6 +3,7 @@ import { generateFromPrompt } from '@/erp/generator/generateFromPrompt'
 import { writePrismaSchema } from '@/erp/prisma/writePrismaSchema'
 import { writePages } from '@/erp/generator/writePages'
 import { writeApiRoutes } from '@/erp/generator/writeApiRoutes'
+import { writeAgentPages } from '@/erp/generator/writeAgentPages'
 
 export async function GET(req: NextRequest) {
 
@@ -23,6 +24,7 @@ writePrismaSchema(erp)
 
 writePages(erp)
 writeApiRoutes(erp)
+writeAgentPages(erp)
 
 return NextResponse.json({
 success: true,

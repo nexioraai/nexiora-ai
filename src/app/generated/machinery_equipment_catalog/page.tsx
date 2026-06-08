@@ -4,18 +4,15 @@ import CrudTable from '@/components/erp/CrudTable'
 export default function Page() {
 return (
 <CrudTable
-title="expenses"
+title="machinery_equipment_catalog"
 fields={[
-'expense_id',
-'expense_date',
-'category',
+'model_id',
+'cat_model',
+'machine_type',
+'serial_number_range',
+'compatible_parts',
 'description',
-'amount_xaf',
-'amount_usd',
-'vendor',
-'reference',
-'approved_by',
-'status'
+'sector'
 ]}
 />
 )

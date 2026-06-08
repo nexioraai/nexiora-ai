@@ -4,14 +4,14 @@ import CrudTable from '@/components/erp/CrudTable'
 export default function Page() {
 return (
 <CrudTable
-title="employees"
+title="purchases"
 fields={[
-'name',
-'role',
-'department',
-'email',
-'salary',
-'hire_date'
+'purchase_order_id',
+'supplier_id',
+'order_date',
+'expected_delivery',
+'status',
+'total_cost'
 ]}
 />
 )

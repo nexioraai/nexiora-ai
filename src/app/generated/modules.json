@@ -1,0 +1,10 @@
+[
+  "customers",
+  "suppliers",
+  "products",
+  "orders",
+  "inventory",
+  "invoices",
+  "employees",
+  "purchases"
+]
