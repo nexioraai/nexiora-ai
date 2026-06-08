@@ -3,6 +3,7 @@ import { generateFromPrompt } from '@/erp/generator/generateFromPrompt'
 import { writePrismaSchema } from '@/erp/prisma/writePrismaSchema'
 import { writePages } from '@/erp/generator/writePages'
 import { writeApiRoutes } from '@/erp/generator/writeApiRoutes'
+import { cleanupGenerated } from '@/erp/generator/cleanupGenerated'
 import { writeAgentPages } from '@/erp/generator/writeAgentPages'
 
 export async function GET(req: NextRequest) {
@@ -19,6 +20,8 @@ success: false,
 error: 'ERP generation failed'
 })
 }
+
+cleanupGenerated()
 
 writePrismaSchema(erp)
 
