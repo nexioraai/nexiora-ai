@@ -1,5 +1,15 @@
 import Link from "next/link";
-import modules from "@/app/generated/modules.json";
+
+const modules = [
+"customers",
+"suppliers",
+"products",
+"inventory",
+"purchase_orders",
+"sales_orders",
+"invoices",
+"payments"
+];
 
 export default function ERPMenu() {
 return (
