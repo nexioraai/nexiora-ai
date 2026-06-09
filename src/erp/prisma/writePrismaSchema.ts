@@ -4,22 +4,30 @@ import { generatePrismaSchema } from './generatePrisma'
 
 export function writePrismaSchema(erp: any) {
 
-console.log('WRITE PRISMA CALLED')
-
 const schema =
 generatePrismaSchema(erp)
 
-console.log(schema)
+const prismaDir =
+path.join(
+process.cwd(),
+'prisma'
+)
+
+fs.mkdirSync(prismaDir, {
+recursive: true
+})
 
 fs.writeFileSync(
 path.join(
-process.cwd(),
-'prisma/generated.prisma'
+prismaDir,
+'schema.prisma'
 ),
 schema
 )
 
-console.log('PRISMA FILE WRITTEN')
+console.log(
+'SCHEMA.PRISMA WRITTEN'
+)
 
 return true
 }
