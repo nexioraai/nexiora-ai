@@ -14,7 +14,17 @@ url = env("DATABASE_URL")
 for (const model of erp.models) {
 
 const fields = model.fields
-.map((field: string) => `${field} String?`)
+.map((field: string) => {
+
+if (
+field.endsWith('_id') &&
+field !== 'id'
+) {
+return `${field} String?`
+}
+
+return `${field} String?`
+})
 .join('\n')
 
 schema += `
