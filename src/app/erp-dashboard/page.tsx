@@ -4,6 +4,7 @@ import AIAgentsSection from '@/components/erp/AIAgentsSection'
 import AutomationsSection from '@/components/erp/AutomationsSection'
 import ForecastSection from '@/components/erp/ForecastSection'
 import AICommandCenter from '@/components/erp/AICommandCenter'
+import LiveStats from '@/components/erp/dashboard/LiveStats'
 
 export default function ERPDashboard() {
 return (
@@ -59,6 +60,8 @@ change="+3.8%"
 />
 
 </div>
+
+<LiveStats />
 
 <AIInsightsSection />
 

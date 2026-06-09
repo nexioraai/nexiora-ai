@@ -11,23 +11,23 @@ url = env("DATABASE_URL")
 }
 `
 
-erp.modules.forEach((module: any) => {
+for (const model of erp.models) {
+
+const fields = model.fields
+.map((field: string) => `${field} String?`)
+.join('\n')
 
 schema += `
-model ${module.name} {
+model ${model.name} {
 id String @id @default(cuid())
 
-${module.fields
-.map((field: string) =>
-`${field} String?`
-)
-.join('\n')}
+${fields}
 
 createdAt DateTime @default(now())
 updatedAt DateTime @updatedAt
 }
 `
-})
+}
 
 return schema
 }

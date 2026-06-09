@@ -16,7 +16,7 @@ const [form, setForm] = useState<any>({})
 
 async function save() {
 
-await fetch(`/api/${title}`, {
+await fetch(`/api/${title}/create`, {
 method: 'POST',
 headers: {
 'Content-Type': 'application/json'

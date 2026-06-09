@@ -14,6 +14,7 @@ fields
 }: Props) {
 
 const [rows, setRows] = useState<any[]>([])
+const [editingRow, setEditingRow] = useState<any>(null)
 console.log("ROWS =", rows)
 
 useEffect(() => {
@@ -37,6 +38,20 @@ return (
 title={title}
 fields={fields}
 />
+
+{editingRow && (
+<div className="border p-4 rounded mb-6">
+<h2>Modification</h2>
+<input className="border p-2 w-full mb-2" value={editingRow.company_name || ""} onChange={(e)=>setEditingRow({...editingRow,company_name:e.target.value})} />
+<input className="border p-2 w-full mb-2" value={editingRow.contact_name || ""} onChange={(e)=>setEditingRow({...editingRow,contact_name:e.target.value})} />
+<input className="border p-2 w-full mb-2" value={editingRow.phone || ""} onChange={(e)=>setEditingRow({...editingRow,phone:e.target.value})} />
+<input className="border p-2 w-full mb-2" value={editingRow.email || ""} onChange={(e)=>setEditingRow({...editingRow,email:e.target.value})} />
+<input className="border p-2 w-full mb-2" value={editingRow.city || ""} onChange={(e)=>setEditingRow({...editingRow,city:e.target.value})} />
+<input className="border p-2 w-full mb-2" value={editingRow.country || ""} onChange={(e)=>setEditingRow({...editingRow,country:e.target.value})} />
+<button onClick={async ()=>{ await fetch("/api/customers/update",{ method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(editingRow) }); setEditingRow(null); load(); }}>Mettre à jour</button>
+</div>
+)}
+
 
 <div className="overflow-auto border rounded">
 
@@ -76,7 +91,20 @@ className="p-3 border-b"
 ))}
 
 <td className="p-3 border-b">
+<button onClick={() => setEditingRow(row)}>
 Modifier
+</button>
+<span> / </span>
+<button onClick={async () => {
+await fetch('/api/customers/delete', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ id: row.id })
+})
+load()
+}}>
+Supprimer
+</button>
 </td>
 
 </tr>

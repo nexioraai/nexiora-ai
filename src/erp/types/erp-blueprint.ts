@@ -4,6 +4,12 @@ name: string
 modules: {
 name: string
 fields: string[]
+
+relations?: {
+field: string
+target: string
+type: string
+}[]
 }[]
 
 dashboard?: string[]

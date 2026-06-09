@@ -8,59 +8,178 @@ provider = "sqlite"
 url = env("DATABASE_URL")
 }
 
-model customers {
+model menu_items {
 id String @id @default(cuid())
 
+item_id String?
 name String?
-phone String?
-email String?
-address String?
-customer_type String?
+description String?
+category String?
+subcategory String?
+base_price String?
+cost_price String?
+profit_margin String?
+preparation_time_minutes String?
+calories String?
+allergens String?
+dietary_tags String?
+is_available String?
+is_seasonal String?
+image_url String?
+recipe_id String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model recipes {
+id String @id @default(cuid())
+
+recipe_id String?
+name String?
+instructions String?
+serving_size String?
+prep_time_minutes String?
+cook_time_minutes String?
+difficulty_level String?
+plating_notes String?
+version String?
+created_by_chef String?
+last_updated String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model recipe_ingredients {
+id String @id @default(cuid())
+
+line_id String?
+recipe_id String?
+ingredient_id String?
+quantity String?
+unit_of_measure String?
+preparation_note String?
+is_optional String?
+substitute_ingredient_id String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model tables {
+id String @id @default(cuid())
+
+table_id String?
+table_number String?
+section String?
+floor String?
+capacity String?
+shape String?
+is_outdoor String?
+is_accessible String?
+status String?
+current_reservation_id String?
+assigned_waiter_id String?
+qr_code String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model reservations {
+id String @id @default(cuid())
+
+reservation_id String?
+guest_name String?
+guest_phone String?
+guest_email String?
+party_size String?
+table_id String?
+reservation_date String?
+reservation_time String?
+duration_minutes String?
+status String?
+special_requests String?
+occasion String?
+dietary_requirements String?
+deposit_paid String?
+deposit_amount String?
+source String?
+confirmation_code String?
+no_show_flag String?
 created_at String?
 
 createdAt DateTime @default(now())
 updatedAt DateTime @updatedAt
 }
 
-model suppliers {
-id String @id @default(cuid())
-
-name String?
-phone String?
-email String?
-address String?
-tax_id String?
-payment_terms String?
-
-createdAt DateTime @default(now())
-updatedAt DateTime @updatedAt
-}
-
-model products {
-id String @id @default(cuid())
-
-name String?
-sku String?
-price String?
-cost String?
-category String?
-stock_quantity String?
-reorder_level String?
-
-createdAt DateTime @default(now())
-updatedAt DateTime @updatedAt
-}
-
-model orders {
+model dining_orders {
 id String @id @default(cuid())
 
 order_id String?
-customer_id String?
-order_date String?
+table_id String?
+reservation_id String?
+order_type String?
 status String?
+opened_at String?
+closed_at String?
+waiter_id String?
+guest_count String?
+subtotal String?
+tax_amount String?
+tip_amount String?
+discount_amount String?
 total_amount String?
 payment_status String?
-delivery_date String?
+payment_method String?
+split_bill_flag String?
+notes String?
+kitchen_priority String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model kitchen_order_items {
+id String @id @default(cuid())
+
+line_id String?
+order_id String?
+menu_item_id String?
+quantity String?
+unit_price String?
+line_total String?
+modifications String?
+allergen_alerts String?
+status String?
+sent_to_kitchen_at String?
+started_cooking_at String?
+ready_at String?
+served_at String?
+station String?
+cook_id String?
+special_instructions String?
+void_reason String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model kitchen_tickets {
+id String @id @default(cuid())
+
+ticket_id String?
+order_id String?
+station String?
+ticket_number String?
+printed_at String?
+acknowledged_at String?
+completed_at String?
+priority_level String?
+notes String?
+bump_count String?
+status String?
 
 createdAt DateTime @default(now())
 updatedAt DateTime @updatedAt
@@ -69,26 +188,90 @@ updatedAt DateTime @updatedAt
 model inventory {
 id String @id @default(cuid())
 
-product_id String?
-warehouse_location String?
-quantity_on_hand String?
-quantity_reserved String?
-last_updated String?
+ingredient_id String?
+name String?
+category String?
+unit_of_measure String?
+current_stock String?
+minimum_stock_level String?
+reorder_point String?
+reorder_quantity String?
+unit_cost String?
+storage_location String?
+storage_conditions String?
+supplier_id String?
+expiry_date String?
+last_received_date String?
+last_counted_date String?
+waste_percentage String?
+is_perishable String?
 
 createdAt DateTime @default(now())
 updatedAt DateTime @updatedAt
 }
 
-model invoices {
+model suppliers {
 id String @id @default(cuid())
 
-invoice_id String?
-order_id String?
-issue_date String?
-due_date String?
-amount String?
-tax String?
+supplier_id String?
+company_name String?
+contact_person String?
+phone String?
+email String?
+address String?
+city String?
+country String?
+payment_terms String?
+delivery_schedule String?
+minimum_order_value String?
+lead_time_days String?
+rating String?
+is_active String?
+tax_id String?
+bank_details String?
+notes String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model purchase_orders {
+id String @id @default(cuid())
+
+po_id String?
+supplier_id String?
+order_date String?
+expected_delivery_date String?
+actual_delivery_date String?
 status String?
+total_amount String?
+payment_status String?
+payment_due_date String?
+ordered_by String?
+received_by String?
+delivery_notes String?
+invoice_reference String?
+discrepancy_notes String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model purchase_order_lines {
+id String @id @default(cuid())
+
+line_id String?
+po_id String?
+ingredient_id String?
+ordered_quantity String?
+received_quantity String?
+unit_cost String?
+line_total String?
+unit_of_measure String?
+expiry_date String?
+batch_number String?
+discrepancy_flag String?
+discrepancy_reason String?
 
 createdAt DateTime @default(now())
 updatedAt DateTime @updatedAt
@@ -97,26 +280,69 @@ updatedAt DateTime @updatedAt
 model employees {
 id String @id @default(cuid())
 
-name String?
+employee_id String?
+full_name String?
 role String?
 department String?
+phone String?
 email String?
-salary String?
 hire_date String?
+employment_type String?
+hourly_rate String?
+salary String?
+shift_type String?
+certifications String?
+food_safety_certificate_expiry String?
+performance_rating String?
+is_active String?
+emergency_contact String?
+bank_details String?
 
 createdAt DateTime @default(now())
 updatedAt DateTime @updatedAt
 }
 
-model purchases {
+model shifts {
 id String @id @default(cuid())
 
-purchase_order_id String?
-supplier_id String?
-order_date String?
-expected_delivery String?
-status String?
-total_cost String?
+shift_id String?
+employee_id String?
+shift_date String?
+scheduled_start String?
+scheduled_end String?
+actual_start String?
+actual_end String?
+break_duration_minutes String?
+total_hours_worked String?
+role_during_shift String?
+station_assigned String?
+tips_earned String?
+notes String?
+attendance_status String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+
+model promotions {
+id String @id @default(cuid())
+
+promotion_id String?
+name String?
+description String?
+type String?
+discount_value String?
+discount_type String?
+start_date String?
+end_date String?
+applicable_days String?
+applicable_times String?
+minimum_order_value String?
+usage_limit String?
+times_used String?
+promo_code String?
+is_active String?
+created_by String?
 
 createdAt DateTime @default(now())
 updatedAt DateTime @updatedAt

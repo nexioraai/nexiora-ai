@@ -12,11 +12,11 @@ fs.mkdirSync(apiBase, {
 recursive: true
 })
 
-erp.modules.forEach((module: any) => {
+for (const model of erp.models) {
 
 const dir = path.join(
 apiBase,
-module.name
+model.name
 )
 
 fs.mkdirSync(dir, {
@@ -30,7 +30,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 export async function GET() {
-const data = await prisma.${module.name}.findMany()
+const data = await prisma.${model.name}.findMany()
 return NextResponse.json(data)
 }
 
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
 
 const body = await req.json()
 
-const item = await prisma.${module.name}.create({
+const item = await prisma.${model.name}.create({
 data: body
 })
 

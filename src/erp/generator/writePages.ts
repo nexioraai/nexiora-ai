@@ -6,7 +6,7 @@ console.log('WRITE PAGES CALLED')
 
 console.log(
 JSON.stringify(
-erp.modules,
+erp.models,
 null,
 2
 )
@@ -21,22 +21,22 @@ fs.mkdirSync(baseDir, { recursive: true })
 fs.writeFileSync(
 path.join(baseDir, "modules.json"),
 JSON.stringify(
- erp.modules.map((m: any) => m.name),
+ erp.models.map((m: any) => m.name),
  null,
  2
 )
 )
 
-erp.modules.forEach((module: any) => {
+for (const model of erp.models) {
 
 const pageDir = path.join(
 baseDir,
-module.name
+model.name
 )
 
 const newDir = path.join(
 baseDir,
-module.name,
+model.name,
 'new'
 )
 
@@ -49,7 +49,7 @@ recursive: true
 })
 
 const fieldsString =
-module.fields
+model.fields
 .map((f: string) => `'${f}'`)
 .join(',\n')
 
@@ -61,7 +61,7 @@ import CrudTable from '@/components/erp/CrudTable'
 export default function Page() {
 return (
 <CrudTable
-title="${module.name}"
+title="${model.name}"
 fields={[
 ${fieldsString}
 ]}
@@ -78,7 +78,7 @@ export default function NewPage() {
 return (
 <div className="p-6">
 <h1 className="text-2xl font-bold">
-Nouveau ${module.name}
+Nouveau ${model.name}
 </h1>
 </div>
 )
@@ -86,7 +86,7 @@ Nouveau ${module.name}
 `
 )
 
-})
+}
 
 return true
 }
