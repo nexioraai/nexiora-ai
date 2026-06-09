@@ -1,16 +1,22 @@
-export type ERPBlueprint = {
-name: string
+import { Relation } from '../contracts/Relation'
 
-modules: {
+export interface ERPModel {
 name: string
 fields: string[]
+}
 
-relations?: {
-field: string
-target: string
-type: string
+export interface ERPBlueprint {
+name?: string
+
+modules?: {
+name: string
+fields: string[]
+relations?: Relation[]
 }[]
-}[]
+
+models: ERPModel[]
+
+relations: Relation[]
 
 dashboard?: string[]
 

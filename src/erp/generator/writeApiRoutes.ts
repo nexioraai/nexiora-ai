@@ -47,7 +47,7 @@ return NextResponse.json(item)
 `
 )
 
-})
+}
 
 return true
 }
