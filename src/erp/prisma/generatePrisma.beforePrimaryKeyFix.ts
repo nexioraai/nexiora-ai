@@ -44,15 +44,10 @@ model.name,
 normalizedGraph
 )
 
-const hasPrimaryKey =
-(model.fields || []).some(
-(field: any) =>
-field.type === 'id'
-)
 schema += `
 model ${model.name} {
 
-${hasPrimaryKey ? '' : 'id String @id @default(cuid())'}
+id String @id @default(cuid())
 
 ${fields}
 
