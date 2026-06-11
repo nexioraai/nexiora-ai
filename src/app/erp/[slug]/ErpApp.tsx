@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Boxes, Bot, Zap, GitBranch, FileBarChart,
-  Search, Circle, TrendingUp, ChevronRight, Database, Shield, History,
+  Search, Circle, TrendingUp, ChevronRight, Database, Shield, History, Brain,
 } from 'lucide-react'
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -13,6 +13,7 @@ import {
 import ModuleTable from './ModuleTable'
 import TeamAccess from './TeamAccess'
 import ActivityLog from './ActivityLog'
+import AIAnalysis from './AIAnalysis'
 import { supabase } from '@/lib/supabase'
 
 type ERPField = { name: string; type: string }
@@ -68,8 +69,9 @@ export default function ErpApp({ erp }: { erp: any }) {
     { id: 'reports', label: 'Rapports', icon: FileBarChart, count: reports.length },
     { id: 'team', label: 'Équipe & Accès', icon: Shield },
     { id: 'activity', label: "Journal d'activité", icon: History },
+    { id: 'analysis', label: 'Analyse IA', icon: Brain },
   ]
-  const visibleNav = nav.filter((n) => (n.id === 'team' || n.id === 'activity') ? isAdmin : true)
+  const visibleNav = nav.filter((n) => (n.id === 'team' || n.id === 'activity' || n.id === 'analysis') ? isAdmin : true)
   const activeLabel = nav.find((n) => n.id === view)?.label || 'Tableau de bord'
 
   return (
@@ -131,6 +133,7 @@ export default function ErpApp({ erp }: { erp: any }) {
               {view === 'reports' && <ReportsView reports={reports} />}
               {view === 'team' && <TeamAccess erpSlug={erp.slug} moduleNames={modules.map((m) => m.name)} isAdmin={isAdmin} ownerEmail={erp.owner_email || ''} />}
               {view === 'activity' && isAdmin && <ActivityLog erpSlug={erp.slug} />}
+              {view === 'analysis' && isAdmin && <AIAnalysis erpSlug={erp.slug} />}
             </motion.div>
           </AnimatePresence>
         </main>
