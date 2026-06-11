@@ -1,4 +1,6 @@
-import { buildRelations } from './buildRelations'
+import { buildRelationGraph } from '@/erp/relations/buildRelationGraph'
+import { normalizeRelations } from '@/erp/relations/normalizeRelations'
+import { buildPrismaRelations } from '@/erp/relations/buildPrismaRelations'
 
 export function generatePrismaSchema(
 erp: any
@@ -15,6 +17,16 @@ url = env("DATABASE_URL")
 }
 `
 
+const relationGraph =
+buildRelationGraph(
+erp.relations || []
+)
+
+const normalizedGraph =
+normalizeRelations(
+relationGraph
+)
+
 for (const model of erp.models || []) {
 
 const fields =
@@ -26,9 +38,9 @@ const fields =
 .join('\n')
 
 const relationFields =
-buildRelations(
+buildPrismaRelations(
 model.name,
-erp.relations || []
+normalizedGraph
 )
 
 schema += `
