@@ -1,187 +1,333 @@
+
 generator client {
-  provider = "prisma-client-js"
+provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
-
-model vehicles {
-  id String @id @default(cuid())
-
-  vehicle_id                  String?
-  license_plate               String?
-  brand                       String?
-  model                       String?
-  year                        String?
-  vehicle_type                String?
-  fuel_type                   String?
-  mileage_current             String?
-  mileage_last_service        String?
-  payload_capacity_kg         String?
-  volume_capacity_m3          String?
-  registration_number         String?
-  registration_expiry_date    String?
-  insurance_provider          String?
-  insurance_policy_number     String?
-  insurance_expiry_date       String?
-  technical_inspection_date   String?
-  technical_inspection_expiry String?
-  status                      String?
-  acquisition_date            String?
-  acquisition_cost            String?
-  gps_device_id               String?
-  current_location            String?
-  assigned_depot              String?
-  notes                       String?
-
-  drivers    drivers[]
-  deliveries deliveries[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+provider = "sqlite"
+url = env("DATABASE_URL")
 }
 
 model drivers {
-  id String @id @default(cuid())
 
-  driver_id                  String?
-  first_name                 String?
-  last_name                  String?
-  date_of_birth              String?
-  national_id                String?
-  phone                      String?
-  emergency_phone            String?
-  email                      String?
-  address                    String?
-  city                       String?
-  hire_date                  String?
-  employment_type            String?
-  license_number             String?
-  license_category           String?
-  license_issue_date         String?
-  license_expiry_date        String?
-  medical_certificate_expiry String?
-  adr_certificate            String?
-  adr_expiry_date            String?
-  status                     String?
-  assigned_vehicle_id        String?
-  total_deliveries           String?
-  total_km_driven            String?
-  rating_average             String?
-  salary_base                String?
-  bonus_per_delivery         String?
-  bank_account               String?
-  notes                      String?
+id String @id @default(cuid())
 
-  assigned_vehicle vehicles?    @relation(fields: [vehiclesId], references: [id])
-  deliveries       deliveries[]
+driver_id String?
+full_name String?
+phone String?
+email String?
+license_number String?
+license_type String?
+license_expiry_date String?
+date_of_birth String?
+hire_date String?
+status String?
+address String?
+emergency_contact String?
+total_deliveries String?
+rating_average String?
+notes String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+vehicle_assignments vehicle_assignments[]
+deliveries deliveries[]
+incidents incidents[]
+plans route_planning[] @relation("PlanDriver")
+tracking_events tracking_events[] @relation("EventDriver")
+fuel_logs fuel_logs[] @relation("FuelLogDriver")
 
-  vehiclesId String?
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+
 }
 
-model customers {
-  id String @id @default(cuid())
+model vehicles {
 
-  customer_id                  String?
-  company_name                 String?
-  contact_first_name           String?
-  contact_last_name            String?
-  customer_type                String?
-  phone                        String?
-  mobile                       String?
-  email                        String?
-  tax_id                       String?
-  billing_address              String?
-  billing_city                 String?
-  billing_postal_code          String?
-  billing_country              String?
-  default_delivery_address     String?
-  default_delivery_city        String?
-  default_delivery_postal_code String?
-  default_delivery_country     String?
-  delivery_instructions        String?
-  preferred_delivery_time_slot String?
-  credit_limit                 String?
-  payment_terms_days           String?
-  contract_start_date          String?
-  contract_end_date            String?
-  rate_per_km                  String?
-  rate_per_kg                  String?
-  flat_delivery_rate           String?
-  status                       String?
-  account_manager              String?
-  total_deliveries             String?
-  total_revenue                String?
-  notes                        String?
+id String @id @default(cuid())
 
-  deliveries deliveries[]
+vehicle_id String?
+plate_number String?
+brand String?
+model String?
+year String?
+type String?
+fuel_type String?
+capacity_kg String?
+volume_m3 String?
+color String?
+vin_number String?
+registration_number String?
+registration_expiry String?
+insurance_policy String?
+insurance_expiry String?
+current_mileage String?
+status String?
+last_maintenance_date String?
+next_maintenance_km String?
+gps_device_id String?
+notes String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+vehicle_assignments vehicle_assignments[]
+vehicle_maintenance vehicle_maintenance[]
+deliveries deliveries[]
+fuel_logs fuel_logs[]
+plans route_planning[] @relation("PlanVehicle")
+incidents incidents[] @relation("IncidentVehicle")
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+
+}
+
+model vehicle_assignments {
+
+id String @id @default(cuid())
+
+assignment_id String?
+vehicle_id String?
+driver_id String?
+assigned_date String?
+unassigned_date String?
+assignment_type String?
+status String?
+notes String?
+
+driver drivers[] 
+vehicle vehicles[] 
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+
 }
 
 model deliveries {
-  id String @id @default(cuid())
 
-  delivery_id                  String?
-  delivery_reference           String?
-  customer_id                  String?
-  driver_id                    String?
-  vehicle_id                   String?
-  route_id                     String?
-  delivery_type                String?
-  status                       String?
-  priority                     String?
-  pickup_address               String?
-  pickup_city                  String?
-  pickup_postal_code           String?
-  pickup_contact_name          String?
-  pickup_contact_phone         String?
-  pickup_scheduled_date        String?
-  pickup_scheduled_time_from   String?
-  pickup_scheduled_time_to     String?
-  pickup_actual_datetime       String?
-  delivery_address             String?
-  delivery_city                String?
-  delivery_postal_code         String?
-  delivery_contact_name        String?
-  delivery_contact_phone       String?
-  delivery_scheduled_date      String?
-  delivery_scheduled_time_from String?
-  delivery_scheduled_time_to   String?
-  delivery_actual_datetime     String?
-  distance_km                  String?
-  weight_kg                    String?
-  volume_m3                    String?
-  package_count                String?
-  fragile                      String?
-  requires_cold_chain          String?
-  requires_signature           String?
-  special_instructions         String?
-  delivery_cost                String?
-  billing_status               String?
-  proof_of_delivery_photo      String?
-  signature_image              String?
-  recipient_name               String?
-  gps_track_start              String?
-  gps_track_end                String?
-  failure_reason               String?
-  attempt_count                String?
-  notes                        String?
+id String @id @default(cuid())
 
-  vehicle  vehicles?  @relation(fields: [vehiclesId], references: [id])
-  driver   drivers?   @relation(fields: [driversId], references: [id])
-  customer customers? @relation(fields: [customersId], references: [id])
+delivery_id String?
+delivery_code String?
+driver_id String?
+vehicle_id String?
+route_id String?
+sender_name String?
+sender_phone String?
+sender_address String?
+recipient_name String?
+recipient_phone String?
+recipient_address String?
+recipient_city String?
+scheduled_date String?
+scheduled_time_slot String?
+pickup_datetime String?
+delivery_datetime String?
+status String?
+priority String?
+package_type String?
+weight_kg String?
+volume_m3 String?
+fragile String?
+proof_of_delivery String?
+signature_collected String?
+photo_url String?
+delivery_notes String?
+failure_reason String?
+attempt_count String?
+created_at String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+driver drivers[] 
+vehicle vehicles[] 
+route routes? @relation(
+"DeliveryRoute",
+fields: [route_id],
+references: [route_id]
+)
+tracking_events tracking_events[]
+incidents incidents[] @relation("IncidentDelivery")
 
-  vehiclesId  String?
-  driversId   String?
-  customersId String?
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+
+}
+
+model routes {
+
+id String @id @default(cuid())
+
+route_id String?
+route_name String?
+route_code String?
+origin_city String?
+destination_city String?
+waypoints String?
+estimated_distance_km String?
+estimated_duration_min String?
+zone String?
+status String?
+notes String?
+
+deliveries deliveries[] @relation("DeliveryRoute")
+route_planning route_planning[]
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+
+}
+
+model route_planning {
+
+id String @id @default(cuid())
+
+plan_id String?
+route_id String?
+driver_id String?
+vehicle_id String?
+plan_date String?
+departure_time String?
+expected_return_time String?
+total_stops String?
+total_deliveries String?
+total_weight_kg String?
+total_volume_m3 String?
+status String?
+optimization_score String?
+notes String?
+
+route routes[] 
+driver drivers? @relation(
+"PlanDriver",
+fields: [driver_id],
+references: [driver_id]
+)
+vehicle vehicles? @relation(
+"PlanVehicle",
+fields: [vehicle_id],
+references: [vehicle_id]
+)
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+
+}
+
+model tracking_events {
+
+id String @id @default(cuid())
+
+event_id String?
+delivery_id String?
+driver_id String?
+event_type String?
+event_datetime String?
+latitude String?
+longitude String?
+address_snapshot String?
+description String?
+created_by String?
+
+delivery deliveries[] 
+driver drivers? @relation(
+"EventDriver",
+fields: [driver_id],
+references: [driver_id]
+)
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+
+}
+
+model vehicle_maintenance {
+
+id String @id @default(cuid())
+
+maintenance_id String?
+vehicle_id String?
+maintenance_type String?
+description String?
+scheduled_date String?
+completed_date String?
+mileage_at_service String?
+next_service_mileage String?
+garage_name String?
+technician_name String?
+cost String?
+invoice_number String?
+parts_replaced String?
+status String?
+notes String?
+
+vehicle vehicles[] 
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+
+}
+
+model fuel_logs {
+
+id String @id @default(cuid())
+
+fuel_log_id String?
+vehicle_id String?
+driver_id String?
+date String?
+fuel_type String?
+liters String?
+cost_per_liter String?
+total_cost String?
+mileage_at_refuel String?
+station_name String?
+payment_method String?
+receipt_number String?
+notes String?
+
+vehicle vehicles[] 
+driver drivers? @relation(
+"FuelLogDriver",
+fields: [driver_id],
+references: [driver_id]
+)
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+
+}
+
+model incidents {
+
+id String @id @default(cuid())
+
+incident_id String?
+driver_id String?
+vehicle_id String?
+delivery_id String?
+incident_date String?
+incident_type String?
+severity String?
+location String?
+latitude String?
+longitude String?
+description String?
+third_party_involved String?
+police_report_number String?
+insurance_claim_number String?
+estimated_damage_cost String?
+status String?
+resolution_notes String?
+photos String?
+
+driver drivers[] 
+vehicle vehicles? @relation(
+"IncidentVehicle",
+fields: [vehicle_id],
+references: [vehicle_id]
+)
+deliverie deliveries? @relation(
+"IncidentDelivery",
+fields: [delivery_id],
+references: [delivery_id]
+)
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+
 }

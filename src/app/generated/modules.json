@@ -1,6 +1,12 @@
 [
-  "vehicles",
   "drivers",
-  "customers",
-  "deliveries"
+  "vehicles",
+  "vehicle_assignments",
+  "deliveries",
+  "routes",
+  "route_planning",
+  "tracking_events",
+  "vehicle_maintenance",
+  "fuel_logs",
+  "incidents"
 ]

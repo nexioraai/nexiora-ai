@@ -4,15 +4,8 @@ import CrudTable from '@/components/erp/CrudTable'
 export default function Page() {
 return (
 <CrudTable
-title="vehicles"
+title="route_planning"
 fields={[
-'[object Object]',
-'[object Object]',
-'[object Object]',
-'[object Object]',
-'[object Object]',
-'[object Object]',
-'[object Object]',
 '[object Object]',
 '[object Object]',
 '[object Object]',
