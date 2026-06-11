@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 type Props = { params: Promise<{ slug: string }> }
 
 type ERPField = { name: string; type: string; required?: boolean; unique?: boolean }
-type ERPModule = { name: string; fields: ERPField[]; relations?: any[] }
+type ERPModule = { name: string; fields: (ERPField | string)[]; relations?: any[] }
 
 async function fetchErp(slug: string) {
   const { data, error } = await supabaseAdmin
@@ -47,12 +47,16 @@ export default async function ErpPage({ params }: Props) {
                 {mod.name.replace(/_/g, ' ')}
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {(mod.fields || []).slice(0, 12).map((f) => (
-                  <div key={f.name} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #1c150d', paddingBottom: 4 }}>
-                    <span style={{ color: '#cbbfae' }}>{f.name.replace(/_/g, ' ')}</span>
-                    <span style={{ color: '#6f6456' }}>{f.type}</span>
+                {(mod.fields || []).slice(0, 12).map((f, i) => {
+                  const fname = typeof f === 'string' ? f : (f?.name || '');
+                  const ftype = typeof f === 'string' ? '' : (f?.type || '');
+                  return (
+                  <div key={fname || i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #1c150d', paddingBottom: 4 }}>
+                    <span style={{ color: '#cbbfae' }}>{fname.replace(/_/g, ' ')}</span>
+                    <span style={{ color: '#6f6456' }}>{ftype}</span>
                   </div>
-                ))}
+                  );
+                })}
                 {(mod.fields || []).length > 12 && (
                   <span style={{ color: '#6f6456', fontSize: 12, marginTop: 4 }}>
                     +{mod.fields.length - 12} autres champs
