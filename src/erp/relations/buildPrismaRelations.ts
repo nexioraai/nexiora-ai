@@ -9,52 +9,126 @@ const lines: string[] = []
 
 for (const relation of graph) {
 
-if (
-relation.sourceModel !== modelName
-) {
-continue
-}
+//
+// MANY TO ONE
+//
 
 if (
 relation.relationType === 'many_to_one'
 ) {
 
-lines.push(
-`${relation.targetModel.slice(0, -1)} ${relation.targetModel}?`
-)
-
-continue
-}
-
 if (
-relation.relationType === 'one_to_one'
+relation.sourceModel === modelName
 ) {
 
 lines.push(
 `${relation.targetModel.slice(0, -1)} ${relation.targetModel}?`
 )
 
+}
+
+if (
+relation.targetModel === modelName
+) {
+
+lines.push(
+`${relation.inverseField} ${relation.sourceModel}[]`
+)
+
+}
+
 continue
 }
+
+//
+// ONE TO MANY
+//
 
 if (
 relation.relationType === 'one_to_many'
 ) {
 
-lines.push(
-`${relation.targetModel} ${relation.targetModel}[]`
-)
-
-continue
-}
-
 if (
-relation.relationType === 'many_to_many'
+relation.sourceModel === modelName
 ) {
 
 lines.push(
 `${relation.targetModel} ${relation.targetModel}[]`
 )
+
+}
+
+if (
+relation.targetModel === modelName
+) {
+
+lines.push(
+`${relation.inverseField} ${relation.sourceModel}?`
+)
+
+}
+
+continue
+}
+
+//
+// ONE TO ONE
+//
+
+if (
+relation.relationType === 'one_to_one'
+) {
+
+if (
+relation.sourceModel === modelName
+) {
+
+lines.push(
+`${relation.targetModel.slice(0, -1)} ${relation.targetModel}?`
+)
+
+}
+
+if (
+relation.targetModel === modelName
+) {
+
+lines.push(
+`${relation.inverseField} ${relation.sourceModel}?`
+)
+
+}
+
+continue
+}
+
+//
+// MANY TO MANY
+//
+
+if (
+relation.relationType === 'many_to_many'
+) {
+
+if (
+relation.sourceModel === modelName
+) {
+
+lines.push(
+`${relation.targetModel} ${relation.targetModel}[]`
+)
+
+}
+
+if (
+relation.targetModel === modelName
+) {
+
+lines.push(
+`${relation.inverseField} ${relation.sourceModel}[]`
+)
+
+}
 
 continue
 }
