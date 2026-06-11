@@ -1,6 +1,7 @@
 import { buildRelationGraph } from '@/erp/relations/buildRelationGraph'
 import { normalizeRelations } from '@/erp/relations/normalizeRelations'
 import { buildPrismaRelations } from '@/erp/relations/buildPrismaRelations'
+import { buildPrismaField } from './buildPrismaField'
 
 export function generatePrismaSchema(
 erp: any
@@ -32,8 +33,8 @@ for (const model of erp.models || []) {
 const fields =
 (model.fields || [])
 .map(
-(field: string) =>
-`${field} String?`
+(field: any) =>
+buildPrismaField(field)
 )
 .join('\n')
 
