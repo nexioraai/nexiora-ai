@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Boxes, Bot, Zap, GitBranch, FileBarChart,
-  Search, Circle, TrendingUp, ChevronRight, Database, Shield,
+  Search, Circle, TrendingUp, ChevronRight, Database, Shield, History,
 } from 'lucide-react'
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -12,6 +12,7 @@ import {
 } from 'recharts'
 import ModuleTable from './ModuleTable'
 import TeamAccess from './TeamAccess'
+import ActivityLog from './ActivityLog'
 import { supabase } from '@/lib/supabase'
 
 type ERPField = { name: string; type: string }
@@ -66,7 +67,9 @@ export default function ErpApp({ erp }: { erp: any }) {
     { id: 'workflows', label: 'Workflows', icon: GitBranch, count: workflows.length },
     { id: 'reports', label: 'Rapports', icon: FileBarChart, count: reports.length },
     { id: 'team', label: 'Équipe & Accès', icon: Shield },
+    { id: 'activity', label: "Journal d'activité", icon: History },
   ]
+  const visibleNav = nav.filter((n) => (n.id === 'team' || n.id === 'activity') ? isAdmin : true)
   const activeLabel = nav.find((n) => n.id === view)?.label || 'Tableau de bord'
 
   return (
@@ -80,7 +83,7 @@ export default function ErpApp({ erp }: { erp: any }) {
           </div>
         </div>
         <nav style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {nav.map((item) => {
+          {visibleNav.map((item) => {
             const Icon = item.icon
             const active = view === item.id
             return (
@@ -127,6 +130,7 @@ export default function ErpApp({ erp }: { erp: any }) {
               {view === 'workflows' && <WorkflowsView workflows={workflows} />}
               {view === 'reports' && <ReportsView reports={reports} />}
               {view === 'team' && <TeamAccess erpSlug={erp.slug} moduleNames={modules.map((m) => m.name)} isAdmin={isAdmin} ownerEmail={erp.owner_email || ''} />}
+              {view === 'activity' && isAdmin && <ActivityLog erpSlug={erp.slug} />}
             </motion.div>
           </AnimatePresence>
         </main>

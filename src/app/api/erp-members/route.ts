@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase as supabaseAnon } from '@/lib/supabase'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { logActivity } from '@/lib/activity-log'
 
 async function getEmail(req: NextRequest): Promise<string | null> {
   const authHeader = req.headers.get('authorization')
@@ -56,6 +57,7 @@ export async function POST(req: NextRequest) {
     .select()
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  await logActivity(erp_slug, email, 'invite_member', `${member_email} invité comme ${role || 'employee'}`)
   return NextResponse.json({ member: data })
 }
 
@@ -96,7 +98,9 @@ export async function DELETE(req: NextRequest) {
   if (!(await isAdmin(email, slug))) {
     return NextResponse.json({ error: "Seul le PDG peut gérer les accès" }, { status: 403 })
   }
+  const { data: removed } = await supabaseAdmin.from('erp_members').select('member_email').eq('id', id).single()
   const { error } = await supabaseAdmin.from('erp_members').delete().eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  await logActivity(slug, email, 'remove_member', `${removed?.member_email || 'membre'} retiré`)
   return NextResponse.json({ success: true })
 }
