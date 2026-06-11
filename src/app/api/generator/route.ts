@@ -11,57 +11,62 @@ import { analyzeBusiness } from '@/ai/business-understanding'
 import { getNextQuestion } from '@/ai/question-engine'
 import { activityScopes } from '@/ai/activity-scopes'
 
+// --- FLAG TEMPORAIRE ---
+// true  = court-circuite le check needsMoreInfo pour valider le pipeline complet.
+// false = comportement normal (demande les infos manquantes avant de generer).
+const BYPASS_UNDERSTANDING = true
+
 export async function GET(req: NextRequest) {
 
-const prompt =
-req.nextUrl.searchParams.get('prompt') || ''
+  const prompt =
+    req.nextUrl.searchParams.get('prompt') || ''
 
-const understanding =
-analyzeBusiness(prompt)
+  const understanding =
+    analyzeBusiness(prompt)
 
-if (understanding.missing.length > 0) {
+  if (!BYPASS_UNDERSTANDING && understanding.missing.length > 0) {
 
-return NextResponse.json({
-success: true,
-needsMoreInfo: true,
-question: getNextQuestion(understanding),
-understanding
-})
-}
+    return NextResponse.json({
+      success: true,
+      needsMoreInfo: true,
+      question: getNextQuestion(understanding),
+      understanding
+    })
+  }
 
-const availableModules =
-activityScopes[
-understanding.activity || 'general_business'
-] || []
+  const availableModules =
+    activityScopes[
+      understanding.activity || 'general_business'
+    ] || []
 
-const selectedModules =
-understanding.scope === 'full_business'
-? availableModules
-: availableModules
+  const selectedModules =
+    understanding.scope === 'full_business'
+      ? availableModules
+      : availableModules
 
-const erp =
-await generateFromPrompt(
-prompt,
-selectedModules
-)
+  const erp =
+    await generateFromPrompt(
+      prompt,
+      selectedModules
+    )
 
-if (!erp) {
-return NextResponse.json({
-success: false,
-error: 'ERP generation failed'
-})
-}
+  if (!erp) {
+    return NextResponse.json({
+      success: false,
+      error: 'ERP generation failed'
+    })
+  }
 
-cleanupGenerated()
+  cleanupGenerated()
 
-writePrismaSchema(erp)
-writePages(erp)
-writeApiRoutes(erp)
-writeAgentPages(erp)
+  writePrismaSchema(erp)
+  writePages(erp)
+  writeApiRoutes(erp)
+  writeAgentPages(erp)
 
-return NextResponse.json({
-success: true,
-selectedModules,
-erp
-})
+  return NextResponse.json({
+    success: true,
+    selectedModules,
+    erp
+  })
 }
