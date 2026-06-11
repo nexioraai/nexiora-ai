@@ -7,6 +7,8 @@ const [prompt, setPrompt] = useState('');
 const [erp, setErp] = useState<any>(null);
 
 async function generate() {
+    console.log('BUTTON CLICKED')
+
 const res = await fetch(
 '/api/generator?prompt=' + encodeURIComponent(prompt)
 )

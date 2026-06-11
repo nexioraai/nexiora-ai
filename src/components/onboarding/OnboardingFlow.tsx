@@ -47,6 +47,24 @@ export default function OnboardingFlow() {
       : prompt;
 
     try {
+      // --- AIGUILLAGE : détection d'intention (site web vs systeme de gestion/ERP) ---
+      // En cas de doute ou d'erreur, l'API renvoie 'website' (flux par defaut sur).
+      try {
+        const intentRes = await fetch('/api/detect-intent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: fullMessage }),
+        });
+        const intentData = await intentRes.json();
+        if (intentData?.type === 'erp') {
+          router.push(`/generator?prompt=${encodeURIComponent(fullMessage)}`);
+          return;
+        }
+      } catch {
+        // si la detection echoue, on continue simplement en mode site web
+      }
+      // --- FIN AIGUILLAGE ---
+
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       if (!token) {
