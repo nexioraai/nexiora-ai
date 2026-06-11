@@ -75,9 +75,10 @@ const inverseAttrs =
 buildInverseRelationAttributes(relation)
 
 lines.push(
-`${relation.inverseField} ${relation.sourceModel}? ${inverseAttrs}`
+buildInverseRelationField(
+relation
 )
-
+)
 }
 
 continue
@@ -112,9 +113,10 @@ const inverseAttrs =
 buildInverseRelationAttributes(relation)
 
 lines.push(
-`${relation.inverseField} ${relation.sourceModel}? ${inverseAttrs}`
+buildInverseRelationField(
+relation
 )
-
+)
 }
 
 continue
