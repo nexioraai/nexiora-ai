@@ -1,3 +1,4 @@
+import { buildInverseRelationAttributes } from "./buildInverseRelationAttributes"
 import { buildRelationAttributes } from './buildRelationAttributes'
 import { RelationGraphItem } from './buildRelationGraph'
 
@@ -66,8 +67,11 @@ if (
 relation.targetModel === modelName
 ) {
 
+const inverseAttrs =
+buildInverseRelationAttributes(relation)
+
 lines.push(
-`${relation.inverseField} ${relation.sourceModel}?`
+`${relation.inverseField} ${relation.sourceModel}? ${inverseAttrs}`
 )
 
 }
@@ -100,8 +104,11 @@ if (
 relation.targetModel === modelName
 ) {
 
+const inverseAttrs =
+buildInverseRelationAttributes(relation)
+
 lines.push(
-`${relation.inverseField} ${relation.sourceModel}?`
+`${relation.inverseField} ${relation.sourceModel}? ${inverseAttrs}`
 )
 
 }
