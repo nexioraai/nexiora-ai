@@ -3,11 +3,15 @@ import { normalizeBlueprint } from '@/erp/contracts/normalizeBlueprint'
 import { validateBlueprint } from '@/erp/contracts/validateBlueprint'
 
 export async function generateFromPrompt(
-prompt: string
+prompt: string,
+selectedModules: string[] = []
 ) {
 
 const raw =
-await generateBlueprint(prompt)
+await generateBlueprint(
+prompt,
+selectedModules
+)
 
 const blueprint =
 normalizeBlueprint(raw)

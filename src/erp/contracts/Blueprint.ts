@@ -7,5 +7,5 @@ fields: string[]
 
 export interface ERPBlueprint {
 models: ERPModel[]
-relations: Relation[]
+relations?: Relation[]
 }

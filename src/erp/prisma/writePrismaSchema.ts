@@ -16,6 +16,7 @@ process.cwd(),
 fs.mkdirSync(prismaDir, {
 recursive: true
 })
+console.log('WRITE PRISMA CALLED')
 
 fs.writeFileSync(
 path.join(
@@ -26,7 +27,16 @@ schema
 )
 
 console.log(
-'SCHEMA.PRISMA WRITTEN'
+'SCHEMA PATH:',
+path.join(
+prismaDir,
+'schema.prisma'
+)
+)
+
+console.log(
+'SCHEMA SIZE:',
+schema.length
 )
 
 return true

@@ -2,8 +2,16 @@ import { anthropic } from '@/lib/anthropic'
 import { ERPBlueprint } from '../types/erp-blueprint'
 
 export async function generateBlueprint(
-prompt: string
+prompt: string,
+selectedModules: string[] = []
 ): Promise<ERPBlueprint> {
+
+const modulesText =
+selectedModules.length
+?
+selectedModules.join("\n")
+:
+"AUTO"
 
 const response = await anthropic.messages.create({
 model: 'claude-sonnet-4-6',
@@ -125,6 +133,16 @@ Format:
 "procure_to_pay"
 ]
 }
+
+Selected Modules:
+
+${modulesText}
+
+If Selected Modules is not AUTO:
+
+- Generate ONLY those modules
+- Do not invent additional modules
+- Build the ERP around those modules
 
 Business:
 

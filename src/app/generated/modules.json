@@ -1,14 +1,6 @@
 [
-"customers",
-"suppliers",
-"products",
-"inventory",
-"purchase_orders",
-"sales_orders",
-"invoices",
-"payments",
-"warranties_returns",
-"caterpillar_models",
-"employees",
-"expenses"
+  "vehicles",
+  "drivers",
+  "customers",
+  "deliveries"
 ]

@@ -1,295 +1,174 @@
+
 generator client {
- provider = "prisma-client-js"
+provider = "prisma-client-js"
 }
 
 datasource db {
- provider = "sqlite"
- url = env("DATABASE_URL")
+provider = "sqlite"
+url = env("DATABASE_URL")
 }
 
+model vehicles {
 
-model customers {
 id String @id @default(cuid())
 
-customer_id String?
-company_name String?
-contact_name String?
+vehicle_id String?
+registration_number String?
+brand String?
+model String?
+year String?
+vehicle_type String?
+fuel_type String?
+payload_capacity_kg String?
+volume_capacity_m3 String?
+current_mileage_km String?
+last_service_date String?
+next_service_date String?
+insurance_number String?
+insurance_expiry_date String?
+technical_inspection_date String?
+technical_inspection_expiry String?
+gps_tracker_id String?
+status String?
+current_location String?
+acquisition_date String?
+acquisition_cost String?
+assigned_driver_id String?
+notes String?
+
+
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+
+}
+
+model drivers {
+
+id String @id @default(cuid())
+
+driver_id String?
+first_name String?
+last_name String?
+date_of_birth String?
+national_id String?
 phone String?
 email String?
 address String?
 city String?
-country String?
-tax_number String?
-customer_type String?
-credit_limit String?
-payment_terms String?
-currency String?
-
-createdAt DateTime @default(now())
-updatedAt DateTime @updatedAt
-}
-
-model suppliers {
-id String @id @default(cuid())
-
-supplier_id String?
-company_name String?
-contact_name String?
-phone String?
-email String?
-country String?
-address String?
-tax_number String?
-supplier_type String?
-currency String?
-payment_terms String?
-lead_time_days String?
-incoterms String?
-bank_details String?
-
-createdAt DateTime @default(now())
-updatedAt DateTime @updatedAt
-}
-
-model products {
-id String @id @default(cuid())
-
-part_number String?
-caterpillar_oem_reference String?
-part_name String?
-description String?
-category String?
-compatible_models String?
-unit_of_measure String?
-purchase_price String?
-selling_price String?
-weight_kg String?
-dimensions String?
-country_of_origin String?
-hs_code String?
-minimum_stock String?
-reorder_point String?
-shelf_location String?
-
-createdAt DateTime @default(now())
-updatedAt DateTime @updatedAt
-}
-
-model inventory {
-id String @id @default(cuid())
-
-inventory_id String?
-part_number String?
-warehouse_location String?
-quantity_on_hand String?
-quantity_reserved String?
-quantity_available String?
-quantity_in_transit String?
-last_received_date String?
-last_sold_date String?
-batch_number String?
-expiry_date String?
-condition String?
-valuation_method String?
-
-createdAt DateTime @default(now())
-updatedAt DateTime @updatedAt
-}
-
-model purchase_orders {
-id String @id @default(cuid())
-
-po_number String?
-supplier_id String?
-order_date String?
-expected_delivery_date String?
-incoterms String?
-currency String?
-exchange_rate String?
-part_number String?
-quantity_ordered String?
-unit_price String?
-total_amount String?
-shipping_cost String?
-insurance_cost String?
-customs_duties String?
-taxes String?
-total_landed_cost String?
-status String?
-payment_status String?
-notes String?
-
-createdAt DateTime @default(now())
-updatedAt DateTime @updatedAt
-}
-
-model import_logistics {
-id String @id @default(cuid())
-
-shipment_id String?
-po_number String?
-supplier_id String?
-shipping_method String?
-carrier_name String?
-bill_of_lading String?
-container_number String?
-departure_port String?
-arrival_port String?
-departure_date String?
-estimated_arrival_date String?
-actual_arrival_date String?
-customs_declaration_number String?
-customs_broker String?
-customs_clearance_date String?
-duties_paid String?
-freight_cost String?
-insurance_cost String?
-shipment_status String?
-documents_checklist String?
-
-createdAt DateTime @default(now())
-updatedAt DateTime @updatedAt
-}
-
-model sales_orders {
-id String @id @default(cuid())
-
-order_number String?
-customer_id String?
-order_date String?
-delivery_date String?
-part_number String?
-quantity String?
-unit_price String?
-discount String?
-tax_rate String?
-total_amount String?
-currency String?
-payment_terms String?
-delivery_address String?
-order_status String?
-invoice_number String?
-payment_status String?
-notes String?
-
-createdAt DateTime @default(now())
-updatedAt DateTime @updatedAt
-}
-
-model invoices {
-id String @id @default(cuid())
-
-invoice_number String?
-invoice_type String?
-order_number String?
-customer_id String?
-invoice_date String?
-due_date String?
-part_number String?
-quantity String?
-unit_price String?
-subtotal String?
-tax_amount String?
-discount String?
-total_amount String?
-currency String?
-payment_status String?
-payment_date String?
-payment_method String?
-
-createdAt DateTime @default(now())
-updatedAt DateTime @updatedAt
-}
-
-model payments {
-id String @id @default(cuid())
-
-payment_id String?
-payment_type String?
-reference_number String?
-customer_or_supplier_id String?
-payment_date String?
-amount String?
-currency String?
-exchange_rate String?
-payment_method String?
-bank_account String?
-transaction_reference String?
-notes String?
-status String?
-
-createdAt DateTime @default(now())
-updatedAt DateTime @updatedAt
-}
-
-model warranties_returns {
-id String @id @default(cuid())
-
-rma_number String?
-customer_id String?
-order_number String?
-part_number String?
-return_date String?
-reason String?
-condition String?
-quantity_returned String?
-refund_amount String?
-replacement_issued String?
-status String?
-notes String?
-
-createdAt DateTime @default(now())
-updatedAt DateTime @updatedAt
-}
-
-model caterpillar_models {
-id String @id @default(cuid())
-
-model_id String?
-model_name String?
-model_category String?
-serial_number_range String?
-year_range String?
-engine_type String?
-compatible_parts String?
-description String?
-
-createdAt DateTime @default(now())
-updatedAt DateTime @updatedAt
-}
-
-model employees {
-id String @id @default(cuid())
-
-employee_id String?
-full_name String?
-role String?
-department String?
-phone String?
-email String?
+license_number String?
+license_category String?
+license_issue_date String?
+license_expiry_date String?
+adr_certificate String?
+adr_expiry_date String?
 hire_date String?
-salary String?
-permissions_level String?
+employment_type String?
+status String?
+total_km_driven String?
+total_deliveries_completed String?
+rating_score String?
+emergency_contact_name String?
+emergency_contact_phone String?
+notes String?
+
+
 
 createdAt DateTime @default(now())
 updatedAt DateTime @updatedAt
+
 }
 
-model expenses {
+model customers {
+
 id String @id @default(cuid())
 
-expense_id String?
-expense_date String?
-category String?
-description String?
-amount String?
+customer_id String?
+company_name String?
+contact_first_name String?
+contact_last_name String?
+phone String?
+mobile String?
+email String?
+billing_address String?
+billing_city String?
+billing_postal_code String?
+billing_country String?
+default_delivery_address String?
+default_delivery_city String?
+default_delivery_postal_code String?
+tax_number String?
+registration_number String?
+payment_terms_days String?
+credit_limit String?
 currency String?
-supplier_id String?
-invoice_reference String?
-payment_method String?
-approved_by String?
-status String?
+customer_type String?
+account_status String?
+total_orders String?
+total_revenue String?
+assigned_account_manager String?
+notes String?
+created_at String?
+
+
 
 createdAt DateTime @default(now())
 updatedAt DateTime @updatedAt
+
+}
+
+model deliveries {
+
+id String @id @default(cuid())
+
+delivery_id String?
+delivery_reference String?
+customer_id String?
+driver_id String?
+vehicle_id String?
+pickup_address String?
+pickup_city String?
+pickup_postal_code String?
+pickup_country String?
+pickup_contact_name String?
+pickup_contact_phone String?
+scheduled_pickup_date String?
+actual_pickup_date String?
+delivery_address String?
+delivery_city String?
+delivery_postal_code String?
+delivery_country String?
+delivery_contact_name String?
+delivery_contact_phone String?
+scheduled_delivery_date String?
+actual_delivery_date String?
+cargo_description String?
+cargo_weight_kg String?
+cargo_volume_m3 String?
+cargo_quantity String?
+cargo_type String?
+is_fragile String?
+requires_refrigeration String?
+temperature_min String?
+temperature_max String?
+distance_km String?
+estimated_duration_hours String?
+actual_duration_hours String?
+delivery_status String?
+priority_level String?
+tracking_code String?
+proof_of_delivery_signature String?
+proof_of_delivery_photo String?
+delivery_notes String?
+failure_reason String?
+delivery_cost String?
+billing_status String?
+created_at String?
+updated_at String?
+
+
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+
 }

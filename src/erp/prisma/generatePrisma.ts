@@ -1,31 +1,8 @@
-export function generatePrismaSchema(erp: any) {
+import { buildRelations } from './buildRelations'
 
-console.log(
-'RELATIONS_COUNT',
-erp.relations?.length || 0
-)
-
-const relationsByModel:
-Record<string, any[]> = {}
-
-for (
-const relation of erp.relations || []
+export function generatePrismaSchema(
+erp: any
 ) {
-
-if (
-!relationsByModel[
-relation.sourceModel
-]
-) {
-relationsByModel[
-relation.sourceModel
-] = []
-}
-
-relationsByModel[
-relation.sourceModel
-].push(relation)
-}
 
 let schema = `
 generator client {
@@ -38,74 +15,21 @@ url = env("DATABASE_URL")
 }
 `
 
-for (const model of erp.models) {
+for (const model of erp.models || []) {
 
 const fields =
-model.fields
+(model.fields || [])
 .map(
 (field: string) =>
 `${field} String?`
 )
 .join('\n')
 
-const modelRelations =
-relationsByModel[
-model.name
-] || []
-
-console.log(
-'MODEL',
-model.name
-)
-
-console.log(
-JSON.stringify(
-modelRelations,
-null,
-2
-)
-)
-
 const relationFields =
-modelRelations
-.map((relation: any) => {
-
-if (
-relation.type ===
-'many_to_one'
-) {
-
-return `
-${relation.inverseField}
-${relation.targetModel}?
-`
-}
-
-if (
-relation.type ===
-'one_to_many'
-) {
-
-return `
-${relation.inverseField}
-${relation.targetModel}[]
-`
-}
-
-if (
-relation.type ===
-'one_to_one'
-) {
-
-return `
-${relation.inverseField}
-${relation.targetModel}?
-`
-}
-
-return ''
-})
-.join('\n')
+buildRelations(
+model.name,
+erp.relations || []
+)
 
 schema += `
 model ${model.name} {
