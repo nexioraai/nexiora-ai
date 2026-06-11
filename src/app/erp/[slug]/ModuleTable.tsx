@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Search, Trash2, Pencil, X, Loader2, Inbox, QrCode } from 'lucide-react'
+import { Plus, Search, Trash2, Pencil, X, Loader2, Inbox, QrCode, ScanLine } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import LocationPicker, { Location, buildLocationCode } from './LocationPicker'
 import QRCodeView from './QRCodeView'
+import Scanner from './Scanner'
 
 type ERPField = { name: string; type: string }
 type ERPModule = { name: string; fields: (ERPField | string)[] }
@@ -35,6 +36,7 @@ export default function ModuleTable({ erpSlug, module }: { erpSlug: string; modu
   const [formScope, setFormScope] = useState('')
   const [location, setLocation] = useState<Location>({ warehouse: '', aisle: '', rack: '', level: '', bin: '' })
   const [qrCode, setQrCode] = useState<string | null>(null)
+  const [showScanner, setShowScanner] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -124,6 +126,9 @@ export default function ModuleTable({ erpSlug, module }: { erpSlug: string; modu
             {scopes.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         )}
+        <button onClick={() => setShowScanner(true)} style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'transparent', color: C.accent, border: `1px solid ${C.panelBorder}`, borderRadius: 10, padding: '9px 14px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
+          <ScanLine size={16} /> Scanner
+        </button>
         <button onClick={openAdd} style={{ display: 'flex', alignItems: 'center', gap: 7, background: C.accent, color: '#fff', border: 'none', borderRadius: 10, padding: '9px 16px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
           <Plus size={16} /> Ajouter
         </button>
@@ -243,6 +248,7 @@ export default function ModuleTable({ erpSlug, module }: { erpSlug: string; modu
         </div>
       )}
 
+      {showScanner && <Scanner onResult={(code) => { setSearch(code); setShowScanner(false) }} onClose={() => setShowScanner(false)} />}
       {qrCode && <QRCodeView code={qrCode} label={label(module.name)} onClose={() => setQrCode(null)} />}
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
