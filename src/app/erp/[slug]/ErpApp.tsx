@@ -10,6 +10,7 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid,
 } from 'recharts'
+import ModuleTable from './ModuleTable'
 
 type ERPField = { name: string; type: string }
 type ERPModule = { name: string; fields: (ERPField | string)[]; relations?: any[] }
@@ -48,6 +49,7 @@ export default function ErpApp({ erp }: { erp: any }) {
   const title = bp.name || erp.business_name || 'Système de gestion'
 
   const [view, setView] = useState<string>('dashboard')
+  const [selectedModule, setSelectedModule] = useState<ERPModule | null>(null)
 
   const nav = [
     { id: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
@@ -74,7 +76,7 @@ export default function ErpApp({ erp }: { erp: any }) {
             const Icon = item.icon
             const active = view === item.id
             return (
-              <button key={item.id} onClick={() => setView(item.id)} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '9px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', fontSize: 13.5, transition: 'all .18s', background: active ? C.accentSoft : 'transparent', color: active ? C.cream : C.muted, fontWeight: active ? 600 : 500 }}>
+              <button key={item.id} onClick={() => { setView(item.id); setSelectedModule(null) }} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '9px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', fontSize: 13.5, transition: 'all .18s', background: active ? C.accentSoft : 'transparent', color: active ? C.cream : C.muted, fontWeight: active ? 600 : 500 }}>
                 <Icon size={17} color={active ? C.accent : C.faint} />
                 <span style={{ flex: 1 }}>{item.label}</span>
                 {typeof item.count === 'number' && (
@@ -111,7 +113,7 @@ export default function ErpApp({ erp }: { erp: any }) {
           <AnimatePresence mode="wait">
             <motion.div key={view} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
               {view === 'dashboard' && <DashboardView dashboard={dashboard} />}
-              {view === 'modules' && <ModulesView modules={modules} />}
+              {view === 'modules' && (selectedModule ? <ModuleTableWrapper erpSlug={erp.slug} module={selectedModule} onBack={() => setSelectedModule(null)} /> : <ModulesView modules={modules} onOpen={setSelectedModule} />)}
               {view === 'agents' && <AgentsView agents={agents} />}
               {view === 'automations' && <AutomationsView automations={automations} />}
               {view === 'workflows' && <WorkflowsView workflows={workflows} />}
@@ -211,11 +213,22 @@ function DashboardView({ dashboard }: any) {
   )
 }
 
-function ModulesView({ modules }: { modules: ERPModule[] }) {
+function ModuleTableWrapper({ erpSlug, module, onBack }: { erpSlug: string; module: ERPModule; onBack: () => void }) {
+  return (
+    <div>
+      <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', marginBottom: 16, padding: 0 }}>
+        <ChevronRight size={15} style={{ transform: 'rotate(180deg)' }} /> Retour aux modules
+      </button>
+      <ModuleTable erpSlug={erpSlug} module={module} />
+    </div>
+  )
+}
+
+function ModulesView({ modules, onOpen }: { modules: ERPModule[]; onOpen: (m: ERPModule) => void }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(330px,1fr))', gap: 16 }}>
       {modules.map((mod, i) => (
-        <motion.div key={mod.name} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} style={card()}>
+        <motion.div key={mod.name} onClick={() => onOpen(mod)} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} style={card({ cursor: 'pointer' })}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
             <div style={{ width: 32, height: 32, borderRadius: 9, background: C.accentSoft, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Database size={16} color={C.accent} />
