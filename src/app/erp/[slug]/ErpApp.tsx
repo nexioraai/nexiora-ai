@@ -1,16 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Boxes, Bot, Zap, GitBranch, FileBarChart,
-  Search, Circle, TrendingUp, ChevronRight, Database,
+  Search, Circle, TrendingUp, ChevronRight, Database, Shield,
 } from 'lucide-react'
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid,
 } from 'recharts'
 import ModuleTable from './ModuleTable'
+import TeamAccess from './TeamAccess'
+import { supabase } from '@/lib/supabase'
 
 type ERPField = { name: string; type: string }
 type ERPModule = { name: string; fields: (ERPField | string)[]; relations?: any[] }
@@ -50,6 +52,11 @@ export default function ErpApp({ erp }: { erp: any }) {
 
   const [view, setView] = useState<string>('dashboard')
   const [selectedModule, setSelectedModule] = useState<ERPModule | null>(null)
+  const [currentEmail, setCurrentEmail] = useState<string>('')
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setCurrentEmail(data.session?.user?.email || ''))
+  }, [])
+  const isAdmin = !!currentEmail && currentEmail.toLowerCase() === (erp.owner_email || '').toLowerCase()
 
   const nav = [
     { id: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
@@ -58,6 +65,7 @@ export default function ErpApp({ erp }: { erp: any }) {
     { id: 'automations', label: 'Automatisations', icon: Zap, count: automations.length },
     { id: 'workflows', label: 'Workflows', icon: GitBranch, count: workflows.length },
     { id: 'reports', label: 'Rapports', icon: FileBarChart, count: reports.length },
+    { id: 'team', label: 'Équipe & Accès', icon: Shield },
   ]
   const activeLabel = nav.find((n) => n.id === view)?.label || 'Tableau de bord'
 
@@ -118,6 +126,7 @@ export default function ErpApp({ erp }: { erp: any }) {
               {view === 'automations' && <AutomationsView automations={automations} />}
               {view === 'workflows' && <WorkflowsView workflows={workflows} />}
               {view === 'reports' && <ReportsView reports={reports} />}
+              {view === 'team' && <TeamAccess erpSlug={erp.slug} moduleNames={modules.map((m) => m.name)} isAdmin={isAdmin} ownerEmail={erp.owner_email || ''} />}
             </motion.div>
           </AnimatePresence>
         </main>
