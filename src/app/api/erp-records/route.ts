@@ -13,20 +13,41 @@ async function getEmail(req: NextRequest): Promise<string | null> {
 }
 
 // GET : lister les enregistrements d'un module
+
+async function getAccess(email: string, erpSlug: string): Promise<{ isAdmin: boolean; scope: string | null }> {
+  const { data: erp } = await supabaseAdmin
+    .from('erps').select('owner_email').eq('slug', erpSlug).single()
+  if (erp && erp.owner_email === email) return { isAdmin: true, scope: null }
+  const { data: member } = await supabaseAdmin
+    .from('erp_members').select('role, scope').eq('erp_slug', erpSlug).eq('member_email', email).single()
+  if (member && member.role === 'admin') return { isAdmin: true, scope: null }
+  return { isAdmin: false, scope: member?.scope || null }
+}
+
 export async function GET(req: NextRequest) {
   const slug = req.nextUrl.searchParams.get('erp_slug')
   const moduleName = req.nextUrl.searchParams.get('module')
   if (!slug || !moduleName) {
     return NextResponse.json({ error: 'erp_slug et module requis' }, { status: 400 })
   }
-  const { data, error } = await supabaseAdmin
+  const email = await getEmail(req)
+  const access = email ? await getAccess(email, slug) : { isAdmin: false, scope: null }
+
+  let query = supabaseAdmin
     .from('erp_records')
     .select('*')
     .eq('erp_slug', slug)
     .eq('module_name', moduleName)
     .order('created_at', { ascending: false })
+
+  // Cloisonnement : un gérant ne voit que les données de son périmètre
+  if (!access.isAdmin && access.scope) {
+    query = query.eq('scope', access.scope)
+  }
+
+  const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ records: data || [] })
+  return NextResponse.json({ records: data || [], access })
 }
 
 // POST : ajouter un enregistrement
@@ -35,13 +56,16 @@ export async function POST(req: NextRequest) {
   if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
-  const { erp_slug, module_name, data } = body
+  const { erp_slug, module_name, data, scope: requestedScope } = body
   if (!erp_slug || !module_name) {
     return NextResponse.json({ error: 'erp_slug et module_name requis' }, { status: 400 })
   }
+  const access = await getAccess(email, erp_slug)
+  // Gérant : scope imposé = son périmètre. PDG : scope qu'il choisit (ou null).
+  const finalScope = access.isAdmin ? (requestedScope || null) : access.scope
   const { data: inserted, error } = await supabaseAdmin
     .from('erp_records')
-    .insert({ erp_slug, module_name, data: data || {}, owner_email: email })
+    .insert({ erp_slug, module_name, data: data || {}, owner_email: email, scope: finalScope })
     .select()
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
