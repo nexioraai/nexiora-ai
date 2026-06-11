@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase'
 
 type ERPField = { name: string; type: string }
 type ERPModule = { name: string; fields: (ERPField | string)[] }
-type Record_ = { id: string; data: Record<string, any>; created_at: string }
+type Record_ = { id: string; data: Record<string, any>; created_at: string; scope?: string | null }
 
 const C = {
   bg2: '#0a0704', panel: 'rgba(245,237,225,0.03)', panelBorder: 'rgba(217,122,79,0.14)',
@@ -26,6 +26,9 @@ export default function ModuleTable({ erpSlug, module }: { erpSlug: string; modu
   const [editing, setEditing] = useState<Record_ | null>(null)
   const [form, setForm] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [scopeFilter, setScopeFilter] = useState('all')
+  const [formScope, setFormScope] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -33,6 +36,7 @@ export default function ModuleTable({ erpSlug, module }: { erpSlug: string; modu
       const res = await fetch(`/api/erp-records?erp_slug=${encodeURIComponent(erpSlug)}&module=${encodeURIComponent(module.name)}`)
       const json = await res.json()
       setRecords(json.records || [])
+      setIsAdmin(!!json.access?.isAdmin)
     } catch { setRecords([]) }
     setLoading(false)
   }, [erpSlug, module.name])
@@ -44,7 +48,7 @@ export default function ModuleTable({ erpSlug, module }: { erpSlug: string; modu
     return data.session?.access_token || ''
   }
 
-  const openAdd = () => { setEditing(null); setForm({}); setShowForm(true) }
+  const openAdd = () => { setEditing(null); setForm({}); setFormScope(''); setShowForm(true) }
   const openEdit = (r: Record_) => {
     setEditing(r)
     const f: Record<string, string> = {}
@@ -67,7 +71,7 @@ export default function ModuleTable({ erpSlug, module }: { erpSlug: string; modu
         await fetch('/api/erp-records', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + t },
-          body: JSON.stringify({ erp_slug: erpSlug, module_name: module.name, data: form }),
+          body: JSON.stringify({ erp_slug: erpSlug, module_name: module.name, data: form, scope: isAdmin ? (formScope || null) : undefined }),
         })
       }
       setShowForm(false)
@@ -87,8 +91,10 @@ export default function ModuleTable({ erpSlug, module }: { erpSlug: string; modu
     } catch {}
   }
 
+  const scopes = Array.from(new Set(records.map((r) => r.scope).filter(Boolean))) as string[]
   const filtered = records.filter((r) =>
-    !search || JSON.stringify(r.data).toLowerCase().includes(search.toLowerCase())
+    (!search || JSON.stringify(r.data).toLowerCase().includes(search.toLowerCase())) &&
+    (scopeFilter === 'all' || r.scope === scopeFilter)
   )
 
   const cols = fields.slice(0, 6)
@@ -106,6 +112,12 @@ export default function ModuleTable({ erpSlug, module }: { erpSlug: string; modu
           <Search size={15} color={C.faint} />
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher…" style={{ background: 'transparent', border: 'none', outline: 'none', color: C.cream, fontSize: 13, width: '100%' }} />
         </div>
+        {isAdmin && scopes.length > 0 && (
+          <select value={scopeFilter} onChange={(e) => setScopeFilter(e.target.value)} style={{ background: C.panel, border: `1px solid ${C.line}`, borderRadius: 10, padding: '9px 12px', color: C.cream, fontSize: 13, outline: 'none', cursor: 'pointer' }}>
+            <option value="all">Tous les périmètres</option>
+            {scopes.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        )}
         <button onClick={openAdd} style={{ display: 'flex', alignItems: 'center', gap: 7, background: C.accent, color: '#fff', border: 'none', borderRadius: 10, padding: '9px 16px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
           <Plus size={16} /> Ajouter
         </button>
@@ -186,6 +198,12 @@ export default function ModuleTable({ erpSlug, module }: { erpSlug: string; modu
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
+              {isAdmin && (
+                <div>
+                  <label style={{ fontSize: 12, color: C.muted, display: 'block', marginBottom: 5 }}>Périmètre (entrepôt / magasin)</label>
+                  <input value={formScope} onChange={(e) => setFormScope(e.target.value)} placeholder="Ex: Warehouse 1 (vide = aucun)" style={{ width: '100%', background: C.panel, border: `1px solid ${C.line}`, borderRadius: 9, padding: '10px 12px', color: C.cream, fontSize: 13.5, outline: 'none' }} />
+                </div>
+              )}
               {fields.map((f) => (
                 <div key={f}>
                   <label style={{ fontSize: 12, color: C.muted, textTransform: 'capitalize', display: 'block', marginBottom: 5 }}>{label(f)}</label>
