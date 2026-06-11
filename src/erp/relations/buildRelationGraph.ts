@@ -1,9 +1,14 @@
 export interface RelationGraphItem {
+
+relationName: string
+
 sourceModel: string
 sourceField: string
 
 targetModel: string
 targetField: string
+
+inverseField: string
 
 relationType:
 | 'one_to_one'
@@ -47,6 +52,10 @@ foreignKeyOwner =
 }
 
 return {
+
+relationName:
+relation.relationName,
+
 sourceModel:
 relation.sourceModel,
 
@@ -58,6 +67,9 @@ relation.targetModel,
 
 targetField:
 relation.targetField,
+
+inverseField:
+relation.inverseField,
 
 relationType:
 relation.type,
@@ -71,6 +83,7 @@ relation.sourceField &&
 relation.targetModel &&
 relation.targetField
 )
+
 }
 })
 }
