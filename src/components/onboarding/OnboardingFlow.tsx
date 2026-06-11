@@ -57,7 +57,22 @@ export default function OnboardingFlow() {
         });
         const intentData = await intentRes.json();
         if (intentData?.type === 'erp') {
-          router.push(`/generator?prompt=${encodeURIComponent(fullMessage)}`);
+          const { data: erpSession } = await supabase.auth.getSession();
+          const erpToken = erpSession.session?.access_token;
+          if (!erpToken) throw new Error(t('onboarding.error.sessionExpired'));
+          const erpRes = await fetch('/api/generator', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + erpToken,
+            },
+            body: JSON.stringify({ prompt: fullMessage }),
+          });
+          const erpData = await erpRes.json();
+          if (!erpRes.ok || !erpData.slug) {
+            throw new Error(erpData.error || t('onboarding.error.generationFailed'));
+          }
+          router.push(`/erp/${erpData.slug}`);
           return;
         }
       } catch {
