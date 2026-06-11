@@ -20,6 +20,21 @@ async function isOwner(email: string, erpSlug: string): Promise<boolean> {
 }
 
 // POST : générer une analyse IA stratégique (PDG UNIQUEMENT)
+
+// GET : récupérer le dernier rapport stocké (PDG uniquement)
+export async function GET(req: NextRequest) {
+  const slug = req.nextUrl.searchParams.get('erp_slug')
+  if (!slug) return NextResponse.json({ error: 'erp_slug requis' }, { status: 400 })
+  const email = await getEmail(req)
+  if (!email || !(await isOwner(email, slug))) {
+    return NextResponse.json({ error: 'Réservé au PDG' }, { status: 403 })
+  }
+  const { data } = await supabaseAdmin
+    .from('erp_analysis_cache').select('*').eq('erp_slug', slug).single()
+  if (!data) return NextResponse.json({ report: null })
+  return NextResponse.json({ report: data.report, recordCount: data.record_count, generatedAt: data.generated_at })
+}
+
 export async function POST(req: NextRequest) {
   const email = await getEmail(req)
   if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -100,6 +115,13 @@ Si les données sont insuffisantes pour une catégorie, renvoie un tableau vide 
   } catch (e) {
     return NextResponse.json({ error: "L'analyse IA a échoué. Réessayez." }, { status: 500 })
   }
+
+  // Sauvegarde du rapport pour affichage instantané + cron quotidien
+  try {
+    await supabaseAdmin.from('erp_analysis_cache').upsert({
+      erp_slug, report, record_count: recordCount, generated_at: new Date().toISOString(),
+    })
+  } catch {}
 
   return NextResponse.json({ report, recordCount })
 }
