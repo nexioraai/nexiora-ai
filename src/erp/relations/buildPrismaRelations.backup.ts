@@ -1,4 +1,4 @@
-import { buildRelationAttributes } from './buildRelationAttributes'
+import { buildRelationAttributes } from "./buildRelationAttributes"
 import { RelationGraphItem } from './buildRelationGraph'
 
 export function buildPrismaRelations(
@@ -22,11 +22,8 @@ if (
 relation.sourceModel === modelName
 ) {
 
-const attrs =
-buildRelationAttributes(relation)
-
 lines.push(
-`${relation.targetModel.slice(0, -1)} ${relation.targetModel}? ${attrs}`
+`${relation.targetModel.slice(0, -1)} ${relation.targetModel}?`
 )
 
 }
@@ -87,11 +84,8 @@ if (
 relation.sourceModel === modelName
 ) {
 
-const attrs =
-buildRelationAttributes(relation)
-
 lines.push(
-`${relation.targetModel.slice(0, -1)} ${relation.targetModel}? ${attrs}`
+`${relation.targetModel.slice(0, -1)} ${relation.targetModel}?`
 )
 
 }
