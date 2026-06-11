@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Search, Trash2, Pencil, X, Loader2, Inbox } from 'lucide-react'
+import { Plus, Search, Trash2, Pencil, X, Loader2, Inbox, QrCode } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import LocationPicker, { Location, buildLocationCode } from './LocationPicker'
+import QRCodeView from './QRCodeView'
 
 type ERPField = { name: string; type: string }
 type ERPModule = { name: string; fields: (ERPField | string)[] }
@@ -33,6 +34,7 @@ export default function ModuleTable({ erpSlug, module }: { erpSlug: string; modu
   const [scopeFilter, setScopeFilter] = useState('all')
   const [formScope, setFormScope] = useState('')
   const [location, setLocation] = useState<Location>({ warehouse: '', aisle: '', rack: '', level: '', bin: '' })
+  const [qrCode, setQrCode] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -163,6 +165,11 @@ export default function ModuleTable({ erpSlug, module }: { erpSlug: string; modu
                     ))}
                     <td style={{ padding: '13px 16px' }}>
                       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                        {r.data?.location_code && (
+                          <button onClick={() => setQrCode(r.data.location_code)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.accent, padding: 4 }} title="QR code">
+                            <QrCode size={15} />
+                          </button>
+                        )}
                         <button onClick={() => openEdit(r)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.faint, padding: 4 }} title="Modifier">
                           <Pencil size={15} />
                         </button>
@@ -236,6 +243,7 @@ export default function ModuleTable({ erpSlug, module }: { erpSlug: string; modu
         </div>
       )}
 
+      {qrCode && <QRCodeView code={qrCode} label={label(module.name)} onClose={() => setQrCode(null)} />}
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
