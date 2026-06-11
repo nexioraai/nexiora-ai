@@ -21,6 +21,24 @@ export default function OnboardingFlow() {
   const [error, setError] = useState('');
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [authLoaded, setAuthLoaded] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(0);
+
+  const LOADING_STEPS = [
+    'Analyse de votre activité…',
+    'Conception des modules métier…',
+    'Création des relations entre données…',
+    'Configuration des agents IA…',
+    'Mise en place des automatisations…',
+    'Finalisation de votre système…',
+  ];
+
+  useEffect(() => {
+    if (step !== 3) { setLoadingStep(0); return; }
+    const id = setInterval(() => {
+      setLoadingStep((s) => (s < LOADING_STEPS.length - 1 ? s + 1 : s));
+    }, 8000);
+    return () => clearInterval(id);
+  }, [step]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -225,14 +243,55 @@ export default function OnboardingFlow() {
         )}
 
         {step === 3 && (
-          <div className="text-center py-16">
-            <div className="inline-block w-16 h-16 border-4 border-[#E07040]/30 border-t-[#E07040] rounded-full animate-spin mb-6"></div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-3 tracking-tight">
-              {t('onboarding.step3.title')}
-            </h2>
-            <p className="text-slate-400 text-lg">
-              {t('onboarding.step3.subtitle')}
-            </p>
+          <div className="py-12">
+            <div className="text-center mb-10">
+              <div className="inline-block w-14 h-14 border-4 border-[#E07040]/30 border-t-[#E07040] rounded-full animate-spin mb-5"></div>
+              <h2 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight">
+                {t('onboarding.step3.title')}
+              </h2>
+              <p className="text-slate-400">
+                {t('onboarding.step3.subtitle')}
+              </p>
+            </div>
+            <div className="max-w-md mx-auto flex flex-col gap-3">
+              {LOADING_STEPS.map((label, i) => {
+                const done = i < loadingStep;
+                const active = i === loadingStep;
+                return (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 transition-all duration-500"
+                    style={{ opacity: i <= loadingStep ? 1 : 0.35 }}
+                  >
+                    <div
+                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-500"
+                      style={{
+                        background: done
+                          ? '#E07040'
+                          : active
+                          ? 'rgba(224,112,64,0.2)'
+                          : 'rgba(255,255,255,0.06)',
+                        border: active ? '2px solid #E07040' : '2px solid transparent',
+                      }}
+                    >
+                      {done ? (
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                      ) : active ? (
+                        <div className="w-2 h-2 rounded-full bg-[#E07040] animate-pulse" />
+                      ) : null}
+                    </div>
+                    <span
+                      className="text-sm md:text-base transition-colors duration-500"
+                      style={{ color: active ? '#fff' : done ? '#cbbfae' : '#6f6456' }}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
