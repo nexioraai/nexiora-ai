@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, Search, Trash2, Pencil, X, Loader2, Inbox } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import LocationPicker, { Location, buildLocationCode } from './LocationPicker'
 
 type ERPField = { name: string; type: string }
 type ERPModule = { name: string; fields: (ERPField | string)[] }
@@ -19,6 +20,8 @@ const fieldName = (f: ERPField | string) => (typeof f === 'string' ? f : f?.name
 
 export default function ModuleTable({ erpSlug, module }: { erpSlug: string; module: ERPModule }) {
   const fields = (module.fields || []).map(fieldName).filter(Boolean)
+  const isLocatable = /inventory|product|stock|warehouse|item|article|entrepot|produit/i.test(module.name)
+  const emptyLoc: Location = { warehouse: '', aisle: '', rack: '', level: '', bin: '' }
   const [records, setRecords] = useState<Record_[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -29,6 +32,7 @@ export default function ModuleTable({ erpSlug, module }: { erpSlug: string; modu
   const [isAdmin, setIsAdmin] = useState(false)
   const [scopeFilter, setScopeFilter] = useState('all')
   const [formScope, setFormScope] = useState('')
+  const [location, setLocation] = useState<Location>({ warehouse: '', aisle: '', rack: '', level: '', bin: '' })
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -48,7 +52,7 @@ export default function ModuleTable({ erpSlug, module }: { erpSlug: string; modu
     return data.session?.access_token || ''
   }
 
-  const openAdd = () => { setEditing(null); setForm({}); setFormScope(''); setShowForm(true) }
+  const openAdd = () => { setEditing(null); setForm({}); setFormScope(''); setLocation({ warehouse: '', aisle: '', rack: '', level: '', bin: '' }); setShowForm(true) }
   const openEdit = (r: Record_) => {
     setEditing(r)
     const f: Record<string, string> = {}
@@ -71,7 +75,7 @@ export default function ModuleTable({ erpSlug, module }: { erpSlug: string; modu
         await fetch('/api/erp-records', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + t },
-          body: JSON.stringify({ erp_slug: erpSlug, module_name: module.name, data: form, scope: isAdmin ? (formScope || null) : undefined }),
+          body: JSON.stringify({ erp_slug: erpSlug, module_name: module.name, data: isLocatable ? { ...form, location_code: buildLocationCode(location) } : form, scope: isAdmin ? (formScope || null) : undefined }),
         })
       }
       setShowForm(false)
@@ -203,6 +207,9 @@ export default function ModuleTable({ erpSlug, module }: { erpSlug: string; modu
                   <label style={{ fontSize: 12, color: C.muted, display: 'block', marginBottom: 5 }}>Périmètre (entrepôt / magasin)</label>
                   <input value={formScope} onChange={(e) => setFormScope(e.target.value)} placeholder="Ex: Warehouse 1 (vide = aucun)" style={{ width: '100%', background: C.panel, border: `1px solid ${C.line}`, borderRadius: 9, padding: '10px 12px', color: C.cream, fontSize: 13.5, outline: 'none' }} />
                 </div>
+              )}
+              {isLocatable && (
+                <LocationPicker value={location} onChange={setLocation} />
               )}
               {fields.map((f) => (
                 <div key={f}>
