@@ -39,9 +39,7 @@ relation.targetModel === modelName
 ) {
 
 lines.push(
-buildInverseRelationField(
-relation
-)
+`${relation.inverseField} ${relation.sourceModel}[]`
 )
 
 }
@@ -143,9 +141,7 @@ relation.targetModel === modelName
 ) {
 
 lines.push(
-buildInverseRelationField(
-relation
-)
+`${relation.inverseField} ${relation.sourceModel}[]`
 )
 
 }
