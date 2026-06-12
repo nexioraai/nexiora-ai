@@ -132,19 +132,14 @@ export default function EntityDetail({
               <div style={{ fontSize: 14, color: C.cream, marginTop: 2 }}>{entity.data[f] || '—'}</div>
             </div>
           ))}
-        </div>
-      </div>
-
-      {!loading && linked.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 24 }}>
-          {linked.map(({ mod, records }) => (
-            <div key={'stat-' + mod.name} style={{ background: C.accentSoft, border: '1px solid ' + C.line, borderRadius: 12, padding: '14px 16px' }}>
-              <div style={{ fontSize: 26, fontWeight: 800, color: C.accent, lineHeight: 1 }}>{records.length}</div>
-              <div style={{ fontSize: 12, color: C.muted, marginTop: 5, textTransform: 'capitalize' }}>{label(mod.name)}</div>
+          {!loading && linked.map(({ mod, records }) => (
+            <div key={'count-' + mod.name}>
+              <div style={{ fontSize: 11.5, color: C.muted, textTransform: 'capitalize' }}>{label(mod.name)}</div>
+              <div style={{ fontSize: 14, color: C.accent, fontWeight: 700, marginTop: 2 }}>{records.length}</div>
             </div>
           ))}
         </div>
-      )}
+      </div>
 
       <div style={{ fontSize: 12, color: C.faint, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 14 }}>Données rattachées</div>
 
