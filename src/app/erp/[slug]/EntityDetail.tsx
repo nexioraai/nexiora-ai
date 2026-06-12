@@ -32,13 +32,28 @@ function entityIdValues(data: Record<string, any>): string[] {
   return Array.from(new Set(vals))
 }
 
-// Le titre lisible d'une entité (1er champ "nom"/"name", sinon 1er champ texte)
-function entityTitle(data: Record<string, any>): string {
+// Champ identifiant ? (id / code / matricule / numero / reference)
+function isIdField(k: string): boolean {
+  return /(^|_| )(id|code|matricule|numero|reference|ref)( |$)/i.test(k.replace(/_/g, ' '))
+}
+// Le titre lisible d'une entité : nom explicite, sinon "Module Numero", sinon 1er champ non-id
+function entityTitle(data: Record<string, any>, moduleName?: string): string {
   const keys = Object.keys(data || {})
-  const nameKey = keys.find((k) => /(nom|name|designation|titre|title|libelle)/i.test(k))
+  // 1. un vrai champ nom, NON vide
+  const nameKey = keys.find((k) => /(nom|name|designation|titre|title|libelle|intitule)/i.test(k) && !isIdField(k))
   if (nameKey && data[nameKey]) return String(data[nameKey])
-  const first = keys.find((k) => data[k])
-  return first ? String(data[first]) : 'Détail'
+  // 2. "Module + numero" (ex: Salle 1)
+  const numKey = keys.find((k) => /(numero|number|num|no)/i.test(k))
+  if (numKey && data[numKey] != null && data[numKey] !== '') {
+    const base = moduleName ? label(moduleName).replace(/s$/i, '') : ''
+    return (base + ' ' + data[numKey]).trim()
+  }
+  // 3. premier champ rempli QUI N'EST PAS un identifiant
+  const textKey = keys.find((k) => data[k] && !isIdField(k))
+  if (textKey) return String(data[textKey])
+  // 4. dernier recours : premier identifiant
+  const idKey = keys.find((k) => data[k])
+  return idKey ? String(data[idKey]) : 'Détail'
 }
 
 export default function EntityDetail({
@@ -54,7 +69,7 @@ export default function EntityDetail({
   const [linked, setLinked] = useState<{ mod: Mod; records: Rec[] }[]>([])
 
   const idVals = entityIdValues(entity.data)
-  const myTitle = entityTitle(entity.data)
+  const myTitle = entityTitle(entity.data, entity.module_name)
 
   const loadLinked = useCallback(async () => {
     setLoading(true)
@@ -144,7 +159,7 @@ export default function EntityDetail({
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
             {records.map((r) => (
               <button key={r.id} onClick={() => onOpenChild(r, mod)} style={{ textAlign: 'left', background: C.panel, border: '1px solid ' + C.line, borderRadius: 12, padding: '13px 15px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                <span style={{ fontSize: 13.5, color: C.cream, fontWeight: 600, textTransform: 'capitalize', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entityTitle(r.data)}</span>
+                <span style={{ fontSize: 13.5, color: C.cream, fontWeight: 600, textTransform: 'capitalize', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entityTitle(r.data, mod.name)}</span>
                 <ChevronRight size={15} color={C.faint} style={{ flexShrink: 0 }} />
               </button>
             ))}
