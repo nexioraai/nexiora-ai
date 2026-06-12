@@ -12,6 +12,7 @@ import {
 } from 'recharts'
 import ModuleTable from './ModuleTable'
 import EntityDetail from './EntityDetail'
+import TenantView, { resolveTenant } from './TenantView'
 import TeamAccess from './TeamAccess'
 import ActivityLog from './ActivityLog'
 import AIAnalysis from './AIAnalysis'
@@ -46,6 +47,7 @@ const pieColors = ['#d97a4f', '#8a6d52', '#3a2e22']
 export default function ErpApp({ erp }: { erp: any }) {
   const bp: Blueprint = erp.blueprint || {}
   const modules = bp.modules || []
+  const tenant = resolveTenant(bp, modules)
   const dashboard = bp.dashboard || []
   const reports = bp.reports || []
   const automations = bp.automations || []
@@ -127,7 +129,11 @@ export default function ErpApp({ erp }: { erp: any }) {
           <AnimatePresence mode="wait">
             <motion.div key={view} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
               {view === 'dashboard' && <DashboardView dashboard={dashboard} />}
-              {view === 'modules' && (selectedModule ? <ModuleTableWrapper erpSlug={erp.slug} module={selectedModule} allModules={modules} onBack={() => setSelectedModule(null)} /> : <ModulesView modules={modules} onOpen={setSelectedModule} />)}
+              {view === 'modules' && (selectedModule
+                ? (tenant && selectedModule.name === tenant.module
+                    ? <SubErpWrapper erpSlug={erp.slug} tenant={tenant} modules={modules} onBack={() => setSelectedModule(null)} />
+                    : <ModuleTableWrapper erpSlug={erp.slug} module={selectedModule} allModules={modules} onBack={() => setSelectedModule(null)} />)
+                : <ModulesView modules={modules} onOpen={setSelectedModule} />)}
               {view === 'agents' && <AgentsView agents={agents} />}
               {view === 'automations' && <AutomationsView automations={automations} />}
               {view === 'workflows' && <WorkflowsView workflows={workflows} />}
@@ -227,6 +233,58 @@ function DashboardView({ dashboard }: any) {
         </ResponsiveContainer>
       </div>
     </Section>
+  )
+}
+
+function SubErpWrapper({ erpSlug, tenant, modules, onBack }: { erpSlug: string; tenant: any; modules: ERPModule[]; onBack: () => void }) {
+  return (
+    <div>
+      <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', marginBottom: 16, padding: 0 }}>
+        <ChevronRight size={15} style={{ transform: 'rotate(180deg)' }} /> Retour aux modules
+      </button>
+      <TenantView
+        erpSlug={erpSlug}
+        tenant={tenant}
+        modules={modules}
+        renderSubErp={(instance, scopeValue) => (
+          <SubErpModules erpSlug={erpSlug} tenant={tenant} modules={modules} scopeValue={scopeValue} instance={instance} />
+        )}
+      />
+    </div>
+  )
+}
+
+function SubErpModules({ erpSlug, tenant, modules, scopeValue, instance }: { erpSlug: string; tenant: any; modules: ERPModule[]; scopeValue: string; instance: any }) {
+  // modules de l'unité = tous sauf le module conteneur lui-meme
+  const childModules = modules.filter((m) => m.name !== tenant.module)
+  const [openMod, setOpenMod] = useState<ERPModule | null>(null)
+  const title = String(instance?.data?.[Object.keys(instance?.data || {}).find((k) => /(nom|name|titre)/i.test(k)) || ''] || scopeValue)
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+        <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg, ' + C.accent + ', #8a4a28)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <LayoutDashboard size={22} color="#fff" />
+        </div>
+        <div>
+          <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>{title}</h2>
+          <div style={{ fontSize: 12.5, color: C.muted }}>Espace autonome · {scopeValue}</div>
+        </div>
+      </div>
+      {openMod
+        ? <ScopedModuleWrapper erpSlug={erpSlug} module={openMod} allModules={modules} tenantKey={tenant.key} scopeValue={scopeValue} onBack={() => setOpenMod(null)} />
+        : <ModulesView modules={childModules} onOpen={setOpenMod} />}
+    </div>
+  )
+}
+
+function ScopedModuleWrapper({ erpSlug, module, allModules, tenantKey, scopeValue, onBack }: { erpSlug: string; module: ERPModule; allModules: ERPModule[]; tenantKey: string; scopeValue: string; onBack: () => void }) {
+  return (
+    <div>
+      <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', marginBottom: 16, padding: 0 }}>
+        <ChevronRight size={15} style={{ transform: 'rotate(180deg)' }} /> Retour
+      </button>
+      <ModuleTable erpSlug={erpSlug} module={module} filterField={tenantKey} filterValue={scopeValue} />
+    </div>
   )
 }
 

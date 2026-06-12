@@ -20,7 +20,7 @@ const C = {
 const label = (s: string) => (s || '').replace(/_/g, ' ')
 const fieldName = (f: ERPField | string) => (typeof f === 'string' ? f : f?.name || '')
 
-export default function ModuleTable({ erpSlug, module, onRowClick }: { erpSlug: string; module: ERPModule; onRowClick?: (rec: any) => void }) {
+export default function ModuleTable({ erpSlug, module, onRowClick, filterField, filterValue }: { erpSlug: string; module: ERPModule; onRowClick?: (rec: any) => void; filterField?: string; filterValue?: string }) {
   const fields = (module.fields || []).map(fieldName).filter(Boolean)
   const isLocatable = /inventory|product|stock|warehouse|item|article|entrepot|produit/i.test(module.name)
   const emptyLoc: Location = { warehouse: '', aisle: '', rack: '', level: '', bin: '' }
@@ -43,11 +43,15 @@ export default function ModuleTable({ erpSlug, module, onRowClick }: { erpSlug: 
     try {
       const res = await fetch(`/api/erp-records?erp_slug=${encodeURIComponent(erpSlug)}&module=${encodeURIComponent(module.name)}`)
       const json = await res.json()
-      setRecords(json.records || [])
+      let recs = json.records || []
+      if (filterField && filterValue != null) {
+        recs = recs.filter((r: any) => String(r?.data?.[filterField] ?? '') === String(filterValue))
+      }
+      setRecords(recs)
       setIsAdmin(!!json.access?.isAdmin)
     } catch { setRecords([]) }
     setLoading(false)
-  }, [erpSlug, module.name])
+  }, [erpSlug, module.name, filterField, filterValue])
 
   useEffect(() => { load() }, [load])
 
