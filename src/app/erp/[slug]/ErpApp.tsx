@@ -11,6 +11,7 @@ import {
   ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid,
 } from 'recharts'
 import ModuleTable from './ModuleTable'
+import EntityDetail from './EntityDetail'
 import TeamAccess from './TeamAccess'
 import ActivityLog from './ActivityLog'
 import AIAnalysis from './AIAnalysis'
@@ -126,7 +127,7 @@ export default function ErpApp({ erp }: { erp: any }) {
           <AnimatePresence mode="wait">
             <motion.div key={view} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
               {view === 'dashboard' && <DashboardView dashboard={dashboard} />}
-              {view === 'modules' && (selectedModule ? <ModuleTableWrapper erpSlug={erp.slug} module={selectedModule} onBack={() => setSelectedModule(null)} /> : <ModulesView modules={modules} onOpen={setSelectedModule} />)}
+              {view === 'modules' && (selectedModule ? <ModuleTableWrapper erpSlug={erp.slug} module={selectedModule} allModules={modules} onBack={() => setSelectedModule(null)} /> : <ModulesView modules={modules} onOpen={setSelectedModule} />)}
               {view === 'agents' && <AgentsView agents={agents} />}
               {view === 'automations' && <AutomationsView automations={automations} />}
               {view === 'workflows' && <WorkflowsView workflows={workflows} />}
@@ -229,13 +230,47 @@ function DashboardView({ dashboard }: any) {
   )
 }
 
-function ModuleTableWrapper({ erpSlug, module, onBack }: { erpSlug: string; module: ERPModule; onBack: () => void }) {
+function ModuleTableWrapper({ erpSlug, module, allModules, onBack }: { erpSlug: string; module: ERPModule; allModules: ERPModule[]; onBack: () => void }) {
+  const [stack, setStack] = useState<{ rec: any; mod: ERPModule }[]>([])
+
+  const openEntity = (rec: any, mod: ERPModule) => setStack((s) => [...s, { rec, mod }])
+  const popTo = (index: number) => setStack((s) => s.slice(0, index))
+
+  const current = stack[stack.length - 1]
+
   return (
     <div>
-      <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', marginBottom: 16, padding: 0 }}>
-        <ChevronRight size={15} style={{ transform: 'rotate(180deg)' }} /> Retour aux modules
+      <button onClick={() => (stack.length > 0 ? popTo(stack.length - 1) : onBack())} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', marginBottom: 16, padding: 0 }}>
+        <ChevronRight size={15} style={{ transform: 'rotate(180deg)' }} /> Retour
       </button>
-      <ModuleTable erpSlug={erpSlug} module={module} />
+
+      {stack.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 14, fontSize: 12.5, color: C.faint }}>
+          <span style={{ cursor: 'pointer' }} onClick={() => popTo(0)}>{label(module.name)}</span>
+          {stack.map((s, i) => (
+            <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <ChevronRight size={12} />
+              <span style={{ cursor: 'pointer', color: i === stack.length - 1 ? C.cream : C.faint }} onClick={() => popTo(i + 1)}>
+                {String(Object.values(s.rec.data || {})[0] || 'Détail')}
+              </span>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {!current && (
+        <ModuleTable erpSlug={erpSlug} module={module} onRowClick={(rec) => openEntity(rec, module)} />
+      )}
+
+      {current && (
+        <EntityDetail
+          erpSlug={erpSlug}
+          entity={{ id: current.rec.id, module_name: current.mod.name, data: current.rec.data }}
+          modules={allModules}
+          onOpenChild={(rec, mod) => openEntity(rec, mod as ERPModule)}
+          onBack={() => popTo(stack.length - 1)}
+        />
+      )}
     </div>
   )
 }

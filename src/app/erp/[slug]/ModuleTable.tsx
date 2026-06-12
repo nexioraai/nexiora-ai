@@ -20,7 +20,7 @@ const C = {
 const label = (s: string) => (s || '').replace(/_/g, ' ')
 const fieldName = (f: ERPField | string) => (typeof f === 'string' ? f : f?.name || '')
 
-export default function ModuleTable({ erpSlug, module }: { erpSlug: string; module: ERPModule }) {
+export default function ModuleTable({ erpSlug, module, onRowClick }: { erpSlug: string; module: ERPModule; onRowClick?: (rec: any) => void }) {
   const fields = (module.fields || []).map(fieldName).filter(Boolean)
   const isLocatable = /inventory|product|stock|warehouse|item|article|entrepot|produit/i.test(module.name)
   const emptyLoc: Location = { warehouse: '', aisle: '', rack: '', level: '', bin: '' }
@@ -162,13 +162,13 @@ export default function ModuleTable({ erpSlug, module }: { erpSlug: string; modu
               </thead>
               <tbody>
                 {filtered.map((r, i) => (
-                  <motion.tr key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }} style={{ borderBottom: `1px solid ${C.line}` }}>
+                  <motion.tr key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }} onClick={() => onRowClick && onRowClick(r)} style={{ borderBottom: `1px solid ${C.line}`, cursor: onRowClick ? 'pointer' : 'default' }}>
                     {cols.map((c) => (
                       <td key={c} style={{ padding: '13px 16px', color: '#cbbfae', whiteSpace: 'nowrap', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {r.data?.[c] || <span style={{ color: C.faint }}>—</span>}
                       </td>
                     ))}
-                    <td style={{ padding: '13px 16px' }}>
+                    <td style={{ padding: '13px 16px' }} onClick={(e) => e.stopPropagation()}>
                       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                         {r.data?.location_code && (
                           <button onClick={() => setQrCode(r.data.location_code)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.accent, padding: 4 }} title="QR code">
