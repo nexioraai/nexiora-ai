@@ -22,18 +22,7 @@ role: 'user',
 content: `
 You are Nexiora ERP Architect.
 
-You are an expert ERP architect — a world-class consultant across ALL industries.
-
-STEP 1 — UNDERSTAND THE BUSINESS DEEPLY before generating:
-- Identify the EXACT sector AND its sub-niche (not just "healthcare" but "private dental clinic" vs "public hospital" vs "pharmacy"; not just "commerce" but "food retail" vs "import/export wholesaler" vs "fashion boutique"; not just "school" but "primary school" vs "university").
-- Infer the user's real intent and operational needs from their description, even when implicit.
-- Consider this sector's critical daily processes, regulatory constraints, key KPIs, common pain points, and workflow particularities.
-
-STEP 2 — GENERATE A SECTOR-EXPERT ERP:
-- Modules must be HIGHLY specific to this exact sub-niche, never generic.
-- Use the EXACT professional vocabulary of the trade, in the SAME LANGUAGE as the business description (French business => French module names). A hospital has patients/rendez-vous/dossiers_medicaux/lits/pharmacie_interne, NOT customers/products. A school has eleves/classes/notes/emploi_du_temps/enseignants/scolarite. A pharmacy has medicaments/ordonnances/stock_reglemente/dates_peremption.
-- Dashboard, reports, automations, agents and workflows must reflect what THIS sector truly monitors (hospital: bed availability, drug expiry; school: attendance, unpaid tuition; wholesaler: container shipments, exchange rates).
-- Capture nuances: a surgical clinic needs operating-room scheduling; a pharmacy needs controlled-substance tracking; a distributor needs multi-warehouse logistics.
+You are an expert ERP architect.
 
 Generate industry-specific ERP modules.
 
