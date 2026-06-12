@@ -20,16 +20,16 @@ function fieldName(f: any): string {
 }
 
 // Récupère TOUTES les valeurs qui peuvent identifier l'entité (id, code, ...)
-function entityIdValues(data: Record<string, any>): string[] {
-  const vals: string[] = []
+function entityIdPairs(data: Record<string, any>): { key: string; value: string }[] {
+  const pairs: { key: string; value: string }[] = []
   for (const [k, v] of Object.entries(data || {})) {
     if (v == null || v === '') continue
-    // champs identifiants : id, code, matricule, numero, reference
-    if (/(^|_)(id|code|matricule|numero|reference|ref)$/i.test(k) || /(id|code|matricule|numero|reference)/i.test(k)) {
-      vals.push(String(v))
+    // champs identifiants : se terminent par id/code/matricule/numero/reference/ref
+    if (/(^|_)(id|code|matricule|numero|reference|ref)$/i.test(k)) {
+      pairs.push({ key: k, value: String(v) })
     }
   }
-  return Array.from(new Set(vals))
+  return pairs
 }
 
 // Champ identifiant ? (id / code / matricule / numero / reference)
@@ -68,13 +68,13 @@ export default function EntityDetail({
   const [loading, setLoading] = useState(true)
   const [linked, setLinked] = useState<{ mod: Mod; records: Rec[] }[]>([])
 
-  const idVals = entityIdValues(entity.data)
+  const idPairs = entityIdPairs(entity.data)
   const myTitle = entityTitle(entity.data, entity.module_name)
 
   const loadLinked = useCallback(async () => {
     setLoading(true)
     const groups: { mod: Mod; records: Rec[] }[] = []
-    if (idVals.length === 0) { setLinked([]); setLoading(false); return }
+    if (idPairs.length === 0) { setLinked([]); setLoading(false); return }
 
     for (const mod of modules) {
       if (mod.name === entity.module_name) continue
@@ -84,14 +84,14 @@ export default function EntityDetail({
         const recs: Rec[] = json.records || []
         // garde les records dont un champ contient l'identifiant de l'entité
         const children = recs.filter((r) =>
-          Object.values(r.data || {}).some((v) => v != null && idVals.includes(String(v)))
+          idPairs.some((p) => String(r?.data?.[p.key] ?? '') === p.value)
         )
         if (children.length > 0) groups.push({ mod, records: children })
       } catch {}
     }
     setLinked(groups)
     setLoading(false)
-  }, [erpSlug, idVals.join('|'), modules, entity.module_name])
+  }, [erpSlug, idPairs.map((p) => p.key + ':' + p.value).join('|'), modules, entity.module_name])
 
   useEffect(() => { loadLinked() }, [loadLinked])
 
