@@ -20,16 +20,26 @@ function fieldName(f: any): string {
 }
 
 // Récupère TOUTES les valeurs qui peuvent identifier l'entité (id, code, ...)
-function entityIdPairs(data: Record<string, any>): { key: string; value: string }[] {
-  const pairs: { key: string; value: string }[] = []
+function entityIdPairs(data: Record<string, any>, moduleName?: string): { key: string; value: string }[] {
+  const all: { key: string; value: string }[] = []
   for (const [k, v] of Object.entries(data || {})) {
     if (v == null || v === '') continue
-    // champs identifiants : se terminent par id/code/matricule/numero/reference/ref
     if (/(^|_)(id|code|matricule|numero|reference|ref)$/i.test(k)) {
-      pairs.push({ key: k, value: String(v) })
+      all.push({ key: k, value: String(v) })
     }
   }
-  return pairs
+  // CLE PRIMAIRE : le champ qui identifie CETTE entite (ex: classes -> classe_id),
+  // pas les cles d'environnement partagees (ecole_id sur une classe = grand-parent).
+  if (moduleName) {
+    const singular = moduleName.replace(/s$/i, '').toLowerCase()
+    const own = all.find((p) => {
+      const kb = p.key.replace(/_(id|code|matricule|numero|reference|ref)$/i, '').toLowerCase()
+      return kb === singular || singular.startsWith(kb) || kb.startsWith(singular)
+    })
+    if (own) return [own]
+  }
+  // fallback : si pas de cle propre identifiable, garder l'unique id sinon tous
+  return all
 }
 
 // Champ identifiant ? (id / code / matricule / numero / reference)
@@ -68,7 +78,7 @@ export default function EntityDetail({
   const [loading, setLoading] = useState(true)
   const [linked, setLinked] = useState<{ mod: Mod; records: Rec[] }[]>([])
 
-  const idPairs = entityIdPairs(entity.data)
+  const idPairs = entityIdPairs(entity.data, entity.module_name)
   const myTitle = entityTitle(entity.data, entity.module_name)
 
   const loadLinked = useCallback(async () => {
