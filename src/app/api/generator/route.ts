@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { generateFromPrompt } from '@/erp/generator/generateFromPrompt'
+import { generateSeedData } from '@/erp/generator/generateSeedData'
 import { analyzeBusiness } from '@/ai/business-understanding'
 import { getNextQuestion } from '@/ai/question-engine'
 import { activityScopes } from '@/ai/activity-scopes'
@@ -80,6 +81,28 @@ export async function POST(req: NextRequest) {
     if (error) {
       console.error('SUPABASE ERROR (erps):', error)
       return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+    }
+
+    // --- Pré-remplissage des données décrites par l'utilisateur (seed) ---
+    try {
+      const seed = await generateSeedData(prompt, erp)
+      if (Array.isArray(seed) && seed.length > 0) {
+        const rows = seed
+          .filter((r: any) => r && r.module_name && r.data)
+          .map((r: any) => ({
+            erp_slug: slug,
+            module_name: r.module_name,
+            data: r.data,
+            owner_email,
+            scope: null,
+          }))
+        if (rows.length > 0) {
+          const { error: seedErr } = await supabaseAdmin.from('erp_records').insert(rows)
+          if (seedErr) console.error('SEED INSERT ERROR:', seedErr)
+        }
+      }
+    } catch (e) {
+      console.error('SEED GENERATION ERROR:', e)
     }
 
     return NextResponse.json({ success: true, slug, selectedModules, erp })
