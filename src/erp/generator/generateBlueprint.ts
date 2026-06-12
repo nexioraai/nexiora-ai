@@ -35,6 +35,15 @@ STEP 2 — GENERATE A SECTOR-EXPERT ERP:
 - Dashboard, reports, automations, agents and workflows must reflect what THIS sector truly monitors (hospital: bed availability, drug expiry; school: attendance, unpaid tuition; wholesaler: container shipments, exchange rates).
 - Capture nuances: a surgical clinic needs operating-room scheduling; a pharmacy needs controlled-substance tracking; a distributor needs multi-warehouse logistics.
 
+STEP 3 — DETECT HIERARCHICAL TENANT (system-within-a-system):
+- Some businesses manage MULTIPLE INDEPENDENT UNITS that each run as a self-contained sub-system: a network of schools (each school has its own students/teachers/library), a retail chain (each store has its own stock/staff/sales), a hospital group (each hospital), a holding (each subsidiary), a ministry (each regional directorate).
+- If and ONLY IF such a container unit exists, identify it and output a top-level "tenant" object:
+  - "module": the exact module name representing the container unit (e.g. "ecoles", "magasins", "hopitaux", "filiales").
+  - "key": the field other modules use to reference it (e.g. "ecole_id", "magasin_id").
+  - "manager": the role that runs ONE unit (e.g. "directeur", "gerant", "responsable").
+- If the business is a SINGLE unit (one shop, one clinic), set "tenant" to null.
+- This is GENERIC: never assume schools. Detect the container for the ACTUAL sector described.
+
 Generate industry-specific ERP modules.
 
 Rules:
@@ -101,6 +110,7 @@ Format:
 
 {
 "name": "ERP Name",
+"tenant": { "module": "ecoles", "key": "ecole_id", "manager": "directeur" },
 "modules": [
 {
 "name": "customers",

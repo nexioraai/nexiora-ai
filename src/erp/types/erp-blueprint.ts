@@ -5,8 +5,16 @@ name: string
 fields: string[]
 }
 
+export interface ERPTenant {
+module: string
+key: string
+manager?: string
+}
+
 export interface ERPBlueprint {
 name?: string
+
+tenant?: ERPTenant | null
 
 modules?: {
 name: string
