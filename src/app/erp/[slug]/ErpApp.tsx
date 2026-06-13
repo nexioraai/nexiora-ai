@@ -13,6 +13,7 @@ import {
 import ModuleTable from './ModuleTable'
 import EntityDetail from './EntityDetail'
 import TenantView, { resolveTenant } from './TenantView'
+import BulkGenerate from './BulkGenerate'
 import TeamAccess from './TeamAccess'
 import ActivityLog from './ActivityLog'
 import AIAnalysis from './AIAnalysis'
@@ -280,6 +281,7 @@ function SubErpModules({ erpSlug, tenant, modules, scopeValue, instance }: { erp
 function ScopedModuleWrapper({ erpSlug, module, allModules, tenantKey, scopeValue, onBack }: { erpSlug: string; module: ERPModule; allModules: ERPModule[]; tenantKey: string; scopeValue: string; onBack: () => void }) {
   const [stack, setStack] = useState<{ rec: any; mod: ERPModule }[]>([])
   const [adding, setAdding] = useState<{ mod: ERPModule; prefill: Record<string, string> } | null>(null)
+  const [reloadKey, setReloadKey] = useState(0)
   const openEntity = (rec: any, mod: ERPModule) => setStack((s) => [...s, { rec, mod }])
   const popTo = (index: number) => setStack((s) => s.slice(0, index))
   const current = stack[stack.length - 1]
@@ -316,7 +318,10 @@ function ScopedModuleWrapper({ erpSlug, module, allModules, tenantKey, scopeValu
       )}
 
       {!current && (
-        <ModuleTable erpSlug={erpSlug} module={module} filterField={tenantKey} filterValue={scopeValue} onRowClick={(rec) => openEntity(rec, module)} />
+        <>
+          <BulkGenerate erpSlug={erpSlug} mod={module} tenantKey={tenantKey} scopeValue={scopeValue} onDone={() => setReloadKey((k) => k + 1)} />
+          <ModuleTable key={reloadKey} erpSlug={erpSlug} module={module} filterField={tenantKey} filterValue={scopeValue} onRowClick={(rec) => openEntity(rec, module)} />
+        </>
       )}
 
       {current && (
