@@ -56,6 +56,12 @@ export default function BulkGenerate({
       // numero lisible si un champ numero existe
       const numField = (mod.fields || []).map(fieldName).find((f: string) => /(numero|number|num)$/i.test(f))
       if (numField) data[numField] = String(i)
+      // nom lisible : "<Singulier> N" (Classe 1, Rayon 1...) si un champ nom existe
+      const nameField = (mod.fields || []).map(fieldName).find((f: string) => /(nom|name|designation|titre|libelle|intitule)/i.test(f) && !/_(id|code|ref)$/i.test(f))
+      if (nameField) {
+        const singular = lbl(mod.name).replace(/s$/i, '')
+        data[nameField] = singular + ' ' + i
+      }
       try {
         await fetch('/api/erp-records', {
           method: 'POST',
