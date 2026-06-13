@@ -14,6 +14,7 @@ import ModuleTable from './ModuleTable'
 import EntityDetail from './EntityDetail'
 import TenantView, { resolveTenant } from './TenantView'
 import BulkGenerate from './BulkGenerate'
+import BulkAddRows from './BulkAddRows'
 import TeamAccess from './TeamAccess'
 import ActivityLog from './ActivityLog'
 import AIAnalysis from './AIAnalysis'
@@ -282,6 +283,7 @@ function ScopedModuleWrapper({ erpSlug, module, allModules, tenantKey, scopeValu
   const [stack, setStack] = useState<{ rec: any; mod: ERPModule }[]>([])
   const [adding, setAdding] = useState<{ mod: ERPModule; prefill: Record<string, string> } | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
+  const [showPaste, setShowPaste] = useState(false)
   const openEntity = (rec: any, mod: ERPModule) => setStack((s) => [...s, { rec, mod }])
   const popTo = (index: number) => setStack((s) => s.slice(0, index))
   const current = stack[stack.length - 1]
@@ -319,8 +321,18 @@ function ScopedModuleWrapper({ erpSlug, module, allModules, tenantKey, scopeValu
 
       {!current && (
         <>
-          <BulkGenerate erpSlug={erpSlug} mod={module} tenantKey={tenantKey} scopeValue={scopeValue} onDone={() => setReloadKey((k) => k + 1)} />
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ flex: 1, minWidth: 240 }}>
+              <BulkGenerate erpSlug={erpSlug} mod={module} tenantKey={tenantKey} scopeValue={scopeValue} onDone={() => setReloadKey((k) => k + 1)} />
+            </div>
+            <button onClick={() => setShowPaste(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: C.accentSoft, color: C.accent, border: '1px solid ' + C.panelBorder, borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', marginBottom: 16 }}>
+              Coller une liste
+            </button>
+          </div>
           <ModuleTable key={reloadKey} erpSlug={erpSlug} module={module} filterField={tenantKey} filterValue={scopeValue} onRowClick={(rec) => openEntity(rec, module)} />
+          {showPaste && (
+            <BulkAddRows erpSlug={erpSlug} mod={module} prefill={{ [tenantKey]: scopeValue }} onClose={() => setShowPaste(false)} onDone={() => setReloadKey((k) => k + 1)} />
+          )}
         </>
       )}
 
