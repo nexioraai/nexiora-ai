@@ -20,7 +20,7 @@ const C = {
 const label = (s: string) => (s || '').replace(/_/g, ' ')
 const fieldName = (f: ERPField | string) => (typeof f === 'string' ? f : f?.name || '')
 
-export default function ModuleTable({ erpSlug, module, onRowClick, filterField, filterValue }: { erpSlug: string; module: ERPModule; onRowClick?: (rec: any) => void; filterField?: string; filterValue?: string }) {
+export default function ModuleTable({ erpSlug, module, onRowClick, filterField, filterValue, prefill, autoOpenAdd }: { erpSlug: string; module: ERPModule; onRowClick?: (rec: any) => void; filterField?: string; filterValue?: string; prefill?: Record<string, string>; autoOpenAdd?: boolean }) {
   const fields = (module.fields || []).map(fieldName).filter(Boolean)
   const isLocatable = /inventory|product|stock|warehouse|item|article|entrepot|produit/i.test(module.name)
   const emptyLoc: Location = { warehouse: '', aisle: '', rack: '', level: '', bin: '' }
@@ -54,13 +54,14 @@ export default function ModuleTable({ erpSlug, module, onRowClick, filterField, 
   }, [erpSlug, module.name, filterField, filterValue])
 
   useEffect(() => { load() }, [load])
+  useEffect(() => { if (autoOpenAdd) openAdd() /* eslint-disable-next-line */ }, [autoOpenAdd])
 
   async function token() {
     const { data } = await supabase.auth.getSession()
     return data.session?.access_token || ''
   }
 
-  const openAdd = () => { setEditing(null); setForm({}); setFormScope(''); setLocation({ warehouse: '', aisle: '', rack: '', level: '', bin: '' }); setShowForm(true) }
+  const openAdd = () => { setEditing(null); setForm({ ...(prefill || {}) }); setFormScope(''); setLocation({ warehouse: '', aisle: '', rack: '', level: '', bin: '' }); setShowForm(true) }
   const openEdit = (r: Record_) => {
     setEditing(r)
     const f: Record<string, string> = {}

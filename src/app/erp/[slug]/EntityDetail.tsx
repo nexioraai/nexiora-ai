@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { ChevronRight, Layers, Loader2 } from 'lucide-react'
+import { ChevronRight, Layers, Loader2, Plus } from 'lucide-react'
 
 const C = {
   panel: 'rgba(245,237,225,0.03)', line: 'rgba(245,237,225,0.07)',
@@ -67,12 +67,13 @@ function entityTitle(data: Record<string, any>, moduleName?: string): string {
 }
 
 export default function EntityDetail({
-  erpSlug, entity, modules, onOpenChild, onBack,
+  erpSlug, entity, modules, onOpenChild, onAddChild, onBack,
 }: {
   erpSlug: string
   entity: Rec
   modules: Mod[]
   onOpenChild: (rec: Rec, mod: Mod) => void
+  onAddChild?: (mod: Mod, prefill: Record<string, string>) => void
   onBack: () => void
 }) {
   const [loading, setLoading] = useState(true)
@@ -160,6 +161,11 @@ export default function EntityDetail({
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0, textTransform: 'capitalize' }}>{label(mod.name)}</h3>
             <span style={{ fontSize: 11, fontWeight: 700, color: C.accent, background: C.accentSoft, borderRadius: 20, padding: '2px 10px' }}>{records.length}</span>
+            {onAddChild && (
+              <button onClick={() => onAddChild(mod, Object.fromEntries(idPairs.map((p) => [p.key, p.value])))} style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5, background: C.accent, color: '#fff', border: 'none', borderRadius: 9, padding: '6px 12px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>
+                <Plus size={14} /> Ajouter
+              </button>
+            )}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
             {records.map((r) => (

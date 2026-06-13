@@ -279,9 +279,21 @@ function SubErpModules({ erpSlug, tenant, modules, scopeValue, instance }: { erp
 
 function ScopedModuleWrapper({ erpSlug, module, allModules, tenantKey, scopeValue, onBack }: { erpSlug: string; module: ERPModule; allModules: ERPModule[]; tenantKey: string; scopeValue: string; onBack: () => void }) {
   const [stack, setStack] = useState<{ rec: any; mod: ERPModule }[]>([])
+  const [adding, setAdding] = useState<{ mod: ERPModule; prefill: Record<string, string> } | null>(null)
   const openEntity = (rec: any, mod: ERPModule) => setStack((s) => [...s, { rec, mod }])
   const popTo = (index: number) => setStack((s) => s.slice(0, index))
   const current = stack[stack.length - 1]
+
+  if (adding) {
+    return (
+      <div>
+        <button onClick={() => setAdding(null)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', marginBottom: 16, padding: 0 }}>
+          <ChevronRight size={15} style={{ transform: 'rotate(180deg)' }} /> Retour
+        </button>
+        <ModuleTable erpSlug={erpSlug} module={adding.mod} prefill={adding.prefill} autoOpenAdd onRowClick={(rec) => { setAdding(null); openEntity(rec, adding.mod) }} />
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -313,6 +325,7 @@ function ScopedModuleWrapper({ erpSlug, module, allModules, tenantKey, scopeValu
           entity={{ id: current.rec.id, module_name: current.mod.name, data: current.rec.data }}
           modules={allModules}
           onOpenChild={(rec, mod) => openEntity(rec, mod as ERPModule)}
+          onAddChild={(mod, prefill) => setAdding({ mod: mod as ERPModule, prefill })}
           onBack={() => popTo(stack.length - 1)}
         />
       )}
@@ -322,11 +335,23 @@ function ScopedModuleWrapper({ erpSlug, module, allModules, tenantKey, scopeValu
 
 function ModuleTableWrapper({ erpSlug, module, allModules, onBack }: { erpSlug: string; module: ERPModule; allModules: ERPModule[]; onBack: () => void }) {
   const [stack, setStack] = useState<{ rec: any; mod: ERPModule }[]>([])
+  const [adding, setAdding] = useState<{ mod: ERPModule; prefill: Record<string, string> } | null>(null)
 
   const openEntity = (rec: any, mod: ERPModule) => setStack((s) => [...s, { rec, mod }])
   const popTo = (index: number) => setStack((s) => s.slice(0, index))
 
   const current = stack[stack.length - 1]
+
+  if (adding) {
+    return (
+      <div>
+        <button onClick={() => setAdding(null)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', marginBottom: 16, padding: 0 }}>
+          <ChevronRight size={15} style={{ transform: 'rotate(180deg)' }} /> Retour
+        </button>
+        <ModuleTable erpSlug={erpSlug} module={adding.mod} prefill={adding.prefill} autoOpenAdd onRowClick={(rec) => { setAdding(null); openEntity(rec, adding.mod) }} />
+      </div>
+    )
+  }
 
   return (
     <div>
