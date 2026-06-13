@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { ChevronRight, Layers, Loader2, Plus } from 'lucide-react'
+import { ChevronRight, Layers, Loader2, Plus, GraduationCap } from 'lucide-react'
+import GradeGrid from './GradeGrid'
 
 const C = {
   panel: 'rgba(245,237,225,0.03)', line: 'rgba(245,237,225,0.07)',
@@ -80,6 +81,14 @@ export default function EntityDetail({
   const [linked, setLinked] = useState<{ mod: Mod; records: Rec[] }[]>([])
 
   const idPairs = entityIdPairs(entity.data, entity.module_name)
+  const [showGrades, setShowGrades] = useState(false)
+  const notesMod = modules.find((m) => /note|grade|bulletin/i.test(m.name))
+  const subjectsMod = modules.find((m) => /matiere|subject|cours|discipline/i.test(m.name)) || null
+  const studentsMod = modules.find((m) => /eleve|student|apprenant/i.test(m.name))
+  const myKey = idPairs[0]?.key
+  const myVal = idPairs[0]?.value
+  const ecolePair = entityIdPairs(entity.data).find((p) => /ecole|school|etabliss/i.test(p.key))
+  const canGrade = !!(notesMod && studentsMod && myKey && /classe|class|groupe/i.test(entity.module_name))
   const myTitle = entityTitle(entity.data, entity.module_name)
 
   const loadLinked = useCallback(async () => {
@@ -122,7 +131,27 @@ export default function EntityDetail({
           <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0, textTransform: 'capitalize' }}>{myTitle}</h2>
           <div style={{ fontSize: 12.5, color: C.muted }}>{label(entity.module_name)}</div>
         </div>
+        {canGrade && (
+          <button onClick={() => setShowGrades(true)} style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, background: C.accent, color: '#fff', border: 'none', borderRadius: 10, padding: '9px 15px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            <GraduationCap size={16} /> Saisir les notes
+          </button>
+        )}
       </div>
+
+      {showGrades && notesMod && studentsMod && myKey && (
+        <GradeGrid
+          erpSlug={erpSlug}
+          studentsMod={studentsMod}
+          notesMod={notesMod}
+          subjectsMod={subjectsMod}
+          classeKey={myKey}
+          classeValue={myVal}
+          ecoleKey={ecolePair?.key}
+          ecoleValue={ecolePair?.value}
+          onClose={() => setShowGrades(false)}
+          onDone={() => loadLinked()}
+        />
+      )}
 
       <div style={{ background: C.panel, border: '1px solid ' + C.line, borderRadius: 14, padding: 18, marginTop: 16, marginBottom: 26 }}>
         <div style={{ fontSize: 12, color: C.faint, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Informations</div>
