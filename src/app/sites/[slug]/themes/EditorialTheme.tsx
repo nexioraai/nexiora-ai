@@ -122,7 +122,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
       <section id="home" className="relative min-h-[92vh] flex items-center pt-20 overflow-hidden">
         {site.hero_image ? (
           <>
-            <Image src={site.hero_image} alt="" fill priority className="object-cover" />
+            <Image src={site.hero_image} alt="" fill priority sizes="100vw" className="object-cover" />
             <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-black/80" />
           </>
         ) : (
@@ -308,6 +308,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
                         src={p.image}
                         alt={p.name}
                         fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                         className="object-cover group-hover:scale-105 transition-transform duration-700"
                       />
                     ) : (
@@ -388,7 +389,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
                   }`}
                   style={{ aspectRatio: i === 0 ? '1 / 1' : '4 / 5' }}
                 >
-                  <Image src={url} alt="" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <Image src={url} alt="" fill sizes="(max-width: 768px) 50vw, 33vw" className="object-cover transition-transform duration-700 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               ))}

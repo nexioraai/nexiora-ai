@@ -113,7 +113,7 @@ export default function BoldTheme({ site }: { site: Site }) {
       <section id="home" className="relative overflow-hidden border-b-[3px] border-black">
         {site.hero_image && (
           <>
-            <Image src={site.hero_image} alt="" fill priority className="object-cover" />
+            <Image src={site.hero_image} alt="" fill priority sizes="100vw" className="object-cover" />
             <div className="absolute inset-0 bg-black/55" />
           </>
         )}
@@ -291,6 +291,7 @@ export default function BoldTheme({ site }: { site: Site }) {
                           src={p.image}
                           alt={p.name}
                           fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                           className="object-cover transition-transform duration-700 group-hover:scale-105"
                         />
                       ) : (
@@ -369,7 +370,7 @@ export default function BoldTheme({ site }: { site: Site }) {
                     className="relative border-[3px] border-black overflow-hidden"
                     style={{ aspectRatio: i % 4 === 0 ? '1 / 1' : '3 / 4' }}
                   >
-                    <Image src={url} alt="" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <Image src={url} alt="" fill sizes="(max-width: 768px) 50vw, 33vw" className="object-cover transition-transform duration-700 group-hover:scale-105" />
                   </div>
                 </div>
               ))}

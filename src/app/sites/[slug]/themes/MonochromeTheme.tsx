@@ -136,7 +136,7 @@ export default function MonochromeTheme({ site }: { site: Site }) {
                 <div key={i} className="group">
                   <div className="aspect-square relative overflow-hidden bg-black/5 mb-4">
                     {p.image ? (
-                      <Image src={p.image} alt={p.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500 grayscale" />
+                      <Image src={p.image} alt={p.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-500 grayscale" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-5xl font-black">{p.name.charAt(0).toUpperCase()}</div>
                     )}
@@ -165,7 +165,7 @@ export default function MonochromeTheme({ site }: { site: Site }) {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {gallery.slice(0, 9).map((url, i) => (
                 <div key={i} className={`relative overflow-hidden bg-black/5 group ${i === 0 ? 'md:col-span-2 md:row-span-2' : ''}`} style={{ aspectRatio: i === 0 ? '1 / 1' : '4 / 5' }}>
-                  <Image src={url} alt="" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
+                  <Image src={url} alt="" fill sizes="(max-width: 768px) 50vw, 33vw" className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
                 </div>
               ))}
             </div>
