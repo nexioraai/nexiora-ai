@@ -2,6 +2,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { fetchSite } from './themes/shared'
+import JsonLd from './themes/JsonLd'
 import EditorialTheme from './themes/EditorialTheme'
 import BoldTheme from './themes/BoldTheme'
 import MonochromeTheme from './themes/MonochromeTheme'
@@ -65,5 +66,10 @@ export default async function SitePage({ params }: Props) {
   const key = (site.theme as keyof typeof themes) || 'editorial'
   const Theme = themes[key] ?? EditorialTheme
 
-  return <Theme site={site} />
+  return (
+    <>
+      <JsonLd site={site} />
+      <Theme site={site} />
+    </>
+  )
 }
