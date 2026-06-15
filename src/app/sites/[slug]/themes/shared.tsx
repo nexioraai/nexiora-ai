@@ -80,6 +80,7 @@ const { data, error } = await supabase
 .from('sites')
 .select(PUBLIC_COLS)
 .eq('slug', slug)
+.eq('published', true)
 .single()
 
 if (error || !data) {

@@ -99,3 +99,13 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .nexiora-halo::before { animation: none; }
 }
+
+
+/* Bouton de publication — point qui pulse (Nexiora) */
+@keyframes nexiora-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.45; transform: scale(0.7); }
+}
+.nexiora-pulse-dot {
+  animation: nexiora-pulse-dot 1.8s ease-in-out infinite;
+}
