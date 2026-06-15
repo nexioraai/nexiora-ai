@@ -37,7 +37,7 @@ export default function Home() {
 
       <OnboardingFlow />
 
-      <Footer />
+      <div className="hidden"><Footer /></div>
     </main>
   );
 }
