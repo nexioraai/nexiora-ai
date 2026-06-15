@@ -66,3 +66,36 @@ html {
     scroll-behavior: auto;
   }
 }
+
+/* === Halo lumineux premium autour du champ === */
+.nexiora-halo {
+  position: relative;
+}
+.nexiora-halo::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 1.1rem;
+  background: linear-gradient(135deg, #4F6EF5, #E07040, #C9A84C, #4F6EF5);
+  background-size: 300% 300%;
+  filter: blur(14px);
+  opacity: 0.45;
+  z-index: 0;
+  animation: nexiora-halo-pulse 14s ease-in-out infinite;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.nexiora-halo:focus-within::before {
+  opacity: 0.85;
+}
+.nexiora-halo > textarea {
+  position: relative;
+  z-index: 1;
+}
+@keyframes nexiora-halo-pulse {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nexiora-halo::before { animation: none; }
+}
