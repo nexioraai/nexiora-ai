@@ -243,7 +243,7 @@ Return ONLY the JSON.`
 
 IMPORTANT CONTEXT:
 - Location: ${location || 'Not specified'}
-- Write ALL text content in ${langName}
+- Write ALL text content in the EXACT SAME LANGUAGE as the business description provided below. Detect the language automatically and use it consistently everywhere.
 - Phone format: start with ${phonePrefix}
 - Currency: use ${currency}
 - Address: write a realistic address in ${location || 'the city'}
@@ -256,6 +256,7 @@ Return ONLY valid JSON, no markdown:
   "name": "",
   "slogan": "",
   "type": "",
+  "lang": "ISO 639-1 code of the language you are writing in, e.g. fr, en, ar, es, de, pt, sw",
   "primaryColor": "#hexcolor",
   "heroTitle": "",
   "heroSubtitle": "",
@@ -324,6 +325,7 @@ Return ONLY valid JSON, no markdown:
       products: parsed.products || [],
       social_links: parsed.socialLinks,
       owner_email,
+      lang: parsed.lang || detectedLang || "fr",
     });
 
     if (error) {

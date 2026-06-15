@@ -18,6 +18,7 @@ import {
   normalizeTestimonial,
   normalizeProduct,
 } from './shared'
+import { getDict } from './i18n'
 
 // ---------- Premium Button ----------
 function PremiumButton({
@@ -60,6 +61,7 @@ function PremiumButton({
 // ---------- Theme ----------
 export default function EditorialTheme({ site }: { site: Site }) {
   const primary = site.primary_color || '#111111'
+  const t = getDict(site.lang)
   const services = (site.services || []).map(normalizeService)
   const testimonials = (site.testimonials || []).map(normalizeTestimonial)
   const products = (site.products || []).map(normalizeProduct)
@@ -94,15 +96,15 @@ export default function EditorialTheme({ site }: { site: Site }) {
             {site.name}
           </Link>
           <nav className="hidden md:flex items-center gap-10 text-sm font-medium text-neutral-700">
-            <a href="#home" className="hover:text-black transition-colors">Home</a>
-            <a href="#about" className="hover:text-black transition-colors">About</a>
-            <a href="#services" className="hover:text-black transition-colors">Services</a>
+            <a href="#home" className="hover:text-black transition-colors">{t.nav.home}</a>
+            <a href="#about" className="hover:text-black transition-colors">{t.nav.about}</a>
+            <a href="#services" className="hover:text-black transition-colors">{t.nav.services}</a>
             {products.length > 0 && (
-              <a href="#shop" className="hover:text-black transition-colors">Shop</a>
+              <a href="#shop" className="hover:text-black transition-colors">{t.nav.shop}</a>
             )}
-            <a href="#gallery" className="hover:text-black transition-colors">Gallery</a>
-            <a href="#testimonials" className="hover:text-black transition-colors">Reviews</a>
-            <a href="#contact" className="hover:text-black transition-colors">Contact</a>
+            <a href="#gallery" className="hover:text-black transition-colors">{t.nav.gallery}</a>
+            <a href="#testimonials" className="hover:text-black transition-colors">{t.nav.reviews}</a>
+            <a href="#contact" className="hover:text-black transition-colors">{t.nav.contact}</a>
             <a
               href={ctaHref}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-white text-sm font-medium shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
@@ -165,14 +167,14 @@ export default function EditorialTheme({ site }: { site: Site }) {
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </PremiumButton>
               <PremiumButton href="#services" variant="ghost" brand={primary}>
-                Voir nos services
+                {t.hero.viewServices}
               </PremiumButton>
             </div>
           </div>
         </div>
 
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60 text-xs tracking-widest uppercase animate-pulse">
-          Scroll
+          {t.hero.scroll}
         </div>
       </section>
 
@@ -183,7 +185,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
             <div className="grid md:grid-cols-[1fr_2fr] gap-16 items-start">
               <div>
                 <div className="text-xs font-medium tracking-[0.2em] uppercase text-neutral-500 mb-4">
-                  About us
+                  {t.sections.aboutKicker}
                 </div>
                 <div className="h-px w-12" style={{ backgroundColor: primary }} />
               </div>
@@ -192,7 +194,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
                   className="font-serif text-4xl md:text-5xl leading-tight mb-8"
                   style={{ fontFamily: 'var(--font-fraunces), serif' }}
                 >
-                  Notre histoire
+                  {t.sections.aboutTitle}
                 </h2>
                 <p className="text-lg md:text-xl leading-relaxed text-neutral-700">
                   {site.about}
@@ -212,13 +214,13 @@ export default function EditorialTheme({ site }: { site: Site }) {
                 className="text-xs font-medium tracking-[0.2em] uppercase mb-4"
                 style={{ color: primary }}
               >
-                What we offer
+                {t.sections.servicesKicker}
               </div>
               <h2
                 className="font-serif text-4xl md:text-5xl leading-tight"
                 style={{ fontFamily: 'var(--font-fraunces), serif' }}
               >
-                Nos services
+                {t.sections.servicesTitle}
               </h2>
             </div>
 
@@ -265,7 +267,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
                         href="#contact"
                         className="inline-flex items-center gap-2 mt-8 text-sm font-medium group/link"
                       >
-                        En savoir plus
+                        {t.labels.learnMore}
                         <ArrowRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
                       </a>
                     )}
@@ -286,13 +288,13 @@ export default function EditorialTheme({ site }: { site: Site }) {
                 className="text-xs font-medium tracking-[0.2em] uppercase mb-4"
                 style={{ color: primary }}
               >
-                Notre catalogue
+                {t.sections.shopKicker}
               </div>
               <h2
                 className="font-serif text-4xl md:text-5xl leading-tight"
                 style={{ fontFamily: 'var(--font-fraunces), serif' }}
               >
-                Boutique
+                {t.sections.shopTitle}
               </h2>
             </div>
 
@@ -341,13 +343,13 @@ export default function EditorialTheme({ site }: { site: Site }) {
                           {p.price}
                         </span>
                       ) : (
-                        <span className="text-sm text-neutral-400">Sur devis</span>
+                        <span className="text-sm text-neutral-400">{t.labels.onQuote}</span>
                       )}
                       <a
                         href="#contact"
                         className="inline-flex items-center gap-1 text-sm font-medium text-neutral-900 group/link"
                       >
-                        Demander
+                        {t.labels.request}
                         <ArrowRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
                       </a>
                     </div>
@@ -369,13 +371,13 @@ export default function EditorialTheme({ site }: { site: Site }) {
                   className="text-xs font-medium tracking-[0.2em] uppercase mb-4"
                   style={{ color: primary }}
                 >
-                  Our work
+                  {t.sections.galleryKicker}
                 </div>
                 <h2
                   className="font-serif text-4xl md:text-5xl leading-tight"
                   style={{ fontFamily: 'var(--font-fraunces), serif' }}
                 >
-                  Galerie
+                  {t.sections.galleryTitle}
                 </h2>
               </div>
             </div>
@@ -411,13 +413,13 @@ export default function EditorialTheme({ site }: { site: Site }) {
                 className="text-xs font-medium tracking-[0.2em] uppercase mb-4"
                 style={{ color: primary }}
               >
-                What clients say
+                {t.sections.testimonialsKicker}
               </div>
               <h2
                 className="font-serif text-4xl md:text-5xl leading-tight"
                 style={{ fontFamily: 'var(--font-fraunces), serif' }}
               >
-                Ils nous font confiance
+                {t.sections.testimonialsTitle}
               </h2>
             </div>
 
@@ -466,22 +468,22 @@ export default function EditorialTheme({ site }: { site: Site }) {
               className="text-xs font-medium tracking-[0.2em] uppercase mb-4"
               style={{ color: primary }}
             >
-              Get in touch
+              {t.sections.contactKicker}
             </div>
             <h2
               className="font-serif text-4xl md:text-5xl leading-tight mb-4"
               style={{ fontFamily: 'var(--font-fraunces), serif' }}
             >
-              Parlons de votre projet
+              {t.sections.contactTitle}
             </h2>
             <p className="text-lg text-neutral-600">
-              Une question, un devis ? Nous répondons sous 24h.
+              {t.sections.contactSubtitle}
             </p>
           </div>
 
           <div className="grid lg:grid-cols-[1.2fr_1fr] gap-10 lg:gap-16 items-start">
             <div className="bg-white border border-neutral-200/70 rounded-3xl p-8 md:p-10 shadow-sm">
-              <ContactForm slug={site.slug} brand={primary} />
+              <ContactForm slug={site.slug} brand={primary} lang={site.lang} />
             </div>
 
             <div className="space-y-4">
@@ -494,7 +496,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
                     <Phone className="w-5 h-5" style={{ color: primary }} />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs uppercase tracking-wider text-neutral-500 mb-1">Téléphone</div>
+                    <div className="text-xs uppercase tracking-wider text-neutral-500 mb-1">{t.labels.phone}</div>
                     <div className="font-medium truncate">{contact.phone}</div>
                   </div>
                 </a>
@@ -508,7 +510,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
                     <Mail className="w-5 h-5" style={{ color: primary }} />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs uppercase tracking-wider text-neutral-500 mb-1">Email</div>
+                    <div className="text-xs uppercase tracking-wider text-neutral-500 mb-1">{t.labels.email}</div>
                     <div className="font-medium truncate">{contact.email}</div>
                   </div>
                 </a>
@@ -522,7 +524,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
                     <MapPin className="w-5 h-5" style={{ color: primary }} />
                   </div>
                   <div>
-                    <div className="text-xs uppercase tracking-wider text-neutral-500 mb-1">Adresse</div>
+                    <div className="text-xs uppercase tracking-wider text-neutral-500 mb-1">{t.labels.address}</div>
                     <div className="font-medium leading-snug">{contact.address}</div>
                   </div>
                 </div>
@@ -531,7 +533,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
               {(social.instagram || social.facebook || social.whatsapp || social.tiktok) && (
                 <div className="pt-4">
                   <div className="text-xs uppercase tracking-wider text-neutral-500 mb-4 px-2">
-                    Suivez-nous
+                    {t.labels.followUs}
                   </div>
                   <div className="flex gap-3 flex-wrap">
                     {social.instagram && (
@@ -573,15 +575,15 @@ export default function EditorialTheme({ site }: { site: Site }) {
               {site.slogan && <div className="text-white/60 text-sm">{site.slogan}</div>}
             </div>
             <nav className="flex gap-8 text-sm text-white/70">
-              <a href="#about" className="hover:text-white transition-colors">About</a>
-              <a href="#services" className="hover:text-white transition-colors">Services</a>
-              <a href="#contact" className="hover:text-white transition-colors">Contact</a>
+              <a href="#about" className="hover:text-white transition-colors">{t.nav.about}</a>
+              <a href="#services" className="hover:text-white transition-colors">{t.nav.services}</a>
+              <a href="#contact" className="hover:text-white transition-colors">{t.nav.contact}</a>
             </nav>
           </div>
           <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-sm text-white/40">
-            <div>© {new Date().getFullYear()} {site.name}. All rights reserved.</div>
+            <div>© {new Date().getFullYear()} {site.name}. {t.labels.rightsReserved}</div>
             <div className="flex items-center gap-2">
-              <span>Powered by</span>
+              <span>{t.labels.poweredBy}</span>
               <a href="https://nexiora.ca" target="_blank" rel="noopener noreferrer" className="font-medium text-white/70 hover:text-white transition-colors">
                 Nexiora
               </a>

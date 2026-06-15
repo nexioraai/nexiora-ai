@@ -501,7 +501,7 @@ export default function BoldTheme({ site }: { site: Site }) {
             </div>
 
             <div className="border-[3px] border-black bg-white p-8 md:p-10">
-              <ContactForm slug={site.slug} brand={primary} />
+              <ContactForm slug={site.slug} brand={primary} lang={site.lang} />
             </div>
           </div>
         </div>

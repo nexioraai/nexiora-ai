@@ -5,13 +5,16 @@ import { useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { Send, Check } from 'lucide-react'
 import { supabase } from '@/lib/supabase';
+import { getDict } from './themes/i18n'
 
 type Props = {
   slug: string
   brand?: string
+  lang?: string
 }
 
-export default function ContactForm({ slug, brand = '#111111' }: Props) {
+export default function ContactForm({ slug, brand = '#111111', lang }: Props) {
+  const t = getDict(lang)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
@@ -46,7 +49,7 @@ export default function ContactForm({ slug, brand = '#111111' }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="text-xs font-bold uppercase tracking-[0.2em] text-neutral-600 mb-6">
-        Envoyez-nous un message
+        {t.form.title}
       </div>
 
       <input
@@ -54,7 +57,7 @@ export default function ContactForm({ slug, brand = '#111111' }: Props) {
         required
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder="Votre nom"
+        placeholder={t.form.name}
         className="w-full px-5 py-4 rounded-xl border border-neutral-200 bg-white text-neutral-900 placeholder-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-4 focus:ring-neutral-900/5 transition-all"
       />
 
@@ -63,7 +66,7 @@ export default function ContactForm({ slug, brand = '#111111' }: Props) {
         required
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="Votre email"
+        placeholder={t.form.email}
         className="w-full px-5 py-4 rounded-xl border border-neutral-200 bg-white text-neutral-900 placeholder-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-4 focus:ring-neutral-900/5 transition-all"
       />
 
@@ -72,7 +75,7 @@ export default function ContactForm({ slug, brand = '#111111' }: Props) {
         rows={5}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        placeholder="Votre message"
+        placeholder={t.form.message}
         className="w-full px-5 py-4 rounded-xl border border-neutral-200 bg-white text-neutral-900 placeholder-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-4 focus:ring-neutral-900/5 transition-all resize-none"
       />
 
@@ -84,16 +87,16 @@ export default function ContactForm({ slug, brand = '#111111' }: Props) {
       >
         <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
         <span className="relative inline-flex items-center justify-center gap-2">
-          {status === 'sending' && 'Envoi en cours…'}
+          {status === 'sending' && t.form.sending}
           {status === 'success' && (
             <>
               <Check className="w-5 h-5" />
-              Message envoyé !
+              {t.form.sent}
             </>
           )}
           {(status === 'idle' || status === 'error') && (
             <>
-              Envoyer le message
+              {t.form.send}
               <Send className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </>
           )}
@@ -102,7 +105,7 @@ export default function ContactForm({ slug, brand = '#111111' }: Props) {
 
       {status === 'error' && (
         <div className="text-sm text-red-600 px-1">
-          Erreur : {errorMsg || 'réessaie dans un instant.'}
+          {t.form.error} : {errorMsg || '…'}
         </div>
       )}
     </form>

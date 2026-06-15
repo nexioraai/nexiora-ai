@@ -45,6 +45,7 @@ tiktok?: string
 hero_image?: string
 cta?: string
 theme?: 'editorial' | 'bold' | string
+lang?: string
 }
 
 export type Product = {
@@ -70,7 +71,7 @@ rating: number
 // ---------- Supabase ----------
 
 export const PUBLIC_COLS =
-'slug,name,slogan,type,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image'
+'slug,name,slogan,type,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image,lang'
 
 export async function fetchSite(
 slug: string

@@ -214,7 +214,7 @@ export default function MonochromeTheme({ site }: { site: Site }) {
           </div>
           <div className="grid lg:grid-cols-[1.2fr_1fr] gap-10 lg:gap-16 items-start">
             <div className="border border-black p-8 md:p-10">
-              <ContactForm slug={site.slug} brand="#000000" />
+              <ContactForm slug={site.slug} brand="#000000" lang={site.lang} />
             </div>
             <div className="space-y-px bg-black/10">
               {contact.phone && (
