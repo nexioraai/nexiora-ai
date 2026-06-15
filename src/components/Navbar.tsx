@@ -96,8 +96,8 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="flex items-center justify-between px-6 py-4 border-b border-white/8 backdrop-blur-md sticky top-0 z-50"
-        style={{ background: 'rgba(10,5,14,0.75)' }}>
+      <nav className="flex items-center justify-between px-6 py-4 sticky top-0 z-50"
+        style={{ background: 'transparent' }}>
         <Link href="/" className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-lg"
             style={{ background: 'radial-gradient(circle at 30% 30%, #4F6EF5 0%, transparent 60%), radial-gradient(circle at 70% 70%, #E07040 0%, transparent 60%), #16090e' }}>
