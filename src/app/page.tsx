@@ -24,15 +24,6 @@ export default function Home() {
       <Navbar />
 
       <section className="text-center px-6 pt-20 pb-8">
-        <div className="inline-block px-4 py-1.5 rounded-full bg-[#E07040]/20 text-[#E07040] text-sm mb-5">
-          {t('home.badge')}
-        </div>
-        <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-4">
-          {t('home.title.part1')} <span className="text-nexiora">{t('home.title.part2')}</span>
-        </h1>
-        <p className="text-slate-400 text-base md:text-lg max-w-2xl mx-auto mb-4">
-          {t('home.subtitle')}
-        </p>
 
         {authLoaded && userEmail && (
           <Link
