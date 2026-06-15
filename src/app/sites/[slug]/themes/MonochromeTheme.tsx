@@ -11,8 +11,10 @@ import {
   normalizeTestimonial,
   normalizeProduct,
 } from './shared'
+import { getDict } from './i18n'
 
 export default function MonochromeTheme({ site }: { site: Site }) {
+  const t = getDict(site.lang)
   const services = (site.services || []).map(normalizeService)
   const testimonials = (site.testimonials || []).map(normalizeTestimonial)
   const products = (site.products || []).map(normalizeProduct)
@@ -41,12 +43,12 @@ export default function MonochromeTheme({ site }: { site: Site }) {
             {site.name}
           </Link>
           <nav className="hidden md:flex items-center gap-10 text-sm font-medium">
-            <a href="#home" className="hover:opacity-60 transition-opacity">Home</a>
-            <a href="#about" className="hover:opacity-60 transition-opacity">About</a>
-            <a href="#services" className="hover:opacity-60 transition-opacity">Services</a>
-            {products.length > 0 && <a href="#shop" className="hover:opacity-60 transition-opacity">Shop</a>}
-            <a href="#gallery" className="hover:opacity-60 transition-opacity">Gallery</a>
-            <a href="#contact" className="hover:opacity-60 transition-opacity">Contact</a>
+            <a href="#home" className="hover:opacity-60 transition-opacity">{t.nav.home}</a>
+            <a href="#about" className="hover:opacity-60 transition-opacity">{t.nav.about}</a>
+            <a href="#services" className="hover:opacity-60 transition-opacity">{t.nav.services}</a>
+            {products.length > 0 && <a href="#shop" className="hover:opacity-60 transition-opacity">{t.nav.shop}</a>}
+            <a href="#gallery" className="hover:opacity-60 transition-opacity">{t.nav.gallery}</a>
+            <a href="#contact" className="hover:opacity-60 transition-opacity">{t.nav.contact}</a>
             <a href={ctaHref} className="inline-flex items-center gap-2 px-5 py-2.5 bg-black text-white text-sm font-medium hover:bg-white hover:text-black border border-black transition-colors">
               {cta} <ArrowRight className="w-4 h-4" />
             </a>
@@ -78,7 +80,7 @@ export default function MonochromeTheme({ site }: { site: Site }) {
               {cta} <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
             </a>
             <a href="#services" className="inline-flex items-center gap-2 px-8 py-4 border border-black hover:bg-black hover:text-white transition-colors">
-              View services
+              {t.mono.viewServices}
             </a>
           </div>
         </div>
@@ -89,9 +91,9 @@ export default function MonochromeTheme({ site }: { site: Site }) {
         <section id="about" className="py-28 md:py-36 border-t border-black">
           <div className="max-w-5xl mx-auto px-6 md:px-10">
             <div className="grid md:grid-cols-[1fr_2fr] gap-16 items-start">
-              <div className="text-xs font-medium tracking-[0.2em] uppercase">01 — About</div>
+              <div className="text-xs font-medium tracking-[0.2em] uppercase">01 — {t.mono.aboutNum}</div>
               <div>
-                <h2 className="text-4xl md:text-5xl font-bold leading-tight mb-8 uppercase tracking-tighter">Our story</h2>
+                <h2 className="text-4xl md:text-5xl font-bold leading-tight mb-8 uppercase tracking-tighter">{t.mono.aboutTitle}</h2>
                 <p className="text-lg md:text-xl leading-relaxed text-black/70">{site.about}</p>
               </div>
             </div>
@@ -104,8 +106,8 @@ export default function MonochromeTheme({ site }: { site: Site }) {
         <section id="services" className="py-28 md:py-36 bg-black text-white">
           <div className="max-w-7xl mx-auto px-6 md:px-10">
             <div className="grid md:grid-cols-[1fr_2fr] gap-16 mb-20">
-              <div className="text-xs font-medium tracking-[0.2em] uppercase opacity-60">02 — Services</div>
-              <h2 className="text-4xl md:text-5xl font-bold leading-tight uppercase tracking-tighter">What we do</h2>
+              <div className="text-xs font-medium tracking-[0.2em] uppercase opacity-60">02 — {t.mono.servicesNum}</div>
+              <h2 className="text-4xl md:text-5xl font-bold leading-tight uppercase tracking-tighter">{t.mono.servicesTitle}</h2>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/10">
               {services.map((s, i) => {
@@ -128,8 +130,8 @@ export default function MonochromeTheme({ site }: { site: Site }) {
         <section id="shop" className="py-28 md:py-36 border-t border-black">
           <div className="max-w-7xl mx-auto px-6 md:px-10">
             <div className="grid md:grid-cols-[1fr_2fr] gap-16 mb-20">
-              <div className="text-xs font-medium tracking-[0.2em] uppercase">03 — Shop</div>
-              <h2 className="text-4xl md:text-5xl font-bold leading-tight uppercase tracking-tighter">Products</h2>
+              <div className="text-xs font-medium tracking-[0.2em] uppercase">03 — {t.mono.shopNum}</div>
+              <h2 className="text-4xl md:text-5xl font-bold leading-tight uppercase tracking-tighter">{t.mono.shopTitle}</h2>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {products.map((p, i) => (
@@ -144,8 +146,8 @@ export default function MonochromeTheme({ site }: { site: Site }) {
                   <h3 className="text-lg font-bold uppercase tracking-tight mb-1">{p.name}</h3>
                   {p.description && <p className="text-sm text-black/60 mb-2 line-clamp-2">{p.description}</p>}
                   <div className="flex items-center justify-between border-t border-black/10 pt-3">
-                    {p.price ? <span className="text-lg font-bold">{p.price}</span> : <span className="text-sm text-black/40">On request</span>}
-                    <a href="#contact" className="text-sm font-medium underline underline-offset-4">Inquire</a>
+                    {p.price ? <span className="text-lg font-bold">{p.price}</span> : <span className="text-sm text-black/40">{t.labels.onQuote}</span>}
+                    <a href="#contact" className="text-sm font-medium underline underline-offset-4">{t.labels.request}</a>
                   </div>
                 </div>
               ))}
@@ -159,8 +161,8 @@ export default function MonochromeTheme({ site }: { site: Site }) {
         <section id="gallery" className="py-28 md:py-36 border-t border-black">
           <div className="max-w-7xl mx-auto px-6 md:px-10">
             <div className="grid md:grid-cols-[1fr_2fr] gap-16 mb-20">
-              <div className="text-xs font-medium tracking-[0.2em] uppercase">04 — Work</div>
-              <h2 className="text-4xl md:text-5xl font-bold leading-tight uppercase tracking-tighter">Gallery</h2>
+              <div className="text-xs font-medium tracking-[0.2em] uppercase">04 — {t.mono.galleryNum}</div>
+              <h2 className="text-4xl md:text-5xl font-bold leading-tight uppercase tracking-tighter">{t.mono.galleryTitle}</h2>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {gallery.slice(0, 9).map((url, i) => (
@@ -178,8 +180,8 @@ export default function MonochromeTheme({ site }: { site: Site }) {
         <section id="testimonials" className="py-28 md:py-36 bg-black text-white">
           <div className="max-w-7xl mx-auto px-6 md:px-10">
             <div className="grid md:grid-cols-[1fr_2fr] gap-16 mb-20">
-              <div className="text-xs font-medium tracking-[0.2em] uppercase opacity-60">05 — Reviews</div>
-              <h2 className="text-4xl md:text-5xl font-bold leading-tight uppercase tracking-tighter">Clients</h2>
+              <div className="text-xs font-medium tracking-[0.2em] uppercase opacity-60">05 — {t.mono.testimonialsNum}</div>
+              <h2 className="text-4xl md:text-5xl font-bold leading-tight uppercase tracking-tighter">{t.mono.testimonialsTitle}</h2>
             </div>
             <div className="grid md:grid-cols-3 gap-px bg-white/10">
               {testimonials.slice(0, 3).map((t, i) => (
@@ -206,10 +208,10 @@ export default function MonochromeTheme({ site }: { site: Site }) {
       <section id="contact" className="py-28 md:py-36 border-t border-black">
         <div className="max-w-7xl mx-auto px-6 md:px-10">
           <div className="grid md:grid-cols-[1fr_2fr] gap-16 mb-20">
-            <div className="text-xs font-medium tracking-[0.2em] uppercase">06 — Contact</div>
+            <div className="text-xs font-medium tracking-[0.2em] uppercase">06 — {t.mono.contactNum}</div>
             <div>
-              <h2 className="text-4xl md:text-5xl font-bold leading-tight mb-4 uppercase tracking-tighter">Let's talk</h2>
-              <p className="text-lg text-black/60">A question? We respond within 24h.</p>
+              <h2 className="text-4xl md:text-5xl font-bold leading-tight mb-4 uppercase tracking-tighter">{t.mono.contactTitle}</h2>
+              <p className="text-lg text-black/60">{t.mono.contactSubtitle}</p>
             </div>
           </div>
           <div className="grid lg:grid-cols-[1.2fr_1fr] gap-10 lg:gap-16 items-start">
@@ -221,7 +223,7 @@ export default function MonochromeTheme({ site }: { site: Site }) {
                 <a href={`tel:${contact.phone}`} className="flex items-center gap-5 p-6 bg-white hover:bg-black hover:text-white transition-colors">
                   <Phone className="w-5 h-5 shrink-0" strokeWidth={1.5} />
                   <div className="min-w-0">
-                    <div className="text-xs uppercase tracking-wider opacity-60 mb-1">Phone</div>
+                    <div className="text-xs uppercase tracking-wider opacity-60 mb-1">{t.labels.phone}</div>
                     <div className="font-medium truncate">{contact.phone}</div>
                   </div>
                 </a>
@@ -230,7 +232,7 @@ export default function MonochromeTheme({ site }: { site: Site }) {
                 <a href={`mailto:${contact.email}`} className="flex items-center gap-5 p-6 bg-white hover:bg-black hover:text-white transition-colors">
                   <Mail className="w-5 h-5 shrink-0" strokeWidth={1.5} />
                   <div className="min-w-0">
-                    <div className="text-xs uppercase tracking-wider opacity-60 mb-1">Email</div>
+                    <div className="text-xs uppercase tracking-wider opacity-60 mb-1">{t.labels.email}</div>
                     <div className="font-medium truncate">{contact.email}</div>
                   </div>
                 </a>
@@ -239,14 +241,14 @@ export default function MonochromeTheme({ site }: { site: Site }) {
                 <div className="flex items-start gap-5 p-6 bg-white">
                   <MapPin className="w-5 h-5 shrink-0" strokeWidth={1.5} />
                   <div>
-                    <div className="text-xs uppercase tracking-wider opacity-60 mb-1">Address</div>
+                    <div className="text-xs uppercase tracking-wider opacity-60 mb-1">{t.labels.address}</div>
                     <div className="font-medium leading-snug">{contact.address}</div>
                   </div>
                 </div>
               )}
               {(social.instagram || social.facebook || social.whatsapp || social.tiktok) && (
                 <div className="bg-white p-6">
-                  <div className="text-xs uppercase tracking-wider opacity-60 mb-4">Follow</div>
+                  <div className="text-xs uppercase tracking-wider opacity-60 mb-4">{t.labels.followUs}</div>
                   <div className="flex gap-2 flex-wrap">
                     {social.instagram && (
                       <a href={social.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="flex items-center justify-center w-11 h-11 border border-black hover:bg-black hover:text-white transition-colors">
@@ -285,16 +287,16 @@ export default function MonochromeTheme({ site }: { site: Site }) {
               {site.slogan && <div className="text-white/60 text-sm">{site.slogan}</div>}
             </div>
             <nav className="flex gap-8 text-sm text-white/70">
-              <a href="#home" className="hover:text-white transition-colors">Home</a>
-            <a href="#about" className="hover:text-white transition-colors">About</a>
-              <a href="#services" className="hover:text-white transition-colors">Services</a>
-              <a href="#contact" className="hover:text-white transition-colors">Contact</a>
+              <a href="#home" className="hover:text-white transition-colors">{t.nav.home}</a>
+            <a href="#about" className="hover:text-white transition-colors">{t.nav.about}</a>
+              <a href="#services" className="hover:text-white transition-colors">{t.nav.services}</a>
+              <a href="#contact" className="hover:text-white transition-colors">{t.nav.contact}</a>
             </nav>
           </div>
           <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-sm text-white/40">
-            <div>© {new Date().getFullYear()} {site.name}. All rights reserved.</div>
+            <div>© {new Date().getFullYear()} {site.name}. {t.labels.rightsReserved}</div>
             <div className="flex items-center gap-2">
-              <span>Powered by</span>
+              <span>{t.labels.poweredBy}</span>
               <a href="https://nexiora.ca" target="_blank" rel="noopener noreferrer" className="font-medium text-white/70 hover:text-white transition-colors">Nexiora</a>
             </div>
           </div>

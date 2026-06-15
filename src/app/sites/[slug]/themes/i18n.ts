@@ -50,6 +50,43 @@ export type ThemeDict = {
     sent: string
     error: string
   }
+  bold: {
+    navWork: string
+    aboutKicker: string
+    aboutTitle: string
+    servicesKicker: string
+    servicesTitle: string
+    servicesCount: string
+    shopKicker: string
+    shopTitle: string
+    shopCount: string
+    onQuote: string
+    order: string
+    galleryKicker: string
+    galleryTitle: string
+    testimonialsKicker: string
+    testimonialsTitle: string
+    contactKicker: string
+    contactTitle1: string
+    contactTitle2: string
+    contactSubtitle: string
+  }
+  mono: {
+    viewServices: string
+    aboutNum: string
+    aboutTitle: string
+    servicesNum: string
+    servicesTitle: string
+    shopNum: string
+    shopTitle: string
+    galleryNum: string
+    galleryTitle: string
+    testimonialsNum: string
+    testimonialsTitle: string
+    contactNum: string
+    contactTitle: string
+    contactSubtitle: string
+  }
 }
 
 const en: ThemeDict = {
@@ -101,6 +138,43 @@ const en: ThemeDict = {
     sent: 'Message sent!',
     error: 'Error',
     title: 'Send us a message',
+  },
+  bold: {
+    navWork: 'Work',
+    aboutKicker: 'About us',
+    aboutTitle: 'Our story.',
+    servicesKicker: 'What we do',
+    servicesTitle: 'SERVICES.',
+    servicesCount: 'services offered',
+    shopKicker: 'Catalogue',
+    shopTitle: 'SHOP.',
+    shopCount: 'products available',
+    onQuote: 'On request',
+    order: 'Order',
+    galleryKicker: 'Our work',
+    galleryTitle: 'GALLERY.',
+    testimonialsKicker: 'The verdict',
+    testimonialsTitle: 'THEY LOVE IT.',
+    contactKicker: "Let's talk",
+    contactTitle1: 'GET IN',
+    contactTitle2: 'TOUCH.',
+    contactSubtitle: 'A question, a quote, an idea? We reply within 24h.',
+  },
+  mono: {
+    viewServices: 'View services',
+    aboutNum: 'About',
+    aboutTitle: 'Our story',
+    servicesNum: 'Services',
+    servicesTitle: 'What we do',
+    shopNum: 'Shop',
+    shopTitle: 'Products',
+    galleryNum: 'Work',
+    galleryTitle: 'Gallery',
+    testimonialsNum: 'Reviews',
+    testimonialsTitle: 'Clients',
+    contactNum: 'Contact',
+    contactTitle: "Let's talk",
+    contactSubtitle: 'A question? We respond within 24h.',
   },
 }
 
@@ -154,6 +228,43 @@ const fr: ThemeDict = {
     error: 'Erreur',
     title: 'Envoyez-nous un message',
   },
+  bold: {
+    navWork: 'Réal.',
+    aboutKicker: 'À propos',
+    aboutTitle: 'Notre histoire.',
+    servicesKicker: "Ce qu'on fait",
+    servicesTitle: 'SERVICES.',
+    servicesCount: 'services proposés',
+    shopKicker: 'Catalogue',
+    shopTitle: 'BOUTIQUE.',
+    shopCount: 'produits disponibles',
+    onQuote: 'Sur devis',
+    order: 'Commander',
+    galleryKicker: 'Nos réalisations',
+    galleryTitle: 'GALERIE.',
+    testimonialsKicker: 'Le verdict',
+    testimonialsTitle: 'ILS ADORENT.',
+    contactKicker: 'Parlons-en',
+    contactTitle1: 'PARLONS',
+    contactTitle2: 'PROJET.',
+    contactSubtitle: 'Une question, un devis, une idée ? On répond sous 24h.',
+  },
+  mono: {
+    viewServices: 'Voir les services',
+    aboutNum: 'À propos',
+    aboutTitle: 'Notre histoire',
+    servicesNum: 'Services',
+    servicesTitle: "Ce qu'on fait",
+    shopNum: 'Boutique',
+    shopTitle: 'Produits',
+    galleryNum: 'Réalisations',
+    galleryTitle: 'Galerie',
+    testimonialsNum: 'Avis',
+    testimonialsTitle: 'Clients',
+    contactNum: 'Contact',
+    contactTitle: 'Parlons-en',
+    contactSubtitle: 'Une question ? Nous répondons sous 24h.',
+  },
 }
 
 const es: ThemeDict = {
@@ -206,6 +317,43 @@ const es: ThemeDict = {
     error: 'Error',
     title: 'Envíanos un mensaje',
   },
+  bold: {
+    navWork: 'Trabajo',
+    aboutKicker: 'Sobre nosotros',
+    aboutTitle: 'Nuestra historia.',
+    servicesKicker: 'Lo que hacemos',
+    servicesTitle: 'SERVICIOS.',
+    servicesCount: 'servicios ofrecidos',
+    shopKicker: 'Catálogo',
+    shopTitle: 'TIENDA.',
+    shopCount: 'productos disponibles',
+    onQuote: 'A consultar',
+    order: 'Pedir',
+    galleryKicker: 'Nuestro trabajo',
+    galleryTitle: 'GALERÍA.',
+    testimonialsKicker: 'El veredicto',
+    testimonialsTitle: 'LES ENCANTA.',
+    contactKicker: 'Hablemos',
+    contactTitle1: 'EN',
+    contactTitle2: 'CONTACTO.',
+    contactSubtitle: '¿Una pregunta, un presupuesto, una idea? Respondemos en 24h.',
+  },
+  mono: {
+    viewServices: 'Ver servicios',
+    aboutNum: 'Nosotros',
+    aboutTitle: 'Nuestra historia',
+    servicesNum: 'Servicios',
+    servicesTitle: 'Lo que hacemos',
+    shopNum: 'Tienda',
+    shopTitle: 'Productos',
+    galleryNum: 'Trabajo',
+    galleryTitle: 'Galería',
+    testimonialsNum: 'Opiniones',
+    testimonialsTitle: 'Clientes',
+    contactNum: 'Contacto',
+    contactTitle: 'Hablemos',
+    contactSubtitle: '¿Una pregunta? Respondemos en 24h.',
+  },
 }
 
 const ar: ThemeDict = {
@@ -257,6 +405,43 @@ const ar: ThemeDict = {
     sent: 'تم إرسال الرسالة!',
     error: 'خطأ',
     title: 'أرسل لنا رسالة',
+  },
+  bold: {
+    navWork: 'أعمالنا',
+    aboutKicker: 'من نحن',
+    aboutTitle: 'قصتنا.',
+    servicesKicker: 'ما نقوم به',
+    servicesTitle: 'خدماتنا.',
+    servicesCount: 'خدمة متاحة',
+    shopKicker: 'الكتالوج',
+    shopTitle: 'المتجر.',
+    shopCount: 'منتج متاح',
+    onQuote: 'حسب الطلب',
+    order: 'اطلب',
+    galleryKicker: 'أعمالنا',
+    galleryTitle: 'المعرض.',
+    testimonialsKicker: 'الحكم',
+    testimonialsTitle: 'يحبونه.',
+    contactKicker: 'لنتحدث',
+    contactTitle1: 'تواصل',
+    contactTitle2: 'معنا.',
+    contactSubtitle: 'سؤال، عرض سعر، فكرة؟ نرد خلال 24 ساعة.',
+  },
+  mono: {
+    viewServices: 'شاهد الخدمات',
+    aboutNum: 'من نحن',
+    aboutTitle: 'قصتنا',
+    servicesNum: 'الخدمات',
+    servicesTitle: 'ما نقوم به',
+    shopNum: 'المتجر',
+    shopTitle: 'المنتجات',
+    galleryNum: 'أعمالنا',
+    galleryTitle: 'المعرض',
+    testimonialsNum: 'الآراء',
+    testimonialsTitle: 'العملاء',
+    contactNum: 'اتصل بنا',
+    contactTitle: 'لنتحدث',
+    contactSubtitle: 'سؤال؟ نرد خلال 24 ساعة.',
   },
 }
 

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Menu, X, ArrowRight } from 'lucide-react'
+import { getDict } from './i18n'
 
 interface MobileNavProps {
   site: {
@@ -9,6 +10,7 @@ interface MobileNavProps {
     name: string
     primary_color?: string
     products?: any[]
+    lang?: string
   }
   cta: string
   ctaHref: string
@@ -17,16 +19,17 @@ interface MobileNavProps {
 export default function MobileNav({ site, cta, ctaHref }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false)
   const primary = site.primary_color || '#111111'
+  const t = getDict(site.lang)
   const hasShop = (site.products?.length || 0) > 0
   const closeMenu = () => setIsOpen(false)
 
   const navLinks = [
-    { href: '#about', label: 'About' },
-    { href: '#services', label: 'Services' },
-    ...(hasShop ? [{ href: '#shop', label: 'Shop' }] : []),
-    { href: '#gallery', label: 'Gallery' },
-    { href: '#testimonials', label: 'Reviews' },
-    { href: '#contact', label: 'Contact' },
+    { href: '#about', label: t.nav.about },
+    { href: '#services', label: t.nav.services },
+    ...(hasShop ? [{ href: '#shop', label: t.nav.shop }] : []),
+    { href: '#gallery', label: t.nav.gallery },
+    { href: '#testimonials', label: t.nav.reviews },
+    { href: '#contact', label: t.nav.contact },
   ]
 
   return (

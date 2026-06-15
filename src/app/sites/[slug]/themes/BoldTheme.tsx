@@ -14,6 +14,7 @@ import { Instagram, Facebook, TikTok, WhatsApp } from './BrandIcons'
 import MobileNav from './MobileNav'
 import ContactForm from '../ContactForm'
 import { type Site, normalizeService, normalizeTestimonial, normalizeProduct } from './shared'
+import { getDict } from './i18n'
 
 const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
@@ -28,6 +29,7 @@ const interTight = Inter_Tight({
 
 export default function BoldTheme({ site }: { site: Site }) {
   const primary = site.primary_color || '#FF3B1F'
+  const t = getDict(site.lang)
   const services = (site.services || []).map(normalizeService)
   const testimonials = (site.testimonials || []).map(normalizeTestimonial)
   const products = (site.products || []).map(normalizeProduct)
@@ -62,15 +64,15 @@ export default function BoldTheme({ site }: { site: Site }) {
             {site.name.toUpperCase()}
           </Link>
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#home" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">Home</a>
-            <a href="#about" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">About</a>
-            <a href="#services" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">Services</a>
+            <a href="#home" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.nav.home}</a>
+            <a href="#about" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.nav.about}</a>
+            <a href="#services" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.nav.services}</a>
             {products.length > 0 && (
-              <a href="#shop" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">Shop</a>
+              <a href="#shop" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.nav.shop}</a>
             )}
-            <a href="#gallery" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">Work</a>
-            <a href="#testimonials" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">Reviews</a>
-            <a href="#contact" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">Contact</a>
+            <a href="#gallery" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.bold.navWork}</a>
+            <a href="#testimonials" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.nav.reviews}</a>
+            <a href="#contact" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.nav.contact}</a>
             <a
               href={ctaHref}
               className="group relative inline-flex items-center gap-2 px-6 py-3 bg-black text-white text-sm font-medium uppercase tracking-wider transition-all"
@@ -173,13 +175,13 @@ export default function BoldTheme({ site }: { site: Site }) {
               </div>
               <div className="pt-6 md:pt-12">
                 <div className="text-xs uppercase tracking-[0.3em] font-bold mb-6 text-black/70">
-                  ★ About us
+                  ★ {t.bold.aboutKicker}
                 </div>
                 <h2
                   className="text-4xl md:text-6xl leading-[0.95] tracking-tight mb-10 text-black"
                   style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 700 }}
                 >
-                  {site.hero_title ? 'Notre histoire.' : `${site.name}.`}
+                  {site.hero_title ? t.bold.aboutTitle : `${site.name}.`}
                 </h2>
                 <p className="text-lg md:text-2xl leading-relaxed text-black/85 max-w-2xl">
                   {site.about}
@@ -197,17 +199,17 @@ export default function BoldTheme({ site }: { site: Site }) {
             <div className="flex items-end justify-between mb-16 flex-wrap gap-6">
               <div>
                 <div className="text-xs uppercase tracking-[0.3em] font-bold mb-4" style={{ color: primary }}>
-                  ★ What we do
+                  ★ {t.bold.servicesKicker}
                 </div>
                 <h2
                   className="text-5xl md:text-7xl leading-[0.9] tracking-tighter"
                   style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 800 }}
                 >
-                  SERVICES.
+                  {t.bold.servicesTitle}
                 </h2>
               </div>
               <div className="text-sm font-medium text-black/60">
-                {String(services.length).padStart(2, '0')} services proposés
+                {String(services.length).padStart(2, '0')} {t.bold.servicesCount}
               </div>
             </div>
           </div>
@@ -263,17 +265,17 @@ export default function BoldTheme({ site }: { site: Site }) {
             <div className="flex items-end justify-between mb-16 flex-wrap gap-6">
               <div>
                 <div className="text-xs uppercase tracking-[0.3em] font-bold mb-4" style={{ color: primary }}>
-                  ★ Catalogue
+                  ★ {t.bold.shopKicker}
                 </div>
                 <h2
                   className="text-5xl md:text-7xl leading-[0.9] tracking-tighter"
                   style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 800 }}
                 >
-                  SHOP.
+                  {t.bold.shopTitle}
                 </h2>
               </div>
               <div className="text-sm font-medium text-black/60">
-                {String(products.length).padStart(2, '0')} produits disponibles
+                {String(products.length).padStart(2, '0')} {t.bold.shopCount}
               </div>
             </div>
 
@@ -324,13 +326,13 @@ export default function BoldTheme({ site }: { site: Site }) {
                             {p.price}
                           </span>
                         ) : (
-                          <span className="text-xs uppercase tracking-widest font-bold text-black/50">Sur devis</span>
+                          <span className="text-xs uppercase tracking-widest font-bold text-black/50">{t.bold.onQuote}</span>
                         )}
                         <a
                           href="#contact"
                           className="inline-flex items-center gap-1 text-xs uppercase tracking-widest font-bold hover:gap-2 transition-all"
                         >
-                          Commander
+                          {t.bold.order}
                           <ArrowUpRight className="w-4 h-4" />
                         </a>
                       </div>
@@ -348,13 +350,13 @@ export default function BoldTheme({ site }: { site: Site }) {
         <section id="gallery" className="border-b-[3px] border-black bg-white py-24 md:py-32 overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 md:px-10 mb-16">
             <div className="text-xs uppercase tracking-[0.3em] font-bold mb-4" style={{ color: primary }}>
-              ★ Our work
+              ★ {t.bold.galleryKicker}
             </div>
             <h2
               className="text-5xl md:text-7xl leading-[0.9] tracking-tighter"
               style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 800 }}
             >
-              GALERIE.
+              {t.bold.galleryTitle}
             </h2>
           </div>
 
@@ -385,13 +387,13 @@ export default function BoldTheme({ site }: { site: Site }) {
           <div className="max-w-7xl mx-auto px-6 md:px-10">
             <div className="text-center mb-20">
               <div className="text-xs uppercase tracking-[0.3em] font-bold mb-4" style={{ color: primary }}>
-                ★ The verdict
+                ★ {t.bold.testimonialsKicker}
               </div>
               <h2
                 className="text-5xl md:text-7xl leading-[0.9] tracking-tighter"
                 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 800 }}
               >
-                THEY LOVE IT.
+                {t.bold.testimonialsTitle}
               </h2>
             </div>
 
@@ -461,16 +463,16 @@ export default function BoldTheme({ site }: { site: Site }) {
           <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-start">
             <div>
               <div className="text-xs uppercase tracking-[0.3em] font-bold mb-4" style={{ color: primary }}>
-                ★ Let's talk
+                ★ {t.bold.contactKicker}
               </div>
               <h2
                 className="text-5xl md:text-7xl leading-[0.9] tracking-tighter mb-8"
                 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 800 }}
               >
-                GET IN<br />TOUCH.
+                {t.bold.contactTitle1}<br />{t.bold.contactTitle2}
               </h2>
               <p className="text-xl text-black/70 mb-10 max-w-md">
-                Une question, un devis, une idée ? On répond sous 24h.
+                {t.bold.contactSubtitle}
               </p>
 
               {/* Socials */}
@@ -518,10 +520,10 @@ export default function BoldTheme({ site }: { site: Site }) {
           </div>
           <div className="pt-8 border-t-[2px] border-white/20 flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-sm">
             <div className="text-white/60 uppercase tracking-wider">
-              © {new Date().getFullYear()} {site.name}. All rights reserved.
+              © {new Date().getFullYear()} {site.name}. {t.labels.rightsReserved}
             </div>
             <div className="flex items-center gap-2 text-white/60 uppercase tracking-wider">
-              <span>Powered by</span>
+              <span>{t.labels.poweredBy}</span>
               <a href="https://nexiora.ca" target="_blank" rel="noopener noreferrer" className="font-bold text-white hover:opacity-70 transition-opacity">
                 Nexiora ↗
               </a>
