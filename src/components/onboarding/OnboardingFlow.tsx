@@ -148,7 +148,7 @@ export default function OnboardingFlow() {
               className="w-full h-44 bg-black/40 border border-white/10 rounded-2xl p-5 text-white text-lg placeholder-slate-500 resize-none focus:outline-none focus:border-[#E07040] transition"
             />
 
-            <div className="flex items-center gap-3 mt-4 flex-wrap">
+            <div className="hidden">
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value as Language)}
