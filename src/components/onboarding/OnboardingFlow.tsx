@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ArrowUp } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LANGUAGES } from '@/lib/languages';
@@ -139,14 +139,26 @@ export default function OnboardingFlow() {
       <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-8 md:p-12 backdrop-blur-sm shadow-2xl">
         {step === 1 && (
           <>
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder={t('onboarding.step1.placeholder')}
-              maxLength={1000}
-              autoFocus
-              className="w-full h-44 bg-black/40 border border-white/10 rounded-2xl p-5 text-white text-lg placeholder-slate-500 resize-none focus:outline-none focus:border-[#E07040] transition"
-            />
+            <div className="relative">
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder={t('onboarding.step1.placeholder')}
+                maxLength={1000}
+                autoFocus
+                className="w-full h-44 bg-black/40 border border-white/10 rounded-2xl p-5 pb-16 text-white text-lg placeholder-slate-500 resize-none focus:outline-none focus:border-[#E07040] transition"
+              />
+              {prompt.trim() && (
+                <button
+                  onClick={generate}
+                  disabled={!authLoaded || !canContinue}
+                  aria-label="Generate"
+                  className="absolute bottom-4 right-4 w-11 h-11 rounded-full flex items-center justify-center bg-white border-2 border-[#FF7A2E] shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
+                >
+                  <ArrowUp size={23} strokeWidth={2.5} className="text-[#FF7A2E]" />
+                </button>
+              )}
+            </div>
 
             <div className="hidden">
               <select
@@ -173,18 +185,6 @@ export default function OnboardingFlow() {
                 </div>
               </div>
             )}
-
-            <button
-              onClick={generate}
-              disabled={!authLoaded || !canContinue}
-              className="w-full mt-6 btn-nexiora py-4 rounded-2xl font-semibold text-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {!authLoaded
-                ? t('onboarding.step1.btnLoading')
-                : !userEmail
-                ? t('onboarding.step1.btnNotLoggedIn')
-                : t('onboarding.step1.btnReady')}
-            </button>
 
             {!userEmail && authLoaded && (
               <p className="text-center mt-4 text-sm text-slate-400">
