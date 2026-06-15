@@ -139,10 +139,6 @@ export default function OnboardingFlow() {
       <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-8 md:p-12 backdrop-blur-sm shadow-2xl">
         {step === 1 && (
           <>
-            <p className="text-slate-400 text-center mb-10 text-base md:text-lg">
-              {t('onboarding.step1.subtitle')}
-            </p>
-
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
