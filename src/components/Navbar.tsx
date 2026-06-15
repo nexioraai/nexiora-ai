@@ -20,6 +20,7 @@ export default function Navbar() {
   const saveTimeout = useRef<any>(null);
 
   const slug = pathname?.startsWith('/edit/') ? pathname.split('/')[2] : null;
+  const isHome = pathname === '/';
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -105,9 +106,9 @@ export default function Navbar() {
           <span className="text-xl font-black tracking-tight text-nexiora hidden sm:block">nexiora</span>
         </Link>
         <div className="flex items-center gap-3 sm:gap-4">
-          <LanguageSwitcher />
+          {!isHome && <LanguageSwitcher />}
           {authLoaded && (userEmail ? (
-            <button onClick={() => setMenuOpen(true)} className="btn-nexiora p-2.5 rounded-full text-white flex items-center justify-center" aria-label="Menu">
+            !isHome && <button onClick={() => setMenuOpen(true)} className="btn-nexiora p-2.5 rounded-full text-white flex items-center justify-center" aria-label="Menu">
               <MenuIcon size={20} />
             </button>
           ) : (
