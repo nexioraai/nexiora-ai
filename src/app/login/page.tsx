@@ -8,6 +8,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -87,17 +88,39 @@ export default function LoginPage() {
             onFocus={(e) => (e.currentTarget.style.borderColor = '#d97a4f')}
             onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(217, 122, 79, 0.2)')}
           />
-          <input
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={onKey}
-            placeholder="Mot de passe"
-            type="password"
-            autoComplete="current-password"
-            style={inputStyle}
-            onFocus={(e) => (e.currentTarget.style.borderColor = '#d97a4f')}
-            onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(217, 122, 79, 0.2)')}
-          />
+          <div style={{ position: 'relative' }}>
+            <input
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={onKey}
+              placeholder="Mot de passe"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="current-password"
+              style={{ ...inputStyle, width: '100%', paddingRight: '3.5rem', boxSizing: 'border-box' }}
+              onFocus={(e) => (e.currentTarget.style.borderColor = '#d97a4f')}
+              onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(217, 122, 79, 0.2)')}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              style={{
+                position: 'absolute',
+                right: '0.75rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                color: '#a89684',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                fontFamily: 'inherit',
+                padding: '0.25rem',
+              }}
+              aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+            >
+              {showPassword ? 'Masquer' : 'Afficher'}
+            </button>
+          </div>
 
           {error && (
             <p style={{
