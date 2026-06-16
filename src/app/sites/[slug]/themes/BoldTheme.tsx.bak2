@@ -434,27 +434,6 @@ export default function BoldTheme({ site }: { site: Site }) {
         </section>
       )}
 
-      {site.faq && site.faq.length > 0 && (
-        <section id="faq" className="border-b-[3px] border-black bg-white py-24 md:py-32">
-          <div className="max-w-4xl mx-auto px-6 md:px-10">
-            <h2 className="text-5xl md:text-7xl uppercase mb-16 leading-none" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 800 }}>
-              {({ fr: 'Questions fréquentes', en: 'FAQ', es: 'Preguntas frecuentes', ar: 'الأسئلة الشائعة' } as Record<string, string>)[site.lang || 'en'] || 'FAQ'}
-            </h2>
-            <div className="space-y-0">
-              {site.faq.map((item, i) => (
-                <details key={i} className="group border-t-[3px] border-black py-6">
-                  <summary className="cursor-pointer list-none flex justify-between items-center text-xl md:text-2xl uppercase" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 700 }}>
-                    {item.question}
-                    <span className="ml-4 transition-transform group-open:rotate-45" style={{ color: primary }}>+</span>
-                  </summary>
-                  <p className="mt-4 text-lg leading-relaxed" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 400 }}>{item.answer}</p>
-                </details>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* =================== CONTACT =================== */}
       <section id="contact" className="border-b-[3px] border-black bg-white">
         {/* Top info strip */}

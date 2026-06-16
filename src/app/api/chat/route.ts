@@ -268,6 +268,12 @@ Return ONLY valid JSON, no markdown:
     {"title": "", "description": ""},
     {"title": "", "description": ""}
   ],
+  "faq": [
+    {"question": "", "answer": ""},
+    {"question": "", "answer": ""},
+    {"question": "", "answer": ""},
+    {"question": "", "answer": ""}
+  ],
   "testimonials": [
     {"name": "", "role": "", "content": "", "rating": 5},
     {"name": "", "role": "", "content": "", "rating": 5},
@@ -288,7 +294,7 @@ Return ONLY valid JSON, no markdown:
 
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2500,
+      max_tokens: 3000,
       messages: [{ role: 'user', content: PROMPT + sectorPrompt + '\n\nBusiness request: ' + message }],
     });
 
@@ -314,6 +320,7 @@ Return ONLY valid JSON, no markdown:
       about: parsed.about,
       services: parsed.services,
       testimonials: parsed.testimonials,
+      faq: parsed.faq || [],
       gallery,
       contact: parsed.contact,
       menu: [],
