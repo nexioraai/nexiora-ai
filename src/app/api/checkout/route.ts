@@ -55,7 +55,7 @@ export async function POST(req: Request) {
       mode: 'subscription',
       customer: customerId,
       line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
-      success_url: `${origin}/welcome`,
+      success_url: `${origin}/welcome?slug=${site.slug}`,
       cancel_url: `${origin}/dashboard?checkout=canceled`,
       metadata: { slug: site.slug, owner_email: user.email },
     });
