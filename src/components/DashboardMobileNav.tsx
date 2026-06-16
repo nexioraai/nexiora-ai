@@ -14,7 +14,7 @@ export default function DashboardMobileNav({ userEmail, onLogout }: DashboardMob
   const closeMenu = () => setIsOpen(false)
 
   return (
-    <div className="md:hidden">
+    <div>
       {/* Hamburger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
