@@ -40,6 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     alternates: { canonical: url },
+    other: { llms: `${url}/llms.txt` },
     openGraph: {
       title,
       description,
