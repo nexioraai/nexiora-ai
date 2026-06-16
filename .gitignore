@@ -45,3 +45,4 @@ src/erp/generator/generateBlueprint.ts.backup
 *.backup
 *.backup_*
 .env.local
+*.bak2
