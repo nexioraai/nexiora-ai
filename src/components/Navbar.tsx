@@ -112,7 +112,7 @@ export default function Navbar() {
               <MenuIcon size={20} />
             </button>
           ) : (
-            <>
+            !isHome && <>
               <Link href="/login" className="text-white/70 hover:text-white text-sm font-medium transition-colors hidden sm:inline">{t('nav.login')}</Link>
               <Link href="/signup" className="btn-nexiora px-4 sm:px-5 py-2 rounded-full text-white text-sm font-semibold whitespace-nowrap">{t('nav.signup')}</Link>
             </>
