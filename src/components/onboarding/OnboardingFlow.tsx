@@ -139,7 +139,7 @@ export default function OnboardingFlow() {
       <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-8 md:p-12 backdrop-blur-sm shadow-2xl">
         {step === 1 && (
           <>
-            <div className="relative nexiora-halo">
+            <div className="relative">
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
@@ -153,7 +153,7 @@ export default function OnboardingFlow() {
                   onClick={generate}
                   disabled={!authLoaded || !canContinue}
                   aria-label="Generate"
-                  className="absolute bottom-4 right-4 w-11 h-11 rounded-full flex items-center justify-center bg-white border-2 border-[#FF5500] shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
+                  className="absolute bottom-4 right-4 z-20 w-11 h-11 rounded-full flex items-center justify-center bg-white border-2 border-[#FF5500] shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
                 >
                   <ArrowUp size={23} strokeWidth={2.5} className="text-[#FF5500]" />
                 </button>

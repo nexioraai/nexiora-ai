@@ -79,14 +79,14 @@ html {
   background: linear-gradient(135deg, #4F6EF5, #E07040, #C9A84C, #4F6EF5);
   background-size: 300% 300%;
   filter: blur(14px);
-  opacity: 0.45;
+  opacity: 0.225;
   z-index: 0;
   animation: nexiora-halo-pulse 14s ease-in-out infinite;
   transition: opacity 0.4s ease;
   pointer-events: none;
 }
 .nexiora-halo:focus-within::before {
-  opacity: 0.85;
+  opacity: 0.425;
 }
 .nexiora-halo > textarea {
   position: relative;
