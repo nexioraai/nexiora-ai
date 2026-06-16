@@ -112,6 +112,7 @@ export default function BoldTheme({ site }: { site: Site }) {
       </div>
 
       {/* =================== HERO =================== */}
+      <main>
       <section id="home" className="relative overflow-hidden border-b-[3px] border-black">
         {site.hero_image && (
           <>
@@ -509,6 +510,7 @@ export default function BoldTheme({ site }: { site: Site }) {
         </div>
       </section>
 
+      </main>
       {/* =================== FOOTER =================== */}
       <footer className="bg-black text-white pt-24 pb-10">
         <div className="max-w-7xl mx-auto px-6 md:px-10">

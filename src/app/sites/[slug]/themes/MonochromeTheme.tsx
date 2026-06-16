@@ -60,6 +60,7 @@ export default function MonochromeTheme({ site }: { site: Site }) {
       <MobileNav site={site} cta={cta} ctaHref={ctaHref} />
 
       {/* HERO */}
+      <main>
       <section id="home" className="relative min-h-screen flex items-center pt-20 pb-20">
         <div className="max-w-7xl mx-auto px-6 md:px-10 w-full mono-fade">
           {site.slogan && (
@@ -278,6 +279,7 @@ export default function MonochromeTheme({ site }: { site: Site }) {
         </div>
       </section>
 
+      </main>
       {/* FOOTER */}
       <footer className="bg-black text-white py-16">
         <div className="max-w-7xl mx-auto px-6 md:px-10">
