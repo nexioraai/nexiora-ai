@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase as supabaseAnon } from '@/lib/supabase';
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
-import { stripe } from '@/lib/stripe';
+import { getStripe } from '@/lib/stripe';
 
 export async function POST(req: Request) {
   try {
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     // Récupérer ou créer le client Stripe
     let customerId = site.stripe_customer_id;
     if (!customerId) {
-      const customer = await stripe.customers.create({
+      const customer = await getStripe().customers.create({
         email: user.email,
         metadata: { slug: site.slug, owner_email: user.email },
       });
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     // Origine pour les URLs de retour (local vs prod automatiquement)
     const origin = req.headers.get('origin') || 'https://www.nexiora.ca';
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       mode: 'subscription',
       customer: customerId,
       line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
