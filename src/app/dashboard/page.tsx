@@ -40,9 +40,26 @@ export default function DashboardPage() {
   };
 
   const handlePublish = async (slug: string, current: boolean) => {
-    const next = !current;
-    await supabase.from('sites').update({ published: next }).eq('slug', slug);
-    setSites(sites.map(s => s.slug === slug ? { ...s, published: next } : s));
+    // Déjà en ligne : gestion de l'abonnement à venir (étape suivante)
+    if (current) return;
+    // Pas encore publié : passage par Stripe Checkout
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) { router.push('/login'); return; }
+    const res = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ slug }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert(data.error || 'Erreur lors du paiement');
+    }
   };
 
   if (loading) return (

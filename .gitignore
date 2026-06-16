@@ -44,3 +44,4 @@ next-env.d.ts
 src/erp/generator/generateBlueprint.ts.backup
 *.backup
 *.backup_*
+.env.local
