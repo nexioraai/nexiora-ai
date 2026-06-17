@@ -105,6 +105,27 @@ export default function JsonLd({ site }: { site: Site }) {
     }
   }
 
+  // Identite stable pour les IA
+  data['@id'] = url
+
+  // Coordonnees reelles (Nominatim)
+  if (typeof site.geo_lat === 'number' && typeof site.geo_lng === 'number') {
+    data.geo = {
+      '@type': 'GeoCoordinates',
+      latitude: site.geo_lat,
+      longitude: site.geo_lng,
+    }
+  }
+
+  // Zone desservie
+  if (site.area_served) data.areaServed = site.area_served
+
+  // Niveau de prix
+  if (site.price_range) data.priceRange = site.price_range
+
+  // Fraicheur du contenu
+  if (site.created_at) data.dateModified = site.created_at
+
   const faqData =
     site.faq && site.faq.length > 0
       ? {

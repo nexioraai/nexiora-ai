@@ -252,6 +252,8 @@ IMPORTANT CONTEXT:
 - whyus: 3 reasons to choose this business. Each = a short punchy "title" (2-4 words) + a "text" of ONE concrete sentence. Make them specific to this business, not generic.
 - mission: ONE inspiring sentence stating what this business does and for whom (its purpose). Specific, not generic.
 - vision: ONE forward-looking sentence describing the long-term ambition of this business.
+- areaServed: the city or region this business serves (e.g. "Montréal" or "Grand Montréal"). Short.
+- priceRange: estimated price level for this sector, one of "$", "$$", "$$$", or "$$$$".
 
 Return ONLY valid JSON, no markdown:
 
@@ -284,6 +286,8 @@ Return ONLY valid JSON, no markdown:
   ],
   "mission": "",
   "vision": "",
+  "areaServed": "",
+  "priceRange": "",
   "testimonials": [
     {"name": "", "role": "", "content": "", "rating": 5},
     {"name": "", "role": "", "content": "", "rating": 5},
@@ -313,6 +317,26 @@ Return ONLY valid JSON, no markdown:
     const parsed = JSON.parse(clean);
 
     const slug = generateSlug(parsed.name);
+
+    // Geocodage reel via Nominatim (OpenStreetMap) depuis l'adresse
+    let geo_lat: number | null = null;
+    let geo_lng: number | null = null;
+    const addr = parsed.contact?.address || '';
+    if (addr) {
+      try {
+        const geoRes = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(addr)}`,
+          { headers: { 'User-Agent': 'Nexiora/1.0 (contact@nexiora.ca)' } }
+        );
+        const geoJson = await geoRes.json();
+        if (Array.isArray(geoJson) && geoJson[0]) {
+          geo_lat = parseFloat(geoJson[0].lat);
+          geo_lng = parseFloat(geoJson[0].lon);
+        }
+      } catch (e) {
+        console.error('Nominatim geocode failed:', e);
+      }
+    }
 
     // Vraies images Pexels colorées selon la marque
     const pexelsQuery = `${parsed.type || 'business'} ${parsed.name || ''}`.trim();
@@ -356,6 +380,10 @@ Return ONLY valid JSON, no markdown:
       social_links: parsed.socialLinks,
       owner_email,
       lang: parsed.lang || detectedLang || "fr",
+      geo_lat,
+      geo_lng,
+      area_served: parsed.areaServed || null,
+      price_range: parsed.priceRange || null,
     });
 
     if (error) {
