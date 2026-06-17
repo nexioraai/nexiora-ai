@@ -1,14 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
+import Sidebar from '@/components/Sidebar';
 import { supabase } from '@/lib/supabase';
-import { useTranslation } from '@/lib/translations';
 
 export default function Home() {
-  const { t } = useTranslation();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [authLoaded, setAuthLoaded] = useState(false);
 
@@ -20,24 +16,12 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen nexiora-bg text-white">
-      <Navbar />
-
-      <section className="text-center px-6 pt-20 pb-8">
-
-        {authLoaded && userEmail && (
-          <Link
-            href="/dashboard"
-            className="inline-block text-sm text-slate-400 hover:text-white transition"
-          >
-            {t('home.dashboardLink')}
-          </Link>
-        )}
-      </section>
-
-      <OnboardingFlow />
-
-      <div className="hidden"><Footer /></div>
-    </main>
+    <div className="min-h-screen nexiora-bg text-white flex">
+      <Sidebar />
+      <main className="flex-1 min-w-0 px-6 lg:pl-40 lg:pr-12">
+        <div className="pt-60 pb-8" />
+        <OnboardingFlow />
+      </main>
+    </div>
   );
 }
