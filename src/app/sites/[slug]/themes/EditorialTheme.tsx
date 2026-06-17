@@ -585,22 +585,22 @@ export default function EditorialTheme({ site }: { site: Site }) {
                   </div>
                   <div className="flex gap-3 flex-wrap">
                     {social.instagram && (
-                      <a href={social.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="flex items-center justify-center w-12 h-12 rounded-xl bg-neutral-100 hover:bg-neutral-900 hover:text-white hover:-translate-y-0.5 transition-all">
+                      <a href={social.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="flex items-center justify-center w-12 h-12 rounded-xl text-white bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF] hover:-translate-y-0.5 transition-all">
                         <Instagram className="w-5 h-5" />
                       </a>
                     )}
                     {social.facebook && (
-                      <a href={social.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="flex items-center justify-center w-12 h-12 rounded-xl bg-neutral-100 hover:bg-neutral-900 hover:text-white hover:-translate-y-0.5 transition-all">
+                      <a href={social.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="flex items-center justify-center w-12 h-12 rounded-xl text-white bg-[#1877F2] hover:-translate-y-0.5 transition-all">
                         <Facebook className="w-5 h-5" />
                       </a>
                     )}
                     {social.tiktok && (
-                      <a href={social.tiktok} target="_blank" rel="noopener noreferrer" aria-label="TikTok" className="flex items-center justify-center w-12 h-12 rounded-xl bg-neutral-100 hover:bg-neutral-900 hover:text-white hover:-translate-y-0.5 transition-all">
+                      <a href={social.tiktok} target="_blank" rel="noopener noreferrer" aria-label="TikTok" className="flex items-center justify-center w-12 h-12 rounded-xl text-white bg-black hover:-translate-y-0.5 transition-all">
                         <TikTok className="w-5 h-5" />
                       </a>
                     )}
                     {social.whatsapp && (
-                      <a href={`https://wa.me/${String(social.whatsapp).replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="flex items-center justify-center w-12 h-12 rounded-xl bg-neutral-100 hover:bg-[#25D366] hover:text-white hover:-translate-y-0.5 transition-all">
+                      <a href={`https://wa.me/${String(social.whatsapp).replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="flex items-center justify-center w-12 h-12 rounded-xl text-white bg-[#25D366] hover:-translate-y-0.5 transition-all">
                         <WhatsApp className="w-5 h-5" />
                       </a>
                     )}
