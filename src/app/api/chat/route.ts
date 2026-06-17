@@ -250,6 +250,8 @@ IMPORTANT CONTEXT:
 - Testimonial names: use realistic local names for ${location || 'the region'}
 - Services: include title AND a compelling 1-sentence description for each
 - whyus: 3 reasons to choose this business. Each = a short punchy "title" (2-4 words) + a "text" of ONE concrete sentence. Make them specific to this business, not generic.
+- mission: ONE inspiring sentence stating what this business does and for whom (its purpose). Specific, not generic.
+- vision: ONE forward-looking sentence describing the long-term ambition of this business.
 
 Return ONLY valid JSON, no markdown:
 
@@ -280,6 +282,8 @@ Return ONLY valid JSON, no markdown:
     {"title": "", "text": ""},
     {"title": "", "text": ""}
   ],
+  "mission": "",
+  "vision": "",
   "testimonials": [
     {"name": "", "role": "", "content": "", "rating": 5},
     {"name": "", "role": "", "content": "", "rating": 5},
@@ -338,6 +342,8 @@ Return ONLY valid JSON, no markdown:
       testimonials: parsed.testimonials,
       faq: parsed.faq || [],
       whyus: parsed.whyus || [],
+      mission: parsed.mission || null,
+      vision: parsed.vision || null,
       gallery,
       contact: parsed.contact,
       menu: [],

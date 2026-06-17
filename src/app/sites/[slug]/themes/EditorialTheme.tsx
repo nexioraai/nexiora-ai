@@ -68,6 +68,12 @@ export default function EditorialTheme({ site }: { site: Site }) {
   const gallery: string[] = (site.gallery || []).filter((u: any) => typeof u === 'string' && u.length > 0 && u.startsWith('http'))
   const contact = site.contact || {}
   const social = site.social_links || {}
+  const whyWords: Record<string, string> = { fr: 'Pourquoi', en: 'Why', es: 'Por qué', ar: 'لماذا', pt: 'Porquê', de: 'Warum', it: 'Perché' }
+  const missionWords: Record<string, string> = { fr: 'Notre mission', en: 'Our mission', es: 'Nuestra misión', ar: 'مهمتنا', pt: 'Nossa missão', de: 'Unsere Mission', it: 'La nostra missione' }
+  const visionWords: Record<string, string> = { fr: 'Notre vision', en: 'Our vision', es: 'Nuestra visión', ar: 'رؤيتنا', pt: 'Nossa visão', de: 'Unsere Vision', it: 'La nostra visione' }
+  const whyWord = whyWords[site.lang || 'fr'] || whyWords.en
+  const missionWord = missionWords[site.lang || 'fr'] || missionWords.en
+  const visionWord = visionWords[site.lang || 'fr'] || visionWords.en
   const cta = site.cta || 'Contactez-nous'
   const ctaHref = products.length > 0 ? '#shop' : '#contact'
 
@@ -191,7 +197,11 @@ export default function EditorialTheme({ site }: { site: Site }) {
                 <div className="h-px w-12" style={{ backgroundColor: primary }} />
 
                 {Array.isArray(site.whyus) && site.whyus.length > 0 && (
-                  <div className="mt-12 space-y-8">
+                  <div className="mt-12">
+                    <h3 className="text-2xl font-serif mb-8 text-neutral-900" style={{ fontFamily: 'var(--font-fraunces), serif' }}>
+                      {whyWord} {site.name} ?
+                    </h3>
+                    <div className="space-y-8">
                     {site.whyus.map((item, i) => (
                       <div key={i}>
                         <div
@@ -208,6 +218,32 @@ export default function EditorialTheme({ site }: { site: Site }) {
                         </p>
                       </div>
                     ))}
+                    </div>
+                  </div>
+                )}
+
+                {(site.mission || site.vision) && (
+                  <div className="mt-12 space-y-8">
+                    {site.mission && (
+                      <div>
+                        <div className="text-xs font-medium tracking-[0.2em] mb-2" style={{ color: primary }}>
+                          {missionWord}
+                        </div>
+                        <p className="text-sm leading-relaxed text-neutral-600">
+                          {site.mission}
+                        </p>
+                      </div>
+                    )}
+                    {site.vision && (
+                      <div>
+                        <div className="text-xs font-medium tracking-[0.2em] mb-2" style={{ color: primary }}>
+                          {visionWord}
+                        </div>
+                        <p className="text-sm leading-relaxed text-neutral-600">
+                          {site.vision}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
