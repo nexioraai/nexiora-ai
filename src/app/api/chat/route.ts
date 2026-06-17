@@ -307,6 +307,16 @@ Return ONLY valid JSON, no markdown:
     // Vraies images Pexels colorées selon la marque
     const pexelsQuery = `${parsed.type || 'business'} ${parsed.name || ''}`.trim();
     const gallery = await fetchPexelsImages(pexelsQuery, parsed.primaryColor);
+    // Image Pexels par produit (recherche par nom + type), en parallèle
+    const rawProducts = Array.isArray(parsed.products) ? parsed.products : [];
+    const productsWithImages = await Promise.all(
+      rawProducts.map(async (p: any) => {
+        if (p.image) return p;
+        const q = `${p.name || ''} ${parsed.type || ''}`.trim();
+        const imgs = await fetchPexelsImages(q, parsed.primaryColor);
+        return { ...p, image: imgs[0] || '' };
+      })
+    );
 
     // Insert via service_role (bypass RLS, sécurisé car owner_email vient du token validé)
     const { error } = await supabaseAdmin.from('sites').insert({
@@ -329,7 +339,7 @@ Return ONLY valid JSON, no markdown:
       address: parsed.contact?.address || '',
       pages: parsed.pages,
       cta: parsed.cta,
-      products: parsed.products || [],
+      products: productsWithImages,
       social_links: parsed.socialLinks,
       owner_email,
       lang: parsed.lang || detectedLang || "fr",
