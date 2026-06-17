@@ -189,6 +189,27 @@ export default function EditorialTheme({ site }: { site: Site }) {
                   {t.sections.aboutKicker}
                 </div>
                 <div className="h-px w-12" style={{ backgroundColor: primary }} />
+
+                {Array.isArray(site.whyus) && site.whyus.length > 0 && (
+                  <div className="mt-12 space-y-8">
+                    {site.whyus.map((item, i) => (
+                      <div key={i}>
+                        <div
+                          className="text-xs font-medium tracking-[0.2em] mb-2"
+                          style={{ color: primary }}
+                        >
+                          {String(i + 1).padStart(2, '0')}
+                        </div>
+                        <h3 className="font-medium text-neutral-900 mb-1">
+                          {item.title}
+                        </h3>
+                        <p className="text-sm leading-relaxed text-neutral-600">
+                          {item.text}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div>
                 <h2

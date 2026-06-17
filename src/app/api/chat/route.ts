@@ -249,6 +249,7 @@ IMPORTANT CONTEXT:
 - Address: write a realistic address in ${location || 'the city'}
 - Testimonial names: use realistic local names for ${location || 'the region'}
 - Services: include title AND a compelling 1-sentence description for each
+- whyus: 3 reasons to choose this business. Each = a short punchy "title" (2-4 words) + a "text" of ONE concrete sentence. Make them specific to this business, not generic.
 
 Return ONLY valid JSON, no markdown:
 
@@ -273,6 +274,11 @@ Return ONLY valid JSON, no markdown:
     {"question": "", "answer": ""},
     {"question": "", "answer": ""},
     {"question": "", "answer": ""}
+  ],
+  "whyus": [
+    {"title": "", "text": ""},
+    {"title": "", "text": ""},
+    {"title": "", "text": ""}
   ],
   "testimonials": [
     {"name": "", "role": "", "content": "", "rating": 5},
@@ -331,6 +337,7 @@ Return ONLY valid JSON, no markdown:
       services: parsed.services,
       testimonials: parsed.testimonials,
       faq: parsed.faq || [],
+      whyus: parsed.whyus || [],
       gallery,
       contact: parsed.contact,
       menu: [],
