@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 
@@ -8,6 +8,8 @@ import Footer from '@/components/Footer';
 import ThemeSelector from '@/components/edit/ThemeSelector';
 import AIAgentChat from '@/components/edit/AIAgentChat';
 import { supabase } from '@/lib/supabase';
+import { computeAiScore } from '@/app/lib/aiScore';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function EditPage() {
   const params = useParams();
@@ -19,6 +21,8 @@ export default function EditPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState('');
+  const [history, setHistory] = useState<{ score: number; date: string; reason: string }[]>([]);
+  const initialPassed = useRef<string[]>([]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -28,7 +32,15 @@ export default function EditPage() {
       }
       supabase.from('sites').select('*').eq('slug', slug).eq('owner_email', data.user.email!).maybeSingle().then(({ data: siteData }) => {
         setSite(siteData);
+        if (siteData) initialPassed.current = computeAiScore(siteData as any).passed;
         setLoading(false);
+      });
+      supabase.from('score_history').select('score, created_at, reason').eq('slug', slug).order('created_at', { ascending: true }).then(({ data: hist }) => {
+        setHistory((hist || []).map((h: any) => ({
+          score: h.score,
+          reason: h.reason || '',
+          date: new Date(h.created_at).toLocaleString('fr-CA', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+        })));
       });
     });
   }, [slug]);
@@ -78,6 +90,16 @@ export default function EditPage() {
       setMessage('Error: ' + error.message);
     } else {
       setMessage('Saved!');
+      // Enregistre un point d'historique du score (non bloquant)
+      try {
+        const { score, passed } = computeAiScore(site as any);
+        const gained = passed.filter((p) => !initialPassed.current.includes(p));
+        const reason = gained.length > 0 ? gained.join(', ') : 'Mise à jour du contenu';
+        await supabase.from('score_history').insert({ slug, score, reason });
+        initialPassed.current = passed;
+      } catch (e) {
+        console.error('score_history insert failed:', e);
+      }
       setTimeout(() => setMessage(''), 3000);
     }
   };
@@ -129,6 +151,71 @@ export default function EditPage() {
             View Site →
           </Link>
         </div>
+
+        {/* Bloc Visibilite IA */}
+        {(() => {
+          const { score, missing } = computeAiScore(site as any);
+          const color = score >= 80 ? '#34d399' : score >= 50 ? '#E07040' : '#f87171';
+          const data = history.length >= 1 ? history : [{ score, date: "Aujourd'hui", reason: '' }];
+          return (
+            <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm mb-8">
+              <div className="flex flex-col md:flex-row md:items-stretch gap-6">
+                <div className="md:w-1/3 flex flex-col justify-center">
+                  <p className="text-sm font-semibold text-white/60 mb-1">Visibilité IA</p>
+                  <p className="text-5xl font-black leading-none" style={{ color }}>{score}<span className="text-white/30 text-2xl font-medium">/100</span></p>
+                  <p className="text-xs text-white/40 mt-2">{missing.length === 0 ? 'Visibilité maximale atteinte 🎯' : `${missing.length} action${missing.length > 1 ? 's' : ''} pour atteindre 100`}</p>
+                </div>
+                <div className="md:w-2/3">
+                  <div style={{ width: '100%', height: 160 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={color} stopOpacity={0.35} />
+                            <stop offset="100%" stopColor={color} stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
+                        <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                        <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} width={48} />
+                        <Tooltip
+                          contentStyle={{ background: '#1a0e22', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: '#fff', fontSize: 12 }}
+                          labelStyle={{ color: 'rgba(255,255,255,0.5)' }}
+                          content={({ active, payload, label }: any) => {
+                            if (!active || !payload || !payload.length) return null;
+                            const p = payload[0].payload;
+                            return (
+                              <div style={{ background: '#1a0e22', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '8px 12px', fontSize: 12, color: '#fff', maxWidth: 220 }}>
+                                <div style={{ color: 'rgba(255,255,255,0.5)' }}>{label}</div>
+                                <div style={{ fontWeight: 700, color }}>{p.score}/100</div>
+                                {p.reason && <div style={{ color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>{p.reason}</div>}
+                              </div>
+                            );
+                          }}
+                        />
+                        <Area type="monotone" dataKey="score" stroke={color} strokeWidth={2.5} fill="url(#scoreGrad)" dot={{ fill: color, r: 4 }} activeDot={{ r: 6 }} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <p className="text-[11px] text-white/30 mt-1 text-center">Évolution du score dans le temps</p>
+                </div>
+              </div>
+              {missing.length > 0 && (
+                <div className="mt-6 pt-6 border-t border-white/10">
+                  <p className="text-sm font-semibold text-white/70 mb-3">Pour améliorer ta visibilité :</p>
+                  <ul className="space-y-2">
+                    {missing.map((m, i) => (
+                      <li key={i} className="flex items-center gap-2 text-sm text-white/60">
+                        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: color }} />
+                        {m}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Form card */}
         <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm space-y-6">

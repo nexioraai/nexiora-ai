@@ -136,7 +136,7 @@ export default function OnboardingFlow() {
 
   return (
     <section className="max-w-3xl mx-auto px-6 pb-24">
-      <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-8 md:p-12 backdrop-blur-sm shadow-2xl">
+      <div className="p-0">
         {step === 1 && (
           <>
             <div className="relative">
@@ -146,7 +146,7 @@ export default function OnboardingFlow() {
                 placeholder={t('onboarding.step1.placeholder')}
                 maxLength={1000}
                 autoFocus
-                className="w-full h-44 bg-black/40 border border-white/10 rounded-2xl p-5 pb-16 text-white text-lg placeholder-slate-500 resize-none focus:outline-none focus:border-[#E07040] transition"
+                className="w-full h-28 bg-black/40 border border-white/10 rounded-[28px] px-6 py-4 pb-14 text-white text-lg placeholder-slate-500 resize-none focus:outline-none focus:border-[#E07040] transition shadow-xl"
               />
               {prompt.trim() && (
                 <button

@@ -11,6 +11,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [sites, setSites] = useState<any[]>([]);
+  const [history, setHistory] = useState<Record<string, number[]>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,6 +25,21 @@ export default function DashboardPage() {
           .then(({ data: sitesData }) => {
             setSites(sitesData || []);
             setLoading(false);
+            const slugs = (sitesData || []).map((s: any) => s.slug);
+            if (slugs.length > 0) {
+              supabase.from('score_history')
+                .select('slug, score, created_at')
+                .in('slug', slugs)
+                .order('created_at', { ascending: true })
+                .then(({ data: hist }) => {
+                  const grouped: Record<string, number[]> = {};
+                  (hist || []).forEach((h: any) => {
+                    if (!grouped[h.slug]) grouped[h.slug] = [];
+                    grouped[h.slug].push(h.score);
+                  });
+                  setHistory(grouped);
+                });
+            }
           });
       }
     });

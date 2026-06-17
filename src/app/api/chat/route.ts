@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { supabase as supabaseAnon } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { computeAiScore } from '@/app/lib/aiScore';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -389,6 +390,26 @@ Return ONLY valid JSON, no markdown:
     if (error) {
       console.error('SUPABASE ERROR:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Premier point d'historique du score de visibilite IA (non bloquant)
+    try {
+      const { score } = computeAiScore({
+        type: parsed.type,
+        geo_lat,
+        geo_lng,
+        faq: parsed.faq,
+        contact: parsed.contact,
+        social_links: parsed.socialLinks,
+        mission: parsed.mission,
+        vision: parsed.vision,
+        whyus: parsed.whyus,
+        area_served: parsed.areaServed,
+        price_range: parsed.priceRange,
+      } as any);
+      await supabaseAdmin.from('score_history').insert({ slug, score, reason: 'Création du site' });
+    } catch (e) {
+      console.error('score_history insert failed:', e);
     }
 
     return NextResponse.json({ ...parsed, slug, gallery });
