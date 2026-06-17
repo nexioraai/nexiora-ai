@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Plus, ExternalLink, Pencil, Trash2, LogOut, Globe } from 'lucide-react';
 import DashboardMobileNav from '@/components/DashboardMobileNav';
 import { supabase } from '@/lib/supabase';
+import { computeAiScore } from '@/app/lib/aiScore';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -125,6 +126,24 @@ export default function DashboardPage() {
                   {site.slogan && (
                     <p className="text-white/40 text-sm mb-4 line-clamp-2">{site.slogan}</p>
                   )}
+                  {(() => {
+                    const { score, missing } = computeAiScore(site);
+                    const color = score >= 80 ? '#34d399' : score >= 50 ? '#E07040' : '#f87171';
+                    return (
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-xs font-semibold text-white/60">Visibilité IA</span>
+                          <span className="text-sm font-black" style={{ color }}>{score}<span className="text-white/30 text-xs font-medium">/100</span></span>
+                        </div>
+                        <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+                          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${score}%`, background: color }} />
+                        </div>
+                        {missing.length > 0 && (
+                          <p className="text-[11px] text-white/40 mt-1.5">{missing.length} action{missing.length > 1 ? 's' : ''} pour atteindre 100</p>
+                        )}
+                      </div>
+                    );
+                  })()}
                   <div className="flex gap-2">
                     <Link href={`/sites/${site.slug}`}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-white text-sm font-semibold transition-opacity hover:opacity-80"
