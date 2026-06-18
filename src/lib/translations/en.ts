@@ -20,6 +20,8 @@ export const en: Record<TranslationKey, string> = {
 
   // Onboarding step 1
   'onboarding.step1.subtitle': 'Describe your business — AI does the rest.',
+  'onboarding.greeting': 'Got an idea, {name}?',
+  'onboarding.greetingNoName': 'Got an idea?',
   'onboarding.step1.placeholder': 'Just describe your business idea...',
   'onboarding.step1.languageAuto': 'Auto (detected via prompt)',
   'onboarding.step1.btnLoading': 'Loading…',

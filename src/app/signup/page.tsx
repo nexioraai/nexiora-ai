@@ -9,6 +9,7 @@ type Mode = 'signup' | 'login' | 'forgot';
 export default function SignupPage() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>('signup');
+  const [firstName, setFirstName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -24,7 +25,7 @@ export default function SignupPage() {
     setInfo('');
 
     if (mode === 'signup') {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { error } = await supabase.auth.signUp({ email, password, options: { data: { first_name: firstName.trim() } } });
       if (error) {
         const msg = error.message.toLowerCase();
         if (msg.includes('already') || msg.includes('registered') || msg.includes('exists')) {
@@ -179,6 +180,36 @@ export default function SignupPage() {
               }}>{info}</p>
             )}
 
+            {isSignup && (
+              <input
+                value={firstName}
+                onChange={e => setFirstName(e.target.value)}
+                placeholder="Prénom"
+                type="text"
+                autoComplete="given-name"
+                style={{
+                  padding: '0.9rem 1rem',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(217, 122, 79, 0.15)',
+                  background: 'rgba(10, 7, 5, 0.6)',
+                  color: '#f5ede1',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                  transition: 'border-color 0.2s, box-shadow 0.2s',
+                  width: '100%',
+                  boxSizing: 'border-box',
+                }}
+                onFocus={e => {
+                  e.currentTarget.style.borderColor = '#d97a4f';
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(217, 122, 79, 0.15)';
+                }}
+                onBlur={e => {
+                  e.currentTarget.style.borderColor = 'rgba(217, 122, 79, 0.15)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              />
+            )}
             <input
               value={email}
               onChange={e => setEmail(e.target.value)}

@@ -27,7 +27,7 @@ export default function Sidebar() {
 
   const pages = [
     { label: 'Accueil', href: '/', icon: Home },
-    { label: 'Mes sites', href: '/dashboard', icon: LayoutGrid },
+    { label: 'Mes projets', href: '/dashboard', icon: LayoutGrid },
   ];
 
   const modules = [
@@ -65,12 +65,6 @@ export default function Sidebar() {
           N
         </div>
         <span className="text-xl font-black tracking-tight text-nexiora">nexiora</span>
-      </Link>
-
-      <Link href="/"
-        className="btn-nexiora flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-white font-semibold text-sm mb-6">
-        <Plus className="w-4 h-4" />
-        Créer un site
       </Link>
 
       <nav className="flex flex-col gap-1 mb-6">

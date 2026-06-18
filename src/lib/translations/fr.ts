@@ -18,6 +18,8 @@ export const fr = {
 
   // Onboarding step 1
   'onboarding.step1.subtitle': "Décrivez votre activité — l'IA fait le reste.",
+  'onboarding.greeting': 'Une idée, {name} ?',
+  'onboarding.greetingNoName': 'Une idée ?',
   'onboarding.step1.placeholder': 'Décris simplement ton idée…',
   'onboarding.step1.languageAuto': 'Auto (détectée via prompt)',
   'onboarding.step1.btnLoading': 'Chargement…',

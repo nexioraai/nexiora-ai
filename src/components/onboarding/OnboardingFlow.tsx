@@ -20,6 +20,7 @@ export default function OnboardingFlow() {
   const [moreDetails, setMoreDetails] = useState('');
   const [error, setError] = useState('');
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [firstName, setFirstName] = useState<string>('');
   const [authLoaded, setAuthLoaded] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
 
@@ -42,7 +43,12 @@ export default function OnboardingFlow() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      setUserEmail(data.session?.user?.email || null);
+      const u = data.session?.user;
+      const email = u?.email || null;
+      setUserEmail(email);
+      const meta: any = u?.user_metadata || {};
+      const raw = meta.first_name || (meta.full_name || '').split(' ')[0] || '';
+      setFirstName(raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : '');
       setAuthLoaded(true);
     });
   }, []);
@@ -139,6 +145,11 @@ export default function OnboardingFlow() {
       <div className="p-0">
         {step === 1 && (
           <>
+            {authLoaded && (
+              <h1 className="text-3xl md:text-4xl font-black tracking-tight text-center mb-8">
+                {firstName ? t('onboarding.greeting').replace('{name}', firstName) : t('onboarding.greetingNoName')}
+              </h1>
+            )}
             <div className="relative">
               <textarea
                 value={prompt}
