@@ -60,7 +60,7 @@ export default function Sidebar() {
 
   const content = (
     <>
-      <Link href="/" className="flex items-center gap-3 px-2 mb-6">
+      <Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-3 px-2 mb-6">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-lg"
           style={{ background: 'radial-gradient(circle at 30% 30%, #4F6EF5 0%, transparent 60%), radial-gradient(circle at 70% 70%, #E07040 0%, transparent 60%), #16090e' }}>
           N
