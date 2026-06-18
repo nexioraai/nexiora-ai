@@ -143,7 +143,7 @@ export default function Sidebar() {
             <button
               onClick={() => setOpen(false)}
               aria-label="Fermer"
-              className="absolute top-4 left-4 text-white/60 hover:text-white"
+              className="absolute top-4 right-4 text-white/60 hover:text-white"
             >
               <X className="w-6 h-6" />
             </button>
