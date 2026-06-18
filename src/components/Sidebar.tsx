@@ -110,6 +110,17 @@ export default function Sidebar() {
         {content}
       </aside>
 
+      {/* Mobile : logo en haut à gauche */}
+      <Link href="/"
+        className="lg:hidden fixed top-4 left-4 z-50 flex items-center gap-2 px-3 h-11 rounded-xl backdrop-blur-md border border-white/10"
+        style={{ background: 'rgba(10,5,14,0.8)' }}>
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-black text-sm"
+          style={{ background: 'radial-gradient(circle at 30% 30%, #4F6EF5 0%, transparent 60%), radial-gradient(circle at 70% 70%, #E07040 0%, transparent 60%), #16090e' }}>
+          N
+        </div>
+        <span className="text-base font-black tracking-tight text-nexiora">nexiora</span>
+      </Link>
+
       {/* Mobile : bouton hamburger */}
       <button
         onClick={() => setOpen(true)}
