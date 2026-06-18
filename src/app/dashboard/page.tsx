@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Plus, ExternalLink, Pencil, Trash2, LogOut, Globe } from 'lucide-react';
 import DashboardMobileNav from '@/components/DashboardMobileNav';
+import Sidebar from '@/components/Sidebar';
 import { supabase } from '@/lib/supabase';
 import { computeAiScore } from '@/app/lib/aiScore';
 
@@ -86,21 +87,12 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="min-h-screen nexiora-bg text-white">
-
-      <nav className="flex items-center justify-between px-6 py-4 border-b border-white/8 backdrop-blur-md sticky top-0 z-50"
-        style={{ background: 'rgba(10,5,14,0.8)' }}>
-        <Link href="/" className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-lg"
-            style={{ background: 'radial-gradient(circle at 30% 30%, #4F6EF5 0%, transparent 60%), radial-gradient(circle at 70% 70%, #E07040 0%, transparent 60%), #16090e' }}>
-            N
-          </div>
-          <span className="text-xl font-black text-nexiora hidden sm:block">nexiora</span>
-        </Link>
+    <div className="min-h-screen nexiora-bg text-white flex">
+      <Sidebar />
+      <div className="lg:hidden fixed top-4 right-4 z-50">
         <DashboardMobileNav userEmail={user?.email} onLogout={handleLogout} />
-      </nav>
-
-      <div className="max-w-6xl mx-auto px-6 py-12">
+      </div>
+      <div className="flex-1 min-w-0 max-w-6xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-10">
           <div>
             <div className="text-xs uppercase tracking-[0.2em] font-medium mb-2" style={{ color: '#E07040' }}>Dashboard</div>
