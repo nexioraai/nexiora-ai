@@ -13,6 +13,7 @@ export default function VisibiliteIaPage() {
   const [sites, setSites] = useState<any[]>([]);
   const [history, setHistory] = useState<Record<string, Point[]>>({});
   const [selected, setSelected] = useState<string | null>(null);
+  const [checks, setChecks] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -43,6 +44,20 @@ export default function VisibiliteIaPage() {
                 });
                 setHistory(grouped);
               });
+            supabase.from('ai_visibility_checks')
+              .select('slug, ai_provider, appears, position, excerpt, checked_at')
+              .in('slug', slugs)
+              .order('checked_at', { ascending: false })
+              .then(({ data: chk }) => {
+                const latest: Record<string, any[]> = {};
+                (chk || []).forEach((row: any) => {
+                  if (!latest[row.slug]) latest[row.slug] = [];
+                  if (!latest[row.slug].some((r: any) => r.ai_provider === row.ai_provider)) {
+                    latest[row.slug].push(row);
+                  }
+                });
+                setChecks(latest);
+              });
           }
         });
     });
@@ -60,6 +75,7 @@ export default function VisibiliteIaPage() {
   const selData: Point[] = selected && history[selected]?.length
     ? history[selected]
     : (selScore ? [{ score: selScore.score, date: "Aujourd'hui", reason: '' }] : []);
+  const selChecks = selected ? (checks[selected] || []) : [];
 
   return (
     <div className="min-h-screen nexiora-bg text-white flex">
@@ -88,6 +104,33 @@ export default function VisibiliteIaPage() {
                     <ScoreChart data={selData} color={selColor} />
                     <p className="text-[11px] text-white/30 mt-1 text-center">Évolution du score dans le temps</p>
                   </div>
+                </div>
+                <div className="mt-6 pt-6 border-t border-white/10">
+                  <p className="text-sm font-semibold text-white/70 mb-4">Présence dans les IA</p>
+                  {selChecks.length === 0 ? (
+                    <p className="text-xs text-white/40">Mesure en cours de préparation.</p>
+                  ) : (
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      {selChecks.map((chk: any) => {
+                        const label = chk.ai_provider === 'perplexity' ? 'Perplexity' : chk.ai_provider === 'chatgpt' ? 'ChatGPT' : chk.ai_provider;
+                        return (
+                          <div key={chk.ai_provider} className="border border-white/10 rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-bold text-white">{label}</span>
+                              {chk.appears ? (
+                                <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#34d39920', color: '#34d399' }}>
+                                  {chk.position ? `${chk.position}e position` : 'Mentionné'}
+                                </span>
+                              ) : (
+                                <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#f8717120', color: '#f87171' }}>Non mentionné</span>
+                              )}
+                            </div>
+                            {chk.excerpt && <p className="text-xs text-white/50 leading-relaxed">"{chk.excerpt}"</p>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
