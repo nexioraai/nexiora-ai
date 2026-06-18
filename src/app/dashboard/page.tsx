@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Plus, ExternalLink, Pencil, Trash2, LogOut, Globe } from 'lucide-react';
-import DashboardMobileNav from '@/components/DashboardMobileNav';
 import Sidebar from '@/components/Sidebar';
 import { supabase } from '@/lib/supabase';
 import { computeAiScore } from '@/app/lib/aiScore';
@@ -89,9 +88,6 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen nexiora-bg text-white flex">
       <Sidebar />
-      <div className="lg:hidden fixed top-4 right-4 z-50">
-        <DashboardMobileNav userEmail={user?.email} onLogout={handleLogout} />
-      </div>
       <div className="flex-1 min-w-0 max-w-6xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-10">
           <div>
