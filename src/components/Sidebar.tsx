@@ -32,7 +32,7 @@ export default function Sidebar() {
 
   const modules = [
     { label: 'Sites Web', href: '/dashboard', icon: Globe },
-    { label: 'Visibilité IA', href: '/dashboard', icon: BarChart3 },
+    { label: 'Visibilité IA', href: '/visibilite-ia', icon: BarChart3 },
     { label: 'ERP', href: null, icon: Database },
     { label: 'Business Maps', href: null, icon: MapPin },
   ];
