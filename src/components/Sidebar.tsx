@@ -37,7 +37,6 @@ export default function Sidebar() {
   const modules = [
     { label: 'Visibilité IA', href: '/visibilite-ia', icon: BarChart3 },
     { label: 'ERP', href: null, icon: Database },
-    { label: 'Business Maps', href: null, icon: MapPin },
   ];
 
   const renderItem = ({ label, href, icon: Icon }: { label: string; href: string | null; icon: any }) =>
