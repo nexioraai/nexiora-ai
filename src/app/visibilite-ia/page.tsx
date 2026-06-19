@@ -5,11 +5,13 @@ import { supabase } from '@/lib/supabase';
 import Sidebar from '@/components/Sidebar';
 import ScoreChart from '@/components/ScoreChart';
 import { computeAiScore } from '@/app/lib/aiScore';
+import { useTranslation } from '@/lib/translations';
 
 type Point = { score: number; date: string; reason: string };
 
 export default function VisibiliteIaPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [sites, setSites] = useState<any[]>([]);
   const [history, setHistory] = useState<Record<string, Point[]>>({});
   const [selected, setSelected] = useState<string | null>(null);
@@ -65,7 +67,7 @@ export default function VisibiliteIaPage() {
 
   if (loading) return (
     <div className="min-h-screen nexiora-bg flex items-center justify-center">
-      <div className="text-white/40 text-lg">Chargement...</div>
+      <div className="text-white/40 text-lg">{t('aivis.loading')}</div>
     </div>
   );
 
@@ -74,7 +76,7 @@ export default function VisibiliteIaPage() {
   const selColor = selScore ? (selScore.score >= 80 ? '#34d399' : selScore.score >= 50 ? '#E07040' : '#f87171') : '#E07040';
   const selData: Point[] = selected && history[selected]?.length
     ? history[selected]
-    : (selScore ? [{ score: selScore.score, date: "Aujourd'hui", reason: '' }] : []);
+    : (selScore ? [{ score: selScore.score, date: t('aivis.today'), reason: '' }] : []);
   const selChecks = selected ? (checks[selected] || []) : [];
 
   return (
@@ -82,13 +84,13 @@ export default function VisibiliteIaPage() {
       <Sidebar />
       <div className="flex-1 min-w-0 max-w-6xl mx-auto px-6 py-12">
         <div className="mb-10">
-          <div className="text-xs uppercase tracking-[0.2em] font-medium mb-2" style={{ color: '#E07040' }}>Visibilité IA</div>
-          <h1 className="text-4xl font-black tracking-tight">Tableau de visibilité</h1>
+          <div className="text-xs uppercase tracking-[0.2em] font-medium mb-2" style={{ color: '#E07040' }}>{t('aivis.eyebrow')}</div>
+          <h1 className="text-4xl font-black tracking-tight">{t('aivis.title')}</h1>
         </div>
 
         {sites.length === 0 ? (
           <div className="text-center py-24 border border-white/8 rounded-3xl" style={{ background: 'rgba(255,255,255,0.02)' }}>
-            <p className="text-white/40 text-xl">Aucun site pour l'instant.</p>
+            <p className="text-white/40 text-xl">{t('aivis.empty')}</p>
           </div>
         ) : (
           <>
@@ -98,17 +100,17 @@ export default function VisibiliteIaPage() {
                   <div className="md:w-1/3 flex flex-col justify-center">
                     <p className="text-sm font-semibold text-white/60 mb-1">{selSite.name}</p>
                     <p className="text-5xl font-black leading-none" style={{ color: selColor }}>{selScore.score}<span className="text-white/30 text-2xl font-medium">/100</span></p>
-                    <p className="text-xs text-white/40 mt-2">{selScore.missing.length === 0 ? 'Visibilité maximale atteinte 🎯' : `${selScore.missing.length} action${selScore.missing.length > 1 ? 's' : ''} pour atteindre 100`}</p>
+                    <p className="text-xs text-white/40 mt-2">{selScore.missing.length === 0 ? t('aivis.maxReached') : t('aivis.actionsToReach').replace('{n}', String(selScore.missing.length))}</p>
                   </div>
                   <div className="md:w-2/3">
                     <ScoreChart data={selData} color={selColor} />
-                    <p className="text-[11px] text-white/30 mt-1 text-center">Évolution du score dans le temps</p>
+                    <p className="text-[11px] text-white/30 mt-1 text-center">{t('aivis.evolution')}</p>
                   </div>
                 </div>
                 <div className="mt-6 pt-6 border-t border-white/10">
-                  <p className="text-sm font-semibold text-white/70 mb-4">Présence dans les IA</p>
+                  <p className="text-sm font-semibold text-white/70 mb-4">{t('aivis.presence')}</p>
                   {selChecks.length === 0 ? (
-                    <p className="text-xs text-white/40">Mesure en cours de préparation.</p>
+                    <p className="text-xs text-white/40">{t('aivis.preparing')}</p>
                   ) : (
                     <div className="grid sm:grid-cols-2 gap-4">
                       {selChecks.map((chk: any) => {
@@ -119,10 +121,10 @@ export default function VisibiliteIaPage() {
                               <span className="text-sm font-bold text-white">{label}</span>
                               {chk.appears ? (
                                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#34d39920', color: '#34d399' }}>
-                                  {chk.position ? `${chk.position}e position` : 'Mentionné'}
+                                  {chk.position ? t('aivis.position').replace('{n}', String(chk.position)) : t('aivis.mentioned')}
                                 </span>
                               ) : (
-                                <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#f8717120', color: '#f87171' }}>Non mentionné</span>
+                                <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#f8717120', color: '#f87171' }}>{t('aivis.notMentioned')}</span>
                               )}
                             </div>
                             {chk.excerpt && <p className="text-xs text-white/50 leading-relaxed">"{chk.excerpt}"</p>}
@@ -146,7 +148,7 @@ export default function VisibiliteIaPage() {
                     style={{ background: active ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.03)' }}>
                     <h2 className="text-lg font-black text-white mb-3">{site.name}</h2>
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-semibold text-white/60">Visibilité IA</span>
+                      <span className="text-xs font-semibold text-white/60">{t('aivis.cardVisibility')}</span>
                       <span className="text-sm font-black" style={{ color }}>{score}<span className="text-white/30 text-xs font-medium">/100</span></span>
                     </div>
                     <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">

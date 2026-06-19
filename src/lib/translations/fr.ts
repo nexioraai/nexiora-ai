@@ -81,6 +81,20 @@ export const fr = {
   'dashboard.online': 'En ligne',
   'dashboard.publish': 'Publier',
   'dashboard.actionsToReach': '{n} action(s) pour atteindre 100',
+  'aivis.loading': 'Chargement...',
+  'aivis.today': "Aujourd'hui",
+  'aivis.eyebrow': 'Visibilité IA',
+  'aivis.title': 'Tableau de visibilité',
+  'aivis.empty': "Aucun site pour l'instant.",
+  'aivis.maxReached': 'Visibilité maximale atteinte 🎯',
+  'aivis.actionsToReach': '{n} action(s) pour atteindre 100',
+  'aivis.evolution': 'Évolution du score dans le temps',
+  'aivis.presence': 'Présence dans les IA',
+  'aivis.preparing': 'Mesure en cours de préparation.',
+  'aivis.position': '{n}e position',
+  'aivis.mentioned': 'Mentionné',
+  'aivis.notMentioned': 'Non mentionné',
+  'aivis.cardVisibility': 'Visibilité IA',
 };
 
 export type TranslationKey = keyof typeof fr;
