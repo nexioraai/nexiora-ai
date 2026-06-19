@@ -60,4 +60,13 @@ export const ar: Record<TranslationKey, string> = {
   'sidebar.settings': 'الإعدادات',
   'sidebar.logout': 'تسجيل الخروج',
   'sidebar.soon': 'قريبًا',
+  'settings.loading': 'جارٍ التحميل...',
+  'settings.eyebrow': 'الإعدادات',
+  'settings.title': 'حسابي',
+  'settings.account': 'الحساب',
+  'settings.firstName': 'الاسم الأول',
+  'settings.notSet': 'غير محدد',
+  'settings.email': 'البريد الإلكتروني',
+  'settings.language': 'اللغة',
+  'settings.logout': 'تسجيل الخروج',
 };

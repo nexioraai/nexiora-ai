@@ -58,6 +58,15 @@ export const fr = {
   'sidebar.settings': 'Paramètres',
   'sidebar.logout': 'Déconnexion',
   'sidebar.soon': 'bientôt',
+  'settings.loading': 'Chargement...',
+  'settings.eyebrow': 'Paramètres',
+  'settings.title': 'Mon compte',
+  'settings.account': 'Compte',
+  'settings.firstName': 'Prénom',
+  'settings.notSet': 'Non renseigné',
+  'settings.email': 'Email',
+  'settings.language': 'Langue',
+  'settings.logout': 'Déconnexion',
 };
 
 export type TranslationKey = keyof typeof fr;

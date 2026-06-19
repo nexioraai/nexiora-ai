@@ -60,4 +60,13 @@ export const en: Record<TranslationKey, string> = {
   'sidebar.settings': 'Settings',
   'sidebar.logout': 'Log out',
   'sidebar.soon': 'soon',
+  'settings.loading': 'Loading...',
+  'settings.eyebrow': 'Settings',
+  'settings.title': 'My account',
+  'settings.account': 'Account',
+  'settings.firstName': 'First name',
+  'settings.notSet': 'Not set',
+  'settings.email': 'Email',
+  'settings.language': 'Language',
+  'settings.logout': 'Log out',
 };
