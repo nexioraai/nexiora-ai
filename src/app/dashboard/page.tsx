@@ -6,9 +6,11 @@ import { Plus, ExternalLink, Pencil, Trash2, LogOut, Globe } from 'lucide-react'
 import Sidebar from '@/components/Sidebar';
 import { supabase } from '@/lib/supabase';
 import { computeAiScore } from '@/app/lib/aiScore';
+import { useTranslation } from '@/lib/translations';
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [user, setUser] = useState<any>(null);
   const [sites, setSites] = useState<any[]>([]);
   const [history, setHistory] = useState<Record<string, number[]>>({});
@@ -51,7 +53,7 @@ export default function DashboardPage() {
   };
 
   const handleDelete = async (slug: string) => {
-    if (!confirm('Supprimer ce site ?')) return;
+    if (!confirm(t('dashboard.confirmDelete'))) return;
     await supabase.from('sites').delete().eq('slug', slug);
     setSites(sites.filter(s => s.slug !== slug));
   };
@@ -75,13 +77,13 @@ export default function DashboardPage() {
     if (data.url) {
       window.location.href = data.url;
     } else {
-      alert(data.error || 'Erreur lors du paiement');
+      alert(data.error || t('dashboard.paymentError'));
     }
   };
 
   if (loading) return (
     <div className="min-h-screen nexiora-bg flex items-center justify-center">
-      <div className="text-white/40 text-lg">Chargement...</div>
+      <div className="text-white/40 text-lg">{t('dashboard.loading')}</div>
     </div>
   );
 
@@ -91,22 +93,22 @@ export default function DashboardPage() {
       <div className="flex-1 min-w-0 max-w-6xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-10">
           <div>
-            <div className="text-xs uppercase tracking-[0.2em] font-medium mb-2" style={{ color: '#E07040' }}>Dashboard</div>
-            <h1 className="text-4xl font-black tracking-tight">Mes sites</h1>
+            <div className="text-xs uppercase tracking-[0.2em] font-medium mb-2" style={{ color: '#E07040' }}>{t('dashboard.eyebrow')}</div>
+            <h1 className="text-4xl font-black tracking-tight">{t('dashboard.title')}</h1>
           </div>
           <Link href="/" className="btn-nexiora flex items-center gap-2 px-6 py-3 rounded-full text-white font-semibold text-sm">
             <Plus className="w-4 h-4" />
-            Nouveau site
+            {t('dashboard.newSite')}
           </Link>
         </div>
 
         {sites.length === 0 ? (
           <div className="text-center py-24 border border-white/8 rounded-3xl" style={{ background: 'rgba(255,255,255,0.02)' }}>
             <Globe className="w-14 h-14 mx-auto mb-6" style={{ color: 'rgba(255,255,255,0.15)' }} />
-            <p className="text-white/40 text-xl mb-6">Aucun site pour l'instant.</p>
+            <p className="text-white/40 text-xl mb-6">{t('dashboard.empty')}</p>
             <Link href="/" className="btn-nexiora inline-flex items-center gap-2 px-8 py-3 rounded-full text-white font-semibold">
               <Plus className="w-4 h-4" />
-              Générer mon premier site
+              {t('dashboard.createFirst')}
             </Link>
           </div>
         ) : (
@@ -136,14 +138,14 @@ export default function DashboardPage() {
                     return (
                       <div className="mb-4">
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-xs font-semibold text-white/60">Visibilité IA</span>
+                          <span className="text-xs font-semibold text-white/60">{t('dashboard.aiVisibility')}</span>
                           <span className="text-sm font-black" style={{ color }}>{score}<span className="text-white/30 text-xs font-medium">/100</span></span>
                         </div>
                         <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
                           <div className="h-full rounded-full transition-all duration-500" style={{ width: `${score}%`, background: color }} />
                         </div>
                         {missing.length > 0 && (
-                          <p className="text-[11px] text-white/40 mt-1.5">{missing.length} action{missing.length > 1 ? 's' : ''} pour atteindre 100</p>
+                          <p className="text-[11px] text-white/40 mt-1.5">{t('dashboard.actionsToReach').replace('{n}', String(missing.length))}</p>
                         )}
                       </div>
                     );
@@ -153,17 +155,17 @@ export default function DashboardPage() {
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-white text-sm font-semibold transition-opacity hover:opacity-80"
                       style={{ background: site.primary_color || '#E07040' }}>
                       <ExternalLink className="w-3.5 h-3.5" />
-                      Voir
+                      {t('dashboard.view')}
                     </Link>
                     <Link href={`/edit/${site.slug}`}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold border border-white/10 text-white/70 hover:text-white hover:border-white/30 transition-all">
                       <Pencil className="w-3.5 h-3.5" />
-                      Éditer
+                      {t('dashboard.edit')}
                     </Link>
                     <button onClick={() => handlePublish(site.slug, site.published)}
                       className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold border transition-all ${site.published ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-white/10 text-white/70 hover:text-white hover:border-white/30'}`}>
                       <span className={`w-2 h-2 rounded-full nexiora-pulse-dot ${site.published ? 'bg-emerald-400' : 'bg-[#E07040]'}`} />
-                      {site.published ? 'En ligne' : 'Publier'}
+                      {site.published ? t('dashboard.online') : t('dashboard.publish')}
                     </button>
                     <button onClick={() => handleDelete(site.slug)}
                       className="w-10 flex items-center justify-center rounded-xl border border-red-500/20 text-red-400/50 hover:text-red-400 hover:border-red-500/40 transition-all">

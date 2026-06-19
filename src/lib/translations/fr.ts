@@ -67,6 +67,20 @@ export const fr = {
   'settings.email': 'Email',
   'settings.language': 'Langue',
   'settings.logout': 'Déconnexion',
+  'dashboard.confirmDelete': 'Supprimer ce site ?',
+  'dashboard.paymentError': 'Erreur lors du paiement',
+  'dashboard.loading': 'Chargement...',
+  'dashboard.eyebrow': 'Dashboard',
+  'dashboard.title': 'Mes sites',
+  'dashboard.newSite': 'Nouveau site',
+  'dashboard.empty': "Aucun site pour l'instant.",
+  'dashboard.createFirst': 'Générer mon premier site',
+  'dashboard.aiVisibility': 'Visibilité IA',
+  'dashboard.view': 'Voir',
+  'dashboard.edit': 'Éditer',
+  'dashboard.online': 'En ligne',
+  'dashboard.publish': 'Publier',
+  'dashboard.actionsToReach': '{n} action(s) pour atteindre 100',
 };
 
 export type TranslationKey = keyof typeof fr;
