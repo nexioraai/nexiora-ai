@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import {
   Home, LayoutGrid, Settings, Globe, BarChart3,
-  Database, MapPin, LogOut, Menu, X,
+  Database, MapPin, LogOut, Menu, X, Zap,
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -37,6 +37,7 @@ export default function Sidebar() {
   const modules = [
     { label: 'Visibilité IA', href: '/visibilite-ia', icon: BarChart3 },
     { label: 'ERP', href: null, icon: Database },
+    { label: 'Upgrade', href: null, icon: Zap },
   ];
 
   const renderItem = ({ label, href, icon: Icon }: { label: string; href: string | null; icon: any }) =>
