@@ -2,10 +2,11 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { fr, type TranslationKey } from './fr';
 import { en } from './en';
+import { ar } from './ar';
 
-export type Lang = 'fr' | 'en';
+export type Lang = 'fr' | 'en' | 'ar';
 
-const dictionaries: Record<Lang, Record<TranslationKey, string>> = { fr, en };
+const dictionaries: Record<Lang, Record<TranslationKey, string>> = { fr, en, ar };
 
 interface LanguageContextType {
   lang: Lang;
@@ -20,7 +21,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem('nexiora-lang') as Lang | null;
-    if (stored === 'fr' || stored === 'en') {
+    if (stored === 'fr' || stored === 'en' || stored === 'ar') {
       setLangState(stored);
     } else {
       const browserLang = navigator.language.toLowerCase();
@@ -30,6 +31,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   }, [lang]);
 
   const setLang = (newLang: Lang) => {
