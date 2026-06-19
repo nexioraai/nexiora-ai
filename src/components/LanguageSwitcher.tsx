@@ -14,6 +14,7 @@ export default function LanguageSwitcher() {
       <option value="fr">🇫🇷 FR</option>
       <option value="en">🇬🇧 EN</option>
       <option value="ar">🇸🇦 AR</option>
+      <option value="es">🇪🇸 ES</option>
     </select>
   );
 }
