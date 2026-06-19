@@ -77,10 +77,13 @@ export default function Sidebar() {
       </nav>
 
       <div className="mt-auto pt-4 border-t border-white/8">
-        <div className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/30 cursor-not-allowed mb-1">
-          <span className="flex items-center gap-3"><Settings className="w-[18px] h-[18px]" />Paramètres</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/5 text-white/40">bientôt</span>
-        </div>
+        <Link href="/parametres"
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-1 ${
+            isActive('/parametres') ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'
+          }`}>
+          <Settings className="w-[18px] h-[18px]" />
+          Paramètres
+        </Link>
         {email && (
           <div className="flex items-center gap-3 px-2 mb-3">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
