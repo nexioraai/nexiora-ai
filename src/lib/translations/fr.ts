@@ -71,7 +71,7 @@ export const fr = {
   'dashboard.paymentError': 'Erreur lors du paiement',
   'dashboard.loading': 'Chargement...',
   'dashboard.eyebrow': 'Dashboard',
-  'dashboard.title': 'Mes sites',
+  'dashboard.title': 'Mes projets',
   'dashboard.newSite': 'Nouveau site',
   'dashboard.empty': "Aucun site pour l'instant.",
   'dashboard.createFirst': 'Générer mon premier site',

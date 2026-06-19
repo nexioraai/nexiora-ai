@@ -71,7 +71,7 @@ export const es = {
   'dashboard.paymentError': 'Error en el pago',
   'dashboard.loading': 'Cargando...',
   'dashboard.eyebrow': 'Panel',
-  'dashboard.title': 'Mis sitios',
+  'dashboard.title': 'Mis proyectos',
   'dashboard.newSite': 'Nuevo sitio',
   'dashboard.empty': 'Aún no hay sitios.',
   'dashboard.createFirst': 'Generar mi primer sitio',

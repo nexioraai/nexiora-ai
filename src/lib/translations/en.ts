@@ -73,7 +73,7 @@ export const en: Record<TranslationKey, string> = {
   'dashboard.paymentError': 'Payment error',
   'dashboard.loading': 'Loading...',
   'dashboard.eyebrow': 'Dashboard',
-  'dashboard.title': 'My sites',
+  'dashboard.title': 'My projects',
   'dashboard.newSite': 'New site',
   'dashboard.empty': 'No sites yet.',
   'dashboard.createFirst': 'Generate my first site',

@@ -73,7 +73,7 @@ export const ar: Record<TranslationKey, string> = {
   'dashboard.paymentError': 'خطأ في الدفع',
   'dashboard.loading': 'جارٍ التحميل...',
   'dashboard.eyebrow': 'لوحة التحكم',
-  'dashboard.title': 'مواقعي',
+  'dashboard.title': 'مشاريعي',
   'dashboard.newSite': 'موقع جديد',
   'dashboard.empty': 'لا توجد مواقع بعد.',
   'dashboard.createFirst': 'أنشئ موقعي الأول',
