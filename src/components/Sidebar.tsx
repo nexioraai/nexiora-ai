@@ -35,7 +35,6 @@ export default function Sidebar() {
   ];
 
   const modules = [
-    { label: 'Sites Web', href: '/dashboard', icon: Globe },
     { label: 'Visibilité IA', href: '/visibilite-ia', icon: BarChart3 },
     { label: 'ERP', href: null, icon: Database },
     { label: 'Business Maps', href: null, icon: MapPin },
@@ -72,7 +71,7 @@ export default function Sidebar() {
         {pages.map(renderItem)}
       </nav>
 
-      <div className="text-[11px] uppercase tracking-[0.18em] font-semibold text-white/30 px-3 mb-2">Modules</div>
+      <div className="text-[11px] uppercase tracking-[0.18em] font-semibold text-white/30 px-3 mb-2">Produits & Services</div>
       <nav className="flex flex-col gap-1">
         {modules.map(renderItem)}
       </nav>
