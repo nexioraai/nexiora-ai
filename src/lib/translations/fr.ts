@@ -49,6 +49,15 @@ export const fr = {
   'onboarding.error.generationFailed': 'Échec de la génération',
   'onboarding.error.missingSlug': 'Slug manquant dans la réponse',
   'onboarding.additionalDetailsTag': "[Détails supplémentaires de l'utilisateur]",
+  'sidebar.home': 'Accueil',
+  'sidebar.projects': 'Mes projets',
+  'sidebar.section.products': 'Produits & Services',
+  'sidebar.aiVisibility': 'Visibilité IA',
+  'sidebar.erp': 'ERP',
+  'sidebar.upgrade': 'Upgrade',
+  'sidebar.settings': 'Paramètres',
+  'sidebar.logout': 'Déconnexion',
+  'sidebar.soon': 'bientôt',
 };
 
 export type TranslationKey = keyof typeof fr;

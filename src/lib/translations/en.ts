@@ -51,4 +51,13 @@ export const en: Record<TranslationKey, string> = {
   'onboarding.error.generationFailed': 'Generation failed',
   'onboarding.error.missingSlug': 'Missing slug in response',
   'onboarding.additionalDetailsTag': "[User's additional details]",
+  'sidebar.home': 'Home',
+  'sidebar.projects': 'My projects',
+  'sidebar.section.products': 'Products & Services',
+  'sidebar.aiVisibility': 'AI Visibility',
+  'sidebar.erp': 'ERP',
+  'sidebar.upgrade': 'Upgrade',
+  'sidebar.settings': 'Settings',
+  'sidebar.logout': 'Log out',
+  'sidebar.soon': 'soon',
 };

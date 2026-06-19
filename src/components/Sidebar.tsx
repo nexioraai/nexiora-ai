@@ -3,12 +3,14 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useTranslation } from '@/lib/translations';
 import {
   Home, LayoutGrid, Settings, Globe, BarChart3,
   Database, MapPin, LogOut, Menu, X, Zap,
 } from 'lucide-react';
 
 export default function Sidebar() {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const router = useRouter();
   const [email, setEmail] = useState<string | null>(null);
@@ -30,14 +32,14 @@ export default function Sidebar() {
     href === '/' ? pathname === '/' : (pathname?.startsWith(href) ?? false);
 
   const pages = [
-    { label: 'Accueil', href: '/', icon: Home },
-    { label: 'Mes projets', href: '/dashboard', icon: LayoutGrid },
+    { label: t('sidebar.home'), href: '/', icon: Home },
+    { label: t('sidebar.projects'), href: '/dashboard', icon: LayoutGrid },
   ];
 
   const modules = [
-    { label: 'Visibilité IA', href: '/visibilite-ia', icon: BarChart3 },
-    { label: 'ERP', href: null, icon: Database },
-    { label: 'Upgrade', href: null, icon: Zap },
+    { label: t('sidebar.aiVisibility'), href: '/visibilite-ia', icon: BarChart3 },
+    { label: t('sidebar.erp'), href: null, icon: Database },
+    { label: t('sidebar.upgrade'), href: null, icon: Zap },
   ];
 
   const renderItem = ({ label, href, icon: Icon }: { label: string; href: string | null; icon: any }) =>
@@ -53,7 +55,7 @@ export default function Sidebar() {
       <div key={label}
         className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/30 cursor-not-allowed">
         <span className="flex items-center gap-3"><Icon className="w-[18px] h-[18px]" />{label}</span>
-        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/5 text-white/40">bientôt</span>
+        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/5 text-white/40">{t('sidebar.soon')}</span>
       </div>
     );
 
@@ -71,7 +73,7 @@ export default function Sidebar() {
         {pages.map(renderItem)}
       </nav>
 
-      <div className="text-[11px] uppercase tracking-[0.18em] font-semibold text-white/30 px-3 mb-2">Produits & Services</div>
+      <div className="text-[11px] uppercase tracking-[0.18em] font-semibold text-white/30 px-3 mb-2">{t('sidebar.section.products')}</div>
       <nav className="flex flex-col gap-1">
         {modules.map(renderItem)}
       </nav>
@@ -82,7 +84,7 @@ export default function Sidebar() {
             isActive('/parametres') ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'
           }`}>
           <Settings className="w-[18px] h-[18px]" />
-          Paramètres
+          {t('sidebar.settings')}
         </Link>
         {email && (
           <div className="flex items-center gap-3 px-2 mb-3">
@@ -96,7 +98,7 @@ export default function Sidebar() {
         <button onClick={handleLogout}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all w-full">
           <LogOut className="w-[18px] h-[18px]" />
-          Déconnexion
+          {t('sidebar.logout')}
         </button>
       </div>
     </>

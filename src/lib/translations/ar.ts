@@ -51,4 +51,13 @@ export const ar: Record<TranslationKey, string> = {
   'onboarding.error.generationFailed': 'فشل الإنشاء',
   'onboarding.error.missingSlug': 'المعرّف (slug) مفقود في الاستجابة',
   'onboarding.additionalDetailsTag': '[تفاصيل إضافية من المستخدم]',
+  'sidebar.home': 'الرئيسية',
+  'sidebar.projects': 'مشاريعي',
+  'sidebar.section.products': 'المنتجات والخدمات',
+  'sidebar.aiVisibility': 'الظهور في الذكاء الاصطناعي',
+  'sidebar.erp': 'تخطيط الموارد',
+  'sidebar.upgrade': 'الترقية',
+  'sidebar.settings': 'الإعدادات',
+  'sidebar.logout': 'تسجيل الخروج',
+  'sidebar.soon': 'قريبًا',
 };
