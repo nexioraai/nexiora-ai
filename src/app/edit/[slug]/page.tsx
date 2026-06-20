@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ThemeSelector from '@/components/edit/ThemeSelector';
 import AIAgentChat from '@/components/edit/AIAgentChat';
+import ProductManager from '@/components/edit/ProductManager';
 import { supabase } from '@/lib/supabase';
 import { computeAiScore } from '@/app/lib/aiScore';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -268,6 +269,8 @@ export default function EditPage() {
             </div>
           )}
         </div>
+
+        <ProductManager slug={slug} />
       </section>
 
       <Footer />
