@@ -19,6 +19,7 @@ import {
   normalizeProduct,
 } from './shared'
 import { getDict } from './i18n'
+import Reveal from './Reveal'
 
 // ---------- Premium Button ----------
 function PremiumButton({
@@ -187,6 +188,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
 
       {/* =================== ABOUT =================== */}
       {site.about && (
+        <Reveal>
         <section id="about" className="py-28 md:py-36">
           <div className="max-w-5xl mx-auto px-6 md:px-10">
             <div className="grid md:grid-cols-[1fr_2fr] gap-16 items-start">
@@ -261,6 +263,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
             </div>
           </div>
         </section>
+        </Reveal>
       )}
 
       {/* =================== SERVICES =================== */}
