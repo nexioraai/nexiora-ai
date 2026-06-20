@@ -50,6 +50,49 @@ export async function GET(
     lines.push('')
   }
 
+  // Mission / Vision
+  if (site.mission) {
+    lines.push('## Notre mission')
+    lines.push(site.mission)
+    lines.push('')
+  }
+  if (site.vision) {
+    lines.push('## Notre vision')
+    lines.push(site.vision)
+    lines.push('')
+  }
+
+  // Pourquoi nous
+  if (Array.isArray(site.whyus) && site.whyus.length > 0) {
+    lines.push('## Pourquoi nous choisir')
+    for (const w of site.whyus) {
+      if (w?.title) {
+        lines.push('### ' + w.title)
+        if (w?.text) lines.push(w.text)
+        lines.push('')
+      }
+    }
+  }
+
+  // Questions fréquentes
+  if (Array.isArray(site.faq) && site.faq.length > 0) {
+    lines.push('## Questions fréquentes')
+    for (const f of site.faq) {
+      if (f?.question) {
+        lines.push('### ' + f.question)
+        if (f?.answer) lines.push(f.answer)
+        lines.push('')
+      }
+    }
+  }
+
+  // Zone desservie
+  if (site.area_served) {
+    lines.push('## Zone desservie')
+    lines.push(site.area_served)
+    lines.push('')
+  }
+
   const phone = site.contact?.phone
   const email = site.contact?.email
   const address = site.contact?.address
@@ -65,6 +108,9 @@ export async function GET(
   lines.push(url)
   lines.push('')
   lines.push('---')
+  if (site.created_at) {
+    lines.push('Dernière mise à jour : ' + new Date(site.created_at).toISOString().split('T')[0])
+  }
   lines.push('Site généré et hébergé par Nexiora — ' + SITE_URL)
   lines.push('')
 
