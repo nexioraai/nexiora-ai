@@ -109,3 +109,22 @@ html {
 .nexiora-pulse-dot {
   animation: nexiora-pulse-dot 1.8s ease-in-out infinite;
 }
+
+/* ===== SCROLL REVEAL (sites générés) ===== */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.9s ease-out, transform 0.9s ease-out;
+  will-change: opacity, transform;
+}
+.reveal.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

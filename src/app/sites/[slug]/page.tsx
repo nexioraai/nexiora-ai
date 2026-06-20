@@ -6,6 +6,7 @@ import JsonLd from './themes/JsonLd'
 import EditorialTheme from './themes/EditorialTheme'
 import BoldTheme from './themes/BoldTheme'
 import MonochromeTheme from './themes/MonochromeTheme'
+import ScrollRevealInit from './themes/ScrollRevealInit'
 
 const themes = {
   editorial: EditorialTheme,
@@ -71,6 +72,7 @@ export default async function SitePage({ params }: Props) {
     <>
       <JsonLd site={site} />
       <Theme site={site} />
+      <ScrollRevealInit />
     </>
   )
 }
