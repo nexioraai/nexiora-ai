@@ -47,3 +47,4 @@ src/erp/generator/generateBlueprint.ts.backup
 .env.local
 *.bak2
 _trash_orphan_pages/
+_trash_backups/
