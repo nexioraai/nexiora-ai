@@ -15,15 +15,17 @@ export default function CartShell({
   children,
   primary,
   labels,
+  slug,
 }: {
   children: ReactNode;
   primary: string;
   labels: Labels;
+  slug: string;
 }) {
   return (
     <CartProvider>
       {children}
-      <CartDrawer primary={primary} labels={labels} />
+      <CartDrawer primary={primary} labels={labels} slug={slug} />
     </CartProvider>
   );
 }

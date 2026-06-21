@@ -76,7 +76,7 @@ export default async function SitePage({ params }: Props) {
   return (
     <>
       <JsonLd site={site} />
-      <CartShell primary={primary} labels={cartLabels}>
+      <CartShell primary={primary} labels={cartLabels} slug={site.slug}>
         <Theme site={site} />
       </CartShell>
       <ScrollRevealInit />

@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import { useCart } from './CartContext';
 import { X, ShoppingBag, Plus, Minus, Trash2 } from 'lucide-react';
 
@@ -13,11 +14,42 @@ type Labels = {
 export default function CartDrawer({
   primary = '#111111',
   labels,
+  slug,
 }: {
   primary?: string;
   labels: Labels;
+  slug: string;
 }) {
   const { items, isOpen, total, currency, count, setQuantity, removeItem, closeCart } = useCart();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleCheckout = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      const res = await fetch('/api/shop/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug,
+          items: items.map((i) => ({
+            id: i.id,
+            name: i.name,
+            priceNumber: i.priceNumber,
+            currency: i.currency,
+            quantity: i.quantity,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur');
+      window.location.href = data.url;
+    } catch (e: any) {
+      setError(e.message);
+      setBusy(false);
+    }
+  };
 
   return (
     <>
@@ -96,12 +128,14 @@ export default function CartDrawer({
               <span className="text-xl font-semibold text-neutral-900">{total.toFixed(2)} {currency}</span>
             </div>
             <button
-              className="w-full py-4 rounded-2xl font-semibold text-white transition hover:opacity-90"
+              className="w-full py-4 rounded-2xl font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
               style={{ background: primary }}
-              onClick={() => { /* B0.5 : checkout Stripe Connect */ }}
+              onClick={handleCheckout}
+              disabled={busy}
             >
-              {labels.checkout}
+              {busy ? '…' : labels.checkout}
             </button>
+            {error && <p className="text-sm text-red-500 text-center">{error}</p>}
             <button onClick={closeCart} className="w-full text-sm text-neutral-500 hover:text-neutral-700 transition">
               {labels.continue}
             </button>
