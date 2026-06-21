@@ -20,6 +20,8 @@ import {
 } from './shared'
 import { getDict } from './i18n'
 import Reveal from './Reveal'
+import AddToCartButton from './AddToCartButton'
+import { getCartLabels } from './cartLabels'
 
 // ---------- Premium Button ----------
 function PremiumButton({
@@ -63,6 +65,7 @@ function PremiumButton({
 export default function EditorialTheme({ site }: { site: Site }) {
   const primary = site.primary_color || '#111111'
   const t = getDict(site.lang)
+  const cartT = getCartLabels(site.lang)
   const services = (site.services || []).map(normalizeService)
   const testimonials = (site.testimonials || []).map(normalizeTestimonial)
   const products = (site.products || []).map(normalizeProduct)
@@ -406,13 +409,25 @@ export default function EditorialTheme({ site }: { site: Site }) {
                       ) : (
                         <span className="text-sm text-neutral-400">{t.labels.onQuote}</span>
                       )}
-                      <a
-                        href="#contact"
-                        className="inline-flex items-center gap-1 text-sm font-medium text-neutral-900 group/link"
-                      >
-                        {t.labels.request}
-                        <ArrowRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
-                      </a>
+                      {p.id && p.priceNumber != null ? (
+                        <AddToCartButton
+                          id={p.id}
+                          name={p.name}
+                          priceNumber={p.priceNumber}
+                          currency={p.currency || 'CAD'}
+                          image={p.image}
+                          primary={primary}
+                          label={cartT.addToCart}
+                        />
+                      ) : (
+                        <a
+                          href="#contact"
+                          className="inline-flex items-center gap-1 text-sm font-medium text-neutral-900 group/link"
+                        >
+                          {t.labels.request}
+                          <ArrowRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
+                        </a>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -6,6 +6,8 @@ import JsonLd from './themes/JsonLd'
 import EditorialTheme from './themes/EditorialTheme'
 import BoldTheme from './themes/BoldTheme'
 import MonochromeTheme from './themes/MonochromeTheme'
+import CartShell from './themes/CartShell'
+import { getCartLabels } from './themes/cartLabels'
 import ScrollRevealInit from './themes/ScrollRevealInit'
 
 const themes = {
@@ -68,10 +70,15 @@ export default async function SitePage({ params }: Props) {
   const key = (site.theme as keyof typeof themes) || 'editorial'
   const Theme = themes[key] ?? EditorialTheme
 
+  const primary = site.primary_color || '#111111'
+  const cartLabels = getCartLabels(site.lang)
+
   return (
     <>
       <JsonLd site={site} />
-      <Theme site={site} />
+      <CartShell primary={primary} labels={cartLabels}>
+        <Theme site={site} />
+      </CartShell>
       <ScrollRevealInit />
     </>
   )

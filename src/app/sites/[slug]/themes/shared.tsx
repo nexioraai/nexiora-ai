@@ -58,9 +58,12 @@ faq?: { question: string; answer: string }[]
 }
 
 export type Product = {
+id?: string
 name: string
 description: string
 price: string
+priceNumber?: number
+currency?: string
 image?: string
 }
 
@@ -99,16 +102,19 @@ return null
 
 const { data: shopProducts } = await supabase
 .from('shop_products')
-.select('name,description,price,currency,images')
+.select('id,name,description,price,currency,images')
 .eq('site_id', (data as any).id)
 .eq('published', true)
 .order('position', { ascending: true })
 
 if (shopProducts && shopProducts.length > 0) {
 ;(data as any).products = shopProducts.map((p: any) => ({
+id: p.id,
 name: p.name,
 description: p.description ?? '',
 price: p.price != null ? `${Number(p.price).toFixed(2)} ${p.currency}` : '',
+priceNumber: p.price != null ? Number(p.price) : undefined,
+currency: p.currency,
 image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : undefined,
 }))
 }
@@ -193,6 +199,9 @@ export function normalizeProduct(
 raw: any
 ): Product {
 return {
+id: raw?.id,
+priceNumber: raw?.priceNumber,
+currency: raw?.currency,
 name:
 raw?.name ??
 raw?.title ??

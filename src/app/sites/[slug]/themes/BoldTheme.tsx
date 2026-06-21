@@ -15,6 +15,8 @@ import MobileNav from './MobileNav'
 import ContactForm from '../ContactForm'
 import { type Site, normalizeService, normalizeTestimonial, normalizeProduct } from './shared'
 import { getDict } from './i18n'
+import AddToCartButton from './AddToCartButton'
+import { getCartLabels } from './cartLabels'
 
 const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
@@ -30,6 +32,7 @@ const interTight = Inter_Tight({
 export default function BoldTheme({ site }: { site: Site }) {
   const primary = site.primary_color || '#FF3B1F'
   const t = getDict(site.lang)
+  const cartT = getCartLabels(site.lang)
   const services = (site.services || []).map(normalizeService)
   const testimonials = (site.testimonials || []).map(normalizeTestimonial)
   const products = (site.products || []).map(normalizeProduct)
@@ -329,13 +332,25 @@ export default function BoldTheme({ site }: { site: Site }) {
                         ) : (
                           <span className="text-xs uppercase tracking-widest font-bold text-black/50">{t.bold.onQuote}</span>
                         )}
-                        <a
-                          href="#contact"
-                          className="inline-flex items-center gap-1 text-xs uppercase tracking-widest font-bold hover:gap-2 transition-all"
-                        >
-                          {t.bold.order}
-                          <ArrowUpRight className="w-4 h-4" />
-                        </a>
+                        {p.id && p.priceNumber != null ? (
+                          <AddToCartButton
+                            id={p.id}
+                            name={p.name}
+                            priceNumber={p.priceNumber}
+                            currency={p.currency || 'CAD'}
+                            image={p.image}
+                            primary={primary}
+                            label={cartT.addToCart}
+                          />
+                        ) : (
+                          <a
+                            href="#contact"
+                            className="inline-flex items-center gap-1 text-xs uppercase tracking-widest font-bold hover:gap-2 transition-all"
+                          >
+                            {t.bold.order}
+                            <ArrowUpRight className="w-4 h-4" />
+                          </a>
+                        )}
                       </div>
                     </div>
                   </div>

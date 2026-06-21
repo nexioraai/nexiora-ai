@@ -12,9 +12,12 @@ import {
   normalizeProduct,
 } from './shared'
 import { getDict } from './i18n'
+import AddToCartButton from './AddToCartButton'
+import { getCartLabels } from './cartLabels'
 
 export default function MonochromeTheme({ site }: { site: Site }) {
   const t = getDict(site.lang)
+  const cartT = getCartLabels(site.lang)
   const services = (site.services || []).map(normalizeService)
   const testimonials = (site.testimonials || []).map(normalizeTestimonial)
   const products = (site.products || []).map(normalizeProduct)
@@ -148,7 +151,7 @@ export default function MonochromeTheme({ site }: { site: Site }) {
                   {p.description && <p className="text-sm text-black/60 mb-2 line-clamp-2">{p.description}</p>}
                   <div className="flex items-center justify-between border-t border-black/10 pt-3">
                     {p.price ? <span className="text-lg font-bold">{p.price}</span> : <span className="text-sm text-black/40">{t.labels.onQuote}</span>}
-                    <a href="#contact" className="text-sm font-medium underline underline-offset-4">{t.labels.request}</a>
+                    {p.id && p.priceNumber != null ? (<AddToCartButton id={p.id} name={p.name} priceNumber={p.priceNumber} currency={p.currency || 'CAD'} image={p.image} primary="#000000" label={cartT.addToCart} />) : (<a href="#contact" className="text-sm font-medium underline underline-offset-4">{t.labels.request}</a>)}
                   </div>
                 </div>
               ))}
