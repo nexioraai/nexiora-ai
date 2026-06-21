@@ -25,7 +25,8 @@ export interface PaymentProvider {
     siteSlug: string,
     items: CartItem[],
     successUrl: string,
-    cancelUrl: string
+    cancelUrl: string,
+    shippingFlat: number
   ): Promise<CheckoutResult>;
   getStatus(accountId: string): Promise<{ ready: boolean }>;
 }

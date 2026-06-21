@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
     const { data: site, error: siteError } = await supabaseAdmin
       .from('sites')
-      .select('id, payment_provider, payment_account_id')
+      .select('id, payment_provider, payment_account_id, shipping_flat')
       .eq('slug', slug)
       .single();
     if (siteError || !site) return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
@@ -29,7 +29,8 @@ export async function POST(req: Request) {
       slug,
       items,
       successUrl,
-      cancelUrl
+      cancelUrl,
+      Number(site.shipping_flat) || 0
     );
 
     const amount = items.reduce((sum, i) => sum + i.priceNumber * i.quantity, 0);

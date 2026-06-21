@@ -15,6 +15,9 @@ export default function PaymentConnect({ slug }: { slug: string }) {
   const [connected, setConnected] = useState(false);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState('');
+  const [shipping, setShipping] = useState('0');
+  const [savingShip, setSavingShip] = useState(false);
+  const [shipMsg, setShipMsg] = useState('');
 
   const loadStatus = async () => {
     try {
@@ -24,6 +27,9 @@ export default function PaymentConnect({ slug }: { slug: string }) {
       if (!res.ok) throw new Error(data.error || 'Erreur');
       setConnected(data.connected);
       setReady(data.ready);
+      const shipRes = await fetch(`/api/shop/shipping?slug=${encodeURIComponent(slug)}`, { headers });
+      const shipData = await shipRes.json();
+      if (shipRes.ok) setShipping(String(shipData.shippingFlat ?? 0));
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -49,6 +55,27 @@ export default function PaymentConnect({ slug }: { slug: string }) {
     } catch (e: any) {
       setError(e.message);
       setBusy(false);
+    }
+  };
+
+  const handleSaveShipping = async () => {
+    setSavingShip(true);
+    setShipMsg('');
+    try {
+      const headers = await authHeaders();
+      const res = await fetch('/api/shop/shipping', {
+        method: 'PATCH',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, shippingFlat: Number(shipping) }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur');
+      setShipMsg('Tarif enregistré');
+      setTimeout(() => setShipMsg(''), 3000);
+    } catch (e: any) {
+      setShipMsg(e.message);
+    } finally {
+      setSavingShip(false);
     }
   };
 
@@ -93,6 +120,34 @@ export default function PaymentConnect({ slug }: { slug: string }) {
       )}
 
       {error && <p className="text-sm text-red-400 mt-3">{error}</p>}
+
+      <div className="mt-8 pt-6 border-t border-white/10">
+        <label className="text-xs text-slate-400 uppercase tracking-wider font-semibold block mb-2">
+          Frais de livraison (forfait)
+        </label>
+        <p className="text-sm text-white/50 mb-3">
+          Montant fixe ajouté à chaque commande. Mets 0 pour la livraison gratuite.
+        </p>
+        <div className="flex items-center gap-3">
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={shipping}
+            onChange={(e) => setShipping(e.target.value)}
+            className="w-32 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#E07040] transition"
+          />
+          <button
+            onClick={handleSaveShipping}
+            disabled={savingShip}
+            className="px-5 py-3 rounded-xl text-sm font-semibold transition disabled:opacity-40"
+            style={{ background: `${ACCENT}1a`, color: ACCENT, border: `1px solid ${ACCENT}33` }}
+          >
+            {savingShip ? '…' : 'Enregistrer'}
+          </button>
+          {shipMsg && <span className="text-sm text-white/60">{shipMsg}</span>}
+        </div>
+      </div>
     </div>
   );
 }

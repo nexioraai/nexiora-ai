@@ -15,7 +15,7 @@ export const stripeProvider: PaymentProvider = {
     return { url: link.url, accountId: account.id };
   },
 
-  async createCheckout(accountId, siteSlug, items, successUrl, cancelUrl) {
+  async createCheckout(accountId, siteSlug, items, successUrl, cancelUrl, shippingFlat) {
     const stripe = getStripe();
 
     const lineItems = items.map((i) => ({
@@ -28,11 +28,27 @@ export const stripeProvider: PaymentProvider = {
       quantity: i.quantity,
     }));
 
+    const currency = (items[0]?.currency || 'cad').toLowerCase();
+    const shippingOptions =
+      shippingFlat > 0
+        ? [
+            {
+              shipping_rate_data: {
+                type: 'fixed_amount' as const,
+                fixed_amount: { amount: Math.round(shippingFlat * 100), currency },
+                display_name: 'Livraison',
+                tax_behavior: 'exclusive' as const,
+              },
+            },
+          ]
+        : undefined;
+
     const baseParams = {
       mode: 'payment' as const,
       line_items: lineItems,
       success_url: successUrl,
       cancel_url: cancelUrl,
+      ...(shippingOptions ? { shipping_options: shippingOptions } : {}),
     };
 
     // Tente avec calcul automatique des taxes (Stripe Tax côté compte connecté).
