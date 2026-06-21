@@ -50,29 +50,3 @@ export async function cjGetVariants(
 ): Promise<any> {
   return cjFetch(email, apiKey, `/product/variant/query?pid=${encodeURIComponent(pid)}`);
 }
-
-/** Calcule les options logistiques CJ pour une destination (triées par pertinence). */
-export async function cjCalculateFreight(
-  email: string,
-  apiKey: string,
-  endCountryCode: string,
-  products: { vid: string; quantity: number }[],
-  startCountryCode = 'CN'
-): Promise<any> {
-  return cjFetch(email, apiKey, '/logistic/freightCalculate', {
-    method: 'POST',
-    body: { startCountryCode, endCountryCode, products },
-  });
-}
-
-/** Crée une commande dropshipping chez CJ (createOrderV2). */
-export async function cjCreateOrder(
-  email: string,
-  apiKey: string,
-  order: Record<string, any>
-): Promise<any> {
-  return cjFetch(email, apiKey, '/shopping/order/createOrderV2', {
-    method: 'POST',
-    body: order,
-  });
-}
