@@ -25,3 +25,28 @@ export async function cjFetch(
   }
   return data.data;
 }
+
+/** Recherche de produits CJ par mot-clé (liste paginée). */
+export async function cjSearchProducts(
+  email: string,
+  apiKey: string,
+  keyword: string,
+  pageNum = 1,
+  pageSize = 20
+): Promise<any> {
+  const params = new URLSearchParams({
+    pageNum: String(pageNum),
+    pageSize: String(pageSize),
+    productNameEn: keyword,
+  });
+  return cjFetch(email, apiKey, `/product/list?${params.toString()}`);
+}
+
+/** Variants d'un produit CJ (pour récupérer le vid + prix). */
+export async function cjGetVariants(
+  email: string,
+  apiKey: string,
+  pid: string
+): Promise<any> {
+  return cjFetch(email, apiKey, `/product/variant/query?pid=${encodeURIComponent(pid)}`);
+}
