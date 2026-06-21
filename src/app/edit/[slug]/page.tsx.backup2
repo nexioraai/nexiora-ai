@@ -9,7 +9,6 @@ import ThemeSelector from '@/components/edit/ThemeSelector';
 import AIAgentChat from '@/components/edit/AIAgentChat';
 import ProductManager from '@/components/edit/ProductManager';
 import PaymentConnect from '@/components/edit/PaymentConnect';
-import CjConnect from '@/components/edit/CjConnect';
 import OrderManager from '@/components/edit/OrderManager';
 import { supabase } from '@/lib/supabase';
 import { computeAiScore } from '@/app/lib/aiScore';
@@ -276,7 +275,6 @@ export default function EditPage() {
         <ProductManager slug={slug} />
 
         <PaymentConnect slug={slug} />
-        <CjConnect slug={slug} />
 
         <OrderManager slug={slug} />
       </section>
