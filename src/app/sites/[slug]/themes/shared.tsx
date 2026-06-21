@@ -80,7 +80,7 @@ rating: number
 // ---------- Supabase ----------
 
 export const PUBLIC_COLS =
-'slug,name,slogan,type,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image,lang,faq,whyus,mission,vision,geo_lat,geo_lng,area_served,price_range,created_at'
+'id,slug,name,slogan,type,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image,lang,faq,whyus,mission,vision,geo_lat,geo_lng,area_served,price_range,created_at'
 
 export async function fetchSite(
 slug: string
@@ -95,6 +95,22 @@ const { data, error } = await supabase
 if (error || !data) {
 console.error(error)
 return null
+}
+
+const { data: shopProducts } = await supabase
+.from('shop_products')
+.select('name,description,price,currency,images')
+.eq('site_id', (data as any).id)
+.eq('published', true)
+.order('position', { ascending: true })
+
+if (shopProducts && shopProducts.length > 0) {
+;(data as any).products = shopProducts.map((p: any) => ({
+name: p.name,
+description: p.description ?? '',
+price: p.price != null ? `${Number(p.price).toFixed(2)} ${p.currency}` : '',
+image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : undefined,
+}))
 }
 
 return data as Site
