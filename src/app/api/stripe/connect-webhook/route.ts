@@ -37,6 +37,7 @@ export async function POST(req: Request) {
             status: 'paid',
             customer_email: session.customer_details?.email ?? null,
             customer_name: session.customer_details?.name ?? null,
+            shipping_address: session.shipping_details?.address ?? session.collected_information?.shipping_details?.address ?? null,
           })
           .eq('payment_ref', session.id)
           .select('id')

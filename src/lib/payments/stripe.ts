@@ -1,4 +1,5 @@
 import 'server-only';
+import { STRIPE_SHIPPING_COUNTRIES } from './countries';
 import { getStripe } from '@/lib/stripe';
 import type { PaymentProvider } from './types';
 
@@ -48,6 +49,7 @@ export const stripeProvider: PaymentProvider = {
       line_items: lineItems,
       success_url: successUrl,
       cancel_url: cancelUrl,
+      shipping_address_collection: { allowed_countries: [...STRIPE_SHIPPING_COUNTRIES] },
       ...(shippingOptions ? { shipping_options: shippingOptions } : {}),
     };
 
