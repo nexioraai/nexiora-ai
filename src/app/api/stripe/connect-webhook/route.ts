@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 import { getStripe } from '@/lib/stripe';
+import { decrementStock } from '@/lib/shop';
 
 /**
  * Webhook dédié aux paiements boutique (Stripe Connect).
@@ -30,14 +31,30 @@ export async function POST(req: Request) {
       // Paiement boutique réussi → commande payée
       case 'checkout.session.completed': {
         const session: any = event.data.object;
-        await supabase
+        const { data: order } = await supabase
           .from('shop_orders')
           .update({
             status: 'paid',
             customer_email: session.customer_details?.email ?? null,
             customer_name: session.customer_details?.name ?? null,
           })
-          .eq('payment_ref', session.id);
+          .eq('payment_ref', session.id)
+          .select('id')
+          .maybeSingle();
+
+        if (order) {
+          const { data: orderItems } = await supabase
+            .from('shop_order_items')
+            .select('product_id, quantity')
+            .eq('order_id', order.id);
+          if (orderItems && orderItems.length > 0) {
+            await decrementStock(
+              orderItems
+                .filter((it: any) => it.product_id)
+                .map((it: any) => ({ id: it.product_id, quantity: it.quantity }))
+            );
+          }
+        }
         break;
       }
       // Paiement expiré / abandonné → commande annulée

@@ -100,3 +100,43 @@ export async function deleteProduct(id: string): Promise<void> {
     .eq('id', id);
   if (error) throw new Error(`deleteProduct: ${error.message}`);
 }
+
+/** Élément de panier minimal pour le contrôle de stock. */
+export type StockLine = { id: string; quantity: number };
+
+/**
+ * Vérifie que chaque produit a un stock suffisant.
+ * Retourne { ok: true } ou { ok: false, reason } avec le premier produit en défaut.
+ */
+export async function checkStock(
+  lines: StockLine[]
+): Promise<{ ok: true } | { ok: false; reason: string }> {
+  for (const line of lines) {
+    const product = await getProduct(line.id);
+    if (!product) return { ok: false, reason: `Produit introuvable` };
+    if (product.stock < line.quantity) {
+      return { ok: false, reason: `Stock insuffisant pour "${product.name}" (${product.stock} disponible)` };
+    }
+  }
+  return { ok: true };
+}
+
+/**
+ * Décrémente le stock des produits achetés (appelé au paiement confirmé).
+ * Best-effort : ne jette pas, log en cas d'erreur sur une ligne.
+ */
+export async function decrementStock(lines: StockLine[]): Promise<void> {
+  for (const line of lines) {
+    const product = await getProduct(line.id);
+    if (!product) {
+      console.error(`decrementStock: produit ${line.id} introuvable`);
+      continue;
+    }
+    const newStock = Math.max(0, product.stock - line.quantity);
+    const { error } = await supabaseAdmin
+      .from('shop_products')
+      .update({ stock: newStock })
+      .eq('id', line.id);
+    if (error) console.error(`decrementStock ${line.id}: ${error.message}`);
+  }
+}

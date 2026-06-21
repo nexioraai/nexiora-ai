@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getProvider } from '@/lib/payments';
+import { checkStock } from '@/lib/shop';
 import type { CartItem } from '@/lib/payments/types';
 
 /** POST /api/shop/checkout → crée la session de paiement. Body: { slug, items } (route publique : un client final achète). */
@@ -19,6 +20,9 @@ export async function POST(req: Request) {
     if (siteError || !site) return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
     if (!site.payment_account_id) return NextResponse.json({ error: 'Paiements non configurés pour ce site' }, { status: 400 });
 
+    const stock = await checkStock(items.map((i) => ({ id: i.id, quantity: i.quantity })));
+    if (!stock.ok) return NextResponse.json({ error: stock.reason }, { status: 409 });
+
     const origin = new URL(req.url).origin;
     const successUrl = `${origin}/sites/${slug}?paid=1`;
     const cancelUrl = `${origin}/sites/${slug}?canceled=1`;
@@ -34,15 +38,31 @@ export async function POST(req: Request) {
     );
 
     const amount = items.reduce((sum, i) => sum + i.priceNumber * i.quantity, 0);
-    await supabaseAdmin.from('shop_orders').insert({
-      site_id: site.id,
-      status: 'pending',
-      total: amount,
-      currency: items[0].currency,
-      payment_provider: site.payment_provider || 'stripe',
-      payment_account_id: site.payment_account_id,
-      payment_ref: orderId,
-    });
+    const { data: order } = await supabaseAdmin
+      .from('shop_orders')
+      .insert({
+        site_id: site.id,
+        status: 'pending',
+        total: amount,
+        currency: items[0].currency,
+        payment_provider: site.payment_provider || 'stripe',
+        payment_account_id: site.payment_account_id,
+        payment_ref: orderId,
+      })
+      .select('id')
+      .single();
+
+    if (order) {
+      await supabaseAdmin.from('shop_order_items').insert(
+        items.map((i) => ({
+          order_id: order.id,
+          product_id: i.id,
+          product_name: i.name,
+          quantity: i.quantity,
+          unit_price: i.priceNumber,
+        }))
+      );
+    }
 
     return NextResponse.json({ url });
   } catch (e: any) {
