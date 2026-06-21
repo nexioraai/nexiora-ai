@@ -17,23 +17,40 @@ export const stripeProvider: PaymentProvider = {
 
   async createCheckout(accountId, siteSlug, items, successUrl, cancelUrl) {
     const stripe = getStripe();
-    const session = await stripe.checkout.sessions.create(
-      {
-        mode: 'payment',
-        line_items: items.map((i) => ({
-          price_data: {
-            currency: i.currency.toLowerCase(),
-            product_data: { name: i.name },
-            unit_amount: Math.round(i.priceNumber * 100),
-          },
-          quantity: i.quantity,
-        })),
-        success_url: successUrl,
-        cancel_url: cancelUrl,
+
+    const lineItems = items.map((i) => ({
+      price_data: {
+        currency: i.currency.toLowerCase(),
+        product_data: { name: i.name },
+        unit_amount: Math.round(i.priceNumber * 100),
+        tax_behavior: 'exclusive' as const,
       },
-      { stripeAccount: accountId }
-    );
-    return { url: session.url ?? '', orderId: session.id };
+      quantity: i.quantity,
+    }));
+
+    const baseParams = {
+      mode: 'payment' as const,
+      line_items: lineItems,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+    };
+
+    // Tente avec calcul automatique des taxes (Stripe Tax côté compte connecté).
+    // Si Stripe Tax n'est pas activé sur ce compte, on retombe sans taxe.
+    try {
+      const session = await stripe.checkout.sessions.create(
+        {
+          ...baseParams,
+          automatic_tax: { enabled: true },
+          billing_address_collection: 'required',
+        },
+        { stripeAccount: accountId }
+      );
+      return { url: session.url ?? '', orderId: session.id };
+    } catch (e: any) {
+      const session = await stripe.checkout.sessions.create(baseParams, { stripeAccount: accountId });
+      return { url: session.url ?? '', orderId: session.id };
+    }
   },
 
   async getStatus(accountId) {
