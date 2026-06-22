@@ -76,3 +76,12 @@ export async function cjCreateOrder(
     body: order,
   });
 }
+
+/** Lit le solde du compte CJ (USD). Garde-fou avant paiement auto. */
+export async function cjGetBalance(
+  email: string,
+  apiKey: string
+): Promise<number> {
+  const data = await cjFetch(email, apiKey, '/shopping/pay/getBalance');
+  return Number(data?.amount ?? data?.balance ?? 0);
+}

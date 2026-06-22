@@ -1,31 +1,43 @@
 import 'server-only';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { cjCalculateFreight, cjCreateOrder } from './client';
+import { cjCalculateFreight, cjCreateOrder, cjGetBalance } from './client';
+
+const MAX_PAY_ATTEMPTS = 3;
+
+/** Détermine si une erreur CJ est permanente (inutile de réessayer). */
+function isPermanentError(msg: string): boolean {
+  const m = msg.toLowerCase();
+  return (
+    m.includes('param') ||
+    m.includes('invalid') ||
+    m.includes('insufficient') ||
+    m.includes('not found') ||
+    m.includes('not a cj')
+  );
+}
 
 /**
- * Exécute le dropshipping CJ pour une commande payée.
- * Pour chaque ligne dont le produit a un cj_vid, calcule le meilleur
- * transporteur (selon le pays du client) puis crée la commande chez CJ.
- * Les lignes sans cj_vid sont ignorées (gérées en stock par le webhook).
- * Renvoie la liste des vid traités en dropshipping.
+ * Exécute le dropshipping CJ pour une commande payée (côté client).
+ * Lignes avec cj_vid → commande CJ. Lignes sans cj_vid → ignorées (stock).
+ * Mode déterminé par sites.cj_auto_pay :
+ *   - false (défaut) : crée la commande chez CJ, paiement manuel par le marchand.
+ *   - true : paie automatiquement via solde CJ (payType 2), avec garde-fous.
  */
 export async function fulfillCjOrder(orderId: string): Promise<string[]> {
-  // Récupère la commande + son site
   const { data: order } = await supabaseAdmin
     .from('shop_orders')
-    .select('id, site_id, shipping_address, customer_name, customer_email')
+    .select('id, site_id, shipping_address, customer_name, customer_email, cj_pay_status, cj_pay_attempts')
     .eq('id', orderId)
     .maybeSingle();
   if (!order) return [];
 
   const { data: site } = await supabaseAdmin
     .from('sites')
-    .select('cj_email, cj_api_key')
+    .select('cj_email, cj_api_key, cj_auto_pay')
     .eq('id', order.site_id)
     .maybeSingle();
   if (!site?.cj_email || !site?.cj_api_key) return [];
 
-  // Lignes de la commande jointes au produit (pour le cj_vid)
   const { data: items } = await supabaseAdmin
     .from('shop_order_items')
     .select('quantity, product_id')
@@ -47,10 +59,24 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
 
   if (cjProducts.length === 0) return [];
 
+  // --- Validation d'adresse stricte (les deux modes) ---
   const addr: any = order.shipping_address || {};
-  const endCountryCode = addr.country || 'US';
+  const endCountryCode = addr.country || '';
+  const missing: string[] = [];
+  if (!endCountryCode) missing.push('country');
+  if (!addr.city) missing.push('city');
+  if (!addr.postal_code) missing.push('postal_code');
+  if (!addr.line1) missing.push('line1');
+  if (missing.length > 0) {
+    console.error(`CJ fulfill: adresse incomplete (${missing.join(', ')}) pour ${order.id}`);
+    await supabaseAdmin
+      .from('shop_orders')
+      .update({ cj_pay_status: 'failed' })
+      .eq('id', order.id);
+    return [];
+  }
 
-  // Meilleur transporteur (CJ trie par pertinence → on prend le 1er)
+  // --- Meilleur transporteur ---
   let logisticName: string | undefined;
   try {
     const freight = await cjCalculateFreight(site.cj_email, site.cj_api_key, endCountryCode, cjProducts);
@@ -61,33 +87,88 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
     console.error('CJ freight calc failed:', e);
   }
 
-  // Crée la commande CJ
-  const cjOrder = {
+  const baseOrder = {
     orderNumber: order.id,
-    shippingZip: addr.postal_code || '',
+    shippingZip: addr.postal_code,
     shippingCountryCode: endCountryCode,
     shippingCountry: endCountryCode,
     shippingProvince: addr.state || '',
-    shippingCity: addr.city || '',
-    shippingPhone: '0000000000',
+    shippingCity: addr.city,
+    shippingPhone: addr.phone || '0000000000',
     shippingCustomerName: order.customer_name || 'Client',
-    shippingAddress: [addr.line1, addr.line2].filter(Boolean).join(', ') || '',
+    shippingAddress: [addr.line1, addr.line2].filter(Boolean).join(', '),
     email: order.customer_email || '',
     ...(logisticName ? { logisticName } : {}),
     fromCountryCode: 'CN',
     products: cjProducts,
   };
 
-  const result = await cjCreateOrder(site.cj_email, site.cj_api_key, cjOrder);
-
-  // Stocke la référence CJ sur la commande si présente
-  const cjOrderId = result?.orderId || result?.orderCode || null;
-  if (cjOrderId) {
-    await supabaseAdmin
-      .from('shop_orders')
-      .update({ status: 'processing' })
-      .eq('id', order.id);
+  // ================= MODE MANUEL (cj_auto_pay = false) =================
+  if (!site.cj_auto_pay) {
+    const result = await cjCreateOrder(site.cj_email, site.cj_api_key, baseOrder);
+    const cjOrderId = result?.orderId || result?.orderCode || null;
+    if (cjOrderId) {
+      await supabaseAdmin
+        .from('shop_orders')
+        .update({ cj_order_id: cjOrderId, status: 'processing' })
+        .eq('id', order.id);
+    }
+    return cjProducts.map((p) => p.vid);
   }
 
-  return cjProducts.map((p) => p.vid);
+  // ================= MODE AUTO (cj_auto_pay = true) =================
+  // Verrou idempotent atomique : seul un passage peut prendre la commande.
+  const { data: locked } = await supabaseAdmin
+    .from('shop_orders')
+    .update({ cj_pay_status: 'processing', cj_pay_attempts: (order.cj_pay_attempts || 0) + 1 })
+    .eq('id', order.id)
+    .in('cj_pay_status', ['pending', 'failed'])
+    .lt('cj_pay_attempts', MAX_PAY_ATTEMPTS)
+    .select('id');
+
+  if (!locked || locked.length === 0) {
+    // Déjà payé, déjà en cours, ou tentatives épuisées → on ne fait rien.
+    return [];
+  }
+
+  // Garde-fou solde
+  try {
+    const balance = await cjGetBalance(site.cj_email, site.cj_api_key);
+    if (balance <= 0) {
+      console.error(`CJ fulfill: solde insuffisant (${balance}) pour ${order.id}`);
+      await supabaseAdmin
+        .from('shop_orders')
+        .update({ cj_pay_status: 'failed' })
+        .eq('id', order.id);
+      return [];
+    }
+  } catch (e) {
+    console.error('CJ getBalance failed:', e);
+    // Transitoire : on rouvre pour retry.
+    await supabaseAdmin
+      .from('shop_orders')
+      .update({ cj_pay_status: 'pending' })
+      .eq('id', order.id);
+    return [];
+  }
+
+  // Création + paiement par solde (payType 2)
+  try {
+    const result = await cjCreateOrder(site.cj_email, site.cj_api_key, { ...baseOrder, payType: 2 });
+    const cjOrderId = result?.orderId || result?.orderCode || null;
+    await supabaseAdmin
+      .from('shop_orders')
+      .update({ cj_order_id: cjOrderId, cj_pay_status: 'paid', status: 'processing' })
+      .eq('id', order.id);
+    return cjProducts.map((p) => p.vid);
+  } catch (e: any) {
+    const msg = String(e?.message || e);
+    const permanent = isPermanentError(msg);
+    console.error(`CJ pay failed (${permanent ? 'permanent' : 'transitoire'}) pour ${order.id}:`, msg);
+    await supabaseAdmin
+      .from('shop_orders')
+      .update({ cj_pay_status: permanent ? 'failed' : 'pending' })
+      .eq('id', order.id);
+    return [];
+  }
 }
