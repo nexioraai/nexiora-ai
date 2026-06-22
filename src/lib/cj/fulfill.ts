@@ -1,6 +1,6 @@
 import 'server-only';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { cjCalculateFreight, cjCreateOrder, cjGetBalance } from './client';
+import { cjCalculateFreight, cjCreateOrder, cjGetBalance, cjGetOrderDetail } from './client';
 
 const MAX_PAY_ATTEMPTS = 3;
 
@@ -129,6 +129,23 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
   if (!locked || locked.length === 0) {
     // Déjà payé, déjà en cours, ou tentatives épuisées → on ne fait rien.
     return [];
+  }
+
+  // Garde-fou anti double-commande : une tentative precedente a pu creer
+  // la commande chez CJ avant une coupure reseau. On verifie avant de recreer.
+  const existing = await cjGetOrderDetail(site.cj_email, site.cj_api_key, order.id);
+  if (existing && (existing.orderId || existing.cjOrderId)) {
+    const existingId = existing.orderId || existing.cjOrderId;
+    const alreadyPaid = ['UNSHIPPED', 'SHIPPED', 'DELIVERED'].includes(existing.orderStatus);
+    await supabaseAdmin
+      .from('shop_orders')
+      .update({
+        cj_order_id: existingId,
+        cj_pay_status: alreadyPaid ? 'paid' : 'processing',
+        status: 'processing',
+      })
+      .eq('id', order.id);
+    return cjProducts.map((p) => p.vid);
   }
 
   // Garde-fou solde

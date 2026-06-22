@@ -77,6 +77,28 @@ export async function cjCreateOrder(
   });
 }
 
+/**
+ * Récupère le détail d'une commande CJ par orderId.
+ * Accepte aussi notre orderNumber custom (= id Supabase de la commande).
+ * Renvoie null si aucune commande n'existe (garde-fou anti double-création).
+ */
+export async function cjGetOrderDetail(
+  email: string,
+  apiKey: string,
+  orderId: string
+): Promise<any | null> {
+  try {
+    return await cjFetch(
+      email,
+      apiKey,
+      `/shopping/order/getOrderDetail?orderId=${encodeURIComponent(orderId)}`
+    );
+  } catch {
+    // CJ renvoie une erreur "order not found" → pas de commande existante.
+    return null;
+  }
+}
+
 /** Lit le solde du compte CJ (USD). Garde-fou avant paiement auto. */
 export async function cjGetBalance(
   email: string,
