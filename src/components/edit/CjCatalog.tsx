@@ -132,8 +132,8 @@ export default function CjCatalog({ slug }: { slug: string }) {
               >
                 {isSel ? '✓' : ''}
               </div>
-              {p.bigImage && (
-                <img src={p.bigImage} alt={p.productNameEn} className="w-full h-32 object-cover rounded-xl mb-2" />
+              {p.productImage && (
+                <img src={p.productImage} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} className="w-full h-32 object-cover rounded-xl mb-2" />
               )}
               <p className="text-xs text-white/70 line-clamp-2">{p.productNameEn}</p>
             </div>

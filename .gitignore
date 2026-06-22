@@ -54,3 +54,5 @@ _trash_backups/
 *.bak
 *.bak2
 *.backup_*
+
+*.backup[0-9]

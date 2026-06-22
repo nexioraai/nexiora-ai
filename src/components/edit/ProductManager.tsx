@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
 // Couleur accent admin Nexiora — changer ici se répercute partout dans ce composant.
@@ -37,6 +37,7 @@ export default function ProductManager({ slug }: { slug: string }) {
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const formRef = useRef<HTMLDivElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [msg, setMsg] = useState('');
@@ -105,6 +106,7 @@ export default function ProductManager({ slug }: { slug: string }) {
       published: p.published,
     });
     setMsg('');
+    setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
   }
 
   async function handleSubmit() {
@@ -189,7 +191,7 @@ export default function ProductManager({ slug }: { slug: string }) {
       )}
 
       {/* Formulaire */}
-      <div className="pt-6 border-t border-white/10 space-y-4">
+      <div ref={formRef} className="pt-6 border-t border-white/10 space-y-4">
         <p className="text-sm font-semibold text-white/70">{editingId ? 'Modifier le produit' : 'Nouveau produit'}</p>
 
         <PField label="Nom">

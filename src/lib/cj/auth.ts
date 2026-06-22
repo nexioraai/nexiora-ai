@@ -2,8 +2,8 @@ import 'server-only';
 
 /**
  * Authentification CJ Dropshipping — CÔTÉ SERVEUR UNIQUEMENT.
- * Le token CJ expire (~15 jours). On l'obtient depuis l'email + la clé API
- * du marchand, et on le met en cache en mémoire par marchand jusqu'à expiration.
+ * Le token CJ expire (~180 jours). On l'obtient depuis la clé API du marchand
+ * (format CJUserNum@api@xxxx) et on le met en cache en mémoire par marchand.
  */
 const CJ_BASE = 'https://developers.cjdropshipping.com/api2.0/v1';
 
@@ -19,7 +19,7 @@ export async function getCjToken(email: string, apiKey: string): Promise<string>
   const res = await fetch(`${CJ_BASE}/authentication/getAccessToken`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password: apiKey }),
+    body: JSON.stringify({ apiKey }),
   });
 
   const data = await res.json();
@@ -27,7 +27,7 @@ export async function getCjToken(email: string, apiKey: string): Promise<string>
     throw new Error(`Échec authentification CJ : ${data.message || 'réponse invalide'}`);
   }
 
-  const expiresAt = Date.now() + 14 * 24 * 60 * 60 * 1000;
+  const expiresAt = Date.now() + 180 * 24 * 60 * 60 * 1000;
   _cache.set(email, { token: data.data.accessToken, expiresAt });
   return data.data.accessToken;
 }
