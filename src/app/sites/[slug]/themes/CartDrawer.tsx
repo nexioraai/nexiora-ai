@@ -23,6 +23,44 @@ export default function CartDrawer({
   const { items, isOpen, total, currency, count, setQuantity, removeItem, closeCart } = useCart();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [country, setCountry] = useState('');
+  const [shipping, setShipping] = useState<number | null>(null);
+  const [calcBusy, setCalcBusy] = useState(false);
+
+  // Libelles pays localises (ISO -> nom), tries alpha. Liste alignee sur Stripe.
+  const COUNTRY_CODES = ['US','CA','GB','FR','DE','ES','IT','NL','BE','CH','AT','IE','PT','SE','NO','DK','FI','PL','AU','NZ','JP','KR','SG','HK','AE','SA','BR','MX','ZA','IN'];
+  const dn = typeof Intl !== 'undefined' && (Intl as any).DisplayNames
+    ? new (Intl as any).DisplayNames(['fr'], { type: 'region' })
+    : null;
+  const countries = COUNTRY_CODES
+    .map((code) => ({ code, name: dn ? dn.of(code) : code }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const handleCountryChange = async (code: string) => {
+    setCountry(code);
+    setShipping(null);
+    setError('');
+    if (!code) return;
+    setCalcBusy(true);
+    try {
+      const res = await fetch('/api/shop/shipping/calculate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug,
+          items: items.map((i) => ({ id: i.id, quantity: i.quantity })),
+          countryCode: code,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur');
+      setShipping(Number(data.shipping) || 0);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setCalcBusy(false);
+    }
+  };
 
   const handleCheckout = async () => {
     setBusy(true);
@@ -33,6 +71,7 @@ export default function CartDrawer({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           slug,
+          countryCode: country,
           items: items.map((i) => ({
             id: i.id,
             name: i.name,
@@ -123,15 +162,41 @@ export default function CartDrawer({
         {/* Footer */}
         {items.length > 0 && (
           <div className="border-t border-neutral-100 px-6 py-5 space-y-4">
+            <div>
+              <label className="block text-sm text-neutral-500 mb-1.5">Pays de livraison</label>
+              <select
+                value={country}
+                onChange={(e) => handleCountryChange(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-neutral-200 text-neutral-900 bg-white focus:outline-none focus:border-neutral-400 transition"
+              >
+                <option value="">Sélectionnez votre pays…</option>
+                {countries.map((co) => (
+                  <option key={co.code} value={co.code}>{co.name}</option>
+                ))}
+              </select>
+            </div>
+            {!country && (
+              <p className="text-sm text-neutral-400 text-center">Sélectionnez votre pays pour calculer la livraison.</p>
+            )}
+            {country && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-neutral-500">Livraison</span>
+                <span className="text-neutral-700">
+                  {calcBusy ? '…' : shipping !== null ? `${shipping.toFixed(2)} ${currency}` : '—'}
+                </span>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <span className="text-neutral-500">{labels.total}</span>
-              <span className="text-xl font-semibold text-neutral-900">{total.toFixed(2)} {currency}</span>
+              <span className="text-xl font-semibold text-neutral-900">
+                {(total + (shipping ?? 0)).toFixed(2)} {currency}
+              </span>
             </div>
             <button
               className="w-full py-4 rounded-2xl font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
               style={{ background: primary }}
               onClick={handleCheckout}
-              disabled={busy}
+              disabled={busy || !country || calcBusy}
             >
               {busy ? '…' : labels.checkout}
             </button>
