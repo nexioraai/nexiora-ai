@@ -12,6 +12,7 @@ import PaymentConnect from '@/components/edit/PaymentConnect';
 import CjConnect from '@/components/edit/CjConnect';
 import CjCatalog from '@/components/edit/CjCatalog';
 import OrderManager from '@/components/edit/OrderManager';
+import DashboardAlerts from '@/components/edit/DashboardAlerts';
 import { supabase } from '@/lib/supabase';
 import { computeAiScore } from '@/app/lib/aiScore';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -156,6 +157,8 @@ export default function EditPage() {
             View Site →
           </Link>
         </div>
+
+        <DashboardAlerts slug={slug} />
 
         {/* Bloc Visibilite IA */}
         {(() => {
