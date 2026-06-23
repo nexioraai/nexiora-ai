@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { cjGetOrderDetail } from '@/lib/cj/client';
+import { sendShippingEmail } from '@/lib/email/sendShippingEmail';
 
 export const maxDuration = 60;
 
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest) {
   // Commandes en attente de tracking : commande CJ creee, pas encore expediee
   const { data: orders } = await supabaseAdmin
     .from('shop_orders')
-    .select('id, site_id, cj_order_id')
+    .select('id, site_id, cj_order_id, customer_email, customer_name')
     .not('cj_order_id', 'is', null)
     .is('tracking_number', null)
     .neq('status', 'shipped')
@@ -45,7 +46,7 @@ export async function GET(req: NextRequest) {
   for (const [siteId, siteOrders] of bySite) {
     const { data: site } = await supabaseAdmin
       .from('sites')
-      .select('cj_email, cj_api_key')
+      .select('cj_email, cj_api_key, name')
       .eq('id', siteId)
       .maybeSingle();
     if (!site?.cj_email || !site?.cj_api_key) continue;
@@ -61,6 +62,15 @@ export async function GET(req: NextRequest) {
             .update({ status: 'shipped', tracking_number: trackNumber })
             .eq('id', order.id);
           shipped++;
+          // Notifie le client (au nom de la boutique). N'echoue jamais le cron.
+          if (order.customer_email) {
+            await sendShippingEmail({
+              to: order.customer_email,
+              customerName: order.customer_name || undefined,
+              shopName: site.name || 'Votre boutique',
+              trackingNumber: trackNumber,
+            });
+          }
         }
       } catch (e) {
         console.error(`CJ tracking: echec pour ${order.id}:`, e);
