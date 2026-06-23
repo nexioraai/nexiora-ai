@@ -13,6 +13,7 @@ import CjConnect from '@/components/edit/CjConnect';
 import CjCatalog from '@/components/edit/CjCatalog';
 import OrderManager from '@/components/edit/OrderManager';
 import DashboardAlerts from '@/components/edit/DashboardAlerts';
+import HealthBadge from '@/components/edit/HealthBadge';
 import { supabase } from '@/lib/supabase';
 import { computeAiScore } from '@/app/lib/aiScore';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -147,6 +148,9 @@ export default function EditPage() {
             <h1 className="text-4xl md:text-5xl font-black tracking-tight">
               Edit <span className="text-nexiora">{site.name}</span>
             </h1>
+            <div className="mt-3">
+              <HealthBadge slug={slug} aiScore={computeAiScore(site as any).score} />
+            </div>
           </div>
           <Link
             href={`/sites/${slug}`}

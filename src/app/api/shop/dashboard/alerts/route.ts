@@ -37,6 +37,13 @@ export async function GET(req: Request) {
       .eq('status', 'processing')
       .eq('cj_pay_status', 'pending');
 
+    // Produits depublies pour rupture de stock CJ
+    const { count: outOfStock } = await supabaseAdmin
+      .from('shop_products')
+      .select('id', { count: 'exact', head: true })
+      .eq('site_id', site.id)
+      .eq('cj_stock_status', 'out_of_stock');
+
     // Solde CJ (non bloquant)
     let balance: number | null = null;
     let lowBalance = false;
@@ -51,6 +58,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       ordersToPayCj: ordersToPayCj || 0,
+      outOfStock: outOfStock || 0,
       balance,
       lowBalance,
       threshold: LOW_BALANCE_THRESHOLD,
