@@ -9,10 +9,10 @@ export async function GET(req: Request) {
     if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
     const { data: site } = await supabaseAdmin
       .from('sites')
-      .select('cj_email, cj_auto_pay, cj_margin_percent')
+      .select('cj_email, cj_auto_pay, cj_margin_percent, cj_round_mode')
       .eq('slug', slug)
       .single();
-    return NextResponse.json({ connected: !!site?.cj_email, autoPay: !!site?.cj_auto_pay, marginPercent: site?.cj_margin_percent ?? 100 });
+    return NextResponse.json({ connected: !!site?.cj_email, autoPay: !!site?.cj_auto_pay, marginPercent: site?.cj_margin_percent ?? 100, roundMode: site?.cj_round_mode ?? 'off' });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
@@ -21,7 +21,7 @@ export async function GET(req: Request) {
 /** PATCH /api/shop/cj/connect/status → bascule le paiement auto CJ. Body: { slug, autoPay } */
 export async function PATCH(req: Request) {
   try {
-    const { slug, autoPay, marginPercent } = await req.json();
+    const { slug, autoPay, marginPercent, roundMode } = await req.json();
     if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
 
     const updates: Record<string, any> = {};
@@ -33,6 +33,10 @@ export async function PATCH(req: Request) {
       const m = Number(marginPercent);
       if (!Number.isFinite(m) || m < 0 || m > 1000) return NextResponse.json({ error: 'marginPercent invalide' }, { status: 400 });
       updates.cj_margin_percent = m;
+    }
+    if (roundMode !== undefined) {
+      if (!['off', 'down', 'up'].includes(roundMode)) return NextResponse.json({ error: 'roundMode invalide' }, { status: 400 });
+      updates.cj_round_mode = roundMode;
     }
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: 'Aucune modification' }, { status: 400 });

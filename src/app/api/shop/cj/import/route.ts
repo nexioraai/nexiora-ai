@@ -18,13 +18,24 @@ export async function POST(req: Request) {
 
     const { data: site } = await supabaseAdmin
       .from('sites')
-      .select('id, cj_email, cj_api_key, cj_margin_percent')
+      .select('id, cj_email, cj_api_key, cj_margin_percent, cj_round_mode')
       .eq('slug', slug)
       .eq('owner_email', user.email)
       .single();
     if (!site?.cj_email || !site?.cj_api_key) {
       return NextResponse.json({ error: 'Compte CJ non connecté' }, { status: 400 });
     }
+
+    // Arrondi psychologique en ,99 selon le mode choisi par le marchand.
+    // 'down' -> ,99 inferieur (ex. 18.40 -> 17.99) ; 'up' -> ,99 superieur (ex. 18.40 -> 18.99)
+    const apply99 = (p: number, mode: string): number => {
+      const floorInt = Math.floor(p);
+      const lower = floorInt - 1 + 0.99;        // ex. 17.99
+      const upper = floorInt + 0.99;            // ex. 18.99
+      if (mode === 'up') return upper;
+      if (mode === 'down') return lower < 0 ? upper : lower;
+      return p;                                 // 'off' ou inconnu : pas d'arrondi
+    };
 
     let imported = 0;
     const errors: string[] = [];
@@ -41,7 +52,12 @@ export async function POST(req: Request) {
           site_id: site.id,
           name: first.variantNameEn || first.variantName || 'Produit CJ',
           description: '',
-          price: Math.round((Number(first.variantSellPrice) || 0) * (1 + (Number(site.cj_margin_percent) || 0) / 100) * 100) / 100,
+          price: (() => {
+            const base = Number(first.variantSellPrice) || 0;
+            const marked = base * (1 + (Number(site.cj_margin_percent) || 0) / 100);
+            const final = apply99(marked, site.cj_round_mode || 'off');
+            return Math.round(final * 100) / 100;
+          })(),
           currency: 'USD',
           images: first.variantImage ? [first.variantImage] : [],
           stock: 0,

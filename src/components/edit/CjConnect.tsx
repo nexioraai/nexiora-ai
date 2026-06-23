@@ -17,6 +17,8 @@ export default function CjConnect({ slug }: { slug: string }) {
   const [savingAuto, setSavingAuto] = useState(false);
   const [marginPercent, setMarginPercent] = useState('100');
   const [savingMargin, setSavingMargin] = useState(false);
+  const [roundMode, setRoundMode] = useState<'off' | 'down' | 'up'>('off');
+  const [savingRound, setSavingRound] = useState(false);
   const [cjEmail, setCjEmail] = useState('');
   const [cjApiKey, setCjApiKey] = useState('');
   const [error, setError] = useState('');
@@ -26,7 +28,7 @@ export default function CjConnect({ slug }: { slug: string }) {
       const headers = await authHeaders();
       const res = await fetch(`/api/shop/cj/connect/status?slug=${encodeURIComponent(slug)}`, { headers });
       const data = await res.json();
-      if (res.ok) { setConnected(data.connected); setAutoPay(!!data.autoPay); setMarginPercent(String(data.marginPercent ?? 100)); }
+      if (res.ok) { setConnected(data.connected); setAutoPay(!!data.autoPay); setMarginPercent(String(data.marginPercent ?? 100)); setRoundMode(data.roundMode ?? 'off'); }
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -78,6 +80,28 @@ export default function CjConnect({ slug }: { slug: string }) {
       setError(e.message);
     } finally {
       setSavingMargin(false);
+    }
+  };
+
+  const handleSetRoundMode = async (mode: 'off' | 'down' | 'up') => {
+    const prev = roundMode;
+    setRoundMode(mode);
+    setSavingRound(true);
+    setError('');
+    try {
+      const headers = await authHeaders();
+      const res = await fetch('/api/shop/cj/connect/status', {
+        method: 'PATCH',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, roundMode: mode }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur');
+    } catch (e: any) {
+      setRoundMode(prev); // rollback
+      setError(e.message);
+    } finally {
+      setSavingRound(false);
     }
   };
 
@@ -163,6 +187,34 @@ export default function CjConnect({ slug }: { slug: string }) {
               >
                 {savingMargin ? 'Enregistrement…' : 'Enregistrer'}
               </button>
+            </div>
+            <div className="mt-5">
+              <p className="text-sm font-semibold text-white mb-1">Arrondi psychologique en ,99</p>
+              <p className="text-xs text-white/40 mb-3">
+                Arrondit les prix importés en ,99. « Inférieur » baisse au ,99 du dessous (18,40 → 17,99), « Supérieur » monte au ,99 du dessus (18,40 → 18,99).
+              </p>
+              <div className="flex gap-2">
+                {([
+                  { key: 'off', label: 'Désactivé' },
+                  { key: 'down', label: ',99 inférieur' },
+                  { key: 'up', label: ',99 supérieur' },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => handleSetRoundMode(opt.key)}
+                    disabled={savingRound}
+                    className="px-4 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-40 border"
+                    style={
+                      roundMode === opt.key
+                        ? { background: `${ACCENT}1a`, color: ACCENT, borderColor: `${ACCENT}55` }
+                        : { background: 'rgba(0,0,0,0.3)', color: 'rgba(255,255,255,0.5)', borderColor: 'rgba(255,255,255,0.1)' }
+                    }
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
