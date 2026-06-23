@@ -107,3 +107,13 @@ export async function cjGetBalance(
   const data = await cjFetch(email, apiKey, '/shopping/pay/getBalance');
   return Number(data?.amount ?? data?.balance ?? 0);
 }
+/** Stock total disponible d'une variante CJ (somme tous entrepots). 0 = epuise. */
+export async function cjGetInventory(
+  email: string,
+  apiKey: string,
+  vid: string
+): Promise<number> {
+  const data = await cjFetch(email, apiKey, `/product/stock/queryByVid?vid=${encodeURIComponent(vid)}`);
+  const rows = Array.isArray(data) ? data : [];
+  return rows.reduce((sum: number, r: any) => sum + (Number(r?.totalInventoryNum) || 0), 0);
+}

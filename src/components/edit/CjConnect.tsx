@@ -15,6 +15,8 @@ export default function CjConnect({ slug }: { slug: string }) {
   const [connected, setConnected] = useState(false);
   const [autoPay, setAutoPay] = useState(false);
   const [savingAuto, setSavingAuto] = useState(false);
+  const [stockAutoRepublish, setStockAutoRepublish] = useState(false);
+  const [savingStockRepublish, setSavingStockRepublish] = useState(false);
   const [marginPercent, setMarginPercent] = useState('100');
   const [savingMargin, setSavingMargin] = useState(false);
   const [roundMode, setRoundMode] = useState<'off' | 'down' | 'up'>('off');
@@ -28,7 +30,7 @@ export default function CjConnect({ slug }: { slug: string }) {
       const headers = await authHeaders();
       const res = await fetch(`/api/shop/cj/connect/status?slug=${encodeURIComponent(slug)}`, { headers });
       const data = await res.json();
-      if (res.ok) { setConnected(data.connected); setAutoPay(!!data.autoPay); setMarginPercent(String(data.marginPercent ?? 100)); setRoundMode(data.roundMode ?? 'off'); }
+      if (res.ok) { setConnected(data.connected); setAutoPay(!!data.autoPay); setMarginPercent(String(data.marginPercent ?? 100)); setRoundMode(data.roundMode ?? 'off'); setStockAutoRepublish(!!data.stockAutoRepublish); }
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -127,6 +129,28 @@ export default function CjConnect({ slug }: { slug: string }) {
     }
   };
 
+  const handleToggleStockRepublish = async () => {
+    const next = !stockAutoRepublish;
+    setStockAutoRepublish(next);
+    setSavingStockRepublish(true);
+    setError('');
+    try {
+      const headers = await authHeaders();
+      const res = await fetch('/api/shop/cj/connect/status', {
+        method: 'PATCH',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, stockAutoRepublish: next }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur');
+    } catch (e: any) {
+      setStockAutoRepublish(!next); // rollback
+      setError(e.message);
+    } finally {
+      setSavingStockRepublish(false);
+    }
+  };
+
   return (
     <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm mt-8">
       <h2 className="text-xl font-bold mb-2">Fournisseur (CJ Dropshipping)</h2>
@@ -161,6 +185,28 @@ export default function CjConnect({ slug }: { slug: string }) {
               <span
                 className="inline-block h-4 w-4 rounded-full bg-white transition"
                 style={{ transform: autoPay ? 'translateX(24px)' : 'translateX(4px)' }}
+              />
+            </button>
+          </div>
+          <div className="flex items-start justify-between gap-4 pt-4 border-t border-white/10">
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-white">Republication auto au retour en stock</p>
+              <p className="text-xs text-white/40 mt-1">
+                Un produit epuise chez CJ est toujours depublie automatiquement. Si activé, il est aussi republié automatiquement quand le stock revient. Sinon, il reste depublié et tu le republies toi-même.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleToggleStockRepublish}
+              disabled={savingStockRepublish}
+              role="switch"
+              aria-checked={stockAutoRepublish}
+              className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition disabled:opacity-40"
+              style={{ background: stockAutoRepublish ? ACCENT : 'rgba(255,255,255,0.15)' }}
+            >
+              <span
+                className="inline-block h-4 w-4 rounded-full bg-white transition"
+                style={{ transform: stockAutoRepublish ? 'translateX(24px)' : 'translateX(4px)' }}
               />
             </button>
           </div>

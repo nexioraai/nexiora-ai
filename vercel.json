@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/cj-tracking",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/cj-stock-sync",
+      "schedule": "0 5 * * *"
     }
   ]
 }

@@ -9,10 +9,10 @@ export async function GET(req: Request) {
     if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
     const { data: site } = await supabaseAdmin
       .from('sites')
-      .select('cj_email, cj_auto_pay, cj_margin_percent, cj_round_mode')
+      .select('cj_email, cj_auto_pay, cj_margin_percent, cj_round_mode, cj_stock_auto_republish')
       .eq('slug', slug)
       .single();
-    return NextResponse.json({ connected: !!site?.cj_email, autoPay: !!site?.cj_auto_pay, marginPercent: site?.cj_margin_percent ?? 100, roundMode: site?.cj_round_mode ?? 'off' });
+    return NextResponse.json({ connected: !!site?.cj_email, autoPay: !!site?.cj_auto_pay, marginPercent: site?.cj_margin_percent ?? 100, roundMode: site?.cj_round_mode ?? 'off', stockAutoRepublish: !!site?.cj_stock_auto_republish });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
@@ -21,7 +21,7 @@ export async function GET(req: Request) {
 /** PATCH /api/shop/cj/connect/status → bascule le paiement auto CJ. Body: { slug, autoPay } */
 export async function PATCH(req: Request) {
   try {
-    const { slug, autoPay, marginPercent, roundMode } = await req.json();
+    const { slug, autoPay, marginPercent, roundMode, stockAutoRepublish } = await req.json();
     if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
 
     const updates: Record<string, any> = {};
@@ -37,6 +37,10 @@ export async function PATCH(req: Request) {
     if (roundMode !== undefined) {
       if (!['off', 'down', 'up'].includes(roundMode)) return NextResponse.json({ error: 'roundMode invalide' }, { status: 400 });
       updates.cj_round_mode = roundMode;
+    }
+    if (stockAutoRepublish !== undefined) {
+      if (typeof stockAutoRepublish !== 'boolean') return NextResponse.json({ error: 'stockAutoRepublish invalide' }, { status: 400 });
+      updates.cj_stock_auto_republish = stockAutoRepublish;
     }
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: 'Aucune modification' }, { status: 400 });
