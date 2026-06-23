@@ -7,6 +7,10 @@
     {
       "path": "/api/ai-visibility",
       "schedule": "0 6 * * 1"
+    },
+    {
+      "path": "/api/cron/cj-tracking",
+      "schedule": "0 7 * * *"
     }
   ]
 }
