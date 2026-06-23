@@ -15,6 +15,8 @@ export default function CjConnect({ slug }: { slug: string }) {
   const [connected, setConnected] = useState(false);
   const [autoPay, setAutoPay] = useState(false);
   const [savingAuto, setSavingAuto] = useState(false);
+  const [marginPercent, setMarginPercent] = useState('100');
+  const [savingMargin, setSavingMargin] = useState(false);
   const [cjEmail, setCjEmail] = useState('');
   const [cjApiKey, setCjApiKey] = useState('');
   const [error, setError] = useState('');
@@ -24,7 +26,7 @@ export default function CjConnect({ slug }: { slug: string }) {
       const headers = await authHeaders();
       const res = await fetch(`/api/shop/cj/connect/status?slug=${encodeURIComponent(slug)}`, { headers });
       const data = await res.json();
-      if (res.ok) { setConnected(data.connected); setAutoPay(!!data.autoPay); }
+      if (res.ok) { setConnected(data.connected); setAutoPay(!!data.autoPay); setMarginPercent(String(data.marginPercent ?? 100)); }
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -52,6 +54,30 @@ export default function CjConnect({ slug }: { slug: string }) {
       setError(e.message);
     } finally {
       setBusy(false);
+    }
+  };
+
+  const handleSaveMargin = async () => {
+    const m = Number(marginPercent);
+    if (!Number.isFinite(m) || m < 0 || m > 1000) {
+      setError('Markup invalide (0 à 1000).');
+      return;
+    }
+    setSavingMargin(true);
+    setError('');
+    try {
+      const headers = await authHeaders();
+      const res = await fetch('/api/shop/cj/connect/status', {
+        method: 'PATCH',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, marginPercent: m }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur');
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSavingMargin(false);
     }
   };
 
@@ -113,6 +139,31 @@ export default function CjConnect({ slug }: { slug: string }) {
                 style={{ transform: autoPay ? 'translateX(24px)' : 'translateX(4px)' }}
               />
             </button>
+          </div>
+          <div className="pt-4 border-t border-white/10">
+            <p className="text-sm font-semibold text-white mb-1">Markup automatique (%)</p>
+            <p className="text-xs text-white/40 mb-3">
+              Pourcentage ajouté au prix d'achat CJ à l'import. Par défaut, Nexiora applique 100 % — un produit à 10 $ est vendu 20 $. La plupart des boutiques visent entre 60 et 200 % selon le produit. Ajuste selon la marge souhaitée.
+            </p>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={0}
+                max={1000}
+                value={marginPercent}
+                onChange={(e) => setMarginPercent(e.target.value)}
+                className="w-28 bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#E07040] transition"
+              />
+              <span className="text-sm text-white/40">%</span>
+              <button
+                onClick={handleSaveMargin}
+                disabled={savingMargin}
+                className="ml-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-40"
+                style={{ background: `${ACCENT}1a`, color: ACCENT, border: `1px solid ${ACCENT}33` }}
+              >
+                {savingMargin ? 'Enregistrement…' : 'Enregistrer'}
+              </button>
+            </div>
           </div>
         </div>
       ) : (

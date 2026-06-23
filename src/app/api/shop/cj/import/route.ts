@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
     const { data: site } = await supabaseAdmin
       .from('sites')
-      .select('id, cj_email, cj_api_key')
+      .select('id, cj_email, cj_api_key, cj_margin_percent')
       .eq('slug', slug)
       .eq('owner_email', user.email)
       .single();
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
           site_id: site.id,
           name: first.variantNameEn || first.variantName || 'Produit CJ',
           description: '',
-          price: Number(first.variantSellPrice) || 0,
+          price: Math.round((Number(first.variantSellPrice) || 0) * (1 + (Number(site.cj_margin_percent) || 0) / 100) * 100) / 100,
           currency: 'USD',
           images: first.variantImage ? [first.variantImage] : [],
           stock: 0,
