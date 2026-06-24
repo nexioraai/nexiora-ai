@@ -132,7 +132,7 @@ export default function OnboardingFlow() {
       if (!res.ok) throw new Error(data.error || t('onboarding.error.generationFailed'));
       if (!data.slug) throw new Error(t('onboarding.error.missingSlug'));
 
-      router.push(`/sites/${data.slug}`);
+      router.push(`/edit/${data.slug}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t('onboarding.error.generationFailed');
       setError(msg);
