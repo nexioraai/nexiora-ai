@@ -153,7 +153,7 @@ export default function EditPage() {
             </div>
           </div>
           <Link
-            href={`/sites/${slug}`}
+            href={`/preview/${slug}`}
             target="_blank"
             rel="noopener noreferrer"
             className="self-start sm:self-auto px-5 py-2.5 rounded-xl text-sm font-semibold bg-white/5 border border-white/10 hover:bg-white/10 transition whitespace-nowrap"
@@ -281,13 +281,13 @@ export default function EditPage() {
           )}
         </div>
 
-        <ProductManager slug={slug} />
+        {(site?.mode == null || site?.mode === 2 || site?.mode === 3) && <ProductManager slug={slug} />}
 
-        <PaymentConnect slug={slug} />
-        <CjConnect slug={slug} />
-        <CjCatalog slug={slug} />
+        {(site?.mode == null || site?.mode === 2 || site?.mode === 3) && <PaymentConnect slug={slug} />}
+        {(site?.mode == null || site?.mode === 3) && <CjConnect slug={slug} />}
+        {(site?.mode == null || site?.mode === 3) && <CjCatalog slug={slug} />}
 
-        <OrderManager slug={slug} />
+        {(site?.mode == null || site?.mode === 2 || site?.mode === 3) && <OrderManager slug={slug} />}
       </section>
 
       <Footer />

@@ -166,6 +166,9 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const message = body.message;
+    // Mode explicite transmis par l'entretien onboarding ("mode: 1|2|3" en tête du message). Null si absent (wizard classique).
+    const modeMatch = typeof message === 'string' ? message.match(/^\s*mode:\s*([123])/i) : null;
+    const siteMode: number | null = modeMatch ? parseInt(modeMatch[1], 10) : null;
     const location = body.location || '';
     const language = body.language || 'fr';
 
@@ -255,6 +258,13 @@ IMPORTANT CONTEXT:
 - vision: ONE forward-looking sentence describing the long-term ambition of this business.
 - areaServed: the city or region this business serves (e.g. "Montréal" or "Grand Montréal"). Short.
 - priceRange: estimated price level for this sector, one of "$", "$$", "$$$", or "$$$$".
+
+DESIGN DIRECTION (CRITICAL — every site must look modern, premium and DISTINCT from others):
+- primaryColor: pick a BOLD, DISTINCTIVE color that fits THIS specific business and sector. NEVER default to generic corporate blue (#1E40AF, #2563EB and similar) unless the brand truly demands it. Explore the full spectrum — deep emerald, terracotta, burgundy, warm amber, plum, teal, charcoal with a vivid accent, etc. Each business should feel visually unique.
+- IF the business description explicitly mentions a preferred color, you MUST use that exact color as primaryColor. Otherwise choose the most fitting distinctive palette yourself.
+- Match the color psychology to the sector and mood: luxury = deep/saturated tones, wellness = soft naturals, food = warm appetizing tones, tech = sharp modern accents, creative = unexpected vivid choices.
+- heroTitle and slogan: punchy, modern, specific to this business — never generic filler.
+- Overall tone: premium, contemporary, confident. Avoid bland template-like wording.
 
 Return ONLY valid JSON, no markdown:
 
@@ -380,6 +390,7 @@ Return ONLY valid JSON, no markdown:
       products: productsWithImages,
       social_links: parsed.socialLinks,
       owner_email,
+      mode: siteMode,
       lang: parsed.lang || detectedLang || "fr",
       geo_lat,
       geo_lng,

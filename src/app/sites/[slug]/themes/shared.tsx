@@ -122,6 +122,39 @@ image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : undefined,
 return data as Site
 }
 
+export async function fetchSitePreview(
+slug: string,
+ownerEmail: string
+): Promise<Site | null> {
+const { data, error } = await supabase
+.from('sites')
+.select(PUBLIC_COLS + ',owner_email')
+.eq('slug', slug)
+.eq('owner_email', ownerEmail)
+.maybeSingle()
+if (error || !data) {
+return null
+}
+const { data: shopProducts } = await supabase
+.from('shop_products')
+.select('id,name,description,price,currency,images')
+.eq('site_id', (data as any).id)
+.eq('published', true)
+.order('position', { ascending: true })
+if (shopProducts && shopProducts.length > 0) {
+;(data as any).products = shopProducts.map((p: any) => ({
+id: p.id,
+name: p.name,
+description: p.description ?? '',
+price: p.price != null ? `${Number(p.price).toFixed(2)} ${p.currency}` : '',
+priceNumber: p.price != null ? Number(p.price) : undefined,
+currency: p.currency,
+image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : undefined,
+}))
+}
+return data as unknown as Site
+}
+
 // ---------- Icons ----------
 
 export const SERVICE_ICONS: LucideIcon[] = [
