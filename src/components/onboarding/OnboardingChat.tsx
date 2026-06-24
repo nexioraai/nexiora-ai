@@ -17,11 +17,27 @@ export default function OnboardingChat() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
   const [skippable, setSkippable] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(0);
+  const LOADING_STEPS = [
+    'Analyse de votre activité…',
+    'Conception des modules métier…',
+    'Création des relations entre données…',
+    'Configuration des agents IA…',
+    'Mise en place des automatisations…',
+    'Finalisation de votre système…',
+  ];
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, loading]);
+  useEffect(() => {
+    if (!generating) { setLoadingStep(0); return; }
+    const id = setInterval(() => {
+      setLoadingStep((s) => (s < LOADING_STEPS.length - 1 ? s + 1 : s));
+    }, 8000);
+    return () => clearInterval(id);
+  }, [generating]);
 
   const skip = () => { if (!loading && !generating) sendText('passer'); };
 
@@ -105,7 +121,31 @@ export default function OnboardingChat() {
           <div className="flex justify-start">
             <div className="bg-white/[0.06] border border-white/10 rounded-[22px] rounded-bl-md px-5 py-4">
               {generating ? (
-                <span className="text-sm text-white/70">Création de votre site sur mesure…</span>
+                <div className="py-2">
+                  <div className="text-center mb-6">
+                    <div className="inline-block w-12 h-12 border-4 border-[#E07040]/30 border-t-[#E07040] rounded-full animate-spin mb-4"></div>
+                    <h3 className="text-lg font-bold mb-1 tracking-tight">Création de votre site sur mesure…</h3>
+                    <p className="text-sm text-slate-400">Cela peut prendre un moment, patientez.</p>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    {LOADING_STEPS.map((label, i) => {
+                      const done = i < loadingStep;
+                      const active = i === loadingStep;
+                      return (
+                        <div key={i} className="flex items-center gap-3 transition-all duration-500" style={{ opacity: i <= loadingStep ? 1 : 0.35 }}>
+                          <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-500" style={{ background: done ? '#E07040' : active ? 'rgba(224,112,64,0.2)' : 'rgba(255,255,255,0.06)', border: active ? '2px solid #E07040' : '2px solid transparent' }}>
+                            {done ? (
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M20 6L9 17l-5-5" /></svg>
+                            ) : active ? (
+                              <div className="w-2 h-2 rounded-full bg-[#E07040] animate-pulse" />
+                            ) : null}
+                          </div>
+                          <span className="text-sm transition-colors duration-500" style={{ color: active ? '#fff' : done ? '#cbbfae' : '#6f6456' }}>{label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               ) : (
                 <div className="flex gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-white/50 animate-bounce" style={{ animationDelay: '0ms' }} />
