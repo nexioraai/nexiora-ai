@@ -107,12 +107,37 @@ export default function OnboardingChat() {
   };
 
   return (
-    <section className="max-w-2xl mx-auto px-4 sm:px-6 pb-10 flex flex-col h-[calc(100vh-120px)]">
+    <section className={`max-w-2xl mx-auto px-4 sm:px-6 pb-10 flex flex-col h-[calc(100vh-120px)] ${messages.length === 1 && !loading && !generating ? 'justify-center' : ''}`}>
       <div className="flex items-center gap-2 justify-center mb-6 text-white/60">
         <Sparkles size={18} className="text-[#FF5500]" />
         <span className="text-sm font-medium tracking-wide">Nexiora — Création sur mesure</span>
       </div>
 
+      {messages.length === 1 && !loading && !generating ? (
+        <div className="flex flex-col items-center justify-center text-center px-4 mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3 bg-gradient-to-br from-white to-white/60 bg-clip-text text-transparent">
+            Donnez vie à votre idée
+          </h1>
+          <p className="text-slate-400 text-base sm:text-lg mb-10 max-w-md">
+            Décrivez votre activité en quelques mots. Nexiora conçoit votre site sur mesure.
+          </p>
+          <div className="flex flex-wrap gap-3 justify-center max-w-lg">
+            {[
+              'Un restaurant à Montréal',
+              'Une boutique de vêtements en ligne',
+              'Un site vitrine pour mon cabinet',
+            ].map((sugg) => (
+              <button
+                key={sugg}
+                onClick={() => sendText(sugg)}
+                className="px-5 py-2.5 rounded-full bg-white/[0.04] border border-white/12 text-sm text-slate-200 hover:border-[#FF5500] hover:text-white hover:bg-white/[0.07] transition"
+              >
+                {sugg}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
       <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4 pr-1">
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -168,6 +193,7 @@ export default function OnboardingChat() {
           </div>
         )}
       </div>
+      )}
 
       {error && <p className="text-sm text-red-400 mt-3 text-center">{error}</p>}
 
