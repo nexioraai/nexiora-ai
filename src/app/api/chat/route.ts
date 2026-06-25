@@ -162,6 +162,9 @@ export async function POST(req: Request) {
 
     // Email validé depuis le token — pas depuis le body (sinon manipulable)
     const owner_email = authData.user.email;
+    const owner_id = authData.user.id;
+    const UNLIMITED_EMAILS = ['issayamiyoussouf@gmail.com'];
+    const isUnlimited = UNLIMITED_EMAILS.includes(owner_email);
     // ===============================================================
 
     const body = await req.json();
@@ -173,6 +176,22 @@ export async function POST(req: Request) {
     const language = body.language || 'fr';
 
     if (!message) return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+
+    // ============ PLAFOND DE GENERATION ============
+    const FREE_LIMIT = 3;
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('generation_count')
+      .eq('id', owner_id)
+      .maybeSingle();
+    const usedGenerations = profile?.generation_count ?? 0;
+    if (!isUnlimited && usedGenerations >= FREE_LIMIT) {
+      return NextResponse.json(
+        { error: "Vous avez atteint la limite de la version gratuite (3 sites). Passez à l'abonnement pour en créer davantage.", limitReached: true },
+        { status: 402 }
+      );
+    }
+    // ===============================================
 
     // ============ DÉTECTION LANGUE + VALIDATION ============
     const detectedLang = (language && language !== 'auto' && ['fr','en','ar','es'].includes(language))
@@ -401,6 +420,17 @@ Return ONLY valid JSON, no markdown:
     if (error) {
       console.error('SUPABASE ERROR:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Increment du compteur de generation (monotone, jamais decremente) — sauf comptes illimites
+    if (!isUnlimited) {
+      try {
+        await supabaseAdmin
+          .from('profiles')
+          .upsert({ id: owner_id, generation_count: usedGenerations + 1 }, { onConflict: 'id' });
+      } catch (e) {
+        console.error('generation_count increment failed:', e);
+      }
     }
 
     // Premier point d'historique du score de visibilite IA (non bloquant)
