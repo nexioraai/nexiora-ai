@@ -17,6 +17,7 @@ export default function OnboardingChat() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
   const [skippable, setSkippable] = useState(false);
+  const [modeOptions, setModeOptions] = useState<{ options: number[]; labels: Record<number, string> } | null>(null);
   const [loadingStep, setLoadingStep] = useState(0);
   const LOADING_STEPS = [
     'Analyse de votre activité…',
@@ -43,14 +44,15 @@ export default function OnboardingChat() {
 
   const send = () => sendText(input.trim());
 
-  const sendText = async (text: string) => {
-    if (!text || loading || generating) return;
+  const sendText = async (text: string, chosenMode?: number) => {
+    if ((!text && !chosenMode) || loading || generating) return;
     setError('');
     const newMessages: Msg[] = [...messages, { role: 'user', content: text }];
     setMessages(newMessages);
     setInput('');
     setLoading(true);
     setSkippable(false);
+    setModeOptions(null);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -62,7 +64,7 @@ export default function OnboardingChat() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ history: newMessages }),
+        body: JSON.stringify({ history: newMessages, ...(chosenMode ? { chosenMode } : {}) }),
       });
 
       let data;
@@ -75,7 +77,10 @@ export default function OnboardingChat() {
         router.push(`/edit/${data.slug}`);
         return;
       }
-      if (data.type === 'ask' && data.reply) {
+      if (data.type === 'choose_mode' && Array.isArray(data.options)) {
+        setMessages((m) => [...m, { role: 'assistant', content: data.reply }]);
+        setModeOptions({ options: data.options, labels: data.labels || {} });
+      } else if (data.type === 'ask' && data.reply) {
         setMessages((m) => [...m, { role: 'assistant', content: data.reply }]);
         setSkippable(data.skippable === true);
       } else {
@@ -86,6 +91,12 @@ export default function OnboardingChat() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const pickMode = (mode: number, label: string) => {
+    if (loading || generating) return;
+    setModeOptions(null);
+    sendText(label.charAt(0).toUpperCase() + label.slice(1), mode);
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
@@ -159,6 +170,23 @@ export default function OnboardingChat() {
       </div>
 
       {error && <p className="text-sm text-red-400 mt-3 text-center">{error}</p>}
+
+      {modeOptions && !loading && !generating && (
+        <div className="flex flex-col gap-3 mt-4">
+          {modeOptions.options.map((mode) => (
+            <button
+              key={mode}
+              onClick={() => pickMode(mode, modeOptions.labels[mode] || `Mode ${mode}`)}
+              className="text-left px-5 py-4 rounded-2xl bg-white/[0.04] border border-white/12 hover:border-[#FF5500] hover:bg-white/[0.07] transition group"
+            >
+              <span className="block text-[15px] font-semibold text-white mb-0.5 group-hover:text-[#FF5500] transition">
+                {mode === 1 ? 'Site vitrine' : mode === 2 ? 'Boutique en ligne' : 'Boutique autonome'}
+              </span>
+              <span className="block text-sm text-slate-400">{modeOptions.labels[mode]}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {skippable && !loading && !generating && (
         <div className="flex justify-center mt-3">
