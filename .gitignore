@@ -63,3 +63,8 @@ _trash_backups/
 *.sqlite
 *.sqlite3
 prisma/dev.db
+
+# Fichiers de sauvegarde locaux (jamais commités)
+*.backup
+*.bak
+*.bak[0-9]

@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/lib/translations';
 import {
   Home, LayoutGrid, Settings, Globe, BarChart3,
-  Database, MapPin, LogOut, Menu, X, Zap,
+  Database, MapPin, LogOut, Menu, X, Zap, Megaphone,
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -38,6 +38,7 @@ export default function Sidebar() {
 
   const modules = [
     { label: t('sidebar.aiVisibility'), href: '/visibilite-ia', icon: BarChart3 },
+    { label: t('sidebar.marketing'), href: '/dashboard/marketing', icon: Megaphone },
     { label: t('sidebar.erp'), href: null, icon: Database },
     { label: t('sidebar.upgrade'), href: null, icon: Zap },
   ];
