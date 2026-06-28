@@ -123,9 +123,9 @@ export default function OnboardingChat() {
           </p>
           <div className="flex flex-wrap gap-3 justify-center max-w-lg">
             {[
-              'Un restaurant à Montréal',
-              'Une boutique de vêtements en ligne',
-              'Un site vitrine pour mon cabinet',
+              'Site vitrine',
+              'Boutique en ligne',
+              'Dropshipping',
             ].map((sugg) => (
               <button
                 key={sugg}
