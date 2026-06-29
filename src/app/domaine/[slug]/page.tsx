@@ -65,7 +65,11 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
             <button
               onClick={handleConnect}
               disabled={loading || !domain}
-              className="px-6 py-3 rounded-xl text-sm font-semibold bg-nexiora text-black hover:opacity-90 transition disabled:opacity-40"
+              className={`px-6 py-3 rounded-xl text-sm font-semibold transition ${
+                loading || !domain
+                  ? 'bg-white/10 text-white/40 cursor-not-allowed'
+                  : 'bg-white text-black hover:opacity-90'
+              }`}
             >
               {loading ? 'Connexion…' : 'Connecter'}
             </button>
