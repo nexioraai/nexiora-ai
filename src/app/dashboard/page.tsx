@@ -162,6 +162,12 @@ export default function DashboardPage() {
                       <Pencil className="w-3.5 h-3.5" />
                       {t('dashboard.edit')}
                     </Link>
+                    {site.published && (
+                    <Link href={`/domaine/${site.slug}`}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold border border-white/10 text-white/70 hover:text-white hover:border-white/30 transition-all">
+                      <Globe className="w-3.5 h-3.5" />
+                    </Link>
+                    )}
                     <button onClick={() => handlePublish(site.slug, site.published)}
                       className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold border transition-all ${site.published ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-white/10 text-white/70 hover:text-white hover:border-white/30'}`}>
                       <span className={`w-2 h-2 rounded-full nexiora-pulse-dot ${site.published ? 'bg-emerald-400' : 'bg-[#E07040]'}`} />

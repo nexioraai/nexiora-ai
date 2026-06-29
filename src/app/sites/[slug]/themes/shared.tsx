@@ -122,6 +122,19 @@ image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : undefined,
 return data as Site
 }
 
+export async function fetchSiteByDomain(
+domain: string
+): Promise<string | null> {
+const { data, error } = await supabase
+.from('sites')
+.select('slug')
+.eq('custom_domain', domain)
+.eq('published', true)
+.single()
+if (error || !data) return null
+return (data as any).slug as string
+}
+
 export async function fetchSitePreview(
 slug: string,
 ownerEmail: string
