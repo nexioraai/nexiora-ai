@@ -33,5 +33,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
-  return [...staticRoutes, ...siteRoutes]
+  const { data: posts } = await supabase
+    .from('blog_posts')
+    .select('slug, created_at')
+    .eq('published', true)
+
+  const blogRoutes: MetadataRoute.Sitemap = (posts ?? []).map((p) => ({
+    url: `${SITE_URL}/blog/${p.slug}`,
+    lastModified: p.created_at ? new Date(p.created_at) : new Date(),
+    changeFrequency: 'monthly',
+    priority: 0.6,
+  }))
+
+  return [...staticRoutes, ...siteRoutes, ...blogRoutes]
 }
