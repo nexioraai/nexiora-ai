@@ -17,9 +17,20 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      setValidSession(!!data.session);
-      setChecking(false);
+      if (data.session) {
+        setValidSession(true);
+        setChecking(false);
+      }
     });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' || session) {
+        setValidSession(true);
+        setChecking(false);
+      } else if (event === 'INITIAL_SESSION' && !session) {
+        setChecking(false);
+      }
+    });
+    return () => sub.subscription.unsubscribe();
   }, []);
 
   const handleReset = async () => {
