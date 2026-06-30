@@ -203,7 +203,7 @@ export default function OnboardingFlow() {
                   {t('onboarding.step1.signinLink')}
                 </Link>{' '}
                 {t('onboarding.step1.signinOr')}{' '}
-                <Link href="/signup" className="text-[#E07040] hover:underline">
+                <Link href="/login" className="text-[#E07040] hover:underline">
                   {t('onboarding.step1.signupLink')}
                 </Link>{' '}
                 {t('onboarding.step1.signinSuffix')}

@@ -4,39 +4,83 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
-export default function LoginPage() {
+type Mode = 'signup' | 'login' | 'forgot';
+
+export default function SignupPage() {
   const router = useRouter();
+  const [mode, setMode] = useState<Mode>('login');
+  const [firstName, setFirstName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [forgotSuccess, setForgotSuccess] = useState(false);
 
-  const handleLogin = async () => {
+  const handleSubmit = async () => {
     setLoading(true);
     setError('');
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setError(error.message);
-      setLoading(false);
+    setInfo('');
+
+    if (mode === 'signup') {
+      const { error } = await supabase.auth.signUp({ email, password, options: { data: { first_name: firstName.trim() } } });
+      if (error) {
+        const msg = error.message.toLowerCase();
+        if (msg.includes('already') || msg.includes('registered') || msg.includes('exists')) {
+          setMode('login');
+          setPassword('');
+          setInfo('Cet email a déjà un compte. Connectez-vous avec votre mot de passe.');
+        } else {
+          setError(error.message);
+        }
+        setLoading(false);
+      } else {
+        setSuccess(true);
+        setLoading(false);
+      }
+    } else if (mode === 'login') {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+      } else {
+        router.push('/dashboard');
+      }
     } else {
-      router.push('/');
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://nexiora.ca/reset-password',
+      });
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+      } else {
+        setForgotSuccess(true);
+        setLoading(false);
+      }
     }
   };
 
-  const onKey = (e: React.KeyboardEvent) => { if (e.key === 'Enter') handleLogin(); };
-
-  const inputStyle: React.CSSProperties = {
-    padding: '0.9rem 1rem',
-    borderRadius: '12px',
-    border: '1px solid rgba(217, 122, 79, 0.2)',
-    background: 'rgba(10, 7, 5, 0.6)',
-    fontSize: '1rem',
-    outline: 'none',
-    color: '#f5ede1',
-    fontFamily: 'inherit',
-    transition: 'border-color 0.2s',
+  const switchTo = (newMode: Mode) => {
+    setMode(newMode);
+    setError('');
+    setInfo('');
+    setPassword('');
+    setForgotSuccess(false);
   };
+
+  const isSignup = mode === 'signup';
+  const isLogin = mode === 'login';
+  const isForgot = mode === 'forgot';
+
+  const titleText = isSignup ? 'Créez votre compte'
+    : isLogin ? 'Connectez-vous à votre compte'
+    : 'Réinitialiser le mot de passe';
+
+  const submitText = loading
+    ? (isSignup ? 'Création du compte...' : isLogin ? 'Connexion...' : 'Envoi...')
+    : (isSignup ? 'Créer mon compte' : isLogin ? 'Se connecter' : 'Envoyer le lien');
 
   return (
     <div style={{
@@ -45,130 +89,332 @@ export default function LoginPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
+      padding: '1.5rem',
       fontFamily: 'var(--font-geist-sans), sans-serif',
-      padding: '2rem',
-      color: '#f5ede1',
     }}>
       <div style={{
         background: 'rgba(26, 22, 18, 0.85)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        padding: '3rem 2.5rem',
-        borderRadius: '20px',
         border: '1px solid rgba(217, 122, 79, 0.15)',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+        padding: 'clamp(2rem, 5vw, 3rem)',
+        borderRadius: '20px',
         width: '100%',
         maxWidth: '420px',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
       }}>
-        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <h1 style={{
-            fontSize: '2.5rem',
-            fontWeight: 900,
-            margin: 0,
-            letterSpacing: '-0.03em',
-            background: 'linear-gradient(135deg, #f5ede1 0%, #d97a4f 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}>Nexiora</h1>
-          <p style={{ color: '#a89684', fontSize: '0.95rem', margin: '0.75rem 0 0' }}>
-            Connectez-vous à votre compte
-          </p>
-        </div>
+        <h1 style={{
+          fontSize: 'clamp(2rem, 5vw, 2.5rem)',
+          fontWeight: 800,
+          textAlign: 'center',
+          color: '#f5ede1',
+          letterSpacing: '-0.02em',
+          margin: '0 0 0.5rem 0',
+        }}>Nexiora</h1>
+        <p style={{
+          color: '#a89684',
+          textAlign: 'center',
+          fontSize: '0.95rem',
+          margin: '0 0 2rem 0',
+        }}>{titleText}</p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onKeyDown={onKey}
-            placeholder="Email"
-            type="email"
-            autoComplete="email"
-            style={inputStyle}
-            onFocus={(e) => (e.currentTarget.style.borderColor = '#d97a4f')}
-            onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(217, 122, 79, 0.2)')}
-          />
-          <div style={{ position: 'relative' }}>
-            <input
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={onKey}
-              placeholder="Mot de passe"
-              type={showPassword ? 'text' : 'password'}
-              autoComplete="current-password"
-              style={{ ...inputStyle, width: '100%', paddingRight: '3.5rem', boxSizing: 'border-box' }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = '#d97a4f')}
-              onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(217, 122, 79, 0.2)')}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              style={{
-                position: 'absolute',
-                right: '0.75rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                color: '#a89684',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-                fontFamily: 'inherit',
-                padding: '0.25rem',
-              }}
-              aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-            >
-              {showPassword ? 'Masquer' : 'Afficher'}
-            </button>
-          </div>
-
-          {error && (
-            <p style={{
-              color: '#ef6a4a',
-              fontSize: '0.875rem',
-              background: 'rgba(239, 106, 74, 0.08)',
-              border: '1px solid rgba(239, 106, 74, 0.2)',
-              padding: '0.75rem',
-              borderRadius: '8px',
-              margin: 0,
-            }}>{error}</p>
-          )}
-
-          <button
-            onClick={handleLogin}
-            disabled={loading || !email || !password}
-            style={{
-              background: loading || !email || !password
-                ? 'rgba(217, 122, 79, 0.25)'
-                : 'linear-gradient(135deg, #d97a4f 0%, #c0612d 100%)',
-              color: '#fff',
-              border: 'none',
-              padding: '1rem',
-              borderRadius: '12px',
-              fontSize: '1rem',
+        {success ? (
+          <div style={{
+            background: 'rgba(217, 122, 79, 0.08)',
+            border: '1px solid rgba(217, 122, 79, 0.25)',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            textAlign: 'center',
+          }}>
+            <p style={{ color: '#f5ede1', fontWeight: 600, fontSize: '0.95rem', margin: '0 0 1rem 0' }}>
+              ✉️ Vérifiez vos emails pour confirmer votre compte !
+            </p>
+            <button type="button" onClick={() => { setSuccess(false); switchTo('login'); }} style={{
+              color: '#d97a4f',
               fontWeight: 600,
-              cursor: loading || !email || !password ? 'not-allowed' : 'pointer',
-              marginTop: '0.5rem',
-              transition: 'transform 0.1s, box-shadow 0.2s',
-              boxShadow: loading || !email || !password ? 'none' : '0 4px 20px rgba(217, 122, 79, 0.35)',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
               fontFamily: 'inherit',
-            }}
-          >
-            {loading ? 'Connexion...' : 'Se connecter'}
-          </button>
-        </div>
+              fontSize: '0.95rem',
+            }}>Aller à la connexion →</button>
+          </div>
+        ) : forgotSuccess ? (
+          <div style={{
+            background: 'rgba(217, 122, 79, 0.08)',
+            border: '1px solid rgba(217, 122, 79, 0.25)',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            textAlign: 'center',
+          }}>
+            <p style={{ color: '#f5ede1', fontWeight: 600, fontSize: '0.95rem', margin: '0 0 0.5rem 0' }}>
+              ✉️ Email envoyé !
+            </p>
+            <p style={{ color: '#a89684', fontSize: '0.875rem', margin: '0 0 1rem 0', lineHeight: 1.5 }}>
+              Cliquez sur le lien dans votre boîte mail pour réinitialiser votre mot de passe.
+            </p>
+            <button type="button" onClick={() => switchTo('login')} style={{
+              color: '#d97a4f',
+              fontWeight: 600,
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              fontFamily: 'inherit',
+              fontSize: '0.95rem',
+            }}>← Retour à la connexion</button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {info && (
+              <p style={{
+                color: '#d97a4f',
+                fontSize: '0.875rem',
+                margin: 0,
+                padding: '0.75rem 0.85rem',
+                background: 'rgba(217, 122, 79, 0.1)',
+                borderRadius: '8px',
+                border: '1px solid rgba(217, 122, 79, 0.25)',
+                lineHeight: 1.5,
+              }}>{info}</p>
+            )}
 
-        <p style={{ textAlign: 'center', marginTop: '2rem', color: '#a89684', fontSize: '0.9rem' }}>
-          Pas encore de compte ?{' '}
-          <Link href="/signup" style={{ color: '#d97a4f', fontWeight: 600, textDecoration: 'none' }}>
-            Créer un compte
-          </Link>
-        </p>
+            {isSignup && (
+              <input
+                value={firstName}
+                onChange={e => setFirstName(e.target.value)}
+                placeholder="Prénom"
+                type="text"
+                autoComplete="given-name"
+                style={{
+                  padding: '0.9rem 1rem',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(217, 122, 79, 0.15)',
+                  background: 'rgba(10, 7, 5, 0.6)',
+                  color: '#f5ede1',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                  transition: 'border-color 0.2s, box-shadow 0.2s',
+                  width: '100%',
+                  boxSizing: 'border-box',
+                }}
+                onFocus={e => {
+                  e.currentTarget.style.borderColor = '#d97a4f';
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(217, 122, 79, 0.15)';
+                }}
+                onBlur={e => {
+                  e.currentTarget.style.borderColor = 'rgba(217, 122, 79, 0.15)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              />
+            )}
+            <input
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="Email"
+              type="email"
+              autoComplete="email"
+              style={{
+                padding: '0.9rem 1rem',
+                borderRadius: '10px',
+                border: '1px solid rgba(217, 122, 79, 0.15)',
+                background: 'rgba(10, 7, 5, 0.6)',
+                color: '#f5ede1',
+                fontSize: '1rem',
+                outline: 'none',
+                fontFamily: 'inherit',
+                transition: 'border-color 0.2s, box-shadow 0.2s',
+                width: '100%',
+                boxSizing: 'border-box',
+              }}
+              onFocus={e => {
+                e.currentTarget.style.borderColor = '#d97a4f';
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(217, 122, 79, 0.15)';
+              }}
+              onBlur={e => {
+                e.currentTarget.style.borderColor = 'rgba(217, 122, 79, 0.15)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            />
 
-        <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.8rem' }}>
-          <Link href="/" style={{ color: '#5a4f42', textDecoration: 'none' }}>
-            ← Retour à l&apos;accueil
-          </Link>
+            {!isForgot && (
+              <div style={{ position: 'relative', width: '100%' }}>
+                <input
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder={isSignup ? 'Mot de passe (min. 6 caractères)' : 'Mot de passe'}
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete={isSignup ? 'new-password' : 'current-password'}
+                  style={{
+                    padding: '0.9rem 3rem 0.9rem 1rem',
+                    borderRadius: '10px',
+                    border: '1px solid rgba(217, 122, 79, 0.15)',
+                    background: 'rgba(10, 7, 5, 0.6)',
+                    color: '#f5ede1',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                    transition: 'border-color 0.2s, box-shadow 0.2s',
+                    width: '100%',
+                    boxSizing: 'border-box',
+                  }}
+                  onFocus={e => {
+                    e.currentTarget.style.borderColor = '#d97a4f';
+                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(217, 122, 79, 0.15)';
+                  }}
+                  onBlur={e => {
+                    e.currentTarget.style.borderColor = 'rgba(217, 122, 79, 0.15)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  style={{
+                    position: 'absolute',
+                    right: '0.5rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '0.5rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#a89684',
+                    transition: 'color 0.2s',
+                    borderRadius: '6px',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color = '#d97a4f'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = '#a89684'; }}
+                >
+                  {showPassword ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {isLogin && (
+              <button
+                type="button"
+                onClick={() => switchTo('forgot')}
+                style={{
+                  alignSelf: 'flex-end',
+                  color: '#a89684',
+                  fontSize: '0.85rem',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  fontFamily: 'inherit',
+                  marginTop: '-0.25rem',
+                  textDecoration: 'underline',
+                  textDecorationColor: 'rgba(168, 150, 132, 0.3)',
+                  textUnderlineOffset: '3px',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#d97a4f'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#a89684'; }}
+              >Mot de passe oublié ?</button>
+            )}
+
+            {error && (
+              <p style={{
+                color: '#ef6a4a',
+                fontSize: '0.875rem',
+                margin: 0,
+                padding: '0.6rem 0.85rem',
+                background: 'rgba(239, 106, 74, 0.08)',
+                borderRadius: '8px',
+                border: '1px solid rgba(239, 106, 74, 0.2)',
+              }}>{error}</p>
+            )}
+
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              style={{
+                background: loading ? 'rgba(217, 122, 79, 0.5)' : 'linear-gradient(135deg, #d97a4f 0%, #c0612d 100%)',
+                color: '#f5ede1',
+                border: 'none',
+                padding: '0.95rem',
+                borderRadius: '10px',
+                fontSize: '1rem',
+                fontWeight: 600,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                fontFamily: 'inherit',
+                marginTop: '0.5rem',
+                transition: 'transform 0.15s, box-shadow 0.2s',
+              }}
+              onMouseEnter={e => {
+                if (!loading) {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(217, 122, 79, 0.3)';
+                }
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >{submitText}</button>
+          </div>
+        )}
+
+        {!success && !forgotSuccess && (
+          <p style={{
+            textAlign: 'center',
+            marginTop: '1.75rem',
+            marginBottom: '0.5rem',
+            color: '#a89684',
+            fontSize: '0.9rem',
+          }}>
+            {isForgot ? (
+              <button type="button" onClick={() => switchTo('login')} style={{
+                color: '#d97a4f',
+                fontWeight: 600,
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                fontFamily: 'inherit',
+                fontSize: '0.9rem',
+              }}>← Retour à la connexion</button>
+            ) : (
+              <>
+                {isSignup ? 'Déjà un compte ? ' : 'Pas encore de compte ? '}
+                <button type="button" onClick={() => switchTo(isSignup ? 'login' : 'signup')} style={{
+                  color: '#d97a4f',
+                  fontWeight: 600,
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  fontFamily: 'inherit',
+                  fontSize: '0.9rem',
+                }}>{isSignup ? 'Se connecter' : 'Créer un compte'}</button>
+              </>
+            )}
+          </p>
+        )}
+
+        <p style={{ textAlign: 'center', marginTop: '0.75rem', marginBottom: 0 }}>
+          <Link href="/" style={{
+            color: '#5a4f42',
+            fontSize: '0.85rem',
+            textDecoration: 'none',
+          }}>← Retour à l'accueil</Link>
         </p>
       </div>
     </div>

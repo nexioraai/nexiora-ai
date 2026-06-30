@@ -17,7 +17,6 @@ export default function robots(): MetadataRoute.Robots {
           '/erp-dashboard/',
           '/edit/',
           '/login/',
-          '/signup/',
           '/reset-password/',
         ],
       },

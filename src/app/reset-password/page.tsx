@@ -130,7 +130,7 @@ export default function ResetPasswordPage() {
             <p style={{ color: '#a89684', fontSize: '0.875rem', margin: '0 0 1rem 0', lineHeight: 1.5 }}>
               Ce lien de réinitialisation n'est plus valide. Demandez-en un nouveau depuis la page de connexion.
             </p>
-            <Link href="/signup" style={{
+            <Link href="/login" style={{
               color: '#d97a4f',
               fontWeight: 600,
               textDecoration: 'none',

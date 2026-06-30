@@ -44,7 +44,7 @@ Oui. Chaque produit généré inclut automatiquement les optimisations GEO (donn
 
 ## Liens
 - [Accueil](${SITE_URL})
-- [Créer un compte](${SITE_URL}/signup)
+- [Créer un compte](${SITE_URL}/login)
 - [Connexion](${SITE_URL}/login)
 
 ---
