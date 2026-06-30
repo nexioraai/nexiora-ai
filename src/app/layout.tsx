@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Nexiora — Créez votre site web IA en 60 secondes",
-  description: "Générateur de site web IA pour entrepreneurs. Décrivez votre activité, obtenez un site professionnel complet en moins d'une minute.",
+  description: "Generate your dropshipping, store, or showcase website with AI in 60 seconds. Describe your business, get a complete professional site instantly.",
 };
 
 export default function RootLayout({
