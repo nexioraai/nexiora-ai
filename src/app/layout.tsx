@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nexiora — Créez votre site web IA en 60 secondes",
+  title: "Nexiora — Create Your Dropshipping, Store, or Website with AI in 60 Seconds",
   description: "Generate your dropshipping, store, or showcase website with AI in 60 seconds. Describe your business, get a complete professional site instantly.",
 };
 
