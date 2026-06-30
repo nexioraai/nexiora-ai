@@ -46,7 +46,23 @@ export default function SignupPage() {
         setError(error.message);
         setLoading(false);
       } else {
-        router.push('/dashboard');
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('welcomed')
+            .eq('id', user.id)
+            .single();
+          if (profile && !profile.welcomed) {
+            fetch('/api/welcome', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: user.email }),
+            }).catch(() => {});
+            await supabase.from('profiles').update({ welcomed: true }).eq('id', user.id);
+          }
+        }
+        router.push('/');
       }
     } else {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
