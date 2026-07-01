@@ -109,7 +109,7 @@ function getSectorPrompt(sector: string): string {
 
 CRITICAL SECTOR - RESTAURANT/CAFE/FOOD:
 - MUST generate "products" array with 6-10 realistic menu items
-- Each item MUST have: {"name": "dish name", "description": "1-sentence description", "price": "amount with currency"}
+- Each item MUST have: {"name": "dish name", "description": "1-sentence description", "price": "amount with currency", "imageQuery": "precise English photo search: concrete subject + mood/lighting, e.g. 'grilled salmon plated dark moody'. Never the business name."}
 - Mix: starters, mains, desserts, drinks
 - Set "type" to specific cuisine (e.g. "Restaurant marocain")
 - Include "Menu" in pages array`;
@@ -119,7 +119,7 @@ CRITICAL SECTOR - RESTAURANT/CAFE/FOOD:
 
 CRITICAL SECTOR - SHOP/BOUTIQUE:
 - MUST generate "products" array with 6-10 realistic products
-- Each MUST have: {"name", "description", "price" with currency}
+- Each MUST have: {"name", "description", "price" with currency, "imageQuery": "precise English photo search: concrete product + mood/lighting, e.g. 'car brake disc dark studio'. Never the business name."}
 - Set "type" to specific store category
 - Include "Shop" in pages array`;
   }
@@ -283,7 +283,20 @@ DESIGN DIRECTION (CRITICAL — every site must look modern, premium and DISTINCT
 - IF the business description explicitly mentions a preferred color, you MUST use that exact color as primaryColor. Otherwise choose the most fitting distinctive palette yourself.
 - Match the color psychology to the sector and mood: luxury = deep/saturated tones, wellness = soft naturals, food = warm appetizing tones, tech = sharp modern accents, creative = unexpected vivid choices.
 - heroTitle and slogan: punchy, modern, specific to this business — never generic filler.
+- imageQuery: a precise English search query for stock photos of THIS business. Format: concrete subject + framing + mood/lighting. Examples: "car brake disc dark studio lighting", "moroccan tagine plated moody", "modern law office interior minimal". NEVER use the business name. Be specific to the sector, never generic like "business" or "shop".
 - Overall tone: premium, contemporary, confident. Avoid bland template-like wording.
+
+BUSINESS MODE CLASSIFICATION (CRITICAL — you MUST return the correct integer mode):
+- mode = 1 (SHOWCASE / VITRINE): restaurants, cafés, bars, food trucks, bakeries, hair salons, barbers, spas, gyms, clinics, dentists, doctors, lawyers, accountants, real estate agents, plumbers, electricians, mechanics, artisans, photographers, event planners, coaches, consultants, schools, any local service, any perishable food business, any made-to-order craft. NEVER anything else.
+- mode = 2 (LOCAL BOUTIQUE with own inventory): physical boutique selling THEIR OWN stock — local clothing store, bookstore, jewelry maker, florist, artisan shop, brand with warehouse. The owner physically holds inventory.
+- mode = 3 (DROPSHIPPING via CJ): ONLY for reselling importable manufactured goods from Asia (gadgets, accessories, phone cases, home decor, fitness gear, beauty tools, small electronics). NEVER for perishables, food, services, made-to-order, or anything requiring local expertise.
+
+STRICT RULES:
+- Restaurant / food / café / bakery → ALWAYS mode 1. NEVER 2 or 3.
+- Any service (salon, clinic, mechanic, lawyer, etc.) → ALWAYS mode 1. NEVER 2 or 3.
+- If the user explicitly says "boutique" with local stock → mode 2.
+- If the user explicitly says "dropshipping" or "resell imported products" → mode 3.
+- When in doubt → mode 1 (safer default).
 
 Return ONLY valid JSON, no markdown:
 
@@ -295,6 +308,7 @@ Return ONLY valid JSON, no markdown:
   "primaryColor": "#hexcolor",
   "heroTitle": "",
   "heroSubtitle": "",
+  "imageQuery": "",
   "about": "",
   "services": [
     {"title": "", "description": ""},
@@ -318,6 +332,7 @@ Return ONLY valid JSON, no markdown:
   "vision": "",
   "areaServed": "",
   "priceRange": "",
+  "mode": 1,
   "testimonials": [
     {"name": "", "role": "", "content": "", "rating": 5},
     {"name": "", "role": "", "content": "", "rating": 5},
@@ -369,14 +384,14 @@ Return ONLY valid JSON, no markdown:
     }
 
     // Vraies images Pexels colorées selon la marque
-    const pexelsQuery = `${parsed.type || 'business'} ${parsed.name || ''}`.trim();
+    const pexelsQuery = (parsed.imageQuery || `${parsed.type || 'business'} ${parsed.name || ''}`).trim();
     const gallery = await fetchPexelsImages(pexelsQuery, parsed.primaryColor);
     // Image Pexels par produit (recherche par nom + type), en parallèle
     const rawProducts = Array.isArray(parsed.products) ? parsed.products : [];
     const productsWithImages = await Promise.all(
       rawProducts.map(async (p: any) => {
         if (p.image) return p;
-        const q = `${p.name || ''} ${parsed.type || ''}`.trim();
+        const q = (p.imageQuery || `${p.name || ''} ${parsed.type || ''}`).trim();
         const imgs = await fetchPexelsImages(q, parsed.primaryColor);
         return { ...p, image: imgs[0] || '' };
       })
@@ -409,7 +424,7 @@ Return ONLY valid JSON, no markdown:
       products: productsWithImages,
       social_links: parsed.socialLinks,
       owner_email,
-      mode: siteMode,
+      mode: siteMode ?? (parsed.mode === 2 || parsed.mode === 3 ? parsed.mode : 1),
       lang: parsed.lang || detectedLang || "fr",
       geo_lat,
       geo_lng,
