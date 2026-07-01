@@ -52,9 +52,6 @@ export default function MonochromeTheme({ site }: { site: Site }) {
             {products.length > 0 && <a href="#shop" className="hover:opacity-60 transition-opacity">{t.nav.shop}</a>}
             <a href="#gallery" className="hover:opacity-60 transition-opacity">{t.nav.gallery}</a>
             <a href="#contact" className="hover:opacity-60 transition-opacity">{t.nav.contact}</a>
-            <a href={ctaHref} className="inline-flex items-center gap-2 px-5 py-2.5 bg-black text-white text-sm font-medium hover:bg-white hover:text-black border border-black transition-colors">
-              {cta} <ArrowRight className="w-4 h-4" />
-            </a>
           </nav>
         </div>
       </header>

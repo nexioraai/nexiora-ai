@@ -76,14 +76,6 @@ export default function BoldTheme({ site }: { site: Site }) {
             <a href="#gallery" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.bold.navWork}</a>
             <a href="#testimonials" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.nav.reviews}</a>
             <a href="#contact" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.nav.contact}</a>
-            <a
-              href={ctaHref}
-              className="group relative inline-flex items-center gap-2 px-6 py-3 bg-black text-white text-sm font-medium uppercase tracking-wider transition-all"
-            >
-              <span className="absolute inset-0 translate-x-0 translate-y-0 group-hover:-translate-x-1 group-hover:-translate-y-1 transition-transform" style={{ backgroundColor: primary }} />
-              <span className="relative">{cta}</span>
-              <ArrowUpRight className="w-4 h-4 relative" />
-            </a>
           </nav>
         </div>
       </header>

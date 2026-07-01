@@ -115,14 +115,6 @@ export default function EditorialTheme({ site }: { site: Site }) {
             <a href="#gallery" className="hover:text-black transition-colors">{t.nav.gallery}</a>
             <a href="#testimonials" className="hover:text-black transition-colors">{t.nav.reviews}</a>
             <a href="#contact" className="hover:text-black transition-colors">{t.nav.contact}</a>
-            <a
-              href={ctaHref}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-white text-sm font-medium shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
-              style={{ backgroundColor: primary }}
-            >
-              {cta}
-              <ArrowRight className="w-4 h-4" />
-            </a>
           </nav>
         </div>
       </header>
