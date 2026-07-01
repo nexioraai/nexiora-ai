@@ -10,21 +10,21 @@ interface ThemeSelectorProps {
 export default function ThemeSelector({ currentTheme, onThemeChange }: ThemeSelectorProps) {
   const themes = [
     {
-      id: 'EditorialTheme',
+      id: 'editorial',
       name: 'Editorial',
       description: 'Élégant & minimaliste',
       preview: 'Serif typographie, design épuré',
       colors: ['#111111', '#ffffff']
     },
     {
-      id: 'BoldTheme',
+      id: 'bold',
       name: 'Bold',
       description: 'Audacieux & impactant',
       preview: 'Typographie massive, contraste fort',
       colors: ['#ffffff', '#FF3B1F']
     },
     {
-      id: 'MonochromeTheme',
+      id: 'monochrome',
       name: 'Monochrome',
       description: 'Épuré & moderne',
       preview: 'Noir & blanc, minimaliste',

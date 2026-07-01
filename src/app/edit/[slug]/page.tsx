@@ -232,7 +232,7 @@ export default function EditPage() {
         {/* Form card */}
         <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm space-y-6">
 
-          <ThemeSelector currentTheme={site.theme || "EditorialTheme"} onThemeChange={(t) => updateField("theme", t)} />
+          <ThemeSelector currentTheme={site.theme || "editorial"} onThemeChange={(t) => updateField("theme", t)} />
 
           <FieldSection label="Hero Image">
             {site.hero_image && (
