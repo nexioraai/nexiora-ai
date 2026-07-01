@@ -20,6 +20,7 @@ import {
 } from './shared'
 import { getDict } from './i18n'
 import Reveal from './Reveal'
+import TiltCard from './TiltCard'
 import AddToCartButton from './AddToCartButton'
 import { getCartLabels } from './cartLabels'
 
@@ -63,6 +64,7 @@ function PremiumButton({
 
 // ---------- Theme ----------
 export default function EditorialTheme({ site }: { site: Site }) {
+  const hidden = (name: string) => (site.hidden_sections || []).includes(name)
   const primary = site.primary_color || '#111111'
   const t = getDict(site.lang)
   const cartT = getCartLabels(site.lang)
@@ -106,15 +108,15 @@ export default function EditorialTheme({ site }: { site: Site }) {
             {site.name}
           </Link>
           <nav className="hidden md:flex items-center gap-10 text-sm font-medium text-neutral-700">
-            <a href="#home" className="hover:text-black transition-colors">{t.nav.home}</a>
-            <a href="#about" className="hover:text-black transition-colors">{t.nav.about}</a>
-            <a href="#services" className="hover:text-black transition-colors">{t.nav.services}</a>
-            {products.length > 0 && (
+            {!hidden('Home') && <a href="#home" className="hover:text-black transition-colors">{t.nav.home}</a>}
+            {!hidden('About') && <a href="#about" className="hover:text-black transition-colors">{t.nav.about}</a>}
+            {!hidden('Services') && <a href="#services" className="hover:text-black transition-colors">{t.nav.services}</a>}
+            {products.length > 0 && !hidden('Shop') && (
               <a href="#shop" className="hover:text-black transition-colors">{t.nav.shop}</a>
             )}
-            <a href="#gallery" className="hover:text-black transition-colors">{t.nav.gallery}</a>
-            <a href="#testimonials" className="hover:text-black transition-colors">{t.nav.reviews}</a>
-            <a href="#contact" className="hover:text-black transition-colors">{t.nav.contact}</a>
+            {!hidden('Gallery') && <a href="#gallery" className="hover:text-black transition-colors">{t.nav.gallery}</a>}
+            {!hidden('Reviews') && <a href="#testimonials" className="hover:text-black transition-colors">{t.nav.reviews}</a>}
+            {!hidden('Contact') && <a href="#contact" className="hover:text-black transition-colors">{t.nav.contact}</a>}
           </nav>
         </div>
       </header>
@@ -124,6 +126,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
 
       {/* =================== HERO =================== */}
       <main>
+      {!hidden('Home') && (
       <section id="home" className="relative min-h-[92vh] flex items-center pt-20 overflow-hidden">
         {site.hero_image ? (
           <>
@@ -180,9 +183,10 @@ export default function EditorialTheme({ site }: { site: Site }) {
           {t.hero.scroll}
         </div>
       </section>
+      )}
 
       {/* =================== ABOUT =================== */}
-      {site.about && (
+      {site.about && !hidden('About') && (
         <Reveal>
         <section id="about" className="py-28 md:py-36">
           <div className="max-w-5xl mx-auto px-6 md:px-10">
@@ -262,7 +266,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
       )}
 
       {/* =================== SERVICES =================== */}
-      {services.length > 0 && (
+      {services.length > 0 && !hidden('Services') && (
         <section id="services" className="reveal py-28 md:py-36 bg-neutral-50">
           <div className="max-w-7xl mx-auto px-6 md:px-10">
             <div className="text-center max-w-2xl mx-auto mb-20">
@@ -285,12 +289,12 @@ export default function EditorialTheme({ site }: { site: Site }) {
                 const Icon = s.Icon
                 const featured = i === 0 && services.length >= 3
                 return (
-                  <div
+                  <TiltCard
                     key={i}
                     className={`group relative p-8 md:p-10 rounded-3xl transition-all duration-500 ${
                       featured
                         ? 'bg-neutral-900 text-white shadow-2xl lg:row-span-2'
-                        : 'bg-white border border-neutral-200/70 hover:border-transparent hover:shadow-xl hover:-translate-y-1'
+                        : 'bg-white border border-neutral-200/70 hover:border-transparent hover:shadow-xl'
                     }`}
                   >
                     <div
@@ -327,7 +331,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
                         <ArrowRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
                       </a>
                     )}
-                  </div>
+                  </TiltCard>
                 )
               })}
             </div>
@@ -336,7 +340,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
       )}
 
       {/* =================== SHOP =================== */}
-      {products.length > 0 && (
+      {products.length > 0 && !hidden('Shop') && (
         <section id="shop" className="reveal py-28 md:py-36">
           <div className="max-w-7xl mx-auto px-6 md:px-10">
             <div className="text-center max-w-2xl mx-auto mb-20">
@@ -430,7 +434,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
       )}
 
       {/* =================== GALLERY =================== */}
-      {gallery.length > 0 && (
+      {gallery.length > 0 && !hidden('Gallery') && (
         <section id="gallery" className="reveal py-28 md:py-36">
           <div className="max-w-7xl mx-auto px-6 md:px-10">
             <div className="flex items-end justify-between mb-16 flex-wrap gap-6">
@@ -469,7 +473,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
       )}
 
       {/* =================== TESTIMONIALS =================== */}
-      {testimonials.length > 0 && (
+      {testimonials.length > 0 && !hidden('Reviews') && (
         <section id="testimonials" className="reveal py-28 md:py-36 bg-neutral-950 text-white relative overflow-hidden">
           <div
             className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-20 blur-3xl"
@@ -555,6 +559,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
       )}
 
       {/* =================== CONTACT =================== */}
+      {!hidden('Contact') && (
       <section id="contact" className="reveal py-28 md:py-36">
         <div className="max-w-7xl mx-auto px-6 md:px-10">
           <div className="text-center max-w-2xl mx-auto mb-20">
@@ -657,6 +662,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
           </div>
         </div>
       </section>
+      )}
 
       </main>
       {/* =================== FOOTER =================== */}

@@ -54,6 +54,8 @@ faq?: { question: string; answer: string }[]
   geo_lng?: number
   area_served?: string
   price_range?: string
+  pages?: { title: string; content: string }[]
+  hidden_sections?: string[]
   created_at?: string
 }
 
@@ -83,7 +85,7 @@ rating: number
 // ---------- Supabase ----------
 
 export const PUBLIC_COLS =
-'id,slug,name,slogan,type,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image,lang,faq,whyus,mission,vision,geo_lat,geo_lng,area_served,price_range,created_at'
+'id,slug,name,slogan,type,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image,lang,faq,whyus,mission,vision,geo_lat,geo_lng,area_served,price_range,hidden_sections,created_at'
 
 export async function fetchSite(
 slug: string

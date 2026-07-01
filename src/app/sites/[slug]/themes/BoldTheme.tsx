@@ -30,6 +30,7 @@ const interTight = Inter_Tight({
 })
 
 export default function BoldTheme({ site }: { site: Site }) {
+  const hidden = (name: string) => (site.hidden_sections || []).includes(name)
   const primary = site.primary_color || '#FF3B1F'
   const t = getDict(site.lang)
   const cartT = getCartLabels(site.lang)
@@ -67,15 +68,15 @@ export default function BoldTheme({ site }: { site: Site }) {
             {site.name.toUpperCase()}
           </Link>
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#home" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.nav.home}</a>
-            <a href="#about" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.nav.about}</a>
-            <a href="#services" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.nav.services}</a>
-            {products.length > 0 && (
+            {!hidden('Home') && <a href="#home" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.nav.home}</a>}
+            {!hidden('About') && <a href="#about" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.nav.about}</a>}
+            {!hidden('Services') && <a href="#services" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.nav.services}</a>}
+            {products.length > 0 && !hidden('Shop') && (
               <a href="#shop" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.nav.shop}</a>
             )}
-            <a href="#gallery" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.bold.navWork}</a>
-            <a href="#testimonials" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.nav.reviews}</a>
-            <a href="#contact" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.nav.contact}</a>
+            {!hidden('Gallery') && <a href="#gallery" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.bold.navWork}</a>}
+            {!hidden('Reviews') && <a href="#testimonials" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.nav.reviews}</a>}
+            {!hidden('Contact') && <a href="#contact" className="text-xs uppercase tracking-[0.2em] font-medium hover:opacity-60 transition-opacity">{t.nav.contact}</a>}
           </nav>
         </div>
       </header>
@@ -108,6 +109,7 @@ export default function BoldTheme({ site }: { site: Site }) {
 
       {/* =================== HERO =================== */}
       <main>
+      {!hidden('Home') && (
       <section id="home" className="relative overflow-hidden border-b-[3px] border-black">
         {site.hero_image && (
           <>
@@ -157,9 +159,10 @@ export default function BoldTheme({ site }: { site: Site }) {
           </div>
         </div>
       </section>
+      )}
 
       {/* =================== ABOUT =================== */}
-      {site.about && (
+      {site.about && !hidden('About') && (
         <section id="about" className="reveal border-b-[3px] border-black" style={{ backgroundColor: primary }}>
           <div className="max-w-7xl mx-auto px-6 md:px-10 py-24 md:py-32">
             <div className="grid md:grid-cols-[auto_1fr] gap-12 md:gap-20 items-start">
@@ -189,7 +192,7 @@ export default function BoldTheme({ site }: { site: Site }) {
       )}
 
       {/* =================== SERVICES (numbered rows) =================== */}
-      {services.length > 0 && (
+      {services.length > 0 && !hidden('Services') && (
         <section id="services" className="reveal border-b-[3px] border-black bg-white">
           <div className="max-w-7xl mx-auto px-6 md:px-10 pt-24 md:pt-32 pb-8">
             <div className="flex items-end justify-between mb-16 flex-wrap gap-6">
@@ -255,7 +258,7 @@ export default function BoldTheme({ site }: { site: Site }) {
       )}
 
       {/* =================== SHOP =================== */}
-      {products.length > 0 && (
+      {products.length > 0 && !hidden('Shop') && (
         <section id="shop" className="reveal border-b-[3px] border-black bg-white py-24 md:py-32">
           <div className="max-w-7xl mx-auto px-6 md:px-10">
             <div className="flex items-end justify-between mb-16 flex-wrap gap-6">
@@ -279,7 +282,7 @@ export default function BoldTheme({ site }: { site: Site }) {
               {products.map((p, i) => (
                 <div key={i} className="group relative">
                   <div
-                    className="absolute inset-0 translate-x-3 translate-y-3 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform"
+                    className="absolute inset-0 translate-x-3 translate-y-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 group-hover:translate-y-1 transition-all duration-300"
                     style={{ backgroundColor: primary }}
                   />
                   <div className="relative border-[3px] border-black bg-white flex flex-col h-full">
@@ -354,7 +357,7 @@ export default function BoldTheme({ site }: { site: Site }) {
       )}
 
       {/* =================== GALLERY =================== */}
-      {gallery.length > 0 && (
+      {gallery.length > 0 && !hidden('Gallery') && (
         <section id="gallery" className="reveal border-b-[3px] border-black bg-white py-24 md:py-32 overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 md:px-10 mb-16">
             <div className="text-xs uppercase tracking-[0.3em] font-bold mb-4" style={{ color: primary }}>
@@ -373,7 +376,7 @@ export default function BoldTheme({ site }: { site: Site }) {
               {gallery.slice(0, 9).map((url, i) => (
                 <div key={i} className="relative group">
                   <div
-                    className="absolute inset-0 translate-x-3 translate-y-3 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform"
+                    className="absolute inset-0 translate-x-3 translate-y-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 group-hover:translate-y-1 transition-all duration-300"
                     style={{ backgroundColor: primary }}
                   />
                   <div
@@ -390,7 +393,7 @@ export default function BoldTheme({ site }: { site: Site }) {
       )}
 
       {/* =================== TESTIMONIALS =================== */}
-      {testimonials.length > 0 && (
+      {testimonials.length > 0 && !hidden('Reviews') && (
         <section id="testimonials" className="reveal border-b-[3px] border-black bg-black text-white py-24 md:py-32">
           <div className="max-w-7xl mx-auto px-6 md:px-10">
             <div className="text-center mb-20">
@@ -463,6 +466,7 @@ export default function BoldTheme({ site }: { site: Site }) {
       )}
 
       {/* =================== CONTACT =================== */}
+      {!hidden('Contact') && (
       <section id="contact" className="reveal border-b-[3px] border-black bg-white">
         {/* Top info strip */}
         <div className="border-b-[3px] border-black" style={{ backgroundColor: primary }}>
@@ -537,6 +541,7 @@ export default function BoldTheme({ site }: { site: Site }) {
           </div>
         </div>
       </section>
+      )}
 
       </main>
       {/* =================== FOOTER =================== */}
