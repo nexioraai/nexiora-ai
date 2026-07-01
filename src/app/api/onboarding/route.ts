@@ -141,37 +141,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ type: 'ask', reply: safeReply, skippable: intent.skippable === true });
     }
 
-    // VERROU MODE : si done mais aucun mode choisi par clic, demander le choix par cartes (déterministe)
-    if (intent.type === 'done' && typeof intent.summary === 'string' && chosenMode === null) {
-      const options = validModesForHistory(history);
-      const labels: Record<number, string> = {
-        1: 'un site vitrine pour vous faire connaître',
-        2: 'une boutique en ligne où vous gérez votre stock',
-        3: 'une boutique autonome en dropshipping, sans gérer de stock',
-      };
-      const intro = options.length === 1
-        ? 'Pour votre activité, voici ce que je peux créer :'
-        : 'Dernière chose : quel type de site souhaitez-vous ?';
-      return NextResponse.json({ type: 'choose_mode', reply: intro, options, labels });
-    }
-
     if (intent.type === 'done' && typeof intent.summary === 'string') {
-      // Génération : on relaie vers /api/chat (logique validée, intouchée)
-      const origin = new URL(req.url).origin;
-      const finalMessage = (chosenMode ? `mode: ${chosenMode}\n` : '') + intent.summary;
-      const genBody: Record<string, string> = { message: finalMessage, location: '' };
-      if (language !== 'auto') genBody.language = language;
-
-      const genRes = await fetch(origin + '/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify(genBody),
-      });
-      const genData = await genRes.json();
-      if (!genRes.ok || !genData.slug) {
-        return NextResponse.json({ error: genData.error || 'Generation failed' }, { status: 500 });
-      }
-      return NextResponse.json({ type: 'done', slug: genData.slug });
+      return NextResponse.json({ type: 'ready_to_generate', summary: intent.summary, mode: chosenMode });
     }
 
     return NextResponse.json({ type: 'ask', reply: 'Pouvez-vous préciser votre activité ?' });
