@@ -19,6 +19,7 @@ export default function OnboardingChat() {
   const [skippable, setSkippable] = useState(false);
   const [modeOptions, setModeOptions] = useState<{ options: number[]; labels: Record<number, string> } | null>(null);
   const [loadingStep, setLoadingStep] = useState(0);
+  const [siteMode, setSiteMode] = useState<number | null>(null);
   const LOADING_STEPS = [
     'Analyse de votre activité…',
     'Conception des modules métier…',
@@ -71,10 +72,22 @@ export default function OnboardingChat() {
       try { data = await res.json(); } catch { throw new Error('Réponse invalide.'); }
       if (!res.ok) throw new Error(data.error || 'Une erreur est survenue.');
 
-      if (data.type === 'done' && data.slug) {
+      if (data.type === 'ready_to_generate' && typeof data.summary === 'string') {
+        if (typeof data.mode === 'number') setSiteMode(data.mode);
         setLoading(false);
         setGenerating(true);
-        router.push(`/edit/${data.slug}`);
+        const finalMessage = (data.mode ? `mode: ${data.mode}\n` : '') + data.summary;
+        const genRes = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ message: finalMessage, location: '' }),
+        });
+        const genData = await genRes.json();
+        if (!genRes.ok || !genData.slug) throw new Error(genData.error || 'Génération échouée.');
+        router.push(`/edit/${genData.slug}`);
         return;
       }
       if (data.type === 'choose_mode' && Array.isArray(data.options)) {
@@ -95,6 +108,7 @@ export default function OnboardingChat() {
 
   const pickMode = (mode: number, label: string) => {
     if (loading || generating) return;
+    setSiteMode(mode);
     setModeOptions(null);
     sendText(label.charAt(0).toUpperCase() + label.slice(1), mode);
   };
@@ -123,16 +137,16 @@ export default function OnboardingChat() {
           </p>
           <div className="flex flex-wrap gap-3 justify-center max-w-lg">
             {[
-              'Site vitrine',
-              'Boutique en ligne',
-              'Dropshipping',
-            ].map((sugg) => (
+              { label: 'Site vitrine', mode: 1 },
+              { label: 'Boutique en ligne', mode: 2 },
+              { label: 'Dropshipping', mode: 3 },
+            ].map(({ label, mode }) => (
               <button
-                key={sugg}
-                onClick={() => sendText(sugg)}
+                key={label}
+                onClick={() => { setSiteMode(mode); sendText(label); }}
                 className="px-5 py-2.5 rounded-full bg-white/[0.04] border border-white/12 text-sm text-slate-200 hover:border-[#FF5500] hover:text-white hover:bg-white/[0.07] transition"
               >
-                {sugg}
+                {label}
               </button>
             ))}
           </div>
@@ -160,7 +174,7 @@ export default function OnboardingChat() {
                 <div className="py-2">
                   <div className="text-center mb-6">
                     <div className="inline-block w-12 h-12 border-4 border-[#E07040]/30 border-t-[#E07040] rounded-full animate-spin mb-4"></div>
-                    <h3 className="text-lg font-bold mb-1 tracking-tight">Création de votre site sur mesure…</h3>
+                    <h3 className="text-lg font-bold mb-1 tracking-tight">Création de votre {siteMode === 2 ? 'boutique' : siteMode === 3 ? 'boutique dropshipping' : 'site'} sur mesure…</h3>
                     <p className="text-sm text-slate-400">Cela peut prendre un moment, patientez.</p>
                   </div>
                   <div className="flex flex-col gap-3">
