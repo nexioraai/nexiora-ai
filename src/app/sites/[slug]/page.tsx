@@ -10,6 +10,8 @@ import CartShell from './themes/CartShell'
 import { getCartLabels } from './themes/cartLabels'
 import ScrollRevealInit from './themes/ScrollRevealInit'
 
+export const dynamic = 'force-dynamic'
+
 const themes = {
   editorial: EditorialTheme,
   bold: BoldTheme,
