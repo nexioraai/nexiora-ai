@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/lib/translations';
 import LanguageSwitcher from './LanguageSwitcher';
-import { Menu as MenuIcon, X, ArrowLeft, Plus, Trash2, Check, Loader2, Upload } from 'lucide-react';
+import { Menu as MenuIcon, X, ArrowLeft, Plus, Trash2, Check, Loader2, Upload, Eye, EyeOff } from 'lucide-react';
 
 export default function Navbar() {
   const { t } = useTranslation();
@@ -81,6 +81,11 @@ export default function Navbar() {
     arr[idx] = { ...arr[idx], [key]: value };
     setSite({ ...site, [field]: arr });
   };
+  const toggleSection = (section: string) => {
+    const hidden = site.hidden_sections || [];
+    const next = hidden.includes(section) ? hidden.filter((x: string) => x !== section) : [...hidden, section];
+    setSite({ ...site, hidden_sections: next });
+  };
   const addArrayItem = (field: string, template: any) => setSite({ ...site, [field]: [...(site[field] || []), template] });
   const removeArrayItem = (field: string, idx: number) => setSite({ ...site, [field]: site[field].filter((_: any, i: number) => i !== idx) });
 
@@ -142,12 +147,21 @@ export default function Navbar() {
                     if (site?.products && site.products.length > 0) sections.push('Shop');
                     sections.push('Gallery', 'Reviews', 'Contact');
                     return sections;
-                  })().map((section) => (
-                    <button key={section} onClick={() => setCurrentSection(section)} disabled={!slug}
-                      className="w-full text-left px-4 py-3 rounded-xl bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition font-medium disabled:opacity-40 disabled:cursor-not-allowed">
-                      {section}
-                    </button>
-                  ))}
+                  })().map((section) => {
+                    const isHidden = (site?.hidden_sections || []).includes(section);
+                    return (
+                    <div key={section} className={`flex items-center gap-2 rounded-xl bg-white/5 transition ${isHidden ? 'opacity-40' : ''}`}>
+                      <button onClick={() => setCurrentSection(section)} disabled={!slug}
+                        className="flex-1 text-left px-4 py-3 text-white/80 hover:text-white transition font-medium disabled:cursor-not-allowed">
+                        {section}
+                      </button>
+                      <button onClick={() => toggleSection(section)} disabled={!slug} title={isHidden ? 'Afficher sur le site' : 'Masquer du site'}
+                        className="px-3 py-3 text-white/50 hover:text-white transition disabled:opacity-40">
+                        {isHidden ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                    );
+                  })}
 
                   {/* Custom Pages */}
                   {(site?.pages || []).map((page: any, idx: number) => (
@@ -329,6 +343,35 @@ export default function Navbar() {
                           <span className="text-xs text-slate-400">Item #{idx + 1}</span>
                           <button onClick={() => removeArrayItem('products', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
                         </div>
+                        {product.image ? (
+                          <div className="relative group rounded-lg overflow-hidden">
+                            <img src={product.image} alt="" className="w-full h-32 object-cover" />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                              <label className="bg-[#E07040] hover:bg-[#E07040]/80 text-white p-2 rounded-lg cursor-pointer transition" title="Replace">
+                                <Upload size={16} />
+                                <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  const url = await uploadImage(file);
+                                  if (url) updateArrayItem('products', idx, 'image', url);
+                                }} />
+                              </label>
+                              <button onClick={() => updateArrayItem('products', idx, 'image', null)} className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition" title="Delete">
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <label className="block w-full text-center bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] py-3 rounded-lg cursor-pointer font-semibold transition border border-[#E07040]/20 text-sm">
+                            <Plus size={16} className="inline mr-1" /> Add photo
+                            <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const url = await uploadImage(file);
+                              if (url) updateArrayItem('products', idx, 'image', url);
+                            }} />
+                          </label>
+                        )}
                         <input value={product.name || ''} onChange={(e) => updateArrayItem('products', idx, 'name', e.target.value)} placeholder="Name" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
                         <input value={product.price || ''} onChange={(e) => updateArrayItem('products', idx, 'price', e.target.value)} placeholder="Price" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
                         <textarea value={product.description || ''} onChange={(e) => updateArrayItem('products', idx, 'description', e.target.value)} placeholder="Description" rows={2} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040] resize-y" />
