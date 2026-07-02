@@ -28,6 +28,7 @@ hero_title?: string
 hero_subtitle?: string
 about?: string
 services?: any[]
+sections?: any[]
 gallery?: string[]
 testimonials?: any[]
 products?: any[]
@@ -56,6 +57,7 @@ faq?: { question: string; answer: string }[]
   price_range?: string
   pages?: { title: string; content: string }[]
   hidden_sections?: string[]
+  section_label?: string
   created_at?: string
 }
 
@@ -73,6 +75,7 @@ export type Service = {
 title: string
 description: string
 Icon: LucideIcon
+image?: string
 }
 
 export type Testimonial = {
@@ -85,7 +88,7 @@ rating: number
 // ---------- Supabase ----------
 
 export const PUBLIC_COLS =
-'id,slug,name,slogan,type,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image,lang,faq,whyus,mission,vision,geo_lat,geo_lng,area_served,price_range,hidden_sections,created_at'
+'id,slug,name,slogan,type,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image,lang,faq,whyus,mission,vision,geo_lat,geo_lng,area_served,price_range,hidden_sections,section_label,sections,created_at'
 
 export async function fetchSite(
 slug: string
