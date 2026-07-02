@@ -43,10 +43,14 @@ async function fetchPexelsImages(query: string, color?: string): Promise<string[
     const colorParam = color ? `&color=${color.replace('#', '')}` : '';
     const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=6&orientation=landscape${colorParam}`;
     const res = await fetch(url, { headers: { Authorization: key } });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error('PEXELS ERROR', res.status, await res.text(), 'query:', query);
+      return [];
+    }
     const data = await res.json();
     return (data.photos || []).map((p: any) => p.src.large || p.src.original).filter(Boolean);
-  } catch {
+  } catch (e) {
+    console.error('PEXELS EXCEPTION', e, 'query:', query);
     return [];
   }
 }
@@ -271,7 +275,13 @@ IMPORTANT CONTEXT:
 - Currency: use ${currency}
 - Address: write a realistic address in ${location || 'the city'}
 - Testimonial names: use realistic local names for ${location || 'the region'}
-- Services: include title AND a compelling 1-sentence description for each
+- sections: THIS IS CRITICAL. Analyze the business sector deeply and decide YOURSELF what offering section(s) this business truly needs — do NOT default to a generic "Services" list. A restaurant needs a "Menu" section with real dishes and prices. A lawyer needs "Domaines d'Expertise" with legal specialties. A photographer needs "Portfolio" with shoot types and packages. A plumber needs "Nos Interventions" with repair types and callout prices. You may generate 1 to 3 sections if the sector genuinely has distinct offering categories (e.g. a restaurant could have "Menu" AND "Réservation"). Each section is an object with:
+  - "name": the natural local-language name for this section (e.g. "Notre Menu", "Nos Domaines d'Expertise")
+  - "items": 4-6 items, each SPECIFIC to this exact business, never generic. Each item has:
+    - "title": concrete and specific (e.g. "Poutine classique" not "Plat principal")
+    - "description": 2 sentences, rich in sensory/concrete detail — appetizing for food, precise outcomes for services
+    - "price": a realistic price string in the correct currency for this item if the sector commonly displays prices (food menus, service callouts, packages). Omit or use "" if pricing doesn't apply (e.g. legal consultation "sur devis").
+    - "imageQuery": precise English stock photo query for THIS specific item (e.g. "poutine fries gravy cheese curds closeup"). Never reuse the same imageQuery twice across the whole response.
 - whyus: 3 reasons to choose this business. Each = a short punchy "title" (2-4 words) + a "text" of ONE concrete sentence. Make them specific to this business, not generic.
 - mission: ONE inspiring sentence stating what this business does and for whom (its purpose). Specific, not generic.
 - vision: ONE forward-looking sentence describing the long-term ambition of this business.
@@ -310,12 +320,16 @@ Return ONLY valid JSON, no markdown:
   "heroSubtitle": "",
   "imageQuery": "",
   "about": "",
-  "services": [
-    {"title": "", "description": ""},
-    {"title": "", "description": ""},
-    {"title": "", "description": ""},
-    {"title": "", "description": ""},
-    {"title": "", "description": ""}
+  "sections": [
+    {
+      "name": "",
+      "items": [
+        {"title": "", "description": "", "price": "", "imageQuery": ""},
+        {"title": "", "description": "", "price": "", "imageQuery": ""},
+        {"title": "", "description": "", "price": "", "imageQuery": ""},
+        {"title": "", "description": "", "price": "", "imageQuery": ""}
+      ]
+    }
   ],
   "faq": [
     {"question": "", "answer": ""},
@@ -353,7 +367,7 @@ Return ONLY valid JSON, no markdown:
 
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 3000,
+      max_tokens: 4500,
       messages: [{ role: 'user', content: PROMPT + sectorPrompt + '\n\nBusiness request: ' + message }],
     });
 
@@ -397,6 +411,21 @@ Return ONLY valid JSON, no markdown:
       })
     );
 
+    // Image Pexels par service, en parallèle
+    const rawSections = Array.isArray(parsed.sections) ? parsed.sections : [];
+    const sectionsWithImages = await Promise.all(
+      rawSections.map(async (sec: any) => {
+        const rawItems = Array.isArray(sec.items) ? sec.items : [];
+        const itemsWithImages = await Promise.all(
+          rawItems.map(async (it: any) => {
+            const q = (it.imageQuery || `${it.title || ''} ${parsed.type || ''}`).trim();
+            const imgs = await fetchPexelsImages(q, parsed.primaryColor);
+            return { ...it, image: imgs[0] || '' };
+          })
+        );
+        return { name: sec.name || '', items: itemsWithImages };
+      })
+    );
     // Insert via service_role (bypass RLS, sécurisé car owner_email vient du token validé)
     const { error } = await supabaseAdmin.from('sites').insert({
       slug,
@@ -407,7 +436,7 @@ Return ONLY valid JSON, no markdown:
       hero_title: parsed.heroTitle,
       hero_subtitle: parsed.heroSubtitle,
       about: parsed.about,
-      services: parsed.services,
+      sections: sectionsWithImages,
       testimonials: parsed.testimonials,
       faq: parsed.faq || [],
       whyus: parsed.whyus || [],
