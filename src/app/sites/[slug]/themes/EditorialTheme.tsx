@@ -68,7 +68,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
   const primary = site.primary_color || '#111111'
   const t = getDict(site.lang)
   const cartT = getCartLabels(site.lang)
-  const services = (site.services || []).map(normalizeService)
+  const sections = site.sections || []
   const testimonials = (site.testimonials || []).map(normalizeTestimonial)
   const products = (site.products || []).map(normalizeProduct)
   const gallery: string[] = (site.gallery || []).filter((u: any) => typeof u === 'string' && u.length > 0 && u.startsWith('http'))
@@ -110,7 +110,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
           <nav className="hidden md:flex items-center gap-10 text-sm font-medium text-neutral-700">
             {!hidden('Home') && <a href="#home" className="hover:text-black transition-colors">{t.nav.home}</a>}
             {!hidden('About') && <a href="#about" className="hover:text-black transition-colors">{t.nav.about}</a>}
-            {!hidden('Services') && <a href="#services" className="hover:text-black transition-colors">{t.nav.services}</a>}
+            {!hidden('Services') && <a href="#services" className="hover:text-black transition-colors">{sections[0]?.name || t.nav.services}</a>}
             {products.length > 0 && !hidden('Shop') && (
               <a href="#shop" className="hover:text-black transition-colors">{t.nav.shop}</a>
             )}
@@ -266,8 +266,8 @@ export default function EditorialTheme({ site }: { site: Site }) {
       )}
 
       {/* =================== SERVICES =================== */}
-      {services.length > 0 && !hidden('Services') && (
-        <section id="services" className="reveal py-28 md:py-36 bg-neutral-50">
+      {sections.length > 0 && !hidden('Services') && sections.map((sec: any, si: number) => (
+        <section key={si} id={si === 0 ? "services" : `section-${si}`} className={`reveal py-28 md:py-36 ${si % 2 === 0 ? "bg-neutral-50" : "bg-white"}`}>
           <div className="max-w-7xl mx-auto px-6 md:px-10">
             <div className="text-center max-w-2xl mx-auto mb-20">
               <div
@@ -280,14 +280,13 @@ export default function EditorialTheme({ site }: { site: Site }) {
                 className="font-serif text-4xl md:text-5xl leading-tight"
                 style={{ fontFamily: 'var(--font-fraunces), serif' }}
               >
-                {t.sections.servicesTitle}
+                {sec.name}
               </h2>
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {services.map((s, i) => {
-                const Icon = s.Icon
-                const featured = i === 0 && services.length >= 3
+              {(sec.items || []).map((s: any, i: number) => {
+                const featured = i === 0 && sec.items.length >= 3
                 return (
                   <TiltCard
                     key={i}
@@ -297,24 +296,27 @@ export default function EditorialTheme({ site }: { site: Site }) {
                         : 'bg-white border border-neutral-200/70 hover:border-transparent hover:shadow-xl'
                     }`}
                   >
-                    <div
-                      className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-6 transition-transform duration-300 group-hover:scale-110 ${
-                        featured ? 'bg-white/10' : ''
-                      }`}
-                      style={
-                        featured
-                          ? {}
-                          : { backgroundColor: `color-mix(in srgb, ${primary} 10%, white)` }
-                      }
-                    >
-                      <Icon className="w-7 h-7" style={{ color: featured ? '#fff' : primary }} />
+                    {s.image && (
+                      <div className="relative w-full h-40 rounded-2xl overflow-hidden mb-6">
+                        <img src={s.image} alt={s.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      </div>
+                    )}
+                    <div className="flex items-start justify-between gap-3 mb-4">
+                      <h3
+                        className="font-serif text-2xl md:text-3xl leading-tight"
+                        style={{ fontFamily: 'var(--font-fraunces), serif' }}
+                      >
+                        {s.title}
+                      </h3>
+                      {s.price && (
+                        <span
+                          className={`shrink-0 text-sm font-semibold px-3 py-1 rounded-full ${featured ? 'bg-white/10' : ''}`}
+                          style={featured ? { color: '#fff' } : { color: primary, backgroundColor: `color-mix(in srgb, ${primary} 10%, white)` }}
+                        >
+                          {s.price}
+                        </span>
+                      )}
                     </div>
-                    <h3
-                      className="font-serif text-2xl md:text-3xl mb-4 leading-tight"
-                      style={{ fontFamily: 'var(--font-fraunces), serif' }}
-                    >
-                      {s.title}
-                    </h3>
                     <p
                       className={`leading-relaxed ${
                         featured ? 'text-white/70' : 'text-neutral-600'
@@ -337,7 +339,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
             </div>
           </div>
         </section>
-      )}
+      ))}
 
       {/* =================== SHOP =================== */}
       {products.length > 0 && !hidden('Shop') && (
@@ -677,7 +679,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
             </div>
             <nav className="flex gap-8 text-sm text-white/70">
               <a href="#about" className="hover:text-white transition-colors">{t.nav.about}</a>
-              <a href="#services" className="hover:text-white transition-colors">{t.nav.services}</a>
+              <a href="#services" className="hover:text-white transition-colors">{sections[0]?.name || t.nav.services}</a>
               <a href="#contact" className="hover:text-white transition-colors">{t.nav.contact}</a>
             </nav>
           </div>
