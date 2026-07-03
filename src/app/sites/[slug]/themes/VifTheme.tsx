@@ -224,7 +224,7 @@ export default function VifTheme({ site }: { site: Site }) {
                         </div>
                         <div className="max-w-[140px]">
                           <div className="w-1.5 h-1.5 rounded-full mt-2 mb-2" style={{ backgroundColor: GOLD }} />
-                          <div className="text-xs font-semibold uppercase" style={{ letterSpacing: '0.05em', color: 'rgba(20,18,16,0.85)' }}>{w.title}</div>
+                          <div className="text-xs font-semibold uppercase" style={{ letterSpacing: '0.05em', color: GOLD }}>{w.title}</div>
                         </div>
                       </div>
                     ))}
