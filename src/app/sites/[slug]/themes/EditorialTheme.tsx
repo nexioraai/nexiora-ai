@@ -116,6 +116,9 @@ export default function EditorialTheme({ site }: { site: Site }) {
             )}
             {!hidden('Gallery') && <a href="#gallery" className="hover:text-black transition-colors">{t.nav.gallery}</a>}
             {!hidden('Reviews') && <a href="#testimonials" className="hover:text-black transition-colors">{t.nav.reviews}</a>}
+            {(site.pages || []).filter((p: any) => p && p.title).map((page: any, pi: number) => (
+              <a key={`navpage-${pi}`} href={`#page-${pi}`} className="hover:text-black transition-colors">{page.title}</a>
+            ))}
             {!hidden('Contact') && <a href="#contact" className="hover:text-black transition-colors">{t.nav.contact}</a>}
           </nav>
         </div>
@@ -559,6 +562,23 @@ export default function EditorialTheme({ site }: { site: Site }) {
           </div>
         </section>
       )}
+
+      {/* =================== CUSTOM PAGES =================== */}
+      {(site.pages || []).filter((p: any) => p && (p.title || p.content || p.image)).map((page: any, pi: number) => (
+        <section key={`page-${pi}`} id={`page-${pi}`} className={`reveal py-28 md:py-36 ${pi % 2 === 0 ? "bg-neutral-50" : "bg-white"}`}>
+          <div className="max-w-4xl mx-auto px-6 md:px-10">
+            <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-neutral-900 mb-10">{page.title}</h2>
+            {page.image && (
+              <div className="relative w-full rounded-3xl overflow-hidden mb-10 aspect-[16/9]">
+                <Image src={page.image} alt={page.title || ''} fill sizes="(max-width:768px) 100vw, 900px" className="object-cover" />
+              </div>
+            )}
+            {page.content && (
+              <div className="text-lg leading-relaxed text-neutral-700 whitespace-pre-line">{page.content}</div>
+            )}
+          </div>
+        </section>
+      ))}
 
       {/* =================== CONTACT =================== */}
       {!hidden('Contact') && (

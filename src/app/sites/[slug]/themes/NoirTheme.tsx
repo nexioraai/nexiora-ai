@@ -388,7 +388,7 @@ export default function NoirTheme({ site }: { site: Site }) {
           to   { opacity: 1; transform: translateY(0); }
         }
         .ed-rise { animation: ed-rise 0.9s ease-out both; }
-        .noir-img { filter: saturate(0.7) brightness(0.68) contrast(1.06); }
+        .noir-img { filter: saturate(0.85) brightness(0.85) contrast(1.06); }
         .noir-veil { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 120% at 50% 32%, transparent 40%, rgba(11,11,13,0.75) 100%), linear-gradient(180deg, rgba(23,18,12,0.3), rgba(23,18,12,0.55)); }
       `}</style>
     </div>
