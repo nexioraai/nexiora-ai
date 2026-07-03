@@ -17,18 +17,18 @@ export default function ThemeSelector({ currentTheme, onThemeChange }: ThemeSele
       colors: ['#111111', '#ffffff']
     },
     {
-      id: 'bold',
-      name: 'Bold',
-      description: 'Audacieux & impactant',
-      preview: 'Typographie massive, contraste fort',
-      colors: ['#ffffff', '#FF3B1F']
+      id: 'noir',
+      name: 'Noir',
+      description: 'Cinématique & luxueux',
+      preview: 'Charbon & or, hero split, sections numérotées',
+      colors: ['#17120C', '#C9A24B']
     },
     {
-      id: 'monochrome',
-      name: 'Monochrome',
-      description: 'Épuré & moderne',
-      preview: 'Noir & blanc, minimaliste',
-      colors: ['#000000', '#ffffff']
+      id: 'vif',
+      name: 'Vif',
+      description: 'Éditorial & vivant',
+      preview: 'Crème doré-beige, serif italique, parallax',
+      colors: ['#EFE6D4', '#B08847']
     }
   ]
 

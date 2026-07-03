@@ -38,7 +38,7 @@ const ALLOWED_SERVICE_FIELDS = new Set(['title', 'description']);
 const ALLOWED_TESTIMONIAL_FIELDS = new Set(['name', 'role', 'content', 'rating']);
 const ALLOWED_PRODUCT_FIELDS = new Set(['name', 'price', 'description']);
 
-const ALLOWED_THEMES = new Set(['editorial', 'bold', 'monochrome']);
+const ALLOWED_THEMES = new Set(['editorial', 'noir', 'vif']);
 const ALLOWED_SOCIAL = new Set(['instagram', 'facebook', 'whatsapp', 'tiktok']);
 
 export async function POST(

@@ -45,7 +45,7 @@ tiktok?: string
 }
 hero_image?: string
 cta?: string
-theme?: 'editorial' | 'bold' | string
+theme?: 'editorial' | 'noir' | 'vif' | string
 lang?: string
 faq?: { question: string; answer: string }[]
   whyus?: { title: string; text: string }[]

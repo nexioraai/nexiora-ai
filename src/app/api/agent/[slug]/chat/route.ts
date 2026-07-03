@@ -43,7 +43,7 @@ const tools: Anthropic.Tool[] = [
       properties: {
         theme: {
           type: 'string',
-          enum: ['editorial', 'bold', 'monochrome'],
+          enum: ['editorial', 'noir', 'vif'],
           description: 'Theme key',
         },
         reason: { type: 'string' },
