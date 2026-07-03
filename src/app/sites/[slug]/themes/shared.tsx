@@ -270,3 +270,23 @@ raw?.image_url ??
 undefined,
 }
 }
+
+
+// Carte OSM partagee par tous les themes (synchro adresse via geo_lat/geo_lng)
+export function ContactMap({ lat, lng, className = '' }: { lat?: number | null; lng?: number | null; className?: string }) {
+  if (lat == null || lng == null) return null
+  const src = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=mapnik&marker=${lat},${lng}`
+  return (
+    <div className={`rounded-2xl overflow-hidden ${className}`}>
+      <iframe
+        title="Map"
+        width="100%"
+        height="220"
+        style={{ border: 0 }}
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        src={src}
+      />
+    </div>
+  )
+}

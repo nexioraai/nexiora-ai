@@ -10,6 +10,7 @@ import {
   type Site,
   normalizeTestimonial,
   normalizeProduct,
+  ContactMap,
 } from './shared'
 import { getDict } from './i18n'
 import Reveal from './Reveal'
@@ -446,6 +447,7 @@ export default function VifTheme({ site }: { site: Site }) {
               </h2>
               <p className="mb-12" style={{ color: 'rgba(20,18,16,0.65)' }}>{t.sections.contactSubtitle}</p>
               <ContactForm slug={site.slug} lang={site.lang} brand={INK} />
+              <ContactMap lat={site.geo_lat} lng={site.geo_lng} className="mt-8 border" />
             </div>
           </section>
         )}

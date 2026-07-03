@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/lib/translations';
 import LanguageSwitcher from './LanguageSwitcher';
-import { Menu as MenuIcon, X, ArrowLeft, Plus, Trash2, Check, Loader2, Upload, Eye, EyeOff } from 'lucide-react';
+import { Menu as MenuIcon, X, ArrowLeft, Plus, Trash2, Check, Loader2, Upload, Eye, EyeOff, MapPin } from 'lucide-react';
 
 export default function Navbar() {
   const { t } = useTranslation();
@@ -75,6 +75,28 @@ export default function Navbar() {
   const updateField = (field: string, value: any) => setSite({ ...site, [field]: value });
   const updateSocialLink = (key: string, value: string) => setSite({ ...site, social_links: { ...(site.social_links || {}), [key]: value } });
   const updateContact = (key: string, value: string) => setSite({ ...site, contact: { ...(site.contact || {}), [key]: value } });
+  const [geocoding, setGeocoding] = useState(false);
+  const geocodeAddress = async () => {
+    const addr = site?.contact?.address;
+    if (!addr) return;
+    setGeocoding(true);
+    try {
+      const res = await fetch('/api/geocode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: addr }),
+      });
+      const data = await res.json();
+      if (data.lat != null && data.lng != null) {
+        setSite((prev: any) => ({ ...prev, geo_lat: data.lat, geo_lng: data.lng }));
+        await supabase.from('sites').update({ geo_lat: data.lat, geo_lng: data.lng }).eq('slug', slug);
+      }
+    } catch (e) {
+      console.error('Geocode failed:', e);
+    } finally {
+      setGeocoding(false);
+    }
+  };
 
   // Generic array helpers
   const updateArrayItem = (field: string, idx: number, key: string, value: any) => {
@@ -383,6 +405,10 @@ export default function Navbar() {
                     <Field label="📞 Phone" value={site.contact?.phone || ''} onChange={(v) => updateContact('phone', v)} />
                     <Field label="📧 Email" value={site.contact?.email || ''} onChange={(v) => updateContact('email', v)} />
                     <Field label="📍 Address" value={site.contact?.address || site.address || ''} onChange={(v) => updateContact('address', v)} />
+                    <button onClick={geocodeAddress} disabled={geocoding} className="w-full px-4 py-2.5 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold text-sm transition border border-[#E07040]/20 flex items-center justify-center gap-2 disabled:opacity-50">
+                      {geocoding ? <Loader2 size={16} className="animate-spin" /> : <MapPin size={16} />}
+                      {geocoding ? 'Localisation...' : 'Localiser sur la carte'}
+                    </button>
                     <div className="pt-4 border-t border-white/10">
                       <h3 className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-3">Réseaux sociaux</h3>
                     </div>

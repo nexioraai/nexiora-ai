@@ -17,6 +17,7 @@ import {
   normalizeService,
   normalizeTestimonial,
   normalizeProduct,
+  ContactMap,
 } from './shared'
 import { getDict } from './i18n'
 import Reveal from './Reveal'
@@ -650,6 +651,8 @@ export default function EditorialTheme({ site }: { site: Site }) {
                   </div>
                 </div>
               )}
+
+              <ContactMap lat={site.geo_lat} lng={site.geo_lng} className="border border-neutral-200" />
 
               {(social.instagram || social.facebook || social.whatsapp || social.tiktok) && (
                 <div className="pt-4">

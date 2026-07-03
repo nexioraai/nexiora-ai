@@ -6,6 +6,8 @@ const isDev = process.env.NODE_ENV === 'development';
 // Limite quelles sources de scripts/styles/images/connexions sont autorisées
 const csp = [
   "default-src 'self'",
+  // Iframes externes autorisees : carte OpenStreetMap dans la section Contact
+  "frame-src 'self' https://www.openstreetmap.org",
   // Scripts : self + inline (Next.js hydration). 'unsafe-eval' uniquement en dev (Turbopack HMR)
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
   // Styles : self + inline (Tailwind utilise des styles inline)
