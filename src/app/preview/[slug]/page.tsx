@@ -10,6 +10,8 @@ import {
 import EditorialTheme from '@/app/sites/[slug]/themes/EditorialTheme';
 import BoldTheme from '@/app/sites/[slug]/themes/BoldTheme';
 import MonochromeTheme from '@/app/sites/[slug]/themes/MonochromeTheme';
+import NoirTheme from '@/app/sites/[slug]/themes/NoirTheme';
+import VifTheme from '@/app/sites/[slug]/themes/VifTheme';
 import CartShell from '@/app/sites/[slug]/themes/CartShell';
 import { getCartLabels } from '@/app/sites/[slug]/themes/cartLabels';
 import ScrollRevealInit from '@/app/sites/[slug]/themes/ScrollRevealInit';
@@ -18,6 +20,8 @@ const themes = {
   editorial: EditorialTheme,
   bold: BoldTheme,
   monochrome: MonochromeTheme,
+  noir: NoirTheme,
+  vif: VifTheme,
 };
 
 export default function PreviewPage() {
