@@ -75,15 +75,11 @@ export default function NoirTheme({ site }: { site: Site }) {
             )}
             {!hidden('Gallery') && <a href="#gallery" className="hover:text-white transition-colors">{t.nav.gallery}</a>}
             {!hidden('Reviews') && <a href="#testimonials" className="hover:text-white transition-colors">{t.nav.reviews}</a>}
+            {(site.pages || []).filter((p: any) => p && p.title).map((page: any, pi: number) => (
+              <a key={`navpage-${pi}`} href={`#page-${pi}`} className="hover:text-white transition-colors">{page.title}</a>
+            ))}
             {!hidden('Contact') && <a href="#contact" className="hover:text-white transition-colors">{t.nav.contact}</a>}
           </nav>
-          <a
-            href={ctaHref}
-            className="hidden md:inline-flex items-center px-5 py-2.5 rounded-full text-sm font-semibold transition-transform hover:scale-105"
-            style={{ backgroundColor: gold, color: '#0B0B0D' }}
-          >
-            {cta}
-          </a>
         </div>
       </header>
 
@@ -351,6 +347,23 @@ export default function NoirTheme({ site }: { site: Site }) {
             </div>
           </section>
         )}
+
+        {/* =================== CUSTOM PAGES =================== */}
+        {(site.pages || []).filter((p: any) => p && (p.title || p.content || p.image)).map((page: any, pi: number) => (
+          <section key={`page-${pi}`} id={`page-${pi}`} className="reveal py-28 md:py-36" style={{ borderTop: `1px solid ${LINE}` }}>
+            <div className="max-w-4xl mx-auto px-6 md:px-10">
+              <h2 className="text-3xl md:text-5xl font-semibold tracking-tight mb-10" style={{ color: gold }}>{page.title}</h2>
+              {page.image && (
+                <div className="relative w-full rounded-2xl overflow-hidden mb-10 aspect-[16/9]" style={{ border: `1px solid ${LINE}` }}>
+                  <img src={page.image} alt={page.title || ''} className="noir-img w-full h-full object-cover" />
+                </div>
+              )}
+              {page.content && (
+                <div className="text-lg leading-relaxed whitespace-pre-line text-white/70">{page.content}</div>
+              )}
+            </div>
+          </section>
+        ))}
 
         {/* =================== CONTACT =================== */}
         {!hidden('Contact') && (
