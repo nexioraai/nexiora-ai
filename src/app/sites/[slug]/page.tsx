@@ -7,6 +7,7 @@ import EditorialTheme from './themes/EditorialTheme'
 import BoldTheme from './themes/BoldTheme'
 import MonochromeTheme from './themes/MonochromeTheme'
 import NoirTheme from './themes/NoirTheme'
+import VifTheme from './themes/VifTheme'
 import CartShell from './themes/CartShell'
 import { getCartLabels } from './themes/cartLabels'
 import ScrollRevealInit from './themes/ScrollRevealInit'
@@ -18,6 +19,7 @@ const themes = {
   bold: BoldTheme,
   monochrome: MonochromeTheme,
   noir: NoirTheme,
+  vif: VifTheme,
 } as const
 
 const SITE_URL =
