@@ -74,6 +74,7 @@ export default function Navbar() {
 
   const updateField = (field: string, value: any) => setSite({ ...site, [field]: value });
   const updateSocialLink = (key: string, value: string) => setSite({ ...site, social_links: { ...(site.social_links || {}), [key]: value } });
+  const updateContact = (key: string, value: string) => setSite({ ...site, contact: { ...(site.contact || {}), [key]: value } });
 
   // Generic array helpers
   const updateArrayItem = (field: string, idx: number, key: string, value: any) => {
@@ -379,9 +380,9 @@ export default function Navbar() {
                 {/* CONTACT */}
                 {currentSection === 'Contact' && site && (
                   <div className="space-y-4">
-                    <Field label="📞 Phone" value={site.phone || ''} onChange={(v) => updateField('phone', v)} />
-                    <Field label="📧 Email" value={site.email || ''} onChange={(v) => updateField('email', v)} />
-                    <Field label="📍 Address" value={site.address || ''} onChange={(v) => updateField('address', v)} />
+                    <Field label="📞 Phone" value={site.contact?.phone || ''} onChange={(v) => updateContact('phone', v)} />
+                    <Field label="📧 Email" value={site.contact?.email || ''} onChange={(v) => updateContact('email', v)} />
+                    <Field label="📍 Address" value={site.contact?.address || site.address || ''} onChange={(v) => updateContact('address', v)} />
                     <div className="pt-4 border-t border-white/10">
                       <h3 className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-3">Réseaux sociaux</h3>
                     </div>
