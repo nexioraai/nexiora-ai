@@ -463,6 +463,18 @@ export default function VifTheme({ site }: { site: Site }) {
           </div>
         </div>
       </footer>
+      {social.whatsapp && (
+        <a
+          href={`https://wa.me/${String(social.whatsapp).replace(/\D/g, '')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Contact us on WhatsApp"
+          className="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-[#25D366] text-white shadow-2xl hover:scale-110 transition-transform"
+        >
+          <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-30" />
+          <WhatsApp className="w-7 h-7 relative" />
+        </a>
+      )}
 
       <style>{`
         @keyframes ed-rise {
