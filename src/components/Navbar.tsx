@@ -89,6 +89,20 @@ export default function Navbar() {
   const addArrayItem = (field: string, template: any) => setSite({ ...site, [field]: [...(site[field] || []), template] });
   const removeArrayItem = (field: string, idx: number) => setSite({ ...site, [field]: site[field].filter((_: any, i: number) => i !== idx) });
 
+  // Nested section item helpers (sections[si].items[ii].key)
+  const updateSectionItem = (si: number, ii: number, key: string, value: any) => {
+    const secs = [...(site.sections || [])];
+    const items = [...(secs[si].items || [])];
+    items[ii] = { ...items[ii], [key]: value };
+    secs[si] = { ...secs[si], items };
+    setSite({ ...site, sections: secs });
+  };
+  const updateSectionName = (si: number, value: string) => {
+    const secs = [...(site.sections || [])];
+    secs[si] = { ...secs[si], name: value };
+    setSite({ ...site, sections: secs });
+  };
+
   // Image upload helper
   const uploadImage = async (file: File): Promise<string | null> => {
     const ext = file.name.split('.').pop();
@@ -145,7 +159,8 @@ export default function Navbar() {
                   {(() => {
                     const sections = ['Home', 'About', 'Services'];
                     if (site?.products && site.products.length > 0) sections.push('Shop');
-                    sections.push('Gallery', 'Reviews', 'Contact');
+                    sections.push('Gallery', 'Reviews', 'FAQ', 'Contact');
+                    (site?.sections || []).forEach((sec: any) => { if (sec?.name) sections.push(sec.name); });
                     return sections;
                   })().map((section) => {
                     const isHidden = (site?.hidden_sections || []).includes(section);
@@ -255,6 +270,24 @@ export default function Navbar() {
                 {currentSection === 'About' && site && (
                   <div className="space-y-4">
                     <TextArea label="About description" value={site.about || ''} onChange={(v) => updateField('about', v)} rows={8} />
+                    <TextArea label="Mission" value={site.mission || ''} onChange={(v) => updateField('mission', v)} rows={3} />
+                    <TextArea label="Vision" value={site.vision || ''} onChange={(v) => updateField('vision', v)} rows={3} />
+                    <div className="pt-4 border-t border-white/10">
+                      <h3 className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-3">Pourquoi nous (points forts)</h3>
+                    </div>
+                    {(site.whyus || []).map((item: any, idx: number) => (
+                      <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-slate-400">Point #{idx + 1}</span>
+                          <button onClick={() => removeArrayItem('whyus', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
+                        </div>
+                        <input value={item.title || ''} onChange={(e) => updateArrayItem('whyus', idx, 'title', e.target.value)} placeholder="Titre" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
+                        <textarea value={item.text || ''} onChange={(e) => updateArrayItem('whyus', idx, 'text', e.target.value)} placeholder="Description" rows={2} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040] resize-y" />
+                      </div>
+                    ))}
+                    <button onClick={() => addArrayItem('whyus', { title: '', text: '' })} className="w-full px-4 py-3 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold transition border border-[#E07040]/20 flex items-center justify-center gap-2">
+                      <Plus size={18} /> Add point
+                    </button>
                   </div>
                 )}
 
@@ -305,6 +338,35 @@ export default function Navbar() {
                   return (
                     <div className="space-y-4">
                       <Field label="Page Title" value={page.title || ''} onChange={(v) => updateArrayItem('pages', pageIdx, 'title', v)} />
+                      {page.image ? (
+                        <div className="relative group rounded-lg overflow-hidden">
+                          <img src={page.image} alt="" className="w-full h-32 object-cover" />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                            <label className="bg-[#E07040] hover:bg-[#E07040]/80 text-white p-2 rounded-lg cursor-pointer transition" title="Replace">
+                              <Upload size={16} />
+                              <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const url = await uploadImage(file);
+                                if (url) updateArrayItem('pages', pageIdx, 'image', url);
+                              }} />
+                            </label>
+                            <button onClick={() => updateArrayItem('pages', pageIdx, 'image', null)} className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition" title="Delete">
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <label className="block w-full text-center bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] py-3 rounded-lg cursor-pointer font-semibold transition border border-[#E07040]/20 text-sm">
+                          <Plus size={16} className="inline mr-1" /> Add photo
+                          <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const url = await uploadImage(file);
+                            if (url) updateArrayItem('pages', pageIdx, 'image', url);
+                          }} />
+                        </label>
+                      )}
                       <TextArea label="Content" value={page.content || ''} onChange={(v) => updateArrayItem('pages', pageIdx, 'content', v)} rows={10} />
                       <button onClick={() => { removeArrayItem('pages', pageIdx); setCurrentSection(null); }}
                         className="w-full px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold transition border border-red-500/20 flex items-center justify-center gap-2">
@@ -379,6 +441,90 @@ export default function Navbar() {
                     ))}
                     <button onClick={() => addArrayItem('products', { name: '', price: '', description: '' })} className="w-full px-4 py-3 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold transition border border-[#E07040]/20 flex items-center justify-center gap-2">
                       <Plus size={18} /> Add Item
+                    </button>
+                  </div>
+                )}
+
+                {/* DYNAMIC SECTIONS (IA) */}
+                {site && (site.sections || []).map((sec: any, si: number) => (
+                  currentSection === sec.name && (
+                    <div key={si} className="space-y-4">
+                      {(sec.items || []).map((item: any, ii: number) => (
+                        <div key={ii} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                          <span className="text-xs text-slate-400">Item #{ii + 1}</span>
+                          {item.image ? (
+                            <div className="relative group rounded-lg overflow-hidden">
+                              <img src={item.image} alt="" className="w-full h-32 object-cover" />
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                                <label className="bg-[#E07040] hover:bg-[#E07040]/80 text-white p-2 rounded-lg cursor-pointer transition" title="Replace">
+                                  <Upload size={16} />
+                                  <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    const url = await uploadImage(file);
+                                    if (url) updateSectionItem(si, ii, 'image', url);
+                                  }} />
+                                </label>
+                              </div>
+                            </div>
+                          ) : (
+                            <label className="block w-full text-center bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] py-3 rounded-lg cursor-pointer font-semibold transition border border-[#E07040]/20 text-sm">
+                              <Plus size={16} className="inline mr-1" /> Add photo
+                              <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const url = await uploadImage(file);
+                                if (url) updateSectionItem(si, ii, 'image', url);
+                              }} />
+                            </label>
+                          )}
+                          <input value={item.title || ''} onChange={(e) => updateSectionItem(si, ii, 'title', e.target.value)} placeholder="Titre" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
+                          <textarea value={item.description || ''} onChange={(e) => updateSectionItem(si, ii, 'description', e.target.value)} placeholder="Description" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040] resize-y" />
+                          {item.price !== undefined && (
+                            <input value={item.price || ''} onChange={(e) => updateSectionItem(si, ii, 'price', e.target.value)} placeholder="Prix / badge" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )
+                ))}
+
+                {/* REVIEWS */}
+                {currentSection === 'Reviews' && site && (
+                  <div className="space-y-4">
+                    {(site.testimonials || []).map((item: any, idx: number) => (
+                      <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-slate-400">Avis #{idx + 1}</span>
+                          <button onClick={() => removeArrayItem('testimonials', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
+                        </div>
+                        <input value={item.name || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'name', e.target.value)} placeholder="Nom" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
+                        <input value={item.role || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'role', e.target.value)} placeholder="Rôle / société" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
+                        <input value={item.rating || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'rating', e.target.value)} placeholder="Note (1-5)" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
+                        <textarea value={item.content || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'content', e.target.value)} placeholder="Témoignage" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040] resize-y" />
+                      </div>
+                    ))}
+                    <button onClick={() => addArrayItem('testimonials', { name: '', role: '', rating: '5', content: '' })} className="w-full px-4 py-3 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold transition border border-[#E07040]/20 flex items-center justify-center gap-2">
+                      <Plus size={18} /> Add review
+                    </button>
+                  </div>
+                )}
+
+                {/* FAQ */}
+                {currentSection === 'FAQ' && site && (
+                  <div className="space-y-4">
+                    {(site.faq || []).map((item: any, idx: number) => (
+                      <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-slate-400">Q{idx + 1}</span>
+                          <button onClick={() => removeArrayItem('faq', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
+                        </div>
+                        <input value={item.question || ''} onChange={(e) => updateArrayItem('faq', idx, 'question', e.target.value)} placeholder="Question" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
+                        <textarea value={item.answer || ''} onChange={(e) => updateArrayItem('faq', idx, 'answer', e.target.value)} placeholder="Réponse" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040] resize-y" />
+                      </div>
+                    ))}
+                    <button onClick={() => addArrayItem('faq', { question: '', answer: '' })} className="w-full px-4 py-3 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold transition border border-[#E07040]/20 flex items-center justify-center gap-2">
+                      <Plus size={18} /> Add question
                     </button>
                   </div>
                 )}
