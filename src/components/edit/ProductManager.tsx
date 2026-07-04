@@ -67,6 +67,12 @@ export default function ProductManager({ slug }: { slug: string }) {
 
   useEffect(() => { load(); }, [slug]);
 
+  useEffect(() => {
+    const handler = () => load();
+    window.addEventListener('products-updated', handler);
+    return () => window.removeEventListener('products-updated', handler);
+  }, [slug]);
+
   function resetForm() {
     setDraft(EMPTY_DRAFT);
     setEditingId(null);
