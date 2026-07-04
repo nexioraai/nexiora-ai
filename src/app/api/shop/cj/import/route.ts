@@ -60,8 +60,8 @@ export async function POST(req: Request) {
           })(),
           currency: 'USD',
           images: first.variantImage ? [first.variantImage] : [],
-          stock: 0,
-          published: false,
+          stock: 9999,
+          published: true,
           cj_pid: pid,
           cj_vid: first.vid,
         });
