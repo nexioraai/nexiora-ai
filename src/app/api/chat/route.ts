@@ -308,6 +308,14 @@ STRICT RULES:
 - If the user explicitly says "dropshipping" or "resell imported products" → mode 3.
 - When in doubt → mode 1 (safer default).
 
+DROPSHIPPING (mode 3) SPECIFIC RULES:
+- pages MUST be ["Home", "About", "FAQ", "Contact"] — NO Gallery, NO Reviews, NO Featured Products, NO Services. Shop section appears automatically when the merchant imports products.
+- sections: return an EMPTY array [] — dropshipping sites do NOT need service/menu sections since products come from CJ import.
+- testimonials: return an EMPTY array [] — no fake reviews.
+- gallery: return an EMPTY array [] — no gallery needed.
+- faq: generate 4 relevant e-commerce FAQ (shipping, returns, payment, product quality).
+- whyus: generate 3 relevant trust signals (fast shipping, secure payment, quality guarantee).
+
 Return ONLY valid JSON, no markdown:
 
 {
