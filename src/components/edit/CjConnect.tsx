@@ -155,7 +155,8 @@ export default function CjConnect({ slug }: { slug: string }) {
     <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm mt-8">
       <h2 className="text-xl font-bold mb-2">Fournisseur (CJ Dropshipping)</h2>
       <p className="text-sm text-white/50 mb-5">
-        Connecte ton compte CJ pour la commande automatique en dropshipping.
+        Connecte ton compte CJ pour la commande automatique en dropshipping.{" "}
+        <a href="https://cjdropshipping.com/login" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: "#E07040" }}>Créer ou accéder à ton compte CJ →</a>
       </p>
 
       {loading ? (
