@@ -23,7 +23,8 @@ export async function POST(req: Request) {
       case 'customer.subscription.updated': {
         const obj: any = event.data.object;
         const customerId = obj.customer as string;
-        const status = obj.status || 'active';
+        const isCheckout = event.type === 'checkout.session.completed';
+        const status = isCheckout ? 'active' : (obj.status || 'active');
         const isActive = status === 'active' || status === 'trialing';
 
         await supabase
