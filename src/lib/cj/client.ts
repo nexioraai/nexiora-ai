@@ -117,3 +117,54 @@ export async function cjGetInventory(
   const rows = Array.isArray(data) ? data : [];
   return rows.reduce((sum: number, r: any) => sum + (Number(r?.totalInventoryNum) || 0), 0);
 }
+
+/** Recherche V2 (Elasticsearch) — supporte mot-clé, SKU, catégorie, prix, tri, pagination. */
+export async function cjSearchProductsV2(
+  email: string,
+  apiKey: string,
+  opts: {
+    keyWord?: string;
+    categoryId?: string;
+    startSellPrice?: number;
+    endSellPrice?: number;
+    orderBy?: string;
+    sort?: 'asc' | 'desc';
+    page?: number;
+    size?: number;
+  } = {}
+): Promise<any> {
+  const params = new URLSearchParams();
+  params.set('page', String(opts.page || 1));
+  params.set('size', String(opts.size || 50));
+  if (opts.keyWord) params.set('keyWord', opts.keyWord);
+  if (opts.categoryId) params.set('categoryId', opts.categoryId);
+  if (opts.startSellPrice != null) params.set('startSellPrice', String(opts.startSellPrice));
+  if (opts.endSellPrice != null) params.set('endSellPrice', String(opts.endSellPrice));
+  if (opts.orderBy) params.set('orderBy', opts.orderBy);
+  if (opts.sort) params.set('sort', opts.sort);
+  const url = `/product/listV2?${params.toString()}`;
+  const data = await cjFetch(email, apiKey, url);
+  return data;
+}
+
+/** Lookup direct par PID ou SKU produit. */
+export async function cjGetProductByIdOrSku(
+  email: string,
+  apiKey: string,
+  identifier: string
+): Promise<any> {
+  try {
+    return await cjFetch(email, apiKey, `/product/query?pid=${encodeURIComponent(identifier)}`);
+  } catch {
+    return cjFetch(email, apiKey, `/product/query?productSku=${encodeURIComponent(identifier)}`);
+  }
+}
+
+/** Liste complète des catégories CJ (hiérarchique). */
+export async function cjGetCategories(
+  email: string,
+  apiKey: string
+): Promise<any[]> {
+  return cjFetch(email, apiKey, '/product/getCategory');
+}
+
