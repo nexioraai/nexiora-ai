@@ -6,27 +6,22 @@ import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/lib/translations';
 import {
   Home, LayoutGrid, Settings, Globe, BarChart3,
-  Database, MapPin, LogOut, Menu, X, Zap, Megaphone,
+  Database, MapPin, Menu, X, Zap, Megaphone,
 } from 'lucide-react';
 
 export default function Sidebar() {
   const { t } = useTranslation();
   const pathname = usePathname();
   const router = useRouter();
-  const [email, setEmail] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email || null));
   }, []);
 
   // Ferme le panneau mobile quand on change de page
   useEffect(() => { setOpen(false); }, [pathname]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
-  };
+
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : (pathname?.startsWith(href) ?? false);
@@ -87,20 +82,8 @@ export default function Sidebar() {
           <Settings className="w-[18px] h-[18px]" />
           {t('sidebar.settings')}
         </Link>
-        {email && (
-          <div className="flex items-center gap-3 px-2 mb-3">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg, #4F6EF5 0%, #E07040 100%)' }}>
-              {email[0].toUpperCase()}
-            </div>
-            <span className="text-xs text-white/50 truncate">{email}</span>
-          </div>
-        )}
-        <button onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all w-full">
-          <LogOut className="w-[18px] h-[18px]" />
-          {t('sidebar.logout')}
-        </button>
+
+
       </div>
     </>
   );
