@@ -40,7 +40,9 @@ export async function POST(req: Request) {
     let imported = 0;
     const errors: string[] = [];
 
-    for (const pid of pids) {
+    for (let i = 0; i < pids.length; i++) {
+      if (i > 0) await new Promise(r => setTimeout(r, 1100));
+      const pid = pids[i];
       try {
         const variants = await cjGetVariants(site.cj_email, site.cj_api_key, pid);
         const first = Array.isArray(variants) ? variants[0] : variants?.[0];
