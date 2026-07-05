@@ -456,7 +456,17 @@ Return ONLY valid JSON, no markdown:
       team: [],
       hours: {},
       address: parsed.contact?.address || '',
-      pages: parsed.pages,
+      pages: (() => {
+        const m = siteMode ?? (parsed.mode === 2 || parsed.mode === 3 ? parsed.mode : 1);
+        if (m === 3) {
+          const l = (parsed.lang || detectedLang || 'fr').toLowerCase();
+          if (l === 'fr') return ['Accueil', 'À propos', 'Contact'];
+          if (l === 'es') return ['Inicio', 'Acerca de', 'Contacto'];
+          if (l === 'ar') return ['الرئيسية', 'من نحن', 'اتصل بنا'];
+          return ['Home', 'About', 'Contact'];
+        }
+        return parsed.pages;
+      })(),
       cta: parsed.cta,
       products: productsWithImages,
       social_links: parsed.socialLinks,
