@@ -64,7 +64,7 @@ export default function CjCatalog({ slug }: { slug: string }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erreur');
-      setMsg(`${data.imported} produit(s) importé(s) — ajuste les prix dans la liste des produits.`);
+      setMsg(`${data.imported} produit(s) importé(s)${data.errors?.length ? ' — Erreurs: ' + data.errors.join(', ') : ''}.`);
       window.dispatchEvent(new Event('products-updated'));
       setSelected(new Set());
     } catch (e: any) {
