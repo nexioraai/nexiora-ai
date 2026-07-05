@@ -91,8 +91,9 @@ export default function Sidebar() {
   return (
     <>
       {/* Desktop : sidebar fixe */}
+      <div className="hidden lg:block w-60 flex-shrink-0" />
       <aside
-        className="hidden lg:flex flex-col w-60 h-screen sticky top-0 border-r border-white/8 px-4 py-5"
+        className="hidden lg:flex flex-col w-60 h-screen fixed top-0 left-0 border-r border-white/8 px-4 py-5 z-40"
         style={{ background: 'rgba(10,5,14,0.6)' }}
       >
         {content}
