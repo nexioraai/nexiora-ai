@@ -467,6 +467,11 @@ Return ONLY valid JSON, no markdown:
         }
         return parsed.pages;
       })(),
+      hidden_sections: (() => {
+        const m = siteMode ?? (parsed.mode === 2 || parsed.mode === 3 ? parsed.mode : 1);
+        if (m === 3) return ['Services', 'Gallery', 'Reviews'];
+        return [];
+      })(),
       cta: parsed.cta,
       products: productsWithImages,
       social_links: parsed.socialLinks,

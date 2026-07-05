@@ -11,6 +11,7 @@ interface MobileNavProps {
     primary_color?: string
     products?: any[]
     lang?: string
+    hidden_sections?: string[]
   }
   cta: string
   ctaHref: string
@@ -21,15 +22,16 @@ export default function MobileNav({ site, cta, ctaHref }: MobileNavProps) {
   const primary = site.primary_color || '#111111'
   const t = getDict(site.lang)
   const hasShop = (site.products?.length || 0) > 0
+  const hidden = (name: string) => (site.hidden_sections || []).includes(name)
   const closeMenu = () => setIsOpen(false)
 
   const navLinks = [
-    { href: '#about', label: t.nav.about },
-    { href: '#services', label: t.nav.services },
-    ...(hasShop ? [{ href: '#shop', label: t.nav.shop }] : []),
-    { href: '#gallery', label: t.nav.gallery },
-    { href: '#testimonials', label: t.nav.reviews },
-    { href: '#contact', label: t.nav.contact },
+    ...(!hidden('About') ? [{ href: '#about', label: t.nav.about }] : []),
+    ...(!hidden('Services') ? [{ href: '#services', label: t.nav.services }] : []),
+    ...(hasShop && !hidden('Shop') ? [{ href: '#shop', label: t.nav.shop }] : []),
+    ...(!hidden('Gallery') ? [{ href: '#gallery', label: t.nav.gallery }] : []),
+    ...(!hidden('Reviews') ? [{ href: '#testimonials', label: t.nav.reviews }] : []),
+    ...(!hidden('Contact') ? [{ href: '#contact', label: t.nav.contact }] : []),
   ]
 
   return (
