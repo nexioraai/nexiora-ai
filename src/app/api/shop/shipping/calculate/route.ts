@@ -62,7 +62,9 @@ export async function POST(req: Request) {
         return NextResponse.json({ shipping: flat, source: 'flat' });
       }
       const cheapest = Math.min(...prices);
-      return NextResponse.json({ shipping: Math.round(cheapest * 100) / 100, source: 'cj' });
+      const bestOption = list.find((o: any) => Number(o?.logisticPrice ?? o?.price ?? o?.freightAmount) === cheapest);
+      const aging = bestOption?.logisticAging || null;
+      return NextResponse.json({ shipping: Math.round(cheapest * 100) / 100, source: 'cj', aging });
     } catch (e) {
       // CJ indisponible -> repli forfait, ne casse jamais le checkout
       return NextResponse.json({ shipping: flat, source: 'flat' });

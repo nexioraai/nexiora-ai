@@ -26,6 +26,7 @@ export default function CartDrawer({
   const [country, setCountry] = useState('');
   const [shipping, setShipping] = useState<number | null>(null);
   const [calcBusy, setCalcBusy] = useState(false);
+  const [aging, setAging] = useState<string | null>(null);
 
   // Libelles pays localises (ISO -> nom), tries alpha. Liste alignee sur Stripe.
   const COUNTRY_CODES = ['US','CA','GB','FR','DE','ES','IT','NL','BE','CH','AT','IE','PT','SE','NO','DK','FI','PL','AU','NZ','JP','KR','SG','HK','AE','SA','BR','MX','ZA','IN'];
@@ -39,6 +40,7 @@ export default function CartDrawer({
   const handleCountryChange = async (code: string) => {
     setCountry(code);
     setShipping(null);
+    setAging(null);
     setError('');
     if (!code) return;
     setCalcBusy(true);
@@ -55,6 +57,7 @@ export default function CartDrawer({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erreur');
       setShipping(Number(data.shipping) || 0);
+      setAging(data.aging || null);
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -179,12 +182,19 @@ export default function CartDrawer({
               <p className="text-sm text-neutral-400 text-center">Sélectionnez votre pays pour calculer la livraison.</p>
             )}
             {country && (
+              <>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-neutral-500">Livraison</span>
                 <span className="text-neutral-700">
                   {calcBusy ? '…' : shipping !== null ? `${shipping.toFixed(2)} ${currency}` : '—'}
                 </span>
               </div>
+              {aging && (
+                <p className="text-xs text-neutral-500 mt-1">
+                  {aging} days
+                </p>
+              )}
+              </>
             )}
             <div className="flex items-center justify-between">
               <span className="text-neutral-500">{labels.total}</span>

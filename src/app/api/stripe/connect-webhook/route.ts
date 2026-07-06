@@ -42,7 +42,7 @@ export async function POST(req: Request) {
             shipping_address: session.shipping_details?.address ?? session.collected_information?.shipping_details?.address ?? null,
           })
           .eq('payment_ref', session.id)
-          .select('id')
+          .select('id, estimated_delivery')
           .maybeSingle();
 
         if (order) {
@@ -87,6 +87,7 @@ export async function POST(req: Request) {
               orderId: order.id,
               total: (session.amount_total || 0) / 100,
               currency: session.currency || 'usd',
+              estimatedDelivery: order.estimated_delivery || undefined,
             });
           } catch (emailErr) {
             console.error('Order confirmation email error:', emailErr);

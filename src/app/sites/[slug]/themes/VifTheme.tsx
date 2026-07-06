@@ -16,6 +16,7 @@ import { getDict } from './i18n'
 import Reveal from './Reveal'
 import TiltCard from './TiltCard'
 import AddToCartButton from './AddToCartButton'
+import ShippingEstimate from './ShippingEstimate'
 import { getCartLabels } from './cartLabels'
 
 // Palette Gusto clair-editorial (fixe, signature du theme)
@@ -357,6 +358,7 @@ export default function VifTheme({ site }: { site: Site }) {
                         primary={INK}
                         label={cartT.addToCart}
                       />
+                      {p.cjVid && <ShippingEstimate siteId={site.id} cjVid={p.cjVid} primary={GOLD} deliveryLabel={t.labels.estimatedDelivery} daysLabel={t.labels.days} />}
                     </div>
                   </TiltCard>
                 ))}

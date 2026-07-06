@@ -23,6 +23,7 @@ import { getDict } from './i18n'
 import Reveal from './Reveal'
 import TiltCard from './TiltCard'
 import AddToCartButton from './AddToCartButton'
+import ShippingEstimate from './ShippingEstimate'
 import { getCartLabels } from './cartLabels'
 
 // ---------- Premium Button ----------
@@ -431,6 +432,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
                         </a>
                       )}
                     </div>
+                    {p.cjVid && <ShippingEstimate siteId={site.id} cjVid={p.cjVid} primary={primary} deliveryLabel={t.labels.estimatedDelivery} daysLabel={t.labels.days} />}
                   </div>
                 </div>
               ))}

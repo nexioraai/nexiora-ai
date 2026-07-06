@@ -19,6 +19,7 @@ type LucideIcon,
 // ---------- Types ----------
 
 export type Site = {
+id: string
 slug: string
 name: string
 slogan?: string
@@ -69,6 +70,7 @@ price: string
 priceNumber?: number
 currency?: string
 image?: string
+cjVid?: string | null
 }
 
 export type Service = {
@@ -107,7 +109,7 @@ return null
 
 const { data: shopProducts } = await supabase
 .from('shop_products')
-.select('id,name,description,price,currency,images')
+.select('id,name,description,price,currency,images,cj_vid')
 .eq('site_id', (data as any).id)
 .eq('published', true)
 .order('position', { ascending: true })
@@ -121,6 +123,7 @@ price: p.price != null ? `${Number(p.price).toFixed(2)} ${p.currency}` : '',
 priceNumber: p.price != null ? Number(p.price) : undefined,
 currency: p.currency,
 image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : undefined,
+cjVid: p.cj_vid || null,
 }))
 }
 
@@ -155,7 +158,7 @@ return null
 }
 const { data: shopProducts } = await supabase
 .from('shop_products')
-.select('id,name,description,price,currency,images')
+.select('id,name,description,price,currency,images,cj_vid')
 .eq('site_id', (data as any).id)
 .eq('published', true)
 .order('position', { ascending: true })
@@ -168,6 +171,7 @@ price: p.price != null ? `${Number(p.price).toFixed(2)} ${p.currency}` : '',
 priceNumber: p.price != null ? Number(p.price) : undefined,
 currency: p.currency,
 image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : undefined,
+cjVid: p.cj_vid || null,
 }))
 }
 return data as unknown as Site

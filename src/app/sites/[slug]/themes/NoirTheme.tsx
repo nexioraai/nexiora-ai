@@ -14,6 +14,7 @@ import { getDict } from './i18n'
 import Reveal from './Reveal'
 import TiltCard from './TiltCard'
 import AddToCartButton from './AddToCartButton'
+import ShippingEstimate from './ShippingEstimate'
 import { getCartLabels } from './cartLabels'
 
 const BG = '#17120C'
@@ -287,6 +288,7 @@ export default function NoirTheme({ site }: { site: Site }) {
                         primary={gold}
                         label={cartT.addToCart}
                       />
+                      {p.cjVid && <ShippingEstimate siteId={site.id} cjVid={p.cjVid} primary={gold} deliveryLabel={t.labels.estimatedDelivery} daysLabel={t.labels.days} />}
                     </div>
                   </TiltCard>
                 ))}

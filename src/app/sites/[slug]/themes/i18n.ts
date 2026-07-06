@@ -39,6 +39,8 @@ export type ThemeDict = {
     followUs: string
     poweredBy: string
     rightsReserved: string
+    estimatedDelivery: string
+    days: string
   }
   form: {
     title: string
@@ -128,6 +130,8 @@ const en: ThemeDict = {
     followUs: 'Follow us',
     poweredBy: 'Powered by',
     rightsReserved: 'All rights reserved.',
+    estimatedDelivery: 'Estimated delivery:',
+    days: 'days',
   },
   form: {
     name: 'Your name',
@@ -217,6 +221,8 @@ const fr: ThemeDict = {
     followUs: 'Suivez-nous',
     poweredBy: 'Propulsé par',
     rightsReserved: 'Tous droits réservés.',
+    estimatedDelivery: 'Livraison estimée :',
+    days: 'jours',
   },
   form: {
     name: 'Votre nom',
@@ -306,6 +312,8 @@ const es: ThemeDict = {
     followUs: 'Síguenos',
     poweredBy: 'Desarrollado por',
     rightsReserved: 'Todos los derechos reservados.',
+    estimatedDelivery: 'Entrega estimada:',
+    days: 'días',
   },
   form: {
     name: 'Tu nombre',
@@ -395,6 +403,8 @@ const ar: ThemeDict = {
     followUs: 'تابعنا',
     poweredBy: 'مشغّل بواسطة',
     rightsReserved: 'جميع الحقوق محفوظة.',
+    estimatedDelivery: 'التسليم المقدّر:',
+    days: 'أيام',
   },
   form: {
     name: 'اسمك',

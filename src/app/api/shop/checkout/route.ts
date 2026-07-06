@@ -32,6 +32,7 @@ export async function POST(req: Request) {
     // Calcul serveur du frais de port : vrai cout CJ si possible, sinon forfait.
     // On ne fait jamais confiance a un montant envoye par le client.
     let shippingAmount = Number(site.shipping_flat) || 0;
+    let estimatedDelivery: string | null = null;
     if (countryCode && STRIPE_SHIPPING_COUNTRIES.includes(countryCode as any) && site.cj_email && site.cj_api_key) {
       try {
         const ids = items.map((i) => i.id);
@@ -50,7 +51,12 @@ export async function POST(req: Request) {
           const prices = list
             .map((o: any) => Number(o?.logisticPrice ?? o?.price ?? o?.freightAmount))
             .filter((n) => Number.isFinite(n) && n >= 0);
-          if (prices.length > 0) shippingAmount = Math.round(Math.min(...prices) * 100) / 100;
+          if (prices.length > 0) {
+            const cheapest = Math.min(...prices);
+            shippingAmount = Math.round(cheapest * 100) / 100;
+            const bestOption = list.find((o: any) => Number(o?.logisticPrice ?? o?.price ?? o?.freightAmount) === cheapest);
+            estimatedDelivery = bestOption?.logisticAging || null;
+          }
         }
       } catch (e) {
         // CJ indisponible -> on garde le forfait. Ne casse jamais le checkout.
@@ -78,6 +84,7 @@ export async function POST(req: Request) {
         payment_provider: site.payment_provider || 'stripe',
         payment_account_id: site.payment_account_id,
         payment_ref: orderId,
+        estimated_delivery: estimatedDelivery,
       })
       .select('id')
       .single();
