@@ -3,6 +3,7 @@ import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 import { getStripe } from '@/lib/stripe';
 import { decrementStock } from '@/lib/shop';
 import { fulfillCjOrder } from '@/lib/cj/fulfill';
+import { sendOrderConfirmationEmail } from '@/lib/email/sendOrderConfirmationEmail';
 
 /**
  * Webhook dédié aux paiements boutique (Stripe Connect).
@@ -70,6 +71,25 @@ export async function POST(req: Request) {
             if (stockItems.length > 0) {
               await decrementStock(stockItems);
             }
+          }
+
+          // Email de confirmation de commande
+          try {
+            const { data: siteData } = await supabase
+              .from('sites')
+              .select('name')
+              .eq('id', (await supabase.from('shop_orders').select('site_id').eq('id', order.id).single()).data?.site_id)
+              .single();
+            await sendOrderConfirmationEmail({
+              to: session.customer_details?.email,
+              customerName: session.customer_details?.name,
+              shopName: siteData?.name || 'Votre boutique',
+              orderId: order.id,
+              total: (session.amount_total || 0) / 100,
+              currency: session.currency || 'usd',
+            });
+          } catch (emailErr) {
+            console.error('Order confirmation email error:', emailErr);
           }
         }
         break;
