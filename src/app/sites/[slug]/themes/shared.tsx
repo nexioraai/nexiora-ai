@@ -93,14 +93,15 @@ export const PUBLIC_COLS =
 'id,slug,name,slogan,type,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image,lang,faq,whyus,mission,vision,geo_lat,geo_lng,area_served,price_range,hidden_sections,section_label,sections,created_at'
 
 export async function fetchSite(
-slug: string
+slug: string,
+allowUnpublished = false
 ): Promise<Site | null> {
-const { data, error } = await supabase
+let query = supabase
 .from('sites')
 .select(PUBLIC_COLS)
 .eq('slug', slug)
-.eq('published', true)
-.single()
+if (!allowUnpublished) query = query.eq('published', true)
+const { data, error } = await query.single()
 
 if (error || !data) {
 console.error(error)

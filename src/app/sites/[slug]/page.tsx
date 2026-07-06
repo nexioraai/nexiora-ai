@@ -25,7 +25,7 @@ const themes = {
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nexiora-ai.vercel.app'
 
-type Props = { params: Promise<{ slug: string }> }
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ [key: string]: string | undefined }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
@@ -68,9 +68,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function SitePage({ params }: Props) {
+export default async function SitePage({ params, searchParams }: Props) {
   const { slug } = await params
-  const site = await fetchSite(slug)
+  const sp = await searchParams
+  const site = await fetchSite(slug, sp.paid === '1')
   if (!site) notFound()
 
   const key = (site.theme as keyof typeof themes) || 'editorial'
