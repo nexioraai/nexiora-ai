@@ -84,7 +84,9 @@ function extractNicheKeyword(type: string | null): string | null {
 async function upsertProducts(products: CatalogProduct[]): Promise<number> {
   if (products.length === 0) return 0;
 
-  const rows = products.map(p => ({
+  const rows = products
+    .filter(p => p.price > 0 && p.supplier_product_id && p.name)
+    .map(p => ({
     supplier_id: p.supplier_id,
     supplier_product_id: p.supplier_product_id,
     name: p.name,

@@ -24,6 +24,16 @@ import { cjSearchProductsV2, cjGetInventory, cjCalculateFreight, cjCreateOrder, 
 const NEXIORA_CJ_EMAIL = process.env.CJ_EMAIL!;
 const NEXIORA_CJ_API_KEY = process.env.CJ_API_KEY!;
 
+/** Parse le prix CJ (peut être '8.79 -- 9.95' ou un nombre). Retourne le min. */
+function parseCjPrice(raw: any): number {
+  if (typeof raw === 'number') return raw;
+  if (typeof raw === 'string') {
+    const match = raw.match(/([\d.]+)/);
+    return match ? parseFloat(match[1]) : 0;
+  }
+  return 0;
+}
+
 /** Mappe un produit CJ brut vers CatalogProduct unifié. */
 function mapCjProduct(raw: any): CatalogProduct {
   const variants = Array.isArray(raw.variants)
@@ -39,12 +49,12 @@ function mapCjProduct(raw: any): CatalogProduct {
 
   return {
     supplier_id: 'cj',
-    supplier_product_id: raw.pid || raw.productId || '',
+    supplier_product_id: raw.pid || raw.id || raw.productId || '',
     name: raw.productNameEn || raw.nameEn || raw.productName || '',
-    description: raw.description || raw.productNameEn || '',
-    category: raw.categoryName || raw.categoryNameEn || '',
+    description: raw.description || raw.productNameEn || raw.nameEn || '',
+    category: raw.categoryName || raw.categoryNameEn || raw.categoryId || '',
     images: [raw.productImage, raw.bigImage, ...(raw.productImageList || [])].filter(Boolean),
-    price: Number(raw.sellPrice ?? raw.productPrice ?? 0),
+    price: parseCjPrice(raw.sellPrice ?? raw.productPrice ?? 0),
     currency: 'USD',
     variants,
     shipping_days_min: raw.logisticAging?.min ?? 10,
