@@ -195,16 +195,21 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
                   style={{
                     width: '100%',
                     marginTop: 8,
-                    padding: '8px 0',
+                    padding: '6px 0',
                     border: 'none',
-                    borderRadius: 6,
-                    background: primary,
-                    color: '#fff',
+                    background: 'transparent',
+                    color: primary,
                     fontSize: 13,
                     fontWeight: 500,
                     cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    opacity: 0.8,
                   }}
                 >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                   {lang === 'fr' ? 'Ajouter au panier' : 'Add to cart'}
                 </button>
               </div>
