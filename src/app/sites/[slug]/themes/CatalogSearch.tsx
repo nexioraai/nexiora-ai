@@ -81,7 +81,7 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
 
   const content = (
     <div style={{ width: '100%', maxWidth: 1100, margin: '1.5rem auto 2rem', padding: '0 1rem' }}>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
         <input
           type="text"
           value={query}
@@ -118,7 +118,7 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
 
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
         gap: 16,
       }}>
         {products.map(p => {
