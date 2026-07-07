@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useCart } from './CartContext';
 import { createPortal } from 'react-dom';
 
 interface CatalogProduct {
@@ -27,6 +28,7 @@ const LABELS: Record<string, Record<string, string>> = {
 
 export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
   const t = LABELS[lang] || LABELS.en;
+  const { addItem, openCart } = useCart();
   const [query, setQuery] = useState('');
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [loading, setLoading] = useState(false);
@@ -179,6 +181,32 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
                     {p.shipping_days_min}-{p.shipping_days_max} {t.shipping}
                   </span>
                 </div>
+                <button
+                  onClick={() => {
+                    addItem({
+                      id: 'catalog-' + p.id,
+                      name: p.name,
+                      priceNumber: p.price,
+                      currency: 'USD',
+                      image: p.images?.[0],
+                    });
+                    openCart();
+                  }}
+                  style={{
+                    width: '100%',
+                    marginTop: 8,
+                    padding: '8px 0',
+                    border: 'none',
+                    borderRadius: 6,
+                    background: primary,
+                    color: '#fff',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {lang === 'fr' ? 'Ajouter au panier' : 'Add to cart'}
+                </button>
               </div>
             </div>
           );
