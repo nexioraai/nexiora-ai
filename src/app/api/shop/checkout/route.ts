@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getProvider } from '@/lib/payments';
 import { checkStock } from '@/lib/shop';
 import type { CartItem } from '@/lib/payments/types';
-import { cjCalculateFreight } from '@/lib/cj/client';
+import { cjCalculateFreight, cjGetVariants } from '@/lib/cj/client';
 import { STRIPE_SHIPPING_COUNTRIES } from '@/lib/payments/countries';
 
 /** POST /api/shop/checkout → crée la session de paiement. Body: { slug, items } (route publique : un client final achète). */
@@ -36,12 +36,36 @@ export async function POST(req: Request) {
     if (countryCode && STRIPE_SHIPPING_COUNTRIES.includes(countryCode as any) && site.cj_email && site.cj_api_key) {
       try {
         const ids = items.map((i) => i.id);
-        const { data: prods } = await supabaseAdmin
-          .from('shop_products')
-          .select('id, cj_vid')
-          .in('id', ids);
+        const shopIds = ids.filter((id) => !id.startsWith('catalog-'));
+        const catalogIds = ids.filter((id) => id.startsWith('catalog-'));
         const vidById = new Map<string, string>();
-        (prods || []).forEach((p: any) => { if (p.cj_vid) vidById.set(p.id, p.cj_vid); });
+
+        // Shop products
+        if (shopIds.length > 0) {
+          const { data: prods } = await supabaseAdmin
+            .from('shop_products')
+            .select('id, cj_vid')
+            .in('id', shopIds);
+          (prods || []).forEach((p: any) => { if (p.cj_vid) vidById.set(p.id, p.cj_vid); });
+        }
+
+        // Catalog products
+        if (catalogIds.length > 0 && site.cj_email && site.cj_api_key) {
+          const realIds = catalogIds.map((id) => id.replace('catalog-', ''));
+          const { data: catProds } = await supabaseAdmin
+            .from('catalog_products')
+            .select('id, supplier_product_id')
+            .in('id', realIds);
+          for (const cp of (catProds || [])) {
+            if (!cp.supplier_product_id) continue;
+            try {
+              const variants = await cjGetVariants(site.cj_email, site.cj_api_key, cp.supplier_product_id);
+              const vid = Array.isArray(variants) && variants.length > 0 ? (variants[0].vid || variants[0].variantId) : null;
+              if (vid) vidById.set('catalog-' + cp.id, vid);
+            } catch {}
+          }
+        }
+
         const cjProducts = items
           .filter((i) => vidById.has(i.id))
           .map((i) => ({ vid: vidById.get(i.id)!, quantity: i.quantity }));
