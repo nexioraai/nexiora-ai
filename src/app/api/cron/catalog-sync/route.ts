@@ -29,11 +29,12 @@ export async function GET(req: NextRequest) {
   }
 
   // 2. Extrait les mots-clés uniques des niches
-  const niches = [...new Set(
+  const rawNiches = [...new Set(
     sites
       .map(s => extractNicheKeyword(s.type))
       .filter(Boolean)
   )] as string[];
+  const niches = rawNiches.flatMap(expandNiche);
 
   if (niches.length === 0) {
     return NextResponse.json({ done: true, synced: 0, message: 'Aucune niche exploitable' });
@@ -69,6 +70,22 @@ export async function GET(req: NextRequest) {
   });
 }
 
+/** Expande une niche en sous-catégories pour plus de résultats. */
+function expandNiche(niche: string): string[] {
+  const map: Record<string, string[]> = {
+    Electronics: ['headphones', 'smartwatch', 'phone accessories', 'LED lights', 'speakers', 'charger', 'camera accessories'],
+    Fashion: ['dress', 'shoes', 'bags', 'jewelry', 'sunglasses', 'watch'],
+    Fitness: ['resistance bands', 'yoga mat', 'gym accessories', 'water bottle', 'sportswear'],
+    Home: ['kitchen gadgets', 'home decor', 'LED lamp', 'storage', 'bathroom accessories'],
+    Beauty: ['makeup brush', 'skincare', 'hair accessories', 'nail art', 'beauty tools'],
+    Tech: ['USB hub', 'phone case', 'tablet stand', 'webcam', 'mouse pad'],
+  };
+  for (const [key, subs] of Object.entries(map)) {
+    if (niche.toLowerCase().includes(key.toLowerCase())) return subs;
+  }
+  return [niche];
+}
+
 /** Extrait un mot-clé de recherche depuis le type du site. */
 function extractNicheKeyword(type: string | null): string | null {
   if (!type) return null;
@@ -84,8 +101,15 @@ function extractNicheKeyword(type: string | null): string | null {
 async function upsertProducts(products: CatalogProduct[]): Promise<number> {
   if (products.length === 0) return 0;
 
+  const seen = new Set<string>();
   const rows = products
-    .filter(p => p.price > 0 && p.supplier_product_id && p.name)
+    .filter(p => {
+      if (p.price <= 0 || !p.supplier_product_id || !p.name) return false;
+      const key = p.supplier_id + ':' + p.supplier_product_id;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
     .map(p => ({
     supplier_id: p.supplier_id,
     supplier_product_id: p.supplier_product_id,

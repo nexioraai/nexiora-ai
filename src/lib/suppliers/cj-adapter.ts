@@ -84,20 +84,25 @@ export const cjAdapter: SupplierAdapter = {
 
   // ---- CRON (clés Nexiora) ----
   async syncCatalog(options: SyncOptions): Promise<SyncResult> {
-    const pageSize = options.page_size || 50;
-    const page = options.page || 1;
+    const pageSize = 200;
+    const maxPages = 3;
     const allProducts: CatalogProduct[] = [];
+    const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 
     for (const category of options.categories) {
-      const data = await cjSearchProductsV2(NEXIORA_CJ_EMAIL, NEXIORA_CJ_API_KEY, {
-        keyWord: category,
-        page,
-        size: pageSize,
-      });
+      for (let page = 1; page <= maxPages; page++) {
+        await delay(1200);
+        const data = await cjSearchProductsV2(NEXIORA_CJ_EMAIL, NEXIORA_CJ_API_KEY, {
+          keyWord: category,
+          page,
+          size: pageSize,
+        });
 
-      const rawList = data?.content?.[0]?.productList ?? data?.content ?? data?.list ?? [];
-      const mapped = rawList.map(mapCjProduct);
-      allProducts.push(...mapped);
+        const rawList = data?.content?.[0]?.productList ?? data?.content ?? data?.list ?? [];
+        const mapped = rawList.map(mapCjProduct);
+        allProducts.push(...mapped);
+        if (rawList.length < pageSize) break;
+      }
     }
 
     const totalRecords = allProducts.length;
@@ -105,8 +110,8 @@ export const cjAdapter: SupplierAdapter = {
     return {
       products: allProducts,
       total_available: totalRecords,
-      has_more: totalRecords >= pageSize,
-      next_page: totalRecords >= pageSize ? page + 1 : undefined,
+      has_more: false,
+      next_page: undefined,
     };
   },
 
