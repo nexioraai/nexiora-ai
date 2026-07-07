@@ -73,11 +73,7 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
     return () => clearTimeout(timer);
   }, [query, search]);
 
-  const badgeColor: Record<string, { bg: string; text: string }> = {
-    cj: { bg: '#FEE2E2', text: '#991B1B' },
-    spocket: { bg: '#DBEAFE', text: '#1E40AF' },
-    printful: { bg: '#DCFCE7', text: '#166534' },
-  };
+
 
   const content = (
     <div style={{ width: '100%', maxWidth: 1100, margin: '1.5rem auto 2rem', padding: '0 1rem' }}>
@@ -122,7 +118,6 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
         gap: 16,
       }}>
         {products.map(p => {
-          const badge = badgeColor[p.supplier_id] || { bg: '#F3F4F6', text: '#374151' };
           return (
             <div
               key={p.id}
@@ -165,20 +160,8 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
                 <p style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px' }}>
                   ${p.price.toFixed(2)}
                 </p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{
-                    fontSize: 11,
-                    padding: '2px 8px',
-                    borderRadius: 10,
-                    background: badge.bg,
-                    color: badge.text,
-                    fontWeight: 500,
-                  }}>
-                    {p.supplier_id.toUpperCase()}
-                  </span>
-                  <span style={{ fontSize: 11, opacity: 0.6 }}>
-                    {p.shipping_days_min}-{p.shipping_days_max} {t.shipping}
-                  </span>
+                <div style={{ fontSize: 11, opacity: 0.6 }}>
+                  {p.shipping_days_min}-{p.shipping_days_max} {t.shipping}
                 </div>
                 <AddToCartButton
                   id={'catalog-' + p.id}
