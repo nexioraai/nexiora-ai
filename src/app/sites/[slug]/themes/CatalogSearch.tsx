@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useCart } from './CartContext';
+import AddToCartButton from './AddToCartButton';
 import { createPortal } from 'react-dom';
 
 interface CatalogProduct {
@@ -28,7 +28,6 @@ const LABELS: Record<string, Record<string, string>> = {
 
 export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
   const t = LABELS[lang] || LABELS.en;
-  const { addItem, openCart } = useCart();
   const [query, setQuery] = useState('');
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [loading, setLoading] = useState(false);
@@ -181,37 +180,15 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
                     {p.shipping_days_min}-{p.shipping_days_max} {t.shipping}
                   </span>
                 </div>
-                <button
-                  onClick={() => {
-                    addItem({
-                      id: 'catalog-' + p.id,
-                      name: p.name,
-                      priceNumber: p.price,
-                      currency: 'USD',
-                      image: p.images?.[0],
-                    });
-                    openCart();
-                  }}
-                  style={{
-                    width: '100%',
-                    marginTop: 8,
-                    padding: '6px 0',
-                    border: 'none',
-                    background: 'transparent',
-                    color: primary,
-                    fontSize: 13,
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 6,
-                    opacity: 0.8,
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                  {lang === 'fr' ? 'Ajouter au panier' : 'Add to cart'}
-                </button>
+                <AddToCartButton
+                  id={'catalog-' + p.id}
+                  name={p.name}
+                  priceNumber={p.price}
+                  currency="USD"
+                  image={p.images?.[0]}
+                  primary={primary}
+                  label={lang === 'fr' ? 'Ajouter au panier' : 'Add to cart'}
+                />
               </div>
             </div>
           );
