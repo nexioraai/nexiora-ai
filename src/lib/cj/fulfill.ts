@@ -1,6 +1,7 @@
 import 'server-only';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { cjCalculateFreight, cjCreateOrder, cjGetBalance, cjGetOrderDetail } from './client';
+import { cjCalculateFreight, cjCreateOrder, cjGetBalance, cjGetOrderDetail, cjGetVariants } from './client';
+import { supabaseAdmin as supabaseAdmin2 } from '@/lib/supabase-admin';
 
 const MAX_PAY_ATTEMPTS = 3;
 
@@ -45,13 +46,42 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
   if (!items || items.length === 0) return [];
 
   const productIds = items.map((it: any) => it.product_id).filter(Boolean);
-  const { data: products } = await supabaseAdmin
-    .from('shop_products')
-    .select('id, cj_vid')
-    .in('id', productIds);
+
+  // Sépare produits shop vs catalogue
+  const shopIds = productIds.filter((id: string) => !id.startsWith('catalog-'));
+  const catalogIds = productIds.filter((id: string) => id.startsWith('catalog-'));
 
   const vidById = new Map<string, string>();
-  (products || []).forEach((p: any) => { if (p.cj_vid) vidById.set(p.id, p.cj_vid); });
+
+  // Produits shop classiques (shop_products.cj_vid)
+  if (shopIds.length > 0) {
+    const { data: products } = await supabaseAdmin
+      .from('shop_products')
+      .select('id, cj_vid')
+      .in('id', shopIds);
+    (products || []).forEach((p: any) => { if (p.cj_vid) vidById.set(p.id, p.cj_vid); });
+  }
+
+  // Produits catalogue (catalog_products.supplier_product_id = pid CJ)
+  if (catalogIds.length > 0) {
+    const realIds = catalogIds.map((id: string) => id.replace('catalog-', ''));
+    const { data: catProds } = await supabaseAdmin
+      .from('catalog_products')
+      .select('id, supplier_product_id')
+      .in('id', realIds);
+    for (const cp of (catProds || [])) {
+      if (!cp.supplier_product_id) continue;
+      try {
+        const variants = await cjGetVariants(site.cj_email, site.cj_api_key, cp.supplier_product_id);
+        const firstVid = Array.isArray(variants) && variants.length > 0
+          ? (variants[0].vid || variants[0].variantId)
+          : null;
+        if (firstVid) vidById.set('catalog-' + cp.id, firstVid);
+      } catch (e) {
+        console.error('CJ getVariants failed for catalog product:', cp.supplier_product_id, e);
+      }
+    }
+  }
 
   const cjProducts = items
     .filter((it: any) => it.product_id && vidById.has(it.product_id))
