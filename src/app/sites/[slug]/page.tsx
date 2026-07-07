@@ -11,6 +11,7 @@ import VifTheme from './themes/VifTheme'
 import CartShell from './themes/CartShell'
 import { getCartLabels } from './themes/cartLabels'
 import ScrollRevealInit from './themes/ScrollRevealInit'
+import CatalogSearch from './themes/CatalogSearch'
 
 export const dynamic = 'force-dynamic'
 
@@ -85,6 +86,7 @@ export default async function SitePage({ params, searchParams }: Props) {
       <JsonLd site={site} />
       <CartShell primary={primary} labels={cartLabels} slug={site.slug}>
         <Theme site={site} />
+        {site.mode === 3 && <CatalogSearch slug={site.slug} primary={primary} lang={site.lang} />}
       </CartShell>
       <ScrollRevealInit />
     </>
