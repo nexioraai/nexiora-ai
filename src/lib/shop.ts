@@ -112,6 +112,7 @@ export async function checkStock(
   lines: StockLine[]
 ): Promise<{ ok: true } | { ok: false; reason: string }> {
   for (const line of lines) {
+    if (line.id.startsWith("catalog-")) continue;
     const product = await getProduct(line.id);
     if (!product) return { ok: false, reason: `Produit introuvable` };
     if (product.stock < line.quantity) {
@@ -127,6 +128,7 @@ export async function checkStock(
  */
 export async function decrementStock(lines: StockLine[]): Promise<void> {
   for (const line of lines) {
+    if (line.id.startsWith("catalog-")) continue;
     const product = await getProduct(line.id);
     if (!product) {
       console.error(`decrementStock: produit ${line.id} introuvable`);
