@@ -13,6 +13,7 @@ import MonochromeTheme from '@/app/sites/[slug]/themes/MonochromeTheme';
 import NoirTheme from '@/app/sites/[slug]/themes/NoirTheme';
 import VifTheme from '@/app/sites/[slug]/themes/VifTheme';
 import CartShell from '@/app/sites/[slug]/themes/CartShell';
+import CatalogSearch from '@/app/sites/[slug]/themes/CatalogSearch';
 import { getCartLabels } from '@/app/sites/[slug]/themes/cartLabels';
 import ScrollRevealInit from '@/app/sites/[slug]/themes/ScrollRevealInit';
 
@@ -78,6 +79,7 @@ export default function PreviewPage() {
       </div>
       <CartShell primary={primary} labels={cartLabels} slug={site.slug}>
         <Theme site={site} />
+        {site.mode === 3 && <CatalogSearch slug={site.slug} primary={primary} lang={site.lang} />}
       </CartShell>
       <ScrollRevealInit />
     </>
