@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 interface CatalogProduct {
   id: string;
@@ -20,8 +21,8 @@ interface Props {
 }
 
 const LABELS: Record<string, Record<string, string>> = {
-  en: { placeholder: 'Search products...', noResults: 'No products found', shipping: 'days', addToCart: 'Add to cart', supplier: 'Supplier', all: 'All' },
-  fr: { placeholder: 'Rechercher des produits...', noResults: 'Aucun produit trouvé', shipping: 'jours', addToCart: 'Ajouter au panier', supplier: 'Fournisseur', all: 'Tous' },
+  en: { placeholder: 'Search products...', noResults: 'No products found', shipping: 'day delivery', all: 'All' },
+  fr: { placeholder: 'Rechercher des produits...', noResults: 'Aucun produit trouvé', shipping: 'j livraison', all: 'Tous' },
 };
 
 export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
@@ -30,16 +31,27 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
-  const [supplier, setSupplier] = useState('');
   const [sort, setSort] = useState('relevance');
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const shop = document.getElementById('shop');
+    if (!shop) return;
+    const heading = shop.querySelector('h2, h3');
+    if (!heading) return;
+    const container = document.createElement('div');
+    container.id = 'catalog-search-portal';
+    heading.parentNode?.insertBefore(container, heading.nextSibling);
+    setPortalTarget(container);
+    return () => { container.remove(); };
+  }, []);
 
   const search = useCallback(async () => {
-    if (!query.trim() && !supplier) return;
+    if (!query.trim()) return;
     setLoading(true);
     try {
       const params = new URLSearchParams({ slug });
       if (query.trim()) params.set('q', query.trim());
-      if (supplier) params.set('supplier', supplier);
       if (sort) params.set('sort', sort);
       const res = await fetch(`/api/catalog/search?${params.toString()}`);
       const data = await res.json();
@@ -50,11 +62,12 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [query, slug, supplier, sort]);
+  }, [query, slug, sort]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       if (query.trim().length >= 2) search();
+      else setProducts([]);
     }, 400);
     return () => clearTimeout(timer);
   }, [query, search]);
@@ -65,9 +78,9 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
     printful: { bg: '#DCFCE7', text: '#166534' },
   };
 
-  return (
-    <div style={{ width: '100%', maxWidth: 900, margin: '2rem auto', padding: '0 1rem' }}>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+  const content = (
+    <div style={{ width: '100%', maxWidth: 1100, margin: '1.5rem auto 2rem', padding: '0 1rem' }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         <input
           type="text"
           value={query}
@@ -80,12 +93,14 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
             border: '1.5px solid #ddd',
             borderRadius: 8,
             outline: 'none',
+            background: 'transparent',
+            color: 'inherit',
           }}
         />
         <select
           value={sort}
-          onChange={e => { setSort(e.target.value); }}
-          style={{ padding: '8px 12px', borderRadius: 8, border: '1.5px solid #ddd', fontSize: 14 }}
+          onChange={e => setSort(e.target.value)}
+          style={{ padding: '8px 12px', borderRadius: 8, border: '1.5px solid #ddd', fontSize: 14, background: 'transparent', color: 'inherit' }}
         >
           <option value="relevance">Relevance</option>
           <option value="price_asc">Prix ↑</option>
@@ -94,10 +109,10 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
         </select>
       </div>
 
-      {loading && <p style={{ textAlign: 'center', color: '#888' }}>...</p>}
+      {loading && <p style={{ textAlign: 'center', opacity: 0.5 }}>...</p>}
 
       {!loading && products.length === 0 && query.length >= 2 && (
-        <p style={{ textAlign: 'center', color: '#888' }}>{t.noResults}</p>
+        <p style={{ textAlign: 'center', opacity: 0.5 }}>{t.noResults}</p>
       )}
 
       <div style={{
@@ -111,16 +126,15 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
             <div
               key={p.id}
               style={{
-                border: '1px solid #eee',
+                border: '1px solid rgba(128,128,128,0.2)',
                 borderRadius: 10,
                 overflow: 'hidden',
-                background: '#fff',
               }}
             >
               <div style={{
                 width: '100%',
                 aspectRatio: '1',
-                background: '#f5f5f5',
+                background: 'rgba(128,128,128,0.05)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -132,7 +146,7 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 ) : (
-                  <span style={{ color: '#ccc', fontSize: 32 }}>📦</span>
+                  <span style={{ opacity: 0.3, fontSize: 32 }}>?</span>
                 )}
               </div>
               <div style={{ padding: 12 }}>
@@ -161,8 +175,8 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
                   }}>
                     {p.supplier_id.toUpperCase()}
                   </span>
-                  <span style={{ fontSize: 11, color: '#888' }}>
-                    🚚 {p.shipping_days_min}-{p.shipping_days_max} {t.shipping}
+                  <span style={{ fontSize: 11, opacity: 0.6 }}>
+                    {p.shipping_days_min}-{p.shipping_days_max} {t.shipping}
                   </span>
                 </div>
               </div>
@@ -172,4 +186,7 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
       </div>
     </div>
   );
+
+  if (!portalTarget) return null;
+  return createPortal(content, portalTarget);
 }
