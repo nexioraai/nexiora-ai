@@ -84,7 +84,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     products: (products || []).map((p: any) => ({
       ...p,
-      cost_price: p.price,
       price: Math.round(p.price * (1 + (site.catalog_markup || 40) / 100) * 100) / 100,
     })),
     total: count || 0,
