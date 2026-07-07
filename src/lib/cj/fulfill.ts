@@ -1,7 +1,6 @@
 import 'server-only';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { cjCalculateFreight, cjCreateOrder, cjGetBalance, cjGetOrderDetail, cjGetVariants } from './client';
-import { supabaseAdmin as supabaseAdmin2 } from '@/lib/supabase-admin';
 
 const MAX_PAY_ATTEMPTS = 3;
 
