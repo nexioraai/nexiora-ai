@@ -35,8 +35,17 @@ export async function POST(req: NextRequest) {
       from: 'no-reply@nexiora.ca',
       to: merchantEmail,
       replyTo: email,
-      subject: 'New message from ' + name + ' — ' + site.name,
-      html: '<h2>New contact message</h2><p><strong>From:</strong> ' + name + ' (' + email + ')</p><p><strong>Site:</strong> ' + site.name + '</p><hr /><p>' + message.replace('\n', '<br />') + '</p>',
+      subject: name + ' — ' + email + ' — ' + site.name,
+      html: '<div style="font-family:sans-serif;max-width:600px;margin:0 auto">' +
+        '<h2 style="color:#111">New message via ' + site.name + '</h2>' +
+        '<div style="background:#f5f5f5;padding:16px;border-radius:8px;margin:16px 0">' +
+        '<p style="margin:0 0 8px"><strong>Name:</strong> ' + name + '</p>' +
+        '<p style="margin:0 0 8px"><strong>Email:</strong> <a href="mailto:' + email + '">' + email + '</a></p>' +
+        '</div>' +
+        '<div style="padding:16px 0;white-space:pre-wrap">' + message.replace('\n', '<br />') + '</div>' +
+        '<hr style="border:none;border-top:1px solid #eee" />' +
+        '<p style="color:#888;font-size:12px">Reply directly to this email to respond to ' + name + '.</p>' +
+        '</div>',
     })
 
     await supabase.from('messages').insert({

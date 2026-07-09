@@ -100,6 +100,12 @@ export default function ContactForm({ slug, brand = '#111111', lang }: Props) {
         </span>
       </button>
 
+      {status === 'success' && (
+        <div className="text-sm text-green-600 px-1 text-center">
+          {t.form.sent}
+        </div>
+      )}
+
       {status === 'error' && (
         <div className="text-sm text-red-600 px-1">
           {t.form.error} : {errorMsg || '…'}
