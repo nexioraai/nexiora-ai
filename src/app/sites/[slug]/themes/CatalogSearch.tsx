@@ -2,17 +2,21 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import AddToCartButton from './AddToCartButton';
+import ProductModal from './ProductModal';
 import { createPortal } from 'react-dom';
 
 interface CatalogProduct {
   id: string;
   supplier_id: string;
   name: string;
+  description: string;
   price: number;
   images: string[];
+  variants: any[];
   shipping_days_min: number;
   shipping_days_max: number;
   warehouse_country: string;
+  category: string;
 }
 
 interface Props {
@@ -34,6 +38,7 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
   const [total, setTotal] = useState(0);
   const [sort, setSort] = useState('relevance');
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null);
 
   useEffect(() => {
     const shop = document.getElementById('shop');
@@ -121,10 +126,12 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
           return (
             <div
               key={p.id}
+              onClick={() => setSelectedProduct(p)}
               style={{
                 border: '1px solid rgba(128,128,128,0.2)',
                 borderRadius: 10,
                 overflow: 'hidden',
+                cursor: 'pointer',
               }}
             >
               <div style={{
@@ -181,5 +188,18 @@ export default function CatalogSearch({ slug, primary, lang = 'en' }: Props) {
   );
 
   if (!portalTarget) return null;
-  return createPortal(content, portalTarget);
+  return createPortal(
+    <>
+      {content}
+      {selectedProduct && (
+        <ProductModal
+          product={selectedProduct}
+          primary={primary}
+          lang={lang}
+          onClose={() => setSelectedProduct(null)}
+        />
+      )}
+    </>,
+    portalTarget
+  );
 }
