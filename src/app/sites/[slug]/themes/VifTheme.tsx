@@ -15,6 +15,7 @@ import {
 import { getDict } from './i18n'
 import Reveal from './Reveal'
 import TiltCard from './TiltCard'
+import ClickableProductCard from './ClickableProductCard'
 import AddToCartButton from './AddToCartButton'
 import ShippingEstimate from './ShippingEstimate'
 import { getCartLabels } from './cartLabels'
@@ -340,7 +341,8 @@ export default function VifTheme({ site }: { site: Site }) {
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {products.map((p: any, i: number) => (
-                  <TiltCard key={i} className="group rounded-3xl overflow-hidden bg-white border border-black/[0.06]">
+                  <ClickableProductCard key={i} product={p} primary={INK} lang={site.lang}>
+                  <TiltCard className="group rounded-3xl overflow-hidden bg-white border border-black/[0.06]">
                     {p.image && (
                       <div className="relative w-full h-56 overflow-hidden">
                         <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -361,6 +363,7 @@ export default function VifTheme({ site }: { site: Site }) {
                       {p.cjVid && <ShippingEstimate siteId={site.id} cjVid={p.cjVid} primary={GOLD} deliveryLabel={t.labels.estimatedDelivery} daysLabel={t.labels.days} />}
                     </div>
                   </TiltCard>
+                  </ClickableProductCard>
                 ))}
               </div>
             </div>

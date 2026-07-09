@@ -13,6 +13,7 @@ import {
 import { getDict } from './i18n'
 import Reveal from './Reveal'
 import TiltCard from './TiltCard'
+import ClickableProductCard from './ClickableProductCard'
 import AddToCartButton from './AddToCartButton'
 import ShippingEstimate from './ShippingEstimate'
 import { getCartLabels } from './cartLabels'
@@ -269,7 +270,8 @@ export default function NoirTheme({ site }: { site: Site }) {
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {products.map((p: any, i: number) => (
-                  <TiltCard key={i} className="group rounded-3xl overflow-hidden bg-[#141418] border border-white/[0.08]">
+                  <ClickableProductCard key={i} product={p} primary={gold} lang={site.lang}>
+                  <TiltCard className="group rounded-3xl overflow-hidden bg-[#141418] border border-white/[0.08]">
                     {p.image && (
                       <div className="relative w-full h-56 overflow-hidden">
                         <img src={p.image} alt={p.name} className="noir-img w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -291,6 +293,7 @@ export default function NoirTheme({ site }: { site: Site }) {
                       {p.cjVid && <ShippingEstimate siteId={site.id} cjVid={p.cjVid} primary={gold} deliveryLabel={t.labels.estimatedDelivery} daysLabel={t.labels.days} />}
                     </div>
                   </TiltCard>
+                  </ClickableProductCard>
                 ))}
               </div>
             </div>

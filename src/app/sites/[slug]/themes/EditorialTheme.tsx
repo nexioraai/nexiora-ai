@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { Instagram, Facebook, TikTok, WhatsApp } from './BrandIcons'
 import MobileNav from './MobileNav'
+import ClickableProductCard from './ClickableProductCard'
 import ContactForm from '../ContactForm'
 import {
   type Site,
@@ -367,8 +368,11 @@ export default function EditorialTheme({ site }: { site: Site }) {
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {products.map((p, i) => (
-                <div
+                <ClickableProductCard
                   key={i}
+                  product={p}
+                  primary={primary}
+                  lang={site.lang}
                   className="group bg-white border border-neutral-200/70 rounded-3xl overflow-hidden hover:shadow-xl hover:-translate-y-1 hover:border-transparent transition-all duration-500 flex flex-col"
                 >
                   <div className="aspect-square relative overflow-hidden bg-neutral-100">
@@ -434,7 +438,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
                     </div>
                     {p.cjVid && <ShippingEstimate siteId={site.id} cjVid={p.cjVid} primary={primary} deliveryLabel={t.labels.estimatedDelivery} daysLabel={t.labels.days} />}
                   </div>
-                </div>
+                </ClickableProductCard>
               ))}
             </div>
           </div>
