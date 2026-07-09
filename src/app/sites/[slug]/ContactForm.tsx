@@ -2,9 +2,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
 import { Send, Check } from 'lucide-react'
-import { supabase } from '@/lib/supabase';
 import { getDict } from './themes/i18n'
 
 type Props = {
@@ -26,23 +24,22 @@ export default function ContactForm({ slug, brand = '#111111', lang }: Props) {
     setStatus('sending')
     setErrorMsg('')
 
-    const { error } = await supabase.from('messages').insert({
-      site_slug: slug,
-      name,
-      email,
-      message,
-    })
-
-    if (error) {
-      setStatus('error')
-      setErrorMsg(error.message)
-    } else {
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, name, email, message }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed')
       setStatus('success')
       setName('')
       setEmail('')
       setMessage('')
-      // Revert to idle after 4s
       setTimeout(() => setStatus('idle'), 4000)
+    } catch (err: any) {
+      setStatus('error')
+      setErrorMsg(err.message || 'Failed to send')
     }
   }
 

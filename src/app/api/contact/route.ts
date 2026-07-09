@@ -1,58 +1,53 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import { Resend } from 'resend'
 
-export async function POST(req: Request) {
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+)
+const resend = new Resend(process.env.RESEND_API_KEY || '')
 
-try {
+export async function POST(req: NextRequest) {
+  try {
+    const { slug, name, email, message } = await req.json()
 
-const body = await req.json();
+    if (!slug || !name || !email || !message) {
+      return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
+    }
 
-const {
-name,
-email,
-subject,
-message,
-} = body;
+    const { data: site, error: siteErr } = await supabase
+      .from('sites')
+      .select('name, contact')
+      .eq('slug', slug)
+      .single()
 
-if (
-!name ||
-!email ||
-!subject ||
-!message
-) {
+    if (siteErr || !site) {
+      return NextResponse.json({ error: 'Site not found' }, { status: 404 })
+    }
 
-return NextResponse.json(
-{
-success: false,
-error: 'Missing fields',
-},
-{
-status: 400,
-}
-);
-}
+    const merchantEmail = site.contact?.email
+    if (!merchantEmail) {
+      return NextResponse.json({ error: 'No contact email configured' }, { status: 400 })
+    }
 
-console.log({
-name,
-email,
-subject,
-message,
-});
+    await resend.emails.send({
+      from: 'no-reply@nexiora.ca',
+      to: merchantEmail,
+      replyTo: email,
+      subject: 'New message from ' + name + ' — ' + site.name,
+      html: '<h2>New contact message</h2><p><strong>From:</strong> ' + name + ' (' + email + ')</p><p><strong>Site:</strong> ' + site.name + '</p><hr /><p>' + message.replace('\n', '<br />') + '</p>',
+    })
 
-return NextResponse.json({
-success: true,
-message: 'Message sent successfully',
-});
+    await supabase.from('messages').insert({
+      site_slug: slug,
+      name,
+      email,
+      message,
+    })
 
-} catch (error: any) {
-
-return NextResponse.json(
-{
-success: false,
-error: error.message,
-},
-{
-status: 500,
-}
-);
-}
+    return NextResponse.json({ ok: true })
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 })
+  }
 }
