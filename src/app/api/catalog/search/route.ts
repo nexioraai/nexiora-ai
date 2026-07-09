@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
   // 1. Récupère la niche du site pour filtrer
   const { data: site } = await supabaseAdmin
     .from('sites')
-    .select('type, mode, catalog_markup')
+    .select('type, mode, cj_margin_percent')
     .eq('slug', slug)
     .eq('published', true)
     .single();
@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     products: (products || []).map((p: any) => ({
       ...p,
-      price: Math.round(p.price * (1 + (site.catalog_markup || 40) / 100) * 100) / 100,
+      price: Math.round(p.price * (1 + (site.cj_margin_percent || 100) / 100) * 100) / 100,
     })),
     total: count || 0,
     page,
