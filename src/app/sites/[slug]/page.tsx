@@ -4,8 +4,6 @@ import { notFound } from 'next/navigation'
 import { fetchSite } from './themes/shared'
 import JsonLd from './themes/JsonLd'
 import EditorialTheme from './themes/EditorialTheme'
-import BoldTheme from './themes/BoldTheme'
-import MonochromeTheme from './themes/MonochromeTheme'
 import NoirTheme from './themes/NoirTheme'
 import VifTheme from './themes/VifTheme'
 import CartShell from './themes/CartShell'
@@ -17,8 +15,6 @@ export const dynamic = 'force-dynamic'
 
 const themes = {
   editorial: EditorialTheme,
-  bold: BoldTheme,
-  monochrome: MonochromeTheme,
   noir: NoirTheme,
   vif: VifTheme,
 } as const
