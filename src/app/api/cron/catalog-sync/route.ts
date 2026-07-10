@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { cjAdapter } from '@/lib/suppliers/cj-adapter';
 import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
+import { printifyAdapter } from '@/lib/suppliers/printify-adapter';
 import type { CatalogProduct } from '@/lib/suppliers/supplier-adapter';
 
 export const maxDuration = 60;
@@ -61,6 +62,15 @@ export async function GET(req: NextRequest) {
     totalSynced += pfUpserted;
   } catch (e: any) {
     errors.push(`Printful: ${e.message}`);
+  }
+
+  // --- Printify ---
+  try {
+    const pyResult = await printifyAdapter.syncCatalog({ categories: niches });
+    const pyUpserted = await upsertProducts(pyResult.products);
+    totalSynced += pyUpserted;
+  } catch (e: any) {
+    errors.push(`Printify: ${e.message}`);
   }
 
   // --- Spocket (futur) ---

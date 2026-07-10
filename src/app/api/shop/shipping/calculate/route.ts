@@ -3,13 +3,14 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { STRIPE_SHIPPING_COUNTRIES } from '@/lib/payments/countries';
 import { cjAdapter } from '@/lib/suppliers/cj-adapter';
 import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
+import { printifyAdapter } from '@/lib/suppliers/printify-adapter';
 import type { ShippingRequest } from '@/lib/suppliers/supplier-adapter';
 
 // Registry : chaque supplier_id pointe vers son adapter
 const adapters: Record<string, { calculateShipping: (items: ShippingRequest[], country: string, creds: Record<string, string>) => Promise<{ total_cost: number; currency: string; estimated_days_min: number; estimated_days_max: number }> }> = {
   cj: cjAdapter as any,
   printful: printfulAdapter as any,
-  // printify: printifyAdapter — a ajouter quand code
+  printify: printifyAdapter as any,
   // zendrop: zendropAdapter — a ajouter quand code
 };
 
@@ -83,7 +84,7 @@ export async function POST(req: Request) {
     const creds: Record<string, Record<string, string>> = {
       cj: { email: site.cj_email || '', apiKey: site.cj_api_key || '' },
       printful: { printful_token: process.env.PRINTFUL_API_TOKEN || '', state_code: stateCode || '' },
-      // printify: { printify_token: process.env.PRINTIFY_API_TOKEN || '' },
+      printify: { printify_token: process.env.PRINTIFY_API_TOKEN || '', printify_shop_id: process.env.PRINTIFY_SHOP_ID || '' },
     };
 
     // Appeler calculateShipping pour chaque groupe

@@ -6,6 +6,7 @@ import type { CartItem } from '@/lib/payments/types';
 import { STRIPE_SHIPPING_COUNTRIES } from '@/lib/payments/countries';
 import { cjAdapter } from '@/lib/suppliers/cj-adapter';
 import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
+import { printifyAdapter } from '@/lib/suppliers/printify-adapter';
 import type { ShippingRequest } from '@/lib/suppliers/supplier-adapter';
 
 /** POST /api/shop/checkout → crée la session de paiement. Body: { slug, items } (route publique : un client final achète). */
@@ -42,10 +43,12 @@ export async function POST(req: Request) {
         const adapters: Record<string, any> = {
           cj: cjAdapter,
           printful: printfulAdapter,
+          printify: printifyAdapter,
         };
         const creds: Record<string, Record<string, string>> = {
           cj: { email: site.cj_email || '', apiKey: site.cj_api_key || '' },
           printful: { printful_token: process.env.PRINTFUL_API_TOKEN || '', state_code: '' },
+          printify: { printify_token: process.env.PRINTIFY_API_TOKEN || '', printify_shop_id: process.env.PRINTIFY_SHOP_ID || '' },
         };
 
         // Separer shop vs catalog
