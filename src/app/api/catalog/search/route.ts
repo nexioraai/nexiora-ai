@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
   const maxDays = url.searchParams.get('max_days');
   const sort = url.searchParams.get('sort') || 'relevance';
   const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10));
+  const country = url.searchParams.get('country')?.toUpperCase();
   const pageSize = 24;
 
   if (!slug) {
@@ -81,11 +82,36 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  // Map country to preferred warehouse order
+  const warehousePriority: Record<string, string[]> = {
+    US: ['US', 'CA', 'MX', 'DE', 'CN', 'TH'],
+    CA: ['US', 'CA', 'MX', 'DE', 'CN', 'TH'],
+    MX: ['US', 'CA', 'MX', 'DE', 'CN', 'TH'],
+    GB: ['DE', 'US', 'CN', 'TH'],
+    DE: ['DE', 'US', 'CN', 'TH'],
+    FR: ['DE', 'US', 'CN', 'TH'],
+    JP: ['JP', 'TH', 'CN', 'US', 'DE'],
+    AU: ['AU', 'TH', 'CN', 'US', 'DE'],
+    BR: ['BR', 'US', 'CN', 'DE'],
+  };
+  const defaultPriority = ['US', 'DE', 'CN', 'TH'];
+  const priority = country ? (warehousePriority[country] || defaultPriority) : null;
+
+  let sorted = (products || []).map((p: any) => ({
+    ...p,
+    price: Math.round(p.price * (1 + (site.cj_margin_percent || 100) / 100) * 100) / 100,
+  }));
+
+  if (priority) {
+    sorted.sort((a: any, b: any) => {
+      const aIdx = priority.indexOf(a.warehouse_country) ?? 99;
+      const bIdx = priority.indexOf(b.warehouse_country) ?? 99;
+      return (aIdx === -1 ? 99 : aIdx) - (bIdx === -1 ? 99 : bIdx);
+    });
+  }
+
   return NextResponse.json({
-    products: (products || []).map((p: any) => ({
-      ...p,
-      price: Math.round(p.price * (1 + (site.cj_margin_percent || 100) / 100) * 100) / 100,
-    })),
+    products: sorted,
     total: count || 0,
     page,
     page_size: pageSize,

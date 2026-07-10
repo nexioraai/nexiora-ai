@@ -65,6 +65,23 @@ export default function CatalogSearch({ slug, primary, lang = 'en', theme = 'edi
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [sort, setSort] = useState('relevance');
+  const [visitorCountry, setVisitorCountry] = useState('');
+
+  useEffect(() => {
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+      if (tz.startsWith('America/')) {
+        const city = tz.split('/')[1] || '';
+        if (['Toronto','Montreal','Vancouver','Winnipeg','Edmonton','Halifax','Regina'].some(c => city.includes(c))) setVisitorCountry('CA');
+        else if (['Mexico_City','Cancun','Tijuana','Monterrey'].some(c => city.includes(c))) setVisitorCountry('MX');
+        else setVisitorCountry('US');
+      } else if (tz.startsWith('Europe/')) setVisitorCountry('DE');
+      else if (tz.startsWith('Asia/Tokyo')) setVisitorCountry('JP');
+      else if (tz.startsWith('Australia/')) setVisitorCountry('AU');
+      else if (tz.startsWith('America/Sao_Paulo') || tz.startsWith('America/Fortaleza')) setVisitorCountry('BR');
+      else setVisitorCountry('US');
+    } catch { setVisitorCountry('US'); }
+  }, []);
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null);
   const [imageSearching, setImageSearching] = useState(false);
@@ -134,6 +151,7 @@ export default function CatalogSearch({ slug, primary, lang = 'en', theme = 'edi
       const params = new URLSearchParams({ slug });
       if (query.trim()) params.set('q', query.trim());
       if (sort) params.set('sort', sort);
+      if (visitorCountry) params.set('country', visitorCountry);
       const res = await fetch('/api/catalog/search?' + params.toString());
       const data = await res.json();
       setProducts(data.products || []);
