@@ -11,6 +11,8 @@ import type {
   OrderResult,
   TrackingResult,
   TrackingStatus,
+  ShippingRequest,
+  ShippingResult,
 } from './supplier-adapter';
 
 // ============================================================
@@ -33,6 +35,7 @@ async function pfFetch(path: string, token: string, init?: RequestInit): Promise
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(process.env.PRINTFUL_STORE_ID ? { 'X-PF-Store-Id': process.env.PRINTFUL_STORE_ID } : {}),
       ...(init?.headers || {}),
     },
   });
@@ -320,5 +323,48 @@ export const printfulAdapter: SupplierAdapter = {
         events: [],
       };
     }
+  },
+
+  // ---- SHIPPING UNIVERSEL ----
+  async calculateShipping(
+    items: ShippingRequest[],
+    countryCode: string,
+    creds: Record<string, string>
+  ): Promise<ShippingResult> {
+    const token = creds['printful_token'] || process.env.PRINTFUL_API_TOKEN || '';
+
+    try {
+      const pfItems = items.map((i) => ({
+        variant_id: Number(i.supplier_product_id),
+        quantity: i.quantity,
+      }));
+
+      const rates = await pfFetch('/shipping/rates', token, {
+        method: 'POST',
+        body: JSON.stringify({
+          recipient: { country_code: countryCode, state_code: creds['state_code'] || '' },
+          items: pfItems,
+        }),
+      });
+
+      if (Array.isArray(rates) && rates.length > 0) {
+        const standard = rates.find((r: any) => r.id === 'STANDARD') || rates[0];
+        return {
+          total_cost: Math.round((parseFloat(standard.rate) || 0) * 100) / 100,
+          currency: 'USD',
+          estimated_days_min: Number(standard.minDeliveryDays) || 4,
+          estimated_days_max: Number(standard.maxDeliveryDays) || 8,
+        };
+      }
+    } catch (err: any) {
+      const msg = err.message || '';
+      if (msg.includes('ships to')) {
+        console.warn('[printful/calculateShipping] Product not available in this country');
+        throw new Error('not_available');
+      }
+      console.error('[printful/calculateShipping]', msg);
+    }
+
+    return { total_cost: 0, currency: 'USD', estimated_days_min: 4, estimated_days_max: 8 };
   },
 };

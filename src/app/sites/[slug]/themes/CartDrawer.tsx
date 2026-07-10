@@ -24,6 +24,44 @@ export default function CartDrawer({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [country, setCountry] = useState('');
+  const [stateCode, setStateCode] = useState('');
+
+  // Auto-detect country + state from timezone
+  const tzStateMap: Record<string, { country: string; state: string }> = {
+    'America/Toronto': { country: 'CA', state: 'ON' },
+    'America/Montreal': { country: 'CA', state: 'QC' },
+    'America/Vancouver': { country: 'CA', state: 'BC' },
+    'America/Edmonton': { country: 'CA', state: 'AB' },
+    'America/Winnipeg': { country: 'CA', state: 'MB' },
+    'America/Halifax': { country: 'CA', state: 'NS' },
+    'America/Regina': { country: 'CA', state: 'SK' },
+    'America/St_Johns': { country: 'CA', state: 'NL' },
+    'America/New_York': { country: 'US', state: 'NY' },
+    'America/Chicago': { country: 'US', state: 'IL' },
+    'America/Denver': { country: 'US', state: 'CO' },
+    'America/Los_Angeles': { country: 'US', state: 'CA' },
+    'America/Phoenix': { country: 'US', state: 'AZ' },
+    'America/Anchorage': { country: 'US', state: 'AK' },
+    'Pacific/Honolulu': { country: 'US', state: 'HI' },
+    'America/Detroit': { country: 'US', state: 'MI' },
+    'America/Indiana/Indianapolis': { country: 'US', state: 'IN' },
+    'Europe/London': { country: 'GB', state: 'ENG' },
+    'Europe/Paris': { country: 'FR', state: '' },
+    'Europe/Berlin': { country: 'DE', state: '' },
+    'Europe/Madrid': { country: 'ES', state: '' },
+    'Europe/Rome': { country: 'IT', state: '' },
+    'Europe/Amsterdam': { country: 'NL', state: '' },
+    'Europe/Brussels': { country: 'BE', state: '' },
+    'Australia/Sydney': { country: 'AU', state: 'NSW' },
+    'Australia/Melbourne': { country: 'AU', state: 'VIC' },
+    'Asia/Tokyo': { country: 'JP', state: '' },
+    'Asia/Seoul': { country: 'KR', state: '' },
+    'Asia/Singapore': { country: 'SG', state: '' },
+    'Asia/Hong_Kong': { country: 'HK', state: '' },
+  };
+  const defaultStates: Record<string, string> = {
+    CA: 'ON', US: 'NY', AU: 'NSW', GB: 'ENG',
+  };
   const [shipping, setShipping] = useState<number | null>(null);
   const [calcBusy, setCalcBusy] = useState(false);
   const [aging, setAging] = useState<string | null>(null);
@@ -42,6 +80,11 @@ export default function CartDrawer({
     setShipping(null);
     setAging(null);
     setError('');
+    // Detect state from timezone or use default
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const detected = tzStateMap[tz];
+    const sc = (detected && detected.country === code) ? detected.state : (defaultStates[code] || '');
+    setStateCode(sc);
     if (!code) return;
     setCalcBusy(true);
     try {
@@ -52,12 +95,18 @@ export default function CartDrawer({
           slug,
           items: items.map((i) => ({ id: i.id, quantity: i.quantity })),
           countryCode: code,
+          stateCode: sc,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erreur');
-      setShipping(Number(data.shipping) || 0);
-      setAging(data.aging || null);
+      if (data.source === 'unavailable') {
+        setShipping(-1);
+        setAging(null);
+      } else {
+        setShipping(Number(data.shipping) || 0);
+        setAging(data.aging || null);
+      }
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -186,12 +235,12 @@ export default function CartDrawer({
               <div className="flex items-center justify-between text-sm">
                 <span className="text-neutral-500">Livraison</span>
                 <span className="text-neutral-700">
-                  {calcBusy ? '…' : shipping !== null ? `${shipping.toFixed(2)} ${currency}` : '—'}
+                  {calcBusy ? '…' : shipping === -1 ? 'Non disponible' : shipping !== null ? `${shipping.toFixed(2)} ${currency}` : '—'}
                 </span>
               </div>
               {aging && (
                 <p className="text-xs text-neutral-500 mt-1">
-                  {aging} days
+                  {aging}
                 </p>
               )}
               </>
@@ -206,7 +255,7 @@ export default function CartDrawer({
               className="w-full py-4 rounded-2xl font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
               style={{ background: primary }}
               onClick={handleCheckout}
-              disabled={busy || !country || calcBusy}
+              disabled={busy || !country || calcBusy || shipping === -1}
             >
               {busy ? '…' : labels.checkout}
             </button>

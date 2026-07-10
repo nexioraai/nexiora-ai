@@ -11,6 +11,8 @@ import type {
   OrderResult,
   TrackingResult,
   TrackingStatus,
+  ShippingRequest,
+  ShippingResult,
 } from './supplier-adapter';
 
 import { cjSearchProductsV2, cjGetInventory, cjCalculateFreight, cjCreateOrder, cjGetOrderDetail, cjGetVariants } from '../cj/client';
@@ -244,6 +246,54 @@ export const cjAdapter: SupplierAdapter = {
         ? `https://t.17track.net/en#nums=${detail.trackNumber}`
         : undefined,
       events: [],
+    };
+  },
+
+  // ---- SHIPPING UNIVERSEL ----
+  async calculateShipping(
+    items: ShippingRequest[],
+    countryCode: string,
+    creds: Record<string, string>
+  ): Promise<ShippingResult> {
+    const email = creds['email'] || creds['cj_email'] || '';
+    const apiKey = creds['apiKey'] || creds['cj_api_key'] || '';
+
+    // Resoudre les vid pour chaque item
+    const cjProducts: { vid: string; quantity: number }[] = [];
+    for (const item of items) {
+      try {
+        const variants = await cjGetVariants(email, apiKey, item.supplier_product_id);
+        const vid = Array.isArray(variants) && variants.length > 0
+          ? (variants[0].vid || variants[0].variantId)
+          : null;
+        if (vid) cjProducts.push({ vid, quantity: item.quantity });
+      } catch {}
+    }
+
+    if (cjProducts.length === 0) {
+      throw new Error('not_available');
+    }
+
+    const options = await cjCalculateFreight(email, apiKey, countryCode, cjProducts);
+    const list = Array.isArray(options) ? options : [];
+    const prices = list
+      .map((o: any) => Number(o?.logisticPrice ?? o?.price ?? o?.freightAmount))
+      .filter((n: number) => Number.isFinite(n) && n >= 0);
+
+    if (prices.length === 0) {
+      throw new Error('not_available');
+    }
+
+    const cheapest = Math.min(...prices);
+    const best = list.find((o: any) => Number(o?.logisticPrice ?? o?.price ?? o?.freightAmount) === cheapest);
+    const aging = best?.logisticAging || '';
+    const match = aging.match(/(\d+)\s*-\s*(\d+)/);
+
+    return {
+      total_cost: Math.round(cheapest * 100) / 100,
+      currency: 'USD',
+      estimated_days_min: match ? Number(match[1]) : 7,
+      estimated_days_max: match ? Number(match[2]) : 15,
     };
   },
 };

@@ -110,6 +110,19 @@ export interface SyncResult {
   next_page?: number;
 }
 
+export interface ShippingRequest {
+  supplier_product_id: string;
+  variant_id?: string;
+  quantity: number;
+}
+
+export interface ShippingResult {
+  total_cost: number;
+  currency: string;
+  estimated_days_min: number;
+  estimated_days_max: number;
+}
+
 export interface SupplierAdapter {
   readonly supplierId: string;
   readonly displayName: string;
@@ -132,4 +145,10 @@ export interface SupplierAdapter {
     supplierOrderId: string,
     merchantCredentials: Record<string, string>
   ): Promise<TrackingResult>;
+
+  calculateShipping?(
+    items: ShippingRequest[],
+    countryCode: string,
+    merchantCredentials: Record<string, string>
+  ): Promise<ShippingResult>;
 }
