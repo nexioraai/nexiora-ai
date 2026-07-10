@@ -280,7 +280,7 @@ export default function CatalogSearch({ slug, primary, lang = 'en', theme = 'edi
                 ${p.price.toFixed(2)}
               </p>
               <div style={{ fontSize: 12, color: tokens.textMuted, marginBottom: 12 }}>
-                {p.shipping_days_min}-{p.shipping_days_max} {t.shipping}
+{(() => { const flags: Record<string,string> = {"US":"🇺🇸","CN":"🇨🇳","DE":"🇩🇪","TH":"🇹🇭","JP":"🇯🇵","BR":"🇧🇷","CA":"🇨🇦","MX":"🇲🇽","AU":"🇦🇺","EU":"🇪🇺"}; return (flags[p.warehouse_country] || "") + " Ships from " + (p.warehouse_country || ""); })()}
               </div>
 
             </div>
