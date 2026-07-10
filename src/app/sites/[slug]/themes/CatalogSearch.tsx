@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import ProductModal from './ProductModal';
 import { createPortal } from 'react-dom';
 
@@ -67,6 +67,53 @@ export default function CatalogSearch({ slug, primary, lang = 'en', theme = 'edi
   const [sort, setSort] = useState('relevance');
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null);
+  const [imageSearching, setImageSearching] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const skipNextSearch = useRef(false);
+
+  const handleImageSearch = useCallback(async (file: File) => {
+    setImageSearching(true);
+    setQuery('');
+    setProducts([]);
+    try {
+      const reader = new FileReader();
+      const dataUrl: string = await new Promise((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const resized = await new Promise<string>((resolve) => {
+        const img = new window.Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w <= 800 && h <= 800) { resolve(dataUrl); return; }
+          if (w > h) { h = Math.round(h * 800 / w); w = 800; }
+          else { w = Math.round(w * 800 / h); h = 800; }
+          const c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          c.getContext('2d')?.drawImage(img, 0, 0, w, h);
+          resolve(c.toDataURL('image/jpeg', 0.85));
+        };
+        img.src = dataUrl;
+      });
+      const res = await fetch('/api/catalog/image-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, image: resized }),
+      });
+      const data = await res.json();
+      if (data.keywords) {
+        skipNextSearch.current = true;
+        setQuery(data.keywords);
+      }
+      setProducts(data.products || []);
+    } catch {
+      setProducts([]);
+    } finally {
+      setImageSearching(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  }, [slug]);
 
   useEffect(() => {
     const shop = document.getElementById('shop');
@@ -98,6 +145,10 @@ export default function CatalogSearch({ slug, primary, lang = 'en', theme = 'edi
   }, [query, slug, sort]);
 
   useEffect(() => {
+    if (skipNextSearch.current) {
+      skipNextSearch.current = false;
+      return;
+    }
     const timer = setTimeout(() => {
       if (query.trim().length >= 2) search();
       else setProducts([]);
@@ -108,19 +159,46 @@ export default function CatalogSearch({ slug, primary, lang = 'en', theme = 'edi
   const content = (
     <div style={{ width: '100%', maxWidth: 1200, margin: '2rem auto 2.5rem', padding: '0 1rem' }}>
       <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
-        <input
-          type="text"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder={t.placeholder}
-          style={{
-            flex: 1, minWidth: 200,
-            padding: '14px 18px', fontSize: 15,
-            border: '1px solid ' + tokens.inputBorder,
-            borderRadius: 10, outline: 'none',
-            background: tokens.inputBg, color: tokens.inputText,
-          }}
-        />
+        <div style={{ flex: 1, minWidth: 200, position: 'relative' }}>
+          <input
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder={t.placeholder}
+            style={{
+              width: '100%',
+              padding: '14px 50px 14px 18px', fontSize: 15,
+              border: '1px solid ' + tokens.inputBorder,
+              borderRadius: 10, outline: 'none',
+              background: tokens.inputBg, color: tokens.inputText,
+              boxSizing: 'border-box',
+            }}
+          />
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={e => { const f = e.target.files?.[0]; if (f) handleImageSearch(f); }}
+          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={imageSearching}
+            title="Search by image"
+            style={{
+              position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+              background: 'none', border: 'none', fontSize: 20,
+              cursor: imageSearching ? 'wait' : 'pointer',
+              opacity: imageSearching ? 0.4 : 0.6,
+              transition: 'opacity 0.2s',
+              padding: 4,
+              color: tokens.inputText,
+            }}
+          >
+            {imageSearching ? '⏳' : '📷'}
+          </button>
+        </div>
         <select
           value={sort}
           onChange={e => setSort(e.target.value)}
