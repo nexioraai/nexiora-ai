@@ -129,6 +129,7 @@ export async function cjSearchProductsV2(
     endSellPrice?: number;
     orderBy?: string;
     sort?: 'asc' | 'desc';
+    countryCode?: string;
     page?: number;
     size?: number;
   } = {}
@@ -142,6 +143,7 @@ export async function cjSearchProductsV2(
   if (opts.endSellPrice != null) params.set('endSellPrice', String(opts.endSellPrice));
   if (opts.orderBy) params.set('orderBy', opts.orderBy);
   if (opts.sort) params.set('sort', opts.sort);
+  if (opts.countryCode) params.set('countryCode', opts.countryCode);
   const url = `/product/listV2?${params.toString()}`;
   const data = await cjFetch(email, apiKey, url);
   return data;

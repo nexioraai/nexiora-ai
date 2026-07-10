@@ -57,9 +57,9 @@ function mapCjProduct(raw: any): CatalogProduct {
     price: parseCjPrice(raw.sellPrice ?? raw.productPrice ?? 0),
     currency: 'USD',
     variants,
-    shipping_days_min: raw.logisticAging?.min ?? 10,
-    shipping_days_max: raw.logisticAging?.max ?? 20,
-    warehouse_country: 'CN',
+    shipping_days_min: raw._warehouseCountry === 'US' ? 3 : (raw.logisticAging?.min ?? 10),
+    shipping_days_max: raw._warehouseCountry === 'US' ? 5 : (raw.logisticAging?.max ?? 20),
+    warehouse_country: raw._warehouseCountry || 'CN',
     in_stock: true,
     last_synced_at: new Date().toISOString(),
   };
@@ -89,19 +89,30 @@ export const cjAdapter: SupplierAdapter = {
     const allProducts: CatalogProduct[] = [];
     const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-    for (const category of options.categories) {
-      for (let page = 1; page <= maxPages; page++) {
-        await delay(1200);
-        const data = await cjSearchProductsV2(NEXIORA_CJ_EMAIL, NEXIORA_CJ_API_KEY, {
-          keyWord: category,
-          page,
-          size: pageSize,
-        });
+    // Double pass: global (CN) + US warehouse
+    const passes: { countryCode?: string; warehouseTag: string }[] = [
+      { warehouseTag: 'CN' },
+      { countryCode: 'US', warehouseTag: 'US' },
+    ];
 
-        const rawList = data?.content?.[0]?.productList ?? data?.content ?? data?.list ?? [];
-        const mapped = rawList.map(mapCjProduct);
-        allProducts.push(...mapped);
-        if (rawList.length < pageSize) break;
+    for (const pass of passes) {
+      for (const category of options.categories) {
+        for (let page = 1; page <= maxPages; page++) {
+          await delay(1200);
+          const data = await cjSearchProductsV2(NEXIORA_CJ_EMAIL, NEXIORA_CJ_API_KEY, {
+            keyWord: category,
+            page,
+            size: pageSize,
+            countryCode: pass.countryCode,
+          });
+
+          const rawList = data?.content?.[0]?.productList ?? data?.content ?? data?.list ?? [];
+          // Tag each raw product with the warehouse country for this pass
+          const tagged = rawList.map((r: any) => ({ ...r, _warehouseCountry: pass.warehouseTag }));
+          const mapped = tagged.map(mapCjProduct);
+          allProducts.push(...mapped);
+          if (rawList.length < pageSize) break;
+        }
       }
     }
 
