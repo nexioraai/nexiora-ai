@@ -279,9 +279,7 @@ export default function CatalogSearch({ slug, primary, lang = 'en', theme = 'edi
               <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 8px', color: tokens.text }}>
                 ${p.price.toFixed(2)}
               </p>
-              <div style={{ fontSize: 12, color: tokens.textMuted, marginBottom: 12 }}>
-{(() => { const flags: Record<string,string> = {"US":"🇺🇸","CN":"🇨🇳","DE":"🇩🇪","TH":"🇹🇭","JP":"🇯🇵","BR":"🇧🇷","CA":"🇨🇦","MX":"🇲🇽","AU":"🇦🇺","EU":"🇪🇺"}; return (flags[p.warehouse_country] || "") + " Ships from " + (p.warehouse_country || ""); })()}
-              </div>
+              
 
             </div>
           </div>
