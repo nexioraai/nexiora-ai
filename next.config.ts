@@ -13,7 +13,7 @@ const csp = [
   // Styles : self + inline (Tailwind utilise des styles inline)
   "style-src 'self' 'unsafe-inline'",
   // Images : self, data URIs (icons SVG inline), blob (preview uploads), Pexels, Supabase Storage
-  "img-src 'self' data: blob: https://images.pexels.com https://*.supabase.co https://cf.cjdropshipping.com https://oss-cf.cjdropshipping.com https://cc-west-usa.oss-us-west-1.aliyuncs.com",
+  "img-src 'self' data: blob: https://images.pexels.com https://*.supabase.co https://cf.cjdropshipping.com https://oss-cf.cjdropshipping.com https://cc-west-usa.oss-us-west-1.aliyuncs.com https://files.cdn.printful.com",
   // Fonts : self, data URIs
   "font-src 'self' data:",
   // Connexions fetch/XHR : self, Supabase (HTTP + websocket realtime). En dev, autoriser localhost pour HMR
@@ -68,6 +68,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'cc-west-usa.oss-us-west-1.aliyuncs.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'files.cdn.printful.com',
       },
     ],
   },
