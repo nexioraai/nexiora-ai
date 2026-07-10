@@ -3,8 +3,10 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getProvider } from '@/lib/payments';
 import { checkStock } from '@/lib/shop';
 import type { CartItem } from '@/lib/payments/types';
-import { cjCalculateFreight, cjGetVariants } from '@/lib/cj/client';
 import { STRIPE_SHIPPING_COUNTRIES } from '@/lib/payments/countries';
+import { cjAdapter } from '@/lib/suppliers/cj-adapter';
+import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
+import type { ShippingRequest } from '@/lib/suppliers/supplier-adapter';
 
 /** POST /api/shop/checkout → crée la session de paiement. Body: { slug, items } (route publique : un client final achète). */
 export async function POST(req: Request) {
@@ -29,61 +31,83 @@ export async function POST(req: Request) {
     const successUrl = `${origin}/sites/${slug}?paid=1`;
     const cancelUrl = `${origin}/sites/${slug}?canceled=1`;
 
-    // Calcul serveur du frais de port : vrai cout CJ si possible, sinon forfait.
+    // Calcul serveur du frais de port : universel multi-fournisseur.
     // On ne fait jamais confiance a un montant envoye par le client.
-    let shippingAmount = Number(site.shipping_flat) || 0;
+    const flat = Number(site.shipping_flat) || 0;
+    let shippingAmount = flat;
     let estimatedDelivery: string | null = null;
-    if (countryCode && STRIPE_SHIPPING_COUNTRIES.includes(countryCode as any) && site.cj_email && site.cj_api_key) {
-      try {
-        const ids = items.map((i) => i.id);
-        const shopIds = ids.filter((id) => !id.startsWith('catalog-'));
-        const catalogIds = ids.filter((id) => id.startsWith('catalog-'));
-        const vidById = new Map<string, string>();
 
-        // Shop products
-        if (shopIds.length > 0) {
+    if (countryCode && STRIPE_SHIPPING_COUNTRIES.includes(countryCode as any)) {
+      try {
+        const adapters: Record<string, any> = {
+          cj: cjAdapter,
+          printful: printfulAdapter,
+        };
+        const creds: Record<string, Record<string, string>> = {
+          cj: { email: site.cj_email || '', apiKey: site.cj_api_key || '' },
+          printful: { printful_token: process.env.PRINTFUL_API_TOKEN || '', state_code: '' },
+        };
+
+        // Separer shop vs catalog
+        const shopItems = items.filter((i) => !i.id.startsWith('catalog-'));
+        const catalogItems = items.filter((i) => i.id.startsWith('catalog-'));
+
+        // Shop products => CJ direct
+        const supplierGroups: Record<string, ShippingRequest[]> = {};
+        if (shopItems.length > 0) {
           const { data: prods } = await supabaseAdmin
             .from('shop_products')
             .select('id, cj_vid')
-            .in('id', shopIds);
-          (prods || []).forEach((p: any) => { if (p.cj_vid) vidById.set(p.id, p.cj_vid); });
+            .in('id', shopItems.map((i) => i.id));
+          for (const p of (prods || [])) {
+            if (!p.cj_vid) continue;
+            const item = shopItems.find((i) => i.id === p.id);
+            if (!item) continue;
+            if (!supplierGroups['cj']) supplierGroups['cj'] = [];
+            supplierGroups['cj'].push({ supplier_product_id: p.cj_vid, quantity: item.quantity });
+          }
         }
 
-        // Catalog products
-        if (catalogIds.length > 0 && site.cj_email && site.cj_api_key) {
-          const realIds = catalogIds.map((id) => id.replace('catalog-', ''));
+        // Catalog products => grouper par supplier_id
+        if (catalogItems.length > 0) {
+          const realIds = catalogItems.map((i) => i.id.replace('catalog-', ''));
           const { data: catProds } = await supabaseAdmin
             .from('catalog_products')
-            .select('id, supplier_product_id')
+            .select('id, supplier_id, supplier_product_id')
             .in('id', realIds);
           for (const cp of (catProds || [])) {
-            if (!cp.supplier_product_id) continue;
-            try {
-              const variants = await cjGetVariants(site.cj_email, site.cj_api_key, cp.supplier_product_id);
-              const vid = Array.isArray(variants) && variants.length > 0 ? (variants[0].vid || variants[0].variantId) : null;
-              if (vid) vidById.set('catalog-' + cp.id, vid);
-            } catch {}
+            if (!cp.supplier_product_id || !cp.supplier_id) continue;
+            const item = catalogItems.find((i) => i.id === 'catalog-' + cp.id);
+            if (!item) continue;
+            if (!supplierGroups[cp.supplier_id]) supplierGroups[cp.supplier_id] = [];
+            supplierGroups[cp.supplier_id].push({
+              supplier_product_id: cp.supplier_product_id,
+              quantity: item.quantity,
+            });
           }
         }
 
-        const cjProducts = items
-          .filter((i) => vidById.has(i.id))
-          .map((i) => ({ vid: vidById.get(i.id)!, quantity: i.quantity }));
-        if (cjProducts.length > 0) {
-          const options = await cjCalculateFreight(site.cj_email, site.cj_api_key, countryCode, cjProducts);
-          const list = Array.isArray(options) ? options : [];
-          const prices = list
-            .map((o: any) => Number(o?.logisticPrice ?? o?.price ?? o?.freightAmount))
-            .filter((n) => Number.isFinite(n) && n >= 0);
-          if (prices.length > 0) {
-            const cheapest = Math.min(...prices);
-            shippingAmount = Math.round(cheapest * 100) / 100;
-            const bestOption = list.find((o: any) => Number(o?.logisticPrice ?? o?.price ?? o?.freightAmount) === cheapest);
-            estimatedDelivery = bestOption?.logisticAging || null;
+        // Appeler calculateShipping pour chaque groupe
+        let totalShipping = 0;
+        let maxDays = 0;
+        for (const [supplierId, groupItems] of Object.entries(supplierGroups)) {
+          const adapter = adapters[supplierId];
+          if (!adapter?.calculateShipping) continue;
+          try {
+            const result = await adapter.calculateShipping(groupItems, countryCode, creds[supplierId] || {});
+            totalShipping += result.total_cost;
+            if (result.estimated_days_max > maxDays) maxDays = result.estimated_days_max;
+          } catch (err: any) {
+            console.error('[checkout/shipping]', supplierId, 'failed:', err.message || err);
           }
         }
+
+        if (totalShipping > 0) {
+          shippingAmount = Math.round(totalShipping * 100) / 100;
+          estimatedDelivery = maxDays > 0 ? String(maxDays) + ' days' : null;
+        }
       } catch (e) {
-        // CJ indisponible -> on garde le forfait. Ne casse jamais le checkout.
+        // Adapter indisponible -> on garde le forfait. Ne casse jamais le checkout.
       }
     }
 

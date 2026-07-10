@@ -233,7 +233,7 @@ export default function CartDrawer({
             {country && (
               <>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">Livraison</span>
+                <span className="text-neutral-500">Livraison estimée</span>
                 <span className="text-neutral-700">
                   {calcBusy ? '…' : shipping === -1 ? 'Non disponible' : shipping !== null ? `${shipping.toFixed(2)} ${currency}` : '—'}
                 </span>
