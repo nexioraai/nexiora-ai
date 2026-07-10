@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { cjAdapter } from '@/lib/suppliers/cj-adapter';
+import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
 import type { CatalogProduct } from '@/lib/suppliers/supplier-adapter';
 
 export const maxDuration = 60;
@@ -51,6 +52,15 @@ export async function GET(req: NextRequest) {
     totalSynced += upserted;
   } catch (e: any) {
     errors.push(`CJ: ${e.message}`);
+  }
+
+  // --- Printful ---
+  try {
+    const pfResult = await printfulAdapter.syncCatalog({ categories: niches });
+    const pfUpserted = await upsertProducts(pfResult.products);
+    totalSynced += pfUpserted;
+  } catch (e: any) {
+    errors.push(`Printful: ${e.message}`);
   }
 
   // --- Spocket (futur) ---
