@@ -95,6 +95,7 @@ export default function EditPage() {
         primary_color: site.primary_color,
         hero_image: site.hero_image,
         theme: site.theme,
+        pod_designs: podDesigns,
       })
       .eq('slug', slug);
     setSaving(false);
