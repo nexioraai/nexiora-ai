@@ -298,7 +298,8 @@ export default function EditPage() {
                       if (!file) return;
                       setUploadingDesign(true);
                       try {
-                        const path = `${slug}/${Date.now()}-${file.name}`;
+                        const ext = (file.name.split('.').pop() || 'png').toLowerCase();
+                        const path = `${slug}/${Date.now()}.${ext}`;
                         const { error } = await supabase.storage.from('pod-designs').upload(path, file);
                         if (error) throw error;
                         const { data } = supabase.storage.from('pod-designs').getPublicUrl(path);
