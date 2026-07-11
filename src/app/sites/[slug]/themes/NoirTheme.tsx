@@ -36,7 +36,8 @@ export default function NoirTheme({ site }: { site: Site }) {
   const contact = site.contact || {}
   const social = site.social_links || {}
   const cta = site.cta || 'Contactez-nous'
-  const ctaHref = products.length > 0 ? '#shop' : '#contact'
+  const mode = site.mode || 1
+  const ctaHref = (products.length > 0 || mode === 3) ? '#shop' : '#contact'
   const heroTitle = site.hero_title || site.name
   const heroWords = heroTitle.trim().split(/\s+/)
   const heroLead = heroWords.slice(0, Math.max(1, heroWords.length - 2)).join(' ')
@@ -73,7 +74,7 @@ export default function NoirTheme({ site }: { site: Site }) {
             {!hidden('Home') && <a href="#home" className="hover:text-white transition-colors">{t.nav.home}</a>}
             {!hidden('About') && <a href="#about" className="hover:text-white transition-colors">{t.nav.about}</a>}
             {!hidden('Services') && <a href="#services" className="hover:text-white transition-colors">{sections[0]?.name || t.nav.services}</a>}
-            {products.length > 0 && !hidden('Shop') && (
+            {(products.length > 0 || mode === 3) && !hidden('Shop') && (
               <a href="#shop" className="hover:text-white transition-colors">{t.nav.shop}</a>
             )}
             {!hidden('Gallery') && <a href="#gallery" className="hover:text-white transition-colors">{t.nav.gallery}</a>}
@@ -257,7 +258,7 @@ export default function NoirTheme({ site }: { site: Site }) {
         ))}
 
         {/* =================== SHOP =================== */}
-        {products.length > 0 && !hidden('Shop') && (
+        {(products.length > 0 || mode === 3) && !hidden('Shop') && (
           <section id="shop" className="reveal py-28 md:py-36" style={{ borderTop: `1px solid ${LINE}` }}>
             <div className="max-w-7xl mx-auto px-6 md:px-10">
               <div className="text-center max-w-2xl mx-auto mb-20">
