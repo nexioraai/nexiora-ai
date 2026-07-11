@@ -8,6 +8,7 @@ import 'server-only';
 export interface CatalogProduct {
   supplier_id: string;
   supplier_product_id: string;
+  supplier_parent_id?: string;
   name: string;
   description: string;
   category: string;

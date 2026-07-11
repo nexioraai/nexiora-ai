@@ -105,53 +105,36 @@ export async function POST(req: Request) {
     const designUrl = designs[0].url;
     if (!designUrl) return NextResponse.json({ error: 'Design URL missing' }, { status: 400 });
 
-    // 1. Query real Printful products from catalog_products
+    // 1. Query real Printful products with parent_id already resolved
     const { data: catProducts } = await supabaseAdmin
       .from('catalog_products')
-      .select('supplier_product_id, name')
+      .select('supplier_product_id, supplier_parent_id, name')
       .eq('supplier_id', 'printful')
       .eq('in_stock', true)
+      .not('supplier_parent_id', 'is', null)
       .limit(20);
 
     if (!catProducts || catProducts.length === 0) {
-      return NextResponse.json({ error: 'No Printful products in catalog' }, { status: 400 });
+      return NextResponse.json({ error: 'No Printful products with parent_id in catalog. Run cron sync first.' }, { status: 400 });
     }
 
-    // 2. Resolve product_id parent for each variant (deduplicate by product_id)
-    const seen = new Set<number>();
-    const blanks: { product_id: number; variant_id: number; name: string; placement: string }[] = [];
+    // 2. Deduplicate by product_id, pick first variant per product
+    const seen = new Set<string>();
+    const blanks: { product_id: number; variant_id: number; name: string }[] = [];
 
     for (const cp of catProducts) {
-      try {
-        const data = await pfFetch(`/products/variant/${cp.supplier_product_id}`);
-        const productId = data?.product?.id;
-        if (!productId || seen.has(productId)) continue;
-        seen.add(productId);
-
-        // Get available placement
-        let placement = 'front';
-        try {
-          const pf = await pfFetch(`/mockup-generator/printfiles/${productId}`);
-          const placements = pf?.available_placements || {};
-          if (placements.front) placement = 'front';
-          else if (placements.default) placement = 'default';
-          else placement = Object.keys(placements)[0] || 'front';
-        } catch {}
-
-        blanks.push({
-          product_id: productId,
-          variant_id: Number(cp.supplier_product_id),
-          name: data?.product?.title || cp.name,
-          placement,
-        });
-        await delay(1000);
-      } catch {}
-
-      if (blanks.length >= 6) break; // Max 6 unique products (Vercel 60s safe)
+      if (!cp.supplier_parent_id || seen.has(cp.supplier_parent_id)) continue;
+      seen.add(cp.supplier_parent_id);
+      blanks.push({
+        product_id: Number(cp.supplier_parent_id),
+        variant_id: Number(cp.supplier_product_id),
+        name: cp.name,
+      });
+      if (blanks.length >= 6) break;
     }
 
     if (blanks.length === 0) {
-      return NextResponse.json({ error: 'Could not resolve any Printful products' }, { status: 400 });
+      return NextResponse.json({ error: 'No unique Printful products found' }, { status: 400 });
     }
 
     // 3. Create mockup tasks
@@ -166,7 +149,7 @@ export async function POST(req: Request) {
             variant_ids: [blank.variant_id],
             format: 'jpg',
             files: [{
-              placement: blank.placement,
+              placement: 'front',
               image_url: designUrl,
               position: POSITION,
             }],

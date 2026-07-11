@@ -157,6 +157,7 @@ async function upsertProducts(products: CatalogProduct[]): Promise<number> {
     .map(p => ({
     supplier_id: p.supplier_id,
     supplier_product_id: p.supplier_product_id,
+    supplier_parent_id: p.supplier_parent_id || null,
     name: p.name,
     description: p.description,
     category: p.category,

@@ -85,6 +85,7 @@ function mapPrintfulVariant(product: any, variant: any): CatalogProduct {
     supplier_id: 'printful',
     // Chez Printful, c'est le variant_id qui est commandable
     supplier_product_id: String(variant.id),
+    supplier_parent_id: String(product.id),
     name: `${product.title || product.type_name || 'Printful'} — ${variant.color || ''} ${variant.size || ''}`.trim(),
     description: product.description || product.title || '',
     category: product.type_name || product.type || '',
