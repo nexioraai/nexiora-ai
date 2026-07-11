@@ -63,35 +63,39 @@ export async function POST(req: Request) {
     const designUrl = designs[0].url;
     if (!designUrl) return NextResponse.json({ error: 'Design URL missing' }, { status: 400 });
 
-    // 1. Launch ALL tasks in parallel
+    // 1. Launch tasks in batches of 2 (rate limit safe)
     const tasks: { blank: typeof PRINTFUL_BLANKS[0]; task_key: string }[] = [];
     const errors: string[] = [];
 
-    await Promise.all(
-      PRINTFUL_BLANKS.map(async (blank) => {
-        try {
-          const task = await pfFetch(`/mockup-generator/create-task/${blank.product_id}`, {
-            method: 'POST',
-            body: JSON.stringify({
-              variant_ids: [blank.variant_id],
-              format: 'jpg',
-              files: [{
-                placement: blank.placement,
-                image_url: designUrl,
-                position: POSITION,
-              }],
-            }),
-          });
-          if (task?.task_key) {
-            tasks.push({ blank, task_key: task.task_key });
-          } else {
-            errors.push(`${blank.name}: no task_key`);
+    for (let i = 0; i < PRINTFUL_BLANKS.length; i += 2) {
+      const batch = PRINTFUL_BLANKS.slice(i, i + 2);
+      await Promise.all(
+        batch.map(async (blank) => {
+          try {
+            const task = await pfFetch(`/mockup-generator/create-task/${blank.product_id}`, {
+              method: 'POST',
+              body: JSON.stringify({
+                variant_ids: [blank.variant_id],
+                format: 'jpg',
+                files: [{
+                  placement: blank.placement,
+                  image_url: designUrl,
+                  position: POSITION,
+                }],
+              }),
+            });
+            if (task?.task_key) {
+              tasks.push({ blank, task_key: task.task_key });
+            } else {
+              errors.push(`${blank.name}: no task_key`);
+            }
+          } catch (err: any) {
+            errors.push(`${blank.name}: ${err.message}`);
           }
-        } catch (err: any) {
-          errors.push(`${blank.name}: ${err.message}`);
-        }
-      })
-    );
+        })
+      );
+      if (i + 2 < PRINTFUL_BLANKS.length) await delay(3000);
+    }
 
     // 2. Poll ALL tasks in parallel (max 40s, 8 polls × 5s)
     const mockups: any[] = [];
