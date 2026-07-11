@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
-// Produits Printful populaires pour mockups (product_id → variant_id par défaut + nom)
 const PRINTFUL_BLANKS = [
   { product_id: 71, variant_id: 4012, name: 'Unisex Staple T-Shirt', placement: 'front' },
   { product_id: 380, variant_id: 9867, name: 'Unisex Hoodie', placement: 'front' },
@@ -49,7 +48,6 @@ export async function POST(req: Request) {
     const { slug } = await req.json();
     if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
 
-    // 1. Get site with pod_designs
     const { data: site } = await supabaseAdmin
       .from('sites')
       .select('id, pod_designs, dropship_type')
@@ -62,71 +60,71 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No designs uploaded' }, { status: 400 });
     }
 
-    // Use first design
     const designUrl = designs[0].url;
     if (!designUrl) return NextResponse.json({ error: 'Design URL missing' }, { status: 400 });
 
-    // 2. Generate mockups for each blank
-    const mockups: any[] = [];
+    // 1. Launch ALL tasks in parallel
+    const tasks: { blank: typeof PRINTFUL_BLANKS[0]; task_key: string }[] = [];
     const errors: string[] = [];
 
-    for (const blank of PRINTFUL_BLANKS) {
-      try {
-        // Create task
-        const task = await pfFetch(`/mockup-generator/create-task/${blank.product_id}`, {
-          method: 'POST',
-          body: JSON.stringify({
-            variant_ids: [blank.variant_id],
-            format: 'jpg',
-            files: [{
-              placement: blank.placement,
-              image_url: designUrl,
-              position: POSITION,
-            }],
-          }),
-        });
-
-        if (!task?.task_key) {
-          errors.push(`${blank.name}: no task_key`);
-          continue;
-        }
-
-        // Poll for result (max 30s)
-        let result = null;
-        for (let i = 0; i < 6; i++) {
-          await delay(5000);
-          const poll = await pfFetch(`/mockup-generator/task?task_key=${task.task_key}`);
-          if (poll.status === 'completed') {
-            result = poll;
-            break;
-          }
-          if (poll.status === 'failed') {
-            errors.push(`${blank.name}: mockup failed — ${poll.error || 'unknown'}`);
-            break;
-          }
-        }
-
-        if (result?.mockups?.[0]) {
-          const m = result.mockups[0];
-          mockups.push({
-            product_name: blank.name,
-            product_id: blank.product_id,
-            variant_id: blank.variant_id,
-            mockup_url: m.mockup_url,
-            extra: (m.extra || []).map((e: any) => ({ title: e.title, url: e.url })),
-            design_url: designUrl,
-            created_at: new Date().toISOString(),
+    await Promise.all(
+      PRINTFUL_BLANKS.map(async (blank) => {
+        try {
+          const task = await pfFetch(`/mockup-generator/create-task/${blank.product_id}`, {
+            method: 'POST',
+            body: JSON.stringify({
+              variant_ids: [blank.variant_id],
+              format: 'jpg',
+              files: [{
+                placement: blank.placement,
+                image_url: designUrl,
+                position: POSITION,
+              }],
+            }),
           });
+          if (task?.task_key) {
+            tasks.push({ blank, task_key: task.task_key });
+          } else {
+            errors.push(`${blank.name}: no task_key`);
+          }
+        } catch (err: any) {
+          errors.push(`${blank.name}: ${err.message}`);
         }
+      })
+    );
 
-        // Rate limit: wait between products
-        await delay(2000);
-      } catch (err: any) {
-        errors.push(`${blank.name}: ${err.message}`);
-      }
+    // 2. Poll ALL tasks in parallel (max 40s, 8 polls × 5s)
+    const mockups: any[] = [];
+    const pending = new Set(tasks.map(t => t.task_key));
+
+    for (let round = 0; round < 8 && pending.size > 0; round++) {
+      await delay(5000);
+      await Promise.all(
+        tasks.filter(t => pending.has(t.task_key)).map(async (t) => {
+          try {
+            const poll = await pfFetch(`/mockup-generator/task?task_key=${t.task_key}`);
+            if (poll.status === 'completed' && poll.mockups?.[0]) {
+              const m = poll.mockups[0];
+              mockups.push({
+                product_name: t.blank.name,
+                product_id: t.blank.product_id,
+                variant_id: t.blank.variant_id,
+                mockup_url: m.mockup_url,
+                extra: (m.extra || []).map((e: any) => ({ title: e.title, url: e.url })),
+                design_url: designUrl,
+                created_at: new Date().toISOString(),
+              });
+              pending.delete(t.task_key);
+            } else if (poll.status === 'failed') {
+              errors.push(`${t.blank.name}: ${poll.error || 'failed'}`);
+              pending.delete(t.task_key);
+            }
+          } catch {}
+        })
+      );
     }
 
-    // 3. Save mockups to site
+    // 3. Save mockups to pod_designs
     const updatedDesigns = designs.map((d: any, i: number) => {
       if (i === 0) return { ...d, mockups };
       return d;
@@ -140,6 +138,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       generated: mockups.length,
+      total: PRINTFUL_BLANKS.length,
       errors,
       mockups: mockups.map(m => ({ name: m.product_name, url: m.mockup_url })),
     });
