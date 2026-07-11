@@ -325,8 +325,9 @@ export default function EditPage() {
                   <button
                     onClick={async () => {
                       setGeneratingMockups(true);
-                      setMessage('');
+                      setMessage('Lancement de la génération…');
                       try {
+                        // 1. Launch tasks
                         const res = await fetch('/api/pod/generate-mockups', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
@@ -334,12 +335,32 @@ export default function EditPage() {
                         });
                         const data = await res.json();
                         if (!res.ok) throw new Error(data.error || 'Erreur');
-                        setMessage(`${data.generated} mockups générés !`);
-                        // Reload pod_designs from DB
-                        const { data: updated } = await supabase.from('sites').select('pod_designs').eq('slug', slug).single();
-                        if (updated?.pod_designs) setPodDesigns(updated.pod_designs);
+                        if (!data.task_keys?.length) throw new Error('Aucune tâche lancée');
+                        setMessage(`${data.task_keys.length} produits lancés… Génération en cours`);
+
+                        // 2. Poll every 5s until done
+                        const taskKeys = data.task_keys;
+                        for (let round = 0; round < 12; round++) {
+                          await new Promise(r => setTimeout(r, 5000));
+                          const pollRes = await fetch('/api/pod/generate-mockups', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ slug, action: 'poll', task_keys: taskKeys }),
+                          });
+                          const pollData = await pollRes.json();
+                          if (pollData.status === 'done') {
+                            setMessage(`${pollData.generated} mockups générés !`);
+                            const { data: updated } = await supabase.from('sites').select('pod_designs').eq('slug', slug).single();
+                            if (updated?.pod_designs) setPodDesigns(updated.pod_designs);
+                            break;
+                          }
+                          setMessage(`Génération… ${pollData.generated} prêts, ${pollData.pending} en cours`);
+                          if (round === 11) {
+                            setMessage(`${pollData.generated} mockups générés (certains ont expiré)`);
+                          }
+                        }
                       } catch (err: any) {
-                        setMessage('Erreur mockups: ' + (err.message || err));
+                        setMessage('Erreur: ' + (err.message || err));
                       } finally {
                         setGeneratingMockups(false);
                       }
@@ -347,7 +368,7 @@ export default function EditPage() {
                     disabled={generatingMockups}
                     className="w-full py-3 rounded-xl border border-white/20 text-sm font-medium text-slate-200 hover:border-[#FF5500] hover:text-white transition disabled:opacity-40"
                   >
-                    {generatingMockups ? 'Génération en cours… (peut prendre 1-2 min)' : '🎨 Générer les mockups automatiquement'}
+                    {generatingMockups ? 'Génération en cours…' : '🎨 Générer les mockups automatiquement'}
                   </button>
                 )}
               </div>
