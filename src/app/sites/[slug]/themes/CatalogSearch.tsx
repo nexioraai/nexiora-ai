@@ -25,6 +25,7 @@ interface Props {
   primary: string;
   lang?: string;
   theme?: ThemeKey;
+  dropshipType?: string;
 }
 
 const LABELS: Record<string, Record<string, string>> = {
@@ -58,7 +59,7 @@ export const THEME_TOKENS: Record<ThemeKey, {
   },
 };
 
-export default function CatalogSearch({ slug, primary, lang = 'en', theme = 'editorial' }: Props) {
+export default function CatalogSearch({ slug, primary, lang = 'en', theme = 'editorial', dropshipType = 'reseller' }: Props) {
   const t = LABELS[lang] || LABELS.en;
   const tokens = THEME_TOKENS[theme] || THEME_TOKENS.editorial;
   const [query, setQuery] = useState('');

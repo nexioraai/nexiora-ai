@@ -75,7 +75,7 @@ export default function PreviewPage() {
       </div>
       <CartShell primary={primary} labels={cartLabels} slug={site.slug}>
         <Theme site={site} />
-        {site.mode === 3 && <CatalogSearch slug={site.slug} primary={primary} lang={site.lang} />}
+        {site.mode === 3 && site.dropship_type !== 'pod_brand' && <CatalogSearch slug={site.slug} primary={primary} lang={site.lang} dropshipType={site.dropship_type || 'reseller'} />}
       </CartShell>
       <ScrollRevealInit />
     </>
