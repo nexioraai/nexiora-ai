@@ -29,6 +29,7 @@ export default function EditPage() {
   const [uploading, setUploading] = useState(false);
   const [podDesigns, setPodDesigns] = useState<{url: string; name: string; created_at: string}[]>([]);
   const [uploadingDesign, setUploadingDesign] = useState(false);
+  const [generatingMockups, setGeneratingMockups] = useState(false);
   const [message, setMessage] = useState('');
   const [history, setHistory] = useState<{ score: number; date: string; reason: string }[]>([]);
   const initialPassed = useRef<string[]>([]);
@@ -320,6 +321,35 @@ export default function EditPage() {
                   {uploadingDesign ? 'Uploading…' : '+ Ajouter un design'}
                 </label>
                 <p className="text-xs text-slate-500">PNG, JPEG, SVG, WebP, TIFF ou PDF — max 50 MB. Résolution 300 DPI recommandée.</p>
+                {podDesigns.length > 0 && (
+                  <button
+                    onClick={async () => {
+                      setGeneratingMockups(true);
+                      setMessage('');
+                      try {
+                        const res = await fetch('/api/pod/generate-mockups', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ slug }),
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.error || 'Erreur');
+                        setMessage(`${data.generated} mockups générés !`);
+                        // Reload pod_designs from DB
+                        const { data: updated } = await supabase.from('sites').select('pod_designs').eq('slug', slug).single();
+                        if (updated?.pod_designs) setPodDesigns(updated.pod_designs);
+                      } catch (err: any) {
+                        setMessage('Erreur mockups: ' + (err.message || err));
+                      } finally {
+                        setGeneratingMockups(false);
+                      }
+                    }}
+                    disabled={generatingMockups}
+                    className="w-full py-3 rounded-xl border border-white/20 text-sm font-medium text-slate-200 hover:border-[#FF5500] hover:text-white transition disabled:opacity-40"
+                  >
+                    {generatingMockups ? 'Génération en cours… (peut prendre 1-2 min)' : '🎨 Générer les mockups automatiquement'}
+                  </button>
+                )}
               </div>
             </FieldSection>
           )}
