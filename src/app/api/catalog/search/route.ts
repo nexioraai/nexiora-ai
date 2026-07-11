@@ -42,9 +42,10 @@ export async function GET(req: NextRequest) {
     .select('*', { count: 'exact' })
     .eq('in_stock', true);
 
-  // Recherche full-text si mot-clé fourni
-  if (q) {
-    query = query.textSearch('name', q, { type: 'websearch', config: 'english' });
+  // Recherche full-text : mot-clé visiteur ou niche du site par défaut
+  const searchTerm = q || extractNicheKeyword(site.type);
+  if (searchTerm) {
+    query = query.textSearch('name', searchTerm, { type: 'websearch', config: 'english' });
   }
 
   // Filtre par fournisseur
@@ -117,4 +118,15 @@ export async function GET(req: NextRequest) {
     page_size: pageSize,
     has_more: (count || 0) > from + pageSize,
   });
+}
+
+
+/** Extrait un mot-clé de recherche depuis le type du site. */
+function extractNicheKeyword(type: string | null): string | null {
+  if (!type) return null;
+  const cleaned = type
+    .replace(/\b(dropshipping|retailer|store|shop|boutique|online|e-commerce|ecommerce|print-on-demand|print on demand|pod|marketplace|fashion brand)\b/gi, '')
+    .replace(/[&.]/g, ' ')
+    .trim();
+  return cleaned || null;
 }

@@ -36,7 +36,8 @@ export async function GET(req: NextRequest) {
       .map(s => extractNicheKeyword(s.type))
       .filter(Boolean)
   )] as string[];
-  const niches = rawNiches.flatMap(expandNiche);
+  const nicheArrays = await Promise.all(rawNiches.map(expandNiche));
+  const niches = nicheArrays.flat();
 
   if (niches.length === 0) {
     return NextResponse.json({ done: true, synced: 0, message: 'Aucune niche exploitable' });
@@ -90,19 +91,42 @@ export async function GET(req: NextRequest) {
   });
 }
 
-/** Expande une niche en sous-catégories pour plus de résultats. */
-function expandNiche(niche: string): string[] {
-  const map: Record<string, string[]> = {
-    Electronics: ['headphones', 'smartwatch', 'phone accessories', 'LED lights', 'speakers', 'charger', 'camera accessories'],
-    Fashion: ['dress', 'shoes', 'bags', 'jewelry', 'sunglasses', 'watch'],
-    Fitness: ['resistance bands', 'yoga mat', 'gym accessories', 'water bottle', 'sportswear'],
-    Home: ['kitchen gadgets', 'home decor', 'LED lamp', 'storage', 'bathroom accessories'],
-    Beauty: ['makeup brush', 'skincare', 'hair accessories', 'nail art', 'beauty tools'],
-    Tech: ['USB hub', 'phone case', 'tablet stand', 'webcam', 'mouse pad'],
-  };
-  for (const [key, subs] of Object.entries(map)) {
-    if (niche.toLowerCase().includes(key.toLowerCase())) return subs;
+/** Expande une niche en mots-clés de recherche via Claude Haiku. */
+async function expandNiche(niche: string): Promise<string[]> {
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY || '',
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 200,
+        messages: [{
+          role: 'user',
+          content: `You are a product search keyword generator for dropshipping/POD suppliers (CJ Dropshipping, Printful, Printify).
+Given this business type: "${niche}"
+Return exactly 7 short English product search keywords that would find relevant products on these platforms.
+Return ONLY a JSON array of strings, nothing else. Example: ["keyword1","keyword2","keyword3","keyword4","keyword5","keyword6","keyword7"]`,
+        }],
+      }),
+    });
+    const data = await res.json();
+    const text = data?.content?.[0]?.text || '';
+    const match = text.match(/\[[\s\S]*\]/);
+    if (match) {
+      const keywords = JSON.parse(match[0]);
+      if (Array.isArray(keywords) && keywords.length > 0) {
+        console.log('[expandNiche]', niche, '->', keywords);
+        return keywords.map((k: any) => String(k));
+      }
+    }
+  } catch (err: any) {
+    console.error('[expandNiche] Haiku failed:', err.message || err);
   }
+  // Fallback: retourner la niche brute
   return [niche];
 }
 
