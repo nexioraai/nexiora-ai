@@ -1,13 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
-const PRINTFUL_BLANKS = [
-  { product_id: 71, variant_id: 4012, name: 'Unisex Staple T-Shirt', placement: 'front' },
-  { product_id: 380, variant_id: 9867, name: 'Unisex Hoodie', placement: 'front' },
-  { product_id: 19, variant_id: 1320, name: 'Classic Mug 11oz', placement: 'front' },
-  { product_id: 534, variant_id: 16585, name: 'Tote Bag', placement: 'front' },
-];
-
 const POSITION = {
   area_width: 1800,
   area_height: 2400,
@@ -38,7 +31,6 @@ async function pfFetch(path: string, init?: RequestInit): Promise<any> {
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-/** POST — launch tasks, return keys. GET — poll results + save. */
 export async function POST(req: Request) {
   try {
     const { slug, action, task_keys } = await req.json();
@@ -75,7 +67,6 @@ export async function POST(req: Request) {
         })
       );
 
-      // If all done, save to DB
       if (pending.length === 0 && results.length > 0) {
         const { data: site } = await supabaseAdmin
           .from('sites')
@@ -101,7 +92,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // ---- CREATE mode (default) ----
+    // ---- CREATE mode ----
     const { data: site } = await supabaseAdmin
       .from('sites')
       .select('id, pod_designs, dropship_type')
@@ -114,10 +105,60 @@ export async function POST(req: Request) {
     const designUrl = designs[0].url;
     if (!designUrl) return NextResponse.json({ error: 'Design URL missing' }, { status: 400 });
 
+    // 1. Query real Printful products from catalog_products
+    const { data: catProducts } = await supabaseAdmin
+      .from('catalog_products')
+      .select('supplier_product_id, name')
+      .eq('supplier_id', 'printful')
+      .eq('in_stock', true)
+      .limit(20);
+
+    if (!catProducts || catProducts.length === 0) {
+      return NextResponse.json({ error: 'No Printful products in catalog' }, { status: 400 });
+    }
+
+    // 2. Resolve product_id parent for each variant (deduplicate by product_id)
+    const seen = new Set<number>();
+    const blanks: { product_id: number; variant_id: number; name: string; placement: string }[] = [];
+
+    for (const cp of catProducts) {
+      try {
+        const data = await pfFetch(`/products/variant/${cp.supplier_product_id}`);
+        const productId = data?.product?.id;
+        if (!productId || seen.has(productId)) continue;
+        seen.add(productId);
+
+        // Get available placement
+        let placement = 'front';
+        try {
+          const pf = await pfFetch(`/mockup-generator/printfiles/${productId}`);
+          const placements = pf?.available_placements || {};
+          if (placements.front) placement = 'front';
+          else if (placements.default) placement = 'default';
+          else placement = Object.keys(placements)[0] || 'front';
+        } catch {}
+
+        blanks.push({
+          product_id: productId,
+          variant_id: Number(cp.supplier_product_id),
+          name: data?.product?.title || cp.name,
+          placement,
+        });
+        await delay(1000);
+      } catch {}
+
+      if (blanks.length >= 6) break; // Max 6 unique products (Vercel 60s safe)
+    }
+
+    if (blanks.length === 0) {
+      return NextResponse.json({ error: 'Could not resolve any Printful products' }, { status: 400 });
+    }
+
+    // 3. Create mockup tasks
     const launched: any[] = [];
     const errors: string[] = [];
 
-    for (const blank of PRINTFUL_BLANKS) {
+    for (const blank of blanks) {
       try {
         const task = await pfFetch(`/mockup-generator/create-task/${blank.product_id}`, {
           method: 'POST',
@@ -142,7 +183,7 @@ export async function POST(req: Request) {
       } catch (err: any) {
         errors.push(`${blank.name}: ${err.message}`);
       }
-      await delay(2000); // 2s between each to avoid 429
+      await delay(2000);
     }
 
     return NextResponse.json({
