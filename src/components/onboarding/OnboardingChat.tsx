@@ -20,6 +20,8 @@ export default function OnboardingChat() {
   const [modeOptions, setModeOptions] = useState<{ options: number[]; labels: Record<number, string> } | null>(null);
   const [loadingStep, setLoadingStep] = useState(0);
   const [siteMode, setSiteMode] = useState<number | null>(null);
+  const [dropshipType, setDropshipType] = useState<string | null>(null);
+  const [showDropshipPicker, setShowDropshipPicker] = useState(false);
   const LOADING_STEPS = [
     'Analyse de votre activité…',
     'Conception des modules métier…',
@@ -65,7 +67,7 @@ export default function OnboardingChat() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ history: newMessages, ...(chosenMode ? { chosenMode } : {}) }),
+        body: JSON.stringify({ history: newMessages, ...(chosenMode ? { chosenMode } : {}), ...(dropshipType ? { dropshipType } : {}) }),
       });
 
       let data;
@@ -83,7 +85,7 @@ export default function OnboardingChat() {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.access_token}`,
           },
-          body: JSON.stringify({ message: finalMessage, location: '' }),
+          body: JSON.stringify({ message: finalMessage, location: '', ...(dropshipType ? { dropshipType } : {}) }),
         });
         const genData = await genRes.json();
         if (!genRes.ok || !genData.slug) throw new Error(genData.error || 'Génération échouée.');
@@ -136,19 +138,58 @@ export default function OnboardingChat() {
             Décrivez votre activité en quelques mots. Nexiora conçoit votre site sur mesure.
           </p>
           <div className="flex flex-wrap gap-3 justify-center max-w-lg">
-            {[
-              { label: 'Site vitrine', mode: 1 },
-              { label: 'Boutique en ligne', mode: 2 },
-              { label: 'Dropshipping', mode: 3 },
-            ].map(({ label, mode }) => (
+            {!showDropshipPicker ? (
+              <>
+              {[
+                { label: 'Site vitrine', mode: 1 },
+                { label: 'Boutique en ligne', mode: 2 },
+                { label: 'Dropshipping', mode: 3 },
+              ].map(({ label, mode }) => (
+                <button
+                  key={label}
+                  onClick={() => {
+                    if (mode === 3) {
+                      setShowDropshipPicker(true);
+                    } else {
+                      setSiteMode(mode);
+                      sendText(label);
+                    }
+                  }}
+                  className="px-5 py-2.5 rounded-full bg-white/[0.04] border border-white/12 text-sm text-slate-200 hover:border-[#FF5500] hover:text-white hover:bg-white/[0.07] transition"
+                >
+                  {label}
+                </button>
+              ))}
+              </>
+            ) : (
+              <>
+              <p className="w-full text-center text-sm text-slate-400 mb-2">Quel type de dropshipping ?</p>
+              {[
+                { label: 'Ma propre marque (POD)', type: 'pod_brand' },
+                { label: 'Personnalisation client (POD)', type: 'pod_custom' },
+                { label: 'Revente produits existants', type: 'reseller' },
+              ].map(({ label, type }) => (
+                <button
+                  key={type}
+                  onClick={() => {
+                    setSiteMode(3);
+                    setDropshipType(type);
+                    setShowDropshipPicker(false);
+                    sendText(`Dropshipping — ${label}`);
+                  }}
+                  className="px-5 py-2.5 rounded-full bg-white/[0.04] border border-white/12 text-sm text-slate-200 hover:border-[#FF5500] hover:text-white hover:bg-white/[0.07] transition"
+                >
+                  {label}
+                </button>
+              ))}
               <button
-                key={label}
-                onClick={() => { setSiteMode(mode); sendText(label); }}
-                className="px-5 py-2.5 rounded-full bg-white/[0.04] border border-white/12 text-sm text-slate-200 hover:border-[#FF5500] hover:text-white hover:bg-white/[0.07] transition"
+                onClick={() => setShowDropshipPicker(false)}
+                className="px-4 py-2 text-xs text-slate-500 hover:text-slate-300 transition"
               >
-                {label}
+                ← Retour
               </button>
-            ))}
+              </>
+            )}
           </div>
         </div>
       ) : (

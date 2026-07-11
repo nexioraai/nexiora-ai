@@ -177,6 +177,7 @@ export async function POST(req: Request) {
     const modeMatch = typeof message === 'string' ? message.match(/^\s*mode:\s*([123])/i) : null;
     const siteMode: number | null = modeMatch ? parseInt(modeMatch[1], 10) : null;
     const location = body.location || '';
+    const dropshipType = body.dropshipType || null;
     const language = body.language || 'fr';
 
     if (!message) return NextResponse.json({ error: 'Message is required' }, { status: 400 });
@@ -482,6 +483,7 @@ Return ONLY valid JSON, no markdown:
       geo_lng,
       area_served: parsed.areaServed || null,
       price_range: parsed.priceRange || null,
+      dropship_type: dropshipType,
     });
 
     if (error) {
