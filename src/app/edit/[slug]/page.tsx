@@ -27,6 +27,8 @@ export default function EditPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [podDesigns, setPodDesigns] = useState<{url: string; name: string; created_at: string}[]>([]);
+  const [uploadingDesign, setUploadingDesign] = useState(false);
   const [message, setMessage] = useState('');
   const [history, setHistory] = useState<{ score: number; date: string; reason: string }[]>([]);
   const initialPassed = useRef<string[]>([]);
@@ -39,7 +41,10 @@ export default function EditPage() {
       }
       supabase.from('sites').select('*').eq('slug', slug).eq('owner_email', data.user.email!).maybeSingle().then(({ data: siteData }) => {
         setSite(siteData);
-        if (siteData) initialPassed.current = computeAiScore(siteData as any).passed;
+        if (siteData) {
+          initialPassed.current = computeAiScore(siteData as any).passed;
+          setPodDesigns(Array.isArray((siteData as any).pod_designs) ? (siteData as any).pod_designs : []);
+        }
         setLoading(false);
       });
       supabase.from('score_history').select('score, created_at, reason').eq('slug', slug).order('created_at', { ascending: true }).then(({ data: hist }) => {
@@ -52,7 +57,7 @@ export default function EditPage() {
     });
   }, [slug]);
 
-  const updateField = (field: string, value: string) => {
+  const updateField = (field: string, value: any) => {
     setSite({ ...site, [field]: value });
   };
 
@@ -259,6 +264,63 @@ export default function EditPage() {
               className="w-24 h-12 rounded-xl border border-white/10 bg-transparent cursor-pointer"
             />
           </FieldSection>
+
+          {/* POD Designs — visible for pod_brand and pod_custom */}
+          {(site as any).dropship_type && ['pod_brand', 'pod_custom'].includes((site as any).dropship_type) && (
+            <FieldSection label="Mes Designs POD">
+              <div className="space-y-3">
+                {podDesigns.map((d, i) => (
+                  <div key={i} className="flex items-center gap-3 bg-white/[0.03] border border-white/10 rounded-xl p-3">
+                    <img src={d.url} alt={d.name} className="w-14 h-14 rounded-lg object-cover border border-white/10" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-slate-200 truncate">{d.name}</p>
+                      <p className="text-xs text-slate-500">{new Date(d.created_at).toLocaleDateString('fr-CA')}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const updated = podDesigns.filter((_, j) => j !== i);
+                        setPodDesigns(updated);
+                        updateField('pod_designs', updated);
+                      }}
+                      className="p-1.5 rounded-lg hover:bg-red-500/10 text-slate-500 hover:text-red-400 transition"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-dashed border-white/20 text-sm text-slate-400 hover:border-[#FF5500] hover:text-slate-200 cursor-pointer transition">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/svg+xml,image/webp,image/tiff,application/pdf"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setUploadingDesign(true);
+                      try {
+                        const path = `${slug}/${Date.now()}-${file.name}`;
+                        const { error } = await supabase.storage.from('pod-designs').upload(path, file);
+                        if (error) throw error;
+                        const { data } = supabase.storage.from('pod-designs').getPublicUrl(path);
+                        const newDesign = { url: data.publicUrl, name: file.name, created_at: new Date().toISOString() };
+                        const updated = [...podDesigns, newDesign];
+                        setPodDesigns(updated);
+                        updateField('pod_designs', updated);
+                        setMessage('Design uploaded!');
+                      } catch (err: any) {
+                        setMessage('Upload error: ' + (err.message || err));
+                      } finally {
+                        setUploadingDesign(false);
+                        e.target.value = '';
+                      }
+                    }}
+                  />
+                  {uploadingDesign ? 'Uploading…' : '+ Ajouter un design'}
+                </label>
+                <p className="text-xs text-slate-500">PNG, JPEG, SVG, WebP, TIFF ou PDF — max 50 MB. Résolution 300 DPI recommandée.</p>
+              </div>
+            </FieldSection>
+          )}
 
           <button
             onClick={handleSave}
