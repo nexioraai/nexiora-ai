@@ -58,7 +58,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const closeCart = useCallback(() => setIsOpen(false), []);
 
   const count = items.reduce((n, i) => n + i.quantity, 0);
-  const total = items.reduce((sum, i) => sum + i.priceNumber * i.quantity, 0);
+  const total = items.reduce((sum, i) => sum + (i.priceNumber || 0) * i.quantity, 0);
   const currency = items[0]?.currency ?? 'CAD';
 
   return (

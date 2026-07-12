@@ -18,6 +18,7 @@ import {
   normalizeService,
   normalizeTestimonial,
   normalizeProduct,
+  mockupsToProducts,
   ContactMap,
 } from './shared'
 import { getDict } from './i18n'
@@ -73,7 +74,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
   const cartT = getCartLabels(site.lang)
   const sections = site.sections || []
   const testimonials = (site.testimonials || []).map(normalizeTestimonial)
-  const products = (site.products || []).map(normalizeProduct)
+  const products = [...(site.products || []).map(normalizeProduct), ...mockupsToProducts(site)]
   const gallery: string[] = (site.gallery || []).filter((u: any) => typeof u === 'string' && u.length > 0 && u.startsWith('http'))
   const contact = site.contact || {}
   const social = site.social_links || {}

@@ -191,7 +191,7 @@ export default function CartDrawer({
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-neutral-900 truncate">{item.name}</p>
-                    <p className="text-sm text-neutral-500">{item.priceNumber.toFixed(2)} {item.currency}</p>
+                    <p className="text-sm text-neutral-500">{(item.priceNumber ?? 0).toFixed(2)} {item.currency}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <button onClick={() => setQuantity(item.id, item.quantity - 1)} className="w-7 h-7 rounded-lg border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 transition">
                         <Minus className="w-3.5 h-3.5" />

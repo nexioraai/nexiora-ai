@@ -62,6 +62,7 @@ faq?: { question: string; answer: string }[]
   hidden_sections?: string[]
   section_label?: string
   created_at?: string
+  pod_designs?: any[]
 }
 
 export type Product = {
@@ -92,7 +93,7 @@ rating: number
 // ---------- Supabase ----------
 
 export const PUBLIC_COLS =
-'id,slug,name,slogan,type,mode,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image,lang,faq,whyus,mission,vision,geo_lat,geo_lng,area_served,price_range,hidden_sections,section_label,sections,created_at,dropship_type'
+'id,slug,name,slogan,type,mode,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image,lang,faq,whyus,mission,vision,geo_lat,geo_lng,area_served,price_range,hidden_sections,section_label,sections,created_at,dropship_type,pod_designs'
 
 export async function fetchSite(
 slug: string,
@@ -278,6 +279,29 @@ undefined,
 }
 }
 
+
+// ---------- POD mockups → Products ----------
+export function mockupsToProducts(site: Site): Product[] {
+  if (site.dropship_type !== "pod_brand" || !site.pod_designs?.length) return []
+  const designs = site.pod_designs
+  const products: Product[] = []
+  for (const design of designs) {
+    if (!design.mockups?.length) continue
+    for (const m of design.mockups) {
+      const pr = m.price ? Number(m.price) : 0
+      products.push({
+        id: `printful-${m.product_id}-${m.variant_id}`,
+        name: m.product_name?.replace(/\s*—\s*.+$/, "") || "Produit",
+        description: "",
+        price: pr > 0 ? `${pr.toFixed(2)} ${m.currency || "CAD"}` : "",
+        priceNumber: pr,
+        currency: m.currency || "CAD",
+        image: m.mockup_url,
+      })
+    }
+  }
+  return products
+}
 
 // Carte OSM partagee par tous les themes (synchro adresse via geo_lat/geo_lng)
 export function ContactMap({ lat, lng, className = '' }: { lat?: number | null; lng?: number | null; className?: string }) {

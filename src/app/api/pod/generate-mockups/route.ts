@@ -48,12 +48,21 @@ export async function POST(req: Request) {
             const poll = await pfFetch(`/mockup-generator/task?task_key=${tk.task_key}`);
             if (poll.status === 'completed' && poll.mockups?.[0]) {
               const m = poll.mockups[0];
+              // Lookup price from catalog
+              const { data: cpRow } = await supabaseAdmin
+                .from('catalog_products')
+                .select('price, currency')
+                .eq('supplier_id', 'printful')
+                .eq('supplier_product_id', String(tk.variant_id))
+                .single();
               results.push({
                 product_name: tk.name,
                 product_id: tk.product_id,
                 variant_id: tk.variant_id,
                 mockup_url: m.mockup_url,
                 extra: (m.extra || []).map((e: any) => ({ title: e.title, url: e.url })),
+                price: cpRow?.price ?? null,
+                currency: cpRow?.currency ?? 'USD',
                 created_at: new Date().toISOString(),
               });
             } else if (poll.status === 'failed') {
@@ -68,6 +77,37 @@ export async function POST(req: Request) {
       );
 
       if (pending.length === 0 && results.length > 0) {
+        // Download mockup images to Supabase Storage (permanent URLs)
+        const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+        for (const m of results) {
+          const urls = [
+            { key: 'mockup_url', url: m.mockup_url },
+            ...((m.extra || []).map((e: any, ei: number) => ({ key: `extra_${ei}`, url: e.url }))),
+          ];
+          for (const item of urls) {
+            try {
+              const imgRes = await fetch(item.url);
+              if (!imgRes.ok) continue;
+              const buf = Buffer.from(await imgRes.arrayBuffer());
+              const ext = item.url.includes('.png') ? 'png' : 'jpg';
+              const storagePath = `${slug}/${m.product_id}-${m.variant_id}-${item.key}.${ext}`;
+              await supabaseAdmin.storage.from('pod-designs').upload(storagePath, buf, {
+                contentType: `image/${ext === 'jpg' ? 'jpeg' : ext}`,
+                upsert: true,
+              });
+              const permUrl = `${sbUrl}/storage/v1/object/public/pod-designs/${storagePath}`;
+              if (item.key === 'mockup_url') {
+                m.mockup_url = permUrl;
+              } else {
+                const idx = parseInt(item.key.split('_')[1]);
+                if (m.extra?.[idx]) m.extra[idx].url = permUrl;
+              }
+            } catch (e) {
+              console.error('Mockup upload error:', e);
+            }
+          }
+        }
+
         const { data: site } = await supabaseAdmin
           .from('sites')
           .select('pod_designs')
