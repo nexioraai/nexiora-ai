@@ -38,8 +38,8 @@ export async function POST(req: Request) {
     const flat = Number(site.shipping_flat) || 0;
 
     // Separer shop vs catalog
-    const shopIds = items.filter((i) => !i.id.startsWith('catalog-'));
-    const catalogIds = items.filter((i) => i.id.startsWith('catalog-'));
+    const shopIds = items.filter((i) => !i.id?.startsWith('catalog-'));
+    const catalogIds = items.filter((i) => i.id?.startsWith('catalog-'));
 
     // Shop products => CJ direct (cj_vid)
     const cjShopItems: ShippingRequest[] = [];
