@@ -52,8 +52,8 @@ export async function POST(req: Request) {
         };
 
         // Separer shop vs catalog
-        const shopItems = items.filter((i) => !i.id.startsWith('catalog-'));
-        const catalogItems = items.filter((i) => i.id.startsWith('catalog-'));
+        const shopItems = items.filter((i) => !i.id?.startsWith('catalog-'));
+        const catalogItems = items.filter((i) => i.id?.startsWith('catalog-'));
 
         // Shop products => CJ direct
         const supplierGroups: Record<string, ShippingRequest[]> = {};
