@@ -33,6 +33,7 @@ export default function EditPage() {
   const [podCatalog, setPodCatalog] = useState<any[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Record<string, {selected: boolean; sellPrice: number}>>({});
   const [loadingCatalog, setLoadingCatalog] = useState(false);
+  const [catalogSearch, setCatalogSearch] = useState('');
   const [message, setMessage] = useState('');
   const [history, setHistory] = useState<{ score: number; date: string; reason: string }[]>([]);
   const initialPassed = useRef<string[]>([]);
@@ -349,8 +350,16 @@ export default function EditPage() {
                       {loadingCatalog ? 'Chargement…' : podCatalog.length > 0 ? `${podCatalog.length} produits chargés — Modifier la sélection` : '📦 Choisir les produits à vendre'}
                     </button>
                     {podCatalog.length > 0 && (
-                      <div className="max-h-80 overflow-y-auto space-y-2 border border-white/10 rounded-xl p-3">
-                        {podCatalog.map((p: any) => {
+                      <div className="space-y-2 border border-white/10 rounded-xl p-3">
+                        <input
+                          type="text"
+                          placeholder="Rechercher un produit…"
+                          value={catalogSearch}
+                          onChange={(e) => setCatalogSearch(e.target.value)}
+                          className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-400 mb-2"
+                        />
+                        <div className="max-h-72 overflow-y-auto space-y-2">
+                        {podCatalog.filter((p: any) => !catalogSearch || p.name.toLowerCase().includes(catalogSearch.toLowerCase())).map((p: any) => {
                           const sel = selectedProducts[p.product_id];
                           return (
                             <div key={p.product_id} className={`flex items-center gap-3 p-2 rounded-lg transition ${sel?.selected ? 'bg-[#FF5500]/10 border border-[#FF5500]/30' : 'bg-white/5 border border-transparent'}`}>
@@ -388,6 +397,7 @@ export default function EditPage() {
                         })}
                         <div className="text-xs text-slate-400 pt-1">
                           {Object.values(selectedProducts).filter((v: any) => v.selected).length} produit(s) sélectionné(s)
+                        </div>
                         </div>
                       </div>
                     )}
