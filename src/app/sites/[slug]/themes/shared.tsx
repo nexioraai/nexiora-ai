@@ -260,7 +260,7 @@ raw: any
 ): Product {
 return {
 id: raw?.id,
-priceNumber: raw?.priceNumber,
+priceNumber: raw?.priceNumber ?? (typeof raw?.price === 'string' ? parseFloat(raw.price.replace(/[^0-9.]/g, '')) || 0 : raw?.price ?? 0),
 currency: raw?.currency,
 name:
 raw?.name ??
