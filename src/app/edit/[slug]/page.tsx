@@ -30,6 +30,9 @@ export default function EditPage() {
   const [podDesigns, setPodDesigns] = useState<{url: string; name: string; created_at: string}[]>([]);
   const [uploadingDesign, setUploadingDesign] = useState(false);
   const [generatingMockups, setGeneratingMockups] = useState(false);
+  const [podCatalog, setPodCatalog] = useState<any[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<Record<string, {selected: boolean; sellPrice: number}>>({});
+  const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [message, setMessage] = useState('');
   const [history, setHistory] = useState<{ score: number; date: string; reason: string }[]>([]);
   const initialPassed = useRef<string[]>([]);
@@ -45,6 +48,11 @@ export default function EditPage() {
         if (siteData) {
           initialPassed.current = computeAiScore(siteData as any).passed;
           setPodDesigns(Array.isArray((siteData as any).pod_designs) ? (siteData as any).pod_designs : []);
+          // Restore selected products from pod_designs
+          const designs = Array.isArray((siteData as any).pod_designs) ? (siteData as any).pod_designs : [];
+          if (designs[0]?.selected_products) {
+            setSelectedProducts(designs[0].selected_products);
+          }
         }
         setLoading(false);
       });
@@ -96,7 +104,9 @@ export default function EditPage() {
         primary_color: site.primary_color,
         hero_image: site.hero_image,
         theme: site.theme,
-        pod_designs: podDesigns,
+        pod_designs: podDesigns.length > 0
+          ? podDesigns.map((d: any, i: number) => i === 0 ? { ...d, selected_products: selectedProducts } : d)
+          : podDesigns,
       })
       .eq('slug', slug);
     setSaving(false);
@@ -322,14 +332,84 @@ export default function EditPage() {
                 </label>
                 <p className="text-xs text-slate-500">PNG, JPEG, SVG, WebP, TIFF ou PDF — max 50 MB. Résolution 300 DPI recommandée.</p>
                 {podDesigns.length > 0 && (
+                  <div className="space-y-3">
+                    <button
+                      onClick={async () => {
+                        setLoadingCatalog(true);
+                        try {
+                          const res = await fetch('/api/pod/catalog');
+                          const data = await res.json();
+                          setPodCatalog(data.products || []);
+                        } catch (e) { console.error(e); }
+                        setLoadingCatalog(false);
+                      }}
+                      disabled={loadingCatalog}
+                      className="w-full py-2 rounded-xl border border-white/20 text-sm text-slate-300 hover:border-[#FF5500] transition disabled:opacity-40"
+                    >
+                      {loadingCatalog ? 'Chargement…' : podCatalog.length > 0 ? `${podCatalog.length} produits chargés — Modifier la sélection` : '📦 Choisir les produits à vendre'}
+                    </button>
+                    {podCatalog.length > 0 && (
+                      <div className="max-h-80 overflow-y-auto space-y-2 border border-white/10 rounded-xl p-3">
+                        {podCatalog.map((p: any) => {
+                          const sel = selectedProducts[p.product_id];
+                          return (
+                            <div key={p.product_id} className={`flex items-center gap-3 p-2 rounded-lg transition ${sel?.selected ? 'bg-[#FF5500]/10 border border-[#FF5500]/30' : 'bg-white/5 border border-transparent'}`}>
+                              <input
+                                type="checkbox"
+                                checked={!!sel?.selected}
+                                onChange={(e) => setSelectedProducts(prev => ({
+                                  ...prev,
+                                  [p.product_id]: { selected: e.target.checked, sellPrice: prev[p.product_id]?.sellPrice || Math.ceil(p.price * 2) }
+                                }))}
+                                className="accent-[#FF5500]"
+                              />
+                              {p.image && <img src={p.image} alt="" className="w-10 h-10 rounded object-cover" />}
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm text-white truncate">{p.name}</div>
+                                <div className="text-xs text-slate-400">Coût: {p.price} {p.currency}</div>
+                              </div>
+                              {sel?.selected && (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-slate-400">Vente:</span>
+                                  <input
+                                    type="number"
+                                    value={sel.sellPrice}
+                                    onChange={(e) => setSelectedProducts(prev => ({
+                                      ...prev,
+                                      [p.product_id]: { ...prev[p.product_id], sellPrice: Number(e.target.value) }
+                                    }))}
+                                    className="w-16 bg-white/10 border border-white/20 rounded px-1 py-0.5 text-sm text-white text-right"
+                                  />
+                                  <span className="text-xs text-slate-400">{p.currency}</span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                        <div className="text-xs text-slate-400 pt-1">
+                          {Object.values(selectedProducts).filter((v: any) => v.selected).length} produit(s) sélectionné(s)
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {podDesigns.length > 0 && Object.values(selectedProducts).some((v: any) => v.selected) && (
                   <button
                     onClick={async () => {
                       setGeneratingMockups(true);
-                      setMessage('Préparation…');
+                      setMessage('Sauvegarde des sélections…');
                       try {
+                        // Auto-save selected_products before generating
+                        const updatedDesigns = podDesigns.length > 0
+                          ? podDesigns.map((d: any, i: number) => i === 0 ? { ...d, selected_products: selectedProducts } : d)
+                          : podDesigns;
+                        await supabase.from('sites').update({ pod_designs: updatedDesigns }).eq('slug', slug);
+                        setPodDesigns(updatedDesigns);
+
+                        const selectedCount = Object.values(selectedProducts).filter((v: any) => v.selected).length;
                         const allTasks: any[] = [];
                         // 1. Launch one product at a time with 60s spacing
-                        for (let i = 0; i < 10; i++) {
+                        for (let i = 0; i < selectedCount; i++) {
                           setMessage(`Produit ${i + 1}… Lancement`);
                           const res = await fetch('/api/pod/generate-mockups', {
                             method: 'POST',
@@ -339,7 +419,7 @@ export default function EditPage() {
                           const data = await res.json();
                           if (data.status === 'all_done') break;
                           if (data.task) allTasks.push(data.task);
-                          if (i < 9) {
+                          if (i < selectedCount - 1) {
                             setMessage(`Produit ${i + 1} lancé. Attente 60s (rate limit)…`);
                             await new Promise(r => setTimeout(r, 60000));
                           }

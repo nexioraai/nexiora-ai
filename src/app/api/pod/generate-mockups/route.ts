@@ -145,17 +145,27 @@ export async function POST(req: Request) {
     const designUrl = designs[0].url;
     if (!designUrl) return NextResponse.json({ error: 'Design URL missing' }, { status: 400 });
 
-    // 1. Query real Printful products with parent_id already resolved
-    const { data: catProducts } = await supabaseAdmin
+    // 1. Get selected products from pod_designs or fallback to auto
+    const selectedProducts = designs[0]?.selected_products || {};
+    const selectedIds = Object.entries(selectedProducts)
+      .filter(([_, v]: [string, any]) => v.selected)
+      .map(([id]: [string, any]) => id);
+
+    let query = supabaseAdmin
       .from('catalog_products')
       .select('supplier_product_id, supplier_parent_id, name')
       .eq('supplier_id', 'printful')
       .eq('in_stock', true)
-      .not('supplier_parent_id', 'is', null)
-      .limit(20);
+      .not('supplier_parent_id', 'is', null);
+
+    if (selectedIds.length > 0) {
+      query = query.in('supplier_parent_id', selectedIds);
+    }
+
+    const { data: catProducts } = await query.limit(100);
 
     if (!catProducts || catProducts.length === 0) {
-      return NextResponse.json({ error: 'No Printful products with parent_id in catalog. Run cron sync first.' }, { status: 400 });
+      return NextResponse.json({ error: 'No Printful products found. Select products or run sync.' }, { status: 400 });
     }
 
     // 2. Deduplicate by product_id, pick first variant per product
@@ -170,7 +180,6 @@ export async function POST(req: Request) {
         variant_id: Number(cp.supplier_product_id),
         name: cp.name,
       });
-      if (blanks.length >= 4) break;
     }
 
     if (blanks.length === 0) {

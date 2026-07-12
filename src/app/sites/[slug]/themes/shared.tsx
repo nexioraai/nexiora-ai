@@ -288,14 +288,18 @@ export function mockupsToProducts(site: Site): Product[] {
   for (const design of designs) {
     if (!design.mockups?.length) continue
     for (const m of design.mockups) {
-      const pr = m.price ? Number(m.price) : 0
+      const selProducts = design.selected_products || {}
+      const sel = selProducts[String(m.product_id)]
+      const sellPrice = sel?.sellPrice ? Number(sel.sellPrice) : 0
+      const pr = sellPrice > 0 ? sellPrice : (m.price ? Number(m.price) : 0)
+      const cur = m.currency || "CAD"
       products.push({
         id: `printful-${m.product_id}-${m.variant_id}`,
         name: m.product_name?.replace(/\s*—\s*.+$/, "") || "Produit",
         description: "",
-        price: pr > 0 ? `${pr.toFixed(2)} ${m.currency || "CAD"}` : "",
+        price: pr > 0 ? `${pr.toFixed(2)} ${cur}` : "",
         priceNumber: pr,
-        currency: m.currency || "CAD",
+        currency: cur,
         image: m.mockup_url,
       })
     }
