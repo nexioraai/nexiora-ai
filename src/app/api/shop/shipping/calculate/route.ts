@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { STRIPE_SHIPPING_COUNTRIES } from '@/lib/payments/countries';
 import { cjAdapter } from '@/lib/suppliers/cj-adapter';
 import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
+import { zendropAdapter } from '@/lib/suppliers/zendrop-adapter';
 import { printifyAdapter } from '@/lib/suppliers/printify-adapter';
 import type { ShippingRequest } from '@/lib/suppliers/supplier-adapter';
 
@@ -11,7 +12,7 @@ const adapters: Record<string, { calculateShipping: (items: ShippingRequest[], c
   cj: cjAdapter as any,
   printful: printfulAdapter as any,
   printify: printifyAdapter as any,
-  // zendrop: zendropAdapter — a ajouter quand code
+  zendrop: zendropAdapter as any,
 };
 
 export async function POST(req: Request) {

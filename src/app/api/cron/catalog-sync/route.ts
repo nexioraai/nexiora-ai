@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { cjAdapter } from '@/lib/suppliers/cj-adapter';
 import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
 import { printifyAdapter } from '@/lib/suppliers/printify-adapter';
+import { zendropAdapter } from '@/lib/suppliers/zendrop-adapter';
 import type { CatalogProduct } from '@/lib/suppliers/supplier-adapter';
 
 export const maxDuration = 60;
@@ -74,6 +75,14 @@ export async function GET(req: NextRequest) {
     errors.push(`Printify: ${e.message}`);
   }
 
+  // --- Zendrop ---
+  try {
+    const zdResult = await zendropAdapter.syncCatalog({ categories: niches });
+    const zdUpserted = await upsertProducts(zdResult.products);
+    totalSynced += zdUpserted;
+  } catch (e: any) {
+    errors.push(`Zendrop: ${e.message}`);
+  }
   // --- Spocket (futur) ---
   // try {
   //   const result = await spocketAdapter.syncCatalog({ categories: niches });
