@@ -363,7 +363,7 @@ export default function EditPage() {
                                 }))}
                                 className="accent-[#FF5500]"
                               />
-                              {p.image && <img src={p.image} alt="" className="w-10 h-10 rounded object-cover" />}
+                              {p.image ? <img src={p.image} alt="" className="w-10 h-10 rounded object-cover" /> : <div className="w-10 h-10 rounded bg-white/10 flex items-center justify-center text-lg">{p.name?.charAt(0)}</div>}
                               <div className="flex-1 min-w-0">
                                 <div className="text-sm text-white truncate">{p.name}</div>
                                 <div className="text-xs text-slate-400">Coût: {p.price} {p.currency}</div>
