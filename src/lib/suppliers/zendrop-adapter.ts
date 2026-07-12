@@ -98,28 +98,33 @@ export const zendropAdapter: SupplierAdapter = {
   warehouseCountries: ['US', 'CN'],
   avgShippingDays: { min: 5, max: 12 },
 
-  async syncCatalog(options: SyncOptions): Promise<SyncResult> {
+  async syncCatalog(_options: SyncOptions): Promise<SyncResult> {
     const allProducts: CatalogProduct[] = [];
+    // Zendrop search returns entire catalog regardless of keyword.
+    // Use category_id pagination for diverse product coverage.
+    const categoryIds = [106, 61, 60, 67, 65, 252]; // Electronics, Apparel, Pets, Baby, Arts, Sports
+    const pagesPerCat = 5;
+    const perPage = 50;
 
-    for (const keyword of options.categories) {
-      try {
-        const data = await zendropCall('get_catalog_products', {
-          search: keyword,
-          limit: options.page_size || 50,
-          page: options.page || 1,
-        });
-
-        const products = data.products || [];
-        for (const p of products) {
-          allProducts.push(mapZendropProduct(p));
+    for (const catId of categoryIds) {
+      for (let page = 1; page <= pagesPerCat; page++) {
+        try {
+          const data = await zendropCall('get_catalog_products', {
+            category_id: catId,
+            limit: perPage,
+            page,
+          });
+          const products = data.products || [];
+          for (const p of products) {
+            allProducts.push(mapZendropProduct(p));
+          }
+          if (products.length < perPage) break;
+        } catch (e) {
+          console.error(`Zendrop sync cat=${catId} page=${page} error:`, e);
         }
-      } catch (e) {
-        console.error(`Zendrop sync keyword="${keyword}" error:`, e);
+        await new Promise(r => setTimeout(r, 600));
       }
-
-      await new Promise(r => setTimeout(r, 600));
     }
-
     return {
       products: allProducts,
       total_available: allProducts.length,
