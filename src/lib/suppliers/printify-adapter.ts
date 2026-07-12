@@ -35,6 +35,7 @@ async function pyFetch(path: string, token: string, init?: RequestInit): Promise
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
+      'User-Agent': 'Nexiora/1.0',
       ...(init?.headers || {}),
     },
   });
