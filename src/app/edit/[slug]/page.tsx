@@ -325,40 +325,39 @@ export default function EditPage() {
                   <button
                     onClick={async () => {
                       setGeneratingMockups(true);
-                      setMessage('Lancement de la génération…');
+                      setMessage('Préparation…');
                       try {
-                        // 1. Launch tasks
-                        const res = await fetch('/api/pod/generate-mockups', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ slug }),
-                        });
-                        const data = await res.json();
-                        if (!res.ok) throw new Error(data.error || 'Erreur');
-                        if (!data.task_keys?.length) throw new Error('Aucune tâche lancée');
-                        setMessage(`${data.task_keys.length} produits lancés… Génération en cours`);
-
-                        // 2. Poll every 5s until done
-                        const taskKeys = data.task_keys;
-                        for (let round = 0; round < 12; round++) {
-                          await new Promise(r => setTimeout(r, 5000));
-                          const pollRes = await fetch('/api/pod/generate-mockups', {
+                        const allTasks: any[] = [];
+                        // 1. Launch one product at a time with 60s spacing
+                        for (let i = 0; i < 10; i++) {
+                          setMessage(`Produit ${i + 1}… Lancement`);
+                          const res = await fetch('/api/pod/generate-mockups', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ slug, action: 'poll', task_keys: taskKeys }),
+                            body: JSON.stringify({ slug, index: i }),
                           });
-                          const pollData = await pollRes.json();
-                          if (pollData.status === 'done') {
-                            setMessage(`${pollData.generated} mockups générés !`);
-                            const { data: updated } = await supabase.from('sites').select('pod_designs').eq('slug', slug).single();
-                            if (updated?.pod_designs) setPodDesigns(updated.pod_designs);
-                            break;
-                          }
-                          setMessage(`Génération… ${pollData.generated} prêts, ${pollData.pending} en cours`);
-                          if (round === 11) {
-                            setMessage(`${pollData.generated} mockups générés (certains ont expiré)`);
+                          const data = await res.json();
+                          if (data.status === 'all_done') break;
+                          if (data.task) allTasks.push(data.task);
+                          if (i < 9) {
+                            setMessage(`Produit ${i + 1} lancé. Attente 60s (rate limit)…`);
+                            await new Promise(r => setTimeout(r, 60000));
                           }
                         }
+                        if (allTasks.length === 0) throw new Error('Aucun mockup lancé');
+
+                        // 2. Poll all tasks
+                        setMessage(`${allTasks.length} produits lancés. Récupération des mockups…`);
+                        await new Promise(r => setTimeout(r, 15000));
+                        const pollRes = await fetch('/api/pod/generate-mockups', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ slug, action: 'poll', task_keys: allTasks }),
+                        });
+                        const pollData = await pollRes.json();
+                        setMessage(`${pollData.generated} mockups générés !`);
+                        const { data: updated } = await supabase.from('sites').select('pod_designs').eq('slug', slug).single();
+                        if (updated?.pod_designs) setPodDesigns(updated.pod_designs);
                       } catch (err: any) {
                         setMessage('Erreur: ' + (err.message || err));
                       } finally {

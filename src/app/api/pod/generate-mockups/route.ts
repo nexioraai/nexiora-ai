@@ -33,7 +33,7 @@ const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 export async function POST(req: Request) {
   try {
-    const { slug, action, task_keys } = await req.json();
+    const { slug, action, task_keys, index: bodyIndex } = await req.json();
     if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
 
     // ---- POLL mode ----
@@ -137,49 +137,53 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No unique Printful products found' }, { status: 400 });
     }
 
-    // 3. Create mockup tasks
-    const launched: any[] = [];
+    // 3. Create ONE mockup task (index from frontend)
+    const idx = typeof bodyIndex === 'number' ? bodyIndex : 0;
     const errors: string[] = [];
 
+    if (idx >= blanks.length) {
+      return NextResponse.json({ status: 'all_done', total: blanks.length });
+    }
+
+    const blank = blanks[idx];
     const PLACEMENTS = ['front', 'default', 'front_large'];
-    for (const blank of blanks) {
-      let created = false;
-      for (const placement of PLACEMENTS) {
-        if (created) break;
-        try {
-          const task = await pfFetch(`/mockup-generator/create-task/${blank.product_id}`, {
-            method: 'POST',
-            body: JSON.stringify({
-              variant_ids: [blank.variant_id],
-              format: 'jpg',
-              files: [{
-                placement,
-                image_url: designUrl,
-                position: POSITION,
-              }],
-            }),
-          });
-          if (task?.task_key) {
-            launched.push({
-              task_key: task.task_key,
-              name: blank.name,
-              product_id: blank.product_id,
-              variant_id: blank.variant_id,
-            });
-            created = true;
-          }
-        } catch (err: any) {
-          if (err.message.includes('not allowed')) continue; // try next placement
-          errors.push(`${blank.name}: ${err.message}`);
+    let launched = null;
+
+    for (const placement of PLACEMENTS) {
+      try {
+        const task = await pfFetch(`/mockup-generator/create-task/${blank.product_id}`, {
+          method: 'POST',
+          body: JSON.stringify({
+            variant_ids: [blank.variant_id],
+            format: 'jpg',
+            files: [{
+              placement,
+              image_url: designUrl,
+              position: POSITION,
+            }],
+          }),
+        });
+        if (task?.task_key) {
+          launched = {
+            task_key: task.task_key,
+            name: blank.name,
+            product_id: blank.product_id,
+            variant_id: blank.variant_id,
+          };
           break;
         }
+      } catch (err: any) {
+        if (err.message.includes('not allowed')) continue;
+        errors.push(`${blank.name}: ${err.message}`);
+        break;
       }
-      await delay(5000);
     }
 
     return NextResponse.json({
       status: 'launched',
-      task_keys: launched,
+      index: idx,
+      total: blanks.length,
+      task: launched,
       errors,
     });
   } catch (e: any) {
