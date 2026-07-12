@@ -180,8 +180,8 @@ export default function CartDrawer({
             </div>
           ) : (
             <div className="space-y-4">
-              {items.map((item) => (
-                <div key={item.id} className="flex gap-4 items-center">
+              {items.map((item, idx) => (
+                <div key={`${item.id}-${idx}`} className="flex gap-4 items-center">
                   {item.image ? (
                     <img src={item.image} alt={item.name} className="w-16 h-16 rounded-xl object-cover border border-neutral-100" />
                   ) : (
