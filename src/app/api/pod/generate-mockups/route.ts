@@ -168,10 +168,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No Printful products found. Select products or run sync.' }, { status: 400 });
     }
 
-    // 2. Deduplicate by product_id, pick first variant per product
+    // 2. Deduplicate by product_id, use merchant-selected variant if available
     const seen = new Set<string>();
     const blanks: { product_id: number; variant_id: number; name: string }[] = [];
 
+    for (const cp of catProducts) {
+      if (!cp.supplier_parent_id || seen.has(cp.supplier_parent_id)) continue;
+      const sel = selectedProducts[cp.supplier_parent_id];
+      const preferredVariant = sel?.variantId ? String(sel.variantId) : null;
+      // If merchant selected a specific variant, skip until we find it
+      if (preferredVariant && cp.supplier_product_id !== preferredVariant) continue;
+      seen.add(cp.supplier_parent_id);
+      blanks.push({
+        product_id: Number(cp.supplier_parent_id),
+        variant_id: Number(cp.supplier_product_id),
+        name: cp.name,
+      });
+    }
+    // Second pass: fill in products where preferred variant wasn't found
     for (const cp of catProducts) {
       if (!cp.supplier_parent_id || seen.has(cp.supplier_parent_id)) continue;
       seen.add(cp.supplier_parent_id);

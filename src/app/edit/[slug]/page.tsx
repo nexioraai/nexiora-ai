@@ -31,7 +31,7 @@ export default function EditPage() {
   const [uploadingDesign, setUploadingDesign] = useState(false);
   const [generatingMockups, setGeneratingMockups] = useState(false);
   const [podCatalog, setPodCatalog] = useState<any[]>([]);
-  const [selectedProducts, setSelectedProducts] = useState<Record<string, {selected: boolean; sellPrice: number}>>({});
+  const [selectedProducts, setSelectedProducts] = useState<Record<string, {selected: boolean; sellPrice: number; variantId?: string}>>({});
   const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [catalogSearch, setCatalogSearch] = useState('');
   const [message, setMessage] = useState('');
@@ -378,18 +378,34 @@ export default function EditPage() {
                                 <div className="text-xs text-slate-400">Coût: {p.price} {p.currency}</div>
                               </div>
                               {sel?.selected && (
-                                <div className="flex items-center gap-1">
-                                  <span className="text-xs text-slate-400">Vente:</span>
-                                  <input
-                                    type="number"
-                                    value={sel.sellPrice}
-                                    onChange={(e) => setSelectedProducts(prev => ({
-                                      ...prev,
-                                      [p.product_id]: { ...prev[p.product_id], sellPrice: Number(e.target.value) }
-                                    }))}
-                                    className="w-16 bg-white/10 border border-white/20 rounded px-1 py-0.5 text-sm text-white text-right"
-                                  />
-                                  <span className="text-xs text-slate-400">{p.currency}</span>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {p.variants?.length > 1 && (
+                                    <select
+                                      value={sel.variantId || p.variants[0]?.variant_id}
+                                      onChange={(e) => setSelectedProducts(prev => ({
+                                        ...prev,
+                                        [p.product_id]: { ...prev[p.product_id], variantId: e.target.value }
+                                      }))}
+                                      className="bg-white/10 border border-white/20 rounded px-1 py-0.5 text-xs text-white max-w-[120px]"
+                                    >
+                                      {p.variants.map((v: any) => (
+                                        <option key={v.variant_id} value={v.variant_id}>{v.label}</option>
+                                      ))}
+                                    </select>
+                                  )}
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-xs text-slate-400">Vente:</span>
+                                    <input
+                                      type="number"
+                                      value={sel.sellPrice}
+                                      onChange={(e) => setSelectedProducts(prev => ({
+                                        ...prev,
+                                        [p.product_id]: { ...prev[p.product_id], sellPrice: Number(e.target.value) }
+                                      }))}
+                                      className="w-16 bg-white/10 border border-white/20 rounded px-1 py-0.5 text-sm text-white text-right"
+                                    />
+                                    <span className="text-xs text-slate-400">{p.currency}</span>
+                                  </div>
                                 </div>
                               )}
                             </div>
