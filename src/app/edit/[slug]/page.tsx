@@ -368,7 +368,12 @@ export default function EditPage() {
                                 checked={!!sel?.selected}
                                 onChange={(e) => setSelectedProducts(prev => ({
                                   ...prev,
-                                  [p.product_id]: { selected: e.target.checked, sellPrice: prev[p.product_id]?.sellPrice || Math.ceil(p.price * 2) }
+                                  [p.product_id]: {
+                                    selected: e.target.checked,
+                                    sellPrice: prev[p.product_id]?.sellPrice || Math.ceil(p.price * 2),
+                                    variantId: prev[p.product_id]?.variantId,
+                                    variants: p.variants || [],
+                                  }
                                 }))}
                                 className="accent-[#FF5500]"
                               />

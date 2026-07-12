@@ -74,6 +74,7 @@ priceNumber?: number
 currency?: string
 image?: string
 cjVid?: string | null
+variants?: { variant_id: string; label: string; price: number; currency: string }[]
 }
 
 export type Service = {
@@ -293,6 +294,7 @@ export function mockupsToProducts(site: Site): Product[] {
       const sellPrice = sel?.sellPrice ? Number(sel.sellPrice) : 0
       const pr = sellPrice > 0 ? sellPrice : (m.price ? Number(m.price) : 0)
       const cur = m.currency || "CAD"
+      const variants = sel?.variants || []
       products.push({
         id: `printful-${m.product_id}-${m.variant_id}`,
         name: m.product_name?.replace(/\s*—\s*.+$/, "") || "Produit",
@@ -301,6 +303,12 @@ export function mockupsToProducts(site: Site): Product[] {
         priceNumber: pr,
         currency: cur,
         image: m.mockup_url,
+        variants: variants.map((v: any) => ({
+          variant_id: v.variant_id,
+          label: v.label,
+          price: sellPrice > 0 ? sellPrice : (v.price || 0),
+          currency: v.currency || cur,
+        })),
       })
     }
   }

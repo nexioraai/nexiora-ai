@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { X } from 'lucide-react';
 import AddToCartButton from './AddToCartButton';
 
@@ -11,6 +12,7 @@ interface MerchantProduct {
   priceNumber?: number;
   currency?: string;
   image?: string;
+  variants?: { variant_id: string; label: string; price: number; currency: string }[];
 }
 
 interface Props {
@@ -27,6 +29,8 @@ const LABELS: Record<string, Record<string, string>> = {
 
 export default function MerchantProductModal({ product: p, primary, lang = 'en', onClose }: Props) {
   const t = LABELS[lang] || LABELS.en;
+  const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
+  const variants = Array.isArray(p.variants) ? p.variants : [];
 
   return (
     <div
@@ -77,9 +81,31 @@ export default function MerchantProductModal({ product: p, primary, lang = 'en',
               {p.price}
             </p>
 
+            {variants.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(0,0,0,0.55)' }}>
+                  {lang === 'fr' ? 'Taille / Couleur' : 'Size / Color'}
+                </p>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {variants.map((v) => (
+                    <button
+                      key={v.variant_id}
+                      onClick={() => setSelectedVariant(v.variant_id === selectedVariant ? null : v.variant_id)}
+                      style={{
+                        padding: '8px 16px', borderRadius: 8, fontSize: 13, cursor: 'pointer', fontWeight: 500,
+                        border: v.variant_id === selectedVariant ? '2px solid ' + primary : '1.5px solid rgba(0,0,0,0.12)',
+                        background: v.variant_id === selectedVariant ? primary + '15' : 'transparent',
+                        color: '#0a0a0a', transition: 'all 0.15s',
+                      }}
+                    >{v.label}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <AddToCartButton
-              id={p.id || p.name}
-              name={p.name}
+              id={(p.id || p.name) + (selectedVariant ? '-' + selectedVariant : '')}
+              name={p.name + (selectedVariant ? ' \u2014 ' + (variants.find(v => v.variant_id === selectedVariant)?.label || '') : '')}
               priceNumber={p.priceNumber || 0}
               currency={p.currency || 'USD'}
               image={p.image}
