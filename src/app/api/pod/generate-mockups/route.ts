@@ -130,7 +130,7 @@ export async function POST(req: Request) {
         variant_id: Number(cp.supplier_product_id),
         name: cp.name,
       });
-      if (blanks.length >= 6) break;
+      if (blanks.length >= 4) break;
     }
 
     if (blanks.length === 0) {
@@ -141,32 +141,40 @@ export async function POST(req: Request) {
     const launched: any[] = [];
     const errors: string[] = [];
 
+    const PLACEMENTS = ['front', 'default', 'front_large'];
     for (const blank of blanks) {
-      try {
-        const task = await pfFetch(`/mockup-generator/create-task/${blank.product_id}`, {
-          method: 'POST',
-          body: JSON.stringify({
-            variant_ids: [blank.variant_id],
-            format: 'jpg',
-            files: [{
-              placement: 'front',
-              image_url: designUrl,
-              position: POSITION,
-            }],
-          }),
-        });
-        if (task?.task_key) {
-          launched.push({
-            task_key: task.task_key,
-            name: blank.name,
-            product_id: blank.product_id,
-            variant_id: blank.variant_id,
+      let created = false;
+      for (const placement of PLACEMENTS) {
+        if (created) break;
+        try {
+          const task = await pfFetch(`/mockup-generator/create-task/${blank.product_id}`, {
+            method: 'POST',
+            body: JSON.stringify({
+              variant_ids: [blank.variant_id],
+              format: 'jpg',
+              files: [{
+                placement,
+                image_url: designUrl,
+                position: POSITION,
+              }],
+            }),
           });
+          if (task?.task_key) {
+            launched.push({
+              task_key: task.task_key,
+              name: blank.name,
+              product_id: blank.product_id,
+              variant_id: blank.variant_id,
+            });
+            created = true;
+          }
+        } catch (err: any) {
+          if (err.message.includes('not allowed')) continue; // try next placement
+          errors.push(`${blank.name}: ${err.message}`);
+          break;
         }
-      } catch (err: any) {
-        errors.push(`${blank.name}: ${err.message}`);
       }
-      await delay(2000);
+      await delay(5000);
     }
 
     return NextResponse.json({
