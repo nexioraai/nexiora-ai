@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       .from('site_catalog_selections')
       .select('id, catalog_products(name, description, category, price, currency)')
       .eq('site_id', site.id)
-      // No filter — re-enhance all
+      .is('custom_name', null)
       .order('sort_order', { ascending: true })
       .limit(30);
 
