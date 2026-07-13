@@ -132,12 +132,17 @@ cjVid: p.cj_vid || null,
 }))
 }
 
-// ---------- Reseller catalog selections → Products ----------
-if ((data as any).mode === 3 && (data as any).dropship_type === 'reseller') {
+await loadCatalogSelections(data as any)
+
+return data as Site
+}
+
+async function loadCatalogSelections(data: any) {
+if (data.mode === 3 && data.dropship_type === 'reseller') {
 const { data: catSels } = await supabase
 .from('site_catalog_selections')
 .select('id, sell_price, custom_name, custom_description, catalog_product_id, catalog_products(name, description, price, currency, images, supplier_id, supplier_product_id)')
-.eq('site_id', (data as any).id)
+.eq('site_id', data.id)
 .eq('merchant_approved', true)
 .order('sort_order', { ascending: true })
 if (catSels && catSels.length > 0) {
@@ -155,12 +160,10 @@ currency: cur,
 image: Array.isArray(cp.images) && cp.images.length > 0 ? cp.images[0] : undefined,
 }
 })
-const existing = (data as any).products || []
-;(data as any).products = [...catalogProducts, ...existing]
+const existing = data.products || []
+data.products = [...catalogProducts, ...existing]
 }
 }
-
-return data as Site
 }
 
 export async function fetchSiteByDomain(
@@ -207,6 +210,8 @@ image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : undefined,
 cjVid: p.cj_vid || null,
 }))
 }
+await loadCatalogSelections(data as any)
+
 return data as unknown as Site
 }
 
