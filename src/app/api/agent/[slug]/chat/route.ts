@@ -5,7 +5,7 @@ import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const tools: Anthropic.Tool[] = [
+const allTools: Anthropic.Tool[] = [
   {
     name: 'propose_field_update',
     description: 'Propose to update a single text field on the site. Requires user approval before applying.',
@@ -298,6 +298,32 @@ const tools: Anthropic.Tool[] = [
   },
 ];
 
+function getToolsForSite(mode: number, dropshipType: string | null): Anthropic.Tool[] {
+  const universal = ['propose_field_update', 'propose_color_update', 'propose_theme_change', 'propose_contact_update', 'propose_update_social'];
+  const content = ['propose_add_service', 'propose_remove_service', 'propose_service_update', 'propose_testimonial_add', 'propose_testimonial_remove', 'propose_testimonial_update', 'propose_gallery_remove', 'propose_gallery_clear'];
+  const manualProducts = ['propose_product_add', 'propose_product_remove', 'propose_product_update'];
+  const catalog = ['catalog_curate', 'catalog_enhance', 'catalog_approve_all', 'catalog_set_margin'];
+  const promo = ['create_promo_code', 'deactivate_promo_code'];
+
+  const allowed = [...universal];
+
+  if (mode === 1) {
+    allowed.push(...content, ...manualProducts);
+  }
+  if (mode === 2) {
+    allowed.push(...content, ...manualProducts, ...promo);
+  }
+  if (mode === 3) {
+    allowed.push(...promo);
+    if (dropshipType === 'reseller' || dropshipType === 'pod_custom') {
+      allowed.push(...catalog);
+    }
+    // pod_brand: NO catalog tools — products come from merchant's own designs
+  }
+
+  return allTools.filter(t => allowed.includes(t.name));
+}
+
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ slug: string }> }
@@ -362,6 +388,8 @@ ${JSON.stringify(
     primary_color: site.primary_color,
     theme: site.theme,
     cta: site.cta,
+    mode: site.mode,
+    dropship_type: site.dropship_type,
     services: site.services,
     social_links: site.social_links,
   },
@@ -369,6 +397,53 @@ ${JSON.stringify(
   2
 )}
 \`\`\`
+
+SITE-SPECIFIC CONTEXT & GUIDANCE:
+\${site.mode === 1 ? \`
+MODE: SHOWCASE / VITRINE (mode 1)
+This is a local business site (restaurant, salon, clinic, etc.). The owner manages their content directly here.
+- They can add/edit/remove services, products (menu items), testimonials, gallery images
+- Help them improve their site content, descriptions, and marketing
+- NO catalog, NO dropshipping features — everything is manually managed
+\` : ''}
+\${site.mode === 2 ? \`
+MODE: LOCAL BOUTIQUE (mode 2)
+This is an online boutique where the owner sells their OWN inventory.
+- They can add/edit/remove their products manually with prices
+- They can create promo codes for their customers
+- Help them write product descriptions, manage their catalog, and market their shop
+- NO dropshipping — the owner physically holds inventory
+\` : ''}
+\${site.mode === 3 && site.dropship_type === 'reseller' ? \`
+MODE: DROPSHIPPING RESELLER (mode 3, reseller)
+This store resells products from CJ Dropshipping + Zendrop suppliers. The store auto-curates 30 trending products.
+- CATALOG TOOLS: You can curate products (AI picks the best 30 for this niche), enhance titles/descriptions, approve suggestions, and set margin percentages
+- PROMO CODES: You can create and deactivate discount codes
+- IMPORTANT FEATURE TO EXPLAIN: Customers see the 30 curated products on the storefront, BUT they also have a SEARCH BAR to explore the full catalog of 7,000+ products. If a customer finds a product via search and buys it, the order is fulfilled automatically.
+- Shipping times: CJ = varies by warehouse (CN 15-25 days, US 5-10 days), Zendrop US = 2-5 days, international = 7-15 days
+- Do NOT offer to add services, testimonials, or gallery — this site type doesn't use them
+\` : ''}
+\${site.mode === 3 && site.dropship_type === 'pod_brand' ? \`
+MODE: PRINT-ON-DEMAND BRAND (mode 3, pod_brand)
+This store sells products featuring the MERCHANT'S OWN original designs (logos, artwork, patterns) printed on blank products via Printful + Printify.
+- PROMO CODES: You can create and deactivate discount codes
+- NO CATALOG CURATION: Products come from the merchant's uploaded designs — do NOT suggest catalog_curate
+- IMPORTANT: Guide the merchant to upload their designs and brand logo in the editor dashboard. Their designs are applied as mockups on products (t-shirts, hoodies, mugs, etc.) and displayed as the store's products
+- Production time: 3-7 business days + shipping
+- Help with brand storytelling, design strategy, collection naming, and marketing their unique brand
+- Do NOT offer to add services, testimonials, or gallery — this site type doesn't use them
+\` : ''}
+\${site.mode === 3 && site.dropship_type === 'pod_custom' ? \`
+MODE: PRINT-ON-DEMAND CUSTOM (mode 3, pod_custom)
+This store lets VISITORS create custom products by uploading their own design/logo/image at purchase time. Blank products come from Printful + Printify.
+- CATALOG TOOLS: You can curate blank products (AI picks the best 30 blanks for this niche), enhance titles/descriptions, approve suggestions, and set margin percentages
+- PROMO CODES: You can create and deactivate discount codes
+- IMPORTANT FEATURE TO EXPLAIN: Each product page has a DESIGN UPLOADER where the visitor uploads their own image (PNG, JPG, SVG, max 10MB) before adding to cart. The design is printed on the product after purchase.
+- Customers see 30 curated blank products AND can search more blanks via the search bar
+- Production time: 3-7 business days + shipping
+- Help the merchant write compelling copy about personalization, customization, and creative freedom
+- Do NOT offer to add services, testimonials, or gallery — this site type doesn't use them
+\` : ''}
 
 MARKETING CONTENT GENERATION (PREMIUM ASSISTANT MODE):
 You are a full marketing expert for this business. You can produce any type of premium marketing content the owner needs.
@@ -448,7 +523,7 @@ Be concise, helpful, and proactive. When the owner asks for a change to the site
       model: 'claude-sonnet-4-6',
       max_tokens: 2000,
       system: systemPrompt,
-      tools,
+      tools: getToolsForSite(site.mode, site.dropship_type),
       messages,
     });
 
