@@ -21,6 +21,10 @@ const ALLOWED_TOOLS = new Set([
   'propose_product_update',
   'propose_gallery_remove',
   'propose_gallery_clear',
+  'catalog_curate',
+  'catalog_enhance',
+  'catalog_approve_all',
+  'catalog_set_margin',
 ]);
 
 const ALLOWED_FIELDS = new Set([
@@ -253,6 +257,68 @@ export async function POST(
         updates.gallery = [];
         break;
       }
+    }
+
+    // ===== Catalog tools (don't use updates, call APIs directly) =====
+    if (tool_name === 'catalog_curate') {
+      const res = await fetch(new URL('/api/catalog/curate', req.url).toString(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug }),
+      });
+      const data = await res.json();
+      if (data.error) return NextResponse.json({ error: data.error }, { status: 500 });
+      // Auto-enhance after curate
+      await fetch(new URL('/api/catalog/enhance', req.url).toString(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug }),
+      });
+      return NextResponse.json({ success: true, message: `${data.count} produits suggérés et optimisés` });
+    }
+
+    if (tool_name === 'catalog_enhance') {
+      const res = await fetch(new URL('/api/catalog/enhance', req.url).toString(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug }),
+      });
+      const data = await res.json();
+      return NextResponse.json({ success: true, message: `${data.enhanced || 0} titres optimisés` });
+    }
+
+    if (tool_name === 'catalog_approve_all') {
+      const { error: approveErr } = await supabase
+        .from('site_catalog_selections')
+        .update({ merchant_approved: true })
+        .eq('site_id', site.id)
+        .eq('merchant_approved', false);
+      if (approveErr) return NextResponse.json({ error: approveErr.message }, { status: 500 });
+      return NextResponse.json({ success: true, message: 'Tous les produits approuvés' });
+    }
+
+    if (tool_name === 'catalog_set_margin') {
+      const { margin_percent } = tool_input;
+      const margin = Number(margin_percent);
+      if (isNaN(margin) || margin < 10 || margin > 90) {
+        return NextResponse.json({ error: 'Marge invalide (10-90%)' }, { status: 400 });
+      }
+      const { data: sels } = await supabase
+        .from('site_catalog_selections')
+        .select('id, catalog_products(price)')
+        .eq('site_id', site.id);
+      let updated_count = 0;
+      for (const sel of (sels || [])) {
+        const cost = (sel as any).catalog_products?.price;
+        if (!cost) continue;
+        const newPrice = Math.ceil((Number(cost) / (1 - margin / 100)) * 100 - 1) / 100;
+        await supabase
+          .from('site_catalog_selections')
+          .update({ sell_price: newPrice })
+          .eq('id', sel.id);
+        updated_count++;
+      }
+      return NextResponse.json({ success: true, message: `${updated_count} prix mis à jour (marge ${margin}%)` });
     }
 
     if (Object.keys(updates).length === 0) {

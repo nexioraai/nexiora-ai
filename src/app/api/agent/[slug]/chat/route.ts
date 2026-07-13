@@ -223,6 +223,51 @@ const tools: Anthropic.Tool[] = [
       required: ['reason'],
     },
   },
+  {
+    name: 'catalog_curate',
+    description: 'Run AI curation: analyze the catalog and suggest the best products for this niche. Use when the merchant says "add products", "suggest products", "fill my shop", etc.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        reason: { type: 'string' },
+      },
+      required: ['reason'],
+    },
+  },
+  {
+    name: 'catalog_enhance',
+    description: 'Rewrite product titles and descriptions to be professional and SEO-friendly. Use when the merchant says "optimize titles", "rewrite descriptions", "improve my products", etc.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        reason: { type: 'string' },
+      },
+      required: ['reason'],
+    },
+  },
+  {
+    name: 'catalog_approve_all',
+    description: 'Approve all pending catalog product suggestions. Use when the merchant says "approve all", "accept everything", "validate all products".',
+    input_schema: {
+      type: 'object',
+      properties: {
+        reason: { type: 'string' },
+      },
+      required: ['reason'],
+    },
+  },
+  {
+    name: 'catalog_set_margin',
+    description: 'Update the sell price of all catalog products to a specific margin percentage over supplier cost. Use when the merchant says "set all prices to 60% margin", "change margin to 50%", etc.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        margin_percent: { type: 'integer', description: 'Target margin percentage (e.g. 50 means sell_price = cost / (1 - 0.50))' },
+        reason: { type: 'string' },
+      },
+      required: ['margin_percent', 'reason'],
+    },
+  },
 ];
 
 export async function POST(
