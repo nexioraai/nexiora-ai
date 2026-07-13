@@ -537,13 +537,13 @@ Return ONLY valid JSON, no markdown:
           await fetch(`${baseUrl}/api/catalog/curate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ siteId: newSite.id }),
+            body: JSON.stringify({ slug }),
           });
           // 2. Enhance
           await fetch(`${baseUrl}/api/catalog/enhance`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ siteId: newSite.id }),
+            body: JSON.stringify({ slug }),
           });
           // 3. Approve all
           await supabaseAdmin

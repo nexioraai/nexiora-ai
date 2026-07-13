@@ -33,14 +33,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Site non-dropshipping' }, { status: 400 });
     }
 
-    // 2. Récupère les produits du catalogue (reseller = CJ + Zendrop)
+    // 2. Récupère les produits du catalogue (selon dropship_type)
     const nicheKeyword = extractNicheKeyword(site.type);
+    const suppliers = site.dropship_type === 'pod_custom' || site.dropship_type === 'pod_brand'
+      ? ['printful', 'printify']
+      : ['cj', 'zendrop'];
 
     let query = supabaseAdmin
       .from('catalog_products')
       .select('id, supplier_id, supplier_product_id, name, category, price, currency, images, shipping_days_min, warehouse_country')
       .eq('in_stock', true)
-      .in('supplier_id', ['cj', 'zendrop']);
+      .in('supplier_id', suppliers);
 
     if (nicheKeyword) {
       query = query.textSearch('name', nicheKeyword, { type: 'websearch', config: 'english' });
@@ -56,7 +59,7 @@ export async function POST(req: NextRequest) {
         .from('catalog_products')
         .select('id, supplier_id, supplier_product_id, name, category, price, currency, images, shipping_days_min, warehouse_country')
         .eq('in_stock', true)
-        .in('supplier_id', ['cj', 'zendrop'])
+        .in('supplier_id', suppliers)
         .order('price', { ascending: true })
         .limit(200);
       const { data: fbProducts, error: fbErr } = await fallback;

@@ -141,7 +141,7 @@ return data as Site
 }
 
 async function loadCatalogSelections(data: any) {
-if (data.mode === 3 && data.dropship_type === 'reseller') {
+if (data.mode === 3 && (data.dropship_type === 'reseller' || data.dropship_type === 'pod_custom')) {
 const { data: catSels } = await supabase
 .from('site_catalog_selections')
 .select('id, sell_price, custom_name, custom_description, catalog_product_id, catalog_products(name, description, price, currency, images, supplier_id, supplier_product_id, shipping_days_min, shipping_days_max)')
