@@ -106,6 +106,7 @@ export default function EditPage() {
         primary_color: site.primary_color,
         hero_image: site.hero_image,
         theme: site.theme,
+        cj_margin_percent: site.cj_margin_percent,
         pod_designs: podDesigns.length > 0
           ? podDesigns.map((d: any, i: number) => i === 0 ? { ...d, selected_products: selectedProducts } : d)
           : podDesigns,
@@ -278,6 +279,40 @@ export default function EditPage() {
               className="w-24 h-12 rounded-xl border border-white/10 bg-transparent cursor-pointer"
             />
           </FieldSection>
+
+          {/* Margin control — visible for mode 3 reseller & pod_custom */}
+          {site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom') && (
+            <FieldSection label="Marge bénéficiaire (%)">
+              <div className="flex items-center gap-4">
+                <input
+                  type="range"
+                  min={20}
+                  max={80}
+                  step={5}
+                  value={site.cj_margin_percent || 50}
+                  onChange={(e) => updateField('cj_margin_percent', Number(e.target.value))}
+                  className="flex-1 accent-[#E07040] h-2 rounded-full"
+                />
+                <div className="flex items-center gap-1 bg-black/30 border border-white/10 rounded-xl px-3 py-2">
+                  <input
+                    type="number"
+                    min={20}
+                    max={80}
+                    value={site.cj_margin_percent || 50}
+                    onChange={(e) => {
+                      const v = Math.min(80, Math.max(20, Number(e.target.value)));
+                      updateField('cj_margin_percent', v);
+                    }}
+                    className="w-12 bg-transparent text-white text-right focus:outline-none"
+                  />
+                  <span className="text-slate-400 text-sm">%</span>
+                </div>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Prix de vente = coût fournisseur ÷ (1 − marge). Ex : coût 10$ à 50% → vente 20$. Modifiable aussi via l'agent IA.
+              </p>
+            </FieldSection>
+          )}
 
           {/* POD Designs — visible for pod_brand and pod_custom */}
           {(site as any).dropship_type && ['pod_brand', 'pod_custom'].includes((site as any).dropship_type) && (
