@@ -135,9 +135,9 @@ function mapPrintifyVariant(
       price,
       stock_quantity: variant.is_enabled ? 9999 : 0,
     }],
-    shipping_days_min: 3,
-    shipping_days_max: 7,
-    warehouse_country: 'US',
+    shipping_days_min: provider?.handling_time?.min || variant?.handling_time?.min || 3,
+    shipping_days_max: (provider?.handling_time?.max || variant?.handling_time?.max || 5) + 3,
+    warehouse_country: provider?.location?.country || 'US',
     in_stock: variant.is_enabled !== false,
     last_synced_at: new Date().toISOString(),
   };

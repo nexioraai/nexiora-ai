@@ -84,9 +84,9 @@ function mapZendropProduct(p: any): CatalogProduct {
     price: parseFloat(p.price || '0'),
     currency: 'USD',
     variants,
-    shipping_days_min: 5,
-    shipping_days_max: 12,
-    warehouse_country: 'US',
+    shipping_days_min: (p.warehouse === 'US' || p.country === 'US' || p.ships_from === 'US') ? 2 : 7,
+    shipping_days_max: (p.warehouse === 'US' || p.country === 'US' || p.ships_from === 'US') ? 5 : 15,
+    warehouse_country: p.warehouse || p.country || p.ships_from || 'US',
     in_stock: true,
     last_synced_at: new Date().toISOString(),
   };

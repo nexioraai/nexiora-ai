@@ -316,6 +316,10 @@ image:
 raw?.image ??
 raw?.image_url ??
 undefined,
+cjVid: raw?.cjVid || null,
+shippingDaysMin: raw?.shippingDaysMin || null,
+shippingDaysMax: raw?.shippingDaysMax || null,
+supplierId: raw?.supplierId || null,
 }
 }
 
