@@ -19,6 +19,10 @@
     {
       "path": "/api/cron/catalog-sync",
       "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/catalog-suggest",
+      "schedule": "0 6 * * 0"
     }
   ]
 }
