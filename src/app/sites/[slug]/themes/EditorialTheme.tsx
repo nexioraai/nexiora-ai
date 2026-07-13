@@ -439,6 +439,12 @@ export default function EditorialTheme({ site }: { site: Site }) {
                       )}
                     </div>
                     {p.cjVid && <ShippingEstimate siteId={site.id} cjVid={p.cjVid} primary={primary} deliveryLabel={t.labels.estimatedDelivery} daysLabel={t.labels.days} />}
+                    {!p.cjVid && p.shippingDaysMin && (
+                      <p className="text-sm mt-1 flex items-center gap-1.5" style={{ color: primary }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                        {t.labels.estimatedDelivery} {p.shippingDaysMin}{p.shippingDaysMax && p.shippingDaysMax !== p.shippingDaysMin ? `-${p.shippingDaysMax}` : ''} {t.labels.days}
+                      </p>
+                    )}
                   </div>
                 </ClickableProductCard>
               ))}

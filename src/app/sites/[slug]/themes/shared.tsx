@@ -75,6 +75,9 @@ currency?: string
 image?: string
 cjVid?: string | null
 variants?: { variant_id: string; label: string; price: number; currency: string }[]
+shippingDaysMin?: number | null
+shippingDaysMax?: number | null
+supplierId?: string | null
 }
 
 export type Service = {
@@ -141,7 +144,7 @@ async function loadCatalogSelections(data: any) {
 if (data.mode === 3 && data.dropship_type === 'reseller') {
 const { data: catSels } = await supabase
 .from('site_catalog_selections')
-.select('id, sell_price, custom_name, custom_description, catalog_product_id, catalog_products(name, description, price, currency, images, supplier_id, supplier_product_id)')
+.select('id, sell_price, custom_name, custom_description, catalog_product_id, catalog_products(name, description, price, currency, images, supplier_id, supplier_product_id, shipping_days_min, shipping_days_max)')
 .eq('site_id', data.id)
 .eq('merchant_approved', true)
 .order('sort_order', { ascending: true })
@@ -158,6 +161,9 @@ price: pr > 0 ? `${pr.toFixed(2)} ${cur}` : '',
 priceNumber: pr,
 currency: cur,
 image: Array.isArray(cp.images) && cp.images.length > 0 ? cp.images[0] : undefined,
+shippingDaysMin: cp.shipping_days_min || null,
+shippingDaysMax: cp.shipping_days_max || null,
+supplierId: cp.supplier_id || null,
 }
 })
 const existing = data.products || []
