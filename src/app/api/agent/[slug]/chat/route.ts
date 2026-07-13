@@ -257,6 +257,18 @@ const tools: Anthropic.Tool[] = [
     },
   },
   {
+    name: 'deactivate_promo_code',
+    description: 'Deactivate an existing promo code. Use when the merchant says "disable code", "deactivate promo", "stop the discount", "remove code BIENVENUE", etc.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'string', description: 'The promo code to deactivate (e.g. BIENVENUE)' },
+        reason: { type: 'string' },
+      },
+      required: ['code', 'reason'],
+    },
+  },
+  {
     name: 'create_promo_code',
     description: 'Create a promo/discount code for the shop. Use when the merchant says "create a promo code", "add 10% discount", "make a coupon", etc.',
     input_schema: {

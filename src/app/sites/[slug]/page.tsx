@@ -10,6 +10,7 @@ import CartShell from './themes/CartShell'
 import { getCartLabels } from './themes/cartLabels'
 import ScrollRevealInit from './themes/ScrollRevealInit'
 import CatalogSearch from './themes/CatalogSearch'
+import PromoBanner from './themes/PromoBanner'
 
 export const dynamic = 'force-dynamic'
 
@@ -81,6 +82,7 @@ export default async function SitePage({ params, searchParams }: Props) {
     <>
       <JsonLd site={site} />
       <CartShell primary={primary} labels={cartLabels} slug={site.slug}>
+        <PromoBanner slug={site.slug} primary={primary} />
         <Theme site={site} />
         {site.mode === 3 && site.dropship_type !== 'pod_brand' && <CatalogSearch slug={site.slug} primary={primary} lang={site.lang} dropshipType={site.dropship_type || 'reseller'} />}
       </CartShell>

@@ -26,6 +26,7 @@ const ALLOWED_TOOLS = new Set([
   'catalog_approve_all',
   'catalog_set_margin',
   'create_promo_code',
+  'deactivate_promo_code',
 ]);
 
 const ALLOWED_FIELDS = new Set([
@@ -320,6 +321,18 @@ export async function POST(
         updated_count++;
       }
       return NextResponse.json({ success: true, message: `${updated_count} prix mis à jour (marge ${margin}%)` });
+    }
+
+    if (tool_name === 'deactivate_promo_code') {
+      const { code } = tool_input;
+      if (!code) return NextResponse.json({ error: 'code requis' }, { status: 400 });
+      const { error: deactErr } = await supabase
+        .from('promo_codes')
+        .update({ active: false })
+        .eq('site_id', site.id)
+        .ilike('code', code.trim());
+      if (deactErr) return NextResponse.json({ error: deactErr.message }, { status: 500 });
+      return NextResponse.json({ success: true, message: `Code "${code}" désactivé` });
     }
 
     if (tool_name === 'create_promo_code') {
