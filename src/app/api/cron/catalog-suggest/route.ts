@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { startCronRun, finishCronRun } from '@/lib/cron-tracker';
 
 export const maxDuration = 120;
 
@@ -17,6 +18,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const runId = await startCronRun('catalog-suggest');
+  try {
   // 1. Tous les sites reseller actifs
   const { data: sites } = await supabaseAdmin
     .from('sites')
@@ -120,5 +123,10 @@ Réponds UNIQUEMENT en JSON : [{"index":0,"sell_price":19.99,"reason":"..."},...
     }
   }
 
+  await finishCronRun(runId, { itemsProcessed: sites.length });
   return NextResponse.json({ processed: sites.length, results });
+  } catch (e: any) {
+    await finishCronRun(runId, { itemsProcessed: 0, status: 'error', errorMessage: e.message });
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
 }

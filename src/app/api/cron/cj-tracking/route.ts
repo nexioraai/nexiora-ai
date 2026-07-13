@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { startCronRun, finishCronRun } from '@/lib/cron-tracker';
 import { cjGetOrderDetail } from '@/lib/cj/client';
 import { sendShippingEmail } from '@/lib/email/sendShippingEmail';
 
@@ -18,6 +19,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const runId = await startCronRun('cj-tracking');
+  try {
   // Commandes en attente de tracking : commande CJ creee, pas encore expediee
   const { data: orders } = await supabaseAdmin
     .from('shop_orders')
@@ -79,5 +82,10 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  await finishCronRun(runId, { itemsProcessed: checked });
   return NextResponse.json({ done: true, checked, shipped });
+  } catch (e: any) {
+    await finishCronRun(runId, { itemsProcessed: 0, status: 'error', errorMessage: e.message });
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
 }

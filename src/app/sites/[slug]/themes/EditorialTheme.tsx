@@ -95,6 +95,12 @@ export default function EditorialTheme({ site }: { site: Site }) {
     >
       {/* Scroll reveal keyframes (pure CSS, no JS) */}
       <style>{`
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--brand, #888); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { opacity: 0.8; }
+        html { scrollbar-width: thin; scrollbar-color: var(--brand, #888) transparent; }
         @keyframes ed-rise {
           from { opacity: 0; transform: translateY(24px); }
           to   { opacity: 1; transform: translateY(0); }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { startCronRun, finishCronRun } from '@/lib/cron-tracker';
 import { cjGetInventory } from '@/lib/cj/client';
 
 export const maxDuration = 60;
@@ -16,6 +17,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const runId = await startCronRun('cj-stock-sync');
+  try {
   // Tous les produits CJ (cj_vid rempli)
   const { data: products } = await supabaseAdmin
     .from('shop_products')
@@ -92,5 +95,10 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  await finishCronRun(runId, { itemsProcessed: checked });
   return NextResponse.json({ done: true, checked, unpublished, republished });
+  } catch (e: any) {
+    await finishCronRun(runId, { itemsProcessed: 0, status: 'error', errorMessage: e.message });
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
 }

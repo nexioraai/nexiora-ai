@@ -5,6 +5,7 @@ import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
 import { printifyAdapter } from '@/lib/suppliers/printify-adapter';
 import { zendropAdapter } from '@/lib/suppliers/zendrop-adapter';
 import type { CatalogProduct } from '@/lib/suppliers/supplier-adapter';
+import { startCronRun, finishCronRun } from '@/lib/cron-tracker';
 
 export const maxDuration = 60;
 
@@ -20,6 +21,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const runId = await startCronRun('catalog-sync');
+  try {
   // 1. Récupère les niches actives (sites mode 3 uniquement)
   const { data: sites } = await supabaseAdmin
     .from('sites')
@@ -92,12 +95,17 @@ export async function GET(req: NextRequest) {
   //   errors.push(`Spocket: ${e.message}`);
   // }
 
+  await finishCronRun(runId, { itemsProcessed: totalSynced });
   return NextResponse.json({
     done: true,
     niches,
     synced: totalSynced,
     errors: errors.length > 0 ? errors : undefined,
   });
+  } catch (e: any) {
+    await finishCronRun(runId, { itemsProcessed: 0, status: 'error', errorMessage: e.message });
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
 }
 
 /** Expande une niche en mots-clés de recherche via Claude Haiku. */
