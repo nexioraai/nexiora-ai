@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, ChevronLeft, ChevronRight, Truck } from 'lucide-react';
 import AddToCartButton from './AddToCartButton';
+import DesignUploader from './DesignUploader';
 import { THEME_TOKENS, ThemeKey } from './CatalogSearch';
 
 interface CatalogProduct {
@@ -25,6 +26,7 @@ interface Props {
   lang?: string;
   theme?: ThemeKey;
   onClose: () => void;
+  isPodCustom?: boolean;
 }
 
 const LABELS: Record<string, Record<string, string>> = {
@@ -46,11 +48,12 @@ const LABELS: Record<string, Record<string, string>> = {
   },
 };
 
-export default function ProductModal({ product: p, primary, lang = 'en', theme = 'editorial', onClose }: Props) {
+export default function ProductModal({ product: p, primary, lang = 'en', theme = 'editorial', onClose, isPodCustom = false }: Props) {
   const t = LABELS[lang] || LABELS.en;
   const tokens = THEME_TOKENS[theme] || THEME_TOKENS.editorial;
   const [imgIndex, setImgIndex] = useState(0);
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
+  const [customDesignUrl, setCustomDesignUrl] = useState<string | null>(null);
   const imgs = p.images?.length ? p.images : [];
   const variants = Array.isArray(p.variants) ? p.variants : [];
 
@@ -163,12 +166,17 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
               </div>
             )}
 
+            {isPodCustom && (
+              <DesignUploader onDesignUploaded={setCustomDesignUrl} primary={primary} lang={lang} />
+            )}
+
             <AddToCartButton
               id={'catalog-' + p.id}
               name={p.name}
               priceNumber={p.price}
               currency="USD"
               image={imgs[0]}
+              customDesignUrl={customDesignUrl || undefined}
               primary={primary}
               label={t.addToCart}
             />

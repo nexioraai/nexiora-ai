@@ -162,6 +162,7 @@ export default function CartDrawer({
             priceNumber: i.priceNumber,
             currency: i.currency,
             quantity: i.quantity,
+            customDesignUrl: i.customDesignUrl,
           })),
         }),
       });

@@ -300,6 +300,7 @@ export default function CatalogSearch({ slug, primary, lang = 'en', theme = 'edi
           lang={lang}
           theme={theme}
           onClose={() => setSelectedProduct(null)}
+          isPodCustom={dropshipType === 'pod_custom'}
         />,
         document.body
       )}

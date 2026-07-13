@@ -8,6 +8,7 @@ export default function AddToCartButton({
   priceNumber,
   currency,
   image,
+  customDesignUrl,
   primary = '#111111',
   label,
 }: {
@@ -16,13 +17,14 @@ export default function AddToCartButton({
   priceNumber: number;
   currency: string;
   image?: string;
+  customDesignUrl?: string;
   primary?: string;
   label: string;
 }) {
   const { addItem } = useCart();
   return (
     <button
-      onClick={() => addItem({ id, name, priceNumber, currency, image })}
+      onClick={() => addItem({ id, name, priceNumber, currency, image, customDesignUrl })}
       className="inline-flex items-center gap-1.5 text-sm font-medium transition hover:opacity-80"
       style={{ color: primary }}
     >

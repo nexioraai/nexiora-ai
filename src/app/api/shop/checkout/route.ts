@@ -141,7 +141,7 @@ export async function POST(req: Request) {
       .single();
 
     if (order) {
-      await supabaseAdmin.from('shop_order_items').insert(
+      const { data: orderItems } = await supabaseAdmin.from('shop_order_items').insert(
         items.map((i) => ({
           order_id: order.id,
           product_id: i.id,
@@ -149,7 +149,18 @@ export async function POST(req: Request) {
           quantity: i.quantity,
           unit_price: i.priceNumber,
         }))
-      );
+      ).select('id');
+      // Save custom designs if any
+      if (orderItems) {
+        const designRows = items
+          .map((item, idx) => item.customDesignUrl && orderItems[idx]
+            ? { order_item_id: orderItems[idx].id, design_url: item.customDesignUrl, placement: 'front' }
+            : null)
+          .filter((r): r is { order_item_id: string; design_url: string; placement: string } => r !== null);
+        if (designRows.length > 0) {
+          await supabaseAdmin.from('order_item_designs').insert(designRows);
+        }
+      }
     }
 
     return NextResponse.json({ url });

@@ -7,6 +7,7 @@ export type CartItem = {
   priceNumber: number;
   currency: string;
   image?: string;
+  customDesignUrl?: string;
   quantity: number;
 };
 
@@ -32,9 +33,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = useCallback((item: Omit<CartItem, 'quantity'>) => {
     setItems((prev) => {
-      const existing = prev.find((i) => i.id === item.id);
+      const existing = prev.find((i) => i.id === item.id && i.customDesignUrl === item.customDesignUrl);
       if (existing) {
-        return prev.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i));
+        return prev.map((i) => (i.id === item.id && i.customDesignUrl === item.customDesignUrl ? { ...i, quantity: i.quantity + 1 } : i));
       }
       return [...prev, { ...item, quantity: 1 }];
     });

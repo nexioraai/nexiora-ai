@@ -6,6 +6,7 @@ export interface CartItem {
   priceNumber: number;
   currency: string;
   quantity: number;
+  customDesignUrl?: string;
 }
 
 export interface OnboardingResult {
