@@ -56,20 +56,18 @@ export async function POST(req: Request) {
     }
 
     // Catalog products => grouper par supplier_id
+    // Cart IDs are "catalog-{supplier_id}-{supplier_product_id}"
     const supplierGroups: Record<string, { supplier_product_id: string; quantity: number }[]> = {};
     if (catalogIds.length > 0) {
-      const realIds = catalogIds.map((i) => i.id.replace('catalog-', ''));
-      const { data: catProds } = await supabaseAdmin
-        .from('catalog_products')
-        .select('id, supplier_id, supplier_product_id')
-        .in('id', realIds);
-      for (const cp of (catProds || [])) {
-        if (!cp.supplier_product_id || !cp.supplier_id) continue;
-        const item = catalogIds.find((i) => i.id === 'catalog-' + cp.id);
-        if (!item) continue;
-        if (!supplierGroups[cp.supplier_id]) supplierGroups[cp.supplier_id] = [];
-        supplierGroups[cp.supplier_id].push({
-          supplier_product_id: cp.supplier_product_id,
+      for (const item of catalogIds) {
+        // Parse: catalog-cj-123456 or catalog-zendrop-abc123
+        const parts = item.id.replace('catalog-', '').split('-');
+        const supplierId = parts[0];
+        const supplierProductId = parts.slice(1).join('-');
+        if (!supplierId || !supplierProductId) continue;
+        if (!supplierGroups[supplierId]) supplierGroups[supplierId] = [];
+        supplierGroups[supplierId].push({
+          supplier_product_id: supplierProductId,
           quantity: item.quantity,
         });
       }
