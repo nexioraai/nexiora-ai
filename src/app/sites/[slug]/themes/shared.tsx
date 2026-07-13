@@ -132,6 +132,34 @@ cjVid: p.cj_vid || null,
 }))
 }
 
+// ---------- Reseller catalog selections → Products ----------
+if ((data as any).mode === 3 && (data as any).dropship_type === 'reseller') {
+const { data: catSels } = await supabase
+.from('site_catalog_selections')
+.select('id, sell_price, custom_name, custom_description, catalog_product_id, catalog_products(name, description, price, currency, images, supplier_id, supplier_product_id)')
+.eq('site_id', (data as any).id)
+.eq('merchant_approved', true)
+.order('sort_order', { ascending: true })
+if (catSels && catSels.length > 0) {
+const catalogProducts = catSels.map((s: any) => {
+const cp = s.catalog_products
+const pr = s.sell_price ? Number(s.sell_price) : (cp.price ? Number(cp.price) : 0)
+const cur = cp.currency || 'CAD'
+return {
+id: `catalog-${cp.supplier_id}-${cp.supplier_product_id}`,
+name: s.custom_name || cp.name,
+description: s.custom_description || cp.description || '',
+price: pr > 0 ? `${pr.toFixed(2)} ${cur}` : '',
+priceNumber: pr,
+currency: cur,
+image: Array.isArray(cp.images) && cp.images.length > 0 ? cp.images[0] : undefined,
+}
+})
+const existing = (data as any).products || []
+;(data as any).products = [...catalogProducts, ...existing]
+}
+}
+
 return data as Site
 }
 
