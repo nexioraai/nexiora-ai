@@ -22,7 +22,7 @@ export default function PromoBanner({ slug, primary }: { slug: string; primary: 
 
   return (
     <div
-      className="w-full py-2.5 px-4 text-center text-sm font-medium relative z-50"
+      className="w-full py-2.5 px-4 text-center text-sm font-medium relative z-[100]"
       style={{ background: primary, color: '#fff' }}
     >
       <span>
