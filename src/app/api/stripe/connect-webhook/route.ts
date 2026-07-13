@@ -4,6 +4,7 @@ import { getStripe } from '@/lib/stripe';
 import { decrementStock } from '@/lib/shop';
 import { fulfillCjOrder } from '@/lib/cj/fulfill';
 import { fulfillPodOrder } from '@/lib/suppliers/pod-fulfill';
+import { fulfillZendropOrder } from '@/lib/suppliers/zendrop-fulfill';
 import { sendOrderConfirmationEmail } from '@/lib/email/sendOrderConfirmationEmail';
 
 /**
@@ -55,6 +56,12 @@ export async function POST(req: Request) {
             console.error('CJ fulfill error:', e);
           }
 
+          // Zendrop fulfill
+          try {
+            await fulfillZendropOrder(order.id);
+          } catch (e) {
+            console.error('Zendrop fulfill error:', e);
+          }
           // POD fulfill (Printful/Printify) avec designs custom
           try {
             await fulfillPodOrder(order.id);
