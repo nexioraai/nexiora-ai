@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     // 1. Récupère le site
     const { data: site, error: siteErr } = await supabaseAdmin
       .from('sites')
-      .select('id, type, mode, dropship_type, cj_margin_percent, language')
+      .select('id, type, mode, dropship_type, cj_margin_percent, lang')
       .eq('slug', slug)
       .single();
 
@@ -48,7 +48,23 @@ export async function POST(req: NextRequest) {
 
     query = query.order('price', { ascending: true }).limit(200);
 
-    const { data: products, error: prodErr } = await query;
+    let { data: products, error: prodErr } = await query;
+
+    // Fallback: si textSearch trop restrictif, on charge sans filtre
+    if ((!products || products.length < 10) && nicheKeyword) {
+      const fallback = supabaseAdmin
+        .from('catalog_products')
+        .select('id, supplier_id, supplier_product_id, name, category, price, currency, images, shipping_days_min, warehouse_country')
+        .eq('in_stock', true)
+        .in('supplier_id', ['cj', 'zendrop'])
+        .order('price', { ascending: true })
+        .limit(200);
+      const { data: fbProducts, error: fbErr } = await fallback;
+      if (!fbErr && fbProducts && fbProducts.length > 0) {
+        products = fbProducts;
+        prodErr = null;
+      }
+    }
 
     if (prodErr || !products || products.length === 0) {
       return NextResponse.json({ error: 'Aucun produit trouvé pour cette niche', products: [] }, { status: 200 });
@@ -59,7 +75,7 @@ export async function POST(req: NextRequest) {
       `${i}|${p.supplier_product_id}|${p.supplier_id}|${p.name}|${p.category}|${p.price}${p.currency}|${p.shipping_days_min}j|${p.warehouse_country}`
     )).join('\n');
 
-    const lang = site.language || 'fr';
+    const lang = site.lang || 'fr';
 
     // 4. Claude Haiku sélectionne les meilleurs
     const msg = await anthropic.messages.create({
