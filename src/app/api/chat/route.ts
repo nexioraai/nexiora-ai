@@ -274,6 +274,7 @@ IMPORTANT CONTEXT:
 - Write ALL text content in the EXACT SAME LANGUAGE as the business description provided below. Detect the language automatically and use it consistently everywhere.
 - Phone format: start with ${phonePrefix}
 - Currency: use ${currency}
+- Dropship type: ${dropshipType || 'none'} (none = not a dropshipping site, reseller = resale imported goods, pod_brand = merchant's own designs printed on demand, pod_custom = visitor uploads their own design)
 - Address: write a realistic address in ${location || 'the city'}
 - Testimonial names: use realistic local names for ${location || 'the region'}
 - sections: THIS IS CRITICAL. Analyze the business sector deeply and decide YOURSELF what offering section(s) this business truly needs — do NOT default to a generic "Services" list. A restaurant needs a "Menu" section with real dishes and prices. A lawyer needs "Domaines d'Expertise" with legal specialties. A photographer needs "Portfolio" with shoot types and packages. A plumber needs "Nos Interventions" with repair types and callout prices. You may generate 1 to 3 sections if the sector genuinely has distinct offering categories (e.g. a restaurant could have "Menu" AND "Réservation"). Each section is an object with:
@@ -300,7 +301,11 @@ DESIGN DIRECTION (CRITICAL — every site must look modern, premium and DISTINCT
 BUSINESS MODE CLASSIFICATION (CRITICAL — you MUST return the correct integer mode):
 - mode = 1 (SHOWCASE / VITRINE): restaurants, cafés, bars, food trucks, bakeries, hair salons, barbers, spas, gyms, clinics, dentists, doctors, lawyers, accountants, real estate agents, plumbers, electricians, mechanics, artisans, photographers, event planners, coaches, consultants, schools, any local service, any perishable food business, any made-to-order craft. NEVER anything else.
 - mode = 2 (LOCAL BOUTIQUE with own inventory): physical boutique selling THEIR OWN stock — local clothing store, bookstore, jewelry maker, florist, artisan shop, brand with warehouse. The owner physically holds inventory.
-- mode = 3 (DROPSHIPPING via CJ): ONLY for reselling importable manufactured goods from Asia (gadgets, accessories, phone cases, home decor, fitness gear, beauty tools, small electronics). NEVER for perishables, food, services, made-to-order, or anything requiring local expertise.
+- mode = 3 (DROPSHIPPING / PRINT-ON-DEMAND): Online store powered by supplier fulfillment. Three sub-types exist (indicated by the "Dropship type" field above):
+  * "reseller" — Resale of manufactured goods sourced from CJ Dropshipping + Zendrop. Products: gadgets, accessories, phone cases, home decor, fitness gear, beauty tools, small electronics. The store auto-curates 30 trending products and customers can search the full 7,000+ product catalog.
+  * "pod_brand" — Merchant's OWN brand: they upload their original designs/logos which are printed on blank products (t-shirts, mugs, hoodies, etc.) via Printful + Printify. The store displays the merchant's designed mockups as products.
+  * "pod_custom" — Visitor customization: the store displays blank products (Printful + Printify), and each VISITOR uploads their own design/logo/image at purchase time. The design is printed on the chosen product.
+  NEVER assign mode 3 to perishables, food, services, made-to-order, or anything requiring local expertise.
 
 STRICT RULES:
 - Restaurant / food / café / bakery → ALWAYS mode 1. NEVER 2 or 3.
@@ -309,13 +314,41 @@ STRICT RULES:
 - If the user explicitly says "dropshipping" or "resell imported products" → mode 3.
 - When in doubt → mode 1 (safer default).
 
-DROPSHIPPING (mode 3) SPECIFIC RULES:
-- pages MUST be ["Home", "About", "FAQ", "Contact"] — NO Gallery, NO Reviews, NO Featured Products, NO Services. Shop section appears automatically when the merchant imports products.
-- sections: return an EMPTY array [] — dropshipping sites do NOT need service/menu sections since products come from CJ import.
+DROPSHIPPING (mode 3) SPECIFIC RULES — ADAPT BY DROPSHIP TYPE:
+
+COMMON TO ALL MODE 3 (reseller, pod_brand, pod_custom):
+- pages MUST be ["Home", "About", "FAQ", "Contact"] — NO Gallery, NO Reviews, NO Services. The shop/catalog appears automatically.
+- sections: return an EMPTY array [] — products come from suppliers, not manual entry.
 - testimonials: return an EMPTY array [] — no fake reviews.
 - gallery: return an EMPTY array [] — no gallery needed.
-- faq: generate 4 relevant e-commerce FAQ (shipping, returns, payment, product quality).
-- whyus: generate 3 relevant trust signals (fast shipping, secure payment, quality guarantee).
+- products: return an EMPTY array [] — products are auto-curated from supplier catalog.
+
+IF dropship_type = "reseller":
+- heroTitle/heroSubtitle: emphasize trending products, unbeatable prices, worldwide shipping, huge selection. Tone = bold e-commerce energy.
+- slogan: about smart shopping, best deals, curated trending products.
+- cta: "Discover our products" / "Découvrir nos produits" / equivalent in site language. Action = browse the shop.
+- about: describe a modern online store curating the best trending products at competitive prices, shipped worldwide.
+- faq: 4 questions about shipping times (7-15 business days international), return policy, secure payment (Stripe), product quality and sourcing.
+- whyus: 3 trust signals — competitive pricing, fast worldwide shipping, secure payment & buyer protection.
+- IMPORTANT: Customers see 30 curated trending products on the storefront AND can search the full 7,000+ product catalog via the search bar to find anything they want.
+
+IF dropship_type = "pod_brand":
+- heroTitle/heroSubtitle: emphasize original designs, unique brand, exclusive creations, wearable art. Tone = creative brand identity.
+- slogan: about unique designs, original creations, the merchant's brand story.
+- cta: "Explore the collection" / "Voir la collection" / equivalent in site language. Action = browse the merchant's designs.
+- about: describe a brand that creates original designs printed on premium products (apparel, accessories, home items). Each product is made-to-order with professional printing.
+- faq: 4 questions about print quality & durability, available product types (t-shirts, hoodies, mugs, posters…), production time (3-7 business days + shipping), sizing & materials.
+- whyus: 3 brand signals — exclusive original designs, premium print-on-demand quality, made-to-order (no waste/overstock).
+- IMPORTANT: The merchant uploads their own designs and logo in the editor dashboard. Products displayed are the merchant's designed mockups — visitors do NOT customize anything, they buy the merchant's creations.
+
+IF dropship_type = "pod_custom":
+- heroTitle/heroSubtitle: emphasize personalization, "create YOUR unique product", upload your logo/design/image, make it yours. Tone = empowering, creative, fun.
+- slogan: about self-expression, custom products, "your design, your product".
+- cta: "Create my product" / "Créer mon produit" / equivalent in site language. Action = start customizing.
+- about: describe a platform where anyone can create custom products by uploading their own design, logo, name, or image. Professional printing on premium blanks (t-shirts, hoodies, mugs, phone cases, etc.).
+- faq: 4 questions about accepted file formats (PNG, JPG, SVG, max 10MB), print areas (front placement), production time (3-7 business days + shipping), how the customization works (choose product → upload design → preview → order).
+- whyus: 3 customization signals — total creative freedom (upload any design), professional print quality, preview before ordering.
+- IMPORTANT: Customers see 30 curated blank products AND can search more blanks via the search bar. On each product, a design uploader lets the visitor upload their own image/logo/design BEFORE adding to cart. The design is printed on the product after purchase.
 
 Return ONLY valid JSON, no markdown:
 
