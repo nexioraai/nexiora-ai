@@ -63,8 +63,21 @@ export default function CatalogSelections({ slug }: { slug: string }) {
       if (data.error) {
         setMessage('Erreur: ' + data.error);
       } else {
-        setMessage(`${data.count} produits suggérés par l'IA !`);
+        setMessage(`${data.count} produits suggérés — optimisation des titres…`);
         await fetchSelections();
+        // Auto-enhance titles
+        try {
+          const enhRes = await fetch('/api/catalog/enhance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ slug }),
+          });
+          const enhData = await enhRes.json();
+          if (enhData.enhanced > 0) {
+            setMessage(`${data.count} produits suggérés, ${enhData.enhanced} titres optimisés !`);
+            await fetchSelections();
+          }
+        } catch {}
       }
     } catch (e: any) {
       setMessage('Erreur: ' + e.message);
@@ -103,7 +116,33 @@ export default function CatalogSelections({ slug }: { slug: string }) {
     }
   };
 
+  const [enhancing, setEnhancing] = useState(false);
+
+  const handleEnhance = async () => {
+    setEnhancing(true);
+    setMessage('');
+    try {
+      const res = await fetch('/api/catalog/enhance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setMessage('Erreur: ' + data.error);
+      } else {
+        setMessage(`${data.enhanced} titres et descriptions optimisés !`);
+        await fetchSelections();
+      }
+    } catch (e: any) {
+      setMessage('Erreur: ' + e.message);
+    } finally {
+      setEnhancing(false);
+    }
+  };
+
   const approvedCount = selections.filter(s => s.merchant_approved).length;
+  const unenhancedCount = selections.filter(s => !s.custom_name).length;
 
   return (
     <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm space-y-4">
@@ -122,6 +161,16 @@ export default function CatalogSelections({ slug }: { slug: string }) {
         >
           {curating ? 'Analyse IA…' : selections.length > 0 ? '🔄 Re-générer suggestions' : '✨ Générer suggestions IA'}
         </button>
+        {selections.length > 0 && unenhancedCount > 0 && (
+          <button
+            onClick={handleEnhance}
+            disabled={enhancing}
+            className="px-4 py-2 rounded-xl text-sm font-semibold transition disabled:opacity-40"
+            style={{ background: '#3b82f620', color: '#3b82f6', border: '1px solid #3b82f640' }}
+          >
+            {enhancing ? 'Réécriture…' : `✍️ Optimiser ${unenhancedCount} titres`}
+          </button>
+        )}
       </div>
 
       {message && (
