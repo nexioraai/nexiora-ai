@@ -522,6 +522,39 @@ Return ONLY valid JSON, no markdown:
       console.error('score_history insert failed:', e);
     }
 
+    // Auto-curation pour sites reseller (mode 3) — non-bloquant
+    const finalMode = siteMode ?? (parsed.mode === 2 || parsed.mode === 3 ? parsed.mode : 1);
+    if (finalMode === 3 && dropshipType) {
+      try {
+        const { data: newSite } = await supabaseAdmin
+          .from('sites')
+          .select('id')
+          .eq('slug', slug)
+          .single();
+        if (newSite?.id) {
+          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
+          // 1. Curate
+          await fetch(`${baseUrl}/api/catalog/curate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ siteId: newSite.id }),
+          });
+          // 2. Enhance
+          await fetch(`${baseUrl}/api/catalog/enhance`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ siteId: newSite.id }),
+          });
+          // 3. Approve all
+          await supabaseAdmin
+            .from('site_catalog_selections')
+            .update({ merchant_approved: true })
+            .eq('site_id', newSite.id);
+        }
+      } catch (e) {
+        console.error('Auto-curation failed (non-blocking):', e);
+      }
+    }
     return NextResponse.json({ ...parsed, slug, gallery });
   } catch (error) {
     console.error('API ERROR:', error);
