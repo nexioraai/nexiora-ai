@@ -25,6 +25,7 @@ const ALLOWED_TOOLS = new Set([
   'catalog_enhance',
   'catalog_approve_all',
   'catalog_set_margin',
+  'create_promo_code',
 ]);
 
 const ALLOWED_FIELDS = new Set([
@@ -319,6 +320,27 @@ export async function POST(
         updated_count++;
       }
       return NextResponse.json({ success: true, message: `${updated_count} prix mis à jour (marge ${margin}%)` });
+    }
+
+    if (tool_name === 'create_promo_code') {
+      const { code, discount_type, discount_value, min_order, max_uses } = tool_input;
+      if (!code || !discount_type || !discount_value) {
+        return NextResponse.json({ error: 'code, discount_type et discount_value requis' }, { status: 400 });
+      }
+      const { error: promoErr } = await supabase
+        .from('promo_codes')
+        .insert({
+          site_id: site.id,
+          code: code.toUpperCase().trim(),
+          discount_type,
+          discount_value: Number(discount_value),
+          min_order: Number(min_order) || 0,
+          max_uses: max_uses || null,
+          active: true,
+        });
+      if (promoErr) return NextResponse.json({ error: promoErr.message }, { status: 500 });
+      const label = discount_type === 'percent' ? `${discount_value}%` : `${discount_value}$`;
+      return NextResponse.json({ success: true, message: `Code promo "${code}" créé : -${label}` });
     }
 
     if (Object.keys(updates).length === 0) {

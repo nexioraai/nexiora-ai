@@ -257,6 +257,22 @@ const tools: Anthropic.Tool[] = [
     },
   },
   {
+    name: 'create_promo_code',
+    description: 'Create a promo/discount code for the shop. Use when the merchant says "create a promo code", "add 10% discount", "make a coupon", etc.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'string', description: 'The promo code (uppercase, e.g. SUMMER20)' },
+        discount_type: { type: 'string', enum: ['percent', 'fixed'], description: 'percent = % off, fixed = flat amount off' },
+        discount_value: { type: 'number', description: 'Discount amount (e.g. 20 for 20% or 20 for $20 off)' },
+        min_order: { type: 'number', description: 'Minimum order amount (0 = no minimum)' },
+        max_uses: { type: 'integer', description: 'Max number of uses (null = unlimited)' },
+        reason: { type: 'string' },
+      },
+      required: ['code', 'discount_type', 'discount_value', 'reason'],
+    },
+  },
+  {
     name: 'catalog_set_margin',
     description: 'Update the sell price of all catalog products to a specific margin percentage over supplier cost. Use when the merchant says "set all prices to 60% margin", "change margin to 50%", etc.',
     input_schema: {

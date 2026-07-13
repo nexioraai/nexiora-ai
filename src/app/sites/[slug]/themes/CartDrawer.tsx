@@ -65,6 +65,11 @@ export default function CartDrawer({
   const [shipping, setShipping] = useState<number | null>(null);
   const [calcBusy, setCalcBusy] = useState(false);
   const [aging, setAging] = useState<string | null>(null);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoMsg, setPromoMsg] = useState('');
+  const [promoValid, setPromoValid] = useState(false);
+  const [promoBusy, setPromoBusy] = useState(false);
 
   // Libelles pays localises (ISO -> nom), tries alpha. Liste alignee sur Stripe.
   const COUNTRY_CODES = ['US','CA','GB','FR','DE','ES','IT','NL','BE','CH','AT','IE','PT','SE','NO','DK','FI','PL','AU','NZ','JP','KR','SG','HK','AE','SA','BR','MX','ZA','IN'];
@@ -74,6 +79,33 @@ export default function CartDrawer({
   const countries = COUNTRY_CODES
     .map((code) => ({ code, name: dn ? dn.of(code) : code }))
     .sort((a, b) => a.name.localeCompare(b.name));
+
+  const handlePromo = async () => {
+    if (!promoCode.trim()) return;
+    setPromoBusy(true);
+    setPromoMsg('');
+    try {
+      const res = await fetch('/api/shop/promo/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, code: promoCode, subtotal: total }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setPromoDiscount(data.discount);
+        setPromoValid(true);
+        setPromoMsg(data.discount_type === 'percent' ? `-${data.discount_value}%` : `-${data.discount} ${currency}`);
+      } else {
+        setPromoDiscount(0);
+        setPromoValid(false);
+        setPromoMsg(data.error || 'Code invalide');
+      }
+    } catch {
+      setPromoMsg('Erreur');
+    } finally {
+      setPromoBusy(false);
+    }
+  };
 
   const handleCountryChange = async (code: string) => {
     setCountry(code);
@@ -245,10 +277,33 @@ export default function CartDrawer({
               )}
               </>
             )}
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="Code promo"
+                value={promoCode}
+                onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoValid(false); setPromoDiscount(0); setPromoMsg(''); }}
+                onKeyDown={(e) => e.key === 'Enter' && handlePromo()}
+                className="flex-1 px-3 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-900 bg-white focus:outline-none focus:border-neutral-400"
+              />
+              <button
+                onClick={handlePromo}
+                disabled={promoBusy || !promoCode.trim()}
+                className="px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-40"
+                style={{ background: `${primary}15`, color: primary, border: `1px solid ${primary}30` }}
+              >
+                {promoBusy ? '…' : 'Appliquer'}
+              </button>
+            </div>
+            {promoMsg && (
+              <p className={`text-xs ${promoValid ? 'text-green-600' : 'text-red-500'}`}>
+                {promoValid ? `✓ Code appliqué : ${promoMsg}` : promoMsg}
+              </p>
+            )}
             <div className="flex items-center justify-between">
               <span className="text-neutral-500">{labels.total}</span>
               <span className="text-xl font-semibold text-neutral-900">
-                {(total + (shipping ?? 0)).toFixed(2)} {currency}
+                {(total + (shipping ?? 0) - promoDiscount).toFixed(2)} {currency}
               </span>
             </div>
             <button
