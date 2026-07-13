@@ -11,6 +11,7 @@ import ProductManager from '@/components/edit/ProductManager';
 import PaymentConnect from '@/components/edit/PaymentConnect';
 import CjConnect from '@/components/edit/CjConnect';
 import CjCatalog from '@/components/edit/CjCatalog';
+import CatalogSelections from '@/components/edit/CatalogSelections';
 import OrderManager from '@/components/edit/OrderManager';
 import DashboardAlerts from '@/components/edit/DashboardAlerts';
 import HealthBadge from '@/components/edit/HealthBadge';
@@ -510,6 +511,7 @@ export default function EditPage() {
 
         {(site?.mode === 2 || site?.mode === 3) && <PaymentConnect slug={slug} />}
         {site?.mode === 3 && <CjConnect slug={slug} />}
+        {site?.mode === 3 && site?.dropship_type === 'reseller' && <CatalogSelections slug={slug} />}
         {site?.mode === 3 && <CjCatalog slug={slug} />}
 
         {(site?.mode === 2 || site?.mode === 3) && <OrderManager slug={slug} />}
