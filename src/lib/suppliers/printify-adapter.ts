@@ -297,7 +297,9 @@ export const printifyAdapter: SupplierAdapter = {
             print_provider_id: Number(printProviderId),
             variant_id: Number(variantId),
             quantity: order.quantity,
-            print_areas: { front: '' }, // POD: design requis, vide = draft
+            print_areas: order.design_url
+              ? { front: { src: order.design_url } }
+              : { front: '' },
           }],
         }),
       });

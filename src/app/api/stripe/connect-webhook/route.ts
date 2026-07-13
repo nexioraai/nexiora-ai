@@ -3,6 +3,7 @@ import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 import { getStripe } from '@/lib/stripe';
 import { decrementStock } from '@/lib/shop';
 import { fulfillCjOrder } from '@/lib/cj/fulfill';
+import { fulfillPodOrder } from '@/lib/suppliers/pod-fulfill';
 import { sendOrderConfirmationEmail } from '@/lib/email/sendOrderConfirmationEmail';
 
 /**
@@ -54,6 +55,12 @@ export async function POST(req: Request) {
             console.error('CJ fulfill error:', e);
           }
 
+          // POD fulfill (Printful/Printify) avec designs custom
+          try {
+            await fulfillPodOrder(order.id);
+          } catch (e) {
+            console.error('POD fulfill error:', e);
+          }
           // Décrément du stock uniquement pour les produits NON gérés par CJ.
           const { data: orderItems } = await supabase
             .from('shop_order_items')

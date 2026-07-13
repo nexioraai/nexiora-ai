@@ -254,11 +254,9 @@ export const printfulAdapter: SupplierAdapter = {
           items: [{
             variant_id: Number(order.supplier_product_id),
             quantity: order.quantity,
-            // POD : le fichier de design est requis.
-            // Pour l'instant, commande sans design = Printful la met en draft.
-            // Le marchand devra fournir le design via son dashboard Printful
-            // ou via un flux d'upload futur dans Nexiora.
-            files: [],
+            files: order.design_url
+              ? [{ type: 'default', url: order.design_url }]
+              : [],
           }],
         }),
       });
