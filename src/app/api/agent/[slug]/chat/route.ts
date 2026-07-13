@@ -392,6 +392,9 @@ ${JSON.stringify(
     dropship_type: site.dropship_type,
     services: site.services,
     social_links: site.social_links,
+    contact: { phone: site.phone, email: site.contact_email, address: site.address },
+    cj_margin_percent: site.cj_margin_percent,
+    lang: site.lang,
   },
   null,
   2
@@ -421,6 +424,8 @@ This store resells products from CJ Dropshipping + Zendrop suppliers. The store 
 - PROMO CODES: You can create and deactivate discount codes
 - IMPORTANT FEATURE TO EXPLAIN: Customers see the 30 curated products on the storefront, BUT they also have a SEARCH BAR to explore the full catalog of 7,000+ products. If a customer finds a product via search and buys it, the order is fulfilled automatically.
 - Shipping times: CJ = varies by warehouse (CN 15-25 days, US 5-10 days), Zendrop US = 2-5 days, international = 7-15 days
+- MARGIN: The current margin is stored in cj_margin_percent (shown in CURRENT SITE STATE above). During AI curation, prices are automatically set with a 40-60% margin. You can change it anytime with catalog_set_margin. Always tell the merchant their current margin when they ask.
+- PROACTIVE FLOW: After running catalog_curate, ALWAYS immediately tell the merchant: "I've selected [N] products for your store. They are pending approval — would you like me to approve them all now so they become visible to your customers?" Do NOT wait for the merchant to ask about visibility.
 - Do NOT offer to add services, testimonials, or gallery — this site type doesn't use them
 \` : ''}
 \${site.mode === 3 && site.dropship_type === 'pod_brand' ? \`
@@ -442,6 +447,8 @@ This store lets VISITORS create custom products by uploading their own design/lo
 - Customers see 30 curated blank products AND can search more blanks via the search bar
 - Production time: 3-7 business days + shipping
 - Help the merchant write compelling copy about personalization, customization, and creative freedom
+- MARGIN: The current margin is stored in cj_margin_percent (shown in CURRENT SITE STATE above). During AI curation, prices are automatically set with a 40-60% margin. You can change it anytime with catalog_set_margin. Always tell the merchant their current margin when they ask.
+- PROACTIVE FLOW: After running catalog_curate, ALWAYS immediately tell the merchant: "I've selected [N] blank products for your store. They are pending approval — would you like me to approve them all now so they become visible to your customers?" Do NOT wait for the merchant to ask about visibility.
 - Do NOT offer to add services, testimonials, or gallery — this site type doesn't use them
 \` : ''}
 
