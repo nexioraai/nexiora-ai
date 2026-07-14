@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
   // 1. Récupère la niche du site pour filtrer
   const { data: site } = await supabaseAdmin
     .from('sites')
-    .select('type, mode, cj_margin_percent')
+    .select('type, mode, cj_margin_percent, cj_round_mode')
     .eq('slug', slug)
     .single();
 
@@ -97,10 +97,19 @@ export async function GET(req: NextRequest) {
   const defaultPriority = ['US', 'DE', 'CN', 'TH'];
   const priority = country ? (warehousePriority[country] || defaultPriority) : null;
 
-  let sorted = (products || []).map((p: any) => ({
-    ...p,
-    price: Math.round(p.price * (1 + (site.cj_margin_percent || 100) / 100) * 100) / 100,
-  }));
+  const apply99 = (price: number, mode: string): number => {
+    const floorInt = Math.floor(price);
+    const lower = floorInt - 1 + 0.99;
+    const upper = floorInt + 0.99;
+    if (mode === 'up') return upper;
+    if (mode === 'down') return lower < 0 ? upper : lower;
+    return price;
+  };
+
+  let sorted = (products || []).map((p: any) => {
+    const marked = Math.round(p.price * (1 + (site.cj_margin_percent || 100) / 100) * 100) / 100;
+    return { ...p, price: apply99(marked, site.cj_round_mode || 'off') };
+  });
 
   if (priority) {
     sorted.sort((a: any, b: any) => {
