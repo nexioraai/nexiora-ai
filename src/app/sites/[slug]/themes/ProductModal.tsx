@@ -171,7 +171,7 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
             )}
 
             <AddToCartButton
-              id={'catalog-' + p.id}
+              id={String(p.id).startsWith('catalog-') ? p.id : 'catalog-' + p.id}
               name={p.name}
               priceNumber={p.price}
               currency="USD"
