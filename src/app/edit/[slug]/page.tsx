@@ -283,33 +283,21 @@ export default function EditPage() {
           {/* Margin control — visible for mode 3 reseller & pod_custom */}
           {site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom') && (
             <FieldSection label="Marge bénéficiaire (%)">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <input
-                  type="range"
-                  min={20}
-                  max={80}
-                  step={5}
+                  type="number"
+                  min={1}
                   value={site.cj_margin_percent || 50}
-                  onChange={(e) => updateField('cj_margin_percent', Number(e.target.value))}
-                  className="flex-1 accent-[#E07040] h-2 rounded-full"
+                  onChange={(e) => {
+                    const v = Math.max(1, Number(e.target.value));
+                    updateField('cj_margin_percent', v);
+                  }}
+                  className="w-24 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white text-center focus:outline-none focus:border-[#E07040] transition"
                 />
-                <div className="flex items-center gap-1 bg-black/30 border border-white/10 rounded-xl px-3 py-2">
-                  <input
-                    type="number"
-                    min={20}
-                    max={80}
-                    value={site.cj_margin_percent || 50}
-                    onChange={(e) => {
-                      const v = Math.min(80, Math.max(20, Number(e.target.value)));
-                      updateField('cj_margin_percent', v);
-                    }}
-                    className="w-12 bg-transparent text-white text-right focus:outline-none"
-                  />
-                  <span className="text-slate-400 text-sm">%</span>
-                </div>
+                <span className="text-slate-400 text-lg">%</span>
               </div>
               <p className="text-xs text-slate-500 mt-1">
-                Prix de vente = coût fournisseur ÷ (1 − marge). Ex : coût 10$ à 50% → vente 20$. Modifiable aussi via l'agent IA.
+                Prix de vente = coût fournisseur × (1 + marge/100). Ex : coût 10$ à 50% → vente 15$. Aucune limite — vous choisissez librement. Modifiable aussi via l'agent IA.
               </p>
             </FieldSection>
           )}
