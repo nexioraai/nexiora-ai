@@ -79,11 +79,12 @@ export async function POST(req: Request) {
       supplierGroups['cj'].push(...cjShopItems);
     }
 
-    // Credentials par fournisseur
+    // Credentials plateforme Nexiora — tous les produits transitent par le compte plateforme
     const creds: Record<string, Record<string, string>> = {
-      cj: { email: site.cj_email || '', apiKey: site.cj_api_key || '' },
-      printful: { printful_token: process.env.PRINTFUL_API_TOKEN || '', state_code: stateCode || '' },
+      cj: { email: process.env.CJ_EMAIL || '', apiKey: process.env.CJ_API_KEY || '' },
+      printful: { printful_token: process.env.PRINTFUL_TOKEN || '', state_code: stateCode || '' },
       printify: { printify_token: process.env.PRINTIFY_API_TOKEN || '', printify_shop_id: process.env.PRINTIFY_SHOP_ID || '' },
+      zendrop: {},
     };
 
     // Appeler calculateShipping pour chaque groupe
