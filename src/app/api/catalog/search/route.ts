@@ -29,7 +29,6 @@ export async function GET(req: NextRequest) {
     .from('sites')
     .select('type, mode, cj_margin_percent')
     .eq('slug', slug)
-    .eq('published', true)
     .single();
 
   if (!site) {
