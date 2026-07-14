@@ -280,6 +280,11 @@ export default function CatalogSearch({ slug, primary, lang = 'en', theme = 'edi
               <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 8px', color: tokens.text }}>
                 ${p.price.toFixed(2)}
               </p>
+              {p.shipping_days_min > 0 && (
+                <p style={{ fontSize: 11, color: tokens.textMuted, margin: 0 }}>
+                  {p.shipping_days_min}-{p.shipping_days_max} {t.shipping}
+                </p>
+              )}
               
 
             </div>
