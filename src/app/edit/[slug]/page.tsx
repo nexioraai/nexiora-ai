@@ -11,6 +11,7 @@ import ProductManager from '@/components/edit/ProductManager';
 import PaymentConnect from '@/components/edit/PaymentConnect';
 import CatalogSelections from '@/components/edit/CatalogSelections';
 import OrderManager from '@/components/edit/OrderManager';
+import FinanceDashboard from '@/components/edit/FinanceDashboard';
 import DashboardAlerts from '@/components/edit/DashboardAlerts';
 import HealthBadge from '@/components/edit/HealthBadge';
 import { supabase } from '@/lib/supabase';
@@ -563,6 +564,8 @@ export default function EditPage() {
         {site?.mode === 3 && site?.dropship_type === 'reseller' && <CatalogSelections slug={slug} />}
 
         {(site?.mode === 2 || site?.mode === 3) && <OrderManager slug={slug} />}
+
+        {(site?.mode === 2 || site?.mode === 3) && <FinanceDashboard slug={slug} />}
       </section>
 
       <Footer />

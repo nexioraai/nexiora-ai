@@ -175,6 +175,9 @@ export async function POST(req: Request) {
         payment_account_id: site.payment_account_id,
         payment_ref: orderId,
         estimated_delivery: estimatedDelivery,
+        supplier_cost: supplierCost,
+        nexiora_commission: nexioraCommission,
+        merchant_profit: amount - supplierCost - nexioraCommission,
       })
       .select('id')
       .single();
