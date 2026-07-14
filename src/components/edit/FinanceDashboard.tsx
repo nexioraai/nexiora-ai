@@ -46,6 +46,28 @@ export default function FinanceDashboard({ slug }: { slug: string }) {
             </button>
           ))}
         </div>
+        <button
+          onClick={() => {
+            if (!data) return;
+            const { summary: sm, chart: ch } = data;
+            const lines = [
+              'Date,Revenus,Cout Fournisseur,Commission Nexiora,Profit Net,Commandes',
+              ...ch.map((r: any) => `${r.date},${r.revenue.toFixed(2)},${(r.revenue - r.profit - (r.revenue * 0.05)).toFixed(2)},${(r.revenue * 0.05).toFixed(2)},${r.profit.toFixed(2)},${r.orders}`),
+              '',
+              `TOTAL,${sm.total_revenue.toFixed(2)},${sm.total_supplier_cost.toFixed(2)},${sm.total_commission.toFixed(2)},${sm.total_profit.toFixed(2)},${sm.order_count}`,
+            ];
+            const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `finances-${slug}-${period}j.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+          }}
+          className="px-3 py-1 rounded-lg text-xs font-medium text-slate-400 border border-white/10 hover:border-[#E07040] hover:text-[#E07040] transition"
+        >
+          Export CSV
+        </button>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
