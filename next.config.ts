@@ -73,6 +73,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'files.cdn.printful.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'static.cdn.printful.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'file.zendrop.com',
+      },
     ],
   },
   async headers() {
