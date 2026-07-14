@@ -23,6 +23,10 @@
     {
       "path": "/api/cron/catalog-suggest",
       "schedule": "0 6 * * 0"
+    },
+    {
+      "path": "/api/cron/instant-payout",
+      "schedule": "0 */4 * * *"
     }
   ]
 }
