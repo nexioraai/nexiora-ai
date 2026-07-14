@@ -147,17 +147,18 @@ export default function OnboardingChat() {
               ].map(({ label, mode }) => (
                 <button
                   key={label}
+                  disabled={mode === 3}
                   onClick={() => {
                     if (mode === 3) {
-                      setShowDropshipPicker(true);
+                      return;
                     } else {
                       setSiteMode(mode);
                       sendText(label);
                     }
                   }}
-                  className="px-5 py-2.5 rounded-full bg-white/[0.04] border border-white/12 text-sm text-slate-200 hover:border-[#FF5500] hover:text-white hover:bg-white/[0.07] transition"
+                  className={`px-5 py-2.5 rounded-full border text-sm transition ${mode === 3 ? 'bg-white/[0.02] border-white/5 text-slate-500 cursor-not-allowed' : 'bg-white/[0.04] border-white/12 text-slate-200 hover:border-[#FF5500] hover:text-white hover:bg-white/[0.07]'}`}
                 >
-                  {label}
+                  {mode === 3 ? `${label} (bientôt)` : label}
                 </button>
               ))}
               </>
