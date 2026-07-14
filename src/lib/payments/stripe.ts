@@ -6,7 +6,7 @@ import type { PaymentProvider } from './types';
 export const stripeProvider: PaymentProvider = {
   async createOnboarding(siteSlug, returnUrl) {
     const stripe = getStripe();
-    const account = await stripe.accounts.create({ type: 'standard' });
+    const account = await stripe.accounts.create({ type: 'express' });
     const link = await stripe.accountLinks.create({
       account: account.id,
       refresh_url: returnUrl,
@@ -16,7 +16,7 @@ export const stripeProvider: PaymentProvider = {
     return { url: link.url, accountId: account.id };
   },
 
-  async createCheckout(accountId, siteSlug, items, successUrl, cancelUrl, shippingFlat) {
+  async createCheckout(accountId, siteSlug, items, successUrl, cancelUrl, shippingFlat, applicationFeeAmount?: number) {
     const stripe = getStripe();
 
     const lineItems = items.map((i) => ({
@@ -51,6 +51,10 @@ export const stripeProvider: PaymentProvider = {
       cancel_url: cancelUrl,
       shipping_address_collection: { allowed_countries: [...STRIPE_SHIPPING_COUNTRIES] },
       ...(shippingOptions ? { shipping_options: shippingOptions } : {}),
+      payment_intent_data: {
+        transfer_data: { destination: accountId },
+        ...(applicationFeeAmount ? { application_fee_amount: Math.round(applicationFeeAmount * 100) } : {}),
+      },
     };
 
     // Tente avec calcul automatique des taxes (Stripe Tax côté compte connecté).
@@ -62,11 +66,10 @@ export const stripeProvider: PaymentProvider = {
           automatic_tax: { enabled: true },
           billing_address_collection: 'required',
         },
-        { stripeAccount: accountId }
       );
       return { url: session.url ?? '', orderId: session.id };
     } catch (e: any) {
-      const session = await stripe.checkout.sessions.create(baseParams, { stripeAccount: accountId });
+      const session = await stripe.checkout.sessions.create(baseParams);
       return { url: session.url ?? '', orderId: session.id };
     }
   },

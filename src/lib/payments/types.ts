@@ -27,7 +27,8 @@ export interface PaymentProvider {
     items: CartItem[],
     successUrl: string,
     cancelUrl: string,
-    shippingFlat: number
+    shippingFlat: number,
+    applicationFeeAmount?: number
   ): Promise<CheckoutResult>;
   getStatus(accountId: string): Promise<{ ready: boolean }>;
 }

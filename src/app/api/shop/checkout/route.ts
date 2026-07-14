@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
     const { data: site, error: siteError } = await supabaseAdmin
       .from('sites')
-      .select('id, payment_provider, payment_account_id, shipping_flat, cj_email, cj_api_key')
+      .select('id, payment_provider, payment_account_id, shipping_flat')
       .eq('slug', slug)
       .single();
     if (siteError || !site) return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
           printify: printifyAdapter,
         };
         const creds: Record<string, Record<string, string>> = {
-          cj: { email: site.cj_email || '', apiKey: site.cj_api_key || '' },
+          cj: { email: process.env.CJ_EMAIL || '', apiKey: process.env.CJ_API_KEY || '' },
           printful: { printful_token: process.env.PRINTFUL_API_TOKEN || '', state_code: '' },
           printify: { printify_token: process.env.PRINTIFY_API_TOKEN || '', printify_shop_id: process.env.PRINTIFY_SHOP_ID || '' },
         };
@@ -114,6 +114,44 @@ export async function POST(req: Request) {
       }
     }
 
+    // Calculate supplier cost for application_fee
+    const NEXIORA_COMMISSION_PERCENT = 5;
+    let supplierCost = 0;
+    // Catalog items: look up cost from catalog_products
+    const catalogCartItems = items.filter((i) => i.id?.startsWith('catalog-'));
+    if (catalogCartItems.length > 0) {
+      for (const item of catalogCartItems) {
+        const parts = item.id.replace('catalog-', '').split('-');
+        const supplierId = parts[0];
+        const supplierProductId = parts.slice(1).join('-');
+        if (supplierId && supplierProductId) {
+          const { data: cp } = await supabaseAdmin
+            .from('catalog_products')
+            .select('price')
+            .eq('supplier_id', supplierId)
+            .eq('supplier_product_id', supplierProductId)
+            .maybeSingle();
+          if (cp?.price) supplierCost += Number(cp.price) * item.quantity;
+        }
+      }
+    }
+    // Shop items: look up cost from shop_products
+    const shopCartItems = items.filter((i) => !i.id?.startsWith('catalog-'));
+    if (shopCartItems.length > 0) {
+      const { data: shopProds } = await supabaseAdmin
+        .from('shop_products')
+        .select('id, cost_price')
+        .in('id', shopCartItems.map((i) => i.id));
+      for (const sp of (shopProds || [])) {
+        const item = shopCartItems.find((i) => i.id === sp.id);
+        if (item && sp.cost_price) supplierCost += Number(sp.cost_price) * item.quantity;
+      }
+    }
+
+    const totalAmount = items.reduce((sum, i) => sum + i.priceNumber * i.quantity, 0);
+    const nexioraCommission = totalAmount * (NEXIORA_COMMISSION_PERCENT / 100);
+    const applicationFeeAmount = supplierCost + nexioraCommission;
+
     const provider = getProvider(site.payment_provider);
     const { url, orderId } = await provider.createCheckout(
       site.payment_account_id,
@@ -121,10 +159,11 @@ export async function POST(req: Request) {
       items,
       successUrl,
       cancelUrl,
-      shippingAmount
+      shippingAmount,
+      applicationFeeAmount
     );
 
-    const amount = items.reduce((sum, i) => sum + i.priceNumber * i.quantity, 0);
+    const amount = totalAmount;
     const { data: order } = await supabaseAdmin
       .from('shop_orders')
       .insert({
