@@ -302,9 +302,9 @@ BUSINESS MODE CLASSIFICATION (CRITICAL — you MUST return the correct integer m
 - mode = 1 (SHOWCASE / VITRINE): restaurants, cafés, bars, food trucks, bakeries, hair salons, barbers, spas, gyms, clinics, dentists, doctors, lawyers, accountants, real estate agents, plumbers, electricians, mechanics, artisans, photographers, event planners, coaches, consultants, schools, any local service, any perishable food business, any made-to-order craft. NEVER anything else.
 - mode = 2 (LOCAL BOUTIQUE with own inventory): physical boutique selling THEIR OWN stock — local clothing store, bookstore, jewelry maker, florist, artisan shop, brand with warehouse. The owner physically holds inventory.
 - mode = 3 (DROPSHIPPING / PRINT-ON-DEMAND): Online store powered by supplier fulfillment. Three sub-types exist (indicated by the "Dropship type" field above):
-  * "reseller" — Resale of manufactured goods sourced from CJ Dropshipping + Zendrop. Products: gadgets, accessories, phone cases, home decor, fitness gear, beauty tools, small electronics. The store auto-curates 30 trending products and customers can search the full 7,000+ product catalog.
-  * "pod_brand" — Merchant's OWN brand: they upload their original designs/logos which are printed on blank products (t-shirts, mugs, hoodies, etc.) via Printful + Printify. The store displays the merchant's designed mockups as products.
-  * "pod_custom" — Visitor customization: the store displays blank products (Printful + Printify), and each VISITOR uploads their own design/logo/image at purchase time. The design is printed on the chosen product.
+  * "reseller" — Resale of trending manufactured goods. Products: gadgets, accessories, phone cases, home decor, fitness gear, beauty tools, small electronics. The store auto-curates 30 trending products and customers can search the full 7,000+ product catalog. Fulfillment is 100% automated by Nexiora.
+  * "pod_brand" — Merchant's OWN brand: they upload their original designs/logos which are printed on premium blank products (t-shirts, mugs, hoodies, etc.). The store displays the merchant's designed mockups as products. Production and fulfillment are 100% automated by Nexiora.
+  * "pod_custom" — Visitor customization: the store displays blank products, and each VISITOR uploads their own design/logo/image at purchase time. The design is printed on the chosen product. Production and fulfillment are 100% automated by Nexiora.
   NEVER assign mode 3 to perishables, food, services, made-to-order, or anything requiring local expertise.
 
 STRICT RULES:
@@ -327,7 +327,7 @@ IF dropship_type = "reseller":
 - heroTitle/heroSubtitle: emphasize trending products, unbeatable prices, worldwide shipping, huge selection. Tone = bold e-commerce energy.
 - slogan: about smart shopping, best deals, curated trending products.
 - cta: "Discover our products" / "Découvrir nos produits" / equivalent in site language. Action = browse the shop.
-- about: describe a modern online store curating the best trending products at competitive prices, shipped worldwide.
+- about: describe a modern online store curating the best trending products at competitive prices, shipped worldwide. All orders are fulfilled automatically — the merchant focuses on their brand while Nexiora handles everything.
 - faq: 4 questions about shipping times (7-15 business days international), return policy, secure payment (Stripe), product quality and sourcing.
 - whyus: 3 trust signals — competitive pricing, fast worldwide shipping, secure payment & buyer protection.
 - IMPORTANT: Customers see 30 curated trending products on the storefront AND can search the full 7,000+ product catalog via the search bar to find anything they want.
@@ -336,7 +336,7 @@ IF dropship_type = "pod_brand":
 - heroTitle/heroSubtitle: emphasize original designs, unique brand, exclusive creations, wearable art. Tone = creative brand identity.
 - slogan: about unique designs, original creations, the merchant's brand story.
 - cta: "Explore the collection" / "Voir la collection" / equivalent in site language. Action = browse the merchant's designs.
-- about: describe a brand that creates original designs printed on premium products (apparel, accessories, home items). Each product is made-to-order with professional printing.
+- about: describe a brand that creates original designs printed on premium products (apparel, accessories, home items). Each product is made-to-order with professional printing. All production and shipping are handled automatically.
 - faq: 4 questions about print quality & durability, available product types (t-shirts, hoodies, mugs, posters…), production time (3-7 business days + shipping), sizing & materials.
 - whyus: 3 brand signals — exclusive original designs, premium print-on-demand quality, made-to-order (no waste/overstock).
 - IMPORTANT: The merchant uploads their own designs and logo in the editor dashboard. Products displayed are the merchant's designed mockups — visitors do NOT customize anything, they buy the merchant's creations.
@@ -345,7 +345,7 @@ IF dropship_type = "pod_custom":
 - heroTitle/heroSubtitle: emphasize personalization, "create YOUR unique product", upload your logo/design/image, make it yours. Tone = empowering, creative, fun.
 - slogan: about self-expression, custom products, "your design, your product".
 - cta: "Create my product" / "Créer mon produit" / equivalent in site language. Action = start customizing.
-- about: describe a platform where anyone can create custom products by uploading their own design, logo, name, or image. Professional printing on premium blanks (t-shirts, hoodies, mugs, phone cases, etc.).
+- about: describe a platform where anyone can create custom products by uploading their own design, logo, name, or image. Professional printing on premium blanks (t-shirts, hoodies, mugs, phone cases, etc.). All production and shipping are handled automatically.
 - faq: 4 questions about accepted file formats (PNG, JPG, SVG, max 10MB), print areas (front placement), production time (3-7 business days + shipping), how the customization works (choose product → upload design → preview → order).
 - whyus: 3 customization signals — total creative freedom (upload any design), professional print quality, preview before ordering.
 - IMPORTANT: Customers see 30 curated blank products AND can search more blanks via the search bar. On each product, a design uploader lets the visitor upload their own image/logo/design BEFORE adding to cart. The design is printed on the product after purchase.
