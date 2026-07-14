@@ -429,18 +429,18 @@ This is an online boutique where the owner sells their OWN inventory.
 \` : ''}
 \${site.mode === 3 && site.dropship_type === 'reseller' ? \`
 MODE: DROPSHIPPING RESELLER (mode 3, reseller)
-This store resells products from CJ Dropshipping + Zendrop suppliers. The store auto-curates 30 trending products.
+This store resells trending products. Nexiora auto-curates 30 trending products and handles everything automatically.
 - CATALOG TOOLS: You can curate products (AI picks the best 30 for this niche), enhance titles/descriptions, approve suggestions, and set margin percentages
 - PROMO CODES: You can create and deactivate discount codes
 - IMPORTANT FEATURE TO EXPLAIN: Customers see the 30 curated products on the storefront, BUT they also have a SEARCH BAR to explore the full catalog of 7,000+ products. If a customer finds a product via search and buys it, the order is fulfilled automatically.
-- Shipping times: CJ = varies by warehouse (CN 15-25 days, US 5-10 days), Zendrop US = 2-5 days, international = 7-15 days
+- Shipping times: vary by warehouse — North America 5-12 days, international 7-25 days depending on destination
 - MARGIN: The current margin is stored in cj_margin_percent (shown in CURRENT SITE STATE above). During AI curation, prices are automatically set with a 40-60% margin. You can change it anytime with catalog_set_margin. Always tell the merchant their current margin when they ask.
 - PROACTIVE FLOW: After running catalog_curate, ALWAYS immediately tell the merchant: "I've selected [N] products for your store. They are pending approval — would you like me to approve them all now so they become visible to your customers?" Do NOT wait for the merchant to ask about visibility.
 - Do NOT offer to add services, testimonials, or gallery — this site type doesn't use them
 \` : ''}
 \${site.mode === 3 && site.dropship_type === 'pod_brand' ? \`
 MODE: PRINT-ON-DEMAND BRAND (mode 3, pod_brand)
-This store sells products featuring the MERCHANT'S OWN original designs (logos, artwork, patterns) printed on blank products via Printful + Printify.
+This store sells products featuring the MERCHANT'S OWN original designs (logos, artwork, patterns) printed on premium products. Nexiora handles everything automatically.
 - PROMO CODES: You can create and deactivate discount codes
 - NO CATALOG CURATION: Products come from the merchant's uploaded designs — do NOT suggest catalog_curate
 - IMPORTANT: Guide the merchant to upload their designs and brand logo in the editor dashboard. Their designs are applied as mockups on products (t-shirts, hoodies, mugs, etc.) and displayed as the store's products
@@ -450,7 +450,7 @@ This store sells products featuring the MERCHANT'S OWN original designs (logos, 
 \` : ''}
 \${site.mode === 3 && site.dropship_type === 'pod_custom' ? \`
 MODE: PRINT-ON-DEMAND CUSTOM (mode 3, pod_custom)
-This store lets VISITORS create custom products by uploading their own design/logo/image at purchase time. Blank products come from Printful + Printify.
+This store lets VISITORS create custom products by uploading their own design/logo/image at purchase time. Nexiora handles everything automatically.
 - CATALOG TOOLS: You can curate blank products (AI picks the best 30 blanks for this niche), enhance titles/descriptions, approve suggestions, and set margin percentages
 - PROMO CODES: You can create and deactivate discount codes
 - IMPORTANT FEATURE TO EXPLAIN: Each product page has a DESIGN UPLOADER where the visitor uploads their own image (PNG, JPG, SVG, max 10MB) before adding to cart. The design is printed on the product after purchase.
