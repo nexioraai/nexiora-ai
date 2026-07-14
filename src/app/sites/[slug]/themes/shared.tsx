@@ -97,7 +97,7 @@ rating: number
 // ---------- Supabase ----------
 
 export const PUBLIC_COLS =
-'id,slug,name,slogan,type,mode,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image,lang,faq,whyus,mission,vision,geo_lat,geo_lng,area_served,price_range,hidden_sections,section_label,sections,created_at,dropship_type,pod_designs'
+'id,slug,name,slogan,type,mode,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image,lang,faq,whyus,mission,vision,geo_lat,geo_lng,area_served,price_range,hidden_sections,section_label,sections,created_at,dropship_type,pod_designs,cj_margin_percent,cj_round_mode'
 
 export async function fetchSite(
 slug: string,
@@ -140,6 +140,20 @@ await loadCatalogSelections(data as any)
 return data as Site
 }
 
+function apply99(price: number, mode: string): number {
+  const floorInt = Math.floor(price);
+  const lower = floorInt - 1 + 0.99;
+  const upper = floorInt + 0.99;
+  if (mode === 'up') return upper;
+  if (mode === 'down') return lower < 0 ? upper : lower;
+  return price;
+}
+
+function calcSellPrice(costPrice: number, marginPercent: number, roundMode: string): number {
+  const marked = Math.round(costPrice * (1 + marginPercent / 100) * 100) / 100;
+  return apply99(marked, roundMode);
+}
+
 async function loadCatalogSelections(data: any) {
 if (data.mode === 3 && (data.dropship_type === 'reseller' || data.dropship_type === 'pod_custom')) {
 const { data: catSels } = await supabase
@@ -149,9 +163,12 @@ const { data: catSels } = await supabase
 .eq('merchant_approved', true)
 .order('sort_order', { ascending: true })
 if (catSels && catSels.length > 0) {
+const margin = data.cj_margin_percent ?? 100;
+const roundMode = data.cj_round_mode || 'off';
 const catalogProducts = catSels.map((s: any) => {
 const cp = s.catalog_products
-const pr = s.sell_price ? Number(s.sell_price) : (cp.price ? Number(cp.price) : 0)
+const costPrice = cp.price ? Number(cp.price) : 0;
+const pr = costPrice > 0 ? calcSellPrice(costPrice, margin, roundMode) : (s.sell_price ? Number(s.sell_price) : 0);
 const cur = cp.currency || 'CAD'
 return {
 id: `catalog-${cp.supplier_id}-${cp.supplier_product_id}`,
