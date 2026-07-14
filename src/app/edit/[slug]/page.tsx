@@ -107,6 +107,7 @@ export default function EditPage() {
         hero_image: site.hero_image,
         theme: site.theme,
         cj_margin_percent: site.cj_margin_percent,
+        cj_round_mode: site.cj_round_mode,
         pod_designs: podDesigns.length > 0
           ? podDesigns.map((d: any, i: number) => i === 0 ? { ...d, selected_products: selectedProducts } : d)
           : podDesigns,
@@ -298,6 +299,34 @@ export default function EditPage() {
               </div>
               <p className="text-xs text-slate-500 mt-1">
                 Prix de vente = coût fournisseur × (1 + marge/100). Ex : coût 10$ à 50% → vente 15$. Aucune limite — vous choisissez librement. Modifiable aussi via l'agent IA.
+              </p>
+            </FieldSection>
+          )}
+
+          {/* Round .99 — visible for mode 3 reseller & pod_custom */}
+          {site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom') && (
+            <FieldSection label="Arrondi psychologique (.99)">
+              <div className="flex gap-2 flex-wrap">
+                {[
+                  { value: 'off', label: 'Désactivé' },
+                  { value: 'down', label: ',99 inférieur' },
+                  { value: 'up', label: ',99 supérieur' },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => updateField('cj_round_mode', opt.value)}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium border transition ${
+                      (site.cj_round_mode || 'off') === opt.value
+                        ? 'bg-[#E07040]/20 border-[#E07040] text-[#E07040]'
+                        : 'border-white/10 text-slate-400 hover:border-white/20'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                « Inférieur » : 18,40 → 17,99. « Supérieur » : 18,40 → 18,99. S'applique au catalogue et à la recherche.
               </p>
             </FieldSection>
           )}
