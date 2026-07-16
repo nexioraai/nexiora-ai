@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { Package, Truck, CheckCircle, XCircle } from 'lucide-react';
 
 const ACCENT = '#E07040';
 
@@ -23,17 +24,31 @@ async function authHeaders() {
   return { Authorization: `Bearer ${data.session?.access_token ?? ''}` };
 }
 
+const TABS = [
+  { key: 'pending,paid', label: 'En cours', icon: 'Package', color: '#fbbf24' },
+  { key: 'shipped', label: 'Expédiées', icon: 'Truck', color: '#60a5fa' },
+  { key: 'delivered', label: 'Livrées', icon: 'CheckCircle', color: '#34d399' },
+  { key: 'canceled', label: 'Annulées', icon: 'XCircle', color: '#9ca3af' },
+] as const;
+
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  pending: { label: 'En attente', color: '#fbbf24' },
+  pending: { label: 'En attente de paiement', color: '#fbbf24' },
   paid: { label: 'Payée', color: '#34d399' },
   shipped: { label: 'Expédiée', color: '#60a5fa' },
+  delivered: { label: 'Livrée', color: '#10b981' },
   canceled: { label: 'Annulée', color: '#9ca3af' },
 };
 
+const ICONS: Record<string, typeof Package> = { Package, Truck, CheckCircle, XCircle };
+
 function formatAddress(addr: any): string {
-  if (!addr) return '—';
+  if (!addr) return '\u2014';
   const parts = [addr.line1, addr.line2, addr.postal_code, addr.city, addr.state, addr.country].filter(Boolean);
   return parts.join(', ');
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 export default function OrderManager({ slug }: { slug: string }) {
@@ -42,6 +57,7 @@ export default function OrderManager({ slug }: { slug: string }) {
   const [error, setError] = useState('');
   const [tracking, setTracking] = useState<Record<string, string>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>(TABS[0].key);
 
   const load = async () => {
     try {
@@ -79,20 +95,53 @@ export default function OrderManager({ slug }: { slug: string }) {
     }
   };
 
+  const statuses = activeTab.split(',');
+  const filtered = orders.filter((o) => statuses.includes(o.status));
+
   return (
     <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm mt-8">
-      <h2 className="text-xl font-bold mb-2">Commandes</h2>
-      <p className="text-sm text-white/50 mb-5">
-        Les commandes payées de ta boutique. Prépare l'envoi, puis marque comme expédiée.
-      </p>
+      <h2 className="text-xl font-bold mb-5">Commandes</h2>
 
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+        {TABS.map((tab) => {
+          const Icon = ICONS[tab.icon];
+          const count = orders.filter((o) => tab.key.split(',').includes(o.status)).length;
+          const active = activeTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
+                active
+                  ? 'border-2'
+                  : 'border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20'
+              }`}
+              style={active ? { borderColor: tab.color, color: tab.color, background: `${tab.color}15` } : {}}
+            >
+              <Icon className="w-4 h-4" />
+              {tab.label}
+              {count > 0 && (
+                <span
+                  className="text-xs px-1.5 py-0.5 rounded-full font-bold"
+                  style={active ? { background: `${tab.color}30`, color: tab.color } : { background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}
+                >
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Orders */}
       {loading ? (
-        <p className="text-sm text-white/40">Chargement…</p>
-      ) : orders.length === 0 ? (
-        <p className="text-sm text-white/40">Aucune commande pour l'instant.</p>
+        <p className="text-sm text-white/40">Chargement\u2026</p>
+      ) : filtered.length === 0 ? (
+        <p className="text-sm text-white/40">Aucune commande dans cette section.</p>
       ) : (
         <div className="space-y-4">
-          {orders.map((o) => {
+          {filtered.map((o) => {
             const st = STATUS_LABELS[o.status] || { label: o.status, color: '#9ca3af' };
             return (
               <div key={o.id} className="border border-white/10 rounded-2xl p-4">
@@ -100,6 +149,7 @@ export default function OrderManager({ slug }: { slug: string }) {
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full" style={{ background: st.color }} />
                     <span className="text-sm font-semibold" style={{ color: st.color }}>{st.label}</span>
+                    <span className="text-xs text-white/30">{formatDate(o.created_at)}</span>
                   </div>
                   <span className="text-sm font-bold text-white">{o.total.toFixed(2)} {o.currency}</span>
                 </div>
@@ -107,21 +157,21 @@ export default function OrderManager({ slug }: { slug: string }) {
                 <div className="text-sm text-white/70 space-y-1 mb-3">
                   {o.shop_order_items.map((it, i) => (
                     <div key={i} className="flex justify-between">
-                      <span>{it.quantity} × {it.product_name}</span>
+                      <span>{it.quantity} \u00d7 {it.product_name}</span>
                       <span className="text-white/40">{(it.unit_price * it.quantity).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
 
                 <div className="text-xs text-white/50 space-y-0.5 mb-3">
-                  <p><span className="text-white/30">Client :</span> {o.customer_name || '—'} {o.customer_email ? `(${o.customer_email})` : ''}</p>
+                  <p><span className="text-white/30">Client :</span> {o.customer_name || '\u2014'} {o.customer_email ? `(${o.customer_email})` : ''}</p>
                   <p><span className="text-white/30">Livraison :</span> {formatAddress(o.shipping_address)}</p>
                 </div>
 
                 {o.status === 'paid' && (
                   <div className="flex items-center gap-2 pt-3 border-t border-white/10">
                     <input
-                      placeholder="N° de suivi (optionnel)"
+                      placeholder="N\u00b0 de suivi (optionnel)"
                       value={tracking[o.id] || ''}
                       onChange={(e) => setTracking({ ...tracking, [o.id]: e.target.value })}
                       className="flex-1 bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#E07040] transition"
@@ -132,12 +182,12 @@ export default function OrderManager({ slug }: { slug: string }) {
                       className="px-4 py-2 rounded-xl text-sm font-semibold transition disabled:opacity-40 whitespace-nowrap"
                       style={{ background: `${ACCENT}1a`, color: ACCENT, border: `1px solid ${ACCENT}33` }}
                     >
-                      {busyId === o.id ? '…' : 'Marquer expédiée'}
+                      {busyId === o.id ? '\u2026' : 'Marquer expédiée'}
                     </button>
                   </div>
                 )}
 
-                {o.status === 'shipped' && o.tracking_number && (
+                {o.tracking_number && (
                   <p className="text-xs text-white/50 pt-3 border-t border-white/10">
                     <span className="text-white/30">Suivi :</span> {o.tracking_number}
                   </p>
