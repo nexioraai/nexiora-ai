@@ -314,6 +314,20 @@ STRICT RULES:
 - If the user explicitly says "dropshipping" or "resell imported products" → mode 3.
 - When in doubt → mode 1 (safer default).
 
+BOUTIQUE CLASSIQUE (mode 2) SPECIFIC RULES:
+- pages MUST be ["Home", "About", "Shop", "Contact"] — the Shop displays products the merchant adds manually in their dashboard. NO supplier catalog, NO search bar for external products, NO automated product curation.
+- sections: 1-2 sections showcasing the type of products this boutique sells (e.g. "Nos Collections", "Nos Créations"). Items are EXAMPLES to inspire the merchant — they will replace them with their real products. Each item has title, description, price, imageQuery as usual.
+- products: return an EMPTY array [] — the merchant adds their own products manually after site generation.
+- testimonials: 3 realistic testimonials (like mode 1).
+- gallery: generate gallery images matching the boutique's aesthetic.
+- heroTitle/heroSubtitle: emphasize the boutique's unique identity, curated selection, local/artisanal quality. Tone = authentic, inviting, personal.
+- slogan: about the boutique's identity, craftsmanship, or curated taste.
+- cta: "Discover our shop" / "Découvrir la boutique" / equivalent in site language. Action = browse the shop.
+- about: describe a local boutique with its own inventory, personal curation, and unique identity. The owner selects and manages their own products. NEVER mention suppliers, dropshipping, automated fulfillment, or Nexiora handling anything.
+- faq: 4 questions about shipping (handled by the merchant), return/exchange policy (merchant's own policy), secure payment (Stripe — the merchant's own Stripe account), and product availability (real physical inventory).
+- whyus: 3 trust signals — unique/curated selection, personal customer service, secure payment.
+- CRITICAL: Mode 2 is a self-managed boutique. The merchant connects their OWN Stripe account via Stripe Connect. Payments go DIRECTLY to the merchant. There is NO platform commission, NO automated fulfillment, NO supplier integration. The merchant handles their own stock, shipping, and customer service. NEVER mention Nexiora, suppliers, or automation in any generated text.
+
 DROPSHIPPING (mode 3) SPECIFIC RULES — ADAPT BY DROPSHIP TYPE:
 
 COMMON TO ALL MODE 3 (reseller, pod_brand, pod_custom):
