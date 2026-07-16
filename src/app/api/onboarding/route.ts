@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { supabase as supabaseAnon } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -72,6 +73,24 @@ export async function POST(req: Request) {
     if (authError || !authData.user || !authData.user.email) {
       return NextResponse.json({ error: 'Unauthorized: invalid token' }, { status: 401 });
     }
+
+    // ============ FREEMIUM LIMIT CHECK ============
+    const UNLIMITED_EMAILS = ['issayamiyoussouf@gmail.com'];
+    const FREE_LIMIT = 3;
+    if (!UNLIMITED_EMAILS.includes(authData.user.email!)) {
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('generation_count')
+        .eq('id', authData.user.id)
+        .maybeSingle();
+      if ((profile?.generation_count ?? 0) >= FREE_LIMIT) {
+        return NextResponse.json(
+          { error: "Vous avez atteint la limite de la version gratuite (3 sites). Passez à l'abonnement pour en créer davantage.", limitReached: true },
+          { status: 402 }
+        );
+      }
+    }
+    // ===============================================
 
     const body = await req.json();
     const rawHistory = Array.isArray(body.history) ? body.history : [];
