@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/lib/translations';
 import {
   Home, LayoutGrid, Settings, Globe, BarChart3,
-  Database, MapPin, Menu, X, Zap, Megaphone,
+  Database, MapPin, Menu, X, Zap, Megaphone, Shield,
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -14,8 +14,12 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
 
   useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user?.email) setUserEmail(data.user.email);
+    });
   }, []);
 
   // Ferme le panneau mobile quand on change de page
@@ -75,6 +79,15 @@ export default function Sidebar() {
       </nav>
 
       <div className="mt-auto pt-4 border-t border-white/8">
+        {userEmail === 'issayamiyoussouf@gmail.com' && (
+          <Link href="/admin"
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-1 ${
+              isActive('/admin') ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'
+            }`}>
+            <Shield className="w-[18px] h-[18px]" />
+            Admin
+          </Link>
+        )}
         <Link href="/parametres"
           className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-1 ${
             isActive('/parametres') ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'

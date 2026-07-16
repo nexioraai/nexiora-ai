@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Users, Globe, ShoppingCart, DollarSign, Monitor, Store, Truck } from "lucide-react";
+import Sidebar from "@/components/Sidebar";
 
 interface CronRun {
   id: string;
@@ -66,7 +67,9 @@ export default function AdminDashboard() {
   const THRESHOLD = 45000;
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white p-6 md:p-10">
+    <div className="min-h-screen nexiora-bg text-white flex">
+      <Sidebar />
+      <main className="flex-1 min-w-0 px-6 lg:pl-40 lg:pr-12 pt-24 lg:pt-10 pb-10">
       <h1 className="text-3xl font-bold mb-8">Nexiora Admin</h1>
 
       {/* Overview Cards */}
@@ -78,7 +81,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Revenue detail */}
-      <div className="bg-neutral-900 rounded-2xl border border-neutral-800 p-6 mb-10">
+      <div className="bg-white/[0.03] border border-white/10 rounded-2xl border border-white/10 p-6 mb-10">
         <h2 className="text-lg font-semibold mb-4">D\u00e9tail revenus</h2>
         <div className="grid grid-cols-3 gap-4">
           <MiniCard label="Ventes totales" value={`$${fmt(stats.revenue.total)}`} />
@@ -98,16 +101,16 @@ export default function AdminDashboard() {
           const published = data?.published || 0;
           const sites = data?.sites || [];
           return (
-            <div key={key} className="bg-neutral-900 rounded-2xl border border-neutral-800 p-6">
+            <div key={key} className="bg-white/[0.03] border border-white/10 rounded-2xl border border-white/10 p-6">
               <div className="flex items-center gap-3 mb-4">
                 <Icon className="w-5 h-5 text-[#E07040]" />
                 <h3 className="text-lg font-semibold">{meta.label}</h3>
-                <span className="text-sm text-neutral-400 ml-auto">{total} site{total > 1 ? "s" : ""} \u2014 {published} publi\u00e9{published > 1 ? "s" : ""}</span>
+                <span className="text-sm text-white/50 ml-auto">{total} site{total > 1 ? "s" : ""} \u2014 {published} publi\u00e9{published > 1 ? "s" : ""}</span>
               </div>
               {sites.length > 0 ? (
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-neutral-500 border-b border-neutral-800">
+                    <tr className="text-left text-white/40 border-b border-white/10">
                       <th className="pb-2 pr-4">Nom</th>
                       <th className="pb-2 pr-4">Propri\u00e9taire</th>
                       <th className="pb-2 pr-4">Cr\u00e9\u00e9 le</th>
@@ -116,12 +119,12 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody>
                     {sites.map((s: SiteInfo) => (
-                      <tr key={s.slug} className="border-b border-neutral-800/50">
+                      <tr key={s.slug} className="border-b border-white/10/50">
                         <td className="py-2 pr-4 font-medium">{s.name}</td>
-                        <td className="py-2 pr-4 text-neutral-400 text-xs">{s.owner_email}</td>
-                        <td className="py-2 pr-4 text-neutral-400 text-xs">{new Date(s.created_at).toLocaleDateString("fr-CA")}</td>
+                        <td className="py-2 pr-4 text-white/50 text-xs">{s.owner_email}</td>
+                        <td className="py-2 pr-4 text-white/50 text-xs">{new Date(s.created_at).toLocaleDateString("fr-CA")}</td>
                         <td className="py-2">
-                          <span className={`px-2 py-0.5 rounded text-xs ${s.published ? "bg-emerald-900 text-emerald-300" : "bg-neutral-800 text-neutral-400"}`}>
+                          <span className={`px-2 py-0.5 rounded text-xs ${s.published ? "bg-emerald-900 text-emerald-300" : "bg-neutral-800 text-white/50"}`}>
                             {s.published ? "En ligne" : "Brouillon"}
                           </span>
                         </td>
@@ -130,7 +133,7 @@ export default function AdminDashboard() {
                   </tbody>
                 </table>
               ) : (
-                <p className="text-sm text-neutral-500">Aucun site dans cette cat\u00e9gorie.</p>
+                <p className="text-sm text-white/40">Aucun site dans cette cat\u00e9gorie.</p>
               )}
             </div>
           );
@@ -142,7 +145,7 @@ export default function AdminDashboard() {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-neutral-400 border-b border-neutral-800">
+            <tr className="text-left text-white/50 border-b border-white/10">
               <th className="pb-2 pr-4">Cron</th>
               <th className="pb-2 pr-4">Date</th>
               <th className="pb-2 pr-4">Dur\u00e9e</th>
@@ -156,9 +159,9 @@ export default function AdminDashboard() {
               const duration = run.duration_ms != null ? (run.duration_ms / 1000).toFixed(1) + "s" : "\u2014";
               const date = new Date(run.started_at).toLocaleString("fr-CA", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
               return (
-                <tr key={run.id} className={`border-b border-neutral-800/50 ${isAlert ? "bg-red-950/30" : ""}`}>
+                <tr key={run.id} className={`border-b border-white/10/50 ${isAlert ? "bg-red-950/30" : ""}`}>
                   <td className="py-2 pr-4 font-mono">{run.cron_name}</td>
-                  <td className="py-2 pr-4 text-neutral-400">{date}</td>
+                  <td className="py-2 pr-4 text-white/50">{date}</td>
                   <td className={`py-2 pr-4 font-mono ${isAlert ? "text-red-400 font-bold" : ""}`}>
                     {duration}
                     {isAlert && <span className="ml-2 px-1.5 py-0.5 text-xs bg-red-600 rounded">\u26a0\ufe0f SLOW</span>}
@@ -176,27 +179,28 @@ export default function AdminDashboard() {
           </tbody>
         </table>
       </div>
+      </main>
     </div>
   );
 }
 
 function StatCard({ icon: Icon, label, value, sub, color }: { icon: any; label: string; value: string | number; sub?: string; color?: string }) {
   return (
-    <div className="bg-neutral-900 rounded-xl p-5 border border-neutral-800">
+    <div className="bg-white/[0.03] border border-white/10 rounded-xl p-5">
       <div className="flex items-center gap-2 mb-2">
-        <Icon className={`w-4 h-4 ${color || "text-neutral-400"}`} />
-        <p className="text-xs text-neutral-400 uppercase tracking-wider">{label}</p>
+        <Icon className={`w-4 h-4 ${color || "text-white/50"}`} />
+        <p className="text-xs text-white/50 uppercase tracking-wider">{label}</p>
       </div>
       <p className={`text-2xl font-bold ${color || ""}`}>{value}</p>
-      {sub && <p className="text-xs text-neutral-500 mt-1">{sub}</p>}
+      {sub && <p className="text-xs text-white/40 mt-1">{sub}</p>}
     </div>
   );
 }
 
 function MiniCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-neutral-800/50 rounded-xl p-4">
-      <p className="text-xs text-neutral-500 mb-1">{label}</p>
+    <div className="bg-white/[0.05] rounded-xl p-4">
+      <p className="text-xs text-white/40 mb-1">{label}</p>
       <p className="text-lg font-bold">{value}</p>
     </div>
   );
