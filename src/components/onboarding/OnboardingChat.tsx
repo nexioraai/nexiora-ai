@@ -12,6 +12,13 @@ const GREETING = "Bonjour ! Décrivez-moi votre activité et je crée votre site
 export default function OnboardingChat() {
   const router = useRouter();
   const [messages, setMessages] = useState<Msg[]>([{ role: 'assistant', content: GREETING }]);
+  const [userEmail, setUserEmail] = useState('');
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user?.email) setUserEmail(data.user.email);
+    });
+  }, []);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -147,7 +154,7 @@ export default function OnboardingChat() {
               ].map(({ label, mode }) => (
                 <button
                   key={label}
-                  disabled={mode === 3}
+                  disabled={mode === 3 && userEmail !== 'issayamiyoussouf@gmail.com'}
                   onClick={() => {
                     if (mode === 3) {
                       return;
@@ -158,7 +165,7 @@ export default function OnboardingChat() {
                   }}
                   className={`px-5 py-2.5 rounded-full border text-sm transition ${mode === 3 ? 'bg-white/[0.02] border-white/5 text-slate-500 cursor-not-allowed' : 'bg-white/[0.04] border-white/12 text-slate-200 hover:border-[#FF5500] hover:text-white hover:bg-white/[0.07]'}`}
                 >
-                  {mode === 3 ? `${label} (bientôt)` : label}
+                  {mode === 3 && userEmail !== 'issayamiyoussouf@gmail.com' ? `${label} (bientôt)` : label}
                 </button>
               ))}
               </>
