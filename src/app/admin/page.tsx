@@ -35,9 +35,9 @@ interface Stats {
 const MODE_LABELS: Record<string, { label: string; icon: typeof Monitor }> = {
   "1": { label: "Vitrine", icon: Monitor },
   "2": { label: "Boutique avec stock", icon: Store },
-  "3-reseller": { label: "Dropshipping \u2014 Reseller", icon: Truck },
-  "3-pod_brand": { label: "Dropshipping \u2014 Brand", icon: Truck },
-  "3-pod_custom": { label: "Dropshipping \u2014 Custom", icon: Truck },
+  "3-reseller": { label: "Dropshipping — Reseller", icon: Truck },
+  "3-pod_brand": { label: "Dropshipping — Brand", icon: Truck },
+  "3-pod_custom": { label: "Dropshipping — Custom", icon: Truck },
 };
 
 const MODE_ORDER = ["1", "2", "3-reseller", "3-pod_brand", "3-pod_custom"];
@@ -50,9 +50,9 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function load() {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) { setError("Non connect\u00e9"); setLoading(false); return; }
+      if (!session?.access_token) { setError("Non connecté"); setLoading(false); return; }
       const res = await fetch("/api/admin/stats", { headers: { Authorization: `Bearer ${session.access_token}` } });
-      if (res.status === 403) { setError("Acc\u00e8s interdit \u2014 admin uniquement"); setLoading(false); return; }
+      if (res.status === 403) { setError("Accès interdit — admin uniquement"); setLoading(false); return; }
       setStats(await res.json());
       setLoading(false);
     }
@@ -74,24 +74,24 @@ export default function AdminDashboard() {
 
       {/* Overview Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-        <StatCard icon={Users} label="Utilisateurs inscrits" value={stats.users.total} sub={`${stats.users.withSites} ont cr\u00e9\u00e9 un site`} color="text-violet-400" />
-        <StatCard icon={Globe} label="Sites cr\u00e9\u00e9s" value={stats.sites.total} sub={`${stats.sites.published} publi\u00e9s`} color="text-emerald-400" />
-        <StatCard icon={ShoppingCart} label="Commandes" value={stats.orders.total} sub={`${stats.orders.paid} pay\u00e9es`} color="text-blue-400" />
+        <StatCard icon={Users} label="Utilisateurs inscrits" value={stats.users.total} sub={`${stats.users.withSites} ont créé un site`} color="text-violet-400" />
+        <StatCard icon={Globe} label="Sites créés" value={stats.sites.total} sub={`${stats.sites.published} publiés`} color="text-emerald-400" />
+        <StatCard icon={ShoppingCart} label="Commandes" value={stats.orders.total} sub={`${stats.orders.paid} payées`} color="text-blue-400" />
         <StatCard icon={DollarSign} label="Revenus plateforme" value={`$${fmt(stats.revenue.commission)}`} sub={`$${fmt(stats.revenue.total)} total ventes`} color="text-amber-400" />
       </div>
 
       {/* Revenue detail */}
       <div className="bg-white/[0.03] border border-white/10 rounded-2xl border border-white/10 p-6 mb-10">
-        <h2 className="text-lg font-semibold mb-4">D\u00e9tail revenus</h2>
+        <h2 className="text-lg font-semibold mb-4">Détail revenus</h2>
         <div className="grid grid-cols-3 gap-4">
           <MiniCard label="Ventes totales" value={`$${fmt(stats.revenue.total)}`} />
-          <MiniCard label="Co\u00fbt fournisseurs" value={`$${fmt(stats.revenue.supplierCost)}`} />
+          <MiniCard label="Coût fournisseurs" value={`$${fmt(stats.revenue.supplierCost)}`} />
           <MiniCard label="Commission Nexiora (5%)" value={`$${fmt(stats.revenue.commission)}`} />
         </div>
       </div>
 
       {/* Breakdown by mode */}
-      <h2 className="text-xl font-semibold mb-4">R\u00e9partition par type</h2>
+      <h2 className="text-xl font-semibold mb-4">Répartition par type</h2>
       <div className="space-y-6 mb-10">
         {MODE_ORDER.map((key) => {
           const data = stats.breakdown[key];
@@ -105,15 +105,15 @@ export default function AdminDashboard() {
               <div className="flex items-center gap-3 mb-4">
                 <Icon className="w-5 h-5 text-[#E07040]" />
                 <h3 className="text-lg font-semibold">{meta.label}</h3>
-                <span className="text-sm text-white/50 ml-auto">{total} site{total > 1 ? "s" : ""} \u2014 {published} publi\u00e9{published > 1 ? "s" : ""}</span>
+                <span className="text-sm text-white/50 ml-auto">{total} site{total > 1 ? "s" : ""} — {published} publié{published > 1 ? "s" : ""}</span>
               </div>
               {sites.length > 0 ? (
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-white/40 border-b border-white/10">
                       <th className="pb-2 pr-4">Nom</th>
-                      <th className="pb-2 pr-4">Propri\u00e9taire</th>
-                      <th className="pb-2 pr-4">Cr\u00e9\u00e9 le</th>
+                      <th className="pb-2 pr-4">Propriétaire</th>
+                      <th className="pb-2 pr-4">Créé le</th>
                       <th className="pb-2">Statut</th>
                     </tr>
                   </thead>
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
                   </tbody>
                 </table>
               ) : (
-                <p className="text-sm text-white/40">Aucun site dans cette cat\u00e9gorie.</p>
+                <p className="text-sm text-white/40">Aucun site dans cette catégorie.</p>
               )}
             </div>
           );
@@ -141,14 +141,14 @@ export default function AdminDashboard() {
       </div>
 
       {/* Cron Runs */}
-      <h2 className="text-xl font-semibold mb-4">Derni\u00e8res ex\u00e9cutions cron</h2>
+      <h2 className="text-xl font-semibold mb-4">Dernières exécutions cron</h2>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-white/50 border-b border-white/10">
               <th className="pb-2 pr-4">Cron</th>
               <th className="pb-2 pr-4">Date</th>
-              <th className="pb-2 pr-4">Dur\u00e9e</th>
+              <th className="pb-2 pr-4">Durée</th>
               <th className="pb-2 pr-4">Items</th>
               <th className="pb-2">Status</th>
             </tr>
@@ -156,7 +156,7 @@ export default function AdminDashboard() {
           <tbody>
             {stats.crons.map((run) => {
               const isAlert = run.duration_ms != null && run.duration_ms > THRESHOLD;
-              const duration = run.duration_ms != null ? (run.duration_ms / 1000).toFixed(1) + "s" : "\u2014";
+              const duration = run.duration_ms != null ? (run.duration_ms / 1000).toFixed(1) + "s" : "—";
               const date = new Date(run.started_at).toLocaleString("fr-CA", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
               return (
                 <tr key={run.id} className={`border-b border-white/10/50 ${isAlert ? "bg-red-950/30" : ""}`}>
@@ -164,7 +164,7 @@ export default function AdminDashboard() {
                   <td className="py-2 pr-4 text-white/50">{date}</td>
                   <td className={`py-2 pr-4 font-mono ${isAlert ? "text-red-400 font-bold" : ""}`}>
                     {duration}
-                    {isAlert && <span className="ml-2 px-1.5 py-0.5 text-xs bg-red-600 rounded">\u26a0\ufe0f SLOW</span>}
+                    {isAlert && <span className="ml-2 px-1.5 py-0.5 text-xs bg-red-600 rounded">⚠️ SLOW</span>}
                   </td>
                   <td className="py-2 pr-4">{run.items_processed}</td>
                   <td className="py-2">
