@@ -133,7 +133,7 @@ export default function OnboardingChat() {
     <section className={`max-w-2xl mx-auto px-4 sm:px-6 pb-10 flex flex-col h-[calc(100vh-120px)] ${messages.length === 1 && !loading && !generating ? 'justify-center' : ''}`}>
       <div className="flex items-center gap-2 justify-center mb-6 text-white/60">
         <Sparkles size={18} className="text-[#FF5500]" />
-        <span className="text-sm font-medium tracking-wide">Nexiora — Création sur mesure</span>
+        <span className="text-sm font-medium tracking-wide" translate="no">Nexiora — Création sur mesure</span>
       </div>
 
       {messages.length === 1 && !loading && !generating ? (
