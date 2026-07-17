@@ -565,7 +565,7 @@ export default function EditPage() {
 
         {(site?.mode === 2 || site?.mode === 3) && <OrderManager slug={slug} />}
 
-        {(site?.mode === 2 || site?.mode === 3) && <FinanceDashboard slug={slug} />}
+        {site?.mode === 3 && <FinanceDashboard slug={slug} />}
       </section>
 
       <Footer />
