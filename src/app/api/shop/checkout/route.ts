@@ -2,12 +2,21 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getProvider } from '@/lib/payments';
 import { checkStock } from '@/lib/shop';
+import { checkCatalogStock } from '@/lib/catalog-stock';
 import type { CartItem } from '@/lib/payments/types';
 import { STRIPE_SHIPPING_COUNTRIES } from '@/lib/payments/countries';
 import { cjAdapter } from '@/lib/suppliers/cj-adapter';
 import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
 import { printifyAdapter } from '@/lib/suppliers/printify-adapter';
 import type { ShippingRequest } from '@/lib/suppliers/supplier-adapter';
+
+/** Décode un id panier catalog : "catalog-{uuid}::{variantId}" -> { realId: uuid, variantId }.
+ *  variantId est optionnel (produits sans variantes). */
+function parseCatalogId(cartId: string): { realId: string; variantId?: string } {
+  const withoutPrefix = cartId.replace(/^catalog-/, '');
+  const [realId, variantId] = withoutPrefix.split('::');
+  return { realId, variantId: variantId || undefined };
+}
 
 /** POST /api/shop/checkout → crée la session de paiement. Body: { slug, items } (route publique : un client final achète). */
 export async function POST(req: Request) {
@@ -27,6 +36,16 @@ export async function POST(req: Request) {
 
     const stock = await checkStock(items.map((i) => ({ id: i.id, quantity: i.quantity })));
     if (!stock.ok) return NextResponse.json({ error: stock.reason }, { status: 409 });
+
+    // Verification stock catalog (live aupres du fournisseur) : le client n'achete jamais du vide.
+    const catalogStockLines = items
+      .filter((i) => i.id?.startsWith('catalog-'))
+      .map((i) => {
+        const { realId, variantId } = parseCatalogId(i.id);
+        return { realId, variantId, quantity: i.quantity };
+      });
+    const catStock = await checkCatalogStock(catalogStockLines, countryCode || 'US');
+    if (!catStock.ok) return NextResponse.json({ error: catStock.reason }, { status: 409 });
 
     const origin = new URL(req.url).origin;
     const successUrl = `${origin}/sites/${slug}?paid=1`;
@@ -73,14 +92,14 @@ export async function POST(req: Request) {
 
         // Catalog products => grouper par supplier_id
         if (catalogItems.length > 0) {
-          const realIds = catalogItems.map((i) => i.id.replace('catalog-', ''));
+          const realIds = catalogItems.map((i) => parseCatalogId(i.id).realId);
           const { data: catProds } = await supabaseAdmin
             .from('catalog_products')
             .select('id, supplier_id, supplier_product_id')
             .in('id', realIds);
           for (const cp of (catProds || [])) {
             if (!cp.supplier_product_id || !cp.supplier_id) continue;
-            const item = catalogItems.find((i) => i.id === 'catalog-' + cp.id);
+            const item = catalogItems.find((i) => parseCatalogId(i.id).realId === cp.id);
             if (!item) continue;
             if (!supplierGroups[cp.supplier_id]) supplierGroups[cp.supplier_id] = [];
             supplierGroups[cp.supplier_id].push({
@@ -121,15 +140,12 @@ export async function POST(req: Request) {
     const catalogCartItems = items.filter((i) => i.id?.startsWith('catalog-'));
     if (catalogCartItems.length > 0) {
       for (const item of catalogCartItems) {
-        const parts = item.id.replace('catalog-', '').split('-');
-        const supplierId = parts[0];
-        const supplierProductId = parts.slice(1).join('-');
-        if (supplierId && supplierProductId) {
+        const { realId } = parseCatalogId(item.id);
+        if (realId) {
           const { data: cp } = await supabaseAdmin
             .from('catalog_products')
             .select('price')
-            .eq('supplier_id', supplierId)
-            .eq('supplier_product_id', supplierProductId)
+            .eq('id', realId)
             .maybeSingle();
           if (cp?.price) supplierCost += Number(cp.price) * item.quantity;
         }
