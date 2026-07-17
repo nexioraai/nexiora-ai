@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
     const { data: site, error: siteError } = await supabaseAdmin
       .from('sites')
-      .select('id, payment_provider, payment_account_id, shipping_flat')
+      .select('id, payment_provider, payment_account_id, shipping_flat, mode')
       .eq('slug', slug)
       .single();
     if (siteError || !site) return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
@@ -150,7 +150,7 @@ export async function POST(req: Request) {
 
     const totalAmount = items.reduce((sum, i) => sum + i.priceNumber * i.quantity, 0);
     const nexioraCommission = totalAmount * (NEXIORA_COMMISSION_PERCENT / 100);
-    const applicationFeeAmount = supplierCost + nexioraCommission;
+    const applicationFeeAmount = site.mode === 3 ? (supplierCost + nexioraCommission) : 0;
 
     const provider = getProvider(site.payment_provider);
     const { url, orderId } = await provider.createCheckout(
