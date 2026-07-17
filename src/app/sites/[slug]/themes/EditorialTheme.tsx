@@ -122,7 +122,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
             {!hidden('Home') && <a href="#home" className="hover:text-black transition-colors">{t.nav.home}</a>}
             {!hidden('About') && <a href="#about" className="hover:text-black transition-colors">{t.nav.about}</a>}
             {!hidden('Services') && <a href="#services" className="hover:text-black transition-colors">{sections[0]?.name || t.nav.services}</a>}
-            {(products.length > 0 || mode === 3) && !hidden('Shop') && (
+            {mode !== 1 && (products.length > 0 || mode === 3) && !hidden('Shop') && (
               <a href="#shop" className="hover:text-black transition-colors">{t.nav.shop}</a>
             )}
             {!hidden('Gallery') && <a href="#gallery" className="hover:text-black transition-colors">{t.nav.gallery}</a>}
@@ -356,7 +356,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
       ))}
 
       {/* =================== SHOP =================== */}
-      {(products.length > 0 || mode === 3) && !hidden('Shop') && (
+      {mode !== 1 && (products.length > 0 || mode === 3) && !hidden('Shop') && (
         <section id="shop" className="reveal py-28 md:py-36">
           <div className="max-w-7xl mx-auto px-6 md:px-10">
             <div className="text-center max-w-2xl mx-auto mb-20">

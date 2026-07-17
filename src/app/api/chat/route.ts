@@ -513,6 +513,12 @@ Return ONLY valid JSON, no markdown:
           if (l === 'ar') return ['الرئيسية', 'من نحن', 'اتصل بنا'];
           return ['Home', 'About', 'Contact'];
         }
+        // Mode 1 (vitrine/service) : jamais de page vente en ligne (Boutique/Shop/Catalogue).
+        // Les autres pages metier (Galerie, Menu, Portfolio...) restent libres.
+        if (m === 1 && Array.isArray(parsed.pages)) {
+          const SELL_PAGE = /\b(boutique|shop|store|tienda|catalog|catalogue|catálogo|متجر|تسوق)\b/i;
+          return parsed.pages.filter((pg: any) => typeof pg === 'string' && !SELL_PAGE.test(pg));
+        }
         return parsed.pages;
       })(),
       hidden_sections: (() => {

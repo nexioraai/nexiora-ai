@@ -86,13 +86,14 @@ export default function OnboardingChat() {
         setLoading(false);
         setGenerating(true);
         const finalMessage = (data.mode ? `mode: ${data.mode}\n` : '') + data.summary;
+        const effectiveDsType = data.dropshipType || dropshipType;
         const genRes = await fetch('/api/chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.access_token}`,
           },
-          body: JSON.stringify({ message: finalMessage, location: '', ...(dropshipType ? { dropshipType } : {}) }),
+          body: JSON.stringify({ message: finalMessage, location: '', ...(effectiveDsType ? { dropshipType: effectiveDsType } : {}) }),
         });
         const genData = await genRes.json();
         if (!genRes.ok || !genData.slug) throw new Error(genData.error || 'Génération échouée.');
@@ -105,6 +106,8 @@ export default function OnboardingChat() {
       } else if (data.type === 'ask' && data.reply) {
         setMessages((m) => [...m, { role: 'assistant', content: data.reply }]);
         setSkippable(data.skippable === true);
+      } else if (data.type === 'need_dropship_type') {
+        setShowDropshipPicker(true);
       } else {
         throw new Error('Réponse inattendue.');
       }
@@ -157,7 +160,7 @@ export default function OnboardingChat() {
                   disabled={mode === 3 && userEmail !== 'issayamiyoussouf@gmail.com'}
                   onClick={() => {
                     if (mode === 3) {
-                      return;
+                      if (userEmail === 'issayamiyoussouf@gmail.com') setShowDropshipPicker(true);
                     } else {
                       setSiteMode(mode);
                       sendText(label);

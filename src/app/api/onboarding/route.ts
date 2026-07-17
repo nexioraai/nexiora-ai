@@ -13,7 +13,12 @@ const SYSTEM = `You are Nexiora's friendly onboarding assistant. Your job: inter
 
 ALWAYS reply in the EXACT same language the user writes in (detect automatically).
 
-You do NOT decide the business mode. The mode (showcase / online boutique / autonomous dropshipping) is chosen by the user via clickable cards in the interface, handled separately. NEVER ask the user to choose a mode in text, NEVER mention "mode 1/2/3", NEVER map their words to a mode.
+YOU MUST DETECT the business intent from what the user says (in ANY language, whether they typed a short word, a long paragraph, or clicked a button). Determine which of these 3 site types fits:
+- SHOWCASE (mode 1): restaurants, cafes, bars, bakeries, salons, spas, gyms, clinics, doctors, lawyers, accountants, mechanics, plumbers, electricians, photographers, coaches, consultants, any local service, any perishable food, any made-to-order craft. A site to present a local business — no online selling of shipped goods.
+- ONLINE BOUTIQUE (mode 2): a shop selling THEIR OWN physical inventory they hold and ship themselves — local clothing store, bookstore, jewelry maker, florist, a brand with its own warehouse stock.
+- DROPSHIPPING / PRINT-ON-DEMAND (mode 3): an online store fulfilled by suppliers, holding NO stock of its own. Sub-types: "reseller" (resell trending manufactured goods), "pod_brand" (merchant uploads their own designs printed on blanks), "pod_custom" (each visitor uploads their own design).
+NEVER assign mode 3 to perishables, food, local services, or made-to-order crafts.
+Do NOT say "mode 1/2/3" to the user in your reply text — speak naturally. But you MUST output the detected mode in the JSON fields below.
 
 REQUIRED info you MUST gather (read the whole history, never re-ask what is already known, ask ONE question at a time):
 1. Business sector / what kind of business it is
@@ -26,9 +31,10 @@ A) A preferred brand COLOR if they have one (name or hex). This is the ONLY desi
 B) Real CONTACT details: professional phone, email, WhatsApp link, address.
 
 OUTPUT FORMAT — respond with ONLY a JSON object, no markdown, no code fences:
-- To ask a question: {"type":"ask","reply":"<message in user's language>","skippable":<boolean>}
+- To ask a question: {"type":"ask","reply":"<message in user's language>","skippable":<boolean>,"detectedMode":<1|2|3|null>,"detectedDropshipType":<"reseller"|"pod_brand"|"pod_custom"|null>}
   Set "skippable":true on EVERY optional offer (color AND contact). Set "skippable":false only for required questions (sector, what they sell).
-- When everything needed is gathered (or optional parts skipped): {"type":"done","summary":"<a single rich English paragraph: sector, what they sell, the preferred color if given (state explicitly), and any real contact details provided. Do NOT mention any mode. Be factual — only what the user actually said.>"}
+  ALWAYS fill "detectedMode" with your best current guess (or null if truly unclear yet). Fill "detectedDropshipType" only when mode is 3 AND the sub-type is clear from the user's words, else null.
+- When everything needed is gathered (or optional parts skipped): {"type":"done","summary":"<a single rich English paragraph: sector, what they sell, the preferred color if given (state explicitly), and any real contact details provided. Be factual — only what the user actually said.>","detectedMode":<1|2|3>,"detectedDropshipType":<"reseller"|"pod_brand"|"pod_custom"|null>}
 
 FINALIZATION RULES:
 - As soon as sector + what they sell are gathered and you have offered the optional color/contact steps (or user skipped), return {"type":"done",...}. Do NOT keep chatting.
@@ -107,6 +113,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid history' }, { status: 400 });
     }
 
+
     const interview = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 600,
@@ -160,8 +167,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ type: 'ask', reply: safeReply, skippable: intent.skippable === true });
     }
 
+    // Mode final : bouton explicite prioritaire, sinon detection agent
+    const detectedMode = [1, 2, 3].includes(intent.detectedMode) ? intent.detectedMode : null;
+    const finalMode = chosenMode ?? detectedMode;
+    const detectedDsType = ['reseller', 'pod_brand', 'pod_custom'].includes(intent.detectedDropshipType) ? intent.detectedDropshipType : null;
+
     if (intent.type === 'done' && typeof intent.summary === 'string') {
-      return NextResponse.json({ type: 'ready_to_generate', summary: intent.summary, mode: chosenMode });
+      return NextResponse.json({
+        type: 'ready_to_generate',
+        summary: intent.summary,
+        mode: finalMode,
+        dropshipType: detectedDsType,
+      });
     }
 
     return NextResponse.json({ type: 'ask', reply: 'Pouvez-vous préciser votre activité ?' });

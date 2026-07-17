@@ -32,6 +32,7 @@ interface Props {
 const LABELS: Record<string, Record<string, string>> = {
   en: {
     addToCart: 'Add to cart',
+    chooseOption: 'Choose an option',
     shipping: 'Estimated delivery',
     days: 'days',
     description: 'Description',
@@ -40,6 +41,7 @@ const LABELS: Record<string, Record<string, string>> = {
   },
   fr: {
     addToCart: 'Ajouter au panier',
+    chooseOption: 'Choisissez une option',
     shipping: 'Livraison estimee',
     days: 'jours',
     description: 'Description',
@@ -171,14 +173,16 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
             )}
 
             <AddToCartButton
-              id={String(p.id).startsWith('catalog-') ? p.id : 'catalog-' + p.id}
+              id={(String(p.id).startsWith('catalog-') ? p.id : 'catalog-' + p.id) + (selectedVariant ? '::' + selectedVariant : '')}
               name={p.name}
               priceNumber={p.price}
               currency="USD"
               image={imgs[0]}
               customDesignUrl={customDesignUrl || undefined}
+              variantId={selectedVariant || undefined}
               primary={primary}
-              label={t.addToCart}
+              label={variants.length > 0 && !selectedVariant ? t.chooseOption : t.addToCart}
+              disabled={variants.length > 0 && !selectedVariant}
             />
 
             {p.description && (
