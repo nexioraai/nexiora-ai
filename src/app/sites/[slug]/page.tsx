@@ -82,7 +82,7 @@ export default async function SitePage({ params, searchParams }: Props) {
     <>
       <JsonLd site={site} />
       <PromoBanner slug={site.slug} primary={primary} />
-      <CartShell primary={primary} labels={cartLabels} slug={site.slug}>
+      <CartShell primary={primary} labels={cartLabels} slug={site.slug} mode={site.mode} shippingFlat={site.shipping_flat}>
         <Theme site={site} />
         {site.mode === 3 && site.dropship_type !== 'pod_brand' && <CatalogSearch slug={site.slug} primary={primary} lang={site.lang} dropshipType={site.dropship_type || 'reseller'} />}
       </CartShell>

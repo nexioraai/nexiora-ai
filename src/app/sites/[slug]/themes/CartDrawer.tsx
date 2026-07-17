@@ -15,10 +15,14 @@ export default function CartDrawer({
   primary = '#111111',
   labels,
   slug,
+  mode,
+  shippingFlat = 0,
 }: {
   primary?: string;
   labels: Labels;
   slug: string;
+  mode?: number | null;
+  shippingFlat?: number;
 }) {
   const { items, isOpen, total, currency, count, setQuantity, removeItem, closeCart } = useCart();
   const [busy, setBusy] = useState(false);
@@ -247,34 +251,43 @@ export default function CartDrawer({
         {/* Footer */}
         {items.length > 0 && (
           <div className="border-t border-neutral-100 px-6 py-5 space-y-4">
-            <div>
-              <label className="block text-sm text-neutral-500 mb-1.5">Pays de livraison</label>
-              <select
-                value={country}
-                onChange={(e) => handleCountryChange(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-neutral-200 text-neutral-900 bg-white focus:outline-none focus:border-neutral-400 transition"
-              >
-                <option value="">Sélectionnez votre pays…</option>
-                {countries.map((co) => (
-                  <option key={co.code} value={co.code}>{co.name}</option>
-                ))}
-              </select>
-            </div>
-            {!country && (
-              <p className="text-sm text-neutral-400 text-center">Sélectionnez votre pays pour calculer la livraison.</p>
-            )}
-            {country && (
-              <>
+            {mode === 2 ? (
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">Livraison estimée</span>
-                <span className="text-neutral-700">
-                  {calcBusy ? '…' : shipping === -1 ? 'Non disponible' : shipping !== null ? `${shipping.toFixed(2)} ${currency}` : '—'}
-                </span>
+                <span className="text-neutral-500">Livraison</span>
+                <span className="text-neutral-700">{shippingFlat > 0 ? `${shippingFlat.toFixed(2)} ${currency}` : 'Gratuite'}</span>
               </div>
-              {aging && (
-                <p className="text-xs text-neutral-500 mt-1">
-                  {aging}
-                </p>
+            ) : (
+              <>
+              <div>
+                <label className="block text-sm text-neutral-500 mb-1.5">Pays de livraison</label>
+                <select
+                  value={country}
+                  onChange={(e) => handleCountryChange(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-neutral-200 text-neutral-900 bg-white focus:outline-none focus:border-neutral-400 transition"
+                >
+                  <option value="">Sélectionnez votre pays…</option>
+                  {countries.map((co) => (
+                    <option key={co.code} value={co.code}>{co.name}</option>
+                  ))}
+                </select>
+              </div>
+              {!country && (
+                <p className="text-sm text-neutral-400 text-center">Sélectionnez votre pays pour calculer la livraison.</p>
+              )}
+              {country && (
+                <>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-neutral-500">Livraison estimée</span>
+                  <span className="text-neutral-700">
+                    {calcBusy ? '…' : shipping === -1 ? 'Non disponible' : shipping !== null ? `${shipping.toFixed(2)} ${currency}` : '—'}
+                  </span>
+                </div>
+                {aging && (
+                  <p className="text-xs text-neutral-500 mt-1">
+                    {aging}
+                  </p>
+                )}
+                </>
               )}
               </>
             )}
@@ -304,14 +317,14 @@ export default function CartDrawer({
             <div className="flex items-center justify-between">
               <span className="text-neutral-500">{labels.total}</span>
               <span className="text-xl font-semibold text-neutral-900">
-                {(total + (shipping ?? 0) - promoDiscount).toFixed(2)} {currency}
+                {(total + (mode === 2 ? shippingFlat : (shipping ?? 0)) - promoDiscount).toFixed(2)} {currency}
               </span>
             </div>
             <button
               className="w-full py-4 rounded-2xl font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
               style={{ background: primary }}
               onClick={handleCheckout}
-              disabled={busy || !country || calcBusy || shipping === -1}
+              disabled={busy || (mode !== 2 && (!country || calcBusy || shipping === -1))}
             >
               {busy ? '…' : labels.checkout}
             </button>

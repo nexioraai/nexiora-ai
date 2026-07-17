@@ -16,16 +16,20 @@ export default function CartShell({
   primary,
   labels,
   slug,
+  mode,
+  shippingFlat,
 }: {
   children: ReactNode;
   primary: string;
   labels: Labels;
   slug: string;
+  mode?: number | null;
+  shippingFlat?: number;
 }) {
   return (
     <CartProvider>
       {children}
-      <CartDrawer primary={primary} labels={labels} slug={slug} />
+      <CartDrawer primary={primary} labels={labels} slug={slug} mode={mode} shippingFlat={shippingFlat} />
     </CartProvider>
   );
 }
