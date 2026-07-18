@@ -56,6 +56,12 @@ export async function POST(req: Request) {
     const flat = Number(site.shipping_flat) || 0;
     let shippingAmount = flat;
     let estimatedDelivery: string | null = null;
+    let shippingResolved = false;
+
+    // Mode 3 : Nexiora avance les frais au fournisseur. Pas de livraison calculable = pas de vente.
+    if (site.mode === 3 && (!countryCode || !STRIPE_SHIPPING_COUNTRIES.includes(countryCode as any))) {
+      return NextResponse.json({ error: 'Livraison indisponible pour cette destination' }, { status: 409 });
+    }
 
     if (countryCode && STRIPE_SHIPPING_COUNTRIES.includes(countryCode as any)) {
       try {
@@ -127,14 +133,21 @@ export async function POST(req: Request) {
         if (totalShipping > 0) {
           shippingAmount = Math.round(totalShipping * 100) / 100;
           estimatedDelivery = maxDays > 0 ? String(maxDays) + ' days' : null;
+          shippingResolved = true;
         }
       } catch (e) {
-        // Adapter indisponible -> on garde le forfait. Ne casse jamais le checkout.
+        // Adapter indisponible -> mode 2 garde le forfait, mode 3 rejette plus bas.
       }
     }
 
+    // Mode 3 : aucun cout de livraison confirme par le fournisseur = refus.
+    // Nexiora n'absorbe jamais un cout inconnu.
+    if (site.mode === 3 && !shippingResolved) {
+      return NextResponse.json({ error: 'Livraison indisponible pour cette destination' }, { status: 409 });
+    }
+
     // Calculate supplier cost for application_fee
-    const NEXIORA_COMMISSION_PERCENT = 5;
+    const NEXIORA_COMMISSION_PERCENT = 6;
     let supplierCost = 0;
     // Catalog items: look up cost from catalog_products
     const catalogCartItems = items.filter((i) => i.id?.startsWith('catalog-'));
@@ -166,7 +179,7 @@ export async function POST(req: Request) {
 
     const totalAmount = items.reduce((sum, i) => sum + i.priceNumber * i.quantity, 0);
     const nexioraCommission = totalAmount * (NEXIORA_COMMISSION_PERCENT / 100);
-    const applicationFeeAmount = site.mode === 3 ? (supplierCost + nexioraCommission) : 0;
+    const applicationFeeAmount = site.mode === 3 ? (supplierCost + shippingAmount + nexioraCommission) : 0;
 
     const provider = getProvider(site.payment_provider);
     const { url, orderId } = await provider.createCheckout(

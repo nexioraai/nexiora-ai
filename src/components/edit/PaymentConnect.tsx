@@ -9,7 +9,8 @@ async function authHeaders() {
   return { Authorization: `Bearer ${data.session?.access_token ?? ''}` };
 }
 
-export default function PaymentConnect({ slug }: { slug: string }) {
+export default function PaymentConnect({ slug, mode }: { slug: string; mode?: number }) {
+  const isAutomated = mode === 3;
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [connected, setConnected] = useState(false);
@@ -83,7 +84,7 @@ export default function PaymentConnect({ slug }: { slug: string }) {
     <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm mt-8">
       <h2 className="text-xl font-bold mb-2">Paiements</h2>
       <p className="text-sm text-white/50 mb-5">
-        Connecte ton compte Stripe pour recevoir les paiements de ta boutique directement.
+        {isAutomated ? 'Connecte ton compte Stripe pour recevoir tes profits automatiquement apres chaque vente.' : 'Connecte ton compte Stripe pour recevoir les paiements de ta boutique directement.'}
       </p>
 
       {loading ? (
@@ -121,7 +122,8 @@ export default function PaymentConnect({ slug }: { slug: string }) {
 
       {error && <p className="text-sm text-red-400 mt-3">{error}</p>}
 
-      <div className="mt-8 pt-6 border-t border-white/10">
+      {!isAutomated && (
+        <div className="mt-8 pt-6 border-t border-white/10">
         <label className="text-xs text-slate-400 uppercase tracking-wider font-semibold block mb-2">
           Frais de livraison (forfait)
         </label>
@@ -148,6 +150,7 @@ export default function PaymentConnect({ slug }: { slug: string }) {
           {shipMsg && <span className="text-sm text-white/60">{shipMsg}</span>}
         </div>
       </div>
+      )}
     </div>
   );
 }
