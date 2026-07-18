@@ -145,29 +145,30 @@ export default function OnboardingChat() {
             Donnez vie à votre idée
           </h1>
           <p className="text-slate-400 text-base sm:text-lg mb-10 max-w-md">
-            Décrivez votre activité en quelques mots. Nexiora conçoit en quelques secondes.
+            Décrivez votre activité en quelques mots. Nexiora conçoit votre site sur mesure.
           </p>
           <div className="flex flex-wrap gap-3 justify-center max-w-lg">
             {!showDropshipPicker ? (
               <>
               {[
-                { label: 'Site web', mode: 1 },
+                { label: 'Site vitrine', mode: 1 },
                 { label: 'Boutique en ligne', mode: 2 },
                 { label: 'Dropshipping', mode: 3 },
               ].map(({ label, mode }) => (
                 <button
                   key={label}
+                  disabled={mode === 3 && userEmail !== 'issayamiyoussouf@gmail.com'}
                   onClick={() => {
                     if (mode === 3) {
-                      setShowDropshipPicker(true);
+                      if (userEmail === 'issayamiyoussouf@gmail.com') setShowDropshipPicker(true);
                     } else {
                       setSiteMode(mode);
                       sendText(label);
                     }
                   }}
-                  className="px-5 py-2.5 rounded-full border text-sm transition bg-white/[0.04] border-white/12 text-slate-200 hover:border-[#FF5500] hover:text-white hover:bg-white/[0.07]"
+                  className={`px-5 py-2.5 rounded-full border text-sm transition ${mode === 3 ? 'bg-white/[0.02] border-white/5 text-slate-500 cursor-not-allowed' : 'bg-white/[0.04] border-white/12 text-slate-200 hover:border-[#FF5500] hover:text-white hover:bg-white/[0.07]'}`}
                 >
-                  {label}
+                  {mode === 3 && userEmail !== 'issayamiyoussouf@gmail.com' ? `${label} (bientôt)` : label}
                 </button>
               ))}
               </>
@@ -175,9 +176,9 @@ export default function OnboardingChat() {
               <>
               <p className="w-full text-center text-sm text-slate-400 mb-2">Quel type de dropshipping ?</p>
               {[
-                { label: 'Revente de catalogue', type: 'reseller' },
-                { label: 'Votre marque', type: 'pod_brand' },
-                { label: 'Personnalisation client', type: 'pod_custom' },
+                { label: 'Ma propre marque (POD)', type: 'pod_brand' },
+                { label: 'Personnalisation client (POD)', type: 'pod_custom' },
+                { label: 'Revente produits existants', type: 'reseller' },
               ].map(({ label, type }) => (
                 <button
                   key={type}
@@ -300,7 +301,7 @@ export default function OnboardingChat() {
           disabled={generating}
           autoFocus
           rows={1}
-          className="w-full bg-black/40 border border-white/10 rounded-[24px] pl-6 pr-16 py-4 text-white text-[15px] placeholder-slate-500 resize-none focus:outline-none transition shadow-xl min-h-[56px] max-h-40"
+          className="w-full bg-black/40 border border-white/10 rounded-[24px] pl-6 pr-16 py-4 text-white text-[15px] placeholder-slate-500 resize-none focus:outline-none focus:border-[#E07040] transition shadow-xl min-h-[56px] max-h-40"
         />
         <button
           onClick={send}
@@ -311,14 +312,6 @@ export default function OnboardingChat() {
           <ArrowUp size={22} strokeWidth={2.5} className="text-[#FF5500]" />
         </button>
       </div>
-
-      {messages.length === 1 && !loading && !generating && !showDropshipPicker && (
-        <div className="mt-5 max-w-lg mx-auto text-left space-y-2 text-[13px] leading-relaxed text-slate-400">
-          <p><span className="text-slate-200 font-medium">Site web</span> — présenter votre activité en ligne (sans vente).</p>
-          <p><span className="text-slate-200 font-medium">Boutique en ligne</span> — vendre vos propres produits (vous gérez le stock).</p>
-          <p><span className="text-slate-200 font-medium">Dropshipping</span> — vendre sans stock ni capital : tout est automatisé, un fournisseur expédie directement à vos clients.</p>
-        </div>
-      )}
     </section>
   );
 }
