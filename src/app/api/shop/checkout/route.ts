@@ -46,7 +46,7 @@ export async function POST(req: Request) {
         const { realId, variantId } = parseCatalogId(i.id);
         return { realId, variantId, quantity: i.quantity };
       });
-    const catStock = await checkCatalogStock(catalogStockLines, countryCode || 'US');
+    const catStock = await checkCatalogStock(catalogStockLines, countryCode || 'US', site.mode === 3);
     if (!catStock.ok) return NextResponse.json({ error: catStock.reason }, { status: 409 });
 
     const origin = new URL(req.url).origin;
@@ -62,6 +62,7 @@ export async function POST(req: Request) {
 
     // Mode 3 : Nexiora avance les frais au fournisseur. Pas de livraison calculable = pas de vente.
     if (site.mode === 3 && (!countryCode || !STRIPE_SHIPPING_COUNTRIES.includes(countryCode as any))) {
+      await logAnomaly({ type: 'shipping_country_unsupported', siteId: site.id, slug, details: { countryCode: countryCode || null } });
       return NextResponse.json({ error: 'Livraison indisponible pour cette destination' }, { status: 409 });
     }
 
@@ -145,6 +146,7 @@ export async function POST(req: Request) {
     // Mode 3 : aucun cout de livraison confirme par le fournisseur = refus.
     // Nexiora n'absorbe jamais un cout inconnu.
     if (site.mode === 3 && !shippingResolved) {
+      await logAnomaly({ type: 'shipping_not_resolved', siteId: site.id, slug, details: { countryCode: countryCode || null, itemCount: items.length } });
       return NextResponse.json({ error: 'Livraison indisponible pour cette destination' }, { status: 409 });
     }
 

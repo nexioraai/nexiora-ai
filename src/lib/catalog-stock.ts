@@ -34,8 +34,11 @@ const CREDS: Record<string, Record<string, string>> = {
  */
 export async function checkCatalogStock(
   lines: CatalogStockLine[],
-  destinationCountry: string
+  destinationCountry: string,
+  strict = false
 ): Promise<{ ok: true } | { ok: false; reason: string }> {
+  // strict = mode 3 : Nexiora avance l'argent au fournisseur.
+  // Toute incertitude (API muette, variante absente) devient un refus.
   if (lines.length === 0) return { ok: true };
 
   // 1. Charger les produits catalog concernes
@@ -63,7 +66,12 @@ export async function checkCatalogStock(
 
     const adapter = ADAPTERS[product.supplier_id];
     const creds = CREDS[product.supplier_id];
-    if (!adapter || !creds) continue; // fournisseur inconnu -> on ne bloque pas
+    if (!adapter || !creds) {
+      if (strict) {
+        return { ok: false, reason: `"${product.name}" n'est pas disponible a la vente.` };
+      }
+      continue; // mode 2 : fournisseur inconnu -> on ne bloque pas
+    }
 
     // 3. Verification live aupres du fournisseur
     try {
@@ -71,6 +79,7 @@ export async function checkCatalogStock(
         {
           supplier_product_id: product.supplier_product_id,
           variant_id: line.variantId || product.supplier_product_id,
+          // NB : sans variantId explicite, les fournisseurs a variantes rejettent l'appel.
           quantity: line.quantity,
           destination_country: destinationCountry || 'US',
         },
@@ -80,8 +89,12 @@ export async function checkCatalogStock(
         return { ok: false, reason: `"${product.name}" n'est plus disponible.` };
       }
     } catch (e) {
-      // Erreur API fournisseur : on ne bloque PAS la vente (le cache in_stock fait deja garde-fou).
       console.error(`[checkCatalogStock] ${product.supplier_id} echec pour ${product.id}:`, e);
+      if (strict) {
+        // Mode 3 : pas de confirmation fournisseur = pas de vente.
+        return { ok: false, reason: `Stock non confirme pour "${product.name}".` };
+      }
+      // Mode 2 : le cache in_stock fait deja garde-fou.
     }
   }
 
