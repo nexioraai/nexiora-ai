@@ -13,7 +13,6 @@ import type {
   TrackingStatus,
   ShippingRequest,
   ShippingResult,
-  ProductVariant,
 } from './supplier-adapter';
 
 import { cjSearchProductsV2, cjGetInventory, cjCalculateFreight, cjCreateOrder, cjGetOrderDetail, cjGetVariants } from '../cj/client';
@@ -127,29 +126,6 @@ export const cjAdapter: SupplierAdapter = {
       has_more: false,
       next_page: undefined,
     };
-  },
-
-  // ---- VARIANTES (live, cles Nexiora globales) ----
-  async listVariants(
-    supplierProductId: string,
-    creds: Record<string, string>
-  ): Promise<ProductVariant[]> {
-    const email = creds['email'] || process.env.CJ_EMAIL || '';
-    const apiKey = creds['apiKey'] || process.env.CJ_API_KEY || '';
-    try {
-      const variants = await cjGetVariants(email, apiKey, supplierProductId);
-      if (!Array.isArray(variants)) return [];
-      return variants.map((v: any) => ({
-        variant_id: String(v.vid),
-        name: v.variantNameEn || v.variantName || v.variantSku || String(v.vid),
-        sku: v.variantSku || '',
-        price: Number(v.variantSellPrice ?? v.sellPrice ?? 0),
-        stock_quantity: Number(v.variantQuantity ?? 999),
-        image: v.variantImage || undefined,
-      }));
-    } catch {
-      return [];
-    }
   },
 
   // ---- CHECKOUT (clés du marchand) ----

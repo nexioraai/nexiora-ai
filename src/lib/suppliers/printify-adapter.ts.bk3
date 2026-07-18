@@ -13,7 +13,6 @@ import type {
   TrackingStatus,
   ShippingRequest,
   ShippingResult,
-  ProductVariant,
 } from './supplier-adapter';
 
 // ============================================================
@@ -205,35 +204,6 @@ export const printifyAdapter: SupplierAdapter = {
   },
 
   // ---- STOCK CHECK ----
-  async listVariants(
-    supplierProductId: string,
-    creds: Record<string, string>
-  ): Promise<ProductVariant[]> {
-    const token = creds['printify_token'] || process.env.PRINTIFY_API_TOKEN || '';
-    const parts = supplierProductId.split('_');
-    if (parts.length < 3) return [];
-    const [bpId, providerId, variantId] = parts;
-    try {
-      const variantData = await pyFetch(
-        `/catalog/blueprints/${bpId}/print_providers/${providerId}/variants.json`,
-        token
-      );
-      const variants = variantData?.variants || [];
-      const variant = variants.find((v: any) => String(v.id) === variantId);
-      if (!variant) return [];
-      return [{
-        variant_id: String(supplierProductId),
-        name: variant.title || 'Standard',
-        sku: '',
-        price: Number(variant.price ?? 0) / 100,
-        stock_quantity: 9999,
-        image: undefined,
-      }];
-    } catch {
-      return [];
-    }
-  },
-
   async checkStock(
     request: StockCheckRequest,
     creds: Record<string, string>

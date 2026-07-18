@@ -12,7 +12,6 @@ import type {
   TrackingResult,
   ShippingRequest,
   ShippingResult,
-  ProductVariant,
 } from './supplier-adapter';
 
 // ============================================================
@@ -131,29 +130,6 @@ export const zendropAdapter: SupplierAdapter = {
       total_available: allProducts.length,
       has_more: false,
     };
-  },
-
-  async listVariants(
-    supplierProductId: string,
-    _creds: Record<string, string>
-  ): Promise<ProductVariant[]> {
-    try {
-      const data = await zendropCall('get_catalog_product', {
-        product_id: Number(supplierProductId),
-      });
-      const product = data.product || data;
-      const variants = product.variants || [];
-      return variants.map((v: any) => ({
-        variant_id: String(v.id || v.variant_id),
-        name: v.name || v.title || v.sku || String(v.id || v.variant_id),
-        sku: v.sku || '',
-        price: parseFloat(v.price || product.price || '0'),
-        stock_quantity: Number(v.stock ?? v.inventory_quantity ?? 999),
-        image: v.image || undefined,
-      }));
-    } catch {
-      return [];
-    }
   },
 
   async checkStock(

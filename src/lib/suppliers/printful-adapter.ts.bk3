@@ -13,7 +13,6 @@ import type {
   TrackingStatus,
   ShippingRequest,
   ShippingResult,
-  ProductVariant,
 } from './supplier-adapter';
 
 // ============================================================
@@ -177,28 +176,6 @@ export const printfulAdapter: SupplierAdapter = {
   },
 
   // ---- CHECKOUT (token marchand) ----
-  async listVariants(
-    supplierProductId: string,
-    creds: Record<string, string>
-  ): Promise<ProductVariant[]> {
-    const token = creds['printful_token'] || process.env.PRINTFUL_API_TOKEN || '';
-    try {
-      const data = await pfFetch(`/products/variant/${supplierProductId}`, token);
-      const v = data?.variant;
-      if (!v) return [];
-      return [{
-        variant_id: String(supplierProductId),
-        name: v.name || v.size || 'Standard',
-        sku: v.product?.name || '',
-        price: parseFloat(v.price) || 0,
-        stock_quantity: v.in_stock !== false ? 9999 : 0,
-        image: v.image || undefined,
-      }];
-    } catch {
-      return [];
-    }
-  },
-
   async checkStock(
     request: StockCheckRequest,
     creds: Record<string, string>

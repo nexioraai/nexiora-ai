@@ -153,4 +153,8 @@ export interface SupplierAdapter {
     countryCode: string,
     merchantCredentials: Record<string, string>
   ): Promise<ShippingResult>;
+  listVariants?(
+    supplierProductId: string,
+    credentials: Record<string, string>
+  ): Promise<ProductVariant[]>;
 }

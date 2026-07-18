@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X, ChevronLeft, ChevronRight, Truck } from 'lucide-react';
 import AddToCartButton from './AddToCartButton';
 import DesignUploader from './DesignUploader';
@@ -9,7 +9,6 @@ import { THEME_TOKENS, ThemeKey } from './CatalogSearch';
 interface CatalogProduct {
   id: string;
   supplier_id: string;
-  supplier_product_id?: string;
   name: string;
   description?: string;
   price: number;
@@ -34,7 +33,6 @@ const LABELS: Record<string, Record<string, string>> = {
   en: {
     addToCart: 'Add to cart',
     chooseOption: 'Choose an option',
-    loadingVariants: 'Loading options...',
     shipping: 'Estimated delivery',
     days: 'days',
     description: 'Description',
@@ -44,7 +42,6 @@ const LABELS: Record<string, Record<string, string>> = {
   fr: {
     addToCart: 'Ajouter au panier',
     chooseOption: 'Choisissez une option',
-    loadingVariants: 'Chargement des options...',
     shipping: 'Livraison estimee',
     days: 'jours',
     description: 'Description',
@@ -60,40 +57,7 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [customDesignUrl, setCustomDesignUrl] = useState<string | null>(null);
   const imgs = p.images?.length ? p.images : [];
-  const cachedVariants = Array.isArray(p.variants) ? p.variants : [];
-  const [liveVariants, setLiveVariants] = useState<any[]>([]);
-  const [loadingVariants, setLoadingVariants] = useState(false);
-
-  // Les variantes ne sont pas stockees en cache (CJ/Zendrop). On les recupere
-  // en direct chez le fournisseur a l'ouverture du modal.
-  useEffect(() => {
-    if (cachedVariants.length > 0) return;
-    if (!p.supplier_id || !p.supplier_product_id) return;
-    let cancelled = false;
-    setLoadingVariants(true);
-    const params = new URLSearchParams({
-      supplier_id: p.supplier_id,
-      supplier_product_id: p.supplier_product_id,
-    });
-    fetch('/api/catalog/variants?' + params.toString())
-      .then((r) => r.json())
-      .then((d) => {
-        if (cancelled) return;
-        const list = Array.isArray(d.variants) ? d.variants : [];
-        if (list.length === 0) return;
-        setLiveVariants(list.map((v: any) => ({
-          vid: v.variant_id,
-          variantNameEn: v.name,
-          variantName: v.name,
-          variantSku: v.sku,
-        })));
-      })
-      .catch(() => { if (!cancelled) setLiveVariants([]); })
-      .finally(() => { if (!cancelled) setLoadingVariants(false); });
-    return () => { cancelled = true; };
-  }, [p.supplier_id, p.supplier_product_id, cachedVariants.length]);
-
-  const variants = cachedVariants.length > 0 ? cachedVariants : liveVariants;
+  const variants = Array.isArray(p.variants) ? p.variants : [];
 
   const prevImg = () => setImgIndex(i => (i > 0 ? i - 1 : imgs.length - 1));
   const nextImg = () => setImgIndex(i => (i < imgs.length - 1 ? i + 1 : 0));
@@ -109,7 +73,7 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
         padding: 16, animation: 'modalFadeIn 0.2s ease',
       }}
     >
-      <style>{'@keyframes modalFadeIn { from { opacity: 0 } to { opacity: 1 } } @keyframes modalSlideUp { from { transform: translateY(20px); opacity: 0 } to { transform: translateY(0); opacity: 1 } } @keyframes spin { to { transform: rotate(360deg) } }'}</style>
+      <style>{'@keyframes modalFadeIn { from { opacity: 0 } to { opacity: 1 } } @keyframes modalSlideUp { from { transform: translateY(20px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }'}</style>
       <div
         onClick={e => e.stopPropagation()}
         style={{
@@ -184,12 +148,6 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
               <span>{t.shipping}: <strong style={{ color: tokens.modalText }}>{p.shipping_days_min}-{p.shipping_days_max} {t.days}</strong>{p.warehouse_country && <> ({t.from} {p.warehouse_country})</>}</span>
             </div>
 
-            {loadingVariants && (
-              <div style={{ marginBottom: 24, fontSize: 13, color: tokens.textMuted, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid ' + tokens.cardBorder, borderTopColor: primary, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-                {t.loadingVariants}
-              </div>
-            )}
             {variants.length > 0 && (
               <div style={{ marginBottom: 24 }}>
                 <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em', color: tokens.textMuted }}>{t.variants}</p>
@@ -223,8 +181,8 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
               customDesignUrl={customDesignUrl || undefined}
               variantId={selectedVariant || undefined}
               primary={primary}
-              label={loadingVariants ? t.loadingVariants : (variants.length > 0 && !selectedVariant ? t.chooseOption : t.addToCart)}
-              disabled={loadingVariants || (variants.length > 0 && !selectedVariant)}
+              label={variants.length > 0 && !selectedVariant ? t.chooseOption : t.addToCart}
+              disabled={variants.length > 0 && !selectedVariant}
             />
 
             {p.description && (
