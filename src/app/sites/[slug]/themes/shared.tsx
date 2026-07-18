@@ -82,6 +82,7 @@ variants?: { variant_id: string; label: string; price: number; currency: string 
 shippingDaysMin?: number | null
 shippingDaysMax?: number | null
 supplierId?: string | null
+supplierProductId?: string | null
 }
 
 export type Service = {
@@ -174,6 +175,7 @@ image: Array.isArray(cp.images) && cp.images.length > 0 ? cp.images[0] : undefin
 shippingDaysMin: cp.shipping_days_min || null,
 shippingDaysMax: cp.shipping_days_max || null,
 supplierId: cp.supplier_id || null,
+supplierProductId: cp.supplier_product_id || null,
 }
 })
 const existing = data.products || []
@@ -330,6 +332,7 @@ cjVid: raw?.cjVid || null,
 shippingDaysMin: raw?.shippingDaysMin || null,
 shippingDaysMax: raw?.shippingDaysMax || null,
 supplierId: raw?.supplierId || null,
+supplierProductId: raw?.supplierProductId || null,
 }
 }
 

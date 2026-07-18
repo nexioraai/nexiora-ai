@@ -12,6 +12,8 @@ interface MerchantProduct {
   priceNumber?: number;
   currency?: string;
   image?: string;
+  supplierId?: string | null;
+  supplierProductId?: string | null;
 }
 
 interface Props {

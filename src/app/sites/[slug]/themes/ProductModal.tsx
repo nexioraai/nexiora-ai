@@ -69,16 +69,14 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
   useEffect(() => {
     if (cachedVariants.length > 0) return;
     if (!p.supplier_id || !p.supplier_product_id) return;
-    let cancelled = false;
     setLoadingVariants(true);
     const params = new URLSearchParams({
       supplier_id: p.supplier_id,
       supplier_product_id: p.supplier_product_id,
     });
-    fetch('/api/catalog/variants?' + params.toString())
+    fetch('/api/catalog/variants?' + params.toString(), { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => {
-        if (cancelled) return;
         const list = Array.isArray(d.variants) ? d.variants : [];
         if (list.length === 0) return;
         setLiveVariants(list.map((v: any) => ({
@@ -88,10 +86,9 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
           variantSku: v.sku,
         })));
       })
-      .catch(() => { if (!cancelled) setLiveVariants([]); })
-      .finally(() => { if (!cancelled) setLoadingVariants(false); });
-    return () => { cancelled = true; };
-  }, [p.supplier_id, p.supplier_product_id, cachedVariants.length]);
+      .catch(() => { /* garder l'etat precedent : ne jamais vider sur erreur */ })
+      .finally(() => setLoadingVariants(false));
+  }, [p.supplier_id, p.supplier_product_id]);
 
   const variants = cachedVariants.length > 0 ? cachedVariants : liveVariants;
 

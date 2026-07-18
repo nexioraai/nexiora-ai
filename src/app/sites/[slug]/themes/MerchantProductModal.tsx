@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import AddToCartButton from './AddToCartButton';
 
@@ -13,6 +13,8 @@ interface MerchantProduct {
   currency?: string;
   image?: string;
   variants?: { variant_id: string; label: string; price: number; currency: string }[];
+  supplierId?: string | null;
+  supplierProductId?: string | null;
 }
 
 interface Props {
@@ -23,14 +25,44 @@ interface Props {
 }
 
 const LABELS: Record<string, Record<string, string>> = {
-  en: { addToCart: 'Add to cart', description: 'Description' },
-  fr: { addToCart: 'Ajouter au panier', description: 'Description' },
+  en: { addToCart: 'Add to cart', description: 'Description', chooseOption: 'Choose an option', loadingVariants: 'Loading options\u2026', options: 'Options' },
+  fr: { addToCart: 'Ajouter au panier', description: 'Description', chooseOption: 'Choisissez une option', loadingVariants: 'Chargement des options\u2026', options: 'Options' },
 };
 
 export default function MerchantProductModal({ product: p, primary, lang = 'en', onClose }: Props) {
   const t = LABELS[lang] || LABELS.en;
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
-  const variants = Array.isArray(p.variants) ? p.variants : [];
+  const cachedVariants = Array.isArray(p.variants) ? p.variants : [];
+  const [liveVariants, setLiveVariants] = useState<any[]>([]);
+  const [loadingVariants, setLoadingVariants] = useState(false);
+
+  // Les variantes ne sont pas en cache : on les recupere en direct chez le
+  // fournisseur, comme le fait ProductModal cote recherche.
+  useEffect(() => {
+    if (cachedVariants.length > 0) return;
+    if (!p.supplierId || !p.supplierProductId) return;
+    setLoadingVariants(true);
+    const params = new URLSearchParams({
+      supplier_id: p.supplierId,
+      supplier_product_id: p.supplierProductId,
+    });
+    fetch('/api/catalog/variants?' + params.toString(), { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d) => {
+        const list = Array.isArray(d.variants) ? d.variants : [];
+        if (list.length === 0) return;
+        setLiveVariants(list.map((v: any) => ({
+          variant_id: v.variant_id,
+          label: v.name,
+          price: v.price,
+          currency: p.currency || 'USD',
+        })));
+      })
+      .catch(() => { /* garder l'etat precedent */ })
+      .finally(() => setLoadingVariants(false));
+  }, [p.supplierId, p.supplierProductId]);
+
+  const variants = cachedVariants.length > 0 ? cachedVariants : liveVariants;
 
   return (
     <div
@@ -104,13 +136,14 @@ export default function MerchantProductModal({ product: p, primary, lang = 'en',
             )}
 
             <AddToCartButton
-              id={(p.id || p.name) + (selectedVariant ? '-' + selectedVariant : '')}
+              id={(p.id || p.name) + (selectedVariant ? '::' + selectedVariant : '')}
               name={p.name + (selectedVariant ? ' \u2014 ' + (variants.find(v => v.variant_id === selectedVariant)?.label || '') : '')}
               priceNumber={p.priceNumber || 0}
               currency={p.currency || 'USD'}
               image={p.image}
               primary={primary}
-              label={t.addToCart}
+              label={loadingVariants ? t.loadingVariants : (variants.length > 0 && !selectedVariant ? t.chooseOption : t.addToCart)}
+              disabled={loadingVariants || (variants.length > 0 && !selectedVariant)}
             />
 
             {p.description && (

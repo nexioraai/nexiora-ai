@@ -66,6 +66,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Livraison indisponible pour cette destination' }, { status: 409 });
     }
 
+    // CJ limite a 1 req/s : on laisse retomber le quota apres la verif de stock.
+    await new Promise((r) => setTimeout(r, 1100));
+
     if (countryCode && STRIPE_SHIPPING_COUNTRIES.includes(countryCode as any)) {
       try {
         const adapters: Record<string, any> = {
@@ -110,6 +113,8 @@ export async function POST(req: Request) {
             if (!cp.supplier_product_id || !cp.supplier_id) continue;
             const item = catalogItems.find((i) => parseCatalogId(i.id).realId === cp.id);
             if (!item) continue;
+            // CJ tarifie la livraison au PRODUIT (pas a la variante) :
+            // calculateShipping attend supplier_product_id, checkStock attend le vid.
             if (!supplierGroups[cp.supplier_id]) supplierGroups[cp.supplier_id] = [];
             supplierGroups[cp.supplier_id].push({
               supplier_product_id: cp.supplier_product_id,
@@ -129,7 +134,7 @@ export async function POST(req: Request) {
             totalShipping += result.total_cost;
             if (result.estimated_days_max > maxDays) maxDays = result.estimated_days_max;
           } catch (err: any) {
-            console.error('[checkout/shipping]', supplierId, 'failed:', err.message || err);
+            console.error('[checkout/shipping]', supplierId, 'failed:', err.message || err, err?.stack);
           }
         }
 

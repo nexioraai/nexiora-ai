@@ -284,14 +284,29 @@ export const cjAdapter: SupplierAdapter = {
 
     // Resoudre les vid pour chaque item
     const cjProducts: { vid: string; quantity: number }[] = [];
+    // CJ limite a 1 requete/seconde : on espace les appels et on retente une fois.
+    let first = true;
     for (const item of items) {
-      try {
-        const variants = await cjGetVariants(email, apiKey, item.supplier_product_id);
-        const vid = Array.isArray(variants) && variants.length > 0
-          ? (variants[0].vid || variants[0].variantId)
-          : null;
-        if (vid) cjProducts.push({ vid, quantity: item.quantity });
-      } catch {}
+      if (!first) await new Promise((r) => setTimeout(r, 1100));
+      first = false;
+      let variants: any = null;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          variants = await cjGetVariants(email, apiKey, item.supplier_product_id);
+          break;
+        } catch (e: any) {
+          const msg = String(e?.message || e);
+          if (attempt === 0 && msg.includes('Too Many Requests')) {
+            await new Promise((r) => setTimeout(r, 1200));
+            continue;
+          }
+          console.error('[cj/calculateShipping] getVariants echec', item.supplier_product_id, msg);
+        }
+      }
+      const vid = Array.isArray(variants) && variants.length > 0
+        ? (variants[0].vid || variants[0].variantId)
+        : null;
+      if (vid) cjProducts.push({ vid, quantity: item.quantity });
     }
 
     if (cjProducts.length === 0) {

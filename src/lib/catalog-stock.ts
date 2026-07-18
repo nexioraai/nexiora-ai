@@ -53,7 +53,11 @@ export async function checkCatalogStock(
   }
 
   // 2. Verifier chaque ligne
+  // CJ limite a 1 requete/seconde : on espace les appels.
+  let firstCall = true;
   for (const line of lines) {
+    if (!firstCall) await new Promise((r) => setTimeout(r, 1100));
+    firstCall = false;
     const product = products.find((p) => p.id === line.realId);
     if (!product) {
       return { ok: false, reason: 'Produit introuvable.' };
