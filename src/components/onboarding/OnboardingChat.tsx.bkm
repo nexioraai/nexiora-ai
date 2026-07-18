@@ -9,17 +9,6 @@ type Msg = { role: 'user' | 'assistant'; content: string };
 
 const GREETING = "Bonjour ! Décrivez-moi votre activité et je crée votre site sur mesure. Quel type de business souhaitez-vous lancer ?";
 
-// Rendu markdown minimal et sur : uniquement le gras **...**.
-// On echappe d'abord le HTML (securite), puis on transforme les paires **.
-function renderBold(text: string) {
-  const escaped = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-  const html = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  return { __html: html };
-}
-
 export default function OnboardingChat() {
   const router = useRouter();
   const [messages, setMessages] = useState<Msg[]>([{ role: 'assistant', content: GREETING }]);
@@ -224,7 +213,7 @@ export default function OnboardingChat() {
                   : 'bg-white/[0.06] border border-white/10 text-slate-100 rounded-[22px] rounded-bl-md'
               }`}
             >
-              <span dangerouslySetInnerHTML={renderBold(m.content)} />
+              {m.content}
             </div>
           </div>
         ))}
