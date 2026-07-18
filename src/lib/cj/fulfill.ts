@@ -63,7 +63,13 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
 
   // Produits catalogue (catalog_products.supplier_product_id = pid CJ)
   if (catalogIds.length > 0) {
-    const realIds = catalogIds.map((id: string) => id.replace('catalog-', ''));
+    const stripVariant = (v: string) => String(v).replace(/^catalog-/, '').split('::')[0];
+    const chosenVid = new Map<string, string>();
+    for (const cid of catalogIds) {
+      const parts = String(cid).replace(/^catalog-/, '').split('::');
+      if (parts[1]) chosenVid.set(parts[0], parts[1]);
+    }
+    const realIds = catalogIds.map((id: string) => stripVariant(id));
     const { data: catProds } = await supabaseAdmin
       .from('catalog_products')
       .select('id, supplier_product_id')
@@ -71,6 +77,13 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
     for (const cp of (catProds || [])) {
       if (!cp.supplier_product_id) continue;
       try {
+        // Respecter la variante choisie par l'acheteur. Sans choix explicite,
+        // on retombe sur la premiere variante du produit.
+        const picked = chosenVid.get(cp.id);
+        if (picked) {
+          vidById.set('catalog-' + cp.id, picked);
+          continue;
+        }
         const variants = await cjGetVariants(site.cj_email, site.cj_api_key, cp.supplier_product_id);
         const firstVid = Array.isArray(variants) && variants.length > 0
           ? (variants[0].vid || variants[0].variantId)
@@ -82,9 +95,13 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
     }
   }
 
+  // Les ids panier catalog peuvent porter une variante ("catalog-{uuid}::{vid}"),
+  // alors que vidById est indexe sans variante. On normalise avant le lookup.
+  const lookupKey = (pid: string) =>
+    String(pid).startsWith('catalog-') ? 'catalog-' + String(pid).replace(/^catalog-/, '').split('::')[0] : pid;
   const cjProducts = items
-    .filter((it: any) => it.product_id && vidById.has(it.product_id))
-    .map((it: any) => ({ vid: vidById.get(it.product_id)!, quantity: it.quantity }));
+    .filter((it: any) => it.product_id && vidById.has(lookupKey(it.product_id)))
+    .map((it: any) => ({ vid: vidById.get(lookupKey(it.product_id))!, quantity: it.quantity }));
 
   if (cjProducts.length === 0) return [];
 

@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
           const cp = s.catalog_products;
           const cost = cp.price ? Number(cp.price) : 0;
           return {
-            id: `catalog-${cp.supplier_id}-${cp.supplier_product_id}`,
+            id: `catalog-${cp.id}`,
             supplier_id: cp.supplier_id,
             supplier_product_id: cp.supplier_product_id,
             name: s.custom_name || cp.name,
@@ -128,10 +128,10 @@ export async function GET(req: NextRequest) {
   // Apply pricing to global results
   const curatedIds = new Set(curatedResults.map((p: any) => p.id));
   const globalMapped = (globalProducts || [])
-    .filter((p: any) => !curatedIds.has(`catalog-${p.supplier_id}-${p.supplier_product_id}`))
+    .filter((p: any) => !curatedIds.has(`catalog-${p.id}`))
     .map((p: any) => {
       const cost = p.price ? Number(p.price) : 0;
-      return { ...p, id: `catalog-${p.supplier_id}-${p.supplier_product_id}`, price: calcPrice(cost), _curated: false };
+      return { ...p, id: `catalog-${p.id}`, price: calcPrice(cost), _curated: false };
     });
 
   // ====== 3. Merge: curated first, then global ======

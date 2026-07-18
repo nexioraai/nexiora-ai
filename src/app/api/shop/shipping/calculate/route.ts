@@ -55,19 +55,24 @@ export async function POST(req: Request) {
       }
     }
 
-    // Catalog products => grouper par supplier_id
-    // Cart IDs are "catalog-{supplier_id}-{supplier_product_id}"
+    // Catalog products => resoudre le fournisseur depuis la base.
+    // Cart IDs : "catalog-{uuid}" ou "catalog-{uuid}::{variantId}".
     const supplierGroups: Record<string, { supplier_product_id: string; quantity: number }[]> = {};
     if (catalogIds.length > 0) {
-      for (const item of catalogIds) {
-        // Parse: catalog-cj-123456 or catalog-zendrop-abc123
-        const parts = item.id.replace('catalog-', '').split('-');
-        const supplierId = parts[0];
-        const supplierProductId = parts.slice(1).join('-');
-        if (!supplierId || !supplierProductId) continue;
-        if (!supplierGroups[supplierId]) supplierGroups[supplierId] = [];
-        supplierGroups[supplierId].push({
-          supplier_product_id: supplierProductId,
+      const realIds = catalogIds
+        .map((i) => i.id.replace(/^catalog-/, '').split('::')[0])
+        .filter(Boolean);
+      const { data: catProds } = await supabaseAdmin
+        .from('catalog_products')
+        .select('id, supplier_id, supplier_product_id')
+        .in('id', realIds);
+      for (const cp of (catProds || [])) {
+        if (!cp.supplier_id || !cp.supplier_product_id) continue;
+        const item = catalogIds.find((i) => i.id.replace(/^catalog-/, '').split('::')[0] === cp.id);
+        if (!item) continue;
+        if (!supplierGroups[cp.supplier_id]) supplierGroups[cp.supplier_id] = [];
+        supplierGroups[cp.supplier_id].push({
+          supplier_product_id: cp.supplier_product_id,
           quantity: item.quantity,
         });
       }
@@ -82,7 +87,7 @@ export async function POST(req: Request) {
     // Credentials plateforme Nexiora — tous les produits transitent par le compte plateforme
     const creds: Record<string, Record<string, string>> = {
       cj: { email: process.env.CJ_EMAIL || '', apiKey: process.env.CJ_API_KEY || '' },
-      printful: { printful_token: process.env.PRINTFUL_TOKEN || '', state_code: stateCode || '' },
+      printful: { printful_token: process.env.PRINTFUL_API_TOKEN || '', state_code: stateCode || '' },
       printify: { printify_token: process.env.PRINTIFY_API_TOKEN || '', printify_shop_id: process.env.PRINTIFY_SHOP_ID || '' },
       zendrop: {},
     };

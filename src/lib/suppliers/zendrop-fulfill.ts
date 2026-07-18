@@ -24,7 +24,8 @@ export async function fulfillZendropOrder(orderId: string): Promise<string[]> {
   const catalogItems = items.filter((i: any) => i.product_id?.startsWith('catalog-'));
   if (catalogItems.length === 0) return [];
 
-  const realIds = catalogItems.map((i: any) => i.product_id.replace('catalog-', ''));
+  const stripVariant = (v: string) => String(v).replace(/^catalog-/, '').split('::')[0];
+  const realIds = catalogItems.map((i: any) => stripVariant(i.product_id));
   const { data: catProds } = await supabaseAdmin
     .from('catalog_products')
     .select('id, supplier_id, supplier_product_id')
@@ -47,7 +48,7 @@ export async function fulfillZendropOrder(orderId: string): Promise<string[]> {
   const supplierOrderIds: string[] = [];
 
   for (const catProd of catProds) {
-    const cartItem = catalogItems.find((i: any) => i.product_id === 'catalog-' + catProd.id);
+    const cartItem = catalogItems.find((i: any) => stripVariant(i.product_id) === catProd.id);
     if (!cartItem) continue;
 
     try {

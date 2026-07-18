@@ -27,7 +27,8 @@ export async function fulfillPodOrder(orderId: string): Promise<string[]> {
   if (catalogItems.length === 0) return [];
 
   // Get catalog product details
-  const realIds = catalogItems.map((i: any) => i.product_id.replace('catalog-', ''));
+  const stripVariant = (v: string) => String(v).replace(/^catalog-/, '').split('::')[0];
+  const realIds = catalogItems.map((i: any) => stripVariant(i.product_id));
   const { data: catProds } = await supabaseAdmin
     .from('catalog_products')
     .select('id, supplier_id, supplier_product_id')
@@ -59,8 +60,11 @@ export async function fulfillPodOrder(orderId: string): Promise<string[]> {
   const supplierOrderIds: string[] = [];
 
   for (const catProd of catProds) {
-    const cartItem = catalogItems.find((i: any) => i.product_id === 'catalog-' + catProd.id);
+    const cartItem = catalogItems.find((i: any) => stripVariant(i.product_id) === catProd.id);
     if (!cartItem) continue;
+    // Variante choisie par l'acheteur ("catalog-{uuid}::{variantId}").
+    // Sans choix explicite, on retombe sur l'id produit (produit sans variantes).
+    const pickedVariant = String(cartItem.product_id).replace(/^catalog-/, '').split('::')[1] || catProd.supplier_product_id;
 
     const designUrl = designByItemId.get(cartItem.id) || undefined;
     const adapter = catProd.supplier_id === 'printful' ? printfulAdapter : printifyAdapter;
@@ -71,7 +75,7 @@ export async function fulfillPodOrder(orderId: string): Promise<string[]> {
     try {
       const result = await adapter.createOrder({
         supplier_product_id: catProd.supplier_product_id,
-        variant_id: catProd.supplier_product_id,
+        variant_id: pickedVariant,
         quantity: cartItem.quantity,
         shipping_address: shippingAddress,
         merchant_order_id: order.id,

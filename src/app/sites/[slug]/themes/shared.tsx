@@ -164,7 +164,7 @@ const costPrice = cp.price ? Number(cp.price) : 0;
 const pr = costPrice > 0 ? calcSellPrice(costPrice, margin, roundMode) : (s.sell_price ? Number(s.sell_price) : 0);
 const cur = cp.currency || 'CAD'
 return {
-id: `catalog-${cp.supplier_id}-${cp.supplier_product_id}`,
+id: `catalog-${s.catalog_product_id}`,
 name: s.custom_name || cp.name,
 description: s.custom_description || cp.description || '',
 price: pr > 0 ? `${pr.toFixed(2)} ${cur}` : '',
