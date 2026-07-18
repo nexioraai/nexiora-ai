@@ -69,15 +69,9 @@ prisma/dev.db
 *.bak
 *.bak[0-9]
 
-# Backups locaux (jamais versionnés) — tous suffixes utilisés pendant le dev
+# Backups locaux (jamais versionnés) — couvre .backup, .bak, et tout suffixe .bk*
 *.backup
 *.backup[0-9]
 *.bak
 *.bak[0-9]
-*.bk[0-9]
-*.bkm
-*.bkq
-*.bkr
-*.bkv
-*.bkw
-*.bkz
+*.bk*
