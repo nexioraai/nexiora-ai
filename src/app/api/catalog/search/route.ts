@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { calcSellPrice, sitePricing } from '@/lib/pricing';
 
 export const maxDuration = 10;
 
@@ -33,19 +34,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
   }
 
-  const margin = site.cj_margin_percent ?? 100;
-  const roundMode = site.cj_round_mode || 'off';
-
-  const apply99 = (price: number, mode: string): number => {
-    const floorInt = Math.floor(price);
-    const lower = floorInt - 1 + 0.99;
-    const upper = floorInt + 0.99;
-    if (mode === 'up') return upper;
-    if (mode === 'down') return lower < 0 ? upper : lower;
-    return price;
-  };
-
-  const calcPrice = (cost: number) => apply99(Math.round(cost * (1 + margin / 100) * 100) / 100, roundMode);
+  const { margin, roundMode } = sitePricing(site);
+  const calcPrice = (cost: number) => calcSellPrice(cost, margin, roundMode);
 
   // Split query into words for ilike matching
   const words = q ? q.toLowerCase().split(/\s+/).filter(w => w.length >= 2) : [];

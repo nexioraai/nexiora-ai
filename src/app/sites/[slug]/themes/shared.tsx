@@ -1,6 +1,7 @@
 // src/app/sites/[slug]/themes/shared.tsx
 
 import { supabase } from '@/lib/supabase'
+import { calcSellPrice, sitePricing } from '@/lib/pricing'
 
 import {
 Wrench,
@@ -143,19 +144,9 @@ await loadCatalogSelections(data as any)
 return data as Site
 }
 
-function apply99(price: number, mode: string): number {
-  const floorInt = Math.floor(price);
-  const lower = floorInt - 1 + 0.99;
-  const upper = floorInt + 0.99;
-  if (mode === 'up') return upper;
-  if (mode === 'down') return lower < 0 ? upper : lower;
-  return price;
-}
 
-function calcSellPrice(costPrice: number, marginPercent: number, roundMode: string): number {
-  const marked = Math.round(costPrice * (1 + marginPercent / 100) * 100) / 100;
-  return apply99(marked, roundMode);
-}
+
+
 
 async function loadCatalogSelections(data: any) {
 if (data.mode === 3 && (data.dropship_type === 'reseller' || data.dropship_type === 'pod_custom')) {
@@ -166,8 +157,7 @@ const { data: catSels } = await supabase
 .eq('merchant_approved', true)
 .order('sort_order', { ascending: true })
 if (catSels && catSels.length > 0) {
-const margin = data.cj_margin_percent ?? 100;
-const roundMode = data.cj_round_mode || 'off';
+const { margin, roundMode } = sitePricing(data);
 const catalogProducts = catSels.map((s: any) => {
 const cp = s.catalog_products
 const costPrice = cp.price ? Number(cp.price) : 0;

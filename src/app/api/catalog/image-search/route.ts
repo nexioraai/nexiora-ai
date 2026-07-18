@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import Anthropic from '@anthropic-ai/sdk';
+import { sitePricing } from '@/lib/pricing';
 
 const anthropic = new Anthropic();
 
@@ -45,7 +46,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Site not found' }, { status: 404 });
     }
 
-    const markup = Number(site.cj_margin_percent) || 50;
+    const { margin: markup } = sitePricing(site);
 
     const words = keywords
       .split(/\s+/)
