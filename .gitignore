@@ -75,6 +75,7 @@ prisma/dev.db
 *.bak
 *.bak[0-9]
 *.bk[0-9]
+*.bkm
 *.bkq
 *.bkr
 *.bkv
