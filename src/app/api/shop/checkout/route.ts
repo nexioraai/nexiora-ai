@@ -10,6 +10,7 @@ import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
 import { printifyAdapter } from '@/lib/suppliers/printify-adapter';
 import type { ShippingRequest } from '@/lib/suppliers/supplier-adapter';
 import { calcSellPrice, sitePricing } from '@/lib/pricing';
+import { logAnomaly } from '@/lib/anomaly';
 
 /** Décode un id panier catalog : "catalog-{uuid}::{variantId}" -> { realId: uuid, variantId }.
  *  variantId est optionnel (produits sans variantes). */
@@ -168,7 +169,7 @@ export async function POST(req: Request) {
           .maybeSingle();
         cost = Number(cp?.price) || 0;
         if (cost <= 0) {
-          console.error('[checkout/guard] cout catalogue introuvable', { slug, itemId: item.id });
+          await logAnomaly({ type: 'catalog_cost_missing', siteId: site.id, slug, details: { itemId: item.id } });
           return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
         }
         serverPrice = calcSellPrice(cost, margin, roundMode);
@@ -181,11 +182,11 @@ export async function POST(req: Request) {
         cost = Number(sp?.cost_price) || 0;
         serverPrice = Number(sp?.price) || 0;
         if (serverPrice <= 0) {
-          console.error('[checkout/guard] prix shop introuvable', { slug, itemId: item.id });
+          await logAnomaly({ type: 'shop_price_missing', siteId: site.id, slug, details: { itemId: item.id } });
           return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
         }
         if (site.mode === 3 && cost <= 0) {
-          console.error('[checkout/guard] cout shop inconnu en mode 3', { slug, itemId: item.id });
+          await logAnomaly({ type: 'shop_cost_missing_mode3', siteId: site.id, slug, details: { itemId: item.id } });
           return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
         }
       }
@@ -204,19 +205,22 @@ export async function POST(req: Request) {
     if (site.mode === 3) {
       const clientPays = totalAmount + shippingAmount;
       if (supplierCost <= 0) {
-        console.error('[checkout/guard] supplierCost nul', { slug, totalAmount });
+        await logAnomaly({ type: 'supplier_cost_zero', siteId: site.id, slug, details: { totalAmount } });
         return NextResponse.json({ error: 'Commande impossible pour le moment' }, { status: 409 });
       }
       if (applicationFeeAmount >= clientPays) {
-        console.error('[checkout/guard] fee >= paiement', { slug, applicationFeeAmount, clientPays });
+        await logAnomaly({ type: 'fee_exceeds_payment', siteId: site.id, slug, details: { applicationFeeAmount, clientPays, supplierCost, shippingAmount } });
         return NextResponse.json({ error: 'Commande impossible pour le moment' }, { status: 409 });
       }
       if (totalAmount - supplierCost - nexioraCommission < 0) {
-        console.error('[checkout/guard] profit marchand negatif', { slug, totalAmount, supplierCost });
+        await logAnomaly({ type: 'negative_merchant_profit', siteId: site.id, slug, details: { totalAmount, supplierCost, nexioraCommission } });
         return NextResponse.json({ error: 'Commande impossible pour le moment' }, { status: 409 });
       }
+      if (shippingAmount > 40 && shippingAmount <= 150) {
+        await logAnomaly({ type: 'shipping_high', severity: 'warning', siteId: site.id, slug, details: { shippingAmount, totalAmount } });
+      }
       if (shippingAmount > 150) {
-        console.error('[checkout/guard] shipping aberrant', { slug, shippingAmount });
+        await logAnomaly({ type: 'shipping_out_of_range', siteId: site.id, slug, details: { shippingAmount, totalAmount } });
         return NextResponse.json({ error: 'Livraison indisponible pour cette destination' }, { status: 409 });
       }
     }
@@ -244,6 +248,8 @@ export async function POST(req: Request) {
         payment_account_id: site.payment_account_id,
         payment_ref: orderId,
         estimated_delivery: estimatedDelivery,
+        shipping_amount: shippingAmount,
+        country_code: countryCode || null,
         supplier_cost: supplierCost,
         nexiora_commission: nexioraCommission,
         merchant_profit: amount - supplierCost - nexioraCommission,
