@@ -9,6 +9,7 @@ import { cjAdapter } from '@/lib/suppliers/cj-adapter';
 import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
 import { printifyAdapter } from '@/lib/suppliers/printify-adapter';
 import type { ShippingRequest } from '@/lib/suppliers/supplier-adapter';
+import { calcSellPrice, sitePricing } from '@/lib/pricing';
 
 /** Décode un id panier catalog : "catalog-{uuid}::{variantId}" -> { realId: uuid, variantId }.
  *  variantId est optionnel (produits sans variantes). */
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
 
     const { data: site, error: siteError } = await supabaseAdmin
       .from('sites')
-      .select('id, payment_provider, payment_account_id, shipping_flat, mode')
+      .select('id, payment_provider, payment_account_id, shipping_flat, mode, cj_margin_percent, cj_round_mode')
       .eq('slug', slug)
       .single();
     if (siteError || !site) return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
@@ -146,40 +147,79 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Livraison indisponible pour cette destination' }, { status: 409 });
     }
 
-    // Calculate supplier cost for application_fee
+    // ---- Passe unique : cout fournisseur + prix de vente serveur ----
+    // SECURITE : le prix vient TOUJOURS du serveur, jamais du client.
+    // Un panier falsifie (priceNumber modifie) est rejete ici.
     const NEXIORA_COMMISSION_PERCENT = 6;
+    const { margin, roundMode } = sitePricing(site);
     let supplierCost = 0;
-    // Catalog items: look up cost from catalog_products
-    const catalogCartItems = items.filter((i) => i.id?.startsWith('catalog-'));
-    if (catalogCartItems.length > 0) {
-      for (const item of catalogCartItems) {
+    let totalAmount = 0;
+
+    for (const item of items) {
+      let cost = 0;
+      let serverPrice = 0;
+
+      if (item.id?.startsWith('catalog-')) {
         const { realId } = parseCatalogId(item.id);
-        if (realId) {
-          const { data: cp } = await supabaseAdmin
-            .from('catalog_products')
-            .select('price')
-            .eq('id', realId)
-            .maybeSingle();
-          if (cp?.price) supplierCost += Number(cp.price) * item.quantity;
+        const { data: cp } = await supabaseAdmin
+          .from('catalog_products')
+          .select('price')
+          .eq('id', realId)
+          .maybeSingle();
+        cost = Number(cp?.price) || 0;
+        if (cost <= 0) {
+          console.error('[checkout/guard] cout catalogue introuvable', { slug, itemId: item.id });
+          return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
+        }
+        serverPrice = calcSellPrice(cost, margin, roundMode);
+      } else {
+        const { data: sp } = await supabaseAdmin
+          .from('shop_products')
+          .select('price, cost_price')
+          .eq('id', item.id)
+          .maybeSingle();
+        cost = Number(sp?.cost_price) || 0;
+        serverPrice = Number(sp?.price) || 0;
+        if (serverPrice <= 0) {
+          console.error('[checkout/guard] prix shop introuvable', { slug, itemId: item.id });
+          return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
+        }
+        if (site.mode === 3 && cost <= 0) {
+          console.error('[checkout/guard] cout shop inconnu en mode 3', { slug, itemId: item.id });
+          return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
         }
       }
-    }
-    // Shop items: look up cost from shop_products
-    const shopCartItems = items.filter((i) => !i.id?.startsWith('catalog-'));
-    if (shopCartItems.length > 0) {
-      const { data: shopProds } = await supabaseAdmin
-        .from('shop_products')
-        .select('id, cost_price')
-        .in('id', shopCartItems.map((i) => i.id));
-      for (const sp of (shopProds || [])) {
-        const item = shopCartItems.find((i) => i.id === sp.id);
-        if (item && sp.cost_price) supplierCost += Number(sp.cost_price) * item.quantity;
-      }
+
+      item.priceNumber = serverPrice;
+      supplierCost += cost * item.quantity;
+      totalAmount += serverPrice * item.quantity;
     }
 
-    const totalAmount = items.reduce((sum, i) => sum + i.priceNumber * i.quantity, 0);
     const nexioraCommission = totalAmount * (NEXIORA_COMMISSION_PERCENT / 100);
     const applicationFeeAmount = site.mode === 3 ? (supplierCost + shippingAmount + nexioraCommission) : 0;
+
+    // ---- Garde-fous financiers (mode 3) ----
+    // Nexiora avance l'argent au fournisseur : aucune commande ne passe si les
+    // montants sont incoherents. Mieux vaut une vente perdue qu'une perte seche.
+    if (site.mode === 3) {
+      const clientPays = totalAmount + shippingAmount;
+      if (supplierCost <= 0) {
+        console.error('[checkout/guard] supplierCost nul', { slug, totalAmount });
+        return NextResponse.json({ error: 'Commande impossible pour le moment' }, { status: 409 });
+      }
+      if (applicationFeeAmount >= clientPays) {
+        console.error('[checkout/guard] fee >= paiement', { slug, applicationFeeAmount, clientPays });
+        return NextResponse.json({ error: 'Commande impossible pour le moment' }, { status: 409 });
+      }
+      if (totalAmount - supplierCost - nexioraCommission < 0) {
+        console.error('[checkout/guard] profit marchand negatif', { slug, totalAmount, supplierCost });
+        return NextResponse.json({ error: 'Commande impossible pour le moment' }, { status: 409 });
+      }
+      if (shippingAmount > 150) {
+        console.error('[checkout/guard] shipping aberrant', { slug, shippingAmount });
+        return NextResponse.json({ error: 'Livraison indisponible pour cette destination' }, { status: 409 });
+      }
+    }
 
     const provider = getProvider(site.payment_provider);
     const { url, orderId } = await provider.createCheckout(
