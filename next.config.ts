@@ -6,10 +6,11 @@ const isDev = process.env.NODE_ENV === 'development';
 // Limite quelles sources de scripts/styles/images/connexions sont autorisées
 const csp = [
   "default-src 'self'",
-  // Iframes externes autorisees : carte OpenStreetMap dans la section Contact
-  "frame-src 'self' https://www.openstreetmap.org",
+  // Iframes externes autorisees : carte OpenStreetMap (section Contact) et
+  // Stripe Elements (le champ carte est rendu dans une iframe Stripe).
+  "frame-src 'self' https://www.openstreetmap.org https://js.stripe.com https://hooks.stripe.com",
   // Scripts : self + inline (Next.js hydration). 'unsafe-eval' uniquement en dev (Turbopack HMR)
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
+  `script-src 'self' 'unsafe-inline' https://js.stripe.com${isDev ? " 'unsafe-eval'" : ''}`,
   // Styles : self + inline (Tailwind utilise des styles inline)
   "style-src 'self' 'unsafe-inline'",
   // Images : self, data URIs (icons SVG inline), blob (preview uploads), Pexels, Supabase Storage
@@ -17,7 +18,7 @@ const csp = [
   // Fonts : self, data URIs
   "font-src 'self' data:",
   // Connexions fetch/XHR : self, Supabase (HTTP + websocket realtime). En dev, autoriser localhost pour HMR
-  `connect-src 'self' https://*.supabase.co wss://*.supabase.co${isDev ? ' ws://localhost:* http://localhost:*' : ''}`,
+  `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://js.stripe.com${isDev ? ' ws://localhost:* http://localhost:*' : ''}`,
   // Embedding : seulement notre propre origine (autorise futurs previews iframe internes)
   "frame-ancestors 'self'",
   // Empêche <base> de pointer ailleurs

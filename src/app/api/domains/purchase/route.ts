@@ -110,7 +110,10 @@ export async function POST(req: NextRequest) {
       }],
       payment_behavior: 'default_incomplete',
       payment_settings: { save_default_payment_method: 'on_subscription' },
-      expand: ['latest_invoice.payment_intent'],
+      // Depuis la version d'API 2026-05-27, le client_secret n'est plus sur
+      // latest_invoice.payment_intent mais sur invoice.confirmation_secret,
+      // qui doit etre expand explicitement.
+      expand: ['latest_invoice.confirmation_secret'],
       metadata: {
         nexiora_domain_id: row.id,
         nexiora_site_id: site.id,
@@ -125,7 +128,10 @@ export async function POST(req: NextRequest) {
       .eq('id', row.id);
 
     const invoice = subscription.latest_invoice as any;
-    const clientSecret = invoice?.payment_intent?.client_secret ?? null;
+    const clientSecret =
+      invoice?.confirmation_secret?.client_secret ??
+      invoice?.payment_intent?.client_secret ??
+      null;
     if (!clientSecret) {
       return NextResponse.json({ error: 'Paiement non initialise' }, { status: 502 });
     }
