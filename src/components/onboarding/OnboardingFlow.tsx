@@ -8,6 +8,50 @@ import { LANGUAGES } from '@/lib/languages';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/lib/translations';
 
+const LOADING_BY_LANG: Record<string, string[]> = {
+  fr: [
+    'Analyse de votre activité…',
+    'Conception des modules métier…',
+    'Création des relations entre données…',
+    'Configuration des agents IA…',
+    'Mise en place des automatisations…',
+    'Finalisation de votre système…',
+  ],
+  en: [
+    'Analyzing your business…',
+    'Designing your modules…',
+    'Building data relationships…',
+    'Configuring AI agents…',
+    'Setting up automations…',
+    'Finalizing your system…',
+  ],
+  es: [
+    'Analizando tu negocio…',
+    'Diseñando los módulos…',
+    'Creando las relaciones de datos…',
+    'Configurando los agentes IA…',
+    'Preparando las automatizaciones…',
+    'Finalizando tu sistema…',
+  ],
+  ar: [
+    'تحليل نشاطك التجاري…',
+    'تصميم وحدات العمل…',
+    'إنشاء العلاقات بين البيانات…',
+    'إعداد وكلاء الذكاء الاصطناعي…',
+    'تجهيز الأتمتة…',
+    'إنهاء نظامك…',
+  ],
+};
+
+/** Detecte la langue depuis le texte saisi par l'utilisateur. */
+function detectUILang(text: string): string {
+  if (/[\u0600-\u06FF]/.test(text)) return 'ar';
+  if (/\b(hola|gracias|tienda|quiero|negocio|vender)\b/i.test(text)) return 'es';
+  if (/\b(bonjour|merci|boutique|je veux|entreprise|vendre)\b/i.test(text)) return 'fr';
+  if (/\b(hello|thanks|shop|i want|business|sell)\b/i.test(text)) return 'en';
+  return 'fr';
+}
+
 type Step = 1 | 2 | 3;
 type Language = string;
 
@@ -24,14 +68,7 @@ export default function OnboardingFlow() {
   const [authLoaded, setAuthLoaded] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
 
-  const LOADING_STEPS = [
-    'Analyse de votre activité…',
-    'Conception des modules métier…',
-    'Création des relations entre données…',
-    'Configuration des agents IA…',
-    'Mise en place des automatisations…',
-    'Finalisation de votre système…',
-  ];
+  const LOADING_STEPS = LOADING_BY_LANG[language] || LOADING_BY_LANG.fr;
 
   useEffect(() => {
     if (step !== 3) { setLoadingStep(0); return; }

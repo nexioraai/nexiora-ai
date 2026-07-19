@@ -7,6 +7,50 @@ import { supabase } from '@/lib/supabase';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
+const LOADING_BY_LANG: Record<string, string[]> = {
+  fr: [
+    'Analyse de votre activité…',
+    'Conception des modules métier…',
+    'Création des relations entre données…',
+    'Configuration des agents IA…',
+    'Mise en place des automatisations…',
+    'Finalisation de votre système…',
+  ],
+  en: [
+    'Analyzing your business…',
+    'Designing your modules…',
+    'Building data relationships…',
+    'Configuring AI agents…',
+    'Setting up automations…',
+    'Finalizing your system…',
+  ],
+  es: [
+    'Analizando tu negocio…',
+    'Diseñando los módulos…',
+    'Creando las relaciones de datos…',
+    'Configurando los agentes IA…',
+    'Preparando las automatizaciones…',
+    'Finalizando tu sistema…',
+  ],
+  ar: [
+    'تحليل نشاطك التجاري…',
+    'تصميم وحدات العمل…',
+    'إنشاء العلاقات بين البيانات…',
+    'إعداد وكلاء الذكاء الاصطناعي…',
+    'تجهيز الأتمتة…',
+    'إنهاء نظامك…',
+  ],
+};
+
+/** Detecte la langue depuis le texte saisi par l'utilisateur. */
+function detectUILang(text: string): string {
+  if (/[\u0600-\u06FF]/.test(text)) return 'ar';
+  if (/\b(hola|gracias|tienda|quiero|negocio|vender)\b/i.test(text)) return 'es';
+  if (/\b(bonjour|merci|boutique|je veux|entreprise|vendre)\b/i.test(text)) return 'fr';
+  if (/\b(hello|thanks|shop|i want|business|sell)\b/i.test(text)) return 'en';
+  return 'fr';
+}
+
 const GREETING = "Bonjour ! Décrivez-moi votre activité et je crée votre site sur mesure. Quel type de business souhaitez-vous lancer ?";
 
 // Rendu markdown minimal et sur : uniquement le gras **...**.
@@ -40,14 +84,10 @@ export default function OnboardingChat() {
   const [siteMode, setSiteMode] = useState<number | null>(null);
   const [dropshipType, setDropshipType] = useState<string | null>(null);
   const [showDropshipPicker, setShowDropshipPicker] = useState(false);
-  const LOADING_STEPS = [
-    'Analyse de votre activité…',
-    'Conception des modules métier…',
-    'Création des relations entre données…',
-    'Configuration des agents IA…',
-    'Mise en place des automatisations…',
-    'Finalisation de votre système…',
-  ];
+  const uiLang = detectUILang(
+    messages.filter((m) => m.role === 'user').map((m) => m.content).join(' ')
+  );
+  const LOADING_STEPS = LOADING_BY_LANG[uiLang] || LOADING_BY_LANG.fr;
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
