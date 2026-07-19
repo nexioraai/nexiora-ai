@@ -59,16 +59,16 @@ const NICHE_BLUEPRINT_MAP: Record<string, number[]> = {
   't-shirt': [5, 6, 12],
   'tshirt': [5, 6, 12],
   // Accessories
-  'accessories': [474, 476, 477, 478],
-  'phone': [474, 476],
-  'electronics': [474, 476, 477, 478],
+  'accessories': [476, 477, 478],
+  'phone': [476],
+  'electronics': [476, 477, 478],
   // Home & Living
   'home': [527, 528, 529, 530],
   'mug': [527, 528],
   'poster': [529, 530],
   'art': [529, 530],
   // Default popular
-  'default': [5, 6, 12, 527, 474],
+  'default': [5, 6, 12, 527],
 };
 
 function getBlueprintIdsForNiche(niches: string[]): number[] {
@@ -185,7 +185,8 @@ export const printifyAdapter: SupplierAdapter = {
         // Deduplicate: pick first enabled variant per blueprint+provider
         const seen = new Set<string>();
         for (const v of variants) {
-          if (!v.is_enabled) continue;
+          // Pas de filtre is_enabled : ce champ appartient aux produits d'une
+          // boutique, pas au catalogue. Le tester ici skippait tous les variants.
           const key = `${bpId}_${provider.id}_${v.id}`;
           if (seen.has(key)) continue;
           seen.add(key);
