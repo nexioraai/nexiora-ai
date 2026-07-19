@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { cjFetch } from '@/lib/cj/client';
 import { NEXIORA_COMMISSION_PERCENT } from '@/lib/pricing';
+import { Resend } from 'resend';
 
 export const maxDuration = 60;
 
@@ -28,6 +29,17 @@ type Finding = {
 };
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** disappeared et manual_price_underwater exigent une action : email immediat.
+ *  out_of_stock et price_spike sont informatifs : visibles sur /admin seulement. */
+const SEVERITY: Record<Finding['kind'], 'blocked' | 'warning'> = {
+  disappeared: 'blocked',
+  out_of_stock: 'warning',
+  manual_price_underwater: 'blocked',
+  price_spike: 'warning',
+};
+
+const ADMIN_EMAIL = 'issayamiyoussouf@gmail.com';
 
 /** CJ renvoie une fourchette "0.58-93.24" : on retient la borne basse. */
 function parseLowPrice(sellPrice: unknown): number | null {
@@ -168,6 +180,49 @@ export async function GET(req: NextRequest) {
       .from('catalog_products')
       .update({ last_checked_at: new Date().toISOString() })
       .in('id', checkedIds);
+  }
+
+  // 5. Persistance des findings (visibles sur /admin)
+  if (findings.length > 0) {
+    const rows = findings.map((f) => ({
+      type: 'sw_' + f.kind,
+      severity: SEVERITY[f.kind],
+      site_id: null,
+      slug: null,
+      details: {
+        supplier_product_id: f.supplier_product_id,
+        name: f.name,
+        detail: f.detail,
+        supplier: 'cj',
+      },
+    }));
+    const { error: insErr } = await supabaseAdmin.from('checkout_anomalies').insert(rows);
+    if (insErr) console.error('[supplier-watch] insert anomalies failed', insErr.message);
+  }
+
+  // 6. Un seul email, uniquement si action requise
+  const blocking = findings.filter((f) => SEVERITY[f.kind] === 'blocked');
+  if (blocking.length > 0 && process.env.RESEND_API_KEY) {
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      const lines = blocking
+        .map((f) => '<tr><td>' + f.kind + '</td><td>' + f.name + '</td><td>' + f.detail + '</td></tr>')
+        .join('');
+      await resend.emails.send({
+        from: 'Nexiora Alerts <no-reply@nexiora.ca>',
+        to: ADMIN_EMAIL,
+        subject: '\u26a0\ufe0f Surveillance fournisseur : ' + blocking.length + ' produit(s) a verifier',
+        html:
+          '<p><strong>' + blocking.length + '</strong> anomalie(s) bloquante(s) sur ' +
+          checkedIds.length + ' produits verifies.</p>' +
+          '<table cellpadding="6" border="1" style="border-collapse:collapse">' +
+          '<tr><th>Type</th><th>Produit</th><th>Detail</th></tr>' + lines + '</table>' +
+          '<p style="color:#888;font-size:12px">' +
+          (findings.length - blocking.length) + ' anomalie(s) non bloquante(s) consultables dans /admin.</p>',
+      });
+    } catch (e) {
+      console.error('[supplier-watch] alert failed', e);
+    }
   }
 
   const elapsed = Math.round((Date.now() - started) / 1000);

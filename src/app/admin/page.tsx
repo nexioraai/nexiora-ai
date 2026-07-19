@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Users, Globe, ShoppingCart, DollarSign, Monitor, Store, Truck } from "lucide-react";
+import { Users, Globe, ShoppingCart, DollarSign, Monitor, Store, Truck, AlertTriangle } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 
 interface CronRun {
@@ -13,6 +13,15 @@ interface CronRun {
   items_processed: number;
   status: string;
   error_message: string | null;
+}
+
+interface Anomaly {
+  id: string;
+  type: string;
+  severity: string;
+  slug: string | null;
+  details: Record<string, unknown> | null;
+  created_at: string;
 }
 
 interface SiteInfo {
@@ -30,6 +39,7 @@ interface Stats {
   revenue: { total: number; commission: number; supplierCost: number };
   breakdown: Record<string, { total: number; published: number; sites: SiteInfo[] }>;
   crons: CronRun[];
+  anomalies: Anomaly[];
 }
 
 const MODE_LABELS: Record<string, { label: string; icon: typeof Monitor }> = {
@@ -41,6 +51,20 @@ const MODE_LABELS: Record<string, { label: string; icon: typeof Monitor }> = {
 };
 
 const MODE_ORDER = ["1", "2", "3-reseller", "3-pod_brand", "3-pod_custom"];
+
+const ANOMALY_LABELS: Record<string, string> = {
+  sw_disappeared: "Produit disparu",
+  sw_out_of_stock: "Rupture de stock",
+  sw_manual_price_underwater: "Prix manuel sous le seuil",
+  sw_price_spike: "Hausse brutale du coût",
+  shipping_not_resolved: "Livraison non calculée",
+};
+
+const SEVERITY_STYLE: Record<string, string> = {
+  blocked: "bg-red-900 text-red-300",
+  warning: "bg-amber-900 text-amber-300",
+  info: "bg-neutral-800 text-white/50",
+};
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -65,6 +89,32 @@ export default function AdminDashboard() {
 
   const fmt = (n: number) => n.toFixed(2);
   const THRESHOLD = 45000;
+  const anomalies = stats.anomalies || [];
+  const blockedCount = anomalies.filter((a) => a.severity === "blocked").length;
+  const warningCount = anomalies.filter((a) => a.severity === "warning").length;
+
+  // Un meme incident se repete : on regroupe par type + site, on garde le plus recent.
+  const groupedMap = new Map<string, { a: Anomaly; count: number; oldest: string }>();
+  for (const a of anomalies) {
+    const key = a.type + "|" + (a.slug || "");
+    const g = groupedMap.get(key);
+    if (!g) {
+      groupedMap.set(key, { a, count: 1, oldest: a.created_at });
+    } else {
+      g.count++;
+      if (a.created_at < g.oldest) g.oldest = a.created_at;
+    }
+  }
+  const grouped = [...groupedMap.values()];
+
+  const fmtDetails = (d: Record<string, unknown> | null) => {
+    if (!d) return "—";
+    const obj = d as Record<string, string>;
+    if (obj.detail) return obj.detail;
+    const entries = Object.entries(obj).filter(([k]) => k !== "name");
+    if (entries.length === 0) return "—";
+    return entries.map(([k, v]) => k + ": " + String(v)).join(" · ");
+  };
 
   return (
     <div className="min-h-screen nexiora-bg text-white flex">
@@ -73,10 +123,11 @@ export default function AdminDashboard() {
       <h1 className="text-3xl font-bold mb-8">Nexiora Admin</h1>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
         <StatCard icon={Users} label="Utilisateurs inscrits" value={stats.users.total} sub={`${stats.users.withSites} ont créé un site`} color="text-violet-400" />
         <StatCard icon={Globe} label="Sites créés" value={stats.sites.total} sub={`${stats.sites.published} publiés`} color="text-emerald-400" />
         <StatCard icon={ShoppingCart} label="Commandes" value={stats.orders.total} sub={`${stats.orders.paid} payées`} color="text-blue-400" />
+        <StatCard icon={AlertTriangle} label="Anomalies bloquantes" value={blockedCount} sub={`${warningCount} avertissement${warningCount > 1 ? "s" : ""}`} color={blockedCount > 0 ? "text-red-400" : "text-white/50"} />
         <StatCard icon={DollarSign} label="Revenus plateforme" value={`$${fmt(stats.revenue.commission)}`} sub={`$${fmt(stats.revenue.total)} total ventes`} color="text-amber-400" />
       </div>
 
@@ -88,6 +139,74 @@ export default function AdminDashboard() {
           <MiniCard label="Coût fournisseurs" value={`$${fmt(stats.revenue.supplierCost)}`} />
           <MiniCard label="Commission Nexiora (5%)" value={`$${fmt(stats.revenue.commission)}`} />
         </div>
+      </div>
+
+      {/* Anomalies */}
+      <div className="flex items-center gap-3 mb-4">
+        <h2 className="text-xl font-semibold">Anomalies</h2>
+        {blockedCount > 0 && (
+          <span className="px-2 py-0.5 rounded text-xs bg-red-600 text-white font-semibold">
+            {blockedCount} bloquante{blockedCount > 1 ? "s" : ""}
+          </span>
+        )}
+        {warningCount > 0 && (
+          <span className="px-2 py-0.5 rounded text-xs bg-amber-700 text-amber-100">
+            {warningCount} avertissement{warningCount > 1 ? "s" : ""}
+          </span>
+        )}
+        <span className="text-xs text-white/40 ml-auto">
+          {grouped.length} incident{grouped.length > 1 ? "s" : ""} distinct{grouped.length > 1 ? "s" : ""}
+        </span>
+      </div>
+      <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 mb-10">
+        {stats.anomalies.length === 0 ? (
+          <p className="text-sm text-white/40">Aucune anomalie détectée.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-white/40 border-b border-white/10">
+                  <th className="pb-2 pr-4">Date</th>
+                  <th className="pb-2 pr-4">Type</th>
+                  <th className="pb-2 pr-4">Sévérité</th>
+                  <th className="pb-2 pr-4">Site</th>
+                  <th className="pb-2">Détail</th>
+                </tr>
+              </thead>
+              <tbody>
+                {grouped.map(({ a, count, oldest }) => {
+                  const d = (a.details || {}) as Record<string, string>;
+                  const dateStr = new Date(a.created_at).toLocaleString("fr-CA", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+                  const firstStr = new Date(oldest).toLocaleString("fr-CA", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+                  return (
+                    <tr key={a.type + "|" + (a.slug || "")} className={`border-b border-white/10 ${a.severity === "blocked" ? "bg-red-950/20" : ""}`}>
+                      <td className="py-2 pr-4 text-white/50 text-xs whitespace-nowrap">
+                        {dateStr}
+                        {count > 1 && <span className="block text-white/30">depuis {firstStr}</span>}
+                      </td>
+                      <td className="py-2 pr-4 font-medium">
+                        {ANOMALY_LABELS[a.type] || a.type}
+                        {count > 1 && (
+                          <span className="ml-2 px-1.5 py-0.5 rounded text-xs bg-white/10 text-white/70">×{count}</span>
+                        )}
+                      </td>
+                      <td className="py-2 pr-4">
+                        <span className={`px-2 py-0.5 rounded text-xs ${SEVERITY_STYLE[a.severity] || SEVERITY_STYLE.info}`}>
+                          {a.severity}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-4 text-white/50 text-xs">{a.slug || "—"}</td>
+                      <td className="py-2 text-white/70 text-xs">
+                        {d.name && d.detail && <span className="block text-white/90">{d.name}</span>}
+                        {fmtDetails(a.details)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Breakdown by mode */}
