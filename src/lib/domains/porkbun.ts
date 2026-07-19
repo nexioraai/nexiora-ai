@@ -1,10 +1,29 @@
 const PORKBUN_BASE = 'https://api.porkbun.com/api/json/v3';
 
+/** Marge Nexiora, fixe en dollars et non en pourcentage : le travail est
+ *  identique quel que soit le prix du TLD. Aligne sur le marche (Squarespace,
+ *  Wix, Shopify facturent ~20$ pour un .com qui leur coute ~11$). */
+export const NEXIORA_DOMAIN_MARGIN_USD = 10;
+
 export type DomainCheck = {
   domain: string;
   available: boolean;
-  priceUsd: number | null;
-  priceCents: number | null;
+  premium: boolean;
+  firstYearPromo: boolean;
+  minDuration: number;
+  /** Prix Porkbun de la premiere annee. */
+  registrationUsd: number | null;
+  /** Cents entiers : /domain/create refuse tout ecart avec ce devis. */
+  registrationCents: number | null;
+  /** Prix Porkbun du renouvellement annuel. Peut differer de l'achat. */
+  renewalUsd: number | null;
+  transferUsd: number | null;
+  /** Ce que paie le marchand la premiere annee. */
+  sellFirstYearUsd: number | null;
+  /** Ce que paie le marchand chaque annee ensuite. C'est ce montant qui sert
+   *  de base a l'abonnement Stripe : facturer sur le prix promotionnel de
+   *  premiere annee ferait perdre de l'argent des le premier renouvellement. */
+  sellRenewalUsd: number | null;
 };
 
 export type RegistrationRequirements = {
@@ -48,13 +67,29 @@ async function pbGet(path: string): Promise<any> {
 export async function checkDomain(domain: string): Promise<DomainCheck> {
   const data = await pbPost('/domain/checkDomain/' + encodeURIComponent(domain));
   const r = data?.response || {};
-  const priceUsd = r.price != null ? Number(r.price) : null;
+  const num = (v: unknown): number | null => {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  };
+
+  const registrationUsd = num(r.price);
+  // Un TLD peut avoir une promo la premiere annee et un renouvellement bien
+  // plus cher (.store a 3$ puis 40$). Sans le prix de renouvellement, on
+  // facturerait a perte des la deuxieme annee.
+  const renewalUsd = num(r?.additional?.renewal?.price) ?? registrationUsd;
+
   return {
     domain,
     available: r.avail === 'yes',
-    priceUsd: Number.isFinite(priceUsd as number) ? priceUsd : null,
-    // create attend des cents entiers et refuse tout ecart avec le devis.
-    priceCents: priceUsd != null ? Math.round(priceUsd * 100) : null,
+    premium: r.premium === 'yes',
+    firstYearPromo: r.firstYearPromo === 'yes',
+    minDuration: Number(r.minDuration) || 1,
+    registrationUsd,
+    registrationCents: registrationUsd != null ? Math.round(registrationUsd * 100) : null,
+    renewalUsd,
+    transferUsd: num(r?.additional?.transfer?.price),
+    sellFirstYearUsd: registrationUsd != null ? registrationUsd + NEXIORA_DOMAIN_MARGIN_USD : null,
+    sellRenewalUsd: renewalUsd != null ? renewalUsd + NEXIORA_DOMAIN_MARGIN_USD : null,
   };
 }
 
