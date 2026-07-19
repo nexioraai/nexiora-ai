@@ -1,7 +1,7 @@
 // src/app/sites/[slug]/themes/shared.tsx
 
 import { supabase } from '@/lib/supabase'
-import { calcSellPrice, sitePricing } from '@/lib/pricing'
+import { calcSellPrice, sitePricing, resolveDisplayPrice } from '@/lib/pricing'
 
 import {
 Wrench,
@@ -162,7 +162,7 @@ const { margin, roundMode } = sitePricing(data);
 const catalogProducts = catSels.map((s: any) => {
 const cp = s.catalog_products
 const costPrice = cp.price ? Number(cp.price) : 0;
-const pr = costPrice > 0 ? calcSellPrice(costPrice, margin, roundMode) : (s.sell_price ? Number(s.sell_price) : 0);
+const pr = resolveDisplayPrice(costPrice, s.sell_price, margin, roundMode);
 const cur = cp.currency || 'CAD'
 return {
 id: `catalog-${s.catalog_product_id}`,

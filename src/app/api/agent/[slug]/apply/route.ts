@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { MIN_MARGIN_PERCENT } from '@/lib/pricing';
 import { supabase as supabaseAnon } from '@/lib/supabase';
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
@@ -302,25 +303,27 @@ export async function POST(
     if (tool_name === 'catalog_set_margin') {
       const { margin_percent } = tool_input;
       const margin = Number(margin_percent);
-      if (isNaN(margin) || margin < 10 || margin > 90) {
-        return NextResponse.json({ error: 'Marge invalide (10-90%)' }, { status: 400 });
+      if (isNaN(margin) || margin < MIN_MARGIN_PERCENT) {
+        return NextResponse.json({ error: `Marge invalide : minimum ${MIN_MARGIN_PERCENT}% pour couvrir la commission Nexiora, les remboursements et les litiges.` }, { status: 400 });
       }
-      const { data: sels } = await supabase
-        .from('site_catalog_selections')
-        .select('id, catalog_products(price)')
-        .eq('site_id', site.id);
-      let updated_count = 0;
-      for (const sel of (sels || [])) {
-        const cost = (sel as any).catalog_products?.price;
-        if (!cost) continue;
-        const newPrice = Math.ceil((Number(cost) / (1 - margin / 100)) * 100 - 1) / 100;
-        await supabase
-          .from('site_catalog_selections')
-          .update({ sell_price: newPrice })
-          .eq('id', sel.id);
-        updated_count++;
+      // La marge du site est la source de verite. Les prix sont calcules a l'affichage
+      // par resolveDisplayPrice(). Ne jamais ecrire dans sell_price ici : ce champ est
+      // reserve aux prix fixes manuellement par le marchand, produit par produit.
+      const { data: updatedSite, error: mErr } = await supabase
+        .from('sites')
+        .update({ cj_margin_percent: margin })
+        .eq('id', site.id)
+        .select()
+        .single();
+      if (mErr) {
+        return NextResponse.json({ error: mErr.message }, { status: 500 });
       }
-      return NextResponse.json({ success: true, message: `${updated_count} prix mis à jour (marge ${margin}%)` });
+      // Renvoie le site pour que l'editeur se rafraichisse sans rechargement manuel
+      return NextResponse.json({
+        success: true,
+        site: updatedSite,
+        message: `Marge fixee a ${margin}%. Les prix du catalogue sont recalcules automatiquement, sauf ceux que tu as fixes manuellement.`,
+      });
     }
 
     if (tool_name === 'deactivate_promo_code') {

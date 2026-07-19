@@ -25,10 +25,13 @@ type Props = {
 export default function AIAgentChat({ slug, onSiteUpdated }: Props) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const messagesRef = useRef<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [toolStates, setToolStates] = useState<Record<string, ToolState>>({});
   const [error, setError] = useState('');
+
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -37,7 +40,7 @@ export default function AIAgentChat({ slug, onSiteUpdated }: Props) {
     }
   }, [messages, loading]);
 
-  const callChat = async (newMessages: ChatMessage[], newUserMessage: string) => {
+  const callChat = async (newMessages: ChatMessage[], newUserMessage?: string) => {
     setLoading(true);
     setError('');
     try {
@@ -51,7 +54,7 @@ export default function AIAgentChat({ slug, onSiteUpdated }: Props) {
           Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          message: newUserMessage,
+          message: newUserMessage ?? '',
           history: newMessages,
         }),
       });
@@ -102,12 +105,16 @@ export default function AIAgentChat({ slug, onSiteUpdated }: Props) {
     await callChat(newMessages, text);
   };
 
-  const appendToolResult = (toolUseId: string, content: string, isError = false) => {
+  const appendToolResult = async (toolUseId: string, content: string, isError = false) => {
     const resultMsg: ChatMessage = {
       role: 'user',
       content: [{ type: 'tool_result', tool_use_id: toolUseId, content, is_error: isError }],
     };
-    setMessages((m) => [...m, resultMsg]);
+    const next = [...messagesRef.current, resultMsg];
+    setMessages(next);
+    // Relance l'agent avec le resultat : sans cela il ne peut pas confirmer
+    // au marchand ce qui vient d'etre fait, et reste silencieux apres l'action.
+    await callChat(next);
   };
 
   const handleApprove = async (toolUseId: string, toolName: string, toolInput: any) => {

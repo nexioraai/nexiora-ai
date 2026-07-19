@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { calcSellPrice, sitePricing } from '@/lib/pricing';
+import { calcSellPrice, sitePricing, resolveDisplayPrice } from '@/lib/pricing';
 
 export const maxDuration = 10;
 
@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
             supplier_product_id: cp.supplier_product_id,
             name: s.custom_name || cp.name,
             description: s.custom_description || cp.description || '',
-            price: cost > 0 ? calcPrice(cost) : (s.sell_price ? Number(s.sell_price) : 0),
+            price: resolveDisplayPrice(cost, s.sell_price, margin, roundMode),
             currency: cp.currency || 'CAD',
             images: cp.images || [],
             shipping_days_min: cp.shipping_days_min,

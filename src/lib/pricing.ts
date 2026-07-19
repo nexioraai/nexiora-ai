@@ -50,6 +50,24 @@ export function calcSellPrice(costPrice: number, marginPercent: number, roundMod
   return apply99(marked, roundMode);
 }
 
+/**
+ * Prix affiche pour un produit du catalogue.
+ * Regle unique : un prix saisi manuellement (sell_price) prime toujours.
+ * Sinon le prix est calcule depuis le cout fournisseur et la marge du site.
+ * Utilise par la boutique et la recherche : ne jamais dupliquer cette logique.
+ */
+export function resolveDisplayPrice(
+  costPrice: number,
+  overridePrice: number | string | null | undefined,
+  marginPercent: number,
+  roundMode: string
+): number {
+  const override = overridePrice != null && overridePrice !== '' ? Number(overridePrice) : NaN;
+  if (!Number.isNaN(override) && override > 0) return override;
+  if (costPrice > 0) return calcSellPrice(costPrice, marginPercent, roundMode);
+  return 0;
+}
+
 /** Lit marge et arrondi depuis une ligne `sites`, avec les defauts unifies. */
 export function sitePricing(site: { cj_margin_percent?: number | null; cj_round_mode?: string | null }) {
   return {

@@ -286,11 +286,11 @@ const allTools: Anthropic.Tool[] = [
   },
   {
     name: 'catalog_set_margin',
-    description: 'Update the sell price of all catalog products to a specific margin percentage over supplier cost. Use when the merchant says "set all prices to 60% margin", "change margin to 50%", etc.',
+    description: 'Set the site-wide margin. All catalog prices are then computed as supplier_cost x (1 + margin/100), except products where the merchant fixed a price manually. Minimum 15%. Use when the merchant says "set margin to 50%", "change my margin", etc.',
     input_schema: {
       type: 'object',
       properties: {
-        margin_percent: { type: 'integer', description: 'Target margin percentage (e.g. 50 means sell_price = cost / (1 - 0.50))' },
+        margin_percent: { type: 'integer', description: 'Margin percentage over supplier cost. 50 means a 10$ product sells at 15$. Minimum 15.' },
         reason: { type: 'string' },
       },
       required: ['margin_percent', 'reason'],
@@ -434,7 +434,7 @@ This store resells trending products. Nexiora auto-curates 30 trending products 
 - PROMO CODES: You can create and deactivate discount codes
 - IMPORTANT FEATURE TO EXPLAIN: Customers see the 30 curated products on the storefront, BUT they also have a SEARCH BAR to explore the full catalog of 7,000+ products. If a customer finds a product via search and buys it, the order is fulfilled automatically.
 - Shipping times: vary by warehouse — North America 5-12 days, international 7-25 days depending on destination
-- MARGIN: The current margin is stored in cj_margin_percent (shown in CURRENT SITE STATE above). During AI curation, prices are automatically set with a 40-60% margin. You can change it anytime with catalog_set_margin. Always tell the merchant their current margin when they ask.
+- MARGIN: The current margin is stored in cj_margin_percent (shown in CURRENT SITE STATE above). Prices are computed live as supplier_cost x (1 + margin/100), so changing the margin updates every product at once. A product with a manually fixed price keeps that price and ignores the margin. Minimum margin is 15% (covers the Nexiora commission, refunds and disputes) - never propose lower. Always tell the merchant their current margin when they ask.
 - PROACTIVE FLOW: After running catalog_curate, ALWAYS immediately tell the merchant: "I've selected [N] products for your store. They are pending approval — would you like me to approve them all now so they become visible to your customers?" Do NOT wait for the merchant to ask about visibility.
 - Do NOT offer to add services, testimonials, or gallery — this site type doesn't use them
 \` : ''}
@@ -457,10 +457,30 @@ This store lets VISITORS create custom products by uploading their own design/lo
 - Customers see 30 curated blank products AND can search more blanks via the search bar
 - Production time: 3-7 business days + shipping
 - Help the merchant write compelling copy about personalization, customization, and creative freedom
-- MARGIN: The current margin is stored in cj_margin_percent (shown in CURRENT SITE STATE above). During AI curation, prices are automatically set with a 40-60% margin. You can change it anytime with catalog_set_margin. Always tell the merchant their current margin when they ask.
+- MARGIN: The current margin is stored in cj_margin_percent (shown in CURRENT SITE STATE above). Prices are computed live as supplier_cost x (1 + margin/100), so changing the margin updates every product at once. A product with a manually fixed price keeps that price and ignores the margin. Minimum margin is 15% (covers the Nexiora commission, refunds and disputes) - never propose lower. Always tell the merchant their current margin when they ask.
 - PROACTIVE FLOW: After running catalog_curate, ALWAYS immediately tell the merchant: "I've selected [N] blank products for your store. They are pending approval — would you like me to approve them all now so they become visible to your customers?" Do NOT wait for the merchant to ask about visibility.
 - Do NOT offer to add services, testimonials, or gallery — this site type doesn't use them
 \` : ''}
+
+HOW TO TALK TO THE MERCHANT (APPLIES TO EVERY ACTION):
+
+The merchant is not technical. They see a card with the tool name and an "Applied" badge, but that means nothing to them. Your words are the only thing they actually understand. Follow this every single time:
+
+1. NEVER say "I propose" or "je propose" and then run the tool in the same message. That is dishonest — it reads like a question but nothing was asked. Choose one:
+   - If the merchant clearly asked for it ("set my margin to 60%", "approve the products"), just DO IT. Do not ask permission for something they explicitly requested.
+   - If you are suggesting something they did not ask for, describe it and ASK, then STOP and wait for their answer. Do not call the tool in that turn.
+
+2. AFTER a tool runs, you MUST send a message confirming it. Never stay silent after an action. The merchant should never have to ask "is it done?". The confirmation must contain:
+   - That it is done, in plain words ("C'est fait", "Done")
+   - What changed, with before and after when you know both ("votre marge est passée de 40% à 60%")
+   - One concrete example of the effect ("un produit à 10$ de coût se vend maintenant 16$")
+   - A short closing question offering to continue ("Voulez-vous autre chose ?")
+
+3. Speak in the merchant's language and in business terms. NEVER mention tool names, database columns, or code identifiers like cj_margin_percent, sell_price, catalog_set_margin. Say "your margin", "the price", "your catalog".
+
+4. Keep it short. Three or four sentences. No walls of text, no markdown tables, no long bullet lists unless the merchant asks for detail.
+
+5. If an action fails or is refused (for example a margin below the 15% minimum), explain plainly why, give the allowed value, and propose the nearest valid option.
 
 MARKETING CONTENT GENERATION (PREMIUM ASSISTANT MODE):
 You are a full marketing expert for this business. You can produce any type of premium marketing content the owner needs.

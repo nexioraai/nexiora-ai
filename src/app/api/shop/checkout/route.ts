@@ -9,7 +9,7 @@ import { cjAdapter } from '@/lib/suppliers/cj-adapter';
 import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
 import { printifyAdapter } from '@/lib/suppliers/printify-adapter';
 import type { ShippingRequest } from '@/lib/suppliers/supplier-adapter';
-import { calcSellPrice, sitePricing, NEXIORA_COMMISSION_PERCENT } from '@/lib/pricing';
+import { calcSellPrice, sitePricing, NEXIORA_COMMISSION_PERCENT, resolveDisplayPrice } from '@/lib/pricing';
 import { logAnomaly } from '@/lib/anomaly';
 
 /** Décode un id panier catalog : "catalog-{uuid}::{variantId}" -> { realId: uuid, variantId }.
@@ -179,7 +179,15 @@ export async function POST(req: Request) {
           await logAnomaly({ type: 'catalog_cost_missing', siteId: site.id, slug, details: { itemId: item.id } });
           return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
         }
-        serverPrice = calcSellPrice(cost, margin, roundMode);
+        // Un prix saisi manuellement par le marchand prime sur le calcul par marge.
+        // Meme regle que la boutique et la recherche (resolveDisplayPrice).
+        const { data: selRow } = await supabaseAdmin
+          .from('site_catalog_selections')
+          .select('sell_price')
+          .eq('site_id', site.id)
+          .eq('catalog_product_id', realId)
+          .maybeSingle();
+        serverPrice = resolveDisplayPrice(cost, selRow?.sell_price, margin, roundMode);
       } else {
         const { data: sp } = await supabaseAdmin
           .from('shop_products')
