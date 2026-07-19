@@ -58,8 +58,29 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
           Domaine <span className="text-nexiora">personnalisé</span>
         </h1>
         <p className="text-slate-400 mb-10">
-          Connecte ton propre nom de domaine à ce site.
+          Achète un domaine via Nexiora, ou connecte celui que tu possèdes déjà.
         </p>
+
+        {!dns && (
+          <Link
+            href={`/domaine/${slug}/acheter`}
+            className="block bg-white/5 border border-white/10 rounded-2xl p-6 mb-4 hover:border-white/30 transition-all"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="font-semibold mb-1">Acheter un domaine</p>
+                <p className="text-sm text-slate-400">
+                  Nexiora l&apos;achète, configure le DNS et met ton site en ligne. Aucune manipulation de ta part.
+                </p>
+              </div>
+              <span className="text-slate-400 text-xl leading-none">&rarr;</span>
+            </div>
+          </Link>
+        )}
+
+        {!dns && (
+          <p className="text-sm text-slate-500 mb-4">Ou connecte un domaine que tu possèdes déjà :</p>
+        )}
 
         {!dns ? (
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">

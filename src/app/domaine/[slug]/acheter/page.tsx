@@ -146,8 +146,8 @@ export default function AcheterDomainePage({ params }: { params: Promise<{ slug:
     <main className="min-h-screen nexiora-bg text-white">
       <Navbar />
       <section className="max-w-2xl mx-auto px-6 pt-12 pb-24">
-        <Link href={`/edit/${slug}`} className="text-sm text-white/50 hover:text-white transition mb-2 inline-block">
-          Retour a l&apos;editeur
+        <Link href={`/domaine/${slug}`} className="text-sm text-white/50 hover:text-white transition mb-2 inline-block">
+          Retour
         </Link>
         <h1 className="text-4xl font-bold mb-2">Acheter un domaine</h1>
         <p className="text-white/60 mb-8">
