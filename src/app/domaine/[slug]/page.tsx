@@ -5,6 +5,7 @@ import { use } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { supabase } from '@/lib/supabase'
+import { useEffect } from 'react'
 
 type Dns = { type: string; name: string; value: string }
 
@@ -15,6 +16,19 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
   const [error, setError] = useState('')
   const [dns, setDns] = useState<Dns[] | null>(null)
   const [connected, setConnected] = useState('')
+  const [status, setStatus] = useState<any>(null)
+
+  useEffect(() => {
+    async function load() {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) return
+      const res = await fetch(`/api/domains/status?slug=${slug}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      if (res.ok) setStatus(await res.json())
+    }
+    load()
+  }, [slug])
 
   async function handleConnect() {
     setError('')
@@ -61,7 +75,38 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
           Achète un domaine via Nexiora, ou connecte celui que tu possèdes déjà.
         </p>
 
-        {!dns && (
+        {status?.purchased && (
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
+            <div className="flex items-baseline justify-between mb-4">
+              <p className="font-semibold">{status.purchased.domain}</p>
+              <span className={`text-xs px-2 py-0.5 rounded ${
+                status.purchased.status === 'sitemap_submitted' ? 'bg-emerald-900 text-emerald-300'
+                : status.purchased.status === 'failed' ? 'bg-red-900 text-red-300'
+                : 'bg-amber-900 text-amber-300'
+              }`}>
+                {status.purchased.status === 'sitemap_submitted' ? 'En ligne et indexe'
+                  : status.purchased.status === 'failed' ? 'Probleme'
+                  : 'Configuration en cours'}
+              </span>
+            </div>
+            <div className="space-y-2 text-sm">
+              <StatusLine done={!!status.purchased.purchased_at} label="Domaine achete" />
+              <StatusLine done={!!status.purchased.dns_configured_at} label="DNS configure" />
+              <StatusLine done={!!status.purchased.google_verified_at} label="Propriete verifiee par Google" />
+              <StatusLine done={!!status.purchased.sitemap_submitted_at} label="Soumis a Google" />
+            </div>
+            {status.purchased.renews_at && (
+              <p className="text-xs text-slate-500 mt-4">
+                Renouvellement le {new Date(status.purchased.renews_at).toLocaleDateString('fr-CA')}
+              </p>
+            )}
+            {status.purchased.last_error && (
+              <p className="text-xs text-red-400 mt-3">{status.purchased.last_error}</p>
+            )}
+          </div>
+        )}
+
+        {!dns && !status?.purchased && (
           <Link
             href={`/domaine/${slug}/acheter`}
             className="block bg-white/5 border border-white/10 rounded-2xl p-6 mb-4 hover:border-white/30 transition-all"
@@ -78,11 +123,11 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
           </Link>
         )}
 
-        {!dns && (
+        {!dns && !status?.purchased && (
           <p className="text-sm text-slate-500 mb-4">Ou connecte un domaine que tu possèdes déjà :</p>
         )}
 
-        {!dns ? (
+        {!dns && !status?.purchased ? (
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
             <label className="block text-sm font-semibold mb-2">Ton domaine</label>
             <input
@@ -116,7 +161,7 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
               Ajoute ces 2 enregistrements chez ton registraire (GoDaddy, Namecheap, IONOS…) :
             </p>
             <div className="space-y-2 mb-6">
-              {dns.map((r, i) => (
+              {dns?.map((r, i) => (
                 <div key={i} className="grid grid-cols-3 gap-3 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono">
                   <span><span className="text-slate-500">Type </span>{r.type}</span>
                   <span><span className="text-slate-500">Nom </span>{r.name}</span>
@@ -131,5 +176,18 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
         )}
       </section>
     </main>
+  )
+}
+
+function StatusLine({ done, label }: { done: boolean; label: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
+        done ? 'bg-emerald-500 text-black' : 'bg-white/10 text-white/30'
+      }`}>
+        {done ? '\u2713' : ''}
+      </span>
+      <span className={done ? 'text-white' : 'text-slate-500'}>{label}</span>
+    </div>
   )
 }
