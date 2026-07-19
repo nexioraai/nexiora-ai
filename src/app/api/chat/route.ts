@@ -289,6 +289,7 @@ IMPORTANT CONTEXT:
 - vision: ONE forward-looking sentence describing the long-term ambition of this business.
 - areaServed: the city or region this business serves (e.g. "Montréal" or "Grand Montréal"). Short.
 - priceRange: estimated price level for this sector, one of "$", "$$", "$$$", or "$$$$".
+- niche_keywords (CRITICAL for mode 3 dropshipping): an array of 8-10 GENERIC single-word English search terms used to search the supplier product catalog by product name. Use BROAD category words, NOT specific product names. The catalog will NOT match "yoga mat" or "resistance band", but WILL match "yoga", "fitness", "gym". Example for a fitness store: ["fitness", "gym", "yoga", "workout", "exercise", "training", "sport", "weight", "running", "muscle"]. Example for a pet store: ["pet", "dog", "cat", "puppy", "collar", "leash", "grooming", "animal", "feeding"]. Example for a tech gadget store: ["phone", "charger", "LED", "USB", "bluetooth", "wireless", "earbuds", "gadget", "smart", "cable"]. For mode 1 and 2, return an empty array [].
 
 DESIGN DIRECTION (CRITICAL — every site must look modern, premium and DISTINCT from others):
 - primaryColor: pick a BOLD, DISTINCTIVE color that fits THIS specific business and sector. NEVER default to generic corporate blue (#1E40AF, #2563EB and similar) unless the brand truly demands it. Explore the full spectrum — deep emerald, terracotta, burgundy, warm amber, plum, teal, charcoal with a vivid accent, etc. Each business should feel visually unique.
@@ -370,6 +371,7 @@ Return ONLY valid JSON, no markdown:
   "name": "",
   "slogan": "",
   "type": "",
+  "niche_keywords": [],
   "lang": "ISO 639-1 code of the language you are writing in, e.g. fr, en, ar, es, de, pt, sw",
   "primaryColor": "#hexcolor",
   "heroTitle": "",
@@ -537,6 +539,7 @@ Return ONLY valid JSON, no markdown:
       area_served: parsed.areaServed || null,
       price_range: parsed.priceRange || null,
       dropship_type: dropshipType,
+      niche_keywords: Array.isArray(parsed.niche_keywords) ? parsed.niche_keywords : [],
     });
 
     if (error) {

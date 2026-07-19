@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
-export const maxDuration = 30;
+export const maxDuration = 45;
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 /**
  * POST /api/catalog/curate
  * Body: { slug: string }
- * Claude Haiku analyse la niche du site et sélectionne les 30 meilleurs produits.
+ * Recherche multi-mots-cles + filtre de pertinence strict par Claude Haiku.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -18,10 +18,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'slug requis' }, { status: 400 });
     }
 
-    // 1. Récupère le site
     const { data: site, error: siteErr } = await supabaseAdmin
       .from('sites')
-      .select('id, type, mode, dropship_type, cj_margin_percent, lang')
+      .select('id, type, mode, dropship_type, cj_margin_percent, lang, niche_keywords')
       .eq('slug', slug)
       .single();
 
@@ -33,107 +32,107 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Site non-dropshipping' }, { status: 400 });
     }
 
-    // 2. Récupère les produits du catalogue (selon dropship_type)
-    const nicheKeyword = extractNicheKeyword(site.type);
-    const suppliers = site.dropship_type === 'pod_custom' || site.dropship_type === 'pod_brand'
-      ? ['printful', 'printify']
-      : ['cj', 'zendrop'];
+    const keywords: string[] = Array.isArray(site.niche_keywords) && site.niche_keywords.length > 0
+      ? site.niche_keywords
+      : extractFallbackKeywords(site.type);
 
-    let query = supabaseAdmin
-      .from('catalog_products')
-      .select('id, supplier_id, supplier_product_id, name, category, price, currency, images, shipping_days_min, warehouse_country')
-      .eq('in_stock', true)
-      .in('supplier_id', suppliers);
-
-    if (nicheKeyword) {
-      query = query.textSearch('name', nicheKeyword, { type: 'websearch', config: 'english' });
+    if (keywords.length === 0) {
+      return NextResponse.json({ error: 'Aucun mot-cle niche disponible', products: [] }, { status: 200 });
     }
 
-    query = query.order('price', { ascending: true }).limit(200);
+    const suppliers = site.dropship_type === 'pod_custom' || site.dropship_type === 'pod_brand'
+      ? ['printful']
+      : ['cj'];
 
-    let { data: products, error: prodErr } = await query;
+    const seen = new Set<string>();
+    const allProducts: any[] = [];
 
-    // Fallback: si textSearch trop restrictif, on charge sans filtre
-    if ((!products || products.length < 10) && nicheKeyword) {
-      const fallback = supabaseAdmin
+    for (const kw of keywords) {
+      const pattern = '%' + kw.toLowerCase().replace(/\s+/g, '%') + '%';
+      const { data: hits } = await supabaseAdmin
         .from('catalog_products')
-        .select('id, supplier_id, supplier_product_id, name, category, price, currency, images, shipping_days_min, warehouse_country')
+        .select('id, supplier_id, supplier_product_id, name, price, currency, images, shipping_days_min, warehouse_country')
         .eq('in_stock', true)
         .in('supplier_id', suppliers)
+        .ilike('name', pattern)
         .order('price', { ascending: true })
-        .limit(200);
-      const { data: fbProducts, error: fbErr } = await fallback;
-      if (!fbErr && fbProducts && fbProducts.length > 0) {
-        products = fbProducts;
-        prodErr = null;
+        .limit(40);
+
+      if (hits) {
+        for (const prod of hits) {
+          if (!seen.has(prod.id)) {
+            seen.add(prod.id);
+            allProducts.push(prod);
+          }
+        }
       }
     }
 
-    if (prodErr || !products || products.length === 0) {
-      return NextResponse.json({ error: 'Aucun produit trouvé pour cette niche', products: [] }, { status: 200 });
+    console.log('[Curate] ' + slug + ': ' + keywords.length + ' keywords -> ' + allProducts.length + ' candidats');
+
+    if (allProducts.length === 0) {
+      return NextResponse.json({ error: 'Aucun produit trouve pour cette niche', keywords, products: [] }, { status: 200 });
     }
 
-    // 3. Prépare le résumé pour Claude (compact pour économiser tokens)
-    const productList = products.map((p: any, i: number) => (
-      `${i}|${p.supplier_product_id}|${p.supplier_id}|${p.name}|${p.category}|${p.price}${p.currency}|${p.shipping_days_min}j|${p.warehouse_country}`
+    const productList = allProducts.map((prod: any, i: number) => (
+      i + '|' + prod.name + '|' + prod.price + (prod.currency || '') + '|' + (prod.shipping_days_min || '?') + 'j|' + (prod.warehouse_country || '?')
     )).join('\n');
 
     const lang = site.lang || 'fr';
+    const nicheLabel = site.type || keywords.join(', ');
 
-    // 4. Claude Haiku sélectionne les meilleurs
     const msg = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2000,
+      max_tokens: 3000,
       messages: [{
         role: 'user',
-        content: `Tu es un expert e-commerce dropshipping.
-
-Le marchand a une boutique spécialisée dans : "${site.type}".
-
-Voici ${products.length} produits disponibles (index|supplier_product_id|supplier|nom|catégorie|prix|délai|entrepôt) :
-${productList}
-
-Sélectionne les 30 meilleurs produits pour cette niche.
-Pour chaque produit, donne :
-- index (le numéro dans la liste)
-- sell_price : prix de vente suggéré en ${lang === 'fr' ? 'CAD' : 'USD'} (marge 40-60% sur le prix fournisseur, arrondi au .99)
-- reason : raison courte en ${lang === 'fr' ? 'français' : 'anglais'} (ex: "marge élevée", "trending", "bestseller")
-
-Réponds UNIQUEMENT en JSON, format :
-[{"index":0,"sell_price":29.99,"reason":"..."},...]
-
-Pas de texte avant ou après le JSON.`
+        content: 'You are a STRICT e-commerce product curator.\n\n' +
+          'STORE NICHE: "' + nicheLabel + '"\n' +
+          'NICHE KEYWORDS: ' + JSON.stringify(keywords) + '\n\n' +
+          'Candidate products (index|name|price|shipping|warehouse):\n' + productList + '\n\n' +
+          'CRITICAL TASK - RELEVANCE FILTERING:\n' +
+          'These products came from a broad keyword search and MANY are NOT relevant to the niche.\n' +
+          'Step 1: For EACH product, ask "Would a customer shopping at a ' + nicheLabel + ' store expect to find this?"\n' +
+          'Step 2: REJECT anything that does not belong. Examples of what to REJECT:\n' +
+          '  - A fitness store must NOT have: pet toys, kitchen knives, phone cables, jewelry, car accessories\n' +
+          '  - A pet store must NOT have: makeup, phone cases, kitchen gadgets, clothing for humans\n' +
+          '  - When in doubt, REJECT. Being strict is REQUIRED.\n' +
+          'Step 3: From the products that PASS, select up to 30, preferring variety within the niche and low supplier cost.\n\n' +
+          'For each selected product provide:\n' +
+          '- index: the number in the list\n' +
+          '- sell_price: suggested retail price in ' + (lang === 'fr' ? 'CAD' : 'USD') + ' (40-60% margin, rounded to .99)\n' +
+          '- reason: short justification in ' + (lang === 'fr' ? 'French' : 'English') + '\n\n' +
+          'RESPOND WITH ONLY a valid JSON array, no text before or after:\n' +
+          '[{"index":0,"sell_price":29.99,"reason":"..."}]\n\n' +
+          'If only 5 products are truly relevant, return only those 5. NEVER pad the list with irrelevant products.'
       }],
     });
 
-    // 5. Parse la réponse
     const raw = msg.content[0].type === 'text' ? msg.content[0].text : '';
     let selections: { index: number; sell_price: number; reason: string }[];
     try {
       const cleaned = raw.replace(/```json\s?/g, '').replace(/```/g, '').trim();
       selections = JSON.parse(cleaned);
     } catch {
-      return NextResponse.json({ error: 'Erreur parsing réponse IA', raw }, { status: 500 });
+      return NextResponse.json({ error: 'Erreur parsing reponse IA', raw }, { status: 500 });
     }
 
-    // 6. Insert dans site_catalog_selections
     const rows = selections
-      .filter((s) => s.index >= 0 && s.index < products.length)
-      .map((s, i) => ({
+      .filter((sel) => sel.index >= 0 && sel.index < allProducts.length)
+      .map((sel, i) => ({
         site_id: site.id,
-        catalog_product_id: products[s.index].id,
-        sell_price: s.sell_price,
+        catalog_product_id: allProducts[sel.index].id,
+        sell_price: sel.sell_price,
         ai_suggested: true,
         merchant_approved: false,
-        ai_reason: s.reason,
+        ai_reason: sel.reason,
         sort_order: i,
       }));
 
     if (rows.length === 0) {
-      return NextResponse.json({ error: 'Aucune sélection valide', selections }, { status: 500 });
+      return NextResponse.json({ error: 'Aucune selection valide apres filtrage', keywords, candidates: allProducts.length }, { status: 200 });
     }
 
-    // Upsert pour éviter les doublons si on re-curate
     const { data: inserted, error: insertErr } = await supabaseAdmin
       .from('site_catalog_selections')
       .upsert(rows, { onConflict: 'site_id,catalog_product_id' })
@@ -146,6 +145,8 @@ Pas de texte avant ou après le JSON.`
     return NextResponse.json({
       success: true,
       count: inserted?.length || 0,
+      keywords,
+      candidates: allProducts.length,
       selections: inserted,
     });
   } catch (err: any) {
@@ -153,11 +154,14 @@ Pas de texte avant ou après le JSON.`
   }
 }
 
-function extractNicheKeyword(type: string | null): string | null {
-  if (!type) return null;
+/**
+ * Fallback pour les sites crees avant niche_keywords.
+ */
+function extractFallbackKeywords(type: string | null): string[] {
+  if (!type) return [];
   const cleaned = type
-    .replace(/\b(dropshipping|retailer|store|shop|boutique|online|e-commerce|ecommerce|print-on-demand|print on demand|pod|marketplace|fashion brand)\b/gi, '')
-    .replace(/[&.]/g, ' ')
+    .replace(/\b(dropshipping|retailer|store|shop|boutique|online|e-commerce|ecommerce|print-on-demand|pod|marketplace|fashion|brand|pro|hub|zone|vibe|supply|global)\b/gi, '')
+    .replace(/[&.,\-]/g, ' ')
     .trim();
-  return cleaned || null;
+  return cleaned.split(/\s+/).filter((w) => w.length >= 3);
 }
