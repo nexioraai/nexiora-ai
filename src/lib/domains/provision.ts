@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { purchaseDomain, previewPurchase, createDnsRecord } from '@/lib/domains/porkbun';
 import { addDomainToVercel, VERCEL_A_RECORD, VERCEL_CNAME } from '@/lib/domains/vercel';
+import { getDnsVerificationToken } from '@/lib/domains/searchconsole';
 
 /**
  * Chaine complete apres encaissement : achat Porkbun, DNS, Vercel.
@@ -74,7 +75,23 @@ export async function provisionDomain(domainId: string): Promise<{ ok: boolean; 
     }
   }
 
-  // 4. Le site pointe desormais sur ce domaine.
+  // 4. TXT de verification Google, pose des maintenant pour laisser le temps
+  //    a la propagation DNS. La verification elle-meme est faite plus tard par
+  //    le cron : Google echoue s'il interroge le DNS trop tot.
+  try {
+    const token = await getDnsVerificationToken(row.domain);
+    await createDnsRecord(row.domain, { type: 'TXT', name: '', content: token });
+    await supabaseAdmin
+      .from('site_domains')
+      .update({ gsc_token: token })
+      .eq('id', domainId);
+  } catch (e: any) {
+    // Non bloquant : le domaine fonctionne meme si l'indexation attend.
+    // Le cron reessaiera.
+    console.error('[provision] TXT Google', row.domain, e?.message || e);
+  }
+
+  // 5. Le site pointe desormais sur ce domaine.
   await supabaseAdmin
     .from('sites')
     .update({ custom_domain: row.domain })

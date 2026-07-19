@@ -47,6 +47,22 @@
     {
       "path": "/api/cron/catalog-sync",
       "schedule": "0 21 * * *"
+    },
+    {
+      "path": "/api/cron/domain-indexing",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/domain-indexing",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/domain-indexing",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/domain-indexing",
+      "schedule": "0 22 * * *"
     }
   ]
 }
