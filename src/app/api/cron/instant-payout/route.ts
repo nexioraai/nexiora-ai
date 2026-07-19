@@ -1,47 +1,59 @@
 import { NextResponse } from 'next/server';
 import { getStripe } from '@/lib/stripe';
+import { startCronRun, finishCronRun } from '@/lib/cron-tracker';
 
 export const maxDuration = 10;
 
 /**
- * POST /api/cron/instant-payout
- * Runs 6x/day (every 4 hours). Checks Nexiora platform Stripe balance
- * and triggers an instant payout to the platform debit card if balance > $5.
+ * GET /api/cron/instant-payout
+ * Verifie le solde Stripe de la plateforme et declenche un virement instantane
+ * vers la carte de debit si le solde depasse 5$.
+ *
+ * La route etait en POST : les crons Vercel appellent en GET, donc elle
+ * renvoyait 405 a chaque execution et n'a jamais tourne.
  */
-export async function POST(req: Request) {
+export async function GET(req: Request) {
   const authHeader = req.headers.get('authorization');
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const runId = await startCronRun('instant-payout');
   try {
     const stripe = getStripe();
 
-    // Check available balance
     const balance = await stripe.balance.retrieve();
-    const available = balance.available.reduce((sum, b) => sum + b.amount, 0);
 
-    // Only payout if balance > $5 (500 cents) to avoid micro-payouts
-    if (available < 500) {
-      return NextResponse.json({ status: 'skipped', reason: 'Balance too low', available_cents: available });
+    // Un virement porte sur UNE devise. Additionner toutes les devises puis
+    // verser dans celle du premier element donnerait un montant faux des qu'il
+    // y a plusieurs devises au solde.
+    const results: { currency: string; amount: number; payoutId?: string; skipped?: string }[] = [];
+
+    for (const bal of balance.available) {
+      // Sous 5$, on laisse s'accumuler : chaque virement instantane coute 1%.
+      if (bal.amount < 500) {
+        results.push({ currency: bal.currency, amount: bal.amount, skipped: 'solde insuffisant' });
+        continue;
+      }
+      try {
+        const payout = await stripe.payouts.create({
+          amount: bal.amount,
+          currency: bal.currency,
+          method: 'instant',
+        });
+        results.push({ currency: bal.currency, amount: bal.amount, payoutId: payout.id });
+      } catch (e: any) {
+        // Carte non eligible, plafond atteint : on n'interrompt pas les autres devises.
+        results.push({ currency: bal.currency, amount: bal.amount, skipped: e.message });
+      }
     }
 
-    // Create instant payout to default external account (debit card)
-    const payout = await stripe.payouts.create({
-      amount: available,
-      currency: balance.available[0]?.currency || 'cad',
-      method: 'instant',
-    });
-
-    return NextResponse.json({
-      status: 'success',
-      payout_id: payout.id,
-      amount: available / 100,
-      currency: payout.currency,
-    });
+    const sent = results.filter((r) => r.payoutId).length;
+    await finishCronRun(runId, { itemsProcessed: sent });
+    return NextResponse.json({ status: 'done', payouts: sent, results });
   } catch (e: any) {
-    // If instant payout fails (e.g. card not eligible), fallback silently
     console.error('[instant-payout] Error:', e.message);
+    await finishCronRun(runId, { itemsProcessed: 0, status: 'error', errorMessage: e.message });
     return NextResponse.json({ status: 'error', message: e.message }, { status: 500 });
   }
 }
