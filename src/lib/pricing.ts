@@ -5,6 +5,35 @@
  */
 
 export const DEFAULT_MARGIN_PERCENT = 100;
+
+/** Commission Nexiora prelevee sur le prix de vente (mode 3 uniquement). */
+export const NEXIORA_COMMISSION_PERCENT = 6;
+
+/**
+ * Marge minimale pour que le marchand ne vende pas a perte.
+ * Le shipping est paye par l'acheteur et reverse au fournisseur : neutre pour le marchand.
+ * profit = vente - cout - (vente x commission)
+ * Seuil : m/100 = commission x (1 + m/100)  =>  m = 100c / (100 - c)
+ */
+export const BREAKEVEN_MARGIN_PERCENT =
+  (100 * NEXIORA_COMMISSION_PERCENT) / (100 - NEXIORA_COMMISSION_PERCENT);
+
+/**
+ * Plancher dur applique au marchand.
+ * Au-dessus du point mort (~6.4%) : a ce seuil le profit couvre les remboursements,
+ * litiges et colis perdus, qui n'entrent pas dans le calcul du point mort.
+ */
+export const MIN_MARGIN_PERCENT = 15;
+
+/** En dessous de ce seuil, la marge est viable mais fragile : alerte sans blocage. */
+export const LOW_MARGIN_PERCENT = 30;
+
+/** Profit marchand pour un cout fournisseur et une marge donnes (hors shipping). */
+export function merchantProfit(costPrice: number, marginPercent: number, roundMode: string): number {
+  const sell = calcSellPrice(costPrice, marginPercent, roundMode);
+  const commission = sell * (NEXIORA_COMMISSION_PERCENT / 100);
+  return Math.round((sell - costPrice - commission) * 100) / 100;
+}
 export const DEFAULT_ROUND_MODE = 'off';
 
 export function apply99(price: number, mode: string): number {

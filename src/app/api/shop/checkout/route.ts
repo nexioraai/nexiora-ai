@@ -9,7 +9,7 @@ import { cjAdapter } from '@/lib/suppliers/cj-adapter';
 import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
 import { printifyAdapter } from '@/lib/suppliers/printify-adapter';
 import type { ShippingRequest } from '@/lib/suppliers/supplier-adapter';
-import { calcSellPrice, sitePricing } from '@/lib/pricing';
+import { calcSellPrice, sitePricing, NEXIORA_COMMISSION_PERCENT } from '@/lib/pricing';
 import { logAnomaly } from '@/lib/anomaly';
 
 /** Décode un id panier catalog : "catalog-{uuid}::{variantId}" -> { realId: uuid, variantId }.
@@ -158,7 +158,7 @@ export async function POST(req: Request) {
     // ---- Passe unique : cout fournisseur + prix de vente serveur ----
     // SECURITE : le prix vient TOUJOURS du serveur, jamais du client.
     // Un panier falsifie (priceNumber modifie) est rejete ici.
-    const NEXIORA_COMMISSION_PERCENT = 6;
+
     const { margin, roundMode } = sitePricing(site);
     let supplierCost = 0;
     let totalAmount = 0;

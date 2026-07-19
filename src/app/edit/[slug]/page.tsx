@@ -14,6 +14,7 @@ import OrderManager from '@/components/edit/OrderManager';
 import FinanceDashboard from '@/components/edit/FinanceDashboard';
 import DashboardAlerts from '@/components/edit/DashboardAlerts';
 import HealthBadge from '@/components/edit/HealthBadge';
+import { MIN_MARGIN_PERCENT, LOW_MARGIN_PERCENT, NEXIORA_COMMISSION_PERCENT, merchantProfit } from '@/lib/pricing';
 import { supabase } from '@/lib/supabase';
 import { computeAiScore } from '@/app/lib/aiScore';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -91,6 +92,14 @@ export default function EditPage() {
   };
 
   const handleSave = async () => {
+    // Verrou rentabilite : jamais de marge sous le seuil de perte (mode 3)
+    if (site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom')) {
+      const m = Number(site.cj_margin_percent ?? 50);
+      if (m < MIN_MARGIN_PERCENT) {
+        setMessage('Marge trop basse : minimum ' + MIN_MARGIN_PERCENT + '% pour ne pas vendre a perte (commission Nexiora ' + NEXIORA_COMMISSION_PERCENT + '%).');
+        return;
+      }
+    }
     setSaving(true);
     setMessage('');
     const { error } = await supabase
@@ -286,11 +295,17 @@ export default function EditPage() {
               <div className="flex items-center gap-3">
                 <input
                   type="number"
-                  min={1}
+                  min={MIN_MARGIN_PERCENT}
                   value={site.cj_margin_percent || 50}
                   onChange={(e) => {
-                    const v = Math.max(1, Number(e.target.value));
-                    updateField('cj_margin_percent', v);
+                    const v = Number(e.target.value);
+                    updateField('cj_margin_percent', Number.isNaN(v) ? MIN_MARGIN_PERCENT : v);
+                  }}
+                  onBlur={(e) => {
+                    const v = Number(e.target.value);
+                    if (Number.isNaN(v) || v < MIN_MARGIN_PERCENT) {
+                      updateField('cj_margin_percent', MIN_MARGIN_PERCENT);
+                    }
                   }}
                   className="w-24 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white text-center focus:outline-none focus:border-[#E07040] transition"
                 />
@@ -299,6 +314,39 @@ export default function EditPage() {
               <p className="text-xs text-slate-500 mt-1">
                 Prix de vente = coût fournisseur × (1 + marge/100). Ex : coût 10$ à 50% → vente 15$. Aucune limite — vous choisissez librement. Modifiable aussi via l'agent IA.
               </p>
+              {(() => {
+                const m = site.cj_margin_percent ?? 50;
+                const round = site.cj_round_mode || 'off';
+                const profit10 = merchantProfit(10, m, round);
+                if (m < MIN_MARGIN_PERCENT) {
+                  return (
+                    <div className="mt-3 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3">
+                      <p className="text-sm text-red-300 font-medium">Marge insuffisante</p>
+                      <p className="text-xs text-red-200/80 mt-1">
+                        Avec {m}% de marge, il vous resterait {profit10.toFixed(2)}$ sur un produit à 10$ de coût, après la commission Nexiora de {NEXIORA_COMMISSION_PERCENT}%.
+                        Un seul remboursement ou colis perdu effacerait le profit de dizaines de ventes.
+                        Marge minimum autorisée : {MIN_MARGIN_PERCENT}%.
+                      </p>
+                    </div>
+                  );
+                }
+                if (m < LOW_MARGIN_PERCENT) {
+                  return (
+                    <div className="mt-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3">
+                      <p className="text-sm text-amber-300 font-medium">Marge faible</p>
+                      <p className="text-xs text-amber-200/80 mt-1">
+                        Après la commission Nexiora de {NEXIORA_COMMISSION_PERCENT}%, il vous reste {profit10.toFixed(2)}$ sur un produit à 10$ de coût.
+                        Viable, mais une hausse du prix fournisseur ou quelques retours réduiraient fortement votre rentabilité.
+                      </p>
+                    </div>
+                  );
+                }
+                return (
+                  <p className="text-xs text-emerald-400/80 mt-2">
+                    Profit net estimé : {profit10.toFixed(2)}$ sur un produit à 10$ de coût (après commission Nexiora de {NEXIORA_COMMISSION_PERCENT}%).
+                  </p>
+                );
+              })()}
             </FieldSection>
           )}
 
@@ -539,7 +587,7 @@ export default function EditPage() {
 
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || (site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom') && Number(site.cj_margin_percent ?? 50) < MIN_MARGIN_PERCENT)}
             className="w-full btn-nexiora py-4 rounded-2xl font-semibold text-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {saving ? 'Saving…' : 'Save Changes'}
