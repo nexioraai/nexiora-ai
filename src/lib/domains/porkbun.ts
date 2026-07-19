@@ -110,6 +110,67 @@ export async function getPricing(): Promise<Record<string, any>> {
   return data.pricing || {};
 }
 
+export type PurchasePreview = {
+  wouldSucceed: boolean;
+  costCents: number | null;
+  costDisplay: string | null;
+  balance: string | null;
+  sufficientFunds: boolean;
+  withinMonthlySpendLimit: boolean;
+  message: string | null;
+};
+
+/**
+ * Repetition a blanc : execute tous les controles Porkbun (disponibilite,
+ * correspondance du prix, eligibilite, fonds, plafond de depense) sans rien
+ * acheter ni debiter. Ne consomme pas le quota de creation.
+ * A appeler systematiquement avant purchaseDomain.
+ */
+export async function previewPurchase(domain: string, costCents: number): Promise<PurchasePreview> {
+  const data = await pbPost('/domain/create/' + encodeURIComponent(domain), {
+    cost: costCents,
+    agreeToTerms: 'yes',
+    dryRun: true,
+  });
+  const p = data?.preview || data || {};
+  return {
+    wouldSucceed: p.wouldSucceed === true,
+    costCents: p.cost != null ? Number(p.cost) : null,
+    costDisplay: p.costDisplay ?? null,
+    balance: p.balance ?? null,
+    sufficientFunds: p.sufficientFunds !== false,
+    withinMonthlySpendLimit: p.withinMonthlySpendLimit !== false,
+    message: p.message ?? data?.message ?? null,
+  };
+}
+
+/**
+ * Achat reel. La cle d'idempotence est obligatoire : une nouvelle tentative
+ * dans les 24h rejoue le resultat initial au lieu de racheter et refacturer.
+ * Elle doit donc etre stable pour une meme intention d'achat (l'id de la ligne
+ * site_domains, pas un uuid genere a chaque appel).
+ */
+export async function purchaseDomain(
+  domain: string,
+  costCents: number,
+  idempotencyKey: string
+): Promise<{ ok: true; raw: any }> {
+  const { apikey, secretapikey } = creds();
+  const res = await fetch(PORKBUN_BASE + '/domain/create/' + encodeURIComponent(domain), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Idempotency-Key': idempotencyKey,
+    },
+    body: JSON.stringify({ apikey, secretapikey, cost: costCents, agreeToTerms: 'yes' }),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || data?.status !== 'SUCCESS') {
+    throw new Error('Porkbun achat ' + res.status + ': ' + (data?.message || 'echec'));
+  }
+  return { ok: true, raw: data };
+}
+
 /** Test d'authentification. */
 export async function ping(): Promise<string> {
   const data = await pbPost('/ping');
