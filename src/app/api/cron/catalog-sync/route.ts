@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
   // 1. Récupère les niches actives (sites mode 3 uniquement)
   const { data: sites } = await supabaseAdmin
     .from('sites')
-    .select('type')
+    .select('type, niche_keywords')
     .eq('mode', 3)
     .not('type', 'is', null);
 
@@ -34,14 +34,59 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ done: true, synced: 0, message: 'Aucun site mode 3' });
   }
 
-  // 2. Extrait les mots-clés uniques des niches
-  const rawNiches = [...new Set(
-    sites
-      .map(s => extractNicheKeyword(s.type))
-      .filter(Boolean)
-  )] as string[];
-  const nicheArrays = await Promise.all(rawNiches.map(expandNiche));
-  const niches = nicheArrays.flat();
+  // 2. Mots-cles de recherche fournisseur.
+  // niche_keywords est genere une fois a la creation du site : on le reutilise
+  // au lieu de rappeler l'IA a chaque execution pour un resultat identique.
+  // expandNiche ne sert plus que de repli pour les sites anterieurs a cette colonne.
+  const keywordSet = new Set<string>();
+  const needExpand: string[] = [];
+  for (const site of sites as any[]) {
+    if (Array.isArray(site.niche_keywords) && site.niche_keywords.length > 0) {
+      for (const k of site.niche_keywords) keywordSet.add(String(k).toLowerCase());
+    } else {
+      const kw = extractNicheKeyword(site.type);
+      if (kw) needExpand.push(kw);
+    }
+  }
+
+  if (needExpand.length > 0) {
+    const expanded = await Promise.all([...new Set(needExpand)].map(expandNiche));
+    for (const k of expanded.flat()) keywordSet.add(String(k).toLowerCase());
+  }
+
+  // Rotation des mots-cles.
+  // Mesure : ~18s par mot-cle sur les trois fournisseurs (CJ limite a 1 req/s).
+  // Traiter tous les mots-cles d'un coup depasse maxDuration et le cron est tue
+  // avant d'ecrire son resultat (5 executions bloquees en 'running' avant ce
+  // correctif). On en traite donc quelques-uns par passage, en reprenant la ou
+  // on s'etait arrete, position memorisee dans cron_state.
+  const KEYWORDS_PER_RUN = 2;  // mesure : 3 mots-cles = 82s, au-dela de maxDuration
+  const allKeywords = [...keywordSet].sort();
+
+  const { data: stateRow } = await supabaseAdmin
+    .from('cron_state')
+    .select('value')
+    .eq('key', 'catalog-sync-cursor')
+    .maybeSingle();
+
+  const cursor = Number((stateRow?.value as any)?.offset ?? 0);
+  const start = allKeywords.length > 0 ? cursor % allKeywords.length : 0;
+
+  // Fenetre glissante : on boucle sur le debut de la liste si besoin.
+  const niches: string[] = [];
+  for (let i = 0; i < Math.min(KEYWORDS_PER_RUN, allKeywords.length); i++) {
+    niches.push(allKeywords[(start + i) % allKeywords.length]);
+  }
+
+  await supabaseAdmin
+    .from('cron_state')
+    .upsert({
+      key: 'catalog-sync-cursor',
+      value: { offset: start + niches.length },
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'key' });
+
+  console.log(`[catalog-sync] mots-cles ${start}-${start + niches.length - 1} sur ${allKeywords.length} : ${niches.join(', ')}`);
 
   if (niches.length === 0) {
     return NextResponse.json({ done: true, synced: 0, message: 'Aucune niche exploitable' });
