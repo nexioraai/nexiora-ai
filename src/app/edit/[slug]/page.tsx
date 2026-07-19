@@ -617,7 +617,7 @@ export default function EditPage() {
       </section>
 
       <Footer />
-      <AIAgentChat slug={slug} onSiteUpdated={setSite} />
+      <AIAgentChat slug={slug} onSiteUpdated={setSite} lang={site?.lang} />
     </main>
   );
 }

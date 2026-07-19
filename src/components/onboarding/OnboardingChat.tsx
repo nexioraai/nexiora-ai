@@ -104,7 +104,7 @@ export default function OnboardingChat() {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.access_token}`,
           },
-          body: JSON.stringify({ message: finalMessage, location: '', ...(effectiveDsType ? { dropshipType: effectiveDsType } : {}) }),
+          body: JSON.stringify({ message: finalMessage, location: '', ...(data.detectedLang ? { language: data.detectedLang } : {}), ...(effectiveDsType ? { dropshipType: effectiveDsType } : {}) }),
         });
         const genData = await genRes.json();
         if (!genRes.ok || !genData.slug) throw new Error(genData.error || 'Génération échouée.');

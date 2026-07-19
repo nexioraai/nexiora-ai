@@ -20,9 +20,81 @@ type ToolState = { status: ToolStatus; error?: string };
 type Props = {
   slug: string;
   onSiteUpdated?: (newSite: any) => void;
+  lang?: string;
 };
 
-export default function AIAgentChat({ slug, onSiteUpdated }: Props) {
+type UILang = 'fr' | 'en' | 'es' | 'ar';
+
+const UI_STRINGS: Record<UILang, Record<string, string>> = {
+  fr: {
+    proposedChange: 'Modification proposee',
+    applied: 'Applique',
+    refused: 'Refuse',
+    applying: 'Application…',
+    error: 'Erreur',
+    refuse: 'Refuser',
+    approve: 'Approuver',
+    setMargin: 'Passer la marge a',
+    marginNote: 'Tous les prix du catalogue sont recalcules, sauf ceux fixes manuellement.',
+    curate: 'Selectionner les meilleurs produits pour votre niche',
+    curateNote: "L'IA analyse le catalogue fournisseur et retient les plus pertinents.",
+    approveAll: 'Rendre tous les produits visibles sur votre site',
+    enhance: 'Reecrire les titres et descriptions des produits',
+  },
+  en: {
+    proposedChange: 'Proposed change',
+    applied: 'Applied',
+    refused: 'Refused',
+    applying: 'Applying…',
+    error: 'Error',
+    refuse: 'Refuse',
+    approve: 'Approve',
+    setMargin: 'Set margin to',
+    marginNote: 'All catalog prices are recalculated, except those you set manually.',
+    curate: 'Select the best products for your niche',
+    curateNote: 'The AI reviews the supplier catalog and keeps the most relevant ones.',
+    approveAll: 'Make all products visible on your site',
+    enhance: 'Rewrite product titles and descriptions',
+  },
+  es: {
+    proposedChange: 'Cambio propuesto',
+    applied: 'Aplicado',
+    refused: 'Rechazado',
+    applying: 'Aplicando…',
+    error: 'Error',
+    refuse: 'Rechazar',
+    approve: 'Aprobar',
+    setMargin: 'Fijar el margen en',
+    marginNote: 'Todos los precios se recalculan, excepto los que fijaste manualmente.',
+    curate: 'Seleccionar los mejores productos para tu nicho',
+    curateNote: 'La IA analiza el catalogo del proveedor y conserva los mas relevantes.',
+    approveAll: 'Hacer visibles todos los productos en tu sitio',
+    enhance: 'Reescribir titulos y descripciones de los productos',
+  },
+  ar: {
+    proposedChange: 'تغيير مقترح',
+    applied: 'تم التطبيق',
+    refused: 'مرفوض',
+    applying: 'جاري التطبيق…',
+    error: 'خطأ',
+    refuse: 'رفض',
+    approve: 'موافقة',
+    setMargin: 'تعيين الهامش إلى',
+    marginNote: 'يعاد حساب جميع أسعار الكتالوج، باستثناء الأسعار التي حددتها يدويا.',
+    curate: 'اختيار أفضل المنتجات لمجالك',
+    curateNote: 'يحلل الذكاء الاصطناعي كتالوج المورد ويحتفظ بالأكثر ملاءمة.',
+    approveAll: 'إظهار جميع المنتجات على موقعك',
+    enhance: 'إعادة كتابة عناوين ووصف المنتجات',
+  },
+};
+
+function ui(lang: string | undefined, key: string): string {
+  const l = (lang || 'en').toLowerCase() as UILang;
+  const dict = UI_STRINGS[l] || UI_STRINGS.en;
+  return dict[key] || UI_STRINGS.en[key] || key;
+}
+
+export default function AIAgentChat({ slug, onSiteUpdated, lang = 'en' }: Props) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const messagesRef = useRef<ChatMessage[]>([]);
@@ -201,6 +273,7 @@ export default function AIAgentChat({ slug, onSiteUpdated }: Props) {
                 toolStates={toolStates}
                 onApprove={handleApprove}
                 onRefuse={handleRefuse}
+                lang={lang}
               />
             ))}
 
@@ -258,11 +331,13 @@ function MessageBubble({
   toolStates,
   onApprove,
   onRefuse,
+  lang,
 }: {
   message: ChatMessage;
   toolStates: Record<string, ToolState>;
   onApprove: (id: string, name: string, input: any) => void;
   onRefuse: (id: string) => void;
+  lang?: string;
 }) {
   if (message.role === 'user') {
     const textBlock = message.content.find((b) => b.type === 'text') as
@@ -300,6 +375,7 @@ function MessageBubble({
               state={state}
               onApprove={() => onApprove(block.id, block.name, block.input)}
               onRefuse={() => onRefuse(block.id)}
+              lang={lang}
             />
           );
         }
@@ -314,12 +390,15 @@ function ToolProposalCard({
   state,
   onApprove,
   onRefuse,
+  lang,
 }: {
   block: { type: 'tool_use'; id: string; name: string; input: any };
   state: ToolState;
   onApprove: () => void;
   onRefuse: () => void;
+  lang?: string;
 }) {
+  const t = (k: string) => ui(lang, k);
   const renderSummary = () => {
     const input = block.input || {};
     switch (block.name) {
@@ -422,6 +501,25 @@ function ToolProposalCard({
         return <>Remove gallery image #{input.index}</>;
       case 'propose_gallery_clear':
         return <>Clear the entire gallery (remove all images)</>;
+      case 'catalog_set_margin':
+        return (
+          <>
+            {t('setMargin')}{' '}
+            <strong className="text-[#E07040]">{input.margin_percent}%</strong>
+            <div className="text-xs text-slate-400 mt-1">{t('marginNote')}</div>
+          </>
+        );
+      case 'catalog_curate':
+        return (
+          <>
+            {t('curate')}
+            <div className="text-xs text-slate-400 mt-1">{t('curateNote')}</div>
+          </>
+        );
+      case 'catalog_approve_all':
+        return <>{t('approveAll')}</>;
+      case 'catalog_enhance':
+        return <>{t('enhance')}</>;
       default:
         return <>{block.name}</>;
     }
@@ -429,13 +527,13 @@ function ToolProposalCard({
 
   const statusBadge = () => {
     if (state.status === 'applied')
-      return <span className="text-green-400 text-xs font-bold">✓ Applied</span>;
+      return <span className="text-green-400 text-xs font-bold">✓ {t('applied')}</span>;
     if (state.status === 'refused')
-      return <span className="text-slate-500 text-xs font-bold">✗ Refused</span>;
+      return <span className="text-slate-500 text-xs font-bold">✗ {t('refused')}</span>;
     if (state.status === 'applying')
-      return <span className="text-slate-400 text-xs">Applying…</span>;
+      return <span className="text-slate-400 text-xs">{t('applying')}</span>;
     if (state.status === 'error')
-      return <span className="text-red-400 text-xs">Error</span>;
+      return <span className="text-red-400 text-xs">{t('error')}</span>;
     return null;
   };
 
@@ -450,7 +548,7 @@ function ToolProposalCard({
     <div className={`border rounded-2xl p-4 text-sm space-y-3 ${borderClass}`}>
       <div className="flex items-center justify-between gap-2">
         <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">
-          Proposed change
+          {t('proposedChange')}
         </div>
         {statusBadge()}
       </div>
@@ -469,13 +567,13 @@ function ToolProposalCard({
             onClick={onRefuse}
             className="flex-1 py-2 rounded-lg text-xs font-semibold bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 transition"
           >
-            Refuse
+            {t('refuse')}
           </button>
           <button
             onClick={onApprove}
             className="flex-1 btn-nexiora py-2 rounded-lg text-xs font-semibold text-white transition"
           >
-            Approve
+            {t('approve')}
           </button>
         </div>
       )}

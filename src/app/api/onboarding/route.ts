@@ -48,7 +48,7 @@ OUTPUT FORMAT — respond with ONLY a JSON object, no markdown, no code fences:
 - To ask a question: {"type":"ask","reply":"<message in user's language>","skippable":<boolean>,"detectedMode":<1|2|3|null>,"detectedDropshipType":<"reseller"|"pod_brand"|"pod_custom"|null>}
   Set "skippable":true on EVERY optional offer (color AND contact). Set "skippable":false only for required questions (sector, what they sell).
   ALWAYS fill "detectedMode" with your best current guess (or null if truly unclear yet). Fill "detectedDropshipType" only when mode is 3 AND the sub-type is clear from the user's words, else null.
-- When everything needed is gathered (or optional parts skipped): {"type":"done","summary":"<a single rich English paragraph: sector, what they sell, the preferred color if given (state explicitly), and any real contact details provided. Be factual — only what the user actually said.>","detectedMode":<1|2|3>,"detectedDropshipType":<"reseller"|"pod_brand"|"pod_custom"|null>}
+- When everything needed is gathered (or optional parts skipped): {"type":"done","summary":"<a single rich English paragraph: sector, what they sell, the preferred color if given (state explicitly), and any real contact details provided. Be factual — only what the user actually said.>","detectedLang":"<ISO 639-1 code of the language the USER wrote in during this conversation: fr, en, ar, es, etc. This is the language their website must be written in. Look at what the user typed, not at your own replies.>","detectedMode":<1|2|3>,"detectedDropshipType":<"reseller"|"pod_brand"|"pod_custom"|null>}
 
 FINALIZATION RULES:
 - As soon as sector + what they sell are gathered and you have offered the optional color/contact steps (or user skipped), return {"type":"done",...}. Do NOT keep chatting.
@@ -190,6 +190,7 @@ export async function POST(req: Request) {
       return NextResponse.json({
         type: 'ready_to_generate',
         summary: intent.summary,
+        detectedLang: intent.detectedLang || null,
         mode: finalMode,
         dropshipType: detectedDsType,
       });

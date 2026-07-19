@@ -10,8 +10,32 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // Client anon pour valider le token utilisateur
 
+// Translitteration arabe -> latin pour les slugs d'URL.
+const AR_TO_LATIN: Record<string, string> = {
+  'ا': 'a', 'أ': 'a', 'إ': 'i', 'آ': 'a', 'ب': 'b', 'ت': 't', 'ث': 'th',
+  'ج': 'j', 'ح': 'h', 'خ': 'kh', 'د': 'd', 'ذ': 'dh', 'ر': 'r', 'ز': 'z',
+  'س': 's', 'ش': 'sh', 'ص': 's', 'ض': 'd', 'ط': 't', 'ظ': 'z', 'ع': 'a',
+  'غ': 'gh', 'ف': 'f', 'ق': 'q', 'ك': 'k', 'ل': 'l', 'م': 'm', 'ن': 'n',
+  'ه': 'h', 'و': 'w', 'ي': 'y', 'ى': 'a', 'ة': 'a', 'ء': '', 'ئ': 'y', 'ؤ': 'w',
+};
+
+function transliterate(input: string): string {
+  // Retire les diacritiques latins (é -> e) puis convertit l'arabe
+  const latin = input.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return latin
+    .split('')
+    .map((ch) => (AR_TO_LATIN[ch] !== undefined ? AR_TO_LATIN[ch] : ch))
+    .join('');
+}
+
 function generateSlug(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
+  const base = transliterate(name || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+    .slice(0, 60);
+  // Filet de securite : si l'ecriture n'est pas translitterable (chinois, cyrillique...)
+  return (base || 'site') + '-' + Date.now();
 }
 
 function getPhonePrefix(location: string): string {
@@ -178,7 +202,7 @@ export async function POST(req: Request) {
     const siteMode: number | null = modeMatch ? parseInt(modeMatch[1], 10) : null;
     const location = body.location || '';
     const dropshipType = body.dropshipType || null;
-    const language = body.language || 'fr';
+    const language = body.language || 'auto';
 
     if (!message) return NextResponse.json({ error: 'Message is required' }, { status: 400 });
 
@@ -271,7 +295,7 @@ Return ONLY the JSON.`
 
 IMPORTANT CONTEXT:
 - Location: ${location || 'Not specified'}
-- Write ALL text content in the EXACT SAME LANGUAGE as the business description provided below. Detect the language automatically and use it consistently everywhere.
+- LANGUAGE (CRITICAL): write ALL text content in ${detectedLang === 'ar' ? 'ARABIC' : detectedLang === 'fr' ? 'FRENCH' : detectedLang === 'es' ? 'SPANISH' : 'ENGLISH'}. This is the language the merchant used, so it is the language their customers speak. Every single string you produce — name, slogan, hero, about, FAQ, buttons, section names — must be in that language. The business description below may be written in English for internal purposes: do NOT copy its language, use the one specified here.
 - Phone format: start with ${phonePrefix}
 - Currency: use ${currency}
 - Dropship type: ${dropshipType || 'none'} (none = not a dropshipping site, reseller = resale imported goods, pod_brand = merchant's own designs printed on demand, pod_custom = visitor uploads their own design)
@@ -509,7 +533,7 @@ Return ONLY valid JSON, no markdown:
       pages: (() => {
         const m = siteMode ?? (parsed.mode === 2 || parsed.mode === 3 ? parsed.mode : 1);
         if (m === 3) {
-          const l = (parsed.lang || detectedLang || 'fr').toLowerCase();
+          const l = (detectedLang || parsed.lang || 'fr').toLowerCase();
           if (l === 'fr') return ['Accueil', 'À propos', 'Contact'];
           if (l === 'es') return ['Inicio', 'Acerca de', 'Contacto'];
           if (l === 'ar') return ['الرئيسية', 'من نحن', 'اتصل بنا'];
@@ -533,7 +557,7 @@ Return ONLY valid JSON, no markdown:
       social_links: parsed.socialLinks,
       owner_email,
       mode: siteMode ?? (parsed.mode === 2 || parsed.mode === 3 ? parsed.mode : 1),
-      lang: parsed.lang || detectedLang || "fr",
+      lang: detectedLang || parsed.lang || "fr",
       geo_lat,
       geo_lng,
       area_served: parsed.areaServed || null,
