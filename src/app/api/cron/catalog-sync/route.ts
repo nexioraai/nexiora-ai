@@ -92,35 +92,36 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ done: true, synced: 0, message: 'Aucune niche exploitable' });
   }
 
-  // 3. Sync chaque fournisseur
+  // 3. Sync des fournisseurs en parallele.
+  // Trois API distinctes, aucun etat partage : le rate limit CJ (1 req/s) est
+  // gere par le delay interne a cjAdapter.syncCatalog et reste sequentiel.
+  // Sequentiellement, la duree etait la somme des trois (mesure : 47s, trop
+  // proche de maxDuration=60). En parallele, c'est le maximum des trois.
+  // allSettled et non all : un fournisseur en panne ne doit pas annuler les autres.
+  const SUPPLIERS: { name: string; run: () => Promise<{ products: CatalogProduct[] }> }[] = [
+    { name: 'CJ', run: () => cjAdapter.syncCatalog({ categories: niches, page: 1, page_size: 50 }) },
+    { name: 'Printful', run: () => printfulAdapter.syncCatalog({ categories: niches }) },
+    { name: 'Printify', run: () => printifyAdapter.syncCatalog({ categories: niches }) },
+  ];
+
+  const settled = await Promise.allSettled(SUPPLIERS.map((s) => s.run()));
+
+  // Les upserts restent sequentiels : ils ecrivent tous dans catalog_products.
   let totalSynced = 0;
   const errors: string[] = [];
 
-  // --- CJ ---
-  try {
-    const result = await cjAdapter.syncCatalog({ categories: niches, page: 1, page_size: 50 });
-    const upserted = await upsertProducts(result.products);
-    totalSynced += upserted;
-  } catch (e: any) {
-    errors.push(`CJ: ${e.message}`);
-  }
-
-  // --- Printful ---
-  try {
-    const pfResult = await printfulAdapter.syncCatalog({ categories: niches });
-    const pfUpserted = await upsertProducts(pfResult.products);
-    totalSynced += pfUpserted;
-  } catch (e: any) {
-    errors.push(`Printful: ${e.message}`);
-  }
-
-  // --- Printify ---
-  try {
-    const pyResult = await printifyAdapter.syncCatalog({ categories: niches });
-    const pyUpserted = await upsertProducts(pyResult.products);
-    totalSynced += pyUpserted;
-  } catch (e: any) {
-    errors.push(`Printify: ${e.message}`);
+  for (let i = 0; i < settled.length; i++) {
+    const outcome = settled[i];
+    const name = SUPPLIERS[i].name;
+    if (outcome.status === 'rejected') {
+      errors.push(`${name}: ${outcome.reason?.message || outcome.reason}`);
+      continue;
+    }
+    try {
+      totalSynced += await upsertProducts(outcome.value.products);
+    } catch (e: any) {
+      errors.push(`${name} (upsert): ${e.message}`);
+    }
   }
 
   // --- Zendrop : DESACTIVE ---

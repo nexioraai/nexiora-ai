@@ -159,7 +159,7 @@ export default function AdminDashboard() {
         </span>
       </div>
       <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 mb-10">
-        {stats.anomalies.length === 0 ? (
+        {anomalies.length === 0 ? (
           <p className="text-sm text-white/40">Aucune anomalie détectée.</p>
         ) : (
           <div className="overflow-x-auto">
