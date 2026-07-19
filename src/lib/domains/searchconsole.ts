@@ -16,8 +16,52 @@ function getAuth() {
   });
 }
 
+function siteVerification() {
+  return google.siteVerification({ version: 'v1', auth: getAuth() });
+}
+
 function searchconsole() {
   return google.searchconsole({ version: 'v1', auth: getAuth() });
+}
+
+/**
+ * Jeton TXT a poser dans la zone DNS du domaine.
+ * Google refuse d'enregistrer une propriete tant que ce TXT n'est pas visible.
+ * Nexiora possede la zone Porkbun, donc peut l'ecrire sans intervention du
+ * marchand : c'est ce qui rend l'indexation entierement automatique.
+ */
+export async function getDnsVerificationToken(domain: string): Promise<string> {
+  const res = await siteVerification().webResource.getToken({
+    requestBody: {
+      site: { type: 'INET_DOMAIN', identifier: domain },
+      verificationMethod: 'DNS_TXT',
+    },
+  });
+  const token = res.data.token;
+  if (!token) throw new Error('Jeton de verification non renvoye');
+  return token;
+}
+
+/**
+ * Declenche la verification cote Google. A appeler APRES ecriture du TXT et
+ * un delai de propagation DNS : Google echoue s'il ne voit pas encore
+ * l'enregistrement, et il faut alors reessayer plus tard.
+ */
+export async function verifyDomain(domain: string): Promise<boolean> {
+  try {
+    await siteVerification().webResource.insert({
+      verificationMethod: 'DNS_TXT',
+      requestBody: {
+        site: { type: 'INET_DOMAIN', identifier: domain },
+      },
+    });
+    return true;
+  } catch (e: any) {
+    const msg = String(e?.message || '');
+    // Propagation DNS incomplete : ce n'est pas un echec definitif.
+    if (/token|verification|not found/i.test(msg)) return false;
+    throw e;
+  }
 }
 
 /** Email du compte de service : c'est lui qu'il faut autoriser cote Search Console. */
