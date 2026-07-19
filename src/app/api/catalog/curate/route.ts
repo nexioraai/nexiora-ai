@@ -97,7 +97,13 @@ export async function POST(req: NextRequest) {
           '  - A fitness store must NOT have: pet toys, kitchen knives, phone cables, jewelry, car accessories\n' +
           '  - A pet store must NOT have: makeup, phone cases, kitchen gadgets, clothing for humans\n' +
           '  - When in doubt, REJECT. Being strict is REQUIRED.\n' +
-          'Step 3: From the products that PASS, select up to 30, preferring variety within the niche and low supplier cost.\n\n' +
+          'Step 3: From the products that PASS, select up to 30 with MANDATORY DIVERSITY.\n' +
+          'DIVERSITY RULE (STRICT): the store has ' + keywords.length + ' niche keywords. Spread your selection across ALL of them.\n' +
+          '  - MAXIMUM 4 products of the same product type (e.g. max 4 charging cables, max 4 leggings, max 4 pet bowls).\n' +
+          '  - A visitor must see a VARIED storefront, not 20 versions of the same item.\n' +
+          '  - If one product type dominates the candidate list, pick the 4 best and REJECT the rest, even if they are relevant.\n' +
+          '  - Prefer covering more keywords with fewer products each, over saturating one keyword.\n' +
+          'Within those constraints, prefer low supplier cost and reasonable shipping times.\n\n' +
           'For each selected product provide:\n' +
           '- index: the number in the list\n' +
           '- sell_price: suggested retail price in ' + (lang === 'fr' ? 'CAD' : 'USD') + ' (40-60% margin, rounded to .99)\n' +
