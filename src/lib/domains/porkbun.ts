@@ -171,6 +171,60 @@ export async function purchaseDomain(
   return { ok: true, raw: data };
 }
 
+export type DnsRecordType = 'A' | 'AAAA' | 'CNAME' | 'ALIAS' | 'TXT' | 'MX' | 'NS' | 'CAA';
+
+export type DnsRecord = {
+  id: string;
+  name: string;
+  type: string;
+  content: string;
+  ttl: string;
+  prio: string | null;
+};
+
+/**
+ * Cree un enregistrement DNS.
+ * name : sous-domaine SANS le domaine. Chaine vide pour la racine, '*' pour
+ * un joker. ttl : minimum et defaut 600 secondes.
+ */
+export async function createDnsRecord(
+  domain: string,
+  record: { type: DnsRecordType; name?: string; content: string; ttl?: number; prio?: number }
+): Promise<string> {
+  const body: Record<string, unknown> = {
+    type: record.type,
+    content: record.content,
+    name: record.name ?? '',
+    ttl: String(record.ttl ?? 600),
+  };
+  if (record.prio != null) body.prio = String(record.prio);
+  const data = await pbPost('/dns/create/' + encodeURIComponent(domain), body);
+  return String(data.id ?? '');
+}
+
+/** Tous les enregistrements du domaine, tous types confondus. */
+export async function listDnsRecords(domain: string): Promise<DnsRecord[]> {
+  const data = await pbPost('/dns/retrieve/' + encodeURIComponent(domain));
+  return (data.records || []) as DnsRecord[];
+}
+
+/** Supprime tous les enregistrements d'un type pour un sous-domaine donne. */
+export async function deleteDnsByNameType(
+  domain: string,
+  type: DnsRecordType,
+  subdomain = ''
+): Promise<void> {
+  const path = '/dns/deleteByNameType/' + encodeURIComponent(domain) + '/' + type +
+    (subdomain ? '/' + encodeURIComponent(subdomain) : '');
+  await pbPost(path);
+}
+
+/** Domaines presents sur le compte Nexiora. */
+export async function listAllDomains(): Promise<{ domain: string; status: string }[]> {
+  const data = await pbPost('/domain/listAll');
+  return (data.domains || []).map((d: any) => ({ domain: d.domain, status: d.status }));
+}
+
 /** Test d'authentification. */
 export async function ping(): Promise<string> {
   const data = await pbPost('/ping');
