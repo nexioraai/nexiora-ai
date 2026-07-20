@@ -19,12 +19,22 @@ export async function POST(req: Request) {
 
     const { data: site } = await supabaseAdmin
       .from('sites')
-      .select('id, cj_email, cj_api_key, cj_margin_percent, cj_round_mode')
+      .select('id, mode, cj_email, cj_api_key, cj_margin_percent, cj_round_mode')
       .eq('slug', slug)
       .eq('owner_email', user.email)
       .single();
     if (!site?.cj_email || !site?.cj_api_key) {
       return NextResponse.json({ error: 'Compte CJ non connecté' }, { status: 400 });
+    }
+    // Frontiere stricte : shop_products appartient au mode 2 (stock propre,
+    // prix fige decide par le marchand). Le mode 3 passe exclusivement par
+    // site_catalog_selections, ou le prix est recalcule live depuis la marge.
+    // Importer ici en mode 3 creerait une seconde etagere aux prix figes.
+    if (site.mode === 3) {
+      return NextResponse.json(
+        { error: 'Import indisponible en mode 3 : utilisez la sélection catalogue.' },
+        { status: 400 }
+      );
     }
 
     let imported = 0;
