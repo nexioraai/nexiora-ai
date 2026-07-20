@@ -31,7 +31,7 @@ export async function POST(req: Request) {
 
     const { data: site } = await supabaseAdmin
       .from('sites')
-      .select('id, cj_email, cj_api_key, shipping_flat')
+      .select('id, shipping_flat')
       .eq('slug', slug)
       .single();
     if (!site) return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });

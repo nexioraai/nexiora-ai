@@ -12,7 +12,6 @@ import PaymentConnect from '@/components/edit/PaymentConnect';
 import CatalogSelections from '@/components/edit/CatalogSelections';
 import OrderManager from '@/components/edit/OrderManager';
 import FinanceDashboard from '@/components/edit/FinanceDashboard';
-import DashboardAlerts from '@/components/edit/DashboardAlerts';
 import HealthBadge from '@/components/edit/HealthBadge';
 import { MIN_MARGIN_PERCENT, LOW_MARGIN_PERCENT, NEXIORA_COMMISSION_PERCENT, merchantProfit } from '@/lib/pricing';
 import { supabase } from '@/lib/supabase';
@@ -178,7 +177,7 @@ export default function EditPage() {
               Edit <span className="text-nexiora">{site.name}</span>
             </h1>
             <div className="mt-3">
-              <HealthBadge slug={slug} aiScore={computeAiScore(site as any).score} />
+              <HealthBadge aiScore={computeAiScore(site as any).score} />
             </div>
           </div>
           <Link
@@ -191,7 +190,6 @@ export default function EditPage() {
           </Link>
         </div>
 
-        <DashboardAlerts slug={slug} />
 
         {/* Bloc Visibilite IA */}
         {(() => {

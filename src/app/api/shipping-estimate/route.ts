@@ -16,17 +16,25 @@ export async function POST(req: NextRequest) {
 
     const { data: site } = await supabase
       .from('sites')
-      .select('cj_email, cj_api_key')
+      .select('id')
       .eq('id', siteId)
       .single()
 
-    if (!site?.cj_email || !site?.cj_api_key) {
-      return NextResponse.json({ error: 'Site has no CJ credentials' }, { status: 404 })
+    if (!site) {
+      return NextResponse.json({ error: 'Site not found' }, { status: 404 })
+    }
+
+    // Mode 3 : credentials Nexiora, le marchand ne connecte pas de compte CJ.
+    const cjEmail = process.env.CJ_EMAIL || ''
+    const cjApiKey = process.env.CJ_API_KEY || ''
+    if (!cjEmail || !cjApiKey) {
+      console.error('shipping-estimate: credentials Nexiora absents')
+      return NextResponse.json({ error: 'Shipping estimate unavailable' }, { status: 503 })
     }
 
     const freight = await cjCalculateFreight(
-      site.cj_email,
-      site.cj_api_key,
+      cjEmail,
+      cjApiKey,
       countryCode,
       products
     )
