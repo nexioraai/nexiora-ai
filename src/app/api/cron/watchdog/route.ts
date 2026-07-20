@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { Resend } from 'resend';
 
@@ -13,10 +13,15 @@ const EXPECTED_CRONS: Record<string, number> = {
   'cj-tracking': 26,
   'cj-stock-sync': 26,
   'instant-payout': 26,
-  'catalog-suggest': 170,
+  'catalog-suggest': 180,
 };
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const auth = req.headers.get('authorization');
+  if (process.env.CRON_SECRET && auth !== 'Bearer ' + process.env.CRON_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const now = new Date();
   const missing: string[] = [];
 
