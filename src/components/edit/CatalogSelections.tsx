@@ -1,7 +1,17 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 const ACCENT = '#E07040';
+
+/** Les routes catalog exigent le token du proprietaire du site. */
+async function authHeaders(): Promise<Record<string, string>> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  return token
+    ? { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+    : { 'Content-Type': 'application/json' };
+}
 
 interface Selection {
   id: string;
@@ -38,7 +48,9 @@ export default function CatalogSelections({ slug }: { slug: string }) {
   const fetchSelections = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/catalog/selections?slug=${slug}`);
+      const res = await fetch(`/api/catalog/selections?slug=${slug}`, {
+        headers: await authHeaders(),
+      });
       const data = await res.json();
       setSelections(data.selections || []);
     } catch (e: any) {
@@ -56,7 +68,7 @@ export default function CatalogSelections({ slug }: { slug: string }) {
     try {
       const res = await fetch('/api/catalog/curate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await authHeaders(),
         body: JSON.stringify({ slug }),
       });
       const data = await res.json();
@@ -69,7 +81,7 @@ export default function CatalogSelections({ slug }: { slug: string }) {
         try {
           const enhRes = await fetch('/api/catalog/enhance', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: await authHeaders(),
             body: JSON.stringify({ slug }),
           });
           const enhData = await enhRes.json();
@@ -89,7 +101,7 @@ export default function CatalogSelections({ slug }: { slug: string }) {
   const handleApprove = async (id: string, approved: boolean) => {
     const res = await fetch('/api/catalog/selections', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await authHeaders(),
       body: JSON.stringify({ slug, id, merchant_approved: approved }),
     });
     if (res.ok) {
@@ -104,13 +116,16 @@ export default function CatalogSelections({ slug }: { slug: string }) {
   const handlePriceSave = async (id: string, price: number) => {
     await fetch('/api/catalog/selections', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await authHeaders(),
       body: JSON.stringify({ slug, id, sell_price: price }),
     });
   };
 
   const handleDelete = async (id: string) => {
-    const res = await fetch(`/api/catalog/selections?slug=${slug}&id=${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/catalog/selections?slug=${slug}&id=${id}`, {
+      method: 'DELETE',
+      headers: await authHeaders(),
+    });
     if (res.ok) {
       setSelections(prev => prev.filter(s => s.id !== id));
     }
@@ -124,7 +139,7 @@ export default function CatalogSelections({ slug }: { slug: string }) {
     try {
       const res = await fetch('/api/catalog/enhance', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await authHeaders(),
         body: JSON.stringify({ slug }),
       });
       const data = await res.json();
