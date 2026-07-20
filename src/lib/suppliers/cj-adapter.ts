@@ -37,6 +37,35 @@ function parseCjPrice(raw: any): number {
   return 0;
 }
 
+/**
+ * Produits inutilisables en dropshipping, a exclure du catalogue.
+ * - Retrait sur place ("self pickup") : aucune expedition possible, on ne peut
+ *   pas fulfiller la commande.
+ * - Prix rond aberrant (999, 10000...) : produit mal configure chez CJ, souvent
+ *   un placeholder ou justement un article pickup.
+ */
+function isUnsellable(raw: any): boolean {
+  const name = String(raw.productNameEn || raw.nameEn || raw.productName || '').toLowerCase();
+
+  // Rejeter uniquement le retrait EXCLUSIF. Le simple mot "pickup" est trop
+  // large : beaucoup de produits listent le retrait comme une option parmi
+  // UPS/USPS/etc. et restent parfaitement expediables.
+  const exclusivePickup = [
+    'only self pickup',
+    'only self pick-up',
+    'only self pick up',
+  ];
+  if (exclusivePickup.some((t) => name.includes(t))) return true;
+  // Titre qui COMMENCE par "self-pick-up" : le retrait est la nature du produit.
+  if (/^self[- ]?pick[- ]?up/.test(name)) return true;
+
+  const price = parseCjPrice(raw.sellPrice ?? raw.productPrice ?? 0);
+  // Placeholders CJ : prix ronds evidents sur des produits qui ne les valent pas.
+  if (price === 999 || price === 10000) return true;
+
+  return false;
+}
+
 /** Mappe un produit CJ brut vers CatalogProduct unifié. */
 function mapCjProduct(raw: any): CatalogProduct {
   const variants = Array.isArray(raw.variants)
@@ -111,7 +140,9 @@ export const cjAdapter: SupplierAdapter = {
 
           const rawList = data?.content?.[0]?.productList ?? data?.content ?? data?.list ?? [];
           // Tag each raw product with the warehouse country for this pass
-          const tagged = rawList.map((r: any) => ({ ...r, _warehouseCountry: pass.warehouseTag }));
+          const tagged = rawList
+            .filter((r: any) => !isUnsellable(r))
+            .map((r: any) => ({ ...r, _warehouseCountry: pass.warehouseTag }));
           const mapped = tagged.map(mapCjProduct);
           allProducts.push(...mapped);
           if (rawList.length < pageSize) break;
