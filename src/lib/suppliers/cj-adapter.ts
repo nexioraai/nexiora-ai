@@ -134,8 +134,10 @@ export const cjAdapter: SupplierAdapter = {
     supplierProductId: string,
     creds: Record<string, string>
   ): Promise<ProductVariant[]> {
-    const email = creds['email'] || process.env.CJ_EMAIL || '';
-    const apiKey = creds['apiKey'] || process.env.CJ_API_KEY || '';
+    // Compte CJ Nexiora, jamais celui d'un marchand : le parametre creds est
+    // impose par l'interface SupplierAdapter mais ignore pour CJ.
+    const email = NEXIORA_CJ_EMAIL;
+    const apiKey = NEXIORA_CJ_API_KEY;
     try {
       const variants = await cjGetVariants(email, apiKey, supplierProductId);
       if (!Array.isArray(variants)) return [];
@@ -279,8 +281,9 @@ export const cjAdapter: SupplierAdapter = {
     countryCode: string,
     creds: Record<string, string>
   ): Promise<ShippingResult> {
-    const email = creds['email'] || creds['cj_email'] || '';
-    const apiKey = creds['apiKey'] || creds['cj_api_key'] || '';
+    // Compte CJ Nexiora, jamais celui d'un marchand.
+    const email = NEXIORA_CJ_EMAIL;
+    const apiKey = NEXIORA_CJ_API_KEY;
 
     // Resoudre les vid pour chaque item
     const cjProducts: { vid: string; quantity: number }[] = [];
