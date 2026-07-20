@@ -75,3 +75,9 @@ prisma/dev.db
 *.bak
 *.bak[0-9]
 *.bk*
+
+# Backups locaux
+*.backup
+*.backup[0-9]
+*.bk[0-9]
+_trash_backups/
