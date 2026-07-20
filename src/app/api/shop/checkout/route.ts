@@ -183,11 +183,23 @@ export async function POST(req: Request) {
         // Meme regle que la boutique et la recherche (resolveDisplayPrice).
         const { data: selRow } = await supabaseAdmin
           .from('site_catalog_selections')
-          .select('sell_price')
+          .select('sell_price, merchant_approved')
           .eq('site_id', site.id)
           .eq('catalog_product_id', realId)
           .maybeSingle();
-        serverPrice = resolveDisplayPrice(cost, selRow?.sell_price, margin, roundMode);
+        // Le produit doit etre selectionne ET approuve par le marchand.
+        // Sans ce controle, tout produit du catalogue global serait achetable
+        // sur n'importe quelle boutique.
+        if (!selRow || selRow.merchant_approved !== true) {
+          await logAnomaly({
+            type: 'checkout_unapproved_product',
+            siteId: site.id,
+            slug,
+            details: { catalogProductId: realId, selected: !!selRow },
+          });
+          return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
+        }
+        serverPrice = resolveDisplayPrice(cost, selRow.sell_price, margin, roundMode);
       } else {
         const { data: sp } = await supabaseAdmin
           .from('shop_products')
