@@ -56,6 +56,45 @@ export async function GET() {
     }
   }
 
+  // #3 — Crons qui finissent à 0 items alors qu'ils ne devraient pas
+  const NEVER_ZERO = ['catalog-sync', 'cj-stock-sync', 'supplier-watch'];
+  const zeroAlerts: string[] = [];
+
+  for (const cronName of NEVER_ZERO) {
+    const cutoff = new Date(now.getTime() - 26 * 60 * 60 * 1000).toISOString();
+    const { data: recent } = await supabaseAdmin
+      .from('cron_runs')
+      .select('items_processed, status')
+      .eq('cron_name', cronName)
+      .eq('status', 'success')
+      .gte('started_at', cutoff)
+      .order('started_at', { ascending: false })
+      .limit(3);
+
+    if (recent && recent.length > 0 && recent.every(r => r.items_processed === 0)) {
+      zeroAlerts.push(cronName);
+    }
+  }
+
+  if (zeroAlerts.length > 0) {
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: 'Nexiora Alerts <no-reply@nexiora.ca>',
+        to: ADMIN_EMAIL,
+        subject: `\u26a0\ufe0f ${zeroAlerts.length} cron(s) \u00e0 0 r\u00e9sultats`,
+        html: [
+          '<p>Ces crons ont retourn\u00e9 0 items sur leurs derni\u00e8res ex\u00e9cutions :</p>',
+          '<ul>',
+          ...zeroAlerts.map(c => `<li><strong>${c}</strong></li>`),
+          '</ul>',
+        ].join(''),
+      });
+    } catch (e) {
+      console.error('Watchdog zero-result alert failed:', e);
+    }
+  }
+
   // #2 — Domaines en échec (marchand a payé mais provisioning raté)
   const { data: failedDomains } = await supabaseAdmin
     .from('site_domains')
@@ -85,6 +124,7 @@ export async function GET() {
     checked: Object.keys(EXPECTED_CRONS).length,
     missing,
     failedDomains: failedDomains?.length || 0,
-    ok: missing.length === 0 && (!failedDomains || failedDomains.length === 0),
+    zeroAlerts,
+    ok: missing.length === 0 && (!failedDomains || failedDomains.length === 0) && zeroAlerts.length === 0,
   });
 }
