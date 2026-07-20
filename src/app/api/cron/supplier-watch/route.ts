@@ -8,16 +8,19 @@ import { startCronRun, finishCronRun } from '@/lib/cron-tracker';
 export const maxDuration = 300;
 
 /**
- * OBSERVATION SEULE - ce cron ne modifie NI les prix, NI in_stock, NI les
- * selections marchands. Il lit l'etat reel chez le fournisseur, le compare
- * a notre cache, et produit un rapport. Seule ecriture : last_checked_at,
- * qui sert uniquement a faire tourner les lots.
+ * Lit l'etat reel chez le fournisseur, le compare a notre cache, produit un
+ * rapport (checkout_anomalies + email si bloquant).
  *
- * Une fois la fiabilite des detections verifiee sur plusieurs jours, on
- * pourra decider quelles actions automatiser.
+ * ECRITURES AUTORISEES, strictement limitees a :
+ *   - last_checked_at : rotation des lots
+ *   - in_stock : la vitrine et la recherche filtrent dessus, un produit epuise
+ *     doit disparaitre de l'affichage plutot que d'etre refuse au paiement
+ *
+ * Ne modifie NI les prix, NI les selections marchands. Un ecart de prix est
+ * signale, jamais corrige automatiquement : la decision revient au marchand.
  */
 
-const BATCH_SIZE = 170;          // mesure : 45 produits = 64s, au-dela de maxDuration
+const BATCH_SIZE = 170;          // mesure : 170 produits = 239s (maxDuration 300s)
 const RATE_LIMIT_MS = 1100;     // CJ : 1 requete/seconde stricte
 const ABORT_ERROR_RATIO = 0.2;  // au-dela, on suppose une panne API et on arrete
 const PRICE_SPIKE_FACTOR = 2;   // hausse consideree comme brutale
@@ -118,6 +121,8 @@ async function runWatch() {
   // 3. Interrogation du fournisseur
   const findings: Finding[] = [];
   const checkedIds: string[] = [];
+  const outOfStockIds: string[] = [];
+  const backInStockIds: string[] = [];
   let apiErrors = 0;
   let aborted = false;
 
@@ -153,15 +158,18 @@ async function runWatch() {
 
     checkedIds.push(p.id);
 
-    // Rupture de stock
+    // Rupture de stock. listedNum absent => -1 : donnee non fiable, on n'ecrit rien.
     const listed = Number(raw?.listedNum ?? -1);
     if (listed === 0) {
+      outOfStockIds.push(p.id);
       findings.push({
         kind: 'out_of_stock',
         supplier_product_id: p.supplier_product_id,
         name: p.name,
         detail: 'Stock epuise chez le fournisseur',
       });
+    } else if (listed > 0) {
+      backInStockIds.push(p.id);
     }
 
     // Comparaison de prix
@@ -199,6 +207,24 @@ async function runWatch() {
       .from('catalog_products')
       .update({ last_checked_at: new Date().toISOString() })
       .in('id', checkedIds);
+  }
+
+  // La vitrine et la recherche filtrent sur in_stock : un produit epuise
+  // disparait de l'affichage au lieu d'etre refuse au moment du paiement.
+  if (outOfStockIds.length > 0) {
+    const { error } = await supabaseAdmin
+      .from('catalog_products')
+      .update({ in_stock: false })
+      .in('id', outOfStockIds);
+    if (error) console.error('[supplier-watch] update in_stock=false', error.message);
+  }
+
+  if (backInStockIds.length > 0) {
+    const { error } = await supabaseAdmin
+      .from('catalog_products')
+      .update({ in_stock: true })
+      .in('id', backInStockIds);
+    if (error) console.error('[supplier-watch] update in_stock=true', error.message);
   }
 
   // 5. Persistance des findings (visibles sur /admin)

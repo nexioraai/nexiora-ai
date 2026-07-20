@@ -4,6 +4,10 @@ import { startCronRun, finishCronRun } from '@/lib/cron-tracker';
 import { cjGetOrderDetail } from '@/lib/cj/client';
 import { sendShippingEmail } from '@/lib/email/sendShippingEmail';
 
+// Mode 3 : credentials Nexiora, le marchand ne connecte pas de compte CJ.
+const CJ_EMAIL = process.env.CJ_EMAIL || '';
+const CJ_API_KEY = process.env.CJ_API_KEY || '';
+
 export const maxDuration = 300;
 
 /**
@@ -49,15 +53,14 @@ export async function GET(req: NextRequest) {
   for (const [siteId, siteOrders] of bySite) {
     const { data: site } = await supabaseAdmin
       .from('sites')
-      .select('cj_email, cj_api_key, name')
+      .select('name')
       .eq('id', siteId)
       .maybeSingle();
-    if (!site?.cj_email || !site?.cj_api_key) continue;
 
     for (const order of siteOrders) {
       checked++;
       try {
-        const detail = await cjGetOrderDetail(site.cj_email, site.cj_api_key, order.id);
+        const detail = await cjGetOrderDetail(CJ_EMAIL, CJ_API_KEY, order.id);
         const trackNumber = detail?.trackNumber || null;
         if (trackNumber) {
           await supabaseAdmin
@@ -70,7 +73,7 @@ export async function GET(req: NextRequest) {
             await sendShippingEmail({
               to: order.customer_email,
               customerName: order.customer_name || undefined,
-              shopName: site.name || 'Votre boutique',
+              shopName: site?.name || 'Votre boutique',
               trackingNumber: trackNumber,
             });
           }
