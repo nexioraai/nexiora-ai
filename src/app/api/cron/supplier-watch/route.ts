@@ -17,7 +17,7 @@ export const maxDuration = 300;
  * pourra decider quelles actions automatiser.
  */
 
-const BATCH_SIZE = 80;          // mesure : 45 produits = 64s, au-dela de maxDuration
+const BATCH_SIZE = 170;          // mesure : 45 produits = 64s, au-dela de maxDuration
 const RATE_LIMIT_MS = 1100;     // CJ : 1 requete/seconde stricte
 const ABORT_ERROR_RATIO = 0.2;  // au-dela, on suppose une panne API et on arrete
 const PRICE_SPIKE_FACTOR = 2;   // hausse consideree comme brutale
