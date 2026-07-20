@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabase as supabaseAnon } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { cjGetVariants } from '@/lib/cj/client';
+import { apply99 } from '@/lib/pricing';
 
 /** POST /api/shop/cj/import → importe un ou plusieurs produits CJ. Body: { slug, pids: string[] } */
 export async function POST(req: Request) {
@@ -25,17 +26,6 @@ export async function POST(req: Request) {
     if (!site?.cj_email || !site?.cj_api_key) {
       return NextResponse.json({ error: 'Compte CJ non connecté' }, { status: 400 });
     }
-
-    // Arrondi psychologique en ,99 selon le mode choisi par le marchand.
-    // 'down' -> ,99 inferieur (ex. 18.40 -> 17.99) ; 'up' -> ,99 superieur (ex. 18.40 -> 18.99)
-    const apply99 = (p: number, mode: string): number => {
-      const floorInt = Math.floor(p);
-      const lower = floorInt - 1 + 0.99;        // ex. 17.99
-      const upper = floorInt + 0.99;            // ex. 18.99
-      if (mode === 'up') return upper;
-      if (mode === 'down') return lower < 0 ? upper : lower;
-      return p;                                 // 'off' ou inconnu : pas d'arrondi
-    };
 
     let imported = 0;
     const errors: string[] = [];
