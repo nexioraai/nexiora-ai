@@ -4,6 +4,10 @@ import { cjCalculateFreight, cjCreateOrder, cjGetBalance, cjGetOrderDetail, cjGe
 
 const MAX_PAY_ATTEMPTS = 3;
 
+// Mode 3 : Nexiora possede le compte fournisseur. Le marchand ne connecte rien.
+const CJ_EMAIL = process.env.CJ_EMAIL || '';
+const CJ_API_KEY = process.env.CJ_API_KEY || '';
+
 /** Détermine si une erreur CJ est permanente (inutile de réessayer). */
 function isPermanentError(msg: string): boolean {
   const m = msg.toLowerCase();
@@ -19,9 +23,9 @@ function isPermanentError(msg: string): boolean {
 /**
  * Exécute le dropshipping CJ pour une commande payée (côté client).
  * Lignes avec cj_vid → commande CJ. Lignes sans cj_vid → ignorées (stock).
- * Mode déterminé par sites.cj_auto_pay :
- *   - false (défaut) : crée la commande chez CJ, paiement manuel par le marchand.
- *   - true : paie automatiquement via solde CJ (payType 2), avec garde-fous.
+ * Credentials Nexiora (CJ_EMAIL / CJ_API_KEY) : le marchand ne connecte pas
+ * de compte CJ. Paiement systematique via le solde Nexiora (payType 2),
+ * avec verrou idempotent, garde-fou anti double-commande et controle de solde.
  */
 export async function fulfillCjOrder(orderId: string): Promise<string[]> {
   const { data: order } = await supabaseAdmin
@@ -31,12 +35,10 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
     .maybeSingle();
   if (!order) return [];
 
-  const { data: site } = await supabaseAdmin
-    .from('sites')
-    .select('cj_email, cj_api_key, cj_auto_pay')
-    .eq('id', order.site_id)
-    .maybeSingle();
-  if (!site?.cj_email || !site?.cj_api_key) return [];
+  if (!CJ_EMAIL || !CJ_API_KEY) {
+    console.error('CJ fulfill: credentials Nexiora absents (CJ_EMAIL / CJ_API_KEY)');
+    return [];
+  }
 
   const { data: items } = await supabaseAdmin
     .from('shop_order_items')
@@ -84,7 +86,7 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
           vidById.set('catalog-' + cp.id, picked);
           continue;
         }
-        const variants = await cjGetVariants(site.cj_email, site.cj_api_key, cp.supplier_product_id);
+        const variants = await cjGetVariants(CJ_EMAIL, CJ_API_KEY, cp.supplier_product_id);
         const firstVid = Array.isArray(variants) && variants.length > 0
           ? (variants[0].vid || variants[0].variantId)
           : null;
@@ -125,7 +127,7 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
   // --- Meilleur transporteur ---
   let logisticName: string | undefined;
   try {
-    const freight = await cjCalculateFreight(site.cj_email, site.cj_api_key, endCountryCode, cjProducts);
+    const freight = await cjCalculateFreight(CJ_EMAIL, CJ_API_KEY, endCountryCode, cjProducts);
     if (Array.isArray(freight) && freight.length > 0) {
       logisticName = freight[0].logisticName;
     }
@@ -149,20 +151,6 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
     products: cjProducts,
   };
 
-  // ================= MODE MANUEL (cj_auto_pay = false) =================
-  if (!site.cj_auto_pay) {
-    const result = await cjCreateOrder(site.cj_email, site.cj_api_key, baseOrder);
-    const cjOrderId = result?.orderId || result?.orderCode || null;
-    if (cjOrderId) {
-      await supabaseAdmin
-        .from('shop_orders')
-        .update({ cj_order_id: cjOrderId, status: 'processing' })
-        .eq('id', order.id);
-    }
-    return cjProducts.map((p) => p.vid);
-  }
-
-  // ================= MODE AUTO (cj_auto_pay = true) =================
   // Verrou idempotent atomique : seul un passage peut prendre la commande.
   const { data: locked } = await supabaseAdmin
     .from('shop_orders')
@@ -179,7 +167,7 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
 
   // Garde-fou anti double-commande : une tentative precedente a pu creer
   // la commande chez CJ avant une coupure reseau. On verifie avant de recreer.
-  const existing = await cjGetOrderDetail(site.cj_email, site.cj_api_key, order.id);
+  const existing = await cjGetOrderDetail(CJ_EMAIL, CJ_API_KEY, order.id);
   if (existing && (existing.orderId || existing.cjOrderId)) {
     const existingId = existing.orderId || existing.cjOrderId;
     const alreadyPaid = ['UNSHIPPED', 'SHIPPED', 'DELIVERED'].includes(existing.orderStatus);
@@ -196,7 +184,7 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
 
   // Garde-fou solde
   try {
-    const balance = await cjGetBalance(site.cj_email, site.cj_api_key);
+    const balance = await cjGetBalance(CJ_EMAIL, CJ_API_KEY);
     if (balance <= 0) {
       console.error(`CJ fulfill: solde insuffisant (${balance}) pour ${order.id}`);
       await supabaseAdmin
@@ -217,7 +205,7 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
 
   // Création + paiement par solde (payType 2)
   try {
-    const result = await cjCreateOrder(site.cj_email, site.cj_api_key, { ...baseOrder, payType: 2 });
+    const result = await cjCreateOrder(CJ_EMAIL, CJ_API_KEY, { ...baseOrder, payType: 2 });
     const cjOrderId = result?.orderId || result?.orderCode || null;
     await supabaseAdmin
       .from('shop_orders')
