@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { cjFetch } from '@/lib/cj/client';
 import { NEXIORA_COMMISSION_PERCENT } from '@/lib/pricing';
 import { Resend } from 'resend';
+import { startCronRun, finishCronRun } from '@/lib/cron-tracker';
 
 export const maxDuration = 60;
 
@@ -50,6 +51,24 @@ function parseLowPrice(sellPrice: unknown): number | null {
 }
 
 export async function GET(req: NextRequest) {
+  const runId = await startCronRun('supplier-watch');
+  try {
+    const res = await runWatch();
+    let checked = 0;
+    try {
+      checked = Number((await res.clone().json())?.checked ?? 0);
+    } catch (e) {
+      console.error('watchdog: failed to parse checked count', e);
+    }
+    await finishCronRun(runId, { itemsProcessed: checked });
+    return res;
+  } catch (e: any) {
+    await finishCronRun(runId, { itemsProcessed: 0, status: 'error', errorMessage: e?.message || String(e) });
+    throw e;
+  }
+}
+
+async function runWatch() {
   const started = Date.now();
 
   const email = process.env.CJ_EMAIL;
