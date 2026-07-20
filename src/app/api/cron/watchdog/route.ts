@@ -11,7 +11,6 @@ const EXPECTED_CRONS: Record<string, number> = {
   'supplier-watch': 14,
   'domain-indexing': 14,
   'cj-tracking': 26,
-  'cj-stock-sync': 26,
   'instant-payout': 26,
   'catalog-suggest': 180,
   'domain-retry': 4,
@@ -63,7 +62,7 @@ export async function GET(req: NextRequest) {
   }
 
   // #3 — Crons qui finissent à 0 items alors qu'ils ne devraient pas
-  const NEVER_ZERO = ['catalog-sync', 'cj-stock-sync', 'supplier-watch'];
+  const NEVER_ZERO = ['catalog-sync', 'supplier-watch'];
   const zeroAlerts: string[] = [];
 
   for (const cronName of NEVER_ZERO) {
