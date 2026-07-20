@@ -19,6 +19,24 @@ export async function POST(req: Request) {
     const mediaType = match[1] as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp';
     const base64Data = match[2];
 
+    // Lecture du site AVANT l'appel Claude : ne jamais payer une analyse
+    // d'image pour un site inexistant ou qui n'a pas de catalogue fournisseur.
+    const { data: site } = await supabaseAdmin
+      .from('sites')
+      .select('id, mode, dropship_type, cj_margin_percent, cj_round_mode')
+      .eq('slug', slug)
+      .maybeSingle();
+
+    if (!site) {
+      return NextResponse.json({ error: 'Site not found' }, { status: 404 });
+    }
+
+    // Seul le mode 3 a un catalogue fournisseur a fouiller. Mode 1 (vitrine)
+    // et mode 2 (stock propre du marchand) n'ont rien a y chercher.
+    if (site.mode !== 3) {
+      return NextResponse.json({ products: [], keywords: '', total: 0 });
+    }
+
     const msg = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 150,
@@ -34,16 +52,6 @@ export async function POST(req: Request) {
     const keywords = ((msg.content[0] as any)?.text || '').trim();
     if (!keywords) {
       return NextResponse.json({ products: [], keywords: '', total: 0 });
-    }
-
-    const { data: site } = await supabaseAdmin
-      .from('sites')
-      .select('id, cj_margin_percent')
-      .eq('slug', slug)
-      .single();
-
-    if (!site) {
-      return NextResponse.json({ error: 'Site not found' }, { status: 404 });
     }
 
     const { margin: markup } = sitePricing(site);
