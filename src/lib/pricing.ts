@@ -25,6 +25,16 @@ export const BREAKEVEN_MARGIN_PERCENT =
  */
 export const MIN_MARGIN_PERCENT = 15;
 
+/**
+ * Prix de vente plancher, en devise. Sur un produit a tres bas cout, une marge
+ * en pourcentage ne couvre pas le fixe Stripe (~0,30 par transaction) : un
+ * article a 0,50 fait perdre de l'argent au marchand a chaque vente. Ce plancher
+ * garantit un profit net positif quel que soit le cout, et protege la
+ * credibilite de la boutique (pas d'articles a quelques centimes).
+ * S'applique au prix calcule ET au prix fixe manuellement.
+ */
+export const MIN_SELL_PRICE = 4.99;
+
 /** En dessous de ce seuil, la marge est viable mais fragile : alerte sans blocage. */
 export const LOW_MARGIN_PERCENT = 30;
 
@@ -47,7 +57,8 @@ export function apply99(price: number, mode: string): number {
 
 export function calcSellPrice(costPrice: number, marginPercent: number, roundMode: string): number {
   const marked = Math.round(costPrice * (1 + marginPercent / 100) * 100) / 100;
-  return apply99(marked, roundMode);
+  const rounded = apply99(marked, roundMode);
+  return Math.max(rounded, MIN_SELL_PRICE);
 }
 
 /**
@@ -63,7 +74,9 @@ export function resolveDisplayPrice(
   roundMode: string
 ): number {
   const override = overridePrice != null && overridePrice !== '' ? Number(overridePrice) : NaN;
-  if (!Number.isNaN(override) && override > 0) return override;
+  // Le plancher s'applique aussi au prix manuel : le marchand ne peut pas se
+  // saborder en fixant un prix sous le seuil de rentabilite.
+  if (!Number.isNaN(override) && override > 0) return Math.max(override, MIN_SELL_PRICE);
   if (costPrice > 0) return calcSellPrice(costPrice, marginPercent, roundMode);
   return 0;
 }
