@@ -98,6 +98,54 @@ export default function CatalogSelections({ slug }: { slug: string }) {
     }
   };
 
+  // --- Ajout manuel depuis le catalogue global ---
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [adding, setAdding] = useState<string | null>(null);
+
+  const handleSearch = async () => {
+    if (!query.trim()) return;
+    setSearching(true);
+    setMessage('');
+    try {
+      const res = await fetch(
+        `/api/catalog/search?slug=${encodeURIComponent(slug)}&q=${encodeURIComponent(query)}`
+      );
+      const data = await res.json();
+      // Seul le catalogue global nous interesse : les produits deja cures
+      // sont dans la liste du dessous.
+      setResults((data.products || []).filter((p: any) => !p._curated));
+    } catch (e: any) {
+      setMessage('Erreur: ' + e.message);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleAdd = async (prefixedId: string) => {
+    const catalogProductId = String(prefixedId).replace(/^catalog-/, '');
+    setAdding(prefixedId);
+    try {
+      const res = await fetch('/api/catalog/selections', {
+        method: 'POST',
+        headers: await authHeaders(),
+        body: JSON.stringify({ slug, catalogProductId }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setMessage('Erreur: ' + data.error);
+      } else {
+        setResults(prev => prev.filter(p => p.id !== prefixedId));
+        await fetchSelections();
+      }
+    } catch (e: any) {
+      setMessage('Erreur: ' + e.message);
+    } finally {
+      setAdding(null);
+    }
+  };
+
   const handleApprove = async (id: string, approved: boolean) => {
     const res = await fetch('/api/catalog/selections', {
       method: 'PATCH',
@@ -193,6 +241,53 @@ export default function CatalogSelections({ slug }: { slug: string }) {
           {message}
         </div>
       )}
+
+      <div className="border border-white/10 rounded-2xl p-4 space-y-3">
+        <p className="text-xs font-semibold text-slate-300">Ajouter un produit du catalogue</p>
+        <div className="flex gap-2">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+            placeholder="Rechercher : yoga mat, wireless earbuds…"
+            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-white/25"
+          />
+          <button
+            onClick={handleSearch}
+            disabled={searching || !query.trim()}
+            className="px-4 py-2 rounded-xl text-sm font-semibold transition disabled:opacity-40"
+            style={{ background: `${ACCENT}20`, color: ACCENT, border: `1px solid ${ACCENT}40` }}
+          >
+            {searching ? 'Recherche…' : 'Rechercher'}
+          </button>
+        </div>
+
+        {results.length > 0 && (
+          <div className="space-y-1.5 max-h-72 overflow-y-auto">
+            {results.map((p: any) => (
+              <div key={p.id} className="flex items-center gap-3 p-2 rounded-lg bg-white/[0.02] border border-white/5">
+                {p.images?.[0] && (
+                  <img src={p.images[0]} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-white truncate">{p.name}</p>
+                  <p className="text-[11px] text-slate-500">
+                    {Number(p.price).toFixed(2)} {p.currency || 'CAD'} · {p.supplier_id}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleAdd(p.id)}
+                  disabled={adding === p.id}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-40 flex-shrink-0"
+                  style={{ background: '#34d39920', color: '#34d399', border: '1px solid #34d39940' }}
+                >
+                  {adding === p.id ? '…' : 'Ajouter'}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {loading ? (
         <div className="text-center py-8 text-slate-500 text-sm">Chargement…</div>
