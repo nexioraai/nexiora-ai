@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { startCronRun, finishCronRun } from '@/lib/cron-tracker';
 import { verifyDomain, addSite, submitSitemap } from '@/lib/domains/searchconsole';
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 /**
  * Termine l'indexation des domaines achetes via Nexiora.

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
-export const maxDuration = 60
+export const maxDuration = 120
 
 // Construit la question type depuis le site
 function buildQuery(site: any): string {

@@ -7,7 +7,7 @@ import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
 import type { CatalogProduct } from '@/lib/suppliers/supplier-adapter';
 import { startCronRun, finishCronRun } from '@/lib/cron-tracker';
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 /**
  * Cron : synchronise les catalogues fournisseurs dans catalog_products.
@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
   // avant d'ecrire son resultat (5 executions bloquees en 'running' avant ce
   // correctif). On en traite donc quelques-uns par passage, en reprenant la ou
   // on s'etait arrete, position memorisee dans cron_state.
-  const KEYWORDS_PER_RUN = 2;  // mesure : 3 mots-cles = 82s, au-dela de maxDuration
+  const KEYWORDS_PER_RUN = 6;  // mesure : 3 mots-cles = 82s, au-dela de maxDuration
   const allKeywords = [...keywordSet].sort();
 
   const { data: stateRow } = await supabaseAdmin

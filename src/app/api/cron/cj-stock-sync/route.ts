@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { startCronRun, finishCronRun } from '@/lib/cron-tracker';
 import { cjGetInventory } from '@/lib/cj/client';
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 /**
  * Cron quotidien : synchronise le stock CJ.

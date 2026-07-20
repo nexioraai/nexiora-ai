@@ -4,7 +4,7 @@ import { startCronRun, finishCronRun } from '@/lib/cron-tracker';
 import { cjGetOrderDetail } from '@/lib/cj/client';
 import { sendShippingEmail } from '@/lib/email/sendShippingEmail';
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 /**
  * Cron quotidien : remonte automatiquement le numero de tracking CJ.

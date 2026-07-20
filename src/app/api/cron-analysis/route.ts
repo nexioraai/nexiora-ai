@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { anthropic } from '@/lib/anthropic'
 
-export const maxDuration = 60
+export const maxDuration = 120
 
 // Analyse un seul ERP et sauvegarde le rapport dans le cache
 async function analyzeErp(erp: any) {
