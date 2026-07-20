@@ -19,8 +19,8 @@ export async function GET(req: NextRequest) {
     .order('started_at', { ascending: false })
     .limit(100);
 
-  // Compute alerts: runs > 75% of Hobby limit (45s)
-  const THRESHOLD_MS = 45000;
+  // Compute alerts: runs > 90% of Pro limit (270s)
+  const THRESHOLD_MS = 270000;
   const alerts = (runs || []).filter(r => r.duration_ms && r.duration_ms > THRESHOLD_MS);
 
   return NextResponse.json({ runs: runs || [], alerts, threshold_ms: THRESHOLD_MS });
