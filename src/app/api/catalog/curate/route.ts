@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 
 export const maxDuration = 45;
 
@@ -18,11 +19,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'slug requis' }, { status: 400 });
     }
 
-    const { data: site, error: siteErr } = await supabaseAdmin
-      .from('sites')
-      .select('id, type, mode, dropship_type, cj_margin_percent, lang, niche_keywords')
-      .eq('slug', slug)
-      .single();
+    // Sans ce controle, n'importe qui declenche des appels Claude payants
+    // sur la boutique d'un autre.
+    const auth = await requireSiteOwner(
+      req,
+      slug,
+      'id, type, mode, dropship_type, cj_margin_percent, lang, niche_keywords'
+    );
+    if (!auth.ok) return auth.response;
+    const site = auth.site;
+    const siteErr = null;
 
     if (siteErr || !site) {
       return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });

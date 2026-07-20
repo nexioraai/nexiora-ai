@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 
 export const maxDuration = 10;
 
@@ -18,13 +19,9 @@ export async function GET(req: NextRequest) {
   const slug = req.nextUrl.searchParams.get('slug');
   if (!slug) return NextResponse.json({ error: 'slug requis' }, { status: 400 });
 
-  const { data: site } = await supabaseAdmin
-    .from('sites')
-    .select('id')
-    .eq('slug', slug)
-    .single();
-
-  if (!site) return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
+  const auth = await requireSiteOwner(req, slug);
+  if (!auth.ok) return auth.response;
+  const site = auth.site;
 
   const { data, error } = await supabaseAdmin
     .from('site_catalog_selections')
@@ -67,6 +64,9 @@ export async function PATCH(req: NextRequest) {
     const { slug, id, ...updates } = await req.json();
     if (!slug || !id) return NextResponse.json({ error: 'slug et id requis' }, { status: 400 });
 
+    const auth = await requireSiteOwner(req, slug);
+    if (!auth.ok) return auth.response;
+
     const allowed = ['sell_price', 'merchant_approved', 'custom_name', 'custom_description', 'sort_order'];
     const clean: Record<string, any> = {};
     for (const k of allowed) {
@@ -81,6 +81,7 @@ export async function PATCH(req: NextRequest) {
       .from('site_catalog_selections')
       .update(clean)
       .eq('id', id)
+      .eq('site_id', auth.site.id)
       .select()
       .single();
 
@@ -96,11 +97,64 @@ export async function DELETE(req: NextRequest) {
   const id = req.nextUrl.searchParams.get('id');
   if (!slug || !id) return NextResponse.json({ error: 'slug et id requis' }, { status: 400 });
 
+  const auth = await requireSiteOwner(req, slug);
+  if (!auth.ok) return auth.response;
+
   const { error } = await supabaseAdmin
     .from('site_catalog_selections')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .eq('site_id', auth.site.id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
+}
+
+/**
+ * POST /api/catalog/selections
+ * Body: { slug, catalogProductId }
+ * Ajout manuel d'un produit du catalogue a la boutique du marchand.
+ * Approuve d'emblee : le marchand l'a choisi lui-meme.
+ * Le prix reste calcule live depuis la marge du site (sell_price null).
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const { slug, catalogProductId } = await req.json();
+    if (!slug || !catalogProductId) {
+      return NextResponse.json({ error: 'slug et catalogProductId requis' }, { status: 400 });
+    }
+
+    const auth = await requireSiteOwner(req, slug);
+    if (!auth.ok) return auth.response;
+
+    const { data: product } = await supabaseAdmin
+      .from('catalog_products')
+      .select('id')
+      .eq('id', catalogProductId)
+      .maybeSingle();
+
+    if (!product) {
+      return NextResponse.json({ error: 'Produit introuvable au catalogue' }, { status: 404 });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('site_catalog_selections')
+      .upsert(
+        {
+          site_id: auth.site.id,
+          catalog_product_id: catalogProductId,
+          ai_suggested: false,
+          merchant_approved: true,
+          sort_order: 0,
+        },
+        { onConflict: 'site_id,catalog_product_id' }
+      )
+      .select()
+      .single();
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ selection: data });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
 }

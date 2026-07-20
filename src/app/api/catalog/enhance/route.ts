@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 
 export const maxDuration = 45;
 
@@ -16,13 +17,11 @@ export async function POST(req: NextRequest) {
     const { slug } = await req.json();
     if (!slug) return NextResponse.json({ error: 'slug requis' }, { status: 400 });
 
-    const { data: site } = await supabaseAdmin
-      .from('sites')
-      .select('id, type, lang')
-      .eq('slug', slug)
-      .single();
-
-    if (!site) return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
+    // Sans ce controle, n'importe qui declenche des appels Claude payants
+    // sur la boutique d'un autre.
+    const auth = await requireSiteOwner(req, slug, 'id, type, lang');
+    if (!auth.ok) return auth.response;
+    const site = auth.site;
 
     // Récupère les sélections sans custom_name (pas encore réécrites)
     const { data: selections } = await supabaseAdmin
