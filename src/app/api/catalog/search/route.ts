@@ -55,7 +55,9 @@ export async function GET(req: NextRequest) {
       curatedResults = curatedSels
         .filter((s: any) => {
           const cp = s.catalog_products;
-          if (!cp || !cp.in_stock) return false;
+          // in_stock null = jamais verifie : le produit reste visible.
+          // Seul un false explicite (pose par supplier-watch) le masque.
+          if (!cp || cp.in_stock === false) return false;
           const name = (s.custom_name || cp.name || '').toLowerCase();
           const desc = (s.custom_description || cp.description || '').toLowerCase();
           return words.every(w => name.includes(w) || desc.includes(w));
@@ -85,7 +87,8 @@ export async function GET(req: NextRequest) {
   let query2 = supabaseAdmin
     .from('catalog_products')
     .select('*', { count: 'exact' })
-    .eq('in_stock', true);
+    // Meme regle qu'ailleurs : seul un false explicite masque le produit.
+    .not('in_stock', 'is', false);
 
   // ilike for each word in name
   if (words.length > 0) {

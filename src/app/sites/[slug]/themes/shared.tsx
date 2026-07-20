@@ -153,13 +153,17 @@ async function loadCatalogSelections(data: any) {
 if (data.mode === 3 && (data.dropship_type === 'reseller' || data.dropship_type === 'pod_custom')) {
 const { data: catSels } = await supabase
 .from('site_catalog_selections')
-.select('id, sell_price, custom_name, custom_description, catalog_product_id, catalog_products(name, description, price, currency, images, supplier_id, supplier_product_id, shipping_days_min, shipping_days_max)')
+.select('id, sell_price, custom_name, custom_description, catalog_product_id, catalog_products(name, description, price, currency, images, supplier_id, supplier_product_id, shipping_days_min, shipping_days_max, in_stock)')
 .eq('site_id', data.id)
 .eq('merchant_approved', true)
 .order('sort_order', { ascending: true })
 if (catSels && catSels.length > 0) {
 const { margin, roundMode } = sitePricing(data);
-const catalogProducts = catSels.map((s: any) => {
+const catalogProducts = catSels
+// Meme regle que la recherche : un produit epuise chez le fournisseur
+// n'est pas affiche. supplier-watch tient in_stock a jour.
+.filter((s: any) => s.catalog_products && s.catalog_products.in_stock !== false)
+.map((s: any) => {
 const cp = s.catalog_products
 const costPrice = cp.price ? Number(cp.price) : 0;
 const pr = resolveDisplayPrice(costPrice, s.sell_price, margin, roundMode);
