@@ -112,16 +112,15 @@ export async function POST(req: NextRequest) {
           'Within those constraints, prefer low supplier cost and reasonable shipping times.\n\n' +
           'For each selected product provide:\n' +
           '- index: the number in the list\n' +
-          '- sell_price: suggested retail price in ' + (lang === 'fr' ? 'CAD' : 'USD') + ' (40-60% margin, rounded to .99)\n' +
           '- reason: short justification in ' + (lang === 'fr' ? 'French' : 'English') + '\n\n' +
           'RESPOND WITH ONLY a valid JSON array, no text before or after:\n' +
-          '[{"index":0,"sell_price":29.99,"reason":"..."}]\n\n' +
+          '[{"index":0,"reason":"..."}]\n\n' +
           'If only 5 products are truly relevant, return only those 5. NEVER pad the list with irrelevant products.'
       }],
     });
 
     const raw = msg.content[0].type === 'text' ? msg.content[0].text : '';
-    let selections: { index: number; sell_price: number; reason: string }[];
+    let selections: { index: number; reason: string }[];
     try {
       const cleaned = raw.replace(/```json\s?/g, '').replace(/```/g, '').trim();
       selections = JSON.parse(cleaned);
@@ -134,7 +133,6 @@ export async function POST(req: NextRequest) {
       .map((sel, i) => ({
         site_id: site.id,
         catalog_product_id: allProducts[sel.index].id,
-        sell_price: sel.sell_price,
         ai_suggested: true,
         merchant_approved: false,
         ai_reason: sel.reason,

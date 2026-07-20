@@ -607,7 +607,7 @@ export default function EditPage() {
         {(site?.mode === 2 || site?.mode === 3) && <ProductManager slug={slug} />}
 
         {(site?.mode === 2 || site?.mode === 3) && <PaymentConnect slug={slug} mode={site?.mode} />}
-        {site?.mode === 3 && site?.dropship_type === 'reseller' && <CatalogSelections slug={slug} />}
+        {site?.mode === 3 && site?.dropship_type === 'reseller' && <CatalogSelections slug={slug} marginPercent={site.cj_margin_percent ?? DEFAULT_MARGIN_PERCENT} roundMode={site.cj_round_mode || undefined} />}
 
         {(site?.mode === 2 || site?.mode === 3) && <OrderManager slug={slug} />}
 

@@ -80,16 +80,16 @@ Voici ${candidates.slice(0, 100).length} NOUVEAUX produits cette semaine (index|
 ${productList}
 
 Sélectionne UNIQUEMENT les produits pertinents pour cette niche (max 10).
-Pour chaque produit, donne : index, sell_price (marge 40-60%, arrondi au .99), reason (en ${lang === 'fr' ? 'français' : 'anglais'}).
+Pour chaque produit, donne : index, reason (en ${lang === 'fr' ? 'français' : 'anglais'}).
 
 Si aucun produit n'est pertinent, retourne [].
 
-Réponds UNIQUEMENT en JSON : [{"index":0,"sell_price":19.99,"reason":"..."},...]`
+Réponds UNIQUEMENT en JSON : [{"index":0,"reason":"..."},...]`
         }],
       });
 
       const raw = msg.content[0].type === 'text' ? msg.content[0].text : '';
-      let selections: { index: number; sell_price: number; reason: string }[];
+      let selections: { index: number; reason: string }[];
       try {
         const cleaned = raw.replace(/```json\s?/g, '').replace(/```/g, '').trim();
         selections = JSON.parse(cleaned);
@@ -104,7 +104,6 @@ Réponds UNIQUEMENT en JSON : [{"index":0,"sell_price":19.99,"reason":"..."},...
         .map((s, i) => ({
           site_id: site.id,
           catalog_product_id: limitedCandidates[s.index].id,
-          sell_price: s.sell_price,
           ai_suggested: true,
           merchant_approved: false,
           ai_reason: '🆕 ' + s.reason,

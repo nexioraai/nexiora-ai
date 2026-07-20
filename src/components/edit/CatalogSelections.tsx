@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { resolveDisplayPrice, DEFAULT_MARGIN_PERCENT, DEFAULT_ROUND_MODE } from '@/lib/pricing';
 
 const ACCENT = '#E07040';
 
@@ -39,7 +40,15 @@ interface Selection {
   };
 }
 
-export default function CatalogSelections({ slug }: { slug: string }) {
+export default function CatalogSelections({
+  slug,
+  marginPercent = DEFAULT_MARGIN_PERCENT,
+  roundMode = DEFAULT_ROUND_MODE,
+}: {
+  slug: string;
+  marginPercent?: number;
+  roundMode?: string;
+}) {
   const [selections, setSelections] = useState<Selection[]>([]);
   const [loading, setLoading] = useState(true);
   const [curating, setCurating] = useState(false);
@@ -301,7 +310,12 @@ export default function CatalogSelections({ slug }: { slug: string }) {
           {selections.map((s) => {
             const p = s.catalog_products;
             if (!p) return null;
-            const margin = s.sell_price && p.price ? Math.round(((s.sell_price - p.price) / s.sell_price) * 100) : 0;
+            // Prix reellement affiche en boutique : meme fonction que la vitrine.
+            const cost = Number(p.price) || 0;
+            const shownPrice = resolveDisplayPrice(cost, s.sell_price, marginPercent, roundMode);
+            // Marge sur le cout, la meme grandeur que le reglage du marchand.
+            // Ne pas confondre avec le taux de marque, calcule sur le prix de vente.
+            const margin = cost > 0 ? Math.round(((shownPrice - cost) / cost) * 100) : 0;
             return (
               <div
                 key={s.id}
@@ -337,9 +351,11 @@ export default function CatalogSelections({ slug }: { slug: string }) {
                     <input
                       type="number"
                       value={s.sell_price || ''}
+                      placeholder={shownPrice > 0 ? shownPrice.toFixed(2) : ''}
+                      title={s.sell_price ? 'Prix fixe manuellement : la marge ne s\'applique pas' : 'Prix calcule depuis la marge du site'}
                       onChange={(e) => handlePriceChange(s.id, Number(e.target.value))}
                       onBlur={(e) => handlePriceSave(s.id, Number(e.target.value))}
-                      className="w-16 bg-white/10 border border-white/20 rounded px-1.5 py-1 text-sm text-white text-right"
+                      className="w-16 bg-white/10 border border-white/20 rounded px-1.5 py-1 text-sm text-white text-right placeholder:text-slate-500"
                     />
                     <span className="text-xs text-slate-400">{p.currency}</span>
                   </div>
