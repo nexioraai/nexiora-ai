@@ -13,7 +13,7 @@ import CatalogSelections from '@/components/edit/CatalogSelections';
 import OrderManager from '@/components/edit/OrderManager';
 import FinanceDashboard from '@/components/edit/FinanceDashboard';
 import HealthBadge from '@/components/edit/HealthBadge';
-import { MIN_MARGIN_PERCENT, LOW_MARGIN_PERCENT, NEXIORA_COMMISSION_PERCENT, merchantProfit } from '@/lib/pricing';
+import { MIN_MARGIN_PERCENT, LOW_MARGIN_PERCENT, NEXIORA_COMMISSION_PERCENT, DEFAULT_MARGIN_PERCENT, merchantProfit } from '@/lib/pricing';
 import { supabase } from '@/lib/supabase';
 import { computeAiScore } from '@/app/lib/aiScore';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -93,7 +93,7 @@ export default function EditPage() {
   const handleSave = async () => {
     // Verrou rentabilite : jamais de marge sous le seuil de perte (mode 3)
     if (site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom')) {
-      const m = Number(site.cj_margin_percent ?? 50);
+      const m = Number(site.cj_margin_percent ?? DEFAULT_MARGIN_PERCENT);
       if (m < MIN_MARGIN_PERCENT) {
         setMessage('Marge trop basse : minimum ' + MIN_MARGIN_PERCENT + '% pour ne pas vendre a perte (commission Nexiora ' + NEXIORA_COMMISSION_PERCENT + '%).');
         return;
@@ -294,7 +294,7 @@ export default function EditPage() {
                 <input
                   type="number"
                   min={MIN_MARGIN_PERCENT}
-                  value={site.cj_margin_percent || 50}
+                  value={site.cj_margin_percent ?? DEFAULT_MARGIN_PERCENT}
                   onChange={(e) => {
                     const v = Number(e.target.value);
                     updateField('cj_margin_percent', Number.isNaN(v) ? MIN_MARGIN_PERCENT : v);
@@ -313,7 +313,7 @@ export default function EditPage() {
                 Prix de vente = coût fournisseur × (1 + marge/100). Ex : coût 10$ à 50% → vente 15$. Aucune limite — vous choisissez librement. Modifiable aussi via l'agent IA.
               </p>
               {(() => {
-                const m = site.cj_margin_percent ?? 50;
+                const m = site.cj_margin_percent ?? DEFAULT_MARGIN_PERCENT;
                 const round = site.cj_round_mode || 'off';
                 const profit10 = merchantProfit(10, m, round);
                 if (m < MIN_MARGIN_PERCENT) {
@@ -585,7 +585,7 @@ export default function EditPage() {
 
           <button
             onClick={handleSave}
-            disabled={saving || (site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom') && Number(site.cj_margin_percent ?? 50) < MIN_MARGIN_PERCENT)}
+            disabled={saving || (site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom') && Number(site.cj_margin_percent ?? DEFAULT_MARGIN_PERCENT) < MIN_MARGIN_PERCENT)}
             className="w-full btn-nexiora py-4 rounded-2xl font-semibold text-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {saving ? 'Saving…' : 'Save Changes'}
