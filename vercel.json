@@ -67,6 +67,10 @@
     {
       "path": "/api/cron/watchdog",
       "schedule": "30 9,21 * * *"
+    },
+    {
+      "path": "/api/cron/domain-retry",
+      "schedule": "15 */2 * * *"
     }
   ]
 }

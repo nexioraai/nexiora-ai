@@ -14,6 +14,7 @@ const EXPECTED_CRONS: Record<string, number> = {
   'cj-stock-sync': 26,
   'instant-payout': 26,
   'catalog-suggest': 180,
+  'domain-retry': 4,
 };
 
 export async function GET(req: NextRequest) {
