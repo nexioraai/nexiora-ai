@@ -134,7 +134,9 @@ export async function GET(req: NextRequest) {
     .filter((p: any) => !curatedIds.has(`catalog-${p.id}`))
     .map((p: any) => {
       const cost = p.price ? Number(p.price) : 0;
-      return { ...p, id: `catalog-${p.id}`, price: calcPrice(cost), _curated: false };
+      // price = prix de vente. Le cout fournisseur reste expose pour l'editeur
+      // marchand, qui doit voir sur quoi la marge s'applique.
+      return { ...p, id: `catalog-${p.id}`, price: calcPrice(cost), _cost: cost, _curated: false };
     });
 
   // ====== 3. Merge: curated first, then global ======

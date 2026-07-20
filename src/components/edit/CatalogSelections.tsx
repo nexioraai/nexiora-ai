@@ -23,6 +23,7 @@ interface Selection {
   merchant_approved: boolean;
   ai_reason: string | null;
   sort_order: number;
+  catalog_product_id: string;
   catalog_products: {
     id: string;
     supplier_id: string;
@@ -122,9 +123,16 @@ export default function CatalogSelections({
         `/api/catalog/search?slug=${encodeURIComponent(slug)}&q=${encodeURIComponent(query)}`
       );
       const data = await res.json();
-      // Seul le catalogue global nous interesse : les produits deja cures
-      // sont dans la liste du dessous.
-      setResults((data.products || []).filter((p: any) => !p._curated));
+      // Exclure ce qui est deja dans la boutique. On se fie a nos propres
+      // selections plutot qu'au flag _curated de l'API : celui-ci ne couvre
+      // que les produits remontes dans la page de resultats courante.
+      const owned = new Set(selections.map((s) => s.catalog_product_id));
+      setResults(
+        (data.products || []).filter((p: any) => {
+          const realId = String(p.id).replace(/^catalog-/, '');
+          return !p._curated && !owned.has(realId);
+        })
+      );
     } catch (e: any) {
       setMessage('Erreur: ' + e.message);
     } finally {
@@ -281,7 +289,9 @@ export default function CatalogSelections({
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-white truncate">{p.name}</p>
                   <p className="text-[11px] text-slate-500">
-                    {Number(p.price).toFixed(2)} {p.currency || 'CAD'} · {p.supplier_id}
+                    Vente {Number(p.price).toFixed(2)} {p.currency || 'CAD'}
+                    {p._cost > 0 && <> · coût {Number(p._cost).toFixed(2)}</>}
+                    {' · '}{p.supplier_id}
                   </p>
                 </div>
                 <button
