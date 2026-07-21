@@ -24,6 +24,15 @@ interface Anomaly {
   created_at: string;
 }
 
+interface ToPayOrder {
+  id: string;
+  cj_order_id: string | null;
+  country_code: string | null;
+  customer_name: string | null;
+  shipping_amount: number | null;
+  created_at: string;
+}
+
 interface SiteInfo {
   name: string;
   slug: string;
@@ -40,6 +49,7 @@ interface Stats {
   breakdown: Record<string, { total: number; published: number; sites: SiteInfo[] }>;
   crons: CronRun[];
   anomalies: Anomaly[];
+  toPayOrders: ToPayOrder[];
 }
 
 const MODE_LABELS: Record<string, { label: string; icon: typeof Monitor }> = {
@@ -121,6 +131,40 @@ export default function AdminDashboard() {
       <Sidebar />
       <main className="flex-1 min-w-0 px-6 lg:pl-40 lg:pr-12 pt-24 lg:pt-10 pb-10">
       <h1 className="text-3xl font-bold mb-8">Nexiora Admin</h1>
+
+      {/* Commandes a payer manuellement chez CJ */}
+      {(stats.toPayOrders || []).length > 0 && (
+        <div className="bg-amber-500/10 border border-amber-500/40 rounded-2xl p-6 mb-10">
+          <div className="flex items-center gap-3 mb-4">
+            <Truck className="w-5 h-5 text-amber-400" />
+            <h2 className="text-lg font-semibold text-amber-100">
+              Commandes a payer chez CJ ({stats.toPayOrders.length})
+            </h2>
+            <a
+              href="https://cjdropshipping.com/mine/dropshipping/orderList?orderType=7"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-auto px-3 py-1.5 rounded-lg bg-amber-500 text-black text-sm font-semibold hover:bg-amber-400"
+            >
+              Ouvrir CJ pour payer
+            </a>
+          </div>
+          <div className="space-y-2">
+            {stats.toPayOrders.map((o) => (
+              <div key={o.id} className="flex items-center gap-4 text-sm bg-black/20 rounded-lg px-4 py-2">
+                <span className="text-white/90">{o.customer_name || "Client"}</span>
+                <span className="text-white/50">{o.country_code || "?"}</span>
+                {o.shipping_amount != null && (
+                  <span className="text-white/50">livraison ${o.shipping_amount.toFixed(2)}</span>
+                )}
+                <span className="text-white/40 ml-auto">
+                  {new Date(o.created_at).toLocaleString("fr-CA")}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Overview Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">

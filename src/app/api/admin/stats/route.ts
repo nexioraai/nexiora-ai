@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
     { data: revenueData },
     { data: recentCrons },
     { data: recentAnomalies },
+    { data: toPayOrders },
   ] = await Promise.all([
     supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true }),
     supabaseAdmin.from('sites').select('*', { count: 'exact', head: true }),
@@ -30,6 +31,7 @@ export async function GET(req: NextRequest) {
     supabaseAdmin.from('shop_orders').select('nexiora_commission, supplier_cost, total, status'),
     supabaseAdmin.from('cron_runs').select('*').order('started_at', { ascending: false }).limit(50),
     supabaseAdmin.from('checkout_anomalies').select('*').order('created_at', { ascending: false }).limit(100),
+    supabaseAdmin.from('shop_orders').select('id, cj_order_id, country_code, customer_name, shipping_amount, created_at').eq('cj_pay_status', 'awaiting_manual_payment').order('created_at', { ascending: false }).limit(50),
   ]);
 
   // Revenue calculations
@@ -59,5 +61,6 @@ export async function GET(req: NextRequest) {
     breakdown: modeMap,
     crons: recentCrons || [],
     anomalies: recentAnomalies || [],
+    toPayOrders: toPayOrders || [],
   });
 }
