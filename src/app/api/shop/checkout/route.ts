@@ -123,10 +123,44 @@ export async function POST(req: Request) {
           }
         }
 
-        // Appeler calculateShipping pour chaque groupe
+        // Lecture du cache CJ (shipping_cache) AVANT tout appel live.
+        // Le cache stocke le PRIX BRUT ; la marge de securite +20% est appliquee ici.
+        // Un groupe entierement couvert par le cache n'appelle jamais CJ.
+        const SHIPPING_MARGIN = 1.20;
+        const cjGroup = supplierGroups['cj'];
+        let cjCacheCost = 0;
+        let cjCacheMaxDays = 0;
+        let cjFromCache = false;
+        if (cjGroup && cjGroup.length > 0) {
+          const cjIds = cjGroup.map((g) => g.supplier_product_id);
+          const { data: cacheRows } = await supabaseAdmin
+            .from('shipping_cache')
+            .select('supplier_product_id, shipping_cost, days_min, days_max')
+            .eq('supplier_id', 'cj')
+            .eq('country_code', countryCode)
+            .in('supplier_product_id', cjIds);
+          const cacheMap = new Map((cacheRows || []).map((r: any) => [r.supplier_product_id, r]));
+          // Le cache n'est utilise que s'il couvre TOUS les produits CJ du panier.
+          const allCovered = cjIds.every((id) => cacheMap.has(id));
+          if (allCovered) {
+            for (const g of cjGroup) {
+              const row: any = cacheMap.get(g.supplier_product_id);
+              cjCacheCost += Number(row.shipping_cost) * g.quantity;
+              const d = Number(row.days_max) || 0;
+              if (d > cjCacheMaxDays) cjCacheMaxDays = d;
+            }
+            // Marge de securite appliquee sur le cout du cache.
+            cjCacheCost = cjCacheCost * SHIPPING_MARGIN;
+            supplierGroups['cj'] = []; // groupe CJ traite : la boucle live le saute
+            cjFromCache = true;
+          }
+        }
+
+        // Appeler calculateShipping pour chaque groupe (fallback live si pas en cache)
         let totalShipping = 0;
         let maxDays = 0;
         for (const [supplierId, groupItems] of Object.entries(supplierGroups)) {
+          if (!groupItems || groupItems.length === 0) continue;
           const adapter = adapters[supplierId];
           if (!adapter?.calculateShipping) continue;
           try {
@@ -136,6 +170,12 @@ export async function POST(req: Request) {
           } catch (err: any) {
             console.error('[checkout/shipping]', supplierId, 'failed:', err.message || err, err?.stack);
           }
+        }
+
+        // Ajouter le resultat du cache CJ (s'il y en a un)
+        if (cjFromCache) {
+          totalShipping += cjCacheCost;
+          if (cjCacheMaxDays > maxDays) maxDays = cjCacheMaxDays;
         }
 
         if (totalShipping > 0) {
