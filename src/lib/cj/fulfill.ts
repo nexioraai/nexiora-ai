@@ -1,6 +1,7 @@
 import 'server-only';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { cjCalculateFreight, cjCreateOrder, cjGetBalance, cjGetOrderDetail, cjGetVariants } from './client';
+import { logAnomaly } from '@/lib/anomaly';
 
 const MAX_PAY_ATTEMPTS = 3;
 
@@ -30,7 +31,7 @@ function isPermanentError(msg: string): boolean {
 export async function fulfillCjOrder(orderId: string): Promise<string[]> {
   const { data: order } = await supabaseAdmin
     .from('shop_orders')
-    .select('id, site_id, shipping_address, customer_name, customer_email, cj_pay_status, cj_pay_attempts')
+    .select('id, site_id, shipping_address, customer_name, customer_email, cj_pay_status, cj_pay_attempts, shipping_amount')
     .eq('id', orderId)
     .maybeSingle();
   if (!order) return [];
@@ -124,15 +125,49 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
     return [];
   }
 
-  // --- Meilleur transporteur ---
+  // --- Meilleur transporteur + GARDE-FOU cout reel ---
+  // On revérifie le vrai shipping CJ juste avant l'envoi. Regle d'or : Nexiora
+  // n'absorbe jamais un cout inconnu. Si le vrai cout depasse ce qu'on a encaisse
+  // (shipping_amount, marge +20% incluse), on BLOQUE plutot que de perdre de l'argent.
   let logisticName: string | undefined;
+  let realShippingCost: number | null = null;
   try {
     const freight = await cjCalculateFreight(CJ_EMAIL, CJ_API_KEY, endCountryCode, cjProducts);
     if (Array.isArray(freight) && freight.length > 0) {
       logisticName = freight[0].logisticName;
+      // Borne basse des options (la moins chere), comme le cache.
+      const prices = freight
+        .map((o: any) => Number(o?.logisticPrice ?? o?.price ?? o?.freightAmount))
+        .filter((n: number) => Number.isFinite(n) && n >= 0);
+      if (prices.length > 0) realShippingCost = Math.min(...prices);
     }
   } catch (e) {
     console.error('CJ freight calc failed:', e);
+  }
+
+  // Comparaison : vrai cout vs montant encaisse.
+  const charged = Number((order as any).shipping_amount) || 0;
+  if (realShippingCost !== null && charged > 0 && realShippingCost > charged) {
+    console.error(
+      `CJ fulfill BLOQUE ${order.id}: vrai shipping ${realShippingCost}$ > encaisse ${charged}$`
+    );
+    await supabaseAdmin
+      .from('shop_orders')
+      .update({ cj_pay_status: 'failed' })
+      .eq('id', order.id);
+    await logAnomaly({
+      type: 'shipping_cost_exceeds_charged',
+      severity: 'blocked',
+      siteId: order.site_id,
+      details: {
+        orderId: order.id,
+        realShippingCost,
+        charged,
+        gap: Math.round((realShippingCost - charged) * 100) / 100,
+        country: endCountryCode,
+      },
+    });
+    return [];
   }
 
   const baseOrder = {
