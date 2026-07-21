@@ -238,19 +238,34 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
     return [];
   }
 
-  // Création + paiement par solde (payType 2)
+  // SEMI-AUTO (payType 3) : la commande est CREEE chez CJ mais PAS payee.
+  // Youssouf la paie ensuite d'un clic (carte/PayPal) sur le site CJ.
+  // Ce mode evite le Wallet pre-charge tant que le volume est faible.
+  // Passage a payType 2 (paiement auto par Wallet) quand le Wallet sera credite.
   try {
-    const result = await cjCreateOrder(CJ_EMAIL, CJ_API_KEY, { ...baseOrder, payType: 2 });
+    const result = await cjCreateOrder(CJ_EMAIL, CJ_API_KEY, { ...baseOrder, payType: 3 });
     const cjOrderId = result?.orderId || result?.orderCode || null;
     await supabaseAdmin
       .from('shop_orders')
-      .update({ cj_order_id: cjOrderId, cj_pay_status: 'paid', status: 'processing' })
+      .update({ cj_order_id: cjOrderId, cj_pay_status: 'awaiting_manual_payment', status: 'processing' })
       .eq('id', order.id);
+    // Prevenir Youssouf : une commande attend son paiement manuel chez CJ.
+    await logAnomaly({
+      type: 'cj_awaiting_manual_payment',
+      severity: 'warning',
+      siteId: order.site_id,
+      details: {
+        orderId: order.id,
+        cjOrderId,
+        country: endCountryCode,
+        customer: order.customer_name || null,
+      },
+    });
     return cjProducts.map((p) => p.vid);
   } catch (e: any) {
     const msg = String(e?.message || e);
     const permanent = isPermanentError(msg);
-    console.error(`CJ pay failed (${permanent ? 'permanent' : 'transitoire'}) pour ${order.id}:`, msg);
+    console.error(`CJ create failed (${permanent ? 'permanent' : 'transitoire'}) pour ${order.id}:`, msg);
     await supabaseAdmin
       .from('shop_orders')
       .update({ cj_pay_status: permanent ? 'failed' : 'pending' })
