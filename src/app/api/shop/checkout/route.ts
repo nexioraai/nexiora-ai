@@ -219,27 +219,19 @@ export async function POST(req: Request) {
           await logAnomaly({ type: 'catalog_cost_missing', siteId: site.id, slug, details: { itemId: item.id } });
           return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
         }
-        // Un prix saisi manuellement par le marchand prime sur le calcul par marge.
-        // Meme regle que la boutique et la recherche (resolveDisplayPrice).
+        // Tout produit du catalogue est achetable sur toute boutique (via la
+        // recherche visiteur). Le prix suit TOUJOURS la marge du marchand.
+        // Si le marchand a selectionne ce produit et fixe un prix manuel,
+        // ce prix prime ; sinon on applique sa marge (resolveDisplayPrice gere null).
         const { data: selRow } = await supabaseAdmin
           .from('site_catalog_selections')
-          .select('sell_price, merchant_approved')
+          .select('sell_price')
           .eq('site_id', site.id)
           .eq('catalog_product_id', realId)
           .maybeSingle();
-        // Le produit doit etre selectionne ET approuve par le marchand.
-        // Sans ce controle, tout produit du catalogue global serait achetable
-        // sur n'importe quelle boutique.
-        if (!selRow || selRow.merchant_approved !== true) {
-          await logAnomaly({
-            type: 'checkout_unapproved_product',
-            siteId: site.id,
-            slug,
-            details: { catalogProductId: realId, selected: !!selRow },
-          });
-          return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
-        }
-        serverPrice = resolveDisplayPrice(cost, selRow.sell_price, margin, roundMode);
+        // Prix = sell_price manuel du marchand OU cout x (1 + marge du marchand),
+        // avec plancher MIN_SELL_PRICE (protege contre la vente a perte).
+        serverPrice = resolveDisplayPrice(cost, selRow?.sell_price, margin, roundMode);
       } else {
         const { data: sp } = await supabaseAdmin
           .from('shop_products')
