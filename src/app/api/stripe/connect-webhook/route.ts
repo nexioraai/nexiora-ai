@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 import { getStripe } from '@/lib/stripe';
-import { decrementStock } from '@/lib/shop';
-import { fulfillCjOrder } from '@/lib/cj/fulfill';
-import { fulfillPodOrder } from '@/lib/suppliers/pod-fulfill';
-import { fulfillZendropOrder } from '@/lib/suppliers/zendrop-fulfill';
-import { sendOrderConfirmationEmail } from '@/lib/email/sendOrderConfirmationEmail';
+import { handlePaidCheckout } from '@/lib/shop/handlePaidCheckout';
 
 /**
  * Webhook dédié aux paiements boutique (Stripe Connect).
@@ -35,81 +31,9 @@ export async function POST(req: Request) {
       // Paiement boutique réussi → commande payée
       case 'checkout.session.completed': {
         const session: any = event.data.object;
-        const { data: order } = await supabase
-          .from('shop_orders')
-          .update({
-            status: 'paid',
-            customer_email: session.customer_details?.email ?? null,
-            customer_name: session.customer_details?.name ?? null,
-            shipping_address: session.shipping_details?.address ?? session.collected_information?.shipping_details?.address ?? null,
-          })
-          .eq('payment_ref', session.id)
-          .select('id, estimated_delivery')
-          .maybeSingle();
-
-        if (order) {
-          // Dropshipping CJ : crée les commandes fournisseur pour les lignes CJ.
-          let cjVids: string[] = [];
-          try {
-            cjVids = await fulfillCjOrder(order.id);
-          } catch (e) {
-            console.error('CJ fulfill error:', e);
-          }
-
-          // Zendrop fulfill
-          try {
-            await fulfillZendropOrder(order.id);
-          } catch (e) {
-            console.error('Zendrop fulfill error:', e);
-          }
-          // POD fulfill (Printful/Printify) avec designs custom
-          try {
-            await fulfillPodOrder(order.id);
-          } catch (e) {
-            console.error('POD fulfill error:', e);
-          }
-          // Décrément du stock uniquement pour les produits NON gérés par CJ.
-          const { data: orderItems } = await supabase
-            .from('shop_order_items')
-            .select('product_id, quantity')
-            .eq('order_id', order.id);
-          if (orderItems && orderItems.length > 0) {
-            const { data: prods } = await supabase
-              .from('shop_products')
-              .select('id, cj_vid')
-              .in('id', orderItems.filter((it: any) => it.product_id).map((it: any) => it.product_id));
-            const cjProductIds = new Set((prods || []).filter((p: any) => p.cj_vid).map((p: any) => p.id));
-            const stockItems = orderItems
-              .filter((it: any) => it.product_id && !cjProductIds.has(it.product_id))
-              .map((it: any) => ({ id: it.product_id, quantity: it.quantity }));
-            if (stockItems.length > 0) {
-              await decrementStock(stockItems);
-            }
-          }
-
-          // Email de confirmation de commande
-          try {
-            const { data: siteData } = await supabase
-              .from('sites')
-              .select('name')
-              .eq('id', (await supabase.from('shop_orders').select('site_id').eq('id', order.id).single()).data?.site_id)
-              .single();
-            await sendOrderConfirmationEmail({
-              to: session.customer_details?.email,
-              customerName: session.customer_details?.name,
-              shopName: siteData?.name || 'Votre boutique',
-              orderId: order.id,
-              total: (session.amount_total || 0) / 100,
-              currency: session.currency || 'usd',
-              estimatedDelivery: order.estimated_delivery || undefined,
-            });
-          } catch (emailErr) {
-            console.error('Order confirmation email error:', emailErr);
-          }
-        }
+        await handlePaidCheckout(session);
         break;
       }
-      // Paiement expiré / abandonné → commande annulée
       case 'checkout.session.expired': {
         const session: any = event.data.object;
         await supabase

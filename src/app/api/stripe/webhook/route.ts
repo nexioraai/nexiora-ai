@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase, supabaseAdmin } from '@/lib/supabase-admin';
 import { getStripe } from '@/lib/stripe';
+import { handlePaidCheckout } from '@/lib/shop/handlePaidCheckout';
 import { provisionDomain } from '@/lib/domains/provision';
 
 export async function POST(req: Request) {
@@ -62,6 +63,11 @@ export async function POST(req: Request) {
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
         const obj: any = event.data.object;
+        // Achat boutique (mode=payment) : fulfillment dropshipping, PAS un abonnement.
+        if (event.type === 'checkout.session.completed' && obj?.mode === 'payment') {
+          await handlePaidCheckout(obj);
+          break;
+        }
         const customerId = obj.customer as string;
 
         // Un abonnement domaine ne dit rien de la publication du site : il ne
