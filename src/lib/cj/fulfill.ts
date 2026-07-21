@@ -217,26 +217,9 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
     return cjProducts.map((p) => p.vid);
   }
 
-  // Garde-fou solde
-  try {
-    const balance = await cjGetBalance(CJ_EMAIL, CJ_API_KEY);
-    if (balance <= 0) {
-      console.error(`CJ fulfill: solde insuffisant (${balance}) pour ${order.id}`);
-      await supabaseAdmin
-        .from('shop_orders')
-        .update({ cj_pay_status: 'failed' })
-        .eq('id', order.id);
-      return [];
-    }
-  } catch (e) {
-    console.error('CJ getBalance failed:', e);
-    // Transitoire : on rouvre pour retry.
-    await supabaseAdmin
-      .from('shop_orders')
-      .update({ cj_pay_status: 'pending' })
-      .eq('id', order.id);
-    return [];
-  }
+  // NOTE : pas de garde-fou solde en mode semi-auto (payType 3). La commande
+  // est CREEE chez CJ sans paiement ; Youssouf la paie ensuite a la main.
+  // Le solde du Wallet n'est donc pas requis pour creer la commande.
 
   // SEMI-AUTO (payType 3) : la commande est CREEE chez CJ mais PAS payee.
   // Youssouf la paie ensuite d'un clic (carte/PayPal) sur le site CJ.
