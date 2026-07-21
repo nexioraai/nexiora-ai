@@ -67,6 +67,18 @@
     {
       "path": "/api/cron/domain-retry",
       "schedule": "15 */2 * * *"
+    },
+    {
+      "path": "/api/cron/shipping-cache",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/shipping-cache",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/shipping-cache",
+      "schedule": "0 20 * * *"
     }
   ]
 }
