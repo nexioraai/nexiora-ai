@@ -551,8 +551,8 @@ export default function EditPage() {
                           if (data.task) allTasks.push(data.task);
                           if (Array.isArray(data.errors) && data.errors.length > 0) allErrors.push(...data.errors);
                           if (i < selectedCount - 1) {
-                            setMessage(`Produit ${i + 1} lancé. Attente 60s (rate limit)…`);
-                            await new Promise(r => setTimeout(r, 60000));
+                            setMessage(`Produit ${i + 1} lancé…`);
+                            await new Promise(r => setTimeout(r, 5000));
                           }
                         }
                         if (allTasks.length === 0) throw new Error('Aucun mockup lancé');
