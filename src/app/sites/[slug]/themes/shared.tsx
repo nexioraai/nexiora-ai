@@ -349,6 +349,7 @@ export function mockupsToProducts(site: Site): Product[] {
   for (const design of designs) {
     if (!design.mockups?.length) continue
     for (const m of design.mockups) {
+      if (m.design_url && design.url && m.design_url !== design.url) continue
       const selProducts = design.selected_products || {}
       const sel = selProducts[String(m.product_id)]
       const sellPrice = sel?.sellPrice ? Number(sel.sellPrice) : 0

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createHash } from 'crypto';
 
 export const maxDuration = 300;
 import { supabaseAdmin } from '@/lib/supabase-admin';
@@ -79,6 +80,15 @@ export async function POST(req: Request) {
       );
 
       if (pending.length === 0 && results.length > 0) {
+        // Fetch site first: current design URL needed for hashing + tagging
+        const { data: site } = await supabaseAdmin
+          .from('sites')
+          .select('pod_designs')
+          .eq('slug', slug)
+          .single();
+        const designs = Array.isArray(site?.pod_designs) ? site.pod_designs : [];
+        const currentDesignUrl = designs[0]?.url || '';
+        const designHash = createHash('md5').update(currentDesignUrl).digest('hex').slice(0, 8);
         // Download mockup images to Supabase Storage (permanent URLs)
         const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
         for (const m of results) {
@@ -92,7 +102,7 @@ export async function POST(req: Request) {
               if (!imgRes.ok) continue;
               const buf = Buffer.from(await imgRes.arrayBuffer());
               const ext = item.url.includes('.png') ? 'png' : 'jpg';
-              const storagePath = `${slug}/${m.product_id}-${m.variant_id}-${item.key}.${ext}`;
+              const storagePath = `${slug}/${designHash}-${m.product_id}-${m.variant_id}-${item.key}.${ext}`;
               await supabaseAdmin.storage.from('pod-designs').upload(storagePath, buf, {
                 contentType: `image/${ext === 'jpg' ? 'jpeg' : ext}`,
                 upsert: true,
@@ -110,18 +120,16 @@ export async function POST(req: Request) {
           }
         }
 
-        const { data: site } = await supabaseAdmin
-          .from('sites')
-          .select('pod_designs')
-          .eq('slug', slug)
-          .single();
         if (site) {
-          const designs = Array.isArray(site.pod_designs) ? site.pod_designs : [];
+          results.forEach((r: any) => { r.design_url = currentDesignUrl; });
           const updated = designs.map((d: any, i: number) => {
             if (i === 0) {
               const existing = Array.isArray(d.mockups) ? d.mockups : [];
               const newKeys = new Set(results.map((r: any) => `${r.product_id}-${r.variant_id}`));
-              const kept = existing.filter((m: any) => !newKeys.has(`${m.product_id}-${m.variant_id}`));
+              // Purge mockups from previous designs + duplicates of new results
+              const kept = existing.filter((m: any) =>
+                m.design_url === currentDesignUrl && !newKeys.has(`${m.product_id}-${m.variant_id}`)
+              );
               return { ...d, mockups: [...kept, ...results] };
             }
             return d;
@@ -209,7 +217,11 @@ export async function POST(req: Request) {
 
     // Skip products that already have a mockup (avoid burning rate limit)
     const existingMockups = Array.isArray(designs[0]?.mockups) ? designs[0].mockups : [];
-    const mockedIds = new Set(existingMockups.map((m: any) => String(m.product_id)));
+    const mockedIds = new Set(
+      existingMockups
+        .filter((m: any) => m.design_url === designUrl)
+        .map((m: any) => String(m.product_id))
+    );
     const todo = blanks.filter(b => !mockedIds.has(String(b.product_id)));
 
     if (todo.length === 0) {

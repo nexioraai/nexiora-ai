@@ -555,16 +555,21 @@ export default function EditPage() {
                         }
                         if (allTasks.length === 0) throw new Error('Aucun mockup lancé');
 
-                        // 2. Poll all tasks
+                        // 2. Poll all tasks until done (max ~2 min)
                         setMessage(`${allTasks.length} produits lancés. Récupération des mockups…`);
-                        await new Promise(r => setTimeout(r, 15000));
-                        const pollRes = await fetch('/api/pod/generate-mockups', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ slug, action: 'poll', task_keys: allTasks }),
-                        });
-                        const pollData = await pollRes.json();
-                        setMessage(`${pollData.generated} mockups générés !`);
+                        let pollData: any = null;
+                        for (let p = 0; p < 12; p++) {
+                          await new Promise(r => setTimeout(r, 10000));
+                          const pollRes = await fetch('/api/pod/generate-mockups', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ slug, action: 'poll', task_keys: allTasks }),
+                          });
+                          pollData = await pollRes.json();
+                          if (pollData.status === 'done') break;
+                          setMessage(`Mockups en cours… (${pollData.generated ?? 0}/${allTasks.length} prêts)`);
+                        }
+                        setMessage(`${pollData?.generated ?? 0} mockups générés !`);
                         const { data: updated } = await supabase.from('sites').select('pod_designs').eq('slug', slug).single();
                         if (updated?.pod_designs) setPodDesigns(updated.pod_designs);
                       } catch (err: any) {
