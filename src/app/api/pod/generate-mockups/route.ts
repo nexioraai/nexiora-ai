@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+
+export const maxDuration = 300;
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 const POSITION = {
@@ -214,18 +216,32 @@ export async function POST(req: Request) {
 
     for (const placement of PLACEMENTS) {
       try {
-        const task = await pfFetch(`/mockup-generator/create-task/${blank.product_id}`, {
-          method: 'POST',
-          body: JSON.stringify({
-            variant_ids: [blank.variant_id],
-            format: 'jpg',
-            files: [{
-              placement,
-              image_url: designUrl,
-              position: POSITION,
-            }],
-          }),
-        });
+        let task: any = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            task = await pfFetch(`/mockup-generator/create-task/${blank.product_id}`, {
+              method: 'POST',
+              body: JSON.stringify({
+                variant_ids: [blank.variant_id],
+                format: 'jpg',
+                files: [{
+                  placement,
+                  image_url: designUrl,
+                  position: POSITION,
+                }],
+              }),
+            });
+            break;
+          } catch (err: any) {
+            if (err.message.includes('429') && attempt < 2) {
+              const m = err.message.match(/after (\d+) seconds/);
+              const waitS = m ? parseInt(m[1]) + 3 : 63;
+              await delay(waitS * 1000);
+              continue;
+            }
+            throw err;
+          }
+        }
         if (task?.task_key) {
           launched = {
             task_key: task.task_key,
