@@ -78,6 +78,24 @@ export async function cjCreateOrder(
 }
 
 /**
+ * Annule une commande chez CJ (DELETE /shopping/order/deleteOrder).
+ * Endpoint verifie par appel reel : POST renvoie 'method not supported',
+ * seul DELETE fonctionne. Leve une erreur si CJ refuse (deja expediee, etc.).
+ */
+export async function cjCancelOrder(
+  email: string,
+  apiKey: string,
+  cjOrderId: string
+): Promise<any> {
+  return cjFetch(
+    email,
+    apiKey,
+    `/shopping/order/deleteOrder?orderId=${encodeURIComponent(cjOrderId)}`,
+    { method: 'DELETE' }
+  );
+}
+
+/**
  * Récupère le détail d'une commande CJ par orderId.
  * Accepte aussi notre orderNumber custom (= id Supabase de la commande).
  * Renvoie null si aucune commande n'existe (garde-fou anti double-création).
