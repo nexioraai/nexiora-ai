@@ -54,7 +54,7 @@ export async function POST(req: Request) {
               // Lookup price from catalog
               const { data: cpRow } = await supabaseAdmin
                 .from('catalog_products')
-                .select('price, currency')
+                .select('price, currency, shipping_days_min, shipping_days_max')
                 .eq('supplier_id', 'printful')
                 .eq('supplier_product_id', String(tk.variant_id))
                 .single();
@@ -66,6 +66,8 @@ export async function POST(req: Request) {
                 extra: (m.extra || []).map((e: any) => ({ title: e.title, url: e.url })),
                 price: cpRow?.price ?? null,
                 currency: cpRow?.currency ?? 'USD',
+                shipping_days_min: cpRow?.shipping_days_min ?? null,
+                shipping_days_max: cpRow?.shipping_days_max ?? null,
                 created_at: new Date().toISOString(),
               });
             } else if (poll.status === 'failed') {

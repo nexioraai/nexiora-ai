@@ -364,6 +364,8 @@ export function mockupsToProducts(site: Site): Product[] {
         priceNumber: pr,
         currency: cur,
         image: m.mockup_url,
+        shippingDaysMin: m.shipping_days_min || null,
+        shippingDaysMax: m.shipping_days_max || null,
         variants: variants.map((v: any) => ({
           variant_id: v.variant_id,
           label: v.label,
