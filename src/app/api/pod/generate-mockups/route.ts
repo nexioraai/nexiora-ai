@@ -248,8 +248,13 @@ export async function POST(req: Request) {
       const vp = (pf.variant_printfiles || []).find((v: any) => v.variant_id === blank.variant_id)
         || (pf.variant_printfiles || [])[0];
       const filesById = new Map((pf.printfiles || []).map((f: any) => [f.printfile_id, f]));
-      for (const p of PLACEMENTS) {
-        if (!available.includes(p) || !vp?.placements?.[p]) continue;
+      // Preferred order first, then any front-like placement the product actually exposes
+      const candidates = [
+        ...PLACEMENTS.filter(p => available.includes(p)),
+        ...available.filter(p => !PLACEMENTS.includes(p) && (p.startsWith('front') || p.startsWith('embroidery_front') || p === 'default')),
+      ];
+      for (const p of candidates) {
+        if (!vp?.placements?.[p]) continue;
         const file: any = filesById.get(vp.placements[p]);
         if (!file) continue;
         // Center the design at 80% of the print area width (square design assumed)
