@@ -537,6 +537,7 @@ export default function EditPage() {
 
                         const selectedCount = Object.values(selectedProducts).filter((v: any) => v.selected).length;
                         const allTasks: any[] = [];
+                        const allErrors: string[] = [];
                         // 1. Launch one product at a time with 60s spacing
                         for (let i = 0; i < selectedCount; i++) {
                           setMessage(`Produit ${i + 1}… Lancement`);
@@ -548,6 +549,7 @@ export default function EditPage() {
                           const data = await res.json();
                           if (data.status === 'all_done') break;
                           if (data.task) allTasks.push(data.task);
+                          if (Array.isArray(data.errors) && data.errors.length > 0) allErrors.push(...data.errors);
                           if (i < selectedCount - 1) {
                             setMessage(`Produit ${i + 1} lancé. Attente 60s (rate limit)…`);
                             await new Promise(r => setTimeout(r, 60000));
@@ -569,7 +571,9 @@ export default function EditPage() {
                           if (pollData.status === 'done') break;
                           setMessage(`Mockups en cours… (${pollData.generated ?? 0}/${allTasks.length} prêts)`);
                         }
-                        setMessage(`${pollData?.generated ?? 0} mockups générés !`);
+                        if (Array.isArray(pollData?.errors) && pollData.errors.length > 0) allErrors.push(...pollData.errors);
+                        const okMsg = `${pollData?.generated ?? 0} mockups générés !`;
+                        setMessage(allErrors.length > 0 ? `${okMsg} ⚠️ ${allErrors.length} échec(s): ${allErrors.map(e => e.split(':')[0]).join(', ')}` : okMsg);
                         const { data: updated } = await supabase.from('sites').select('pod_designs').eq('slug', slug).single();
                         if (updated?.pod_designs) setPodDesigns(updated.pod_designs);
                       } catch (err: any) {

@@ -237,7 +237,7 @@ export async function POST(req: Request) {
     }
 
     const blank = todo[idx];
-    const PLACEMENTS = ['front', 'default', 'front_large'];
+    const PLACEMENTS = ['front', 'default', 'front_large', 'embroidery_front', 'embroidery_front_large'];
     let launched = null;
 
     for (const placement of PLACEMENTS) {
