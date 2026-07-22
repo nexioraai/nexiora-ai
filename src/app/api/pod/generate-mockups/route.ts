@@ -240,7 +240,41 @@ export async function POST(req: Request) {
     const PLACEMENTS = ['front', 'default', 'front_large', 'embroidery_front', 'embroidery_front_large'];
     let launched = null;
 
-    for (const placement of PLACEMENTS) {
+    // Fetch real printfile specs for this product (placement + exact print area)
+    let placementsToTry: { placement: string; position: typeof POSITION }[] = [];
+    try {
+      const pf = await pfFetch(`/mockup-generator/printfiles/${blank.product_id}`);
+      const available = Object.keys(pf.available_placements || {});
+      const vp = (pf.variant_printfiles || []).find((v: any) => v.variant_id === blank.variant_id)
+        || (pf.variant_printfiles || [])[0];
+      const filesById = new Map((pf.printfiles || []).map((f: any) => [f.printfile_id, f]));
+      for (const p of PLACEMENTS) {
+        if (!available.includes(p) || !vp?.placements?.[p]) continue;
+        const file: any = filesById.get(vp.placements[p]);
+        if (!file) continue;
+        // Center the design at 80% of the print area width (square design assumed)
+        const w = Math.round(file.width * 0.8);
+        const h = w;
+        placementsToTry.push({
+          placement: p,
+          position: {
+            area_width: file.width,
+            area_height: file.height,
+            width: w,
+            height: h,
+            top: Math.max(0, Math.round((file.height - h) / 2)),
+            left: Math.max(0, Math.round((file.width - w) / 2)),
+          },
+        });
+      }
+    } catch {
+      // printfiles unavailable -> fallback below
+    }
+    if (placementsToTry.length === 0) {
+      placementsToTry = PLACEMENTS.map(p => ({ placement: p, position: POSITION }));
+    }
+
+    for (const { placement, position } of placementsToTry) {
       try {
         let task: any = null;
         for (let attempt = 0; attempt < 3; attempt++) {
@@ -253,7 +287,7 @@ export async function POST(req: Request) {
                 files: [{
                   placement,
                   image_url: designUrl,
-                  position: POSITION,
+                  position,
                 }],
               }),
             });
