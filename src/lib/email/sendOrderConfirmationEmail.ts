@@ -12,10 +12,14 @@ interface OrderConfirmationParams {
   total: number;
   currency: string;
   estimatedDelivery?: string;
+  /** Token secret permettant a l'acheteur d'annuler lui-meme sa commande. */
+  cancelToken?: string;
+  /** Origine du site (https://...) pour construire le lien d'annulation. */
+  siteOrigin?: string;
 }
 
 export async function sendOrderConfirmationEmail(params: OrderConfirmationParams): Promise<boolean> {
-  const { to, customerName, shopName, orderId, total, currency, estimatedDelivery } = params;
+  const { to, customerName, shopName, orderId, total, currency, estimatedDelivery, cancelToken, siteOrigin } = params;
   if (!to || !shopName) return false;
   if (!process.env.RESEND_API_KEY) {
     console.error('sendOrderConfirmationEmail: RESEND_API_KEY absente');
@@ -44,6 +48,15 @@ export async function sendOrderConfirmationEmail(params: OrderConfirmationParams
       <p style="font-size: 14px; line-height: 1.6; color: #555;">
         Vous recevrez un email avec votre numéro de suivi dès que votre commande sera expédiée.
       </p>
+      ${cancelToken && siteOrigin ? `<div style="border-top: 1px solid #e5e5e5; margin: 24px 0 0; padding-top: 16px;">
+        <p style="font-size: 13px; line-height: 1.6; color: #777; margin: 0 0 8px;">
+          Vous avez change d'avis ? Vous pouvez annuler tant que la commande n'est pas expediee.
+        </p>
+        <a href="${siteOrigin}/cancel-order?id=${orderId}&token=${cancelToken}"
+           style="font-size: 13px; color: #888; text-decoration: underline;">
+          Annuler ma commande
+        </a>
+      </div>` : ''}
       <p style="font-size: 14px; line-height: 1.6; color: #555;">Merci pour votre confiance,<br/>L'équipe ${shopName}</p>
     </div>
   `;

@@ -40,7 +40,7 @@ export async function handlePaidCheckout(session: any): Promise<void> {
         : session.payment_intent?.id ?? null,
     })
     .eq('payment_ref', session.id)
-    .select('id, estimated_delivery, site_id')
+    .select('id, estimated_delivery, site_id, cancel_token')
     .maybeSingle();
 
   if (!order) return;
@@ -96,6 +96,8 @@ export async function handlePaidCheckout(session: any): Promise<void> {
       total: (session.amount_total || 0) / 100,
       currency: session.currency || 'usd',
       estimatedDelivery: order.estimated_delivery || undefined,
+      cancelToken: (order as any).cancel_token || undefined,
+      siteOrigin: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nexiora.ca',
     });
   } catch (emailErr) {
     console.error('Order confirmation email error:', emailErr);
