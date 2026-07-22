@@ -308,6 +308,9 @@ export async function POST(req: Request) {
         payment_ref: orderId,
         estimated_delivery: estimatedDelivery,
         shipping_amount: shippingAmount,
+        // Token secret pour le lien "Annuler ma commande" envoye a l'acheteur.
+        // Impossible a deviner : seul le destinataire de l'email peut annuler.
+        cancel_token: crypto.randomUUID(),
         country_code: countryCode || null,
         supplier_cost: supplierCost,
         nexiora_commission: nexioraCommission,

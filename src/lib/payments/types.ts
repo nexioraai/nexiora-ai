@@ -31,4 +31,6 @@ export interface PaymentProvider {
     applicationFeeAmount?: number
   ): Promise<CheckoutResult>;
   getStatus(accountId: string): Promise<{ ready: boolean }>;
+  /** Rembourse un paiement (avec reverse transfer vers le marchand). */
+  refundPayment(paymentIntentId: string): Promise<{ id: string; status: string | null; amount: number }>;
 }

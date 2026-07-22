@@ -33,6 +33,11 @@ export async function handlePaidCheckout(session: any): Promise<void> {
       customer_email: customerEmail,
       customer_name: customerName,
       shipping_address: shippingAddress,
+      // Necessaire pour rembourser plus tard (annulation) : Stripe rembourse
+      // un payment_intent, pas une session.
+      payment_intent_id: typeof session.payment_intent === 'string'
+        ? session.payment_intent
+        : session.payment_intent?.id ?? null,
     })
     .eq('payment_ref', session.id)
     .select('id, estimated_delivery, site_id')

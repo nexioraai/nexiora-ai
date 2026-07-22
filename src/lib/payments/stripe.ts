@@ -74,6 +74,23 @@ export const stripeProvider: PaymentProvider = {
     }
   },
 
+  /**
+   * Rembourse integralement un paiement boutique.
+   * reverse_transfer: true -> Stripe REPREND l'argent deja transfere au
+   * marchand (solde negatif si insuffisant, recupere sur ses ventes suivantes).
+   * refund_application_fee: true -> Nexiora rend aussi sa commission.
+   * Sans ces deux options, Nexiora paierait le remboursement de sa poche.
+   */
+  async refundPayment(paymentIntentId: string) {
+    const stripe = getStripe();
+    const refund = await stripe.refunds.create({
+      payment_intent: paymentIntentId,
+      reverse_transfer: true,
+      refund_application_fee: true,
+    });
+    return { id: refund.id, status: refund.status, amount: refund.amount };
+  },
+
   async getStatus(accountId) {
     const stripe = getStripe();
     const account = await stripe.accounts.retrieve(accountId);
