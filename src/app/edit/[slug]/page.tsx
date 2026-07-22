@@ -536,43 +536,44 @@ export default function EditPage() {
                         setPodDesigns(updatedDesigns);
 
                         const selectedCount = Object.values(selectedProducts).filter((v: any) => v.selected).length;
-                        const allTasks: any[] = [];
                         const allErrors: string[] = [];
-                        // 1. Launch one product at a time with 60s spacing
-                        for (let i = 0; i < selectedCount; i++) {
-                          setMessage(`Produit ${i + 1}… Lancement`);
-                          const res = await fetch('/api/pod/generate-mockups', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ slug, index: i }),
-                          });
-                          const data = await res.json();
-                          if (data.status === 'all_done') break;
-                          if (data.task) allTasks.push(data.task);
-                          if (Array.isArray(data.errors) && data.errors.length > 0) allErrors.push(...data.errors);
-                          if (i < selectedCount - 1) {
-                            setMessage(`Produit ${i + 1} lancé…`);
+                        let totalGenerated = 0;
+                        // Passes: launch remaining -> poll -> repeat until nothing left or no progress
+                        for (let pass = 0; pass < 6; pass++) {
+                          const passTasks: any[] = [];
+                          for (let i = 0; i < selectedCount; i++) {
+                            setMessage(`Passe ${pass + 1} — produit ${i + 1}… (${totalGenerated} prêts)`);
+                            const res = await fetch('/api/pod/generate-mockups', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ slug, index: i }),
+                            });
+                            const data = await res.json();
+                            if (data.status === 'all_done') break;
+                            if (data.task) passTasks.push(data.task);
+                            if (Array.isArray(data.errors) && data.errors.length > 0) allErrors.push(...data.errors);
                             await new Promise(r => setTimeout(r, 5000));
                           }
-                        }
-                        if (allTasks.length === 0) throw new Error('Aucun mockup lancé');
+                          if (passTasks.length === 0) break; // all done or nothing launchable
 
-                        // 2. Poll all tasks until done (max ~2 min)
-                        setMessage(`${allTasks.length} produits lancés. Récupération des mockups…`);
-                        let pollData: any = null;
-                        for (let p = 0; p < 12; p++) {
-                          await new Promise(r => setTimeout(r, 10000));
-                          const pollRes = await fetch('/api/pod/generate-mockups', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ slug, action: 'poll', task_keys: allTasks }),
-                          });
-                          pollData = await pollRes.json();
-                          if (pollData.status === 'done') break;
-                          setMessage(`Mockups en cours… (${pollData.generated ?? 0}/${allTasks.length} prêts)`);
+                          setMessage(`Passe ${pass + 1} — ${passTasks.length} lancés, récupération…`);
+                          let pollData: any = null;
+                          for (let p = 0; p < 12; p++) {
+                            await new Promise(r => setTimeout(r, 10000));
+                            const pollRes = await fetch('/api/pod/generate-mockups', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ slug, action: 'poll', task_keys: passTasks }),
+                            });
+                            pollData = await pollRes.json();
+                            if (pollData.status === 'done') break;
+                            setMessage(`Passe ${pass + 1} — mockups en cours… (${pollData.generated ?? 0}/${passTasks.length})`);
+                          }
+                          totalGenerated += pollData?.generated ?? 0;
+                          if (Array.isArray(pollData?.errors) && pollData.errors.length > 0) allErrors.push(...pollData.errors);
+                          if ((pollData?.generated ?? 0) === 0) break; // no progress -> stop
                         }
-                        if (Array.isArray(pollData?.errors) && pollData.errors.length > 0) allErrors.push(...pollData.errors);
-                        const okMsg = `${pollData?.generated ?? 0} mockups générés !`;
+                        const okMsg = `${totalGenerated} mockups générés !`;
                         setMessage(allErrors.length > 0 ? `${okMsg} ⚠️ ${allErrors.length} échec(s): ${allErrors.map(e => e.split(':')[0]).join(', ')}` : okMsg);
                         const { data: updated } = await supabase.from('sites').select('pod_designs').eq('slug', slug).single();
                         if (updated?.pod_designs) setPodDesigns(updated.pod_designs);
