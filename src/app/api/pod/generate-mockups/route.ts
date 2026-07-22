@@ -118,7 +118,12 @@ export async function POST(req: Request) {
         if (site) {
           const designs = Array.isArray(site.pod_designs) ? site.pod_designs : [];
           const updated = designs.map((d: any, i: number) => {
-            if (i === 0) return { ...d, mockups: results };
+            if (i === 0) {
+              const existing = Array.isArray(d.mockups) ? d.mockups : [];
+              const newKeys = new Set(results.map((r: any) => `${r.product_id}-${r.variant_id}`));
+              const kept = existing.filter((m: any) => !newKeys.has(`${m.product_id}-${m.variant_id}`));
+              return { ...d, mockups: [...kept, ...results] };
+            }
             return d;
           });
           await supabaseAdmin.from('sites').update({ pod_designs: updated }).eq('slug', slug);
@@ -202,15 +207,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No unique Printful products found' }, { status: 400 });
     }
 
+    // Skip products that already have a mockup (avoid burning rate limit)
+    const existingMockups = Array.isArray(designs[0]?.mockups) ? designs[0].mockups : [];
+    const mockedIds = new Set(existingMockups.map((m: any) => String(m.product_id)));
+    const todo = blanks.filter(b => !mockedIds.has(String(b.product_id)));
+
+    if (todo.length === 0) {
+      return NextResponse.json({ status: 'all_done', total: blanks.length, already_done: true });
+    }
+
     // 3. Create ONE mockup task (index from frontend)
     const idx = typeof bodyIndex === 'number' ? bodyIndex : 0;
     const errors: string[] = [];
 
-    if (idx >= blanks.length) {
-      return NextResponse.json({ status: 'all_done', total: blanks.length });
+    if (idx >= todo.length) {
+      return NextResponse.json({ status: 'all_done', total: todo.length });
     }
 
-    const blank = blanks[idx];
+    const blank = todo[idx];
     const PLACEMENTS = ['front', 'default', 'front_large'];
     let launched = null;
 
@@ -261,7 +275,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       status: 'launched',
       index: idx,
-      total: blanks.length,
+      total: todo.length,
       task: launched,
       errors,
     });
