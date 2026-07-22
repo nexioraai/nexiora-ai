@@ -43,7 +43,7 @@ export async function sendOrderConfirmationEmail(params: OrderConfirmationParams
         <p style="font-size: 13px; color: #666; margin: 12px 0 4px;">Total</p>
         <p style="font-size: 18px; font-weight: 700; margin: 0;">${formattedTotal}</p>
         ${estimatedDelivery ? `<p style="font-size: 13px; color: #666; margin: 12px 0 4px;">Livraison estim\u00e9e</p>
-        <p style="font-size: 16px; font-weight: 600; margin: 0;">${estimatedDelivery} jours</p>` : ''}
+        <p style="font-size: 16px; font-weight: 600; margin: 0;">${String(estimatedDelivery).replace(/\s*days?\s*/i, ' jours').trim()}</p>` : ''}
       </div>
       <p style="font-size: 14px; line-height: 1.6; color: #555;">
         Vous recevrez un email avec votre numéro de suivi dès que votre commande sera expédiée.
