@@ -79,7 +79,7 @@ export async function POST(req: Request) {
         })
       );
 
-      if (pending.length === 0 && results.length > 0) {
+      if (results.length > 0) {
         // Fetch site first: current design URL needed for hashing + tagging
         const { data: site } = await supabaseAdmin
           .from('sites')
