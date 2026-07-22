@@ -135,8 +135,8 @@ export const printfulAdapter: SupplierAdapter = {
           token
         );
 
-        // 3. Pour chaque produit, fetch détails + variants (max 8 par catégorie pour le cron)
-        for (const prod of (products || []).slice(0, 8)) {
+        // 3. Pour chaque produit, fetch détails + variants (max 20 par catégorie pour le cron)
+        for (const prod of (products || []).slice(0, 20)) {
           if (prod.is_discontinued) continue;
           await delay(600);
           try {
