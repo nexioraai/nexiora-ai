@@ -177,7 +177,7 @@ export async function POST(req: Request) {
       query = query.in('supplier_parent_id', selectedIds);
     }
 
-    const { data: catProducts } = await query.limit(100);
+    const { data: catProducts } = await query.limit(1000);
 
     if (!catProducts || catProducts.length === 0) {
       return NextResponse.json({ error: 'No Printful products found. Select products or run sync.' }, { status: 400 });
@@ -316,6 +316,10 @@ export async function POST(req: Request) {
         errors.push(`${blank.name}: ${err.message}`);
         break;
       }
+    }
+
+    if (!launched && errors.length === 0) {
+      errors.push(`${blank.name}: no compatible placement found`);
     }
 
     return NextResponse.json({
