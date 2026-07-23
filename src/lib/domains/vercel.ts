@@ -12,6 +12,12 @@ export type VercelDomainResult = {
   alreadyExists: boolean;
   /** Enregistrements a poser dans la zone DNS pour que le domaine resolve. */
   dns: { type: 'A' | 'CNAME'; name: string; value: string }[];
+  /**
+   * TXT exiges par Vercel pour prouver la propriete du domaine. Tant qu'ils
+   * ne sont pas dans la zone, Vercel refuse de servir le domaine et c'est
+   * l'ancien hebergeur qui repond.
+   */
+  verification: { type: string; domain: string; value: string }[];
 };
 
 /** Cible Vercel pour la racine (A) et pour www (CNAME). */
@@ -49,6 +55,7 @@ export async function addDomainToVercel(domain: string): Promise<VercelDomainRes
   return {
     ok: true,
     alreadyExists,
+    verification: Array.isArray(data?.verification) ? data.verification : [],
     dns: [
       { type: 'A', name: '@', value: VERCEL_A_RECORD },
       { type: 'CNAME', name: 'www', value: VERCEL_CNAME },
@@ -65,6 +72,7 @@ export async function addDomainToVercel(domain: string): Promise<VercelDomainRes
 export async function getVercelDomainStatus(domain: string): Promise<{
   attached: boolean;
   verified: boolean;
+  verification: { type: string; domain: string; value: string }[];
 }> {
   const { token, projectId } = vercelCreds();
   const res = await fetch(
@@ -72,7 +80,26 @@ export async function getVercelDomainStatus(domain: string): Promise<{
     { headers: { Authorization: 'Bearer ' + token } }
   );
   const data = await res.json().catch(() => null);
-  if (res.status === 404) return { attached: false, verified: false };
+  if (res.status === 404) return { attached: false, verified: false, verification: [] };
   if (!res.ok) throw new Error(data?.error?.message || 'Erreur Vercel ' + res.status);
-  return { attached: true, verified: data?.verified === true };
+  return {
+    attached: true,
+    verified: data?.verified === true,
+    verification: Array.isArray(data?.verification) ? data.verification : [],
+  };
+}
+
+/**
+ * Demande a Vercel de relire le DNS et de valider la propriete du domaine.
+ * Sans cet appel, le TXT _vercel peut etre en place sans que Vercel le sache :
+ * le domaine reste non verifie et l'ancien hebergeur continue de repondre.
+ */
+export async function verifyVercelDomain(domain: string): Promise<boolean> {
+  const { token, projectId } = vercelCreds();
+  const res = await fetch(
+    VERCEL_API + '/v9/projects/' + projectId + '/domains/' + encodeURIComponent(domain) + '/verify',
+    { method: 'POST', headers: { Authorization: 'Bearer ' + token } }
+  );
+  const data = await res.json().catch(() => null);
+  return res.ok && data?.verified === true;
 }

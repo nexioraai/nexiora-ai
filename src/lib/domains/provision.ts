@@ -1,6 +1,12 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { purchaseDomain, previewPurchase, createDnsRecord, deleteDnsByNameType } from '@/lib/domains/porkbun';
-import { addDomainToVercel, VERCEL_A_RECORD, VERCEL_CNAME } from '@/lib/domains/vercel';
+import {
+  addDomainToVercel,
+  getVercelDomainStatus,
+  verifyVercelDomain,
+  VERCEL_A_RECORD,
+  VERCEL_CNAME,
+} from '@/lib/domains/vercel';
 import { getDnsVerificationToken } from '@/lib/domains/searchconsole';
 
 /**
@@ -50,8 +56,16 @@ export async function provisionDomain(domainId: string): Promise<{ ok: boolean; 
 
   // 2. Rattachement Vercel avant le DNS : sans cela le domaine resoudrait
   //    vers un projet qui ne le reconnait pas.
+  let vercelVerification: { type: string; domain: string; value: string }[] = [];
   try {
-    await addDomainToVercel(row.domain);
+    const added = await addDomainToVercel(row.domain);
+    vercelVerification = added.verification;
+    // Un domaine deja rattache ne renvoie pas les TXT dans la reponse d'ajout :
+    // il faut les relire sur l'etat du domaine.
+    if (!vercelVerification.length) {
+      const st = await getVercelDomainStatus(row.domain);
+      if (!st.verified) vercelVerification = st.verification;
+    }
   } catch (e: any) {
     return fail('Vercel : ' + (e?.message || 'echec rattachement'));
   }
@@ -84,6 +98,34 @@ export async function provisionDomain(domainId: string): Promise<{ ok: boolean; 
         .eq('id', domainId);
     } catch (e: any) {
       return fail('DNS : ' + (e?.message || 'echec ecriture'));
+    }
+  }
+
+  // 3bis. TXT de propriete exiges par Vercel. Sans eux le domaine reste
+  //       "pending verification" et Vercel sert l'ancien hebergeur : le
+  //       marchand voit son ancien site alors que tout semble configure.
+  if (vercelVerification.length) {
+    for (const v of vercelVerification) {
+      if (v.type?.toUpperCase() !== 'TXT') continue;
+      // Vercel donne le FQDN (_vercel.exemple.com), Porkbun attend le
+      // sous-domaine seul.
+      const sub = v.domain.endsWith('.' + row.domain)
+        ? v.domain.slice(0, -(row.domain.length + 1))
+        : '';
+      try {
+        await deleteDnsByNameType(row.domain, 'TXT', sub);
+      } catch {
+        /* rien a supprimer */
+      }
+      await createDnsRecord(row.domain, { type: 'TXT', name: sub, content: v.value });
+    }
+    // La verification echoue si le DNS n'a pas encore propage : ce n'est pas
+    // un echec de provisioning, le cron domain-retry repassera.
+    try {
+      const ok = await verifyVercelDomain(row.domain);
+      if (!ok) console.warn('[provision] Vercel pas encore verifie', row.domain);
+    } catch (e: any) {
+      console.warn('[provision] verify Vercel', row.domain, e?.message || e);
     }
   }
 
