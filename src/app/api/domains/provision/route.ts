@@ -16,8 +16,16 @@ export const maxDuration = 120;
 export async function POST(req: NextRequest) {
   const token = req.headers.get('authorization')?.replace('Bearer ', '');
   if (!token) return NextResponse.json({ error: 'Non authentifie' }, { status: 401 });
-  const { data: { user }, error: authErr } = await supabaseAnon.auth.getUser(token);
-  if (authErr || !user?.email) return NextResponse.json({ error: 'Non authentifie' }, { status: 401 });
+
+  // Deux voies d'appel : le marchand via son token Supabase, ou l'operateur
+  // Nexiora via CRON_SECRET (reprise manuelle, domaine transfere).
+  const isOperator = !!process.env.CRON_SECRET && token === process.env.CRON_SECRET;
+  let userEmail: string | null = null;
+  if (!isOperator) {
+    const { data: { user }, error: authErr } = await supabaseAnon.auth.getUser(token);
+    if (authErr || !user?.email) return NextResponse.json({ error: 'Non authentifie' }, { status: 401 });
+    userEmail = user.email;
+  }
 
   const { slug, domain } = await req.json().catch(() => ({}));
   const clean = String(domain || '').trim().toLowerCase();
@@ -30,7 +38,7 @@ export async function POST(req: NextRequest) {
     .select('id, owner_email')
     .eq('slug', slug)
     .maybeSingle();
-  if (!site || site.owner_email !== user.email) {
+  if (!site || (!isOperator && site.owner_email !== userEmail)) {
     return NextResponse.json({ error: 'Site introuvable' }, { status: 403 });
   }
 
