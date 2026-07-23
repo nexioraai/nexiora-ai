@@ -12,7 +12,13 @@ function getAuth() {
   const credentials = JSON.parse(Buffer.from(b64, 'base64').toString('utf8'));
   return new google.auth.GoogleAuth({
     credentials,
-    scopes: ['https://www.googleapis.com/auth/webmasters'],
+    // L'API Site Verification exige son propre scope : webmasters seul suffit
+    // pour Search Console mais fait echouer getToken/insert avec
+    // "insufficient authentication scopes".
+    scopes: [
+      'https://www.googleapis.com/auth/webmasters',
+      'https://www.googleapis.com/auth/siteverification',
+    ],
   });
 }
 
