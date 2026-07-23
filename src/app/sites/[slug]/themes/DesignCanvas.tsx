@@ -15,6 +15,7 @@ interface DesignPosition {
 
 interface Props {
   productImage?: string;
+  productName?: string;
   variantId?: string;
   onDesignChange: (url: string | null, position: DesignPosition | null) => void;
   primary?: string;
@@ -44,10 +45,19 @@ const LABELS: Record<string, Record<string, string>> = {
   },
 };
 
-// Print area as a fraction of the displayed product image (visual guide).
-const AREA = { left: 0.30, top: 0.22, width: 0.40, height: 0.42 };
+// Where the print area sits on the product photo. Width + top are empirical per
+// garment type; the HEIGHT is derived from the real printfile ratio so the box
+// always has the exact shape of Printful's printable surface.
+const AREA_PRESETS: { match: RegExp; left: number; top: number; width: number }[] = [
+  { match: /hoodie|sweatshirt|sweat/i, left: 0.28, top: 0.26, width: 0.44 },
+  { match: /cap|hat|beanie/i,          left: 0.34, top: 0.34, width: 0.32 },
+  { match: /mug|bottle|tumbler/i,      left: 0.26, top: 0.28, width: 0.48 },
+  { match: /tote|bag|pack/i,           left: 0.26, top: 0.24, width: 0.48 },
+  { match: /poster|print|canvas/i,     left: 0.10, top: 0.10, width: 0.80 },
+];
+const AREA_DEFAULT = { left: 0.26, top: 0.20, width: 0.48 }; // t-shirts & co
 
-export default function DesignCanvas({ productImage, variantId, onDesignChange, primary = '#111', lang = 'en' }: Props) {
+export default function DesignCanvas({ productImage, productName = '', variantId, onDesignChange, primary = '#111', lang = 'en' }: Props) {
   const t = LABELS[lang] || LABELS.en;
   const [preview, setPreview] = useState<string | null>(null);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
@@ -61,6 +71,17 @@ export default function DesignCanvas({ productImage, variantId, onDesignChange, 
   const inputRef = useRef<HTMLInputElement>(null);
   const areaRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef({ mx: 0, my: 0, bx: 0, by: 0 });
+
+  // Print box: preset position/width + height from the real printfile ratio
+  const preset = AREA_PRESETS.find(p => p.match.test(productName)) || AREA_DEFAULT;
+  const printRatio = printArea ? printArea.area_width / printArea.area_height : 0.75;
+  const imgRatio = 0.8; // product photos are roughly 4:5 in the storefront
+  const area = {
+    left: preset.left,
+    top: preset.top,
+    width: preset.width,
+    height: (preset.width / printRatio) * imgRatio,
+  };
 
   // Fetch the real print area dimensions for this variant
   useEffect(() => {
@@ -182,8 +203,8 @@ export default function DesignCanvas({ productImage, variantId, onDesignChange, 
               ref={areaRef}
               style={{
                 position: 'absolute',
-                left: `${AREA.left * 100}%`, top: `${AREA.top * 100}%`,
-                width: `${AREA.width * 100}%`, height: `${AREA.height * 100}%`,
+                left: `${area.left * 100}%`, top: `${area.top * 100}%`,
+                width: `${area.width * 100}%`, height: `${area.height * 100}%`,
                 border: `1px dashed ${primary}80`, borderRadius: 4,
               }}
             >
