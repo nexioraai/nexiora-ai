@@ -8,6 +8,7 @@ import {
   VERCEL_CNAME,
 } from '@/lib/domains/vercel';
 import { getDnsVerificationToken } from '@/lib/domains/searchconsole';
+import { checkExistingMail } from '@/lib/domains/mail-guard';
 
 /**
  * Chaine complete apres encaissement : achat Porkbun, DNS, Vercel.
@@ -56,6 +57,25 @@ export async function provisionDomain(domainId: string): Promise<{ ok: boolean; 
 
   // 2. Rattachement Vercel avant le DNS : sans cela le domaine resoudrait
   //    vers un projet qui ne le reconnait pas.
+  // Garde-fou messagerie. Prendre la main sur la zone DNS d'un domaine qui
+  // porte deja une messagerie la coupe : la nouvelle zone est vide et les
+  // MX/SPF/DKIM d'origine ne sont pas reconstituables de facon fiable
+  // (selecteur DKIM arbitraire, sous-domaines non enumerables). Nexiora
+  // n'absorbe pas ce risque a la place du marchand : elle le signale.
+  try {
+    const mail = await checkExistingMail(row.domain);
+    if (mail.hasMail && !mail.safe) {
+      return fail(
+        'Messagerie active detectee sur ce domaine (' +
+          mail.hosts.slice(0, 3).join(', ') +
+          '). Le provisioning couperait les emails. Migrer la messagerie ou ' +
+          'recreer les enregistrements MX/SPF/DKIM dans la zone Nexiora avant de continuer.'
+      );
+    }
+  } catch (e: any) {
+    console.warn('[provision] verification messagerie', row.domain, e?.message || e);
+  }
+
   let vercelVerification: { type: string; domain: string; value: string }[] = [];
   try {
     const added = await addDomainToVercel(row.domain);
