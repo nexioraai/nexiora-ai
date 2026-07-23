@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { purchaseDomain, previewPurchase, createDnsRecord } from '@/lib/domains/porkbun';
+import { purchaseDomain, previewPurchase, createDnsRecord, deleteDnsByNameType } from '@/lib/domains/porkbun';
 import { addDomainToVercel, VERCEL_A_RECORD, VERCEL_CNAME } from '@/lib/domains/vercel';
 import { getDnsVerificationToken } from '@/lib/domains/searchconsole';
 
@@ -60,6 +60,18 @@ export async function provisionDomain(domainId: string): Promise<{ ok: boolean; 
   //    dans le parcours classique ; ici Nexiora possede la zone.
   if (!row.dns_configured_at) {
     try {
+      // Un domaine transfere arrive avec les enregistrements de son ancien
+      // hebergeur. createDnsRecord AJOUTE sans remplacer : sans ce nettoyage,
+      // la zone renvoie deux A et le trafic part chez l'ancien hebergeur.
+      // Suppression tolerante : une zone vide (domaine neuf) n'a rien a
+      // supprimer, ce n'est pas une erreur.
+      for (const [t, name] of [['A', ''], ['ALIAS', ''], ['CNAME', 'www'], ['A', 'www']] as const) {
+        try {
+          await deleteDnsByNameType(row.domain, t, name);
+        } catch {
+          /* rien a supprimer */
+        }
+      }
       await createDnsRecord(row.domain, { type: 'A', name: '', content: VERCEL_A_RECORD });
       await createDnsRecord(row.domain, { type: 'CNAME', name: 'www', content: VERCEL_CNAME });
       await supabaseAdmin
