@@ -27,13 +27,28 @@ const PREFERRED = ['front', 'default', 'front_large', 'embroidery_front', 'embro
 // Classify any Printful placement into a visitor-facing side.
 // Placement names vary a lot: front, front_large, front_dtfabric,
 // embroidery_chest_left, embroidery_chest_center, sleeve_left, back...
-function classify(p: string): { side: string; rank: number } | null {
-  if (/label/i.test(p)) return null;                       // inside/outside labels: not for visitors
-  if (/back/i.test(p)) return { side: 'back', rank: 2 };
-  if (/sleeve_left|wrist_left/i.test(p)) return { side: 'sleeve_left', rank: 3 };
-  if (/sleeve_right|wrist_right/i.test(p)) return { side: 'sleeve_right', rank: 4 };
-  if (/front|chest|default/i.test(p)) return { side: 'front', rank: 1 };
-  return { side: 'front', rank: 5 };                       // anything else printable
+type Side = 'front' | 'back' | 'sleeve_left' | 'sleeve_right';
+
+// Side order shown to the visitor (independent from placement selection)
+const SIDE_ORDER: Side[] = ['front', 'back', 'sleeve_left', 'sleeve_right'];
+
+// Declarative classification. First match wins. `prefer` is a tie-break used
+// ONLY between placements of the same side — never across sides.
+const RULES: { match: RegExp; side: Side | null; prefer: number }[] = [
+  { match: /label/i,                  side: null,           prefer: 0 }, // not for visitors
+  { match: /back/i,                   side: 'back',         prefer: 1 },
+  { match: /sleeve_left|wrist_left/i, side: 'sleeve_left',  prefer: 1 },
+  { match: /sleeve_right|wrist_right/i, side: 'sleeve_right', prefer: 1 },
+  { match: /chest_left|chest_right/i, side: 'front',        prefer: 2 }, // small corner logo
+  { match: /front|chest|default/i,    side: 'front',        prefer: 1 }, // main front area
+];
+
+function classify(p: string): { side: Side; prefer: number } | null {
+  for (const r of RULES) {
+    if (!r.match.test(p)) continue;
+    return r.side ? { side: r.side, prefer: r.prefer } : null;
+  }
+  return { side: 'front', prefer: 3 }; // unknown but printable
 }
 
 /** GET /api/pod/printfile-info?product_id=X&variant_id=Y
@@ -78,18 +93,22 @@ export async function GET(req: Request) {
       if (!cls) continue;
       const file: any = filesById.get(vp.placements[p]);
       if (!file) continue;
-      const existing = bySide.get(cls.side);
-      if (existing && existing.rank <= cls.rank) continue;
-      bySide.set(cls.side, {
-        placement: p, side: cls.side, rank: cls.rank,
+      const candidate = {
+        placement: p, side: cls.side, prefer: cls.prefer,
         area_width: file.width, area_height: file.height,
-      });
+        area: file.width * file.height,
+      };
+      const existing = bySide.get(cls.side);
+      // Within a side: biggest printable surface wins, rule preference breaks ties
+      const better = !existing
+        || candidate.area > existing.area
+        || (candidate.area === existing.area && candidate.prefer < existing.prefer);
+      if (better) bySide.set(cls.side, candidate);
     }
-    const order = ['front', 'back', 'sleeve_left', 'sleeve_right'];
-    const placements: any[] = order
+    const placements: any[] = SIDE_ORDER
       .map(sd => bySide.get(sd))
       .filter(Boolean)
-      .map(({ rank, ...rest }: any) => rest);
+      .map(({ prefer, area, ...rest }: any) => rest);
 
     if (placements.length === 0) {
       // Fallback: any front-like placement, even unnamed
