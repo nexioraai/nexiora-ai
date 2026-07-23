@@ -55,6 +55,8 @@ export interface OrderRequest {
   shipping_address: ShippingAddress;
   merchant_order_id: string;
   design_url?: string;
+  design_position?: Record<string, number>;
+  design_placement?: string;
 }
 
 export interface ShippingAddress {

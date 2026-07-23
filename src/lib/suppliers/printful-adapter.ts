@@ -278,7 +278,11 @@ export const printfulAdapter: SupplierAdapter = {
             variant_id: Number(order.supplier_product_id),
             quantity: order.quantity,
             files: order.design_url
-              ? [{ type: 'default', url: order.design_url }]
+              ? [{
+                  type: order.design_placement || 'default',
+                  url: order.design_url,
+                  ...(order.design_position ? { position: order.design_position } : {}),
+                }]
               : [],
           }],
         }),

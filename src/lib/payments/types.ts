@@ -7,6 +7,7 @@ export interface CartItem {
   currency: string;
   quantity: number;
   customDesignUrl?: string;
+  customDesignPosition?: Record<string, number>;
 }
 
 export interface OnboardingResult {

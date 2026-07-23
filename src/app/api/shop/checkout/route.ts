@@ -333,9 +333,14 @@ export async function POST(req: Request) {
       if (orderItems) {
         const designRows = items
           .map((item, idx) => item.customDesignUrl && orderItems[idx]
-            ? { order_item_id: orderItems[idx].id, design_url: item.customDesignUrl, placement: 'front' }
+            ? {
+                order_item_id: orderItems[idx].id,
+                design_url: item.customDesignUrl,
+                placement: 'front',
+                position: item.customDesignPosition || null,
+              }
             : null)
-          .filter((r): r is { order_item_id: string; design_url: string; placement: string } => r !== null);
+          .filter((r): r is { order_item_id: string; design_url: string; placement: string; position: any } => r !== null);
         if (designRows.length > 0) {
           await supabaseAdmin.from('order_item_designs').insert(designRows);
         }

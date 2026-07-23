@@ -40,10 +40,12 @@ export async function fulfillPodOrder(orderId: string): Promise<string[]> {
   const orderItemIds = catalogItems.map((i: any) => i.id);
   const { data: designs } = await supabaseAdmin
     .from('order_item_designs')
-    .select('order_item_id, design_url, placement')
+    .select('order_item_id, design_url, placement, position')
     .in('order_item_id', orderItemIds);
-  const designByItemId = new Map<string, string>();
-  (designs || []).forEach((d: any) => { designByItemId.set(d.order_item_id, d.design_url); });
+  const designByItemId = new Map<string, { url: string; position?: any; placement?: string }>();
+  (designs || []).forEach((d: any) => {
+    designByItemId.set(d.order_item_id, { url: d.design_url, position: d.position, placement: d.placement });
+  });
 
   const addr: any = order.shipping_address || {};
   const shippingAddress = {
@@ -66,7 +68,8 @@ export async function fulfillPodOrder(orderId: string): Promise<string[]> {
     // Sans choix explicite, on retombe sur l'id produit (produit sans variantes).
     const pickedVariant = String(cartItem.product_id).replace(/^catalog-/, '').split('::')[1] || catProd.supplier_product_id;
 
-    const designUrl = designByItemId.get(cartItem.id) || undefined;
+    const designRow = designByItemId.get(cartItem.id);
+    const designUrl = designRow?.url || undefined;
     const adapter = catProd.supplier_id === 'printful' ? printfulAdapter : printifyAdapter;
     const creds: Record<string, string> = catProd.supplier_id === 'printful'
       ? { printful_token: process.env.PRINTFUL_API_TOKEN || '' }
@@ -80,6 +83,8 @@ export async function fulfillPodOrder(orderId: string): Promise<string[]> {
         shipping_address: shippingAddress,
         merchant_order_id: order.id,
         design_url: designUrl,
+        design_position: designRow?.position || undefined,
+        design_placement: designRow?.placement || undefined,
       }, creds);
 
       if (result.success && result.supplier_order_id) {

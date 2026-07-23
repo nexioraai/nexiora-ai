@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, Truck } from 'lucide-react';
 import AddToCartButton from './AddToCartButton';
-import DesignUploader from './DesignUploader';
+import DesignCanvas from './DesignCanvas';
 import { THEME_TOKENS, ThemeKey } from './CatalogSearch';
 
 interface CatalogProduct {
@@ -59,6 +59,7 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
   const [imgIndex, setImgIndex] = useState(0);
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [customDesignUrl, setCustomDesignUrl] = useState<string | null>(null);
+  const [customDesignPosition, setCustomDesignPosition] = useState<Record<string, number> | null>(null);
   const imgs = p.images?.length ? p.images : [];
   const cachedVariants = Array.isArray(p.variants) ? p.variants : [];
   const [liveVariants, setLiveVariants] = useState<any[]>([]);
@@ -208,7 +209,13 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
             )}
 
             {isPodCustom && (
-              <DesignUploader onDesignUploaded={setCustomDesignUrl} primary={primary} lang={lang} />
+              <DesignCanvas
+                productImage={imgs[0]}
+                variantId={selectedVariant || p.supplier_product_id}
+                onDesignChange={(url, pos) => { setCustomDesignUrl(url); setCustomDesignPosition(pos); }}
+                primary={primary}
+                lang={lang}
+              />
             )}
 
             <AddToCartButton
@@ -218,6 +225,7 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
               currency="USD"
               image={imgs[0]}
               customDesignUrl={customDesignUrl || undefined}
+              customDesignPosition={customDesignPosition || undefined}
               variantId={selectedVariant || undefined}
               primary={primary}
               label={loadingVariants ? t.loadingVariants : (variants.length > 0 && !selectedVariant ? t.chooseOption : t.addToCart)}

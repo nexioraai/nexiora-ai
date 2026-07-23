@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export const maxDuration = 30;
 
@@ -28,8 +29,19 @@ const PREFERRED = ['front', 'default', 'front_large', 'embroidery_front', 'embro
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const productId = searchParams.get('product_id');
+    let productId = searchParams.get('product_id');
     const variantId = searchParams.get('variant_id');
+
+    // Storefront only knows the variant id — resolve the parent product from catalog
+    if (!productId && variantId) {
+      const { data: cp } = await supabaseAdmin
+        .from('catalog_products')
+        .select('supplier_parent_id')
+        .eq('supplier_id', 'printful')
+        .eq('supplier_product_id', String(variantId))
+        .single();
+      productId = cp?.supplier_parent_id || null;
+    }
     if (!productId) return NextResponse.json({ error: 'Missing product_id' }, { status: 400 });
 
     const cacheKey = `${productId}:${variantId || ''}`;
