@@ -56,6 +56,7 @@ export default function DesignCanvas({ productImage, variantId, onDesignChange, 
   const [printArea, setPrintArea] = useState<{ area_width: number; area_height: number } | null>(null);
   // Design box in fractions of the print area (0..1)
   const [box, setBox] = useState({ x: 0.1, y: 0.1, scale: 0.8 });
+  const [aspect, setAspect] = useState(1); // natural width / height of the design
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const areaRef = useRef<HTMLDivElement>(null);
@@ -76,7 +77,7 @@ export default function DesignCanvas({ productImage, variantId, onDesignChange, 
     const aw = printArea?.area_width ?? 1800;
     const ah = printArea?.area_height ?? 2400;
     const w = Math.round(aw * b.scale);
-    const h = w; // square design box
+    const h = Math.round(w / (aspect || 1)); // real design ratio, never assume square
     onDesignChange(url, {
       area_width: aw,
       area_height: ah,
@@ -85,7 +86,7 @@ export default function DesignCanvas({ productImage, variantId, onDesignChange, 
       left: Math.max(0, Math.round(aw * b.x)),
       top: Math.max(0, Math.round(ah * b.y)),
     });
-  }, [printArea, onDesignChange]);
+  }, [printArea, onDesignChange, aspect]);
 
   useEffect(() => { if (uploadedUrl) report(uploadedUrl, box); }, [box, uploadedUrl, report]);
 
@@ -113,6 +114,21 @@ export default function DesignCanvas({ productImage, variantId, onDesignChange, 
     }
   };
 
+  // Vertical room depends on the design's rendered height, not on its width fraction
+  const clampPos = useCallback((x: number, y: number, scale: number) => {
+    const rect = areaRef.current?.getBoundingClientRect();
+    const maxX = Math.max(0, 1 - scale);
+    let maxY = Math.max(0, 1 - scale);
+    if (rect && rect.width > 0 && rect.height > 0) {
+      const heightPx = (scale * rect.width) / (aspect || 1);
+      maxY = Math.max(0, 1 - heightPx / rect.height);
+    }
+    return {
+      x: Math.min(Math.max(0, x), maxX),
+      y: Math.min(Math.max(0, y), maxY),
+    };
+  }, [aspect]);
+
   const startDrag = (clientX: number, clientY: number) => {
     setDragging(true);
     dragStart.current = { mx: clientX, my: clientY, bx: box.x, by: box.y };
@@ -123,14 +139,11 @@ export default function DesignCanvas({ productImage, variantId, onDesignChange, 
     const rect = areaRef.current.getBoundingClientRect();
     const dx = (clientX - dragStart.current.mx) / rect.width;
     const dy = (clientY - dragStart.current.my) / rect.height;
-    const maxX = 1 - box.scale;
-    const maxY = 1 - box.scale;
     setBox(b => ({
       ...b,
-      x: Math.min(Math.max(0, dragStart.current.bx + dx), Math.max(0, maxX)),
-      y: Math.min(Math.max(0, dragStart.current.by + dy), Math.max(0, maxY)),
+      ...clampPos(dragStart.current.bx + dx, dragStart.current.by + dy, b.scale),
     }));
-  }, [dragging, box.scale]);
+  }, [dragging, clampPos]);
 
   useEffect(() => {
     if (!dragging) return;
@@ -177,6 +190,10 @@ export default function DesignCanvas({ productImage, variantId, onDesignChange, 
               <img
                 src={preview}
                 alt="Design"
+                onLoad={e => {
+                  const im = e.currentTarget;
+                  if (im.naturalWidth && im.naturalHeight) setAspect(im.naturalWidth / im.naturalHeight);
+                }}
                 draggable={false}
                 onMouseDown={e => { e.preventDefault(); startDrag(e.clientX, e.clientY); }}
                 onTouchStart={e => { if (e.touches[0]) startDrag(e.touches[0].clientX, e.touches[0].clientY); }}
@@ -203,11 +220,7 @@ export default function DesignCanvas({ productImage, variantId, onDesignChange, 
                 type="range" min={20} max={100} value={Math.round(box.scale * 100)}
                 onChange={e => {
                   const scale = Number(e.target.value) / 100;
-                  setBox(b => ({
-                    scale,
-                    x: Math.min(b.x, Math.max(0, 1 - scale)),
-                    y: Math.min(b.y, Math.max(0, 1 - scale)),
-                  }));
+                  setBox(b => ({ scale, ...clampPos(b.x, b.y, scale) }));
                 }}
                 style={{ flex: 1, accentColor: primary }}
               />

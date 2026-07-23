@@ -376,8 +376,8 @@ export default function EditPage() {
             </FieldSection>
           )}
 
-          {/* POD Designs — visible for pod_brand and pod_custom */}
-          {(site as any).dropship_type && ['pod_brand', 'pod_custom'].includes((site as any).dropship_type) && (
+          {/* POD Designs — pod_brand only (in pod_custom the visitor uploads at checkout) */}
+          {(site as any).dropship_type === 'pod_brand' && (
             <FieldSection label="Mes Designs POD">
               <div className="space-y-3">
                 {podDesigns.map((d, i) => (
