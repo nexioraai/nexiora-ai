@@ -34,7 +34,14 @@ export async function addDomainToVercel(domain: string): Promise<VercelDomainRes
   });
   const data = await res.json().catch(() => null);
 
-  const alreadyExists = data?.error?.code === 'domain_already_exists';
+  // Vercel renvoie plusieurs codes pour un domaine deja rattache a CE projet
+  // (domain_already_exists, domain_already_in_use...). Aucun n'est une erreur :
+  // le domaine est la, il reste seulement a poser le DNS.
+  const msg = String(data?.error?.message || '');
+  const alreadyExists =
+    data?.error?.code === 'domain_already_exists' ||
+    data?.error?.code === 'domain_already_in_use' ||
+    /already in use/i.test(msg);
   if (!res.ok && !alreadyExists) {
     throw new Error(data?.error?.message || 'Erreur Vercel ' + res.status);
   }
