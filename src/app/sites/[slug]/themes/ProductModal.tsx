@@ -58,8 +58,7 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
   const tokens = THEME_TOKENS[theme] || THEME_TOKENS.editorial;
   const [imgIndex, setImgIndex] = useState(0);
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
-  const [customDesignUrl, setCustomDesignUrl] = useState<string | null>(null);
-  const [customDesignPosition, setCustomDesignPosition] = useState<Record<string, number> | null>(null);
+  const [customDesigns, setCustomDesigns] = useState<any[]>([]);
   const imgs = p.images?.length ? p.images : [];
   const cachedVariants = Array.isArray(p.variants) ? p.variants : [];
   const [liveVariants, setLiveVariants] = useState<any[]>([]);
@@ -213,7 +212,7 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
                 productImage={imgs[0]}
                 productName={p.name}
                 variantId={selectedVariant || p.supplier_product_id}
-                onDesignChange={(url, pos) => { setCustomDesignUrl(url); setCustomDesignPosition(pos); }}
+                onDesignChange={setCustomDesigns}
                 primary={primary}
                 lang={lang}
               />
@@ -225,8 +224,8 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
               priceNumber={p.price}
               currency="USD"
               image={imgs[0]}
-              customDesignUrl={customDesignUrl || undefined}
-              customDesignPosition={customDesignPosition || undefined}
+              customDesigns={customDesigns.length > 0 ? customDesigns : undefined}
+              customDesignUrl={customDesigns[0]?.url}
               variantId={selectedVariant || undefined}
               primary={primary}
               label={loadingVariants ? t.loadingVariants : (variants.length > 0 && !selectedVariant ? t.chooseOption : t.addToCart)}

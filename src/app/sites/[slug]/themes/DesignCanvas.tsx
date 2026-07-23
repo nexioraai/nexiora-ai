@@ -13,11 +13,24 @@ interface DesignPosition {
   left: number;
 }
 
+interface PlacementInfo {
+  placement: string;
+  side: string;
+  area_width: number;
+  area_height: number;
+}
+
+export interface DesignEntry {
+  url: string;
+  placement: string;
+  position: DesignPosition;
+}
+
 interface Props {
   productImage?: string;
   productName?: string;
   variantId?: string;
-  onDesignChange: (url: string | null, position: DesignPosition | null) => void;
+  onDesignChange: (designs: DesignEntry[]) => void;
   primary?: string;
   lang?: string;
 }
@@ -29,6 +42,11 @@ const LABELS: Record<string, Record<string, string>> = {
     dragHint: 'Drag & drop or click to browse',
     uploading: 'Uploading...',
     adjust: 'Drag to move · pinch or slider to resize',
+    front: 'Front',
+    back: 'Back',
+    sleeve_left: 'Left sleeve',
+    sleeve_right: 'Right sleeve',
+    placement: 'Print location',
     size: 'Size',
     remove: 'Remove',
     error: 'Upload failed, please try again',
@@ -39,6 +57,11 @@ const LABELS: Record<string, Record<string, string>> = {
     dragHint: 'Glissez-deposez ou cliquez pour parcourir',
     uploading: 'Envoi en cours...',
     adjust: 'Glissez pour deplacer · curseur pour redimensionner',
+    front: 'Devant',
+    back: 'Dos',
+    sleeve_left: 'Manche gauche',
+    sleeve_right: 'Manche droite',
+    placement: 'Emplacement',
     size: 'Taille',
     remove: 'Supprimer',
     error: 'Echec, veuillez reessayer',
@@ -59,18 +82,24 @@ const AREA_DEFAULT = { left: 0.26, top: 0.20, width: 0.48 }; // t-shirts & co
 
 export default function DesignCanvas({ productImage, productName = '', variantId, onDesignChange, primary = '#111', lang = 'en' }: Props) {
   const t = LABELS[lang] || LABELS.en;
-  const [preview, setPreview] = useState<string | null>(null);
-  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [printArea, setPrintArea] = useState<{ area_width: number; area_height: number } | null>(null);
-  // Design box in fractions of the print area (0..1)
-  const [box, setBox] = useState({ x: 0.1, y: 0.1, scale: 0.8 });
-  const [aspect, setAspect] = useState(1); // natural width / height of the design
+  const [placements, setPlacements] = useState<PlacementInfo[]>([]);
+  const [side, setSide] = useState('front');
+  // One design per side: { front: {...}, back: {...} }
+  const [bySide, setBySide] = useState<Record<string, {
+    preview: string; url: string; box: { x: number; y: number; scale: number }; aspect: number;
+  }>>({});
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const areaRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef({ mx: 0, my: 0, bx: 0, by: 0 });
+
+  const current = bySide[side];
+  const preview = current?.preview || null;
+  const box = current?.box || { x: 0.1, y: 0.1, scale: 0.8 };
+  const aspect = current?.aspect || 1;
+  const printArea = placements.find(p => p.side === side) || placements[0] || null;
 
   // Print box: preset position/width + height from the real printfile ratio
   const preset = AREA_PRESETS.find(p => p.match.test(productName)) || AREA_DEFAULT;
@@ -88,28 +117,42 @@ export default function DesignCanvas({ productImage, productName = '', variantId
     if (!variantId) return;
     fetch(`/api/pod/printfile-info?variant_id=${variantId}`)
       .then(r => r.json())
-      .then(d => { if (d.area_width) setPrintArea({ area_width: d.area_width, area_height: d.area_height }); })
+      .then(d => {
+        if (Array.isArray(d.placements) && d.placements.length > 0) {
+          setPlacements(d.placements);
+          setSide(s => (d.placements.some((p: PlacementInfo) => p.side === s) ? s : d.placements[0].side));
+        }
+      })
       .catch(() => {});
   }, [variantId]);
 
-  // Report url + printful-ready position upward
-  const report = useCallback((url: string | null, b: typeof box) => {
-    if (!url) { onDesignChange(null, null); return; }
-    const aw = printArea?.area_width ?? 1800;
-    const ah = printArea?.area_height ?? 2400;
-    const w = Math.round(aw * b.scale);
-    const h = Math.round(w / (aspect || 1)); // real design ratio, never assume square
-    onDesignChange(url, {
-      area_width: aw,
-      area_height: ah,
-      width: w,
-      height: h,
-      left: Math.max(0, Math.round(aw * b.x)),
-      top: Math.max(0, Math.round(ah * b.y)),
-    });
-  }, [printArea, onDesignChange, aspect]);
-
-  useEffect(() => { if (uploadedUrl) report(uploadedUrl, box); }, [box, uploadedUrl, report]);
+  // Report every filled side upward, with printful-ready coordinates
+  useEffect(() => {
+    const entries: DesignEntry[] = [];
+    for (const [sideKey, d] of Object.entries(bySide)) {
+      const pl = placements.find(p => p.side === sideKey);
+      if (!pl || !d?.url) continue;
+      const aw = pl.area_width;
+      const ah = pl.area_height;
+      const w = Math.round(aw * d.box.scale);
+      const h = Math.round(w / (d.aspect || 1));
+      entries.push({
+        url: d.url,
+        placement: pl.placement,
+        position: {
+          area_width: aw,
+          area_height: ah,
+          width: w,
+          height: h,
+          left: Math.max(0, Math.round(aw * d.box.x)),
+          top: Math.max(0, Math.round(ah * d.box.y)),
+        },
+      });
+    }
+    onDesignChange(entries);
+    // onDesignChange identity is stable enough here (setState from parent)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bySide, placements]);
 
   const handleFile = async (file: File) => {
     setError(null);
@@ -123,13 +166,22 @@ export default function DesignCanvas({ productImage, productName = '', variantId
       const res = await fetch('/api/shop/upload-design', { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setPreview(URL.createObjectURL(file));
-      setUploadedUrl(data.url);
-      report(data.url, box);
+      const objUrl = URL.createObjectURL(file);
+      const im = new Image();
+      im.onload = () => {
+        setBySide(prev => ({
+          ...prev,
+          [side]: {
+            preview: objUrl,
+            url: data.url,
+            box: { x: 0.1, y: 0.1, scale: 0.8 },
+            aspect: im.naturalWidth && im.naturalHeight ? im.naturalWidth / im.naturalHeight : 1,
+          },
+        }));
+      };
+      im.src = objUrl;
     } catch {
       setError(t.error);
-      setUploadedUrl(null);
-      onDesignChange(null, null);
     } finally {
       setUploading(false);
     }
@@ -150,6 +202,7 @@ export default function DesignCanvas({ productImage, productName = '', variantId
     };
   }, [aspect]);
 
+
   const startDrag = (clientX: number, clientY: number) => {
     setDragging(true);
     dragStart.current = { mx: clientX, my: clientY, bx: box.x, by: box.y };
@@ -160,11 +213,15 @@ export default function DesignCanvas({ productImage, productName = '', variantId
     const rect = areaRef.current.getBoundingClientRect();
     const dx = (clientX - dragStart.current.mx) / rect.width;
     const dy = (clientY - dragStart.current.my) / rect.height;
-    setBox(b => ({
-      ...b,
-      ...clampPos(dragStart.current.bx + dx, dragStart.current.by + dy, b.scale),
-    }));
-  }, [dragging, clampPos]);
+    setBySide(prev => {
+      const cur = prev[side];
+      if (!cur) return prev;
+      return {
+        ...prev,
+        [side]: { ...cur, box: { ...cur.box, ...clampPos(dragStart.current.bx + dx, dragStart.current.by + dy, cur.box.scale) } },
+      };
+    });
+  }, [dragging, clampPos, side]);
 
   useEffect(() => {
     if (!dragging) return;
@@ -184,16 +241,43 @@ export default function DesignCanvas({ productImage, productName = '', variantId
   }, [dragging, onMove]);
 
   const handleRemove = () => {
-    setPreview(null);
-    setUploadedUrl(null);
-    setBox({ x: 0.1, y: 0.1, scale: 0.8 });
-    onDesignChange(null, null);
+    setBySide(prev => {
+      const next = { ...prev };
+      delete next[side];
+      return next;
+    });
     if (inputRef.current) inputRef.current.value = '';
   };
 
   return (
     <div style={{ marginBottom: 20 }}>
       <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.6 }}>{t.title}</p>
+
+      {placements.length > 1 && (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+          {placements.map(pl => {
+            const active = pl.side === side;
+            const filled = !!bySide[pl.side];
+            return (
+              <button
+                key={pl.side}
+                onClick={() => setSide(pl.side)}
+                style={{
+                  padding: '6px 12px', borderRadius: 999, fontSize: 12, cursor: 'pointer',
+                  border: `1px solid ${active ? primary : primary + '30'}`,
+                  background: active ? primary : 'transparent',
+                  color: active ? '#fff' : 'inherit',
+                  opacity: active ? 1 : 0.75,
+                  display: 'flex', alignItems: 'center', gap: 5,
+                }}
+              >
+                {t[pl.side] || pl.side}
+                {filled && <span style={{ width: 6, height: 6, borderRadius: '50%', background: active ? '#fff' : primary }} />}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {preview && productImage ? (
         <div>
@@ -211,10 +295,6 @@ export default function DesignCanvas({ productImage, productName = '', variantId
               <img
                 src={preview}
                 alt="Design"
-                onLoad={e => {
-                  const im = e.currentTarget;
-                  if (im.naturalWidth && im.naturalHeight) setAspect(im.naturalWidth / im.naturalHeight);
-                }}
                 draggable={false}
                 onMouseDown={e => { e.preventDefault(); startDrag(e.clientX, e.clientY); }}
                 onTouchStart={e => { if (e.touches[0]) startDrag(e.touches[0].clientX, e.touches[0].clientY); }}
@@ -241,7 +321,11 @@ export default function DesignCanvas({ productImage, productName = '', variantId
                 type="range" min={20} max={100} value={Math.round(box.scale * 100)}
                 onChange={e => {
                   const scale = Number(e.target.value) / 100;
-                  setBox(b => ({ scale, ...clampPos(b.x, b.y, scale) }));
+                  setBySide(prev => {
+                    const cur = prev[side];
+                    if (!cur) return prev;
+                    return { ...prev, [side]: { ...cur, box: { scale, ...clampPos(cur.box.x, cur.box.y, scale) } } };
+                  });
                 }}
                 style={{ flex: 1, accentColor: primary }}
               />

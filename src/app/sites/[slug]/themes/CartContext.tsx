@@ -9,6 +9,7 @@ export type CartItem = {
   image?: string;
   customDesignUrl?: string;
   customDesignPosition?: Record<string, number>;
+  customDesigns?: any[];
   variantId?: string;
   quantity: number;
 };

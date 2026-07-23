@@ -24,6 +24,14 @@ async function pfFetch(path: string): Promise<any> {
 
 const PREFERRED = ['front', 'default', 'front_large', 'embroidery_front', 'embroidery_front_large'];
 
+// Placements offered to the visitor, in display order
+const OFFERED: { key: RegExp; side: string }[] = [
+  { key: /^(front|default|front_large|embroidery_front|embroidery_front_large|front_dtfabric)$/, side: 'front' },
+  { key: /^(back|back_large|embroidery_back|back_dtfabric)$/, side: 'back' },
+  { key: /^(sleeve_left|embroidery_sleeve_left|sleeve_left_dtfabric)$/, side: 'sleeve_left' },
+  { key: /^(sleeve_right|embroidery_sleeve_right|sleeve_right_dtfabric)$/, side: 'sleeve_right' },
+];
+
 /** GET /api/pod/printfile-info?product_id=X&variant_id=Y
  *  Returns { placement, area_width, area_height } for the front-like print area. */
 export async function GET(req: Request) {
@@ -58,16 +66,40 @@ export async function GET(req: Request) {
       ...available.filter(p => !PREFERRED.includes(p) && (p.startsWith('front') || p === 'default')),
     ];
 
-    for (const p of candidates) {
-      if (!vp?.placements?.[p]) continue;
-      const file: any = filesById.get(vp.placements[p]);
+    // All printable sides the visitor can choose from
+    const placements: any[] = [];
+    for (const { key, side } of OFFERED) {
+      const match = available.find(p => key.test(p) && vp?.placements?.[p]);
+      if (!match) continue;
+      const file: any = filesById.get(vp.placements[match]);
       if (!file) continue;
-      const info = { placement: p, area_width: file.width, area_height: file.height };
-      cache.set(cacheKey, info);
-      return NextResponse.json(info);
+      placements.push({ placement: match, side, area_width: file.width, area_height: file.height });
     }
 
-    return NextResponse.json({ error: 'No compatible placement' }, { status: 404 });
+    if (placements.length === 0) {
+      // Fallback: any front-like placement, even unnamed
+      for (const p of candidates) {
+        if (!vp?.placements?.[p]) continue;
+        const file: any = filesById.get(vp.placements[p]);
+        if (!file) continue;
+        placements.push({ placement: p, side: 'front', area_width: file.width, area_height: file.height });
+        break;
+      }
+    }
+
+    if (placements.length === 0) {
+      return NextResponse.json({ error: 'No compatible placement' }, { status: 404 });
+    }
+
+    const info = {
+      placements,
+      // backward-compatible front info
+      placement: placements[0].placement,
+      area_width: placements[0].area_width,
+      area_height: placements[0].area_height,
+    };
+    cache.set(cacheKey, info);
+    return NextResponse.json(info);
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

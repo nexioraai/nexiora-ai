@@ -57,6 +57,7 @@ export interface OrderRequest {
   design_url?: string;
   design_position?: Record<string, number>;
   design_placement?: string;
+  design_files?: { url: string; placement: string; position?: Record<string, number> }[];
 }
 
 export interface ShippingAddress {

@@ -42,9 +42,12 @@ export async function fulfillPodOrder(orderId: string): Promise<string[]> {
     .from('order_item_designs')
     .select('order_item_id, design_url, placement, position')
     .in('order_item_id', orderItemIds);
-  const designByItemId = new Map<string, { url: string; position?: any; placement?: string }>();
+  // An item can carry several designs (front, back, sleeves...)
+  const designsByItemId = new Map<string, { url: string; placement: string; position?: any }[]>();
   (designs || []).forEach((d: any) => {
-    designByItemId.set(d.order_item_id, { url: d.design_url, position: d.position, placement: d.placement });
+    const list = designsByItemId.get(d.order_item_id) || [];
+    list.push({ url: d.design_url, placement: d.placement || 'front', position: d.position });
+    designsByItemId.set(d.order_item_id, list);
   });
 
   const addr: any = order.shipping_address || {};
@@ -68,7 +71,8 @@ export async function fulfillPodOrder(orderId: string): Promise<string[]> {
     // Sans choix explicite, on retombe sur l'id produit (produit sans variantes).
     const pickedVariant = String(cartItem.product_id).replace(/^catalog-/, '').split('::')[1] || catProd.supplier_product_id;
 
-    const designRow = designByItemId.get(cartItem.id);
+    const designList = designsByItemId.get(cartItem.id) || [];
+    const designRow = designList[0];
     const designUrl = designRow?.url || undefined;
     const adapter = catProd.supplier_id === 'printful' ? printfulAdapter : printifyAdapter;
     const creds: Record<string, string> = catProd.supplier_id === 'printful'
@@ -85,6 +89,7 @@ export async function fulfillPodOrder(orderId: string): Promise<string[]> {
         design_url: designUrl,
         design_position: designRow?.position || undefined,
         design_placement: designRow?.placement || undefined,
+        design_files: designList.length > 0 ? designList : undefined,
       }, creds);
 
       if (result.success && result.supplier_order_id) {

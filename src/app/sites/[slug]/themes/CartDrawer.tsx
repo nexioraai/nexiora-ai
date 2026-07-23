@@ -168,6 +168,7 @@ export default function CartDrawer({
             quantity: i.quantity,
             customDesignUrl: i.customDesignUrl,
             customDesignPosition: i.customDesignPosition,
+            customDesigns: i.customDesigns,
           })),
         }),
       });

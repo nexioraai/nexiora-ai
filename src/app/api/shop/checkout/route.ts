@@ -331,16 +331,30 @@ export async function POST(req: Request) {
       ).select('id');
       // Save custom designs if any
       if (orderItems) {
-        const designRows = items
-          .map((item, idx) => item.customDesignUrl && orderItems[idx]
-            ? {
-                order_item_id: orderItems[idx].id,
-                design_url: item.customDesignUrl,
-                placement: 'front',
-                position: item.customDesignPosition || null,
-              }
-            : null)
-          .filter((r): r is { order_item_id: string; design_url: string; placement: string; position: any } => r !== null);
+        const designRows: { order_item_id: string; design_url: string; placement: string; position: any }[] = [];
+        items.forEach((item, idx) => {
+          if (!orderItems[idx]) return;
+          const orderItemId = orderItems[idx].id;
+          if (Array.isArray(item.customDesigns) && item.customDesigns.length > 0) {
+            // One row per print location (front, back, sleeves...)
+            item.customDesigns.forEach(d => {
+              if (!d?.url) return;
+              designRows.push({
+                order_item_id: orderItemId,
+                design_url: d.url,
+                placement: d.placement || 'front',
+                position: d.position || null,
+              });
+            });
+          } else if (item.customDesignUrl) {
+            designRows.push({
+              order_item_id: orderItemId,
+              design_url: item.customDesignUrl,
+              placement: 'front',
+              position: item.customDesignPosition || null,
+            });
+          }
+        });
         if (designRows.length > 0) {
           await supabaseAdmin.from('order_item_designs').insert(designRows);
         }

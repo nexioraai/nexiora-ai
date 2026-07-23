@@ -8,6 +8,7 @@ export interface CartItem {
   quantity: number;
   customDesignUrl?: string;
   customDesignPosition?: Record<string, number>;
+  customDesigns?: { url: string; placement: string; position: Record<string, number> }[];
 }
 
 export interface OnboardingResult {

@@ -277,13 +277,19 @@ export const printfulAdapter: SupplierAdapter = {
           items: [{
             variant_id: Number(order.supplier_product_id),
             quantity: order.quantity,
-            files: order.design_url
-              ? [{
-                  type: order.design_placement || 'default',
-                  url: order.design_url,
-                  ...(order.design_position ? { position: order.design_position } : {}),
-                }]
-              : [],
+            files: Array.isArray(order.design_files) && order.design_files.length > 0
+              ? order.design_files.map(f => ({
+                  type: f.placement || 'default',
+                  url: f.url,
+                  ...(f.position ? { position: f.position } : {}),
+                }))
+              : order.design_url
+                ? [{
+                    type: order.design_placement || 'default',
+                    url: order.design_url,
+                    ...(order.design_position ? { position: order.design_position } : {}),
+                  }]
+                : [],
           }],
         }),
       });
