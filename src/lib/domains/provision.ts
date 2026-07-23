@@ -141,8 +141,14 @@ export async function provisionDomain(domainId: string): Promise<{ ok: boolean; 
       .eq('id', domainId);
   } catch (e: any) {
     // Non bloquant : le domaine fonctionne meme si l'indexation attend.
-    // Le cron reessaiera.
-    console.error('[provision] TXT Google', row.domain, e?.message || e);
+    // Le cron reessaiera. Mais l'erreur doit rester visible : sans trace,
+    // un domaine reste indefiniment non indexe sans que personne ne le sache.
+    const msg = 'TXT Google : ' + (e?.message || String(e));
+    console.error('[provision]', row.domain, msg);
+    await supabaseAdmin
+      .from('site_domains')
+      .update({ last_error: msg.slice(0, 500) })
+      .eq('id', domainId);
   }
 
   // 5. Le site pointe desormais sur ce domaine.
