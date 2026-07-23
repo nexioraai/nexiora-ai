@@ -24,13 +24,17 @@ async function pfFetch(path: string): Promise<any> {
 
 const PREFERRED = ['front', 'default', 'front_large', 'embroidery_front', 'embroidery_front_large'];
 
-// Placements offered to the visitor, in display order
-const OFFERED: { key: RegExp; side: string }[] = [
-  { key: /^(front|default|front_large|embroidery_front|embroidery_front_large|front_dtfabric)$/, side: 'front' },
-  { key: /^(back|back_large|embroidery_back|back_dtfabric)$/, side: 'back' },
-  { key: /^(sleeve_left|embroidery_sleeve_left|sleeve_left_dtfabric)$/, side: 'sleeve_left' },
-  { key: /^(sleeve_right|embroidery_sleeve_right|sleeve_right_dtfabric)$/, side: 'sleeve_right' },
-];
+// Classify any Printful placement into a visitor-facing side.
+// Placement names vary a lot: front, front_large, front_dtfabric,
+// embroidery_chest_left, embroidery_chest_center, sleeve_left, back...
+function classify(p: string): { side: string; rank: number } | null {
+  if (/label/i.test(p)) return null;                       // inside/outside labels: not for visitors
+  if (/back/i.test(p)) return { side: 'back', rank: 2 };
+  if (/sleeve_left|wrist_left/i.test(p)) return { side: 'sleeve_left', rank: 3 };
+  if (/sleeve_right|wrist_right/i.test(p)) return { side: 'sleeve_right', rank: 4 };
+  if (/front|chest|default/i.test(p)) return { side: 'front', rank: 1 };
+  return { side: 'front', rank: 5 };                       // anything else printable
+}
 
 /** GET /api/pod/printfile-info?product_id=X&variant_id=Y
  *  Returns { placement, area_width, area_height } for the front-like print area. */
@@ -66,15 +70,26 @@ export async function GET(req: Request) {
       ...available.filter(p => !PREFERRED.includes(p) && (p.startsWith('front') || p === 'default')),
     ];
 
-    // All printable sides the visitor can choose from
-    const placements: any[] = [];
-    for (const { key, side } of OFFERED) {
-      const match = available.find(p => key.test(p) && vp?.placements?.[p]);
-      if (!match) continue;
-      const file: any = filesById.get(vp.placements[match]);
+    // All printable sides the visitor can choose from (one placement per side)
+    const bySide = new Map<string, any>();
+    for (const p of available) {
+      if (!vp?.placements?.[p]) continue;
+      const cls = classify(p);
+      if (!cls) continue;
+      const file: any = filesById.get(vp.placements[p]);
       if (!file) continue;
-      placements.push({ placement: match, side, area_width: file.width, area_height: file.height });
+      const existing = bySide.get(cls.side);
+      if (existing && existing.rank <= cls.rank) continue;
+      bySide.set(cls.side, {
+        placement: p, side: cls.side, rank: cls.rank,
+        area_width: file.width, area_height: file.height,
+      });
     }
+    const order = ['front', 'back', 'sleeve_left', 'sleeve_right'];
+    const placements: any[] = order
+      .map(sd => bySide.get(sd))
+      .filter(Boolean)
+      .map(({ rank, ...rest }: any) => rest);
 
     if (placements.length === 0) {
       // Fallback: any front-like placement, even unnamed
