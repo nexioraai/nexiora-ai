@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export const maxDuration = 30;
 
-// Printfiles never change for a given product — cache in module scope
+// Templates never change for a given product — cache in module scope
 const cache = new Map<string, any>();
 
 async function pfFetch(path: string): Promise<any> {
@@ -22,25 +22,20 @@ async function pfFetch(path: string): Promise<any> {
   return (await res.json()).result;
 }
 
-const PREFERRED = ['front', 'default', 'front_large', 'embroidery_front', 'embroidery_front_large'];
-
-// Classify any Printful placement into a visitor-facing side.
-// Placement names vary a lot: front, front_large, front_dtfabric,
-// embroidery_chest_left, embroidery_chest_center, sleeve_left, back...
 type Side = 'front' | 'back' | 'sleeve_left' | 'sleeve_right';
 
-// Side order shown to the visitor (independent from placement selection)
+// Side order shown to the visitor
 const SIDE_ORDER: Side[] = ['front', 'back', 'sleeve_left', 'sleeve_right'];
 
-// Declarative classification. First match wins. `prefer` is a tie-break used
-// ONLY between placements of the same side — never across sides.
+// Declarative classification. First match wins. `prefer` breaks ties between
+// placements of the SAME side only — never across sides.
 const RULES: { match: RegExp; side: Side | null; prefer: number }[] = [
-  { match: /label/i,                  side: null,           prefer: 0 }, // not for visitors
-  { match: /back/i,                   side: 'back',         prefer: 1 },
-  { match: /sleeve_left|wrist_left/i, side: 'sleeve_left',  prefer: 1 },
+  { match: /label/i, side: null, prefer: 0 },                                  // not for visitors
+  { match: /back/i, side: 'back', prefer: 1 },
+  { match: /sleeve_left|wrist_left/i, side: 'sleeve_left', prefer: 1 },
   { match: /sleeve_right|wrist_right/i, side: 'sleeve_right', prefer: 1 },
-  { match: /chest_left|chest_right/i, side: 'front',        prefer: 2 }, // small corner logo
-  { match: /front|chest|default/i,    side: 'front',        prefer: 1 }, // main front area
+  { match: /chest_left|chest_right/i, side: 'front', prefer: 2 },              // small corner logo
+  { match: /front|chest|default/i, side: 'front', prefer: 1 },                 // main front area
 ];
 
 function classify(p: string): { side: Side; prefer: number } | null {
@@ -51,8 +46,9 @@ function classify(p: string): { side: Side; prefer: number } | null {
   return { side: 'front', prefer: 3 }; // unknown but printable
 }
 
-/** GET /api/pod/printfile-info?product_id=X&variant_id=Y
- *  Returns { placement, area_width, area_height } for the front-like print area. */
+/** GET /api/pod/printfile-info?variant_id=Y[&product_id=X]
+ *  Returns, for every printable side, the official Printful template image and
+ *  the exact print area on it (as fractions), so the canvas never guesses. */
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -74,52 +70,58 @@ export async function GET(req: Request) {
     const cacheKey = `${productId}:${variantId || ''}`;
     if (cache.has(cacheKey)) return NextResponse.json(cache.get(cacheKey));
 
-    const pf = await pfFetch(`/mockup-generator/printfiles/${productId}`);
-    const available = Object.keys(pf.available_placements || {});
-    const vp = (pf.variant_printfiles || []).find((v: any) => String(v.variant_id) === String(variantId))
-      || (pf.variant_printfiles || [])[0];
-    const filesById = new Map((pf.printfiles || []).map((f: any) => [f.printfile_id, f]));
+    const tpl = await pfFetch(`/mockup-generator/templates/${productId}`);
+    const templatesById = new Map<number, any>(
+      (tpl.templates || []).map((t: any) => [t.template_id, t])
+    );
 
-    const candidates = [
-      ...PREFERRED.filter(p => available.includes(p)),
-      ...available.filter(p => !PREFERRED.includes(p) && (p.startsWith('front') || p === 'default')),
-    ];
+    // Templates for this specific variant, falling back to the first mapping
+    const mapping = (tpl.variant_mapping || []).find(
+      (m: any) => String(m.variant_id) === String(variantId)
+    ) || (tpl.variant_mapping || [])[0];
 
-    // All printable sides the visitor can choose from (one placement per side)
+    if (!mapping?.templates?.length) {
+      return NextResponse.json({ error: 'No template for this product' }, { status: 404 });
+    }
+
+    // Keep one placement per side: biggest print area wins, rule preference breaks ties
     const bySide = new Map<string, any>();
-    for (const p of available) {
-      if (!vp?.placements?.[p]) continue;
-      const cls = classify(p);
+    for (const entry of mapping.templates) {
+      const cls = classify(entry.placement || '');
       if (!cls) continue;
-      const file: any = filesById.get(vp.placements[p]);
-      if (!file) continue;
+      const t: any = templatesById.get(entry.template_id);
+      if (!t || !t.image_url || !t.template_width || !t.template_height) continue;
+
       const candidate = {
-        placement: p, side: cls.side, prefer: cls.prefer,
-        area_width: file.width, area_height: file.height,
-        area: file.width * file.height,
+        placement: entry.placement,
+        side: cls.side,
+        prefer: cls.prefer,
+        image_url: t.image_url,
+        background_color: t.background_color || null,
+        // Print area as fractions of the template image — exact, never guessed
+        area: {
+          left: t.print_area_left / t.template_width,
+          top: t.print_area_top / t.template_height,
+          width: t.print_area_width / t.template_width,
+          height: t.print_area_height / t.template_height,
+        },
+        // Printfile pixel dimensions (used to build Printful coordinates)
+        area_width: t.print_area_width,
+        area_height: t.print_area_height,
+        _size: t.print_area_width * t.print_area_height,
       };
+
       const existing = bySide.get(cls.side);
-      // Within a side: biggest printable surface wins, rule preference breaks ties
       const better = !existing
-        || candidate.area > existing.area
-        || (candidate.area === existing.area && candidate.prefer < existing.prefer);
+        || candidate._size > existing._size
+        || (candidate._size === existing._size && candidate.prefer < existing.prefer);
       if (better) bySide.set(cls.side, candidate);
     }
-    const placements: any[] = SIDE_ORDER
+
+    const placements = SIDE_ORDER
       .map(sd => bySide.get(sd))
       .filter(Boolean)
-      .map(({ prefer, area, ...rest }: any) => rest);
-
-    if (placements.length === 0) {
-      // Fallback: any front-like placement, even unnamed
-      for (const p of candidates) {
-        if (!vp?.placements?.[p]) continue;
-        const file: any = filesById.get(vp.placements[p]);
-        if (!file) continue;
-        placements.push({ placement: p, side: 'front', area_width: file.width, area_height: file.height });
-        break;
-      }
-    }
+      .map(({ prefer, _size, ...rest }: any) => rest);
 
     if (placements.length === 0) {
       return NextResponse.json({ error: 'No compatible placement' }, { status: 404 });

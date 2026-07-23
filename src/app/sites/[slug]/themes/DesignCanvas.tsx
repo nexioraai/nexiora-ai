@@ -16,6 +16,9 @@ interface DesignPosition {
 interface PlacementInfo {
   placement: string;
   side: string;
+  image_url: string;
+  background_color?: string | null;
+  area: { left: number; top: number; width: number; height: number };
   area_width: number;
   area_height: number;
 }
@@ -28,7 +31,6 @@ export interface DesignEntry {
 
 interface Props {
   productImage?: string;
-  productName?: string;
   variantId?: string;
   onDesignChange: (designs: DesignEntry[]) => void;
   primary?: string;
@@ -68,19 +70,9 @@ const LABELS: Record<string, Record<string, string>> = {
   },
 };
 
-// Where the print area sits on the product photo. Width + top are empirical per
-// garment type; the HEIGHT is derived from the real printfile ratio so the box
-// always has the exact shape of Printful's printable surface.
-const AREA_PRESETS: { match: RegExp; left: number; top: number; width: number }[] = [
-  { match: /hoodie|sweatshirt|sweat/i, left: 0.28, top: 0.26, width: 0.44 },
-  { match: /cap|hat|beanie/i,          left: 0.34, top: 0.34, width: 0.32 },
-  { match: /mug|bottle|tumbler/i,      left: 0.26, top: 0.28, width: 0.48 },
-  { match: /tote|bag|pack/i,           left: 0.26, top: 0.24, width: 0.48 },
-  { match: /poster|print|canvas/i,     left: 0.10, top: 0.10, width: 0.80 },
-];
-const AREA_DEFAULT = { left: 0.26, top: 0.20, width: 0.48 }; // t-shirts & co
+// Print area and template image come straight from Printful — nothing guessed.
 
-export default function DesignCanvas({ productImage, productName = '', variantId, onDesignChange, primary = '#111', lang = 'en' }: Props) {
+export default function DesignCanvas({ productImage, variantId, onDesignChange, primary = '#111', lang = 'en' }: Props) {
   const t = LABELS[lang] || LABELS.en;
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -101,16 +93,9 @@ export default function DesignCanvas({ productImage, productName = '', variantId
   const aspect = current?.aspect || 1;
   const printArea = placements.find(p => p.side === side) || placements[0] || null;
 
-  // Print box: preset position/width + height from the real printfile ratio
-  const preset = AREA_PRESETS.find(p => p.match.test(productName)) || AREA_DEFAULT;
-  const printRatio = printArea ? printArea.area_width / printArea.area_height : 0.75;
-  const imgRatio = 0.8; // product photos are roughly 4:5 in the storefront
-  const area = {
-    left: preset.left,
-    top: preset.top,
-    width: preset.width,
-    height: (preset.width / printRatio) * imgRatio,
-  };
+  // Exact print area on the official Printful template
+  const area = printArea?.area || { left: 0.3, top: 0.2, width: 0.4, height: 0.5 };
+  const templateImage = printArea?.image_url || productImage;
 
   // Fetch the real print area dimensions for this variant
   useEffect(() => {
@@ -279,10 +264,10 @@ export default function DesignCanvas({ productImage, productName = '', variantId
         </div>
       )}
 
-      {preview && productImage ? (
+      {preview && templateImage ? (
         <div>
           <div style={{ position: 'relative', width: '100%', maxWidth: 360, margin: '0 auto', userSelect: 'none' }}>
-            <img src={productImage} alt="" style={{ width: '100%', display: 'block', borderRadius: 12 }} draggable={false} />
+            <img src={templateImage} alt="" style={{ width: '100%', display: 'block', borderRadius: 12 }} draggable={false} />
             <div
               ref={areaRef}
               style={{

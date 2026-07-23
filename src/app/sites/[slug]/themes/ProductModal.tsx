@@ -210,7 +210,6 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
             {isPodCustom && (
               <DesignCanvas
                 productImage={imgs[0]}
-                productName={p.name}
                 variantId={selectedVariant || p.supplier_product_id}
                 onDesignChange={setCustomDesigns}
                 primary={primary}
