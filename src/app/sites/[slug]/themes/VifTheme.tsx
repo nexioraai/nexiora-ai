@@ -112,7 +112,7 @@ export default function VifTheme({ site }: { site: Site }) {
           <section id="home" ref={heroRef} className="relative min-h-[100vh] flex items-center px-4 md:px-8 py-24">
               <div className="relative w-full max-w-[1400px] mx-auto rounded-[2rem] overflow-hidden py-16 md:py-20" style={{ background: `linear-gradient(180deg, #F1E9D6 0%, #EADFC4 100%)`, boxShadow: `0 30px 80px -30px rgba(20,18,16,0.25)`, border: `1px solid rgba(20,18,16,0.05)` }}>
             {/* Badge scene (Gusto) */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 px-6 py-2.5 rounded-full flex items-center gap-2 text-xs font-semibold tracking-[0.3em] uppercase shadow-lg whitespace-nowrap" style={{ backgroundColor: INK, color: CREAM }}>
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 max-w-[calc(100%-2rem)] px-4 sm:px-6 py-2.5 rounded-full flex items-center justify-center gap-2 text-[10px] sm:text-xs font-semibold tracking-[0.15em] sm:tracking-[0.3em] uppercase shadow-lg text-center" style={{ backgroundColor: INK, color: CREAM }}>
               <Sparkles className="w-3.5 h-3.5" style={{ color: GOLD }} />
               {site.slogan || t.sections.aboutKicker}
             </div>
