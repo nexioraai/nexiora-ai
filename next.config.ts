@@ -17,8 +17,10 @@ const csp = [
   "img-src 'self' data: blob: https://images.pexels.com https://*.supabase.co https://cf.cjdropshipping.com https://oss-cf.cjdropshipping.com https://cc-west-usa.oss-us-west-1.aliyuncs.com https://files.cdn.printful.com https://static.cdn.printful.com https://file.zendrop.com",
   // Fonts : self, data URIs
   "font-src 'self' data:",
+  "worker-src 'self' blob:",
+  "child-src 'self' blob:",
   // Connexions fetch/XHR : self, Supabase (HTTP + websocket realtime). En dev, autoriser localhost pour HMR
-  `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://js.stripe.com${isDev ? ' ws://localhost:* http://localhost:*' : ''}`,
+  `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://js.stripe.com https://tiles.openfreemap.org${isDev ? ' ws://localhost:* http://localhost:*' : ''}`,
   // Embedding : seulement notre propre origine (autorise futurs previews iframe internes)
   "frame-ancestors 'self'",
   // Empêche <base> de pointer ailleurs
