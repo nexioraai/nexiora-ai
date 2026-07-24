@@ -174,7 +174,7 @@ export default function VifTheme({ site }: { site: Site }) {
                 <svg className="absolute z-20 -bottom-2 right-1/3 w-10 h-8 float-a drop-shadow-md" style={{animationDelay:'1.8s'}} viewBox="0 0 100 60"><path d="M15 25 L 40 10 L 85 20 L 75 50 L 25 45 Z" fill="#EFCE7C" stroke="#B99648" strokeWidth="1.5"/></svg>
 
                 {/* Image detouree "flottante" facon Gusto (pas de disque plein) */}
-                <div className="relative w-[160%] max-w-none sm:w-full sm:max-w-[560px] aspect-square flex items-center justify-center -translate-x-[12%] sm:translate-x-0" style={{ transform: 'translate(var(--px,0), var(--py,0))', transition: 'transform 0.2s ease-out' }}>
+                <div className="relative w-[160%] max-w-none sm:w-full sm:max-w-[560px] aspect-square flex items-center justify-center" style={{ transform: 'translate(var(--px,0), var(--py,0))', transition: 'transform 0.2s ease-out' }}>
                   {/* ombre douce sous l'image */}
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[70%] h-8 rounded-full blur-2xl opacity-40" style={{ backgroundColor: 'rgba(20,18,16,0.35)' }} />
                   {site.hero_image ? (
