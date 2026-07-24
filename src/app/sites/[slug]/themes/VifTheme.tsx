@@ -498,7 +498,7 @@ export default function VifTheme({ site }: { site: Site }) {
                 )}
               </div>
 
-              <ContactMap lat={site.geo_lat} lng={site.geo_lng} className="mt-8 border" />
+              <ContactMap lat={site.geo_lat} lng={site.geo_lng} accent={GOLD} dark={false} className="mt-8" />
             </div>
           </section>
         )}

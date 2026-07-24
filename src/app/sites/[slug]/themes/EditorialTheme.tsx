@@ -673,7 +673,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
                 </div>
               )}
 
-              <ContactMap lat={site.geo_lat} lng={site.geo_lng} className="border border-neutral-200" />
+              <ContactMap lat={site.geo_lat} lng={site.geo_lng} accent={primary} dark={false} />
 
               {(social.instagram || social.facebook || social.whatsapp || social.tiktok) && (
                 <div className="pt-4">

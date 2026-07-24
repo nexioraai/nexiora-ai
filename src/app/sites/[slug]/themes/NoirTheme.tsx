@@ -429,7 +429,7 @@ export default function NoirTheme({ site }: { site: Site }) {
                 )}
               </div>
 
-              <ContactMap lat={site.geo_lat} lng={site.geo_lng} className="mt-8 border" />
+              <ContactMap lat={site.geo_lat} lng={site.geo_lng} accent={gold} className="mt-8" />
             </div>
           </section>
         )}
