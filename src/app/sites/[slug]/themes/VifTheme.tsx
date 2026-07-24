@@ -112,7 +112,7 @@ export default function VifTheme({ site }: { site: Site }) {
           <section id="home" ref={heroRef} className="relative min-h-[100vh] flex items-center px-4 md:px-8 py-24">
               <div className="relative w-full max-w-[1400px] mx-auto rounded-[2rem] overflow-hidden py-16 md:py-20" style={{ background: `linear-gradient(180deg, #F1E9D6 0%, #EADFC4 100%)`, boxShadow: `0 30px 80px -30px rgba(20,18,16,0.25)`, border: `1px solid rgba(20,18,16,0.05)` }}>
             {/* Badge scene (Gusto) */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 max-w-[calc(100%-2rem)] px-4 sm:px-6 py-2.5 rounded-full flex items-center justify-center gap-2 text-[10px] sm:text-xs font-semibold tracking-[0.15em] sm:tracking-[0.3em] uppercase shadow-lg text-center" style={{ backgroundColor: INK, color: CREAM }}>
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 w-[calc(100%-1.5rem)] sm:w-auto px-4 sm:px-6 py-2.5 rounded-full flex items-center justify-center gap-2 text-[10px] sm:text-xs font-semibold tracking-[0.08em] sm:tracking-[0.3em] uppercase shadow-lg text-center leading-snug" style={{ backgroundColor: INK, color: CREAM }}>
               <Sparkles className="w-3.5 h-3.5" style={{ color: GOLD }} />
               {site.slogan || t.sections.aboutKicker}
             </div>
@@ -194,7 +194,7 @@ export default function VifTheme({ site }: { site: Site }) {
                 </div>
 
                 {/* Sceau circulaire (tampon rond facon Gusto) */}
-                <div className="hidden md:flex absolute top-16 right-8 z-30 w-24 h-24 items-center justify-center pointer-events-none">
+                <div className="flex absolute top-4 right-0 md:top-16 md:right-8 z-30 w-16 h-16 md:w-24 md:h-24 items-center justify-center pointer-events-none">
                   <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full animate-spin-slow">
                     <defs>
                       <path id="seal-curve" d="M 50,50 m -38,0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0" />
@@ -213,7 +213,7 @@ export default function VifTheme({ site }: { site: Site }) {
 
                 {/* Timeline verticale 01/02/03 (Gusto) */}
                 {Array.isArray(site.whyus) && site.whyus.length > 0 && (
-                  <div className="hidden xl:flex absolute right-6 top-1/2 -translate-y-1/2 flex-col gap-6 z-20 max-w-[200px]">
+                  <div className="flex xl:absolute xl:right-6 xl:top-1/2 xl:-translate-y-1/2 flex-row xl:flex-col justify-center flex-wrap gap-4 xl:gap-6 z-20 w-full xl:w-auto xl:max-w-[200px] mt-6 xl:mt-0">
                     {site.whyus.slice(0, 3).map((w: any, i: number) => (
                       <div key={i} className="flex items-start gap-3">
                         <div className="flex flex-col items-center pt-1">
