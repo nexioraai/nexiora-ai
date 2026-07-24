@@ -20,6 +20,7 @@ import ClickableProductCard from './ClickableProductCard'
 import AddToCartButton from './AddToCartButton'
 import ShippingEstimate from './ShippingEstimate'
 import { getCartLabels } from './cartLabels'
+import { socialUrl } from '@/lib/social'
 
 // Palette Gusto clair-editorial (fixe, signature du theme)
 const CREAM = '#EFE6D4'
@@ -508,16 +509,16 @@ export default function VifTheme({ site }: { site: Site }) {
         <div className="max-w-7xl mx-auto px-6 md:px-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="text-xl" style={{ fontFamily: 'var(--font-fraunces), serif' }}>{site.name}</div>
           <div className="flex items-center gap-5" style={{ color: INK }}>
-            {social.instagram && <a href={social.instagram} target="_blank" rel="noreferrer"><Instagram className="w-5 h-5" /></a>}
-            {social.facebook && <a href={social.facebook} target="_blank" rel="noreferrer"><Facebook className="w-5 h-5" /></a>}
-            {social.tiktok && <a href={social.tiktok} target="_blank" rel="noreferrer"><TikTok className="w-5 h-5" /></a>}
-            {social.whatsapp && <a href={social.whatsapp} target="_blank" rel="noreferrer"><WhatsApp className="w-5 h-5" /></a>}
+            {socialUrl('instagram', social.instagram) && <a href={socialUrl('instagram', social.instagram)!} target="_blank" rel="noreferrer"><Instagram className="w-5 h-5" /></a>}
+            {socialUrl('facebook', social.facebook) && <a href={socialUrl('facebook', social.facebook)!} target="_blank" rel="noreferrer"><Facebook className="w-5 h-5" /></a>}
+            {socialUrl('tiktok', social.tiktok) && <a href={socialUrl('tiktok', social.tiktok)!} target="_blank" rel="noreferrer"><TikTok className="w-5 h-5" /></a>}
+            {socialUrl('whatsapp', social.whatsapp) && <a href={socialUrl('whatsapp', social.whatsapp)!} target="_blank" rel="noreferrer"><WhatsApp className="w-5 h-5" /></a>}
           </div>
         </div>
       </footer>
       {social.whatsapp && (
         <a
-          href={`https://wa.me/${String(social.whatsapp).replace(/\D/g, '')}`}
+          href={socialUrl('whatsapp', social.whatsapp)!}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Contact us on WhatsApp"
