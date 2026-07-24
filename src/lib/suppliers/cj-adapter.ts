@@ -16,7 +16,7 @@ import type {
   ProductVariant,
 } from './supplier-adapter';
 
-import { cjSearchProductsV2, cjGetInventory, cjCalculateFreight, cjCreateOrder, cjGetOrderDetail, cjGetVariants } from '../cj/client';
+import { cjSearchProductsV2, cjGetInventory, cjCalculateFreight, cjCreateOrder, cjGetOrderDetail, cjGetVariants, cjGetCategories } from '../cj/client';
 
 // ============================================================
 // CJ Dropshipping — Supplier Adapter Implementation
@@ -67,6 +67,56 @@ function isUnsellable(raw: any): boolean {
 }
 
 /** Mappe un produit CJ brut vers CatalogProduct unifié. */
+// ---------- Resolution des categories CJ (UUID -> nom lisible) ----------
+// L'API produit CJ renvoie categoryName vide et ne fournit que categoryId (UUID).
+// La taxonomie complete (/product/getCategory) donne le mapping UUID -> nom sur
+// 3 niveaux. On la charge UNE fois par run (cache module-scope, comme printfile-info)
+// et on s'en sert pour stocker un nom exploitable au lieu d'un UUID opaque - sans
+// quoi la curation par categorie est impossible (cause du cas meubles/cuisine).
+let cjCategoryMap: Record<string, string> | null = null;
+let cjCategoryMapLoadedAt = 0;
+const CJ_CATEGORY_TTL_MS = 6 * 60 * 60 * 1000; // 6 h : la taxonomie CJ bouge peu
+
+/** Aplatit la taxonomie hierarchique CJ (3 niveaux) en map { id -> nom }. */
+function flattenCjCategories(list: any[]): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const f of list || []) {
+    if (f?.categoryFirstId) map[f.categoryFirstId] = f.categoryFirstName || '';
+    for (const sec of (f?.categoryFirstList || [])) {
+      if (sec?.categorySecondId) map[sec.categorySecondId] = sec.categorySecondName || '';
+      for (const t of (sec?.categorySecondList || [])) {
+        if (t?.categoryId) map[t.categoryId] = t.categoryName || '';
+      }
+    }
+  }
+  return map;
+}
+
+/** Charge (avec cache) la map des categories CJ. Silencieux en cas d'echec. */
+async function ensureCjCategoryMap(): Promise<void> {
+  const fresh = cjCategoryMap && (Date.now() - cjCategoryMapLoadedAt) < CJ_CATEGORY_TTL_MS;
+  if (fresh) return;
+  try {
+    const list = await cjGetCategories(NEXIORA_CJ_EMAIL, NEXIORA_CJ_API_KEY);
+    const map = flattenCjCategories(Array.isArray(list) ? list : []);
+    if (Object.keys(map).length > 0) {
+      cjCategoryMap = map;
+      cjCategoryMapLoadedAt = Date.now();
+    }
+  } catch (e) {
+    console.error('[CJ] chargement taxonomie echoue, categoryId brut conserve:', e);
+  }
+}
+
+/** Traduit un categoryId CJ en nom lisible. Fallback : l'id brut (jamais vide). */
+function resolveCjCategory(raw: any): string {
+  const direct = raw.categoryName || raw.categoryNameEn;
+  if (direct) return direct;
+  const id = raw.categoryId || '';
+  if (id && cjCategoryMap && cjCategoryMap[id]) return cjCategoryMap[id];
+  return id;
+}
+
 function mapCjProduct(raw: any): CatalogProduct {
   const variants = Array.isArray(raw.variants)
     ? raw.variants.map((v: any) => ({
@@ -84,7 +134,7 @@ function mapCjProduct(raw: any): CatalogProduct {
     supplier_product_id: raw.pid || raw.id || raw.productId || '',
     name: raw.productNameEn || raw.nameEn || raw.productName || '',
     description: raw.description || raw.productNameEn || raw.nameEn || '',
-    category: raw.categoryName || raw.categoryNameEn || raw.categoryId || '',
+    category: resolveCjCategory(raw),
     images: [raw.productImage, raw.bigImage, ...(raw.productImageList || [])].filter(Boolean),
     price: parseCjPrice(raw.sellPrice ?? raw.productPrice ?? 0),
     currency: 'USD',
@@ -116,6 +166,8 @@ export const cjAdapter: SupplierAdapter = {
 
   // ---- CRON (clés Nexiora) ----
   async syncCatalog(options: SyncOptions): Promise<SyncResult> {
+    // Charge la taxonomie CJ (cache 6 h) pour traduire les categoryId en noms.
+    await ensureCjCategoryMap();
     const pageSize = 200;
     const maxPages = 3;
     const allProducts: CatalogProduct[] = [];
