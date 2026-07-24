@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       const pattern = '%' + kw.toLowerCase().replace(/\s+/g, '%') + '%';
       const { data: hits } = await supabaseAdmin
         .from('catalog_products')
-        .select('id, supplier_id, supplier_product_id, name, price, currency, images, shipping_days_min, warehouse_country')
+        .select('id, supplier_id, supplier_product_id, name, category, price, currency, images, shipping_days_min, warehouse_country')
         .eq('in_stock', true)
         .in('supplier_id', suppliers)
         .ilike('name', pattern)
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
     }
 
     const productList = allProducts.map((prod: any, i: number) => (
-      i + '|' + prod.name + '|' + prod.price + (prod.currency || '') + '|' + (prod.shipping_days_min || '?') + 'j|' + (prod.warehouse_country || '?')
+      i + '|' + prod.name + '|[cat:' + (prod.category || '?') + ']|' + prod.price + (prod.currency || '') + '|' + (prod.shipping_days_min || '?') + 'j|' + (prod.warehouse_country || '?')
     )).join('\n');
 
     const lang = site.lang || 'fr';
@@ -95,7 +95,8 @@ export async function POST(req: NextRequest) {
         content: 'You are a STRICT e-commerce product curator.\n\n' +
           'STORE NICHE: "' + nicheLabel + '"\n' +
           'NICHE KEYWORDS: ' + JSON.stringify(keywords) + '\n\n' +
-          'Candidate products (index|name|price|shipping|warehouse):\n' + productList + '\n\n' +
+          'Candidate products (index|name|[cat:supplier_category]|price|shipping|warehouse):\n' + productList + '\n\n' +
+          'The [cat:...] field is the SUPPLIER category of each product. It is your STRONGEST relevance signal - trust it over the product name, which is often noisy or mistranslated.\n' +
           'CRITICAL TASK - RELEVANCE FILTERING:\n' +
           'These products came from a broad keyword search and MANY are NOT relevant to the niche.\n' +
           'Step 1: For EACH product, ask "Would a customer shopping at a ' + nicheLabel + ' store expect to find this?"\n' +
