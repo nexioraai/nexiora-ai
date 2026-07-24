@@ -16,6 +16,7 @@ Heart,
 Package,
 type LucideIcon,
 } from 'lucide-react'
+import FuturisticMap from './FuturisticMap'
 
 // ---------- Types ----------
 
@@ -416,7 +417,6 @@ export function ContactMap({
   lng,
   className = '',
   accent = '#6366f1',
-  dark = true,
 }: {
   lat?: number | null
   lng?: number | null
@@ -425,96 +425,5 @@ export function ContactMap({
   dark?: boolean
 }) {
   if (lat == null || lng == null) return null
-  const D = 0.0025
-  const src = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - D},${lat - D},${lng + D},${lat + D}&layer=mapnik&marker=${lat},${lng}`
-  const osmLink = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=17/${lat}/${lng}`
-  return (
-    <div
-      className={`relative rounded-2xl overflow-hidden ${className}`}
-      style={{
-        border: `1px solid ${accent}40`,
-        boxShadow: `0 0 0 1px ${accent}14, 0 18px 50px -22px ${accent}80`,
-      }}
-    >
-      <iframe
-        title="Map"
-        width="100%"
-        height="260"
-        style={{
-          border: 0,
-          display: 'block',
-          filter: dark
-            ? 'invert(0.92) hue-rotate(180deg) saturate(0.7) contrast(0.95) brightness(0.95)'
-            : 'saturate(0.85) contrast(1.05)',
-        }}
-        loading="lazy"
-        referrerPolicy="no-referrer-when-downgrade"
-        src={src}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background: `radial-gradient(circle at 50% 50%, ${accent}00 30%, ${accent}26 100%)`,
-          mixBlendMode: 'screen',
-        }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.12]"
-        style={{
-          backgroundImage: `linear-gradient(to right, ${accent} 1px, transparent 1px), linear-gradient(to bottom, ${accent} 1px, transparent 1px)`,
-          backgroundSize: '44px 44px',
-          maskImage: 'radial-gradient(ellipse at center, black 20%, transparent 78%)',
-          WebkitMaskImage: 'radial-gradient(ellipse at center, black 20%, transparent 78%)',
-        }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-        style={{ width: 120, height: 120 }}
-      >
-        <span
-          className="absolute inset-0 rounded-full"
-          style={{ border: `1px solid ${accent}55` }}
-        />
-        <span
-          className="absolute rounded-full"
-          style={{
-            left: '50%',
-            top: '50%',
-            width: 46,
-            height: 46,
-            transform: 'translate(-50%, -50%)',
-            border: `1px solid ${accent}99`,
-          }}
-        />
-        <span
-          className="absolute rounded-full"
-          style={{
-            left: '50%',
-            top: '50%',
-            width: 10,
-            height: 10,
-            transform: 'translate(-50%, -50%)',
-            backgroundColor: accent,
-            boxShadow: `0 0 18px 5px ${accent}80`,
-          }}
-        />
-      </div>
-      <a
-        href={osmLink}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="absolute bottom-3 right-3 z-10 px-3 py-1.5 rounded-full text-[10px] font-medium uppercase tracking-[0.12em] backdrop-blur-md transition-transform hover:-translate-y-0.5"
-        style={{
-          backgroundColor: `${accent}26`,
-          border: `1px solid ${accent}66`,
-          color: dark ? '#fff' : '#111',
-        }}
-      >
-        Voir la carte
-      </a>
-    </div>
-  )
+  return <FuturisticMap lat={lat} lng={lng} accent={accent} className={className} />
 }
