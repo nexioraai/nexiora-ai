@@ -201,6 +201,38 @@ if (error || !data) return null
 return (data as any).slug as string
 }
 
+export type SiteBrand = {
+  slug: string
+  name: string
+  primaryColor: string | null
+  theme: string | null
+  lang: string | null
+}
+
+/**
+ * Recupere le strict minimum pour brander une page d'erreur.
+ * Ne renvoie jamais d'info sensible (pas d'email, pas d'id).
+ */
+export async function fetchSiteBrandByDomain(
+  domain: string
+): Promise<SiteBrand | null> {
+  const { data, error } = await supabase
+    .from('sites')
+    .select('slug,name,primary_color,theme,lang')
+    .eq('custom_domain', domain)
+    .eq('published', true)
+    .maybeSingle()
+  if (error || !data) return null
+  const d = data as any
+  return {
+    slug: d.slug,
+    name: d.name,
+    primaryColor: d.primary_color || null,
+    theme: d.theme || null,
+    lang: d.lang || null,
+  }
+}
+
 export async function fetchSitePreview(
 slug: string,
 ownerEmail: string
