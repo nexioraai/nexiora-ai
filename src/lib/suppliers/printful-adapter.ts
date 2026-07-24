@@ -56,22 +56,50 @@ const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 async function findCategoryIds(token: string, niches: string[]): Promise<number[]> {
   const raw = await pfFetch('/categories', token);
   const categories: any[] = raw?.categories || raw || [];
-  const ids = new Set<number>();
-  const lowerNiches = niches.map(n => n.toLowerCase());
 
-  for (const cat of categories) {
-    const title = (cat.title || '').toLowerCase();
-    for (const niche of lowerNiches) {
-      if (title.includes(niche) || niche.includes(title)) {
-        ids.add(cat.id);
-      }
+  // Univers des catégories-feuilles vendables : on écarte les regroupements
+  // qui ne sont pas des types imprimables (racines de l'arbre, marques,
+  // collections marketing, doublons « All … »), et tout parent ayant des enfants.
+  const BRANDS_PARENT = 159;      // Bella+Canvas, Gildan, adidas…
+  const COLLECTIONS_PARENT = 116; // Sportswear, Bestsellers, 4th of July…
+  const GENERIC = /^all\b|^all-over\b/i;
+  const parentIds = new Set<number>(categories.map(c => Number(c.parent_id)));
+  const sellable = categories.filter(c => {
+    const id = Number(c.id);
+    const parent = Number(c.parent_id);
+    const title = String(c.title || '');
+    if (parent === 0) return false;                 // enfants directs de la racine = gros parents
+    if (parent === BRANDS_PARENT) return false;
+    if (parent === COLLECTIONS_PARENT) return false;
+    if (GENERIC.test(title)) return false;
+    if (parentIds.has(id)) return false;            // a des enfants → pas une feuille
+    return true;
+  });
+
+  // Match niche → titre de feuille par MOT entier (évite « art » ⊂ « Cartes »).
+  const ids = new Set<number>();
+  // Normalisation singulier/pluriel : les titres Printful sont au pluriel
+  // (« Mugs », « Beanies », « Socks »), les niches souvent au singulier.
+  // On compare en retirant un « s » final de part et d'autre, tout en gardant
+  // le match par mot entier (donc « art » ne matche pas « Cartes »).
+  const singular = (w: string) => w.endsWith('s') ? w.slice(0, -1) : w;
+  const niceWords = niches.map(n => singular(n.toLowerCase().trim())).filter(Boolean);
+  for (const cat of sellable) {
+    const titleWords = String(cat.title || '')
+      .toLowerCase().split(/[^a-z0-9]+/).filter(Boolean).map(singular);
+    for (const niche of niceWords) {
+      if (titleWords.includes(niche)) { ids.add(Number(cat.id)); break; }
     }
   }
 
-  // Fallback : si aucun match, prendre les catégories populaires
-  if (ids.size === 0 && categories.length > 0) {
-    // T-shirts, Posters, Mugs — catégories de base Printful
-    categories.slice(0, 5).forEach(c => ids.add(c.id));
+  // Fallback cohérent : socle POD universel (T-shirts, Hoodies, Sweatshirts,
+  // Mugs, Posters, Tote bags, Tank tops, Beanies — IDs vérifiés 2026-07),
+  // restreint aux feuilles réellement présentes. Jamais les parents fourre-tout.
+  if (ids.size === 0) {
+    const BASELINE = [24, 28, 29, 195, 55, 48, 23, 45];
+    const sellableIds = new Set(sellable.map(c => Number(c.id)));
+    for (const id of BASELINE) if (sellableIds.has(id)) ids.add(id);
+    if (ids.size === 0) sellable.slice(0, 8).forEach(c => ids.add(Number(c.id)));
   }
 
   return Array.from(ids);
