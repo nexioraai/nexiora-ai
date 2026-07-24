@@ -16,7 +16,6 @@ Heart,
 Package,
 type LucideIcon,
 } from 'lucide-react'
-import FuturisticMap from './FuturisticMap'
 
 // ---------- Types ----------
 
@@ -425,5 +424,22 @@ export function ContactMap({
   dark?: boolean
 }) {
   if (lat == null || lng == null) return null
-  return <FuturisticMap lat={lat} lng={lng} accent={accent} className={className} />
+  const D = 0.0035
+  const src = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - D},${lat - D},${lng + D},${lat + D}&layer=mapnik&marker=${lat},${lng}`
+  return (
+    <div
+      className={`rounded-2xl overflow-hidden ${className}`}
+      style={{ border: `1px solid ${accent}33` }}
+    >
+      <iframe
+        title="Map"
+        width="100%"
+        height="260"
+        style={{ border: 0, display: 'block' }}
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        src={src}
+      />
+    </div>
+  )
 }
