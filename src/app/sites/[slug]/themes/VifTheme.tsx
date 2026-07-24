@@ -118,7 +118,7 @@ export default function VifTheme({ site }: { site: Site }) {
             </div>
 
             <div className="relative max-w-7xl mx-auto px-6 md:px-10 w-full grid lg:grid-cols-2 gap-10 items-center pt-16">
-              <div className="ed-rise">
+              <div className="ed-rise order-2 lg:order-1">
                 <h1
                   className="text-5xl md:text-6xl xl:text-7xl leading-[1.05] font-medium mb-8"
                   style={{ fontFamily: 'var(--font-fraunces), serif' }}
@@ -158,7 +158,7 @@ export default function VifTheme({ site }: { site: Site }) {
               </div>
 
               {/* Hero visuel + effet parallax curseur + petales flottants */}
-              <div className="relative flex items-center justify-center min-h-[420px]">
+              <div className="relative flex items-center justify-center min-h-[420px] order-1 lg:order-2">
                 {/* Ingredients flottants premier plan (Gusto) */}
                 {/* Tomates cerises */}
                 <svg className="absolute z-20 -top-6 left-16 w-14 h-14 float-a drop-shadow-lg" viewBox="0 0 100 100"><defs><radialGradient id="tom1" cx="35%" cy="35%"><stop offset="0%" stopColor="#FF7B6B"/><stop offset="100%" stopColor="#C0332A"/></radialGradient></defs><circle cx="50" cy="55" r="34" fill="url(#tom1)"/><path d="M50 20 L 45 8 M50 20 L 55 10 M50 20 L 50 5" stroke="#4A7A3A" strokeWidth="3" strokeLinecap="round" fill="none"/></svg>
@@ -174,7 +174,7 @@ export default function VifTheme({ site }: { site: Site }) {
                 <svg className="absolute z-20 -bottom-2 right-1/3 w-10 h-8 float-a drop-shadow-md" style={{animationDelay:'1.8s'}} viewBox="0 0 100 60"><path d="M15 25 L 40 10 L 85 20 L 75 50 L 25 45 Z" fill="#EFCE7C" stroke="#B99648" strokeWidth="1.5"/></svg>
 
                 {/* Image detouree "flottante" facon Gusto (pas de disque plein) */}
-                <div className="relative w-full max-w-[560px] aspect-square flex items-center justify-center" style={{ transform: 'translate(var(--px,0), var(--py,0))', transition: 'transform 0.2s ease-out' }}>
+                <div className="relative w-[130%] max-w-none sm:w-full sm:max-w-[560px] aspect-square flex items-center justify-center" style={{ transform: 'translate(var(--px,0), var(--py,0))', transition: 'transform 0.2s ease-out' }}>
                   {/* ombre douce sous l'image */}
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[70%] h-8 rounded-full blur-2xl opacity-40" style={{ backgroundColor: 'rgba(20,18,16,0.35)' }} />
                   {site.hero_image ? (
@@ -217,7 +217,7 @@ export default function VifTheme({ site }: { site: Site }) {
                     {site.whyus.slice(0, 3).map((w: any, i: number) => (
                       <div key={i} className="flex items-start gap-3">
                         <div className="flex flex-col items-center pt-1">
-                          <span className="text-lg font-medium" style={{ color: GOLD, fontFamily: 'var(--font-fraunces), serif' }}>
+                          <span className="text-sm xl:text-lg font-medium" style={{ color: GOLD, fontFamily: 'var(--font-fraunces), serif' }}>
                             {String(i + 1).padStart(2, '0')}
                           </span>
                           {i < Math.min(2, (site.whyus?.length ?? 0) - 1) && (
@@ -226,7 +226,7 @@ export default function VifTheme({ site }: { site: Site }) {
                         </div>
                         <div className="max-w-[140px]">
                           <div className="w-1.5 h-1.5 rounded-full mt-2 mb-2" style={{ backgroundColor: GOLD }} />
-                          <div className="text-xs font-semibold uppercase" style={{ letterSpacing: '0.05em', color: GOLD }}>{w.title}</div>
+                          <div className="text-[9px] xl:text-xs font-semibold uppercase" style={{ letterSpacing: '0.05em', color: GOLD }}>{w.title}</div>
                         </div>
                       </div>
                     ))}
