@@ -51,20 +51,6 @@ export default function FuturisticMap({
     el.style.boxShadow = '0 0 0 6px ' + accent + '33, 0 0 26px 8px ' + accent + '99'
     new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map)
 
-    map.on('load', () => {
-      const layers = map.getStyle().layers || []
-      for (const l of layers) {
-        if (l.type === 'line' && /road|highway|transport/i.test(l.id)) {
-          try {
-            map.setPaintProperty(l.id, 'line-color', accent)
-            map.setPaintProperty(l.id, 'line-opacity', 0.32)
-          } catch {}
-        }
-      }
-      try {
-        map.setPaintProperty('background', 'background-color', '#05060a')
-      } catch {}
-    })
 
     return () => {
       map.remove()
