@@ -24,7 +24,7 @@ function parseCatalogId(cartId: string): { realId: string; variantId?: string } 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { slug, items, countryCode } = body as { slug?: string; items?: CartItem[]; countryCode?: string };
+    const { slug, items, countryCode, shipmentTier } = body as { slug?: string; items?: CartItem[]; countryCode?: string; shipmentTier?: string };
     if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
     if (!items || items.length === 0) return NextResponse.json({ error: 'Panier vide' }, { status: 400 });
 
@@ -57,6 +57,7 @@ export async function POST(req: Request) {
     // On ne fait jamais confiance a un montant envoye par le client.
     const flat = Number(site.shipping_flat) || 0;
     let shippingAmount = flat;
+    let chosenLogisticName: string | null = null;  // transporteur CJ du tier choisi
     let estimatedDelivery: string | null = null;
     let shippingResolved = false;
 
@@ -135,7 +136,7 @@ export async function POST(req: Request) {
           const cjIds = cjGroup.map((g) => g.supplier_product_id);
           const { data: cacheRows } = await supabaseAdmin
             .from('shipping_cache')
-            .select('supplier_product_id, shipping_cost, days_min, days_max')
+            .select('supplier_product_id, shipping_cost, days_min, days_max, tiers')
             .eq('supplier_id', 'cj')
             .eq('country_code', countryCode)
             .in('supplier_product_id', cjIds);
@@ -143,11 +144,26 @@ export async function POST(req: Request) {
           // Le cache n'est utilise que s'il couvre TOUS les produits CJ du panier.
           const allCovered = cjIds.every((id) => cacheMap.has(id));
           if (allCovered) {
+            // Verifier que le tier choisi est disponible sur TOUS les produits.
+            const tierAvailable = shipmentTier && cjGroup.every((g) => {
+              const row: any = cacheMap.get(g.supplier_product_id);
+              return Array.isArray(row?.tiers) && row.tiers.some((t: any) => t.tier === shipmentTier);
+            });
             for (const g of cjGroup) {
               const row: any = cacheMap.get(g.supplier_product_id);
-              cjCacheCost += Number(row.shipping_cost) * g.quantity;
-              const d = Number(row.days_max) || 0;
-              if (d > cjCacheMaxDays) cjCacheMaxDays = d;
+              if (tierAvailable) {
+                // Cout du tier choisi par l'acheteur (eco/standard/express).
+                const t = row.tiers.find((x: any) => x.tier === shipmentTier);
+                cjCacheCost += Number(t.cost) * g.quantity;
+                if (t.name && !chosenLogisticName) chosenLogisticName = String(t.name);
+                const d = Number(t.days_max) || 0;
+                if (d > cjCacheMaxDays) cjCacheMaxDays = d;
+              } else {
+                // Fallback : borne basse (comportement historique).
+                cjCacheCost += Number(row.shipping_cost) * g.quantity;
+                const d = Number(row.days_max) || 0;
+                if (d > cjCacheMaxDays) cjCacheMaxDays = d;
+              }
             }
             // Marge de securite appliquee sur le cout du cache.
             cjCacheCost = cjCacheCost * SHIPPING_MARGIN;
@@ -308,6 +324,8 @@ export async function POST(req: Request) {
         payment_ref: orderId,
         estimated_delivery: estimatedDelivery,
         shipping_amount: shippingAmount,
+        shipment_tier: shipmentTier || null,
+        shipment_logistic_name: chosenLogisticName,
         // Token secret pour le lien "Annuler ma commande" envoye a l'acheteur.
         // Impossible a deviner : seul le destinataire de l'email peut annuler.
         cancel_token: crypto.randomUUID(),

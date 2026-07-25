@@ -31,7 +31,7 @@ function isPermanentError(msg: string): boolean {
 export async function fulfillCjOrder(orderId: string): Promise<string[]> {
   const { data: order } = await supabaseAdmin
     .from('shop_orders')
-    .select('id, site_id, shipping_address, customer_name, customer_email, cj_pay_status, cj_pay_attempts, shipping_amount')
+    .select('id, site_id, shipping_address, customer_name, customer_email, cj_pay_status, cj_pay_attempts, shipping_amount, shipment_logistic_name')
     .eq('id', orderId)
     .maybeSingle();
   if (!order) return [];
@@ -134,7 +134,12 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
   try {
     const freight = await cjCalculateFreight(CJ_EMAIL, CJ_API_KEY, endCountryCode, cjProducts);
     if (Array.isArray(freight) && freight.length > 0) {
-      logisticName = freight[0].logisticName;
+      // Transporteur choisi par l'acheteur (tier eco/standard/express), si CJ le
+      // propose encore ; sinon on retombe sur la borne basse.
+      const chosen = (order as any).shipment_logistic_name
+        ? freight.find((o: any) => o.logisticName === (order as any).shipment_logistic_name)
+        : null;
+      logisticName = chosen ? chosen.logisticName : freight[0].logisticName;
       // Borne basse des options (la moins chere), comme le cache.
       const prices = freight
         .map((o: any) => Number(o?.logisticPrice ?? o?.price ?? o?.freightAmount))
