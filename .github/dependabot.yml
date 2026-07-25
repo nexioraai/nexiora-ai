@@ -11,3 +11,8 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    # Prisma disparaitra avec le debranchement de src/erp/ : on ignore ses
+    # updates pour eviter les PR recurrentes (breaking change v7) en attendant.
+    ignore:
+      - dependency-name: "prisma"
+      - dependency-name: "@prisma/client"
