@@ -49,6 +49,57 @@ function lowestPrice(options: unknown): { price: number; aging: string } | null 
   return best;
 }
 
+/** Regroupe les options logistiques CJ en 3 tiers : eco / standard / express.
+ *  - eco     : le moins cher
+ *  - express : le plus rapide (borne haute la plus basse), a prix raisonnable
+ *  - standard: meilleur compromis prix + delai, distinct des deux autres
+ *  Un plafond (3x le moins cher) ecarte les aberrations (DHL, fret maritime). */
+function pickThreeTiers(options: unknown): {
+  tier: 'eco' | 'standard' | 'express';
+  name: string; cost: number; days_min: number | null; days_max: number | null;
+}[] | null {
+  const list = Array.isArray(options) ? options : [];
+  const valid = list
+    .map((o: any) => ({
+      name: String(o?.logisticName ?? ''),
+      cost: Number(o?.logisticPrice ?? o?.price ?? o?.freightAmount),
+      aging: String(o?.logisticAging ?? ''),
+    }))
+    .filter((o) => Number.isFinite(o.cost) && o.cost >= 0);
+  if (valid.length === 0) return null;
+
+  const pmin = (a: string) => { const n = Number(a.split('-')[0]); return Number.isFinite(n) ? n : 999; };
+  const pmax = (a: string) => { const parts = a.split('-'); const n = Number(parts[1] ?? parts[0]); return Number.isFinite(n) ? n : 999; };
+
+  const eco = valid.reduce((a, b) => (b.cost < a.cost ? b : a));
+  const cap = eco.cost * 3;
+  const pool = valid.filter((o) => o.cost <= cap);
+
+  const express = pool.reduce((a, b) => {
+    const am = pmax(a.aging), bm = pmax(b.aging);
+    if (bm !== am) return bm < am ? b : a;
+    const amn = pmin(a.aging), bmn = pmin(b.aging);
+    if (bmn !== amn) return bmn < amn ? b : a;
+    return b.cost < a.cost ? b : a;
+  });
+
+  const rest = pool.filter((o) => o.name !== eco.name && o.name !== express.name);
+  const standard = (rest.length ? rest : pool).reduce((a, b) => {
+    const sa = a.cost + pmax(a.aging) * 0.5;
+    const sb = b.cost + pmax(b.aging) * 0.5;
+    return sb < sa ? b : a;
+  });
+
+  const build = (tier: 'eco' | 'standard' | 'express', o: typeof eco) => ({
+    tier, name: o.name, cost: o.cost,
+    days_min: parseAging(o.aging).min, days_max: parseAging(o.aging).max,
+  });
+  // Dedup : si standard == express (peu d'options), on ne garde que les distincts.
+  const tiers = [build('eco', eco), build('standard', standard), build('express', express)];
+  const seen = new Set<string>();
+  return tiers.filter((t) => { const k = t.name + t.cost; if (seen.has(k)) return false; seen.add(k); return true; });
+}
+
 export async function GET(req: NextRequest) {
   const runId = await startCronRun('shipping-cache');
   try {
@@ -193,9 +244,11 @@ async function runShippingCache() {
     // Appel 2 : freight
     await sleep(RATE_LIMIT_MS);
     let best: { price: number; aging: string } | null = null;
+    let tiers: ReturnType<typeof pickThreeTiers> = null;
     try {
       const options = await cjCalculateFreight(email, apiKey, pair.country, [{ vid, quantity: 1 }]);
       best = lowestPrice(options);
+      tiers = pickThreeTiers(options);
     } catch (e: any) {
       apiErrors++;
       console.warn(`[shipping-cache] freight ${pair.supplierProductId}/${pair.country}: ${String(e?.message || e).slice(0, 100)}`);
@@ -217,6 +270,7 @@ async function runShippingCache() {
           shipping_cost: best.price,
           days_min: min,
           days_max: max,
+          tiers: tiers ?? null,
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'supplier_id,supplier_product_id,country_code' }
