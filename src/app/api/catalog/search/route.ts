@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
 import { calcSellPrice, sitePricing, resolveDisplayPrice } from '@/lib/pricing';
 
 export const maxDuration = 10;
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
 
   const { data: site } = await supabaseAdmin
     .from('sites')
-    .select('id, type, mode, cj_margin_percent, cj_round_mode')
+    .select('id, type, mode, dropship_type, cj_margin_percent, cj_round_mode')
     .eq('slug', slug)
     .single();
 
@@ -105,7 +106,13 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  if (supplier) {
+  // Cloisonnement STRICT par sous-type : une boutique pod_brand/pod_custom ne
+  // montre que du POD (Printful/Gelato), une boutique reseller que du CJ. La
+  // regle vient du dropship_type de la boutique, PAS d'un parametre d'URL.
+  const allowedSuppliers = suppliersForDropshipType((site as any).dropship_type);
+  query2 = query2.in('supplier_id', allowedSuppliers);
+  // Filtre additionnel optionnel (ex. restreindre a un seul fournisseur autorise).
+  if (supplier && allowedSuppliers.includes(supplier)) {
     query2 = query2.eq('supplier_id', supplier);
   }
   if (maxDays) {

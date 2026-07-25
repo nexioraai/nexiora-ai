@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 
 export const maxDuration = 45;
@@ -46,9 +47,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Aucun mot-cle niche disponible', products: [] }, { status: 200 });
     }
 
-    const suppliers = site.dropship_type === 'pod_custom' || site.dropship_type === 'pod_brand'
-      ? ['printful']
-      : ['cj'];
+    // Source unique : reseller -> CJ, pod_brand/pod_custom -> Printful + Gelato.
+    // (Historiquement code en dur sur ['printful'] : Gelato manquait cote POD.)
+    const suppliers = suppliersForDropshipType(site.dropship_type);
 
     const seen = new Set<string>();
     const allProducts: any[] = [];
