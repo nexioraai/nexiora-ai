@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { cjAdapter } from '@/lib/suppliers/cj-adapter';
 import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
+import { gelatoAdapter } from '@/lib/suppliers/gelato-adapter';
 // import { printifyAdapter } from '@/lib/suppliers/printify-adapter'; // desactive : voir bloc SUPPLIERS
 // import { zendropAdapter } from '@/lib/suppliers/zendrop-adapter'; // desactive : pas de variantes au catalogue
 import type { CatalogProduct } from '@/lib/suppliers/supplier-adapter';
@@ -101,6 +102,7 @@ export async function GET(req: NextRequest) {
   const SUPPLIERS: { name: string; run: () => Promise<{ products: CatalogProduct[] }> }[] = [
     { name: 'CJ', run: () => cjAdapter.syncCatalog({ categories: niches, page: 1, page_size: 50 }) },
     { name: 'Printful', run: () => printfulAdapter.syncCatalog({ categories: niches }) },
+    { name: 'Gelato', run: () => gelatoAdapter.syncCatalog({ categories: niches }) },
     // Printify DESACTIVE (2026-07-19) : 0 produit synchronise depuis toujours.
     // L'endpoint catalogue /variants.json ne renvoie ni 'cost' ni 'is_enabled'.
     // mapPrintifyVariant calculait donc price=0, et upsertProducts filtre price<=0.

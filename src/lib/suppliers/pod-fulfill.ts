@@ -2,6 +2,7 @@ import 'server-only';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { printfulAdapter } from './printful-adapter';
 import { printifyAdapter } from './printify-adapter';
+import { gelatoAdapter } from './gelato-adapter';
 
 /**
  * Fulfil POD items (Printful/Printify) for a paid order.
@@ -33,7 +34,7 @@ export async function fulfillPodOrder(orderId: string): Promise<string[]> {
     .from('catalog_products')
     .select('id, supplier_id, supplier_product_id')
     .in('id', realIds)
-    .in('supplier_id', ['printful', 'printify']);
+    .in('supplier_id', ['printful', 'printify', 'gelato']);
   if (!catProds || catProds.length === 0) return [];
 
   // Get designs for these order items
@@ -74,9 +75,13 @@ export async function fulfillPodOrder(orderId: string): Promise<string[]> {
     const designList = designsByItemId.get(cartItem.id) || [];
     const designRow = designList[0];
     const designUrl = designRow?.url || undefined;
-    const adapter = catProd.supplier_id === 'printful' ? printfulAdapter : printifyAdapter;
+    const adapter = catProd.supplier_id === 'printful' ? printfulAdapter
+      : catProd.supplier_id === 'gelato' ? gelatoAdapter
+      : printifyAdapter;
     const creds: Record<string, string> = catProd.supplier_id === 'printful'
       ? { printful_token: process.env.PRINTFUL_API_TOKEN || '' }
+      : catProd.supplier_id === 'gelato'
+      ? { gelato_key: process.env.GELATO_API_KEY || '' }
       : { printify_token: process.env.PRINTIFY_API_TOKEN || '', printify_shop_id: process.env.PRINTIFY_SHOP_ID || '' };
 
     try {
