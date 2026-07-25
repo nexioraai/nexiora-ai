@@ -69,6 +69,9 @@ export default function CartDrawer({
   const [shipping, setShipping] = useState<number | null>(null);
   const [calcBusy, setCalcBusy] = useState(false);
   const [aging, setAging] = useState<string | null>(null);
+  type CjTier = { tier: string; label: string; cost: number; days_min: number | null; days_max: number | null };
+  const [tiers, setTiers] = useState<CjTier[] | null>(null);
+  const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [promoCode, setPromoCode] = useState('');
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [promoMsg, setPromoMsg] = useState('');
@@ -114,6 +117,8 @@ export default function CartDrawer({
   const handleCountryChange = async (code: string) => {
     setCountry(code);
     setShipping(null);
+    setTiers(null);
+    setSelectedTier(null);
     setAging(null);
     setError('');
     // Detect state from timezone or use default
@@ -140,14 +145,29 @@ export default function CartDrawer({
         setShipping(-1);
         setAging(null);
       } else {
-        setShipping(Number(data.shipping) || 0);
         setAging(data.aging || null);
+        // Tiers CJ : si presents, on pilote le shipping par le tier choisi.
+        if (Array.isArray(data.cjTiers) && data.cjTiers.length > 0) {
+          setTiers(data.cjTiers);
+          const std = data.cjTiers.find((t: CjTier) => t.tier === 'standard') || data.cjTiers[0];
+          setSelectedTier(std.tier);
+          setShipping(Number(std.cost) || 0);
+        } else {
+          setTiers(null);
+          setSelectedTier(null);
+          setShipping(Number(data.shipping) || 0);
+        }
       }
     } catch (e: any) {
       setError(e.message);
     } finally {
       setCalcBusy(false);
     }
+  };
+
+  const pickTier = (t: CjTier) => {
+    setSelectedTier(t.tier);
+    setShipping(Number(t.cost) || 0);
   };
 
   const handleCheckout = async () => {
@@ -170,6 +190,8 @@ export default function CartDrawer({
             customDesignPosition: i.customDesignPosition,
             customDesigns: i.customDesigns,
           })),
+          stateCode,
+          shipmentTier: selectedTier,
         }),
       });
       const data = await res.json();
@@ -284,10 +306,36 @@ export default function CartDrawer({
                     {calcBusy ? '…' : shipping === -1 ? 'Non disponible' : shipping !== null ? `${shipping.toFixed(2)} ${currency}` : '—'}
                   </span>
                 </div>
-                {aging && (
+                {aging && !tiers && (
                   <p className="text-xs text-neutral-500 mt-1">
                     {aging}
                   </p>
+                )}
+                {tiers && tiers.length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    <p className="text-xs text-neutral-500">Choisissez votre livraison :</p>
+                    {tiers.map((t) => (
+                      <button
+                        key={t.tier}
+                        type="button"
+                        onClick={() => pickTier(t)}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-left transition ${selectedTier === t.tier ? 'border-neutral-900 bg-neutral-50' : 'border-neutral-200 bg-white hover:border-neutral-300'}`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${selectedTier === t.tier ? 'border-neutral-900' : 'border-neutral-300'}`}>
+                            {selectedTier === t.tier && <span className="w-1.5 h-1.5 rounded-full bg-neutral-900" />}
+                          </span>
+                          <span className="text-sm">
+                            <span className="font-medium text-neutral-900">{t.label}</span>
+                            {(t.days_min || t.days_max) && (
+                              <span className="text-neutral-500"> · {t.days_min}-{t.days_max} j</span>
+                            )}
+                          </span>
+                        </span>
+                        <span className="text-sm text-neutral-900">{t.cost.toFixed(2)} {currency}</span>
+                      </button>
+                    ))}
+                  </div>
                 )}
                 </>
               )}

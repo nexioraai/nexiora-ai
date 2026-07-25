@@ -6,6 +6,7 @@ import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
 import { zendropAdapter } from '@/lib/suppliers/zendrop-adapter';
 import { printifyAdapter } from '@/lib/suppliers/printify-adapter';
 import type { ShippingRequest } from '@/lib/suppliers/supplier-adapter';
+import type { ShippingTier } from '@/lib/cj/shipping-tiers';
 
 // Registry : chaque supplier_id pointe vers son adapter
 const adapters: Record<string, { calculateShipping: (items: ShippingRequest[], country: string, creds: Record<string, string>) => Promise<{ total_cost: number; currency: string; estimated_days_min: number; estimated_days_max: number }> }> = {
@@ -126,10 +127,56 @@ export async function POST(req: Request) {
       return NextResponse.json({ shipping: flat, source: 'flat' });
     }
 
+    // --- Tiers de livraison CJ (eco/standard/express) ---
+    // Si le panier contient des produits CJ, on lit shipping_cache.tiers et on
+    // agrege les 3 tiers (marge +20% comme le checkout). Reponse enrichie sans
+    // toucher au montant 'shipping' historique (retro-compat).
+    const SHIPPING_MARGIN = 1.20;
+    let cjTiers: { tier: string; label: string; cost: number; days_min: number | null; days_max: number | null }[] | null = null;
+    const cjGroup = supplierGroups['cj'];
+    if (cjGroup && cjGroup.length > 0) {
+      const productIds = cjGroup.map((g) => g.supplier_product_id);
+      const { data: cacheRows } = await supabaseAdmin
+        .from('shipping_cache')
+        .select('supplier_product_id, tiers')
+        .eq('supplier_id', 'cj')
+        .eq('country_code', countryCode)
+        .in('supplier_product_id', productIds);
+      // On agrege : chaque produit doit avoir les 3 tiers, on somme par tier.
+      if (cacheRows && cacheRows.length === productIds.length && cacheRows.every((r: any) => Array.isArray(r.tiers) && r.tiers.length > 0)) {
+        const agg: Record<string, { cost: number; days_min: number; days_max: number }> = {};
+        let ok = true;
+        for (const g of cjGroup) {
+          const row = cacheRows.find((r: any) => r.supplier_product_id === g.supplier_product_id);
+          const tiers: ShippingTier[] = row?.tiers || [];
+          for (const key of ['eco', 'standard', 'express']) {
+            const t = tiers.find((x) => x.tier === key);
+            if (!t) { ok = false; break; }
+            if (!agg[key]) agg[key] = { cost: 0, days_min: 0, days_max: 0 };
+            agg[key].cost += Number(t.cost) * g.quantity;
+            agg[key].days_min = Math.max(agg[key].days_min, t.days_min || 0);
+            agg[key].days_max = Math.max(agg[key].days_max, t.days_max || 0);
+          }
+          if (!ok) break;
+        }
+        if (ok) {
+          const labels: Record<string, string> = { eco: 'Économique', standard: 'Standard', express: 'Express' };
+          cjTiers = ['eco', 'standard', 'express'].map((key) => ({
+            tier: key,
+            label: labels[key],
+            cost: Math.round(agg[key].cost * SHIPPING_MARGIN * 100) / 100,
+            days_min: agg[key].days_min || null,
+            days_max: agg[key].days_max || null,
+          }));
+        }
+      }
+    }
+
     return NextResponse.json({
       shipping: Math.round(totalShipping * 100) / 100,
       source: sources.join('+'),
       aging: minDays < 999 ? `${minDays}-${maxDays} days` : null,
+      cjTiers,
     });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
