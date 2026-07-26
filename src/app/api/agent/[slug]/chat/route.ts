@@ -4,6 +4,7 @@ import { supabase as supabaseAnon } from '@/lib/supabase';
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+import { logAiUsage } from '@/lib/ai-usage';
 
 const allTools: Anthropic.Tool[] = [
   {
@@ -563,6 +564,7 @@ Be concise, helpful, and proactive. When the owner asks for a change to the site
       tools: getToolsForSite(site.mode, site.dropship_type),
       messages,
     });
+    await logAiUsage({ siteId: site.id, usageType: 'agent', model: 'claude-sonnet-4-6', usage: response.usage });
 
     return NextResponse.json({
       role: 'assistant',
