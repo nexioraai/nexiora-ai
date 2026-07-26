@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { supabase as supabaseAnon } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { logAiUsage } from '@/lib/ai-usage';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -281,6 +282,7 @@ export async function POST(req: Request) {
         max_tokens: 1500,
         messages: [{ role: 'user', content: buildBriefPrompt(site) }],
       });
+      await logAiUsage({ siteId: site.id, usageType: 'marketing', model: 'claude-haiku-4-5-20251001', usage: briefRes.usage });
       const briefText = briefRes.content.map((c: any) => (c.type === 'text' ? c.text : '')).join('');
       brief = parseJson(briefText);
 
@@ -301,6 +303,7 @@ export async function POST(req: Request) {
       max_tokens: 2500,
       messages: [{ role: 'user', content: buildContentPrompt(site, brief, format as Format) }],
     });
+    await logAiUsage({ siteId: site.id, usageType: 'marketing', model: 'claude-sonnet-4-6', usage: contentRes.usage });
     const contentText = contentRes.content.map((c: any) => (c.type === 'text' ? c.text : '')).join('');
     const content = parseJson(contentText);
     // ====================================================
