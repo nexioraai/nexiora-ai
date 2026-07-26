@@ -121,7 +121,7 @@ function mapCjProduct(raw: any): CatalogProduct {
   const variants = Array.isArray(raw.variants)
     ? raw.variants.map((v: any) => ({
         variant_id: v.vid || v.variantId || '',
-        name: v.variantNameEn || v.variantName || '',
+        name: v.variantNameEn || v.variantName || v.variantKey || '',
         sku: v.variantSku || v.productSku || '',
         price: Number(v.variantSellPrice ?? v.sellPrice ?? 0),
         stock_quantity: Number(v.variantVolume ?? 0),
@@ -226,7 +226,7 @@ export const cjAdapter: SupplierAdapter = {
       if (!Array.isArray(variants)) return [];
       return variants.map((v: any) => ({
         variant_id: String(v.vid),
-        name: v.variantNameEn || v.variantName || v.variantSku || String(v.vid),
+        name: v.variantNameEn || v.variantName || v.variantKey || v.variantSku || String(v.vid),
         sku: v.variantSku || '',
         price: Number(v.variantSellPrice ?? v.sellPrice ?? 0),
         stock_quantity: Number(v.variantQuantity ?? 999),
