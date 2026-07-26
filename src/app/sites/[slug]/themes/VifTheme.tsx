@@ -81,7 +81,7 @@ export default function VifTheme({ site }: { site: Site }) {
       >
         <div className="max-w-7xl mx-auto px-6 md:px-10 h-20 flex items-center justify-between">
           <Link
-            href={`/sites/${site.slug}`}
+            href="#home"
             className="text-2xl tracking-tight font-medium"
             style={{ fontFamily: 'var(--font-fraunces), serif' }}
           >

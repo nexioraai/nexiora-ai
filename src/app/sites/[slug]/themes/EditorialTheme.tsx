@@ -113,7 +113,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
       <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-white/70 border-b border-black/5">
         <div className="max-w-7xl mx-auto px-6 md:px-10 h-20 flex items-center justify-between">
           <Link
-            href={`/sites/${site.slug}`}
+            href="#home"
             className="font-serif text-2xl tracking-tight font-medium"
             style={{ fontFamily: 'var(--font-fraunces), serif' }}
           >

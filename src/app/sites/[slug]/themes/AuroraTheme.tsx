@@ -82,7 +82,7 @@ export default function AuroraTheme({ site }: { site: Site }) {
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 border-b border-black/5">
         <div className="max-w-[1400px] mx-auto px-4 md:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 min-w-0">
-            <Link href={`/sites/${site.slug}`} className="text-xl md:text-2xl font-semibold tracking-tight shrink-0">
+            <Link href="#home" className="text-xl md:text-2xl font-semibold tracking-tight shrink-0">
               {site.name}
             </Link>
             {isShop && (
