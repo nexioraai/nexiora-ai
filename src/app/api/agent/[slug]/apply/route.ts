@@ -266,7 +266,7 @@ export async function POST(
     if (tool_name === 'catalog_curate') {
       const res = await fetch(new URL('/api/catalog/curate', req.url).toString(), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({ slug }),
       });
       const data = await res.json();
@@ -274,7 +274,7 @@ export async function POST(
       // Auto-enhance after curate
       await fetch(new URL('/api/catalog/enhance', req.url).toString(), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({ slug }),
       });
       return NextResponse.json({ success: true, message: `${data.count} produits suggérés et optimisés` });
@@ -283,7 +283,7 @@ export async function POST(
     if (tool_name === 'catalog_enhance') {
       const res = await fetch(new URL('/api/catalog/enhance', req.url).toString(), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({ slug }),
       });
       const data = await res.json();

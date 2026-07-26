@@ -621,13 +621,13 @@ Return ONLY valid JSON, no markdown:
           // 1. Curate
           await fetch(`${baseUrl}/api/catalog/curate`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
             body: JSON.stringify({ slug }),
           });
           // 2. Enhance
           await fetch(`${baseUrl}/api/catalog/enhance`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
             body: JSON.stringify({ slug }),
           });
           // 3. Approve all
