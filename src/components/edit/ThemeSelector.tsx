@@ -29,6 +29,12 @@ export default function ThemeSelector({ currentTheme, onThemeChange }: ThemeSele
       description: 'Éditorial & vivant',
       preview: 'Crème doré-beige, serif italique, parallax',
       colors: ['#EFE6D4', '#B08847']
+    },
+    {
+      id: 'aurora',
+      name: 'Aurora',
+      description: 'E-commerce futuriste',
+      colors: ['#6366f1', '#f5c0d1']
     }
   ]
 
@@ -39,7 +45,7 @@ export default function ThemeSelector({ currentTheme, onThemeChange }: ThemeSele
         <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Thème</span>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-3">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
         {themes.map((theme) => (
           <button
             key={theme.id}
