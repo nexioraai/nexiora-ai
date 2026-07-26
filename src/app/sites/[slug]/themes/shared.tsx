@@ -64,6 +64,7 @@ faq?: { question: string; answer: string }[]
   section_label?: string
   created_at?: string
   pod_designs?: any[]
+  product_families?: Record<string, string>
   cj_margin_percent?: number
   cj_round_mode?: string
   shipping_flat?: number
@@ -83,6 +84,7 @@ shippingDaysMin?: number | null
 shippingDaysMax?: number | null
 supplierId?: string | null
 supplierProductId?: string | null
+family?: string
 }
 
 export type Service = {
@@ -102,7 +104,7 @@ rating: number
 // ---------- Supabase ----------
 
 export const PUBLIC_COLS =
-'id,slug,name,slogan,type,mode,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image,lang,faq,whyus,mission,vision,geo_lat,geo_lng,area_served,price_range,hidden_sections,section_label,sections,created_at,dropship_type,pod_designs,cj_margin_percent,cj_round_mode,shipping_flat'
+'id,slug,name,slogan,type,mode,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image,lang,faq,whyus,mission,vision,geo_lat,geo_lng,area_served,price_range,hidden_sections,section_label,sections,created_at,dropship_type,pod_designs,product_families,cj_margin_percent,cj_round_mode,shipping_flat'
 
 export async function fetchSite(
 slug: string,
@@ -153,7 +155,7 @@ async function loadCatalogSelections(data: any) {
 if (data.mode === 3 && (data.dropship_type === 'reseller' || data.dropship_type === 'pod_custom')) {
 const { data: catSels } = await supabase
 .from('site_catalog_selections')
-.select('id, sell_price, custom_name, custom_description, catalog_product_id, catalog_products(name, description, price, currency, images, supplier_id, supplier_product_id, shipping_days_min, shipping_days_max, in_stock)')
+.select('id, sell_price, custom_name, custom_description, catalog_product_id, catalog_products(name, description, price, currency, images, supplier_id, supplier_product_id, shipping_days_min, shipping_days_max, in_stock, category)')
 .eq('site_id', data.id)
 .eq('merchant_approved', true)
 .order('sort_order', { ascending: true })
@@ -180,6 +182,7 @@ shippingDaysMin: cp.shipping_days_min || null,
 shippingDaysMax: cp.shipping_days_max || null,
 supplierId: cp.supplier_id || null,
 supplierProductId: cp.supplier_product_id || null,
+family: ((data.product_families || {}) as Record<string,string>)[cp.category] || undefined,
 }
 })
 const existing = data.products || []
@@ -369,6 +372,7 @@ shippingDaysMin: raw?.shippingDaysMin || null,
 shippingDaysMax: raw?.shippingDaysMax || null,
 supplierId: raw?.supplierId || null,
 supplierProductId: raw?.supplierProductId || null,
+family: raw?.family || undefined,
 }
 }
 

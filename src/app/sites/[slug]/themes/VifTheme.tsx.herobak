@@ -181,7 +181,7 @@ export default function VifTheme({ site }: { site: Site }) {
                     <img
                       src={site.hero_image}
                       alt={site.name}
-                      className="relative w-full h-full object-contain drop-shadow-2xl hero-float"
+                      className="relative w-full h-full object-contain drop-shadow-2xl"
                       style={{ filter: 'drop-shadow(0 30px 40px rgba(20,18,16,0.25))' }}
                     />
                   ) : (

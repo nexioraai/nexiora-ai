@@ -6,6 +6,7 @@ import JsonLd from './themes/JsonLd'
 import EditorialTheme from './themes/EditorialTheme'
 import NoirTheme from './themes/NoirTheme'
 import VifTheme from './themes/VifTheme'
+import AuroraTheme from './themes/AuroraTheme'
 import CartShell from './themes/CartShell'
 import { getCartLabels } from './themes/cartLabels'
 import ScrollRevealInit from './themes/ScrollRevealInit'
@@ -18,6 +19,7 @@ const themes = {
   editorial: EditorialTheme,
   noir: NoirTheme,
   vif: VifTheme,
+  aurora: AuroraTheme,
 } as const
 
 const SITE_URL =
@@ -84,7 +86,7 @@ export default async function SitePage({ params, searchParams }: Props) {
       <PromoBanner slug={site.slug} primary={primary} />
       <CartShell primary={primary} labels={cartLabels} slug={site.slug} mode={site.mode} shippingFlat={site.shipping_flat}>
         <Theme site={site} />
-        {site.mode === 3 && site.dropship_type !== 'pod_brand' && <CatalogSearch slug={site.slug} primary={primary} lang={site.lang} dropshipType={site.dropship_type || 'reseller'} />}
+        {site.mode === 3 && site.dropship_type !== 'pod_brand' && site.theme !== 'aurora' && <CatalogSearch slug={site.slug} primary={primary} lang={site.lang} dropshipType={site.dropship_type || 'reseller'} />}
       </CartShell>
       <ScrollRevealInit />
     </>

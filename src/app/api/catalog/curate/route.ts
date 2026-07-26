@@ -115,17 +115,26 @@ export async function POST(req: NextRequest) {
           'For each selected product provide:\n' +
           '- index: the number in the list\n' +
           '- reason: short justification in ' + (lang === 'fr' ? 'French' : 'English') + '\n\n' +
-          'RESPOND WITH ONLY a valid JSON array, no text before or after:\n' +
-          '[{"index":0,"reason":"..."}]\n\n' +
-          'If only 5 products are truly relevant, return only those 5. NEVER pad the list with irrelevant products.'
+          'ALSO - PRODUCT FAMILIES:\n' +
+          'Look at the [cat:supplier_category] of every product you SELECTED. Group these raw supplier categories into 4 to 6 clean customer-facing FAMILIES that fit a ' + nicheLabel + ' store (e.g. many jewelry categories -> "Bijoux"; makeup+skincare -> "Beaute"). Family names MUST be in ' + (lang === 'fr' ? 'French' : lang === 'es' ? 'Spanish' : lang === 'ar' ? 'Arabic' : lang === 'pt' ? 'Portuguese' : lang === 'de' ? 'German' : lang === 'it' ? 'Italian' : 'English') + ', short (1-2 words), Title Case. EVERY supplier category of your selected products MUST map to exactly one family.\n\n' +
+          'RESPOND WITH ONLY a valid JSON object, no text before or after:\n' +
+          '{"products":[{"index":0,"reason":"..."}],"families":{"Rings":"Bijoux","Makeup Brushes":"Beaute"}}\n\n' +
+          'If only 5 products are truly relevant, return only those 5 in "products". NEVER pad with irrelevant products.'
       }],
     });
 
     const raw = msg.content[0].type === 'text' ? msg.content[0].text : '';
     let selections: { index: number; reason: string }[];
+    let families: Record<string, string> = {};
     try {
       const cleaned = raw.replace(/```json\s?/g, '').replace(/```/g, '').trim();
-      selections = JSON.parse(cleaned);
+      const parsed = JSON.parse(cleaned);
+      if (Array.isArray(parsed)) {
+        selections = parsed;
+      } else {
+        selections = Array.isArray(parsed.products) ? parsed.products : [];
+        families = parsed.families && typeof parsed.families === 'object' ? parsed.families : {};
+      }
     } catch {
       return NextResponse.json({ error: 'Erreur parsing reponse IA', raw }, { status: 500 });
     }
@@ -154,8 +163,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: insertErr.message }, { status: 500 });
     }
 
+    if (families && Object.keys(families).length > 0) {
+      await supabaseAdmin
+        .from('sites')
+        .update({ product_families: families })
+        .eq('id', site.id);
+    }
+
     return NextResponse.json({
       success: true,
+      families,
       count: inserted?.length || 0,
       keywords,
       candidates: allProducts.length,

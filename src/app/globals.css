@@ -156,3 +156,10 @@ html {
   scrollbar-width: thin;
   scrollbar-color: rgba(128, 128, 128, 0.3) transparent;
 }
+
+/* Hero image gentle float — used across all themes */
+@keyframes hero-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-12px) scale(1.01); }
+}
+.hero-float { animation: hero-float 7s ease-in-out infinite; }

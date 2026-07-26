@@ -136,7 +136,7 @@ export default function NoirTheme({ site }: { site: Site }) {
                   <div className="absolute -inset-6 rounded-[2rem] blur-3xl opacity-40 pointer-events-none" style={{ background: `radial-gradient(circle, ${gold} 0%, transparent 70%)` }} />
                   {site.hero_image ? (
                     <div className="relative aspect-[4/5] rounded-[1.75rem] overflow-hidden" style={{ border: `1px solid ${LINE}` }}>
-                      <img src={site.hero_image} alt={site.name} className="w-full h-full object-cover hero-float" />
+                      <img src={site.hero_image} alt={site.name} className="w-full h-full object-cover" />
                       <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, transparent 55%, rgba(11,11,13,0.55) 100%)' }} />
                     </div>
                   ) : (

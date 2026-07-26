@@ -482,6 +482,10 @@ Return ONLY valid JSON, no markdown:
     // Vraies images Pexels colorées selon la marque
     const pexelsQuery = (parsed.imageQuery || `${parsed.type || 'business'} ${parsed.name || ''}`).trim();
     const gallery = await fetchPexelsImages(pexelsQuery, parsed.primaryColor);
+    // Image hero dédiée (recherche premium selon la niche)
+    const heroQuery = (parsed.heroImageQuery || pexelsQuery).trim();
+    const heroImgs = await fetchPexelsImages(heroQuery, parsed.primaryColor);
+    const heroImage = heroImgs[0] || gallery[0] || '';
     // Image Pexels par produit (recherche par nom + type), en parallèle
     const rawProducts = Array.isArray(parsed.products) ? parsed.products : [];
     const productsWithImages = await Promise.all(
@@ -517,6 +521,7 @@ Return ONLY valid JSON, no markdown:
       primary_color: parsed.primaryColor,
       hero_title: parsed.heroTitle,
       hero_subtitle: parsed.heroSubtitle,
+      hero_image: heroImage,
       about: parsed.about,
       sections: sectionsWithImages,
       testimonials: parsed.testimonials,
