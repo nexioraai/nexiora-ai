@@ -70,3 +70,6 @@ prisma/dev.db
 # Backups locaux (jamais versionnes)
 *.backup*
 _trash_backups/
+
+*.bak
+*.backup
