@@ -15,6 +15,7 @@ export default function AddToCartButton({
   primary = '#111111',
   label,
   disabled = false,
+  onAdded,
 }: {
   id: string;
   name: string;
@@ -28,11 +29,12 @@ export default function AddToCartButton({
   primary?: string;
   label: string;
   disabled?: boolean;
+  onAdded?: () => void;
 }) {
   const { addItem } = useCart();
   return (
     <button
-      onClick={() => { if (!disabled) addItem({ id, name, priceNumber, currency, image, customDesignUrl, customDesignPosition, customDesigns, variantId }); }}
+      onClick={() => { if (!disabled) { addItem({ id, name, priceNumber, currency, image, customDesignUrl, customDesignPosition, customDesigns, variantId }); onAdded?.(); } }}
       disabled={disabled}
       className="inline-flex items-center gap-1.5 text-sm font-medium transition hover:opacity-80"
       style={{ color: primary, opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}

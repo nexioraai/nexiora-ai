@@ -229,6 +229,7 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
               primary={primary}
               label={loadingVariants ? t.loadingVariants : (variants.length > 0 && !selectedVariant ? t.chooseOption : t.addToCart)}
               disabled={loadingVariants || (variants.length > 0 && !selectedVariant)}
+              onAdded={onClose}
             />
 
             {p.description && (
