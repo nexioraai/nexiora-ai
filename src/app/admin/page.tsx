@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Users, Globe, ShoppingCart, DollarSign, Monitor, Store, Truck, AlertTriangle } from "lucide-react";
+import { Users, Globe, ShoppingCart, DollarSign, Monitor, Store, Truck, AlertTriangle, Cpu } from "lucide-react";
+import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 
 interface CronRun {
@@ -173,6 +174,7 @@ export default function AdminDashboard() {
         <StatCard icon={ShoppingCart} label="Commandes" value={stats.orders.total} sub={`${stats.orders.paid} payées`} color="text-blue-400" />
         <StatCard icon={AlertTriangle} label="Anomalies bloquantes" value={blockedCount} sub={`${warningCount} avertissement${warningCount > 1 ? "s" : ""}`} color={blockedCount > 0 ? "text-red-400" : "text-white/50"} />
         <StatCard icon={DollarSign} label="Revenus plateforme" value={`$${fmt(stats.revenue.commission)}`} sub={`$${fmt(stats.revenue.total)} total ventes`} color="text-amber-400" />
+        <StatCard icon={Cpu} label="Consommation IA" value="Voir détails" sub="Coût par boutique" color="text-cyan-400" href="/admin/ai-usage" />
       </div>
 
       {/* Revenue detail */}
@@ -347,9 +349,9 @@ export default function AdminDashboard() {
   );
 }
 
-function StatCard({ icon: Icon, label, value, sub, color }: { icon: any; label: string; value: string | number; sub?: string; color?: string }) {
-  return (
-    <div className="bg-white/[0.03] border border-white/10 rounded-xl p-5">
+function StatCard({ icon: Icon, label, value, sub, color, href }: { icon: any; label: string; value: string | number; sub?: string; color?: string; href?: string }) {
+  const inner = (
+    <div className={`bg-white/[0.03] border border-white/10 rounded-xl p-5 ${href ? "hover:bg-white/[0.06] transition cursor-pointer" : ""}`}>
       <div className="flex items-center gap-2 mb-2">
         <Icon className={`w-4 h-4 ${color || "text-white/50"}`} />
         <p className="text-xs text-white/50 uppercase tracking-wider">{label}</p>
@@ -358,6 +360,7 @@ function StatCard({ icon: Icon, label, value, sub, color }: { icon: any; label: 
       {sub && <p className="text-xs text-white/40 mt-1">{sub}</p>}
     </div>
   );
+  return href ? <Link href={href}>{inner}</Link> : inner;
 }
 
 function MiniCard({ label, value }: { label: string; value: string }) {
