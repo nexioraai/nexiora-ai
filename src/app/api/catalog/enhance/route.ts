@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
+import { logAiUsage } from '@/lib/ai-usage';
 
 export const maxDuration = 45;
 
@@ -75,6 +76,7 @@ Réponds UNIQUEMENT en JSON :
 Pas de texte avant ou après.`
       }],
     });
+    await logAiUsage({ siteId: site.id, usageType: 'enhance', model: 'claude-haiku-4-5-20251001', usage: msg.usage });
 
     const raw = msg.content[0].type === 'text' ? msg.content[0].text : '';
     const cleaned = raw.replace(/```json\s?/g, '').replace(/```/g, '').trim();

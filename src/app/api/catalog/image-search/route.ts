@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import Anthropic from '@anthropic-ai/sdk';
 import { sitePricing } from '@/lib/pricing';
+import { logAiUsage } from '@/lib/ai-usage';
 
 const anthropic = new Anthropic();
 
@@ -48,6 +49,7 @@ export async function POST(req: Request) {
         ],
       }],
     });
+    await logAiUsage({ siteId: site.id, usageType: 'image', model: 'claude-sonnet-4-6', usage: msg.usage });
 
     const keywords = ((msg.content[0] as any)?.text || '').trim();
     if (!keywords) {

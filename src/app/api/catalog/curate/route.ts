@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
+import { logAiUsage } from '@/lib/ai-usage';
 
 export const maxDuration = 45;
 
@@ -122,6 +123,7 @@ export async function POST(req: NextRequest) {
           'If only 5 products are truly relevant, return only those 5 in "products". NEVER pad with irrelevant products.'
       }],
     });
+    await logAiUsage({ siteId: site.id, usageType: 'curate', model: 'claude-haiku-4-5-20251001', usage: msg.usage });
 
     const raw = msg.content[0].type === 'text' ? msg.content[0].text : '';
     let selections: { index: number; reason: string }[];
