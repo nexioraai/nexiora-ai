@@ -45,5 +45,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }))
 
-  return [...staticRoutes, ...siteRoutes, ...blogRoutes]
+  const { data: shopProducts } = await supabase
+    .from('shop_products')
+    .select('id, created_at, sites!inner(slug, published)')
+    .eq('published', true)
+    .eq('sites.published', true)
+  const shopProductRoutes: MetadataRoute.Sitemap = (shopProducts ?? []).map((p: any) => ({
+    url: SITE_URL + '/sites/' + p.sites.slug + '/produits/' + encodeURIComponent(p.id),
+    lastModified: p.created_at ? new Date(p.created_at) : new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.7,
+  }))
+
+  const { data: catalogSels } = await supabase
+    .from('site_catalog_selections')
+    .select('catalog_product_id, sites!inner(slug, published)')
+    .eq('merchant_approved', true)
+    .eq('sites.published', true)
+  const catalogProductRoutes: MetadataRoute.Sitemap = (catalogSels ?? []).map((c: any) => ({
+    url: SITE_URL + '/sites/' + c.sites.slug + '/produits/' + encodeURIComponent('catalog-' + c.catalog_product_id),
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.7,
+  }))
+
+  return [...staticRoutes, ...siteRoutes, ...blogRoutes, ...shopProductRoutes, ...catalogProductRoutes]
 }
