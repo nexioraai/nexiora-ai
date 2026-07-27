@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { fetchSite } from './themes/shared'
 import JsonLd from './themes/JsonLd'
+import HtmlLang from './themes/HtmlLang'
 import EditorialTheme from './themes/EditorialTheme'
 import NoirTheme from './themes/NoirTheme'
 import VifTheme from './themes/VifTheme'
@@ -82,6 +83,7 @@ export default async function SitePage({ params, searchParams }: Props) {
 
   return (
     <>
+      <HtmlLang lang={site.lang} />
       <JsonLd site={site} />
       <PromoBanner slug={site.slug} primary={primary} />
       <CartShell primary={primary} labels={cartLabels} slug={site.slug} mode={site.mode} shippingFlat={site.shipping_flat}>
