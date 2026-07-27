@@ -14,7 +14,7 @@ import ScrollRevealInit from './themes/ScrollRevealInit'
 import CatalogSearch from './themes/CatalogSearch'
 import PromoBanner from './themes/PromoBanner'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 const themes = {
   editorial: EditorialTheme,
