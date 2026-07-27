@@ -114,6 +114,7 @@ export default function AuroraTheme({ site }: { site: Site }) {
       <main id="home">
         {isShop ? (
           <StorefrontDense
+          slug={site.slug}
             products={products}
             primary={primary}
             siteId={site.id}

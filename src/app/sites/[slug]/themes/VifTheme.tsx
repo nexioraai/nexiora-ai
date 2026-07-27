@@ -344,7 +344,7 @@ export default function VifTheme({ site }: { site: Site }) {
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {products.map((p: any, i: number) => (
-                  <ClickableProductCard key={i} product={p} primary={INK} lang={site.lang}>
+                  <ClickableProductCard slug={site.slug} key={i} product={p} primary={INK} lang={site.lang}>
                   <TiltCard className="group rounded-3xl overflow-hidden bg-white border border-black/[0.06]">
                     {p.image && (
                       <div className="relative w-full h-56 overflow-hidden">

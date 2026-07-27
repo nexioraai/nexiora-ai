@@ -27,6 +27,7 @@ export default function StorefrontDense({
   products,
   primary,
   siteId,
+  slug,
   siteName,
   lang,
   heroTitle,
@@ -39,6 +40,7 @@ export default function StorefrontDense({
   products: Product[]
   primary: string
   siteId: string
+  slug: string
   siteName: string
   lang?: string
   heroTitle?: string
@@ -219,7 +221,7 @@ export default function StorefrontDense({
 
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
             {shown.map((p, i) => (
-              <ClickableProductCard
+              <ClickableProductCard slug={slug}
                 key={`${p.id ?? p.name}-${i}`}
                 product={p}
                 primary={primary}

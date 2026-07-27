@@ -273,7 +273,7 @@ export default function NoirTheme({ site }: { site: Site }) {
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {products.map((p: any, i: number) => (
-                  <ClickableProductCard key={i} product={p} primary={gold} lang={site.lang}>
+                  <ClickableProductCard slug={site.slug} key={i} product={p} primary={gold} lang={site.lang}>
                   <TiltCard className="group rounded-3xl overflow-hidden bg-[#141418] border border-white/[0.08]">
                     {p.image && (
                       <div className="relative w-full h-56 overflow-hidden">

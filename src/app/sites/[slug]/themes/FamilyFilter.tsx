@@ -23,12 +23,14 @@ export default function FamilyFilter({
   products,
   primary,
   siteId,
+  slug,
   lang,
   labels,
 }: {
   products: Product[]
   primary: string
   siteId: string
+  slug: string
   lang?: string
   labels: Labels
 }) {
@@ -163,7 +165,7 @@ export default function FamilyFilter({
         {/* Product grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {shown.map((p, i) => (
-            <ClickableProductCard
+            <ClickableProductCard slug={slug}
               key={`${p.id ?? p.name}-${i}`}
               product={p}
               primary={primary}

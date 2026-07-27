@@ -377,7 +377,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {products.map((p, i) => (
-                <ClickableProductCard
+                <ClickableProductCard slug={site.slug}
                   key={i}
                   product={p}
                   primary={primary}
