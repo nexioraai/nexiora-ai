@@ -11,12 +11,17 @@ export type ProductPage = {
   inStock: boolean
   siteName: string
   siteSlug: string
+  primary: string
+  theme: string
+  lang: string
+  mode: number
+  shippingFlat: number | null
 }
 
 export async function fetchProduct(slug: string, rawId: string): Promise<ProductPage | null> {
   const { data: site } = await supabase
     .from('sites')
-    .select('id, name, slug, mode, dropship_type, product_families, cj_margin_percent, cj_round_mode, published')
+    .select('id, name, slug, mode, dropship_type, product_families, cj_margin_percent, cj_round_mode, primary_color, theme, lang, shipping_flat, published')
     .eq('slug', slug)
     .eq('published', true)
     .maybeSingle()
@@ -46,6 +51,11 @@ export async function fetchProduct(slug: string, rawId: string): Promise<Product
       inStock: cp.in_stock !== false,
       siteName: (site as any).name,
       siteSlug: (site as any).slug,
+      primary: (site as any).primary_color || '#111111',
+      theme: (site as any).theme || 'editorial',
+      lang: (site as any).lang || 'fr',
+      mode: (site as any).mode,
+      shippingFlat: (site as any).shipping_flat ?? null,
     }
   }
 
@@ -67,5 +77,10 @@ export async function fetchProduct(slug: string, rawId: string): Promise<Product
     inStock: ((p as any).stock ?? 0) > 0,
     siteName: (site as any).name,
     siteSlug: (site as any).slug,
+    primary: (site as any).primary_color || '#111111',
+    theme: (site as any).theme || 'editorial',
+    lang: (site as any).lang || 'fr',
+    mode: (site as any).mode,
+    shippingFlat: (site as any).shipping_flat ?? null,
   }
 }

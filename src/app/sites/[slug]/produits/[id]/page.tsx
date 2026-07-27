@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { fetchProduct } from './fetchProduct'
 import ProductPageView from './ProductPageView'
+import CartShell from '../../themes/CartShell'
+import { getCartLabels } from '../../themes/cartLabels'
 
 export const revalidate = 60
 
@@ -67,13 +69,23 @@ export default async function ProductPage({ params }: Props) {
     },
   }
 
+  const labels = getCartLabels(product.lang)
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ProductPageView product={product} />
+      <CartShell
+        primary={product.primary}
+        labels={labels}
+        slug={product.siteSlug}
+        mode={product.mode}
+        shippingFlat={product.shippingFlat ?? undefined}
+      >
+        <ProductPageView product={product} />
+      </CartShell>
     </>
   )
 }
