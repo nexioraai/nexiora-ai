@@ -9,7 +9,7 @@ async function sendCronAlert(cronName: string, durationMs: number) {
     const resend = new Resend(process.env.RESEND_API_KEY);
     const seconds = (durationMs / 1000).toFixed(1);
     await resend.emails.send({
-      from: 'Nexiora Alerts <no-reply@nexiora.ca>',
+      from: 'Woorri Alerts <no-reply@woorri.com>',
       to: ADMIN_EMAIL,
       subject: `\u26a0\ufe0f Cron ${cronName} slow: ${seconds}s`,
       html: `<p>Le cron <strong>${cronName}</strong> a pris <strong>${seconds}s</strong> (seuil: ${ALERT_THRESHOLD_MS / 1000}s).</p><p>Pensez \u00e0 optimiser ou passer au plan Pro (300s).</p>`,

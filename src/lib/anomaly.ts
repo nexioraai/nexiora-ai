@@ -57,7 +57,7 @@ export async function logAnomaly(params: {
       .join('');
 
     await resend.emails.send({
-      from: 'Nexiora Alerts <no-reply@nexiora.ca>',
+      from: 'Woorri Alerts <no-reply@woorri.com>',
       to: ADMIN_EMAIL,
       subject: '\u26a0\ufe0f Anomalie checkout : ' + type,
       html:

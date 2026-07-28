@@ -2,7 +2,7 @@ import 'server-only';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM_ADDRESS = 'no-reply@nexiora.ca';
+const FROM_ADDRESS = 'no-reply@woorri.com';
 
 interface OrderConfirmationParams {
   to: string;

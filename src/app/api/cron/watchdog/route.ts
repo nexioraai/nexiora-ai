@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     try {
       const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
-        from: 'Nexiora Alerts <no-reply@nexiora.ca>',
+        from: 'Woorri Alerts <no-reply@woorri.com>',
         to: ADMIN_EMAIL,
         subject: `\u26a0\ufe0f ${missing.length} cron(s) silencieux`,
         html: [
@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
     try {
       const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
-        from: 'Nexiora Alerts <no-reply@nexiora.ca>',
+        from: 'Woorri Alerts <no-reply@woorri.com>',
         to: ADMIN_EMAIL,
         subject: `\u26a0\ufe0f ${zeroAlerts.length} cron(s) \u00e0 0 r\u00e9sultats`,
         html: [
@@ -110,7 +110,7 @@ export async function GET(req: NextRequest) {
     try {
       const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
-        from: 'Nexiora Alerts <no-reply@nexiora.ca>',
+        from: 'Woorri Alerts <no-reply@woorri.com>',
         to: ADMIN_EMAIL,
         subject: `\u26a0\ufe0f ${failedDomains.length} domaine(s) en \u00e9chec`,
         html: [

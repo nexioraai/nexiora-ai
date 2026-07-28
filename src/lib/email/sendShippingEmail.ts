@@ -4,8 +4,8 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Adresse d'envoi : domaine Resend par defaut (fonctionne sans verif domaine).
-// A remplacer par notifications@nexiora.ca une fois le domaine verifie chez Resend.
-const FROM_ADDRESS = 'no-reply@nexiora.ca';
+// Adresse d'envoi Woorri (domaine verifie chez Resend).
+const FROM_ADDRESS = 'no-reply@woorri.com';
 
 interface ShippingEmailParams {
   to: string;            // email du client

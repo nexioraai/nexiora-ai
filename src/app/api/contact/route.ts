@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     }
 
     await resend.emails.send({
-      from: 'no-reply@nexiora.ca',
+      from: 'no-reply@woorri.com',
       to: merchantEmail,
       replyTo: email,
       subject: name + ' — ' + email + ' — ' + site.name,
