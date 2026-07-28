@@ -64,7 +64,7 @@ export default function Sidebar() {
       <Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-3 px-2 mb-6">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-lg"
           style={{ background: 'radial-gradient(circle at 30% 30%, #4F6EF5 0%, transparent 60%), radial-gradient(circle at 70% 70%, #E07040 0%, transparent 60%), #16090e' }}>
-          N
+          W
         </div>
         <span className="text-xl font-black tracking-tight text-nexiora" translate="no">woorri</span>
       </Link>
@@ -118,7 +118,7 @@ export default function Sidebar() {
         style={{ background: 'rgba(10,5,14,0.8)' }}>
         <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-black text-sm"
           style={{ background: 'radial-gradient(circle at 30% 30%, #4F6EF5 0%, transparent 60%), radial-gradient(circle at 70% 70%, #E07040 0%, transparent 60%), #16090e' }}>
-          N
+          W
         </div>
         <span className="text-base font-black tracking-tight text-nexiora" translate="no">woorri</span>
       </Link>
