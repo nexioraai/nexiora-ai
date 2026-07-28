@@ -187,7 +187,7 @@ export default function OnboardingChat() {
     <section className={`max-w-2xl mx-auto px-4 sm:px-6 pb-10 flex flex-col h-[calc(100vh-120px)] ${messages.length === 1 && !loading && !generating ? 'justify-center' : ''}`}>
       <div className="flex items-center gap-2 justify-center mb-6 text-white/60">
         <Sparkles size={18} className="text-[#FF5500]" />
-        <span className="text-sm font-medium tracking-wide" translate="no">Nexiora — Création sur mesure</span>
+        <span className="text-sm font-medium tracking-wide" translate="no">Woorri — Création sur mesure</span>
       </div>
 
       {messages.length === 1 && !loading && !generating ? (
@@ -196,7 +196,7 @@ export default function OnboardingChat() {
             Donnez vie à votre idée
           </h1>
           <p className="text-slate-400 text-base sm:text-lg mb-10 max-w-md">
-            Décrivez votre activité en quelques mots. Nexiora conçoit en quelques secondes.
+            Décrivez votre activité en quelques mots. Woorri conçoit en quelques secondes.
           </p>
           <div className="flex flex-wrap gap-3 justify-center max-w-lg">
             {!showDropshipPicker ? (

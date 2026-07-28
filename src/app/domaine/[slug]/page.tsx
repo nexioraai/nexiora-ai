@@ -72,7 +72,7 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
           Domaine <span className="text-nexiora">personnalisé</span>
         </h1>
         <p className="text-slate-400 mb-10">
-          Achète un domaine via Nexiora, ou connecte celui que tu possèdes déjà.
+          Achète un domaine via Woorri, ou connecte celui que tu possèdes déjà.
         </p>
 
         {status?.purchased && (
@@ -115,7 +115,7 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
               <div>
                 <p className="font-semibold mb-1">Acheter un domaine</p>
                 <p className="text-sm text-slate-400">
-                  Nexiora l&apos;achète, configure le DNS et met ton site en ligne. Aucune manipulation de ta part.
+                  Woorri l&apos;achète, configure le DNS et met ton site en ligne. Aucune manipulation de ta part.
                 </p>
               </div>
               <span className="text-slate-400 text-xl leading-none">&rarr;</span>

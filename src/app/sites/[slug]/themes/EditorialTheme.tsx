@@ -732,7 +732,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
             <div className="flex items-center gap-2">
               <span>{t.labels.poweredBy}</span>
               <a href="https://nexiora.ca" target="_blank" rel="noopener noreferrer" className="font-medium text-white/70 hover:text-white transition-colors">
-                Nexiora
+                Woorri
               </a>
             </div>
           </div>

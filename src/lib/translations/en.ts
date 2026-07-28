@@ -7,7 +7,7 @@ export const en: Record<TranslationKey, string> = {
   'nav.dashboard': 'My dashboard',
 
   // Footer
-  'footer.copyright': '© 2026 Nexiora AI. All rights reserved.',
+  'footer.copyright': '© 2026 Woorri. All rights reserved.',
   'footer.privacy': 'Privacy',
   'footer.terms': 'Terms',
 
@@ -15,7 +15,7 @@ export const en: Record<TranslationKey, string> = {
   'home.badge': 'AI Website Builder',
   'home.title.part1': 'Build your business',
   'home.title.part2': 'with AI',
-  'home.subtitle': 'Nexiora automatically creates websites, dashboards, and apps for entrepreneurs.',
+  'home.subtitle': 'Woorri automatically creates websites, dashboards, and apps for entrepreneurs.',
   'home.dashboardLink': 'Go to my dashboard →',
 
   // Onboarding step 1
@@ -58,7 +58,7 @@ export const en: Record<TranslationKey, string> = {
   'sidebar.marketing': 'Marketing',
   'marketing.eyebrow': 'Marketing Module',
   'marketing.title': 'Marketing',
-  'marketing.subtitle': 'Generate ready-to-publish content, consistent with your business. Nexiora already knows your products, tone and audience.',
+  'marketing.subtitle': 'Generate ready-to-publish content, consistent with your business. Woorri already knows your products, tone and audience.',
   'marketing.selectSite': 'Site',
   'marketing.article.title': 'SEO Article',
   'marketing.article.desc': 'Title, meta, Hn structure and a Google-optimized article.',

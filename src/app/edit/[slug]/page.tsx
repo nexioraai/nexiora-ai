@@ -95,7 +95,7 @@ export default function EditPage() {
     if (site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom')) {
       const m = Number(site.cj_margin_percent ?? DEFAULT_MARGIN_PERCENT);
       if (m < MIN_MARGIN_PERCENT) {
-        setMessage('Marge trop basse : minimum ' + MIN_MARGIN_PERCENT + '% pour ne pas vendre a perte (commission Nexiora ' + NEXIORA_COMMISSION_PERCENT + '%).');
+        setMessage('Marge trop basse : minimum ' + MIN_MARGIN_PERCENT + '% pour ne pas vendre a perte (commission Woorri ' + NEXIORA_COMMISSION_PERCENT + '%).');
         return;
       }
     }
@@ -321,7 +321,7 @@ export default function EditPage() {
                     <div className="mt-3 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3">
                       <p className="text-sm text-red-300 font-medium">Marge insuffisante</p>
                       <p className="text-xs text-red-200/80 mt-1">
-                        Avec {m}% de marge, il vous resterait {profit10.toFixed(2)}$ sur un produit à 10$ de coût, après la commission Nexiora de {NEXIORA_COMMISSION_PERCENT}%.
+                        Avec {m}% de marge, il vous resterait {profit10.toFixed(2)}$ sur un produit à 10$ de coût, après la commission Woorri de {NEXIORA_COMMISSION_PERCENT}%.
                         Un seul remboursement ou colis perdu effacerait le profit de dizaines de ventes.
                         Marge minimum autorisée : {MIN_MARGIN_PERCENT}%.
                       </p>
@@ -333,7 +333,7 @@ export default function EditPage() {
                     <div className="mt-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3">
                       <p className="text-sm text-amber-300 font-medium">Marge faible</p>
                       <p className="text-xs text-amber-200/80 mt-1">
-                        Après la commission Nexiora de {NEXIORA_COMMISSION_PERCENT}%, il vous reste {profit10.toFixed(2)}$ sur un produit à 10$ de coût.
+                        Après la commission Woorri de {NEXIORA_COMMISSION_PERCENT}%, il vous reste {profit10.toFixed(2)}$ sur un produit à 10$ de coût.
                         Viable, mais une hausse du prix fournisseur ou quelques retours réduiraient fortement votre rentabilité.
                       </p>
                     </div>
@@ -341,7 +341,7 @@ export default function EditPage() {
                 }
                 return (
                   <p className="text-xs text-emerald-400/80 mt-2">
-                    Profit net estimé : {profit10.toFixed(2)}$ sur un produit à 10$ de coût (après commission Nexiora de {NEXIORA_COMMISSION_PERCENT}%).
+                    Profit net estimé : {profit10.toFixed(2)}$ sur un produit à 10$ de coût (après commission Woorri de {NEXIORA_COMMISSION_PERCENT}%).
                   </p>
                 );
               })()}

@@ -111,7 +111,7 @@ export async function GET(
   if (site.created_at) {
     lines.push('Dernière mise à jour : ' + new Date(site.created_at).toISOString().split('T')[0])
   }
-  lines.push('Site généré et hébergé par Nexiora — ' + SITE_URL)
+  lines.push('Site généré et hébergé par Woorri — ' + SITE_URL)
   lines.push('')
 
   return new Response(lines.join('\n'), {

@@ -51,7 +51,7 @@ export default function FinanceDashboard({ slug }: { slug: string }) {
             if (!data) return;
             const { summary: sm, chart: ch } = data;
             const lines = [
-              'Date,Revenus,Cout Fournisseur,Commission Nexiora,Profit Net,Commandes',
+              'Date,Revenus,Cout Fournisseur,Commission Woorri,Profit Net,Commandes',
               ...ch.map((r: any) => `${r.date},${r.revenue.toFixed(2)},${(r.revenue - r.profit - (r.revenue * 0.05)).toFixed(2)},${(r.revenue * 0.05).toFixed(2)},${r.profit.toFixed(2)},${r.orders}`),
               '',
               `TOTAL,${sm.total_revenue.toFixed(2)},${sm.total_supplier_cost.toFixed(2)},${sm.total_commission.toFixed(2)},${sm.total_profit.toFixed(2)},${sm.order_count}`,
@@ -73,7 +73,7 @@ export default function FinanceDashboard({ slug }: { slug: string }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Card label="Revenus" value={`${fmt(s.total_revenue)} ${s.currency}`} color="#3b82f6" />
         <Card label="Coût fournisseur" value={`${fmt(s.total_supplier_cost)} ${s.currency}`} color="#f59e0b" />
-        <Card label="Commission Nexiora" value={`${fmt(s.total_commission)} ${s.currency}`} color="#E07040" />
+        <Card label="Commission Woorri" value={`${fmt(s.total_commission)} ${s.currency}`} color="#E07040" />
         <Card label="Profit net" value={`${fmt(s.total_profit)} ${s.currency}`} color="#34d399" />
       </div>
 

@@ -7,7 +7,7 @@ export const ar: Record<TranslationKey, string> = {
   'nav.dashboard': 'لوحة التحكم',
 
   // Footer
-  'footer.copyright': '© 2026 Nexiora AI. جميع الحقوق محفوظة.',
+  'footer.copyright': '© 2026 Woorri. جميع الحقوق محفوظة.',
   'footer.privacy': 'الخصوصية',
   'footer.terms': 'الشروط',
 
@@ -15,7 +15,7 @@ export const ar: Record<TranslationKey, string> = {
   'home.badge': 'مولّد المواقع بالذكاء الاصطناعي',
   'home.title.part1': 'أطلق مشروعك',
   'home.title.part2': 'بالذكاء الاصطناعي',
-  'home.subtitle': 'تنشئ Nexiora تلقائيًا مواقع ولوحات تحكم وتطبيقات لأصحاب المشاريع.',
+  'home.subtitle': 'تنشئ Woorri تلقائيًا مواقع ولوحات تحكم وتطبيقات لأصحاب المشاريع.',
   'home.dashboardLink': '← الذهاب إلى لوحة التحكم',
 
   // Onboarding step 1

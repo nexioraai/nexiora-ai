@@ -5,7 +5,7 @@ export const es = {
   'nav.dashboard': 'Mi panel',
 
   // Footer
-  'footer.copyright': '© 2026 Nexiora AI. Todos los derechos reservados.',
+  'footer.copyright': '© 2026 Woorri. Todos los derechos reservados.',
   'footer.privacy': 'Privacidad',
   'footer.terms': 'Condiciones',
 
@@ -13,7 +13,7 @@ export const es = {
   'home.badge': 'Generador de sitios con IA',
   'home.title.part1': 'Lanza tu empresa',
   'home.title.part2': 'con la IA',
-  'home.subtitle': 'Nexiora crea automáticamente sitios web, paneles y aplicaciones para emprendedores.',
+  'home.subtitle': 'Woorri crea automáticamente sitios web, paneles y aplicaciones para emprendedores.',
   'home.dashboardLink': 'Acceder a mi panel →',
 
   // Onboarding step 1
@@ -56,7 +56,7 @@ export const es = {
   'sidebar.marketing': 'Marketing',
   'marketing.eyebrow': 'Módulo Marketing',
   'marketing.title': 'Marketing',
-  'marketing.subtitle': 'Genera contenido listo para publicar, coherente con tu negocio. Nexiora ya conoce tus productos, tono y público.',
+  'marketing.subtitle': 'Genera contenido listo para publicar, coherente con tu negocio. Woorri ya conoce tus productos, tono y público.',
   'marketing.selectSite': 'Sitio',
   'marketing.article.title': 'Artículo SEO',
   'marketing.article.desc': 'Título, meta, estructura Hn y un artículo optimizado para Google.',
