@@ -79,7 +79,7 @@ function ContentResult({ format, content }: { format: Format; content: any }) {
           <div className="border border-white/8 rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)' }}>
             <div className="flex items-center justify-between px-5 py-3 border-b border-white/8">
               <span className="text-sm font-semibold text-white/80">Visuel généré</span>
-              <a href={content.image} download="nexiora-visuel.png"
+              <a href={content.image} download="woorri-visuel.png"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-white/10 text-white/60 hover:text-white hover:border-white/30 transition-all">
                 <Download className="w-3.5 h-3.5" />Télécharger
               </a>
