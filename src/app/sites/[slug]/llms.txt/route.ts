@@ -2,7 +2,7 @@
 import { fetchSite } from '../themes/shared'
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nexiora-ai.vercel.app'
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://woorri.com'
 
 export async function GET(
   _req: Request,

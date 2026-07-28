@@ -24,7 +24,7 @@ const themes = {
 } as const
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nexiora-ai.vercel.app'
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://woorri.com'
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ [key: string]: string | undefined }> }
 
