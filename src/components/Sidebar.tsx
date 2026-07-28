@@ -66,7 +66,7 @@ export default function Sidebar() {
           style={{ background: 'radial-gradient(circle at 30% 30%, #4F6EF5 0%, transparent 60%), radial-gradient(circle at 70% 70%, #E07040 0%, transparent 60%), #16090e' }}>
           N
         </div>
-        <span className="text-xl font-black tracking-tight text-nexiora" translate="no">nexiora</span>
+        <span className="text-xl font-black tracking-tight text-nexiora" translate="no">woorri</span>
       </Link>
 
       <nav className="flex flex-col gap-1 mb-6">
@@ -120,7 +120,7 @@ export default function Sidebar() {
           style={{ background: 'radial-gradient(circle at 30% 30%, #4F6EF5 0%, transparent 60%), radial-gradient(circle at 70% 70%, #E07040 0%, transparent 60%), #16090e' }}>
           N
         </div>
-        <span className="text-base font-black tracking-tight text-nexiora" translate="no">nexiora</span>
+        <span className="text-base font-black tracking-tight text-nexiora" translate="no">woorri</span>
       </Link>
 
       {/* Mobile : bouton hamburger */}

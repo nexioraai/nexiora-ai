@@ -145,7 +145,7 @@ export default function Navbar() {
             style={{ background: 'radial-gradient(circle at 30% 30%, #4F6EF5 0%, transparent 60%), radial-gradient(circle at 70% 70%, #E07040 0%, transparent 60%), #16090e' }}>
             N
           </div>
-          <span className="text-xl font-black tracking-tight text-nexiora hidden sm:block" translate="no">nexiora</span>
+          <span className="text-xl font-black tracking-tight text-nexiora hidden sm:block" translate="no">woorri</span>
         </Link>
         <div className="flex items-center gap-3 sm:gap-4">
           {!isHome && <LanguageSwitcher />}
