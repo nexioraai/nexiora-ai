@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     }
 
     // Origine pour les URLs de retour (local vs prod automatiquement)
-    const origin = req.headers.get('origin') || 'https://www.nexiora.ca';
+    const origin = req.headers.get('origin') || 'https://woorri.com';
 
     const session = await getStripe().checkout.sessions.create({
       mode: 'subscription',

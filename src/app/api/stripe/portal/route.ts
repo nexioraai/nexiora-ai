@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     const session = await stripe.billingPortal.sessions.create({
       customer: site.stripe_customer_id,
-      return_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.nexiora.ca'}/parametres`,
+      return_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://woorri.com'}/parametres`,
     });
 
     return NextResponse.json({ url: session.url });

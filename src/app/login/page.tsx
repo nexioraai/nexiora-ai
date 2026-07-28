@@ -66,7 +66,7 @@ export default function SignupPage() {
       }
     } else {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://nexiora.ca/reset-password',
+        redirectTo: 'https://woorri.com/reset-password',
       });
       if (error) {
         setError(error.message);

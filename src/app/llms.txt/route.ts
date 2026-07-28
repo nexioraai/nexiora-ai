@@ -10,7 +10,7 @@ export function GET() {
 > Woorri est une plateforme canadienne premium de génération de sites web, de boutiques en ligne et d'applications de gestion d'entreprise par intelligence artificielle. Vous décrivez votre activité en langage naturel, et Woorri crée pour vous, en quelques secondes, un produit professionnel, multilingue et optimisé à la fois pour les moteurs de recherche (SEO) et les IA génératives (GEO). Aucune compétence technique requise.
 
 ## À propos
-- Plateforme canadienne basée à Montréal, Québec (nexiora.ca)
+- Plateforme canadienne basée à Montréal, Québec (woorri.com)
 - Pilotée par intelligence artificielle générative : décrivez votre besoin en langage humain, Woorri fait le reste
 - Aucune compétence technique ni connaissance en programmation nécessaire
 - Multilingue : français, anglais, arabe, espagnol
