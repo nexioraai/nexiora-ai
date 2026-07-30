@@ -124,14 +124,37 @@ export default function OnboardingChat() {
   );
   const LOADING_STEPS = LOADING_BY_LANG[uiLang] || LOADING_BY_LANG.fr;
   const PLACEHOLDERS = PLACEHOLDER_BY_LANG[uiLang] || PLACEHOLDER_BY_LANG.fr;
-  const [placeholderIdx, setPlaceholderIdx] = useState(0);
+  const [typed, setTyped] = useState('');
+  const twPhrase = useRef(0);
+  const twChar = useRef(0);
+  const twPhase = useRef<'typing' | 'pausing' | 'deleting'>('typing');
   useEffect(() => {
-    if (input) return; // fige la rotation des que l'utilisateur tape
-    const id = setInterval(() => {
-      setPlaceholderIdx((i) => (i + 1) % PLACEHOLDERS.length);
-    }, 2600);
-    return () => clearInterval(id);
-  }, [input, PLACEHOLDERS.length]);
+    if (input) { setTyped(''); return; } // fige l'animation des que l'utilisateur tape
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      const phrases = PLACEHOLDERS;
+      const full = phrases[twPhrase.current % phrases.length];
+      if (twPhase.current === 'typing') {
+        twChar.current += 1;
+        setTyped(full.slice(0, twChar.current));
+        if (twChar.current >= full.length) { twPhase.current = 'pausing'; timer = setTimeout(tick, 1500); }
+        else { timer = setTimeout(tick, 55); }
+      } else if (twPhase.current === 'pausing') {
+        twPhase.current = 'deleting';
+        timer = setTimeout(tick, 400);
+      } else {
+        twChar.current -= 1;
+        setTyped(full.slice(0, Math.max(twChar.current, 0)));
+        if (twChar.current <= 0) {
+          twPhase.current = 'typing';
+          twPhrase.current = (twPhrase.current + 1) % phrases.length;
+          timer = setTimeout(tick, 250);
+        } else { timer = setTimeout(tick, 28); }
+      }
+    };
+    timer = setTimeout(tick, 250);
+    return () => clearTimeout(timer);
+  }, [input, uiLang]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -390,10 +413,10 @@ export default function OnboardingChat() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={onKeyDown}
-          placeholder={PLACEHOLDERS[placeholderIdx]}
+          placeholder={typed}
+          aria-label="Décrivez votre activité"
           maxLength={1000}
           disabled={generating}
-          autoFocus
           rows={1}
           className="w-full bg-black/40 border border-white/10 rounded-[24px] pl-6 pr-16 py-4 text-white text-[15px] placeholder-slate-500 resize-none focus:outline-none transition shadow-xl min-h-[56px] max-h-40"
         />
