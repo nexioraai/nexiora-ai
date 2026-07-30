@@ -55,27 +55,47 @@ export async function POST(req: NextRequest) {
     const seen = new Set<string>();
     const allProducts: any[] = [];
 
+    const CATALOG_COLS = 'id, supplier_id, supplier_product_id, name, category, price, currency, images, shipping_days_min, warehouse_country';
+
+    const collectHits = (hits: any[] | null) => {
+      if (!hits) return;
+      for (const prod of hits) {
+        if (!seen.has(prod.id)) {
+          seen.add(prod.id);
+          allProducts.push(prod);
+        }
+      }
+    };
+
     for (const kw of keywords) {
       const pattern = '%' + kw.toLowerCase().replace(/\s+/g, '%') + '%';
-      const { data: hits } = await supabaseAdmin
+
+      // Niveau 1 : la categorie fournisseur est le signal le plus fiable.
+      const { data: catHits } = await supabaseAdmin
         .from('catalog_products')
-        .select('id, supplier_id, supplier_product_id, name, category, price, currency, images, shipping_days_min, warehouse_country')
+        .select(CATALOG_COLS)
         .eq('in_stock', true)
         .in('supplier_id', suppliers)
-        .ilike('name', pattern)
+        .ilike('category', pattern)
         .order('price', { ascending: true })
         .limit(40);
 
-      if (hits) {
-        for (const prod of hits) {
-          if (!seen.has(prod.id)) {
-            seen.add(prod.id);
-            allProducts.push(prod);
-          }
-        }
+      collectHits(catHits);
+
+      // Niveau 2 : filet de secours par le nom si la categorie ne donne rien.
+      if (!catHits || catHits.length < 5) {
+        const { data: nameHits } = await supabaseAdmin
+          .from('catalog_products')
+          .select(CATALOG_COLS)
+          .eq('in_stock', true)
+          .in('supplier_id', suppliers)
+          .ilike('name', pattern)
+          .order('price', { ascending: true })
+          .limit(40);
+
+        collectHits(nameHits);
       }
     }
-
     console.log('[Curate] ' + slug + ': ' + keywords.length + ' keywords -> ' + allProducts.length + ' candidats');
 
     if (allProducts.length === 0) {
