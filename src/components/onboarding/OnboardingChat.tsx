@@ -42,6 +42,41 @@ const LOADING_BY_LANG: Record<string, string[]> = {
   ],
 };
 
+const PLACEHOLDER_BY_LANG: Record<string, string[]> = {
+  fr: [
+    'Créer mon site web…',
+    'Lancer ma marque de vêtements, sans un sou…',
+    'Vendre sans stock, sans investir…',
+    'Ouvrir ma boutique, zéro risque…',
+    'Vendre mes créations, sans avancer d\'argent…',
+    'Mes clients personnalisent, moi je vends…',
+  ],
+  en: [
+    'Build my website…',
+    'Launch my clothing brand, $0 down…',
+    'Sell with no stock, no investment…',
+    'Open my shop, zero risk…',
+    'Sell my creations, nothing upfront…',
+    'My customers design, I sell…',
+  ],
+  es: [
+    'Crear mi sitio web…',
+    'Lanzar mi marca de ropa, sin un peso…',
+    'Vender sin stock, sin invertir…',
+    'Abrir mi tienda, cero riesgo…',
+    'Vender mis creaciones, sin adelantar nada…',
+    'Mis clientes personalizan, yo vendo…',
+  ],
+  ar: [
+    'أنشئ موقعي الإلكتروني…',
+    'أطلق علامة ملابسي، بدون أي مال…',
+    'بِع بدون مخزون، بدون استثمار…',
+    'افتح متجري، دون أي مخاطرة…',
+    'بِع إبداعاتي، دون دفع مقدمًا…',
+    'عملائي يصممون، وأنا أبيع…',
+  ],
+};
+
 /** Detecte la langue depuis le texte saisi par l'utilisateur. */
 function detectUILang(text: string): string {
   if (/[\u0600-\u06FF]/.test(text)) return 'ar';
@@ -88,6 +123,15 @@ export default function OnboardingChat() {
     messages.filter((m) => m.role === 'user').map((m) => m.content).join(' ')
   );
   const LOADING_STEPS = LOADING_BY_LANG[uiLang] || LOADING_BY_LANG.fr;
+  const PLACEHOLDERS = PLACEHOLDER_BY_LANG[uiLang] || PLACEHOLDER_BY_LANG.fr;
+  const [placeholderIdx, setPlaceholderIdx] = useState(0);
+  useEffect(() => {
+    if (input) return; // fige la rotation des que l'utilisateur tape
+    const id = setInterval(() => {
+      setPlaceholderIdx((i) => (i + 1) % PLACEHOLDERS.length);
+    }, 2600);
+    return () => clearInterval(id);
+  }, [input, PLACEHOLDERS.length]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -346,7 +390,7 @@ export default function OnboardingChat() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={onKeyDown}
-          placeholder="Votre réponse…"
+          placeholder={PLACEHOLDERS[placeholderIdx]}
           maxLength={1000}
           disabled={generating}
           autoFocus
