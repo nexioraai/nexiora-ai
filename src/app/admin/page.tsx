@@ -178,7 +178,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Revenue detail */}
-      <div className="bg-white/[0.03] border border-white/10 rounded-2xl border border-white/10 p-6 mb-10">
+      <div className="bg-white/[0.03] border border-white/10 rounded-2xl border border-white/10 p-6 mb-10 glass glass-hover">
         <h2 className="text-lg font-semibold mb-4">Détail revenus</h2>
         <div className="grid grid-cols-3 gap-4">
           <MiniCard label="Ventes totales" value={`$${fmt(stats.revenue.total)}`} />
