@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { resolveDisplayPrice, DEFAULT_MARGIN_PERCENT, DEFAULT_ROUND_MODE } from '@/lib/pricing';
 
-const ACCENT = '#E07040';
+const ACCENT = '#FA5D1E';
 
 /** Les routes catalog exigent le token du proprietaire du site. */
 async function authHeaders(): Promise<Record<string, string>> {

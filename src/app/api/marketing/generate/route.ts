@@ -16,7 +16,7 @@ async function generateSocialImage(site: any, brief: any): Promise<string | null
     return null;
   }
   try {
-    const color = site.primary_color || '#E07040';
+    const color = site.primary_color || '#FA5D1E';
     const ton = brief?.ton || 'moderne et premium';
     const positionnement = brief?.positionnement || '';
 

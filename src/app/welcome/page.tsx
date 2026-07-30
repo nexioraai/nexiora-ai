@@ -13,7 +13,7 @@ function Confetti() {
   const [pieces, setPieces] = useState<Piece[]>([]);
 
   useEffect(() => {
-    const colors = ['#4F6EF5', '#E07040', '#C9A84C', '#ffffff'];
+    const colors = ['#4F6EF5', '#FA5D1E', '#C9A84C', '#ffffff'];
     const next: Piece[] = Array.from({ length: 40 }).map((_, i) => ({
       left: Math.random() * 100,
       delay: Math.random() * 0.6,
@@ -86,7 +86,7 @@ function WelcomeContent() {
           className="mx-auto mb-8 flex items-center justify-center rounded-full"
           style={{
             width: 96, height: 96,
-            background: 'linear-gradient(135deg, #4F6EF5 0%, #E07040 60%, #C9A84C 100%)',
+            background: 'linear-gradient(135deg, #4F6EF5 0%, #FA5D1E 60%, #C9A84C 100%)',
             animation: 'nexiora-pop .5s ease-out',
           }}
         >
@@ -108,7 +108,7 @@ function WelcomeContent() {
           {slug && (
             <Link href={`/sites/${slug}`}
               className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-white transition-transform hover:scale-[1.02]"
-              style={{ background: 'linear-gradient(135deg, #4F6EF5 0%, #E07040 60%, #C9A84C 100%)' }}>
+              style={{ background: 'linear-gradient(135deg, #4F6EF5 0%, #FA5D1E 60%, #C9A84C 100%)' }}>
               <ExternalLink size={18} />
               Voir mon site
             </Link>

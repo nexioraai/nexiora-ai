@@ -142,7 +142,7 @@ export default function Navbar() {
         style={{ background: 'transparent' }}>
         <Link href="/" className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-lg"
-            style={{ background: 'radial-gradient(circle at 30% 30%, #4F6EF5 0%, transparent 60%), radial-gradient(circle at 70% 70%, #E07040 0%, transparent 60%), #16090e' }}>
+            style={{ background: 'radial-gradient(circle at 30% 30%, #4F6EF5 0%, transparent 60%), radial-gradient(circle at 70% 70%, #FA5D1E 0%, transparent 60%), #16090e' }}>
             N
           </div>
           <span className="text-xl font-black tracking-tight text-nexiora hidden sm:block" translate="no">woorri</span>
@@ -206,7 +206,7 @@ export default function Navbar() {
                     <button key={'page-' + idx} onClick={() => setCurrentSection('page:' + idx)}
                       className="w-full text-left px-4 py-3 rounded-xl bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition font-medium flex items-center justify-between">
                       <span>{page.title || 'Untitled Page'}</span>
-                      <span className="text-xs text-[#E07040]">Custom</span>
+                      <span className="text-xs text-[#FA5D1E]">Custom</span>
                     </button>
                   ))}
 
@@ -217,7 +217,7 @@ export default function Navbar() {
                       setSite({ ...site, pages: newPages });
                       setCurrentSection('page:' + (newPages.length - 1));
                     }}
-                      className="w-full px-4 py-3 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold transition border border-[#E07040]/20 border-dashed flex items-center justify-center gap-2 mt-3">
+                      className="w-full px-4 py-3 rounded-xl bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] font-semibold transition border border-[#FA5D1E]/20 border-dashed flex items-center justify-center gap-2 mt-3">
                       <Plus size={18} /> Add Page
                     </button>
                   )}
@@ -250,7 +250,7 @@ export default function Navbar() {
                     <Field label="Hero Subtitle" value={site.hero_subtitle || ''} onChange={(v) => updateField('hero_subtitle', v)} />
                     <div>
                       <label className="block text-xs text-slate-400 uppercase tracking-wider font-semibold mb-2">Primary Color</label>
-                      <input type="color" value={site.primary_color || '#E07040'} onChange={(e) => updateField('primary_color', e.target.value)} className="w-24 h-12 rounded-xl border border-white/10 bg-transparent cursor-pointer" />
+                      <input type="color" value={site.primary_color || '#FA5D1E'} onChange={(e) => updateField('primary_color', e.target.value)} className="w-24 h-12 rounded-xl border border-white/10 bg-transparent cursor-pointer" />
                     </div>
                     <Field label="CTA Button Text" value={site.cta || ''} onChange={(v) => updateField('cta', v)} />
                     <div className="pt-4 border-t border-white/10">
@@ -259,7 +259,7 @@ export default function Navbar() {
                         <div className="relative group rounded-xl overflow-hidden mb-3">
                           <img src={site.hero_image} alt="hero" className="w-full h-40 object-cover" />
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                            <label className="bg-[#E07040] text-white p-2 rounded-lg cursor-pointer" title="Replace">
+                            <label className="bg-[#FA5D1E] text-white p-2 rounded-lg cursor-pointer" title="Replace">
                               <Upload size={16} />
                               <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                                 const file = e.target.files?.[0];
@@ -275,7 +275,7 @@ export default function Navbar() {
                         </div>
                       )}
                       {!site.hero_image && (
-                        <label className="block w-full text-center bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] py-4 rounded-xl cursor-pointer font-semibold transition border border-[#E07040]/20">
+                        <label className="block w-full text-center bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] py-4 rounded-xl cursor-pointer font-semibold transition border border-[#FA5D1E]/20">
                           <Plus size={18} className="inline mr-2" /> Upload Hero Image
                           <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                             const file = e.target.files?.[0];
@@ -304,11 +304,11 @@ export default function Navbar() {
                           <span className="text-xs text-slate-400">Point #{idx + 1}</span>
                           <button onClick={() => removeArrayItem('whyus', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
                         </div>
-                        <input value={item.title || ''} onChange={(e) => updateArrayItem('whyus', idx, 'title', e.target.value)} placeholder="Titre" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
-                        <textarea value={item.text || ''} onChange={(e) => updateArrayItem('whyus', idx, 'text', e.target.value)} placeholder="Description" rows={2} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040] resize-y" />
+                        <input value={item.title || ''} onChange={(e) => updateArrayItem('whyus', idx, 'title', e.target.value)} placeholder="Titre" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <textarea value={item.text || ''} onChange={(e) => updateArrayItem('whyus', idx, 'text', e.target.value)} placeholder="Description" rows={2} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
                       </div>
                     ))}
-                    <button onClick={() => addArrayItem('whyus', { title: '', text: '' })} className="w-full px-4 py-3 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold transition border border-[#E07040]/20 flex items-center justify-center gap-2">
+                    <button onClick={() => addArrayItem('whyus', { title: '', text: '' })} className="w-full px-4 py-3 rounded-xl bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] font-semibold transition border border-[#FA5D1E]/20 flex items-center justify-center gap-2">
                       <Plus size={18} /> Add point
                     </button>
                   </div>
@@ -323,11 +323,11 @@ export default function Navbar() {
                           <span className="text-xs text-slate-400">Service #{idx + 1}</span>
                           <button onClick={() => removeArrayItem('services', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
                         </div>
-                        <input value={service.name || service.title || ''} onChange={(e) => updateArrayItem('services', idx, 'name', e.target.value)} placeholder="Service name" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
-                        <textarea value={service.description || ''} onChange={(e) => updateArrayItem('services', idx, 'description', e.target.value)} placeholder="Description" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040] resize-y" />
+                        <input value={service.name || service.title || ''} onChange={(e) => updateArrayItem('services', idx, 'name', e.target.value)} placeholder="Service name" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <textarea value={service.description || ''} onChange={(e) => updateArrayItem('services', idx, 'description', e.target.value)} placeholder="Description" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
                       </div>
                     ))}
-                    <button onClick={() => addArrayItem('services', { name: '', description: '' })} className="w-full px-4 py-3 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold transition border border-[#E07040]/20 flex items-center justify-center gap-2">
+                    <button onClick={() => addArrayItem('services', { name: '', description: '' })} className="w-full px-4 py-3 rounded-xl bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] font-semibold transition border border-[#FA5D1E]/20 flex items-center justify-center gap-2">
                       <Plus size={18} /> Add Service
                     </button>
                   </div>
@@ -342,12 +342,12 @@ export default function Navbar() {
                           <span className="text-xs text-slate-400">Review #{idx + 1}</span>
                           <button onClick={() => removeArrayItem('testimonials', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
                         </div>
-                        <input value={t.name || t.author || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'name', e.target.value)} placeholder="Customer name" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
-                        <textarea value={t.content || t.text || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'content', e.target.value)} placeholder="Review content" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040] resize-y" />
-                        <input type="number" min="1" max="5" value={t.rating || 5} onChange={(e) => updateArrayItem('testimonials', idx, 'rating', parseInt(e.target.value))} placeholder="Rating (1-5)" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
+                        <input value={t.name || t.author || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'name', e.target.value)} placeholder="Customer name" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <textarea value={t.content || t.text || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'content', e.target.value)} placeholder="Review content" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
+                        <input type="number" min="1" max="5" value={t.rating || 5} onChange={(e) => updateArrayItem('testimonials', idx, 'rating', parseInt(e.target.value))} placeholder="Rating (1-5)" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
                       </div>
                     ))}
-                    <button onClick={() => addArrayItem('testimonials', { name: '', content: '', rating: 5 })} className="w-full px-4 py-3 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold transition border border-[#E07040]/20 flex items-center justify-center gap-2">
+                    <button onClick={() => addArrayItem('testimonials', { name: '', content: '', rating: 5 })} className="w-full px-4 py-3 rounded-xl bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] font-semibold transition border border-[#FA5D1E]/20 flex items-center justify-center gap-2">
                       <Plus size={18} /> Add Review
                     </button>
                   </div>
@@ -365,7 +365,7 @@ export default function Navbar() {
                         <div className="relative group rounded-lg overflow-hidden">
                           <img src={page.image} alt="" className="w-full h-32 object-cover" />
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                            <label className="bg-[#E07040] hover:bg-[#E07040]/80 text-white p-2 rounded-lg cursor-pointer transition" title="Replace">
+                            <label className="bg-[#FA5D1E] hover:bg-[#FA5D1E]/80 text-white p-2 rounded-lg cursor-pointer transition" title="Replace">
                               <Upload size={16} />
                               <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                                 const file = e.target.files?.[0];
@@ -380,7 +380,7 @@ export default function Navbar() {
                           </div>
                         </div>
                       ) : (
-                        <label className="block w-full text-center bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] py-3 rounded-lg cursor-pointer font-semibold transition border border-[#E07040]/20 text-sm">
+                        <label className="block w-full text-center bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] py-3 rounded-lg cursor-pointer font-semibold transition border border-[#FA5D1E]/20 text-sm">
                           <Plus size={16} className="inline mr-1" /> Add photo
                           <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                             const file = e.target.files?.[0];
@@ -405,7 +405,7 @@ export default function Navbar() {
                     <Field label="📞 Phone" value={site.contact?.phone || ''} onChange={(v) => updateContact('phone', v)} />
                     <Field label="📧 Email" value={site.contact?.email || ''} onChange={(v) => updateContact('email', v)} />
                     <Field label="📍 Address" value={site.contact?.address || site.address || ''} onChange={(v) => updateContact('address', v)} />
-                    <button onClick={geocodeAddress} disabled={geocoding} className="w-full px-4 py-2.5 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold text-sm transition border border-[#E07040]/20 flex items-center justify-center gap-2 disabled:opacity-50">
+                    <button onClick={geocodeAddress} disabled={geocoding} className="w-full px-4 py-2.5 rounded-xl bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] font-semibold text-sm transition border border-[#FA5D1E]/20 flex items-center justify-center gap-2 disabled:opacity-50">
                       {geocoding ? <Loader2 size={16} className="animate-spin" /> : <MapPin size={16} />}
                       {geocoding ? 'Localisation...' : 'Localiser sur la carte'}
                     </button>
@@ -436,7 +436,7 @@ export default function Navbar() {
                           <div className="relative group rounded-lg overflow-hidden">
                             <img src={product.image} alt="" className="w-full h-32 object-cover" />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                              <label className="bg-[#E07040] hover:bg-[#E07040]/80 text-white p-2 rounded-lg cursor-pointer transition" title="Replace">
+                              <label className="bg-[#FA5D1E] hover:bg-[#FA5D1E]/80 text-white p-2 rounded-lg cursor-pointer transition" title="Replace">
                                 <Upload size={16} />
                                 <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                                   const file = e.target.files?.[0];
@@ -451,7 +451,7 @@ export default function Navbar() {
                             </div>
                           </div>
                         ) : (
-                          <label className="block w-full text-center bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] py-3 rounded-lg cursor-pointer font-semibold transition border border-[#E07040]/20 text-sm">
+                          <label className="block w-full text-center bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] py-3 rounded-lg cursor-pointer font-semibold transition border border-[#FA5D1E]/20 text-sm">
                             <Plus size={16} className="inline mr-1" /> Add photo
                             <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                               const file = e.target.files?.[0];
@@ -461,12 +461,12 @@ export default function Navbar() {
                             }} />
                           </label>
                         )}
-                        <input value={product.name || ''} onChange={(e) => updateArrayItem('products', idx, 'name', e.target.value)} placeholder="Name" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
-                        <input value={product.price || ''} onChange={(e) => updateArrayItem('products', idx, 'price', e.target.value)} placeholder="Price" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
-                        <textarea value={product.description || ''} onChange={(e) => updateArrayItem('products', idx, 'description', e.target.value)} placeholder="Description" rows={2} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040] resize-y" />
+                        <input value={product.name || ''} onChange={(e) => updateArrayItem('products', idx, 'name', e.target.value)} placeholder="Name" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <input value={product.price || ''} onChange={(e) => updateArrayItem('products', idx, 'price', e.target.value)} placeholder="Price" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <textarea value={product.description || ''} onChange={(e) => updateArrayItem('products', idx, 'description', e.target.value)} placeholder="Description" rows={2} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
                       </div>
                     ))}
-                    <button onClick={() => addArrayItem('products', { name: '', price: '', description: '' })} className="w-full px-4 py-3 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold transition border border-[#E07040]/20 flex items-center justify-center gap-2">
+                    <button onClick={() => addArrayItem('products', { name: '', price: '', description: '' })} className="w-full px-4 py-3 rounded-xl bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] font-semibold transition border border-[#FA5D1E]/20 flex items-center justify-center gap-2">
                       <Plus size={18} /> Add Item
                     </button>
                   </div>
@@ -483,7 +483,7 @@ export default function Navbar() {
                             <div className="relative group rounded-lg overflow-hidden">
                               <img src={item.image} alt="" className="w-full h-32 object-cover" />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                                <label className="bg-[#E07040] hover:bg-[#E07040]/80 text-white p-2 rounded-lg cursor-pointer transition" title="Replace">
+                                <label className="bg-[#FA5D1E] hover:bg-[#FA5D1E]/80 text-white p-2 rounded-lg cursor-pointer transition" title="Replace">
                                   <Upload size={16} />
                                   <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                                     const file = e.target.files?.[0];
@@ -495,7 +495,7 @@ export default function Navbar() {
                               </div>
                             </div>
                           ) : (
-                            <label className="block w-full text-center bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] py-3 rounded-lg cursor-pointer font-semibold transition border border-[#E07040]/20 text-sm">
+                            <label className="block w-full text-center bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] py-3 rounded-lg cursor-pointer font-semibold transition border border-[#FA5D1E]/20 text-sm">
                               <Plus size={16} className="inline mr-1" /> Add photo
                               <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                                 const file = e.target.files?.[0];
@@ -505,10 +505,10 @@ export default function Navbar() {
                               }} />
                             </label>
                           )}
-                          <input value={item.title || ''} onChange={(e) => updateSectionItem(si, ii, 'title', e.target.value)} placeholder="Titre" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
-                          <textarea value={item.description || ''} onChange={(e) => updateSectionItem(si, ii, 'description', e.target.value)} placeholder="Description" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040] resize-y" />
+                          <input value={item.title || ''} onChange={(e) => updateSectionItem(si, ii, 'title', e.target.value)} placeholder="Titre" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                          <textarea value={item.description || ''} onChange={(e) => updateSectionItem(si, ii, 'description', e.target.value)} placeholder="Description" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
                           {item.price !== undefined && (
-                            <input value={item.price || ''} onChange={(e) => updateSectionItem(si, ii, 'price', e.target.value)} placeholder="Prix / badge" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
+                            <input value={item.price || ''} onChange={(e) => updateSectionItem(si, ii, 'price', e.target.value)} placeholder="Prix / badge" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
                           )}
                         </div>
                       ))}
@@ -525,13 +525,13 @@ export default function Navbar() {
                           <span className="text-xs text-slate-400">Avis #{idx + 1}</span>
                           <button onClick={() => removeArrayItem('testimonials', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
                         </div>
-                        <input value={item.name || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'name', e.target.value)} placeholder="Nom" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
-                        <input value={item.role || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'role', e.target.value)} placeholder="Rôle / société" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
-                        <input value={item.rating || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'rating', e.target.value)} placeholder="Note (1-5)" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
-                        <textarea value={item.content || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'content', e.target.value)} placeholder="Témoignage" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040] resize-y" />
+                        <input value={item.name || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'name', e.target.value)} placeholder="Nom" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <input value={item.role || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'role', e.target.value)} placeholder="Rôle / société" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <input value={item.rating || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'rating', e.target.value)} placeholder="Note (1-5)" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <textarea value={item.content || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'content', e.target.value)} placeholder="Témoignage" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
                       </div>
                     ))}
-                    <button onClick={() => addArrayItem('testimonials', { name: '', role: '', rating: '5', content: '' })} className="w-full px-4 py-3 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold transition border border-[#E07040]/20 flex items-center justify-center gap-2">
+                    <button onClick={() => addArrayItem('testimonials', { name: '', role: '', rating: '5', content: '' })} className="w-full px-4 py-3 rounded-xl bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] font-semibold transition border border-[#FA5D1E]/20 flex items-center justify-center gap-2">
                       <Plus size={18} /> Add review
                     </button>
                   </div>
@@ -546,11 +546,11 @@ export default function Navbar() {
                           <span className="text-xs text-slate-400">Q{idx + 1}</span>
                           <button onClick={() => removeArrayItem('faq', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
                         </div>
-                        <input value={item.question || ''} onChange={(e) => updateArrayItem('faq', idx, 'question', e.target.value)} placeholder="Question" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
-                        <textarea value={item.answer || ''} onChange={(e) => updateArrayItem('faq', idx, 'answer', e.target.value)} placeholder="Réponse" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040] resize-y" />
+                        <input value={item.question || ''} onChange={(e) => updateArrayItem('faq', idx, 'question', e.target.value)} placeholder="Question" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <textarea value={item.answer || ''} onChange={(e) => updateArrayItem('faq', idx, 'answer', e.target.value)} placeholder="Réponse" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
                       </div>
                     ))}
-                    <button onClick={() => addArrayItem('faq', { question: '', answer: '' })} className="w-full px-4 py-3 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold transition border border-[#E07040]/20 flex items-center justify-center gap-2">
+                    <button onClick={() => addArrayItem('faq', { question: '', answer: '' })} className="w-full px-4 py-3 rounded-xl bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] font-semibold transition border border-[#FA5D1E]/20 flex items-center justify-center gap-2">
                       <Plus size={18} /> Add question
                     </button>
                   </div>
@@ -566,7 +566,7 @@ export default function Navbar() {
                           <div key={idx} className="relative group rounded-xl overflow-hidden">
                             <img src={url} alt="" className="w-full h-36 object-cover" />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                              <label className="bg-[#E07040] hover:bg-[#E07040]/80 text-white p-2 rounded-lg cursor-pointer transition" title="Replace">
+                              <label className="bg-[#FA5D1E] hover:bg-[#FA5D1E]/80 text-white p-2 rounded-lg cursor-pointer transition" title="Replace">
                                 <Upload size={16} />
                                 <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                                   const file = e.target.files?.[0];
@@ -592,7 +592,7 @@ export default function Navbar() {
                         );
                       })}
                     </div>
-                    <label className="block w-full text-center bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] py-4 rounded-xl cursor-pointer font-semibold transition border border-[#E07040]/20">
+                    <label className="block w-full text-center bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] py-4 rounded-xl cursor-pointer font-semibold transition border border-[#FA5D1E]/20">
                       <Plus size={18} className="inline mr-2" /> Add Image
                       <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                         const file = e.target.files?.[0];
@@ -613,11 +613,11 @@ export default function Navbar() {
                           <span className="text-xs text-slate-400">Page #{idx + 1}</span>
                           <button onClick={() => removeArrayItem('pages', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
                         </div>
-                        <input value={page.title || ''} onChange={(e) => updateArrayItem('pages', idx, 'title', e.target.value)} placeholder="Page title (ex: Services, FAQ)" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040]" />
-                        <textarea value={page.content || ''} onChange={(e) => updateArrayItem('pages', idx, 'content', e.target.value)} placeholder="Content" rows={4} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#E07040] resize-y" />
+                        <input value={page.title || ''} onChange={(e) => updateArrayItem('pages', idx, 'title', e.target.value)} placeholder="Page title (ex: Services, FAQ)" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <textarea value={page.content || ''} onChange={(e) => updateArrayItem('pages', idx, 'content', e.target.value)} placeholder="Content" rows={4} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
                       </div>
                     ))}
-                    <button onClick={() => addArrayItem('pages', { title: '', content: '' })} className="w-full px-4 py-3 rounded-xl bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] font-semibold transition border border-[#E07040]/20 flex items-center justify-center gap-2">
+                    <button onClick={() => addArrayItem('pages', { title: '', content: '' })} className="w-full px-4 py-3 rounded-xl bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] font-semibold transition border border-[#FA5D1E]/20 flex items-center justify-center gap-2">
                       <Plus size={18} /> Add Page
                     </button>
                   </div>
@@ -635,7 +635,7 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
   return (
     <div>
       <label className="block text-xs text-slate-400 uppercase tracking-wider font-semibold mb-2">{label}</label>
-      <input value={value} onChange={(e) => onChange(e.target.value)} className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#E07040]" />
+      <input value={value} onChange={(e) => onChange(e.target.value)} className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FA5D1E]" />
     </div>
   );
 }
@@ -644,7 +644,7 @@ function TextArea({ label, value, onChange, rows = 5 }: { label: string; value: 
   return (
     <div>
       <label className="block text-xs text-slate-400 uppercase tracking-wider font-semibold mb-2">{label}</label>
-      <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows} className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#E07040] resize-y" />
+      <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows} className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FA5D1E] resize-y" />
     </div>
   );
 }

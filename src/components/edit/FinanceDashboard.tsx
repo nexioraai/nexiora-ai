@@ -38,7 +38,7 @@ export default function FinanceDashboard({ slug }: { slug: string }) {
               onClick={() => setPeriod(d)}
               className={`px-3 py-1 rounded-lg text-xs font-medium transition ${
                 period === d
-                  ? 'bg-[#E07040]/20 text-[#E07040] border border-[#E07040]'
+                  ? 'bg-[#FA5D1E]/20 text-[#FA5D1E] border border-[#FA5D1E]'
                   : 'text-slate-400 border border-white/10 hover:border-white/20'
               }`}
             >
@@ -64,7 +64,7 @@ export default function FinanceDashboard({ slug }: { slug: string }) {
             a.click();
             URL.revokeObjectURL(url);
           }}
-          className="px-3 py-1 rounded-lg text-xs font-medium text-slate-400 border border-white/10 hover:border-[#E07040] hover:text-[#E07040] transition"
+          className="px-3 py-1 rounded-lg text-xs font-medium text-slate-400 border border-white/10 hover:border-[#FA5D1E] hover:text-[#FA5D1E] transition"
         >
           Export CSV
         </button>
@@ -73,7 +73,7 @@ export default function FinanceDashboard({ slug }: { slug: string }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Card label="Revenus" value={`${fmt(s.total_revenue)} ${s.currency}`} color="#3b82f6" />
         <Card label="Coût fournisseur" value={`${fmt(s.total_supplier_cost)} ${s.currency}`} color="#f59e0b" />
-        <Card label="Commission Woorri" value={`${fmt(s.total_commission)} ${s.currency}`} color="#E07040" />
+        <Card label="Commission Woorri" value={`${fmt(s.total_commission)} ${s.currency}`} color="#FA5D1E" />
         <Card label="Profit net" value={`${fmt(s.total_profit)} ${s.currency}`} color="#34d399" />
       </div>
 

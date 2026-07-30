@@ -93,7 +93,7 @@ export default function DashboardPage() {
       <div className="flex-1 min-w-0 max-w-6xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-10">
           <div>
-            <div className="text-xs uppercase tracking-[0.2em] font-medium mb-2" style={{ color: '#E07040' }}>{t('dashboard.eyebrow')}</div>
+            <div className="text-xs uppercase tracking-[0.2em] font-medium mb-2" style={{ color: '#FA5D1E' }}>{t('dashboard.eyebrow')}</div>
             <h1 className="text-4xl font-black tracking-tight">{t('dashboard.title')}</h1>
           </div>
           <Link href="/" className="btn-nexiora flex items-center gap-2 px-6 py-3 rounded-full text-white font-semibold text-sm">
@@ -119,11 +119,11 @@ export default function DashboardPage() {
                 style={{ background: 'rgba(255,255,255,0.03)' }}>
                 <div className="h-28 relative flex items-center justify-center overflow-hidden">
                   <div className="absolute inset-0"
-                    style={{ background: `radial-gradient(ellipse at 50% 50%, ${site.primary_color || '#E07040'}50 0%, transparent 70%), #0a050e` }} />
+                    style={{ background: `radial-gradient(ellipse at 50% 50%, ${site.primary_color || '#FA5D1E'}50 0%, transparent 70%), #0a050e` }} />
                   <div className="relative text-center px-4">
                     <h2 className="text-xl font-black text-white">{site.name}</h2>
                     <span className="text-xs px-3 py-1 rounded-full mt-2 inline-block font-medium"
-                      style={{ background: `${site.primary_color || '#E07040'}25`, color: site.primary_color || '#E07040' }}>
+                      style={{ background: `${site.primary_color || '#FA5D1E'}25`, color: site.primary_color || '#FA5D1E' }}>
                       {site.type}
                     </span>
                   </div>
@@ -134,7 +134,7 @@ export default function DashboardPage() {
                   )}
                   {(() => {
                     const { score, missing } = computeAiScore(site);
-                    const color = score >= 80 ? '#34d399' : score >= 50 ? '#E07040' : '#f87171';
+                    const color = score >= 80 ? '#34d399' : score >= 50 ? '#FA5D1E' : '#f87171';
                     return (
                       <div className="mb-4">
                         <div className="flex items-center justify-between mb-1.5">
@@ -153,7 +153,7 @@ export default function DashboardPage() {
                   <div className="flex gap-2">
                     <Link href={site.published ? `/sites/${site.slug}` : `/preview/${site.slug}`}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-white text-sm font-semibold transition-opacity hover:opacity-80"
-                      style={{ background: site.primary_color || '#E07040' }}>
+                      style={{ background: site.primary_color || '#FA5D1E' }}>
                       <ExternalLink className="w-3.5 h-3.5" />
                       {t('dashboard.view')}
                     </Link>
@@ -170,7 +170,7 @@ export default function DashboardPage() {
                     )}
                     <button onClick={() => handlePublish(site.slug, site.published)}
                       className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold border transition-all ${site.published ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-white/10 text-white/70 hover:text-white hover:border-white/30'}`}>
-                      <span className={`w-2 h-2 rounded-full nexiora-pulse-dot ${site.published ? 'bg-emerald-400' : 'bg-[#E07040]'}`} />
+                      <span className={`w-2 h-2 rounded-full nexiora-pulse-dot ${site.published ? 'bg-emerald-400' : 'bg-[#FA5D1E]'}`} />
                       {site.published ? t('dashboard.online') : t('dashboard.publish')}
                     </button>
                     <button onClick={() => handleDelete(site.slug)}

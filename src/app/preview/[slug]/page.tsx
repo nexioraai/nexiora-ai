@@ -71,7 +71,7 @@ export default function PreviewPage() {
 
   return (
     <>
-      <div className="sticky top-0 z-50 bg-[#E07040] text-white text-sm font-medium text-center py-2 px-4">
+      <div className="sticky top-0 z-50 bg-[#FA5D1E] text-white text-sm font-medium text-center py-2 px-4">
         Mode aperçu — ce site n'est pas encore publié. Publiez-le depuis votre tableau de bord pour le rendre public.
       </div>
       <PromoBanner slug={site.slug} primary={primary} />

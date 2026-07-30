@@ -194,16 +194,16 @@ export default function OnboardingFlow() {
                 placeholder={t('onboarding.step1.placeholder')}
                 maxLength={1000}
                 autoFocus
-                className="w-full h-28 bg-black/40 border border-white/10 rounded-[28px] px-6 py-4 pb-14 text-white text-lg placeholder-slate-500 resize-none focus:outline-none focus:border-[#E07040] transition shadow-xl"
+                className="w-full h-28 bg-black/40 border border-white/10 rounded-[28px] px-6 py-4 pb-14 text-white text-lg placeholder-slate-500 resize-none focus:outline-none focus:border-[#FA5D1E] transition shadow-xl"
               />
               {prompt.trim() && (
                 <button
                   onClick={generate}
                   disabled={!authLoaded || !canContinue}
                   aria-label="Generate"
-                  className="absolute bottom-4 right-4 z-20 w-11 h-11 rounded-full flex items-center justify-center bg-white border-2 border-[#FF5500] shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
+                  className="absolute bottom-4 right-4 z-20 w-11 h-11 rounded-full flex items-center justify-center bg-white border-2 border-[#FA5D1E] shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
                 >
-                  <ArrowUp size={23} strokeWidth={2.5} className="text-[#FF5500]" />
+                  <ArrowUp size={23} strokeWidth={2.5} className="text-[#FA5D1E]" />
                 </button>
               )}
             </div>
@@ -212,7 +212,7 @@ export default function OnboardingFlow() {
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value as Language)}
-                className="bg-black/40 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[#E07040]"
+                className="bg-black/40 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[#FA5D1E]"
               >
                 <option value="auto">✨ {t('onboarding.step1.languageAuto')}</option>
                 {LANGUAGES.map((lang) => (
@@ -225,7 +225,7 @@ export default function OnboardingFlow() {
 
             {error && (
               <div className="mt-6 flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div className="w-9 h-9 rounded-full flex items-center justify-center text-white flex-shrink-0 shadow-lg" style={{ background: 'linear-gradient(135deg, #4F6EF5 0%, #E07040 100%)' }}>
+                <div className="w-9 h-9 rounded-full flex items-center justify-center text-white flex-shrink-0 shadow-lg" style={{ background: 'linear-gradient(135deg, #4F6EF5 0%, #FA5D1E 100%)' }}>
                   <Sparkles size={16} />
                 </div>
                 <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm p-4 text-white/90 text-sm leading-relaxed">
@@ -236,11 +236,11 @@ export default function OnboardingFlow() {
 
             {!userEmail && authLoaded && (
               <p className="text-center mt-4 text-sm text-slate-400">
-                <Link href="/login" className="text-[#E07040] hover:underline">
+                <Link href="/login" className="text-[#FA5D1E] hover:underline">
                   {t('onboarding.step1.signinLink')}
                 </Link>{' '}
                 {t('onboarding.step1.signinOr')}{' '}
-                <Link href="/login" className="text-[#E07040] hover:underline">
+                <Link href="/login" className="text-[#FA5D1E] hover:underline">
                   {t('onboarding.step1.signupLink')}
                 </Link>{' '}
                 {t('onboarding.step1.signinSuffix')}
@@ -271,7 +271,7 @@ export default function OnboardingFlow() {
               placeholder={t('onboarding.step2.placeholder')}
               maxLength={2000}
               autoFocus
-              className="w-full h-44 bg-black/40 border border-white/10 rounded-2xl p-5 text-white text-lg placeholder-slate-500 resize-none focus:outline-none focus:border-[#E07040] transition"
+              className="w-full h-44 bg-black/40 border border-white/10 rounded-2xl p-5 text-white text-lg placeholder-slate-500 resize-none focus:outline-none focus:border-[#FA5D1E] transition"
             />
 
             <button
@@ -289,7 +289,7 @@ export default function OnboardingFlow() {
         {step === 3 && (
           <div className="py-12">
             <div className="text-center mb-10">
-              <div className="inline-block w-14 h-14 border-4 border-[#E07040]/30 border-t-[#E07040] rounded-full animate-spin mb-5"></div>
+              <div className="inline-block w-14 h-14 border-4 border-[#FA5D1E]/30 border-t-[#FA5D1E] rounded-full animate-spin mb-5"></div>
               <h2 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight">
                 {t('onboarding.step3.title')}
               </h2>
@@ -311,11 +311,11 @@ export default function OnboardingFlow() {
                       className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-500"
                       style={{
                         background: done
-                          ? '#E07040'
+                          ? '#FA5D1E'
                           : active
                           ? 'rgba(224,112,64,0.2)'
                           : 'rgba(255,255,255,0.06)',
-                        border: active ? '2px solid #E07040' : '2px solid transparent',
+                        border: active ? '2px solid #FA5D1E' : '2px solid transparent',
                       }}
                     >
                       {done ? (
@@ -323,7 +323,7 @@ export default function OnboardingFlow() {
                           <path d="M20 6L9 17l-5-5" />
                         </svg>
                       ) : active ? (
-                        <div className="w-2 h-2 rounded-full bg-[#E07040] animate-pulse" />
+                        <div className="w-2 h-2 rounded-full bg-[#FA5D1E] animate-pulse" />
                       ) : null}
                     </div>
                     <span

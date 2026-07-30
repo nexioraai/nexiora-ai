@@ -73,7 +73,7 @@ export default function VisibiliteIaPage() {
 
   const selSite = sites.find(s => s.slug === selected);
   const selScore = selSite ? computeAiScore(selSite) : null;
-  const selColor = selScore ? (selScore.score >= 80 ? '#34d399' : selScore.score >= 50 ? '#E07040' : '#f87171') : '#E07040';
+  const selColor = selScore ? (selScore.score >= 80 ? '#34d399' : selScore.score >= 50 ? '#FA5D1E' : '#f87171') : '#FA5D1E';
   const selData: Point[] = selected && history[selected]?.length
     ? history[selected]
     : (selScore ? [{ score: selScore.score, date: t('aivis.today'), reason: '' }] : []);
@@ -84,7 +84,7 @@ export default function VisibiliteIaPage() {
       <Sidebar />
       <div className="flex-1 min-w-0 max-w-6xl mx-auto px-6 py-12">
         <div className="mb-10">
-          <div className="text-xs uppercase tracking-[0.2em] font-medium mb-2" style={{ color: '#E07040' }}>{t('aivis.eyebrow')}</div>
+          <div className="text-xs uppercase tracking-[0.2em] font-medium mb-2" style={{ color: '#FA5D1E' }}>{t('aivis.eyebrow')}</div>
           <h1 className="text-4xl font-black tracking-tight">{t('aivis.title')}</h1>
         </div>
 
@@ -140,7 +140,7 @@ export default function VisibiliteIaPage() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {sites.map((site) => {
                 const { score } = computeAiScore(site);
-                const color = score >= 80 ? '#34d399' : score >= 50 ? '#E07040' : '#f87171';
+                const color = score >= 80 ? '#34d399' : score >= 50 ? '#FA5D1E' : '#f87171';
                 const active = site.slug === selected;
                 return (
                   <button key={site.slug} onClick={() => setSelected(site.slug)}

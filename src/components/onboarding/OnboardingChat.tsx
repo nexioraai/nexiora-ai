@@ -253,7 +253,7 @@ export default function OnboardingChat() {
   return (
     <section className={`max-w-2xl mx-auto px-4 sm:px-6 pb-10 flex flex-col h-[calc(100vh-120px)] ${messages.length === 1 && !loading && !generating ? 'justify-center' : ''}`}>
       <div className="flex items-center gap-2 justify-center mb-6 text-white/60">
-        <Sparkles size={18} className="text-[#FF5500]" />
+        <Sparkles size={18} className="text-[#FA5D1E]" />
         <span className="text-sm font-medium tracking-wide" translate="no">Woorri — Création sur mesure</span>
       </div>
 
@@ -283,7 +283,7 @@ export default function OnboardingChat() {
                       sendText(label);
                     }
                   }}
-                  className="px-5 py-2.5 rounded-full border text-sm transition bg-white/[0.04] border-white/12 text-slate-200 hover:border-[#FF5500] hover:text-white hover:bg-white/[0.07]"
+                  className="px-5 py-2.5 rounded-full border text-sm transition bg-white/[0.04] border-white/12 text-slate-200 hover:border-[#FA5D1E] hover:text-white hover:bg-white/[0.07]"
                 >
                   {label}
                 </button>
@@ -305,7 +305,7 @@ export default function OnboardingChat() {
                     setShowDropshipPicker(false);
                     sendText(`Dropshipping — ${label}`);
                   }}
-                  className="px-5 py-2.5 rounded-full bg-white/[0.04] border border-white/12 text-sm text-slate-200 hover:border-[#FF5500] hover:text-white hover:bg-white/[0.07] transition"
+                  className="px-5 py-2.5 rounded-full bg-white/[0.04] border border-white/12 text-sm text-slate-200 hover:border-[#FA5D1E] hover:text-white hover:bg-white/[0.07] transition"
                 >
                   {label}
                 </button>
@@ -327,7 +327,7 @@ export default function OnboardingChat() {
             <div
               className={`max-w-[82%] px-5 py-3 text-[15px] leading-relaxed shadow-lg whitespace-pre-wrap ${
                 m.role === 'user'
-                  ? 'bg-gradient-to-br from-[#FF5500] to-[#E07040] text-white rounded-[22px] rounded-br-md'
+                  ? 'bg-gradient-to-br from-[#FA5D1E] to-[#FA5D1E] text-white rounded-[22px] rounded-br-md'
                   : 'bg-white/[0.06] border border-white/10 text-slate-100 rounded-[22px] rounded-bl-md'
               }`}
             >
@@ -342,7 +342,7 @@ export default function OnboardingChat() {
               {generating ? (
                 <div className="py-2">
                   <div className="text-center mb-6">
-                    <div className="inline-block w-12 h-12 border-4 border-[#E07040]/30 border-t-[#E07040] rounded-full animate-spin mb-4"></div>
+                    <div className="inline-block w-12 h-12 border-4 border-[#FA5D1E]/30 border-t-[#FA5D1E] rounded-full animate-spin mb-4"></div>
                     <h3 className="text-lg font-bold mb-1 tracking-tight">Création de votre {siteMode === 2 ? 'boutique' : siteMode === 3 ? 'boutique dropshipping' : 'site'} sur mesure…</h3>
                     <p className="text-sm text-slate-400">Cela peut prendre un moment, patientez.</p>
                   </div>
@@ -352,11 +352,11 @@ export default function OnboardingChat() {
                       const active = i === loadingStep;
                       return (
                         <div key={i} className="flex items-center gap-3 transition-all duration-500" style={{ opacity: i <= loadingStep ? 1 : 0.35 }}>
-                          <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-500" style={{ background: done ? '#E07040' : active ? 'rgba(224,112,64,0.2)' : 'rgba(255,255,255,0.06)', border: active ? '2px solid #E07040' : '2px solid transparent' }}>
+                          <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-500" style={{ background: done ? '#FA5D1E' : active ? 'rgba(224,112,64,0.2)' : 'rgba(255,255,255,0.06)', border: active ? '2px solid #FA5D1E' : '2px solid transparent' }}>
                             {done ? (
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M20 6L9 17l-5-5" /></svg>
                             ) : active ? (
-                              <div className="w-2 h-2 rounded-full bg-[#E07040] animate-pulse" />
+                              <div className="w-2 h-2 rounded-full bg-[#FA5D1E] animate-pulse" />
                             ) : null}
                           </div>
                           <span className="text-sm transition-colors duration-500" style={{ color: active ? '#fff' : done ? '#cbbfae' : '#6f6456' }}>{label}</span>
@@ -386,9 +386,9 @@ export default function OnboardingChat() {
             <button
               key={mode}
               onClick={() => pickMode(mode, modeOptions.labels[mode] || `Mode ${mode}`)}
-              className="text-left px-5 py-4 rounded-2xl bg-white/[0.04] border border-white/12 hover:border-[#FF5500] hover:bg-white/[0.07] transition group"
+              className="text-left px-5 py-4 rounded-2xl bg-white/[0.04] border border-white/12 hover:border-[#FA5D1E] hover:bg-white/[0.07] transition group"
             >
-              <span className="block text-[15px] font-semibold text-white mb-0.5 group-hover:text-[#FF5500] transition">
+              <span className="block text-[15px] font-semibold text-white mb-0.5 group-hover:text-[#FA5D1E] transition">
                 {mode === 1 ? 'Site vitrine' : mode === 2 ? 'Boutique en ligne' : 'Boutique autonome'}
               </span>
               <span className="block text-sm text-slate-400">{modeOptions.labels[mode]}</span>
@@ -424,9 +424,9 @@ export default function OnboardingChat() {
           onClick={send}
           disabled={!input.trim() || loading || generating}
           aria-label="Envoyer"
-          className="absolute bottom-3 right-3 w-11 h-11 rounded-full flex items-center justify-center bg-white border-2 border-[#FF5500] shadow-lg transition disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105"
+          className="absolute bottom-3 right-3 w-11 h-11 rounded-full flex items-center justify-center bg-white border-2 border-[#FA5D1E] shadow-lg transition disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105"
         >
-          <ArrowUp size={22} strokeWidth={2.5} className="text-[#FF5500]" />
+          <ArrowUp size={22} strokeWidth={2.5} className="text-[#FA5D1E]" />
         </button>
       </div>
 

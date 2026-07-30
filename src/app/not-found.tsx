@@ -27,7 +27,7 @@ export default function NotFound() {
             fontSize: 'clamp(5rem, 22vw, 9rem)',
             color: 'transparent',
             backgroundImage:
-              'linear-gradient(135deg, #4F6EF5 0%, #E07040 60%, #C9A84C 100%)',
+              'linear-gradient(135deg, #4F6EF5 0%, #FA5D1E 60%, #C9A84C 100%)',
             WebkitBackgroundClip: 'text',
             backgroundClip: 'text',
           }}

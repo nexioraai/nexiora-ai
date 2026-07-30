@@ -44,7 +44,7 @@ export default function ConfirmModal({ title, message, onConfirm, onCancel, isDa
             className={`flex-1 px-4 py-3 rounded-xl font-semibold transition ${
               isDangerous
                 ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
-                : 'bg-[#E07040] text-white hover:bg-[#E07040]/80'
+                : 'bg-[#FA5D1E] text-white hover:bg-[#FA5D1E]/80'
             }`}
           >
             Confirmer

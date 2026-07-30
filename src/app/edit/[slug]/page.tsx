@@ -153,7 +153,7 @@ export default function EditPage() {
         <Navbar />
         <div className="max-w-3xl mx-auto px-6 py-20 text-center">
           <h1 className="text-3xl font-bold mb-4">Site not found</h1>
-          <Link href="/dashboard" className="text-[#E07040] hover:underline">← Back to Dashboard</Link>
+          <Link href="/dashboard" className="text-[#FA5D1E] hover:underline">← Back to Dashboard</Link>
         </div>
         <Footer />
       </main>
@@ -194,7 +194,7 @@ export default function EditPage() {
         {/* Bloc Visibilite IA */}
         {(() => {
           const { score, missing } = computeAiScore(site as any);
-          const color = score >= 80 ? '#34d399' : score >= 50 ? '#E07040' : '#f87171';
+          const color = score >= 80 ? '#34d399' : score >= 50 ? '#FA5D1E' : '#f87171';
           const data = history.length >= 1 ? history : [{ score, date: "Aujourd'hui", reason: '' }];
           return (
             <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm mb-8">
@@ -265,7 +265,7 @@ export default function EditPage() {
             {site.hero_image && (
               <img src={site.hero_image} alt="hero" className="w-full max-h-48 object-cover rounded-xl mb-3 border border-white/10" />
             )}
-            <label className="block w-full text-center bg-[#E07040]/10 hover:bg-[#E07040]/20 text-[#E07040] py-3 rounded-xl cursor-pointer font-semibold transition border border-[#E07040]/20">
+            <label className="block w-full text-center bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] py-3 rounded-xl cursor-pointer font-semibold transition border border-[#FA5D1E]/20">
               {uploading ? 'Uploading…' : 'Upload an image'}
               <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
             </label>
@@ -281,7 +281,7 @@ export default function EditPage() {
           <FieldSection label="Primary Color">
             <input
               type="color"
-              value={site.primary_color || '#E07040'}
+              value={site.primary_color || '#FA5D1E'}
               onChange={(e) => updateField('primary_color', e.target.value)}
               className="w-24 h-12 rounded-xl border border-white/10 bg-transparent cursor-pointer"
             />
@@ -305,7 +305,7 @@ export default function EditPage() {
                       updateField('cj_margin_percent', MIN_MARGIN_PERCENT);
                     }
                   }}
-                  className="w-24 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white text-center focus:outline-none focus:border-[#E07040] transition"
+                  className="w-24 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white text-center focus:outline-none focus:border-[#FA5D1E] transition"
                 />
                 <span className="text-slate-400 text-lg">%</span>
               </div>
@@ -362,7 +362,7 @@ export default function EditPage() {
                     onClick={() => updateField('cj_round_mode', opt.value)}
                     className={`px-4 py-2 rounded-xl text-sm font-medium border transition ${
                       (site.cj_round_mode || 'off') === opt.value
-                        ? 'bg-[#E07040]/20 border-[#E07040] text-[#E07040]'
+                        ? 'bg-[#FA5D1E]/20 border-[#FA5D1E] text-[#FA5D1E]'
                         : 'border-white/10 text-slate-400 hover:border-white/20'
                     }`}
                   >
@@ -399,7 +399,7 @@ export default function EditPage() {
                     </button>
                   </div>
                 ))}
-                <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-dashed border-white/20 text-sm text-slate-400 hover:border-[#FF5500] hover:text-slate-200 cursor-pointer transition">
+                <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-dashed border-white/20 text-sm text-slate-400 hover:border-[#FA5D1E] hover:text-slate-200 cursor-pointer transition">
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/svg+xml,image/webp,image/tiff,application/pdf"
@@ -443,7 +443,7 @@ export default function EditPage() {
                         setLoadingCatalog(false);
                       }}
                       disabled={loadingCatalog}
-                      className="w-full py-2 rounded-xl border border-white/20 text-sm text-slate-300 hover:border-[#FF5500] transition disabled:opacity-40"
+                      className="w-full py-2 rounded-xl border border-white/20 text-sm text-slate-300 hover:border-[#FA5D1E] transition disabled:opacity-40"
                     >
                       {loadingCatalog ? 'Chargement…' : podCatalog.length > 0 ? `${podCatalog.length} produits chargés — Modifier la sélection` : '📦 Choisir les produits à vendre'}
                     </button>
@@ -460,7 +460,7 @@ export default function EditPage() {
                         {podCatalog.filter((p: any) => !catalogSearch || p.name.toLowerCase().includes(catalogSearch.toLowerCase())).map((p: any) => {
                           const sel = selectedProducts[p.product_id];
                           return (
-                            <div key={p.product_id} className={`flex items-center gap-3 p-2 rounded-lg transition ${sel?.selected ? 'bg-[#FF5500]/10 border border-[#FF5500]/30' : 'bg-white/5 border border-transparent'}`}>
+                            <div key={p.product_id} className={`flex items-center gap-3 p-2 rounded-lg transition ${sel?.selected ? 'bg-[#FA5D1E]/10 border border-[#FA5D1E]/30' : 'bg-white/5 border border-transparent'}`}>
                               <input
                                 type="checkbox"
                                 checked={!!sel?.selected}
@@ -473,7 +473,7 @@ export default function EditPage() {
                                     variants: p.variants || [],
                                   }
                                 }))}
-                                className="accent-[#FF5500]"
+                                className="accent-[#FA5D1E]"
                               />
                               {p.image ? <img src={p.image} alt="" className="w-10 h-10 rounded object-cover" /> : <div className="w-10 h-10 rounded bg-white/10 flex items-center justify-center text-lg">{p.name?.charAt(0)}</div>}
                               <div className="flex-1 min-w-0">
@@ -584,7 +584,7 @@ export default function EditPage() {
                       }
                     }}
                     disabled={generatingMockups}
-                    className="w-full py-3 rounded-xl border border-white/20 text-sm font-medium text-slate-200 hover:border-[#FF5500] hover:text-white transition disabled:opacity-40"
+                    className="w-full py-3 rounded-xl border border-white/20 text-sm font-medium text-slate-200 hover:border-[#FA5D1E] hover:text-white transition disabled:opacity-40"
                   >
                     {generatingMockups ? 'Génération en cours…' : '🎨 Générer les mockups automatiquement'}
                   </button>
@@ -645,7 +645,7 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
       <input
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-[#E07040] transition"
+        className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-[#FA5D1E] transition"
       />
     </FieldSection>
   );
@@ -668,7 +668,7 @@ function TextAreaField({
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
         rows={rows}
-        className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-[#E07040] transition resize-y"
+        className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-[#FA5D1E] transition resize-y"
       />
     </FieldSection>
   );

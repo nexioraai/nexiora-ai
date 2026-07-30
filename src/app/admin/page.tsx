@@ -268,7 +268,7 @@ export default function AdminDashboard() {
           return (
             <div key={key} className="bg-white/[0.03] border border-white/10 rounded-2xl border border-white/10 p-6">
               <div className="flex items-center gap-3 mb-4">
-                <Icon className="w-5 h-5 text-[#E07040]" />
+                <Icon className="w-5 h-5 text-[#FA5D1E]" />
                 <h3 className="text-lg font-semibold">{meta.label}</h3>
                 <span className="text-sm text-white/50 ml-auto">{total} site{total > 1 ? "s" : ""} — {published} publié{published > 1 ? "s" : ""}</span>
               </div>

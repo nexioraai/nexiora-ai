@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Package, Truck, CheckCircle, XCircle } from 'lucide-react';
 
-const ACCENT = '#E07040';
+const ACCENT = '#FA5D1E';
 
 type OrderItem = { product_name: string; quantity: number; unit_price: number };
 type Order = {
@@ -174,7 +174,7 @@ export default function OrderManager({ slug }: { slug: string }) {
                       placeholder="N° de suivi (optionnel)"
                       value={tracking[o.id] || ''}
                       onChange={(e) => setTracking({ ...tracking, [o.id]: e.target.value })}
-                      className="flex-1 bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#E07040] transition"
+                      className="flex-1 bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#FA5D1E] transition"
                     />
                     <button
                       onClick={() => markShipped(o.id)}

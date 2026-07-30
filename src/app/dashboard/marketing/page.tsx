@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/lib/translations';
 import type { TranslationKey } from '@/lib/translations/fr';
 
-const ACCENT = '#E07040';
+const ACCENT = '#FA5D1E';
 
 type Format = 'article' | 'social' | 'email';
 

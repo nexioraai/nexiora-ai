@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
-const ACCENT = '#E07040';
+const ACCENT = '#FA5D1E';
 
 async function authHeaders() {
   const { data } = await supabase.auth.getSession();
@@ -137,7 +137,7 @@ export default function PaymentConnect({ slug, mode }: { slug: string; mode?: nu
             step="0.01"
             value={shipping}
             onChange={(e) => setShipping(e.target.value)}
-            className="w-32 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#E07040] transition"
+            className="w-32 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FA5D1E] transition"
           />
           <button
             onClick={handleSaveShipping}

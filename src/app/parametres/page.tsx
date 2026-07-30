@@ -160,7 +160,7 @@ export default function ParametresPage() {
       <Sidebar />
       <div className="flex-1 min-w-0 max-w-3xl mx-auto px-6 py-12">
         <div className="mb-10">
-          <div className="text-xs uppercase tracking-[0.2em] font-medium mb-2" style={{ color: '#E07040' }}>{t('settings.eyebrow')}</div>
+          <div className="text-xs uppercase tracking-[0.2em] font-medium mb-2" style={{ color: '#FA5D1E' }}>{t('settings.eyebrow')}</div>
           <h1 className="text-4xl font-black tracking-tight">{t('settings.title')}</h1>
         </div>
         <div className="space-y-6">

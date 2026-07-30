@@ -10,6 +10,11 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-accent: #FA5D1E;
+  --color-bg-deep: #0A050E;
+  --color-brand-blue: #4F6EF5;
+  --color-brand-gold: #C9A84C;
+  --color-brand-prune: #8B2252;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -42,7 +47,7 @@ body {
     #0a050e;
 }
 .btn-nexiora {
-  background: linear-gradient(135deg, #4F6EF5 0%, #E07040 60%, #C9A84C 100%);
+  background: linear-gradient(135deg, #4F6EF5 0%, #FA5D1E 60%, #C9A84C 100%);
   transition: opacity 0.2s, transform 0.2s;
 }
 .btn-nexiora:hover {
@@ -53,7 +58,7 @@ body {
   opacity: 0.5;
 }
 .text-nexiora {
-  background: linear-gradient(135deg, #4F6EF5 0%, #E07040 55%, #C9A84C 100%);
+  background: linear-gradient(135deg, #4F6EF5 0%, #FA5D1E 55%, #C9A84C 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -83,7 +88,7 @@ html {
   position: absolute;
   inset: -3px;
   border-radius: 1.1rem;
-  background: linear-gradient(135deg, #4F6EF5, #E07040, #C9A84C, #4F6EF5);
+  background: linear-gradient(135deg, #4F6EF5, #FA5D1E, #C9A84C, #4F6EF5);
   background-size: 300% 300%;
   filter: blur(14px);
   opacity: 0.225;

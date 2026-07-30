@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
 // Couleur accent admin Nexiora — changer ici se répercute partout dans ce composant.
-const ACCENT = '#E07040';
+const ACCENT = '#FA5D1E';
 
 type Product = {
   id: string;

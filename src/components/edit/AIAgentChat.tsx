@@ -256,7 +256,7 @@ export default function AIAgentChat({ slug, onSiteUpdated, lang = 'en' }: Props)
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.length === 0 && (
               <div className="text-center text-slate-500 mt-12 px-6">
-                <Sparkles className="w-8 h-8 mx-auto mb-3 text-[#E07040]/60" />
+                <Sparkles className="w-8 h-8 mx-auto mb-3 text-[#FA5D1E]/60" />
                 <p className="text-sm text-white/80 mb-3">Ask me anything about your site.</p>
                 <div className="text-xs text-slate-500 space-y-1">
                   <p>"Change the name to Garage Pro"</p>
@@ -280,9 +280,9 @@ export default function AIAgentChat({ slug, onSiteUpdated, lang = 'en' }: Props)
             {loading && (
               <div className="flex gap-2 items-center text-slate-400 text-sm py-2">
                 <div className="flex gap-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#E07040] animate-pulse" />
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#E07040] animate-pulse" style={{ animationDelay: '0.2s' }} />
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#E07040] animate-pulse" style={{ animationDelay: '0.4s' }} />
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#FA5D1E] animate-pulse" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#FA5D1E] animate-pulse" style={{ animationDelay: '0.2s' }} />
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#FA5D1E] animate-pulse" style={{ animationDelay: '0.4s' }} />
                 </div>
                 <span>Thinking…</span>
               </div>
@@ -308,7 +308,7 @@ export default function AIAgentChat({ slug, onSiteUpdated, lang = 'en' }: Props)
                 }}
                 placeholder="Ask the agent to change something…"
                 rows={2}
-                className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-[#E07040] resize-none"
+                className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-[#FA5D1E] resize-none"
               />
               <button
                 onClick={handleSubmit}
@@ -346,7 +346,7 @@ function MessageBubble({
     if (!textBlock) return null;
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] bg-[#E07040]/15 border border-[#E07040]/30 text-white rounded-2xl rounded-tr-sm px-4 py-2 text-sm whitespace-pre-wrap">
+        <div className="max-w-[85%] bg-[#FA5D1E]/15 border border-[#FA5D1E]/30 text-white rounded-2xl rounded-tr-sm px-4 py-2 text-sm whitespace-pre-wrap">
           {textBlock.text}
         </div>
       </div>
@@ -405,7 +405,7 @@ function ToolProposalCard({
       case 'propose_field_update':
         return (
           <>
-            Change <strong className="text-[#E07040]">{input.field}</strong> to:{' '}
+            Change <strong className="text-[#FA5D1E]">{input.field}</strong> to:{' '}
             <span className="text-white">"{input.value}"</span>
           </>
         );
@@ -424,47 +424,47 @@ function ToolProposalCard({
       case 'propose_theme_change':
         return (
           <>
-            Change theme to <strong className="text-[#E07040]">{input.theme}</strong>
+            Change theme to <strong className="text-[#FA5D1E]">{input.theme}</strong>
           </>
         );
       case 'propose_add_service':
         return (
           <>
-            Add service: <strong className="text-[#E07040]">{input.title}</strong>
+            Add service: <strong className="text-[#FA5D1E]">{input.title}</strong>
             <div className="text-xs text-slate-400 mt-1">{input.description}</div>
           </>
         );
       case 'propose_remove_service':
         return (
           <>
-            Remove service at index <strong className="text-[#E07040]">{input.index}</strong>
+            Remove service at index <strong className="text-[#FA5D1E]">{input.index}</strong>
           </>
         );
       case 'propose_update_social':
         return (
           <>
-            Update <strong className="text-[#E07040]">{input.platform}</strong>:{' '}
+            Update <strong className="text-[#FA5D1E]">{input.platform}</strong>:{' '}
             <span className="text-slate-300 break-all text-xs">{input.url}</span>
           </>
         );
       case 'propose_contact_update':
         return (
           <>
-            Update contact <strong className="text-[#E07040]">{input.field}</strong>:{' '}
+            Update contact <strong className="text-[#FA5D1E]">{input.field}</strong>:{' '}
             <span className="text-white">"{input.value}"</span>
           </>
         );
       case 'propose_service_update':
         return (
           <>
-            Update service #{input.index} <strong className="text-[#E07040]">{input.field}</strong>:{' '}
+            Update service #{input.index} <strong className="text-[#FA5D1E]">{input.field}</strong>:{' '}
             <span className="text-white">"{input.value}"</span>
           </>
         );
       case 'propose_testimonial_add':
         return (
           <>
-            Add testimonial: <strong className="text-[#E07040]">{input.name}</strong>{' '}
+            Add testimonial: <strong className="text-[#FA5D1E]">{input.name}</strong>{' '}
             <span className="text-slate-400">({input.rating}★)</span>
             <div className="text-xs text-slate-400 mt-1 italic">"{input.content}"</div>
           </>
@@ -474,14 +474,14 @@ function ToolProposalCard({
       case 'propose_testimonial_update':
         return (
           <>
-            Update testimonial #{input.index} <strong className="text-[#E07040]">{input.field}</strong>:{' '}
+            Update testimonial #{input.index} <strong className="text-[#FA5D1E]">{input.field}</strong>:{' '}
             <span className="text-white">"{String(input.value)}"</span>
           </>
         );
       case 'propose_product_add':
         return (
           <>
-            Add product: <strong className="text-[#E07040]">{input.name}</strong>
+            Add product: <strong className="text-[#FA5D1E]">{input.name}</strong>
             {input.price && <span className="text-slate-300"> — {input.price}</span>}
             {input.description && (
               <div className="text-xs text-slate-400 mt-1">{input.description}</div>
@@ -493,7 +493,7 @@ function ToolProposalCard({
       case 'propose_product_update':
         return (
           <>
-            Update product #{input.index} <strong className="text-[#E07040]">{input.field}</strong>:{' '}
+            Update product #{input.index} <strong className="text-[#FA5D1E]">{input.field}</strong>:{' '}
             <span className="text-white">"{input.value}"</span>
           </>
         );
@@ -505,7 +505,7 @@ function ToolProposalCard({
         return (
           <>
             {t('setMargin')}{' '}
-            <strong className="text-[#E07040]">{input.margin_percent}%</strong>
+            <strong className="text-[#FA5D1E]">{input.margin_percent}%</strong>
             <div className="text-xs text-slate-400 mt-1">{t('marginNote')}</div>
           </>
         );
@@ -542,7 +542,7 @@ function ToolProposalCard({
       ? 'border-green-500/30 bg-green-500/5'
       : state.status === 'refused' || state.status === 'error'
       ? 'border-white/10 bg-white/[0.02] opacity-70'
-      : 'border-[#E07040]/40 bg-[#E07040]/5';
+      : 'border-[#FA5D1E]/40 bg-[#FA5D1E]/5';
 
   return (
     <div className={`border rounded-2xl p-4 text-sm space-y-3 ${borderClass}`}>

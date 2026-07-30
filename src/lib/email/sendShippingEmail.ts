@@ -42,7 +42,7 @@ export async function sendShippingEmail(params: ShippingEmailParams): Promise<bo
       </div>
       <p style="font-size: 14px; line-height: 1.6; color: #555;">
         Vous pouvez suivre votre colis avec ce numéro sur un service de suivi comme
-        <a href="https://www.17track.net/en" style="color: #E07040;">17track.net</a>.
+        <a href="https://www.17track.net/en" style="color: #FA5D1E;">17track.net</a>.
       </p>
       <p style="font-size: 14px; line-height: 1.6; color: #555;">Merci pour votre confiance,<br/>L'équipe ${shopName}</p>
     </div>

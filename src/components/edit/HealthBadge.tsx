@@ -10,7 +10,7 @@ export default function HealthBadge({ aiScore }: { aiScore: number }) {
 
   const config = {
     green: { color: '#34d399', label: 'Tout va bien', pulse: false },
-    orange: { color: '#E07040', label: 'Attention', pulse: true },
+    orange: { color: '#FA5D1E', label: 'Attention', pulse: true },
   }[level];
 
   const tooltip =
