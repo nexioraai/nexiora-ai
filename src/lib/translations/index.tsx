@@ -26,7 +26,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       setLangState(stored);
     } else {
       const browserLang = navigator.language.toLowerCase();
-      setLangState(browserLang.startsWith('fr') ? 'fr' : 'en');
+      if (browserLang.startsWith('fr')) setLangState('fr');
+      else if (browserLang.startsWith('es')) setLangState('es');
+      else if (browserLang.startsWith('ar')) setLangState('ar');
+      else setLangState('en');
     }
   }, []);
 
