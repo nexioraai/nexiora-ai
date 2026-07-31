@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { resolveDisplayPrice, DEFAULT_MARGIN_PERCENT, DEFAULT_ROUND_MODE } from '@/lib/pricing';
+import { useTranslation } from '@/lib/translations';
 
 const ACCENT = '#FA5D1E';
 
@@ -50,6 +51,7 @@ export default function CatalogSelections({
   marginPercent?: number;
   roundMode?: string;
 }) {
+  const { t } = useTranslation();
   const [selections, setSelections] = useState<Selection[]>([]);
   const [loading, setLoading] = useState(true);
   const [curating, setCurating] = useState(false);
@@ -85,7 +87,7 @@ export default function CatalogSelections({
       if (data.error) {
         setMessage('Erreur: ' + data.error);
       } else {
-        setMessage(`${data.count} produits suggérés — optimisation des titres…`);
+        setMessage(t('cs.suggested').replace('{count}', String(data.count)));
         await fetchSelections();
         // Auto-enhance titles
         try {
@@ -96,7 +98,7 @@ export default function CatalogSelections({
           });
           const enhData = await enhRes.json();
           if (enhData.enhanced > 0) {
-            setMessage(`${data.count} produits suggérés, ${enhData.enhanced} titres optimisés !`);
+            setMessage(t('cs.suggestedDone').replace('{count}', String(data.count)).replace('{enhanced}', String(enhData.enhanced)));
             await fetchSelections();
           }
         } catch {}
@@ -211,7 +213,7 @@ export default function CatalogSelections({
       if (data.error) {
         setMessage('Erreur: ' + data.error);
       } else {
-        setMessage(`${data.enhanced} titres et descriptions optimisés !`);
+        setMessage(t('cs.enhancedDone').replace('{count}', String(data.enhanced)));
         await fetchSelections();
       }
     } catch (e: any) {
@@ -230,7 +232,7 @@ export default function CatalogSelections({
         <div>
           <h2 className="text-lg font-bold text-white">Mes Produits Catalogue</h2>
           <p className="text-xs text-slate-400 mt-1">
-            {selections.length} produits · {approvedCount} approuvés
+            {t('cs.stats').replace('{count}', String(selections.length)).replace('{approved}', String(approvedCount))}
           </p>
         </div>
         <button
@@ -239,7 +241,7 @@ export default function CatalogSelections({
           className="px-4 py-2 rounded-xl text-sm font-semibold transition disabled:opacity-40"
           style={{ background: `${ACCENT}20`, color: ACCENT, border: `1px solid ${ACCENT}40` }}
         >
-          {curating ? 'Analyse IA…' : selections.length > 0 ? '🔄 Re-générer suggestions' : '✨ Générer suggestions IA'}
+          {curating ? t('cs.curating') : selections.length > 0 ? t('cs.regenerate') : t('cs.generate')}
         </button>
         {selections.length > 0 && unenhancedCount > 0 && (
           <button
@@ -248,7 +250,7 @@ export default function CatalogSelections({
             className="px-4 py-2 rounded-xl text-sm font-semibold transition disabled:opacity-40"
             style={{ background: '#3b82f620', color: '#3b82f6', border: '1px solid #3b82f640' }}
           >
-            {enhancing ? 'Réécriture…' : `✍️ Optimiser ${unenhancedCount} titres`}
+            {enhancing ? t('cs.enhancing') : t('cs.optimizeTitles').replace('{count}', String(unenhancedCount))}
           </button>
         )}
       </div>
@@ -312,8 +314,8 @@ export default function CatalogSelections({
         <div className="text-center py-8 text-slate-500 text-sm">Chargement…</div>
       ) : selections.length === 0 ? (
         <div className="text-center py-12 text-slate-500">
-          <p className="text-sm">Aucun produit sélectionné.</p>
-          <p className="text-xs mt-1">Cliquez sur "Générer suggestions IA" pour que Claude analyse votre niche.</p>
+          <p className="text-sm">{t('cs.empty')}</p>
+          <p className="text-xs mt-1">{t('cs.emptyHint')}</p>
         </div>
       ) : (
         <div className="space-y-2 max-h-[600px] overflow-y-auto">

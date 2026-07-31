@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useTranslation } from '@/lib/translations';
 
 // Couleur accent admin Nexiora — changer ici se répercute partout dans ce composant.
 const ACCENT = '#FA5D1E';
@@ -33,6 +34,7 @@ const EMPTY_DRAFT: Draft = {
 };
 
 export default function ProductManager({ slug }: { slug: string }) {
+  const { t } = useTranslation();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
@@ -150,7 +152,7 @@ export default function ProductManager({ slug }: { slug: string }) {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Supprimer ce produit ?')) return;
+    if (!confirm(t('pm.confirmDelete'))) return;
     setBusy(true);
     try {
       const res = await fetch(`/api/shop/products/${id}`, {
@@ -166,15 +168,15 @@ export default function ProductManager({ slug }: { slug: string }) {
   return (
     <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-white">Boutique</h3>
-        <p className="text-sm text-white/40 mt-1">Gère les produits vendus sur ton site.</p>
+        <h3 className="text-lg font-semibold text-white">{t('pm.title')}</h3>
+        <p className="text-sm text-white/40 mt-1">{t('pm.subtitle')}</p>
       </div>
 
       {/* Liste produits */}
       {loading ? (
         <p className="text-white/40 text-sm">Chargement…</p>
       ) : products.length === 0 ? (
-        <p className="text-white/40 text-sm">Aucun produit. Ajoute ton premier produit ci-dessous.</p>
+        <p className="text-white/40 text-sm">{t('pm.empty')}</p>
       ) : (
         <div className="space-y-3">
           {products.map((p) => (
@@ -185,12 +187,12 @@ export default function ProductManager({ slug }: { slug: string }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-white truncate">{p.name}</span>
-                  {!p.published && <span className="text-[10px] uppercase tracking-wide text-white/40 border border-white/15 rounded-full px-2 py-0.5">Masqué</span>}
+                  {!p.published && <span className="text-[10px] uppercase tracking-wide text-white/40 border border-white/15 rounded-full px-2 py-0.5">{t('pm.hidden')}</span>}
                 </div>
                 <div className="text-sm text-white/50">{p.price.toFixed(2)} {p.currency} · stock {p.stock}</div>
               </div>
-              <button onClick={() => startEdit(p)} className="text-sm px-3 py-1.5 rounded-lg transition" style={{ background: `${ACCENT}1a`, color: ACCENT }}>Éditer</button>
-              <button onClick={() => handleDelete(p.id)} disabled={busy} className="text-sm px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 transition">Suppr.</button>
+              <button onClick={() => startEdit(p)} className="text-sm px-3 py-1.5 rounded-lg transition" style={{ background: `${ACCENT}1a`, color: ACCENT }}>{t('pm.edit')}</button>
+              <button onClick={() => handleDelete(p.id)} disabled={busy} className="text-sm px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 transition">{t('pm.delete')}</button>
             </div>
           ))}
         </div>
@@ -198,34 +200,34 @@ export default function ProductManager({ slug }: { slug: string }) {
 
       {/* Formulaire */}
       <div ref={formRef} className="pt-6 border-t border-white/10 space-y-4">
-        <p className="text-sm font-semibold text-white/70">{editingId ? 'Modifier le produit' : 'Nouveau produit'}</p>
+        <p className="text-sm font-semibold text-white/70">{editingId ? t('pm.formEdit') : t('pm.formNew')}</p>
 
-        <PField label="Nom">
+        <PField label={t('pm.field.name')}>
           <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })}
             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-white/30 transition" />
         </PField>
 
-        <PField label="Description">
+        <PField label={t('pm.field.description')}>
           <textarea value={draft.description} rows={3} onChange={(e) => setDraft({ ...draft, description: e.target.value })}
             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-white/30 transition resize-y" />
         </PField>
 
         <div className="grid grid-cols-3 gap-3">
-          <PField label="Prix">
+          <PField label={t('pm.field.price')}>
             <input type="number" step="0.01" value={draft.price} onChange={(e) => setDraft({ ...draft, price: e.target.value })}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-white/30 transition" />
           </PField>
-          <PField label="Devise">
+          <PField label={t('pm.field.currency')}>
             <input value={draft.currency} onChange={(e) => setDraft({ ...draft, currency: e.target.value.toUpperCase() })}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-white/30 transition" />
           </PField>
-          <PField label="Stock">
+          <PField label={t('pm.field.stock')}>
             <input type="number" value={draft.stock} onChange={(e) => setDraft({ ...draft, stock: e.target.value })}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-white/30 transition" />
           </PField>
         </div>
 
-        <PField label="Images">
+        <PField label={t('pm.field.images')}>
           {draft.images.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
               {draft.images.map((url) => (
@@ -238,7 +240,7 @@ export default function ProductManager({ slug }: { slug: string }) {
           )}
           <label className="block w-full text-center py-3 rounded-xl cursor-pointer font-semibold transition border"
             style={{ background: `${ACCENT}1a`, color: ACCENT, borderColor: `${ACCENT}33` }}>
-            {uploading ? 'Upload…' : 'Ajouter une image'}
+            {uploading ? t('pm.uploading') : t('pm.addImage')}
             <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
           </label>
         </PField>
@@ -252,10 +254,10 @@ export default function ProductManager({ slug }: { slug: string }) {
           <button onClick={handleSubmit} disabled={busy}
             className="flex-1 py-3 rounded-2xl font-semibold transition disabled:opacity-40"
             style={{ background: ACCENT, color: '#fff' }}>
-            {busy ? '…' : editingId ? 'Enregistrer' : 'Ajouter le produit'}
+            {busy ? '…' : editingId ? t('pm.save') : t('pm.add')}
           </button>
           {editingId && (
-            <button onClick={resetForm} className="px-5 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white/60 font-semibold transition">Annuler</button>
+            <button onClick={resetForm} className="px-5 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white/60 font-semibold transition">{t('pm.cancel')}</button>
           )}
         </div>
 

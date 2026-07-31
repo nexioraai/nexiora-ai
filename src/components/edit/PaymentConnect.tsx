@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useTranslation } from '@/lib/translations';
 
 const ACCENT = '#FA5D1E';
 
@@ -10,6 +11,7 @@ async function authHeaders() {
 }
 
 export default function PaymentConnect({ slug, mode }: { slug: string; mode?: number }) {
+  const { t } = useTranslation();
   const isAutomated = mode === 3;
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -71,7 +73,7 @@ export default function PaymentConnect({ slug, mode }: { slug: string; mode?: nu
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erreur');
-      setShipMsg('Tarif enregistré');
+      setShipMsg(t('pc.rateSaved'));
       setTimeout(() => setShipMsg(''), 3000);
     } catch (e: any) {
       setShipMsg(e.message);
@@ -84,7 +86,7 @@ export default function PaymentConnect({ slug, mode }: { slug: string; mode?: nu
     <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm mt-8">
       <h2 className="text-xl font-bold mb-2">Paiements</h2>
       <p className="text-sm text-white/50 mb-5">
-        {isAutomated ? 'Connecte ton compte Stripe pour recevoir tes profits automatiquement apres chaque vente.' : 'Connecte ton compte Stripe pour recevoir les paiements de ta boutique directement.'}
+        {isAutomated ? t('pc.introAutomated') : t('pc.introNormal')}
       </p>
 
       {loading ? (
@@ -92,13 +94,13 @@ export default function PaymentConnect({ slug, mode }: { slug: string; mode?: nu
       ) : ready ? (
         <div className="flex items-center gap-2 text-sm font-semibold text-green-400">
           <span className="w-2 h-2 rounded-full bg-green-400" />
-          Compte Stripe connecté et prêt à recevoir des paiements
+          {t('pc.connected')}
         </div>
       ) : connected ? (
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-sm font-semibold text-yellow-400">
             <span className="w-2 h-2 rounded-full bg-yellow-400" />
-            Onboarding incomplet — termine la configuration Stripe
+            {t('pc.onboardingIncomplete')}
           </div>
           <button
             onClick={handleConnect}
@@ -116,7 +118,7 @@ export default function PaymentConnect({ slug, mode }: { slug: string; mode?: nu
           className="px-5 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-40"
           style={{ background: `${ACCENT}1a`, color: ACCENT, border: `1px solid ${ACCENT}33` }}
         >
-          {busy ? 'Redirection…' : 'Connecter Stripe'}
+          {busy ? t('pc.redirecting') : t('pc.connectStripe')}
         </button>
       )}
 
@@ -125,10 +127,10 @@ export default function PaymentConnect({ slug, mode }: { slug: string; mode?: nu
       {!isAutomated && (
         <div className="mt-8 pt-6 border-t border-white/10">
         <label className="text-xs text-slate-400 uppercase tracking-wider font-semibold block mb-2">
-          Frais de livraison (forfait)
+          {t('pc.shippingLabel')}
         </label>
         <p className="text-sm text-white/50 mb-3">
-          Montant fixe ajouté à chaque commande. Mets 0 pour la livraison gratuite.
+          {t('pc.shippingHint')}
         </p>
         <div className="flex items-center gap-3">
           <input
@@ -145,7 +147,7 @@ export default function PaymentConnect({ slug, mode }: { slug: string; mode?: nu
             className="px-5 py-3 rounded-xl text-sm font-semibold transition disabled:opacity-40"
             style={{ background: `${ACCENT}1a`, color: ACCENT, border: `1px solid ${ACCENT}33` }}
           >
-            {savingShip ? '…' : 'Enregistrer'}
+            {savingShip ? '…' : t('pc.save')}
           </button>
           {shipMsg && <span className="text-sm text-white/60">{shipMsg}</span>}
         </div>
