@@ -62,10 +62,10 @@ const PLACEHOLDER_BY_LANG: Record<string, string[]> = {
   es: [
     'Crear mi sitio web…',
     'Lanzar mi marca de ropa, sin un peso…',
-    'Vender sin stock, sin invertir…',
+    'Vender sin stock ni dinero…',
     'Abrir mi tienda, cero riesgo…',
-    'Vender mis creaciones, sin adelantar nada…',
-    'Mis clientes personalizan, yo vendo…',
+    'Mi tienda, cero riesgo…',
+    'Mis clientes crean, yo vendo…',
   ],
   ar: [
     'أنشئ موقعي الإلكتروني…',
@@ -133,6 +133,11 @@ export default function OnboardingChat() {
   const twPhase = useRef<'typing' | 'pausing' | 'deleting'>('typing');
   useEffect(() => {
     if (input) { setTyped(''); return; } // fige l'animation des que l'utilisateur tape
+    // reinit propre a chaque changement de langue (evite un index invalide sur l'ancienne liste)
+    twPhrase.current = 0;
+    twChar.current = 0;
+    twPhase.current = 'typing';
+    setTyped('');
     let timer: ReturnType<typeof setTimeout>;
     const tick = () => {
       const phrases = PLACEHOLDERS;
