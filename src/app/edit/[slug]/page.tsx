@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { useTranslation } from '@/lib/translations';
 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -22,6 +23,7 @@ export default function EditPage() {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
+  const { t } = useTranslation();
 
   const [site, setSite] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -129,7 +131,7 @@ export default function EditPage() {
       try {
         const { score, passed } = computeAiScore(site as any);
         const gained = passed.filter((p) => !initialPassed.current.includes(p));
-        const reason = gained.length > 0 ? gained.join(', ') : 'Mise à jour du contenu';
+        const reason = gained.length > 0 ? gained.join(', ') : t('edit.score.contentUpdate');
         await supabase.from('score_history').insert({ slug, score, reason });
         initialPassed.current = passed;
       } catch (e) {
@@ -200,9 +202,9 @@ export default function EditPage() {
             <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm mb-8">
               <div className="flex flex-col md:flex-row md:items-stretch gap-6">
                 <div className="md:w-1/3 flex flex-col justify-center">
-                  <p className="text-sm font-semibold text-white/60 mb-1">Visibilité IA</p>
+                  <p className="text-sm font-semibold text-white/60 mb-1">{t('edit.aivis.title')}</p>
                   <p className="text-5xl font-black leading-none" style={{ color }}>{score}<span className="text-white/30 text-2xl font-medium">/100</span></p>
-                  <p className="text-xs text-white/40 mt-2">{missing.length === 0 ? 'Visibilité maximale atteinte 🎯' : `${missing.length} action${missing.length > 1 ? 's' : ''} pour atteindre 100`}</p>
+                  <p className="text-xs text-white/40 mt-2">{missing.length === 0 ? t('edit.aivis.max') : t('edit.aivis.actionsToReach').replace('{count}', String(missing.length))}</p>
                 </div>
                 <div className="md:w-2/3">
                   <div style={{ width: '100%', height: 160 }}>
@@ -236,12 +238,12 @@ export default function EditPage() {
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
-                  <p className="text-[11px] text-white/30 mt-1 text-center">Évolution du score dans le temps</p>
+                  <p className="text-[11px] text-white/30 mt-1 text-center">{t('edit.aivis.scoreEvolution')}</p>
                 </div>
               </div>
               {missing.length > 0 && (
                 <div className="mt-6 pt-6 border-t border-white/10">
-                  <p className="text-sm font-semibold text-white/70 mb-3">Pour améliorer ta visibilité :</p>
+                  <p className="text-sm font-semibold text-white/70 mb-3">{t('edit.aivis.improve')}</p>
                   <ul className="space-y-2">
                     {missing.map((m, i) => (
                       <li key={i} className="flex items-center gap-2 text-sm text-white/60">
@@ -289,7 +291,7 @@ export default function EditPage() {
 
           {/* Margin control — visible for mode 3 reseller & pod_custom */}
           {site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom') && (
-            <FieldSection label="Marge bénéficiaire (%)">
+            <FieldSection label={t('edit.margin.label')}>
               <div className="flex items-center gap-3">
                 <input
                   type="number"
@@ -310,7 +312,7 @@ export default function EditPage() {
                 <span className="text-slate-400 text-lg">%</span>
               </div>
               <p className="text-xs text-slate-500 mt-1">
-                Prix de vente = coût fournisseur × (1 + marge/100). Ex : coût 10$ à 50% → vente 15$. Aucune limite — vous choisissez librement. Modifiable aussi via l'agent IA.
+                {t('edit.margin.formula')}
               </p>
               {(() => {
                 const m = site.cj_margin_percent ?? DEFAULT_MARGIN_PERCENT;
@@ -319,11 +321,9 @@ export default function EditPage() {
                 if (m < MIN_MARGIN_PERCENT) {
                   return (
                     <div className="mt-3 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3">
-                      <p className="text-sm text-red-300 font-medium">Marge insuffisante</p>
+                      <p className="text-sm text-red-300 font-medium">{t('edit.margin.insufficientTitle')}</p>
                       <p className="text-xs text-red-200/80 mt-1">
-                        Avec {m}% de marge, il vous resterait {profit10.toFixed(2)}$ sur un produit à 10$ de coût, après la commission Woorri de {NEXIORA_COMMISSION_PERCENT}%.
-                        Un seul remboursement ou colis perdu effacerait le profit de dizaines de ventes.
-                        Marge minimum autorisée : {MIN_MARGIN_PERCENT}%.
+                        {t('edit.margin.insufficientBody').replace('{margin}', String(m)).replace('{profit}', profit10.toFixed(2)).replace('{commission}', String(NEXIORA_COMMISSION_PERCENT)).replace('{min}', String(MIN_MARGIN_PERCENT))}
                       </p>
                     </div>
                   );
@@ -331,17 +331,16 @@ export default function EditPage() {
                 if (m < LOW_MARGIN_PERCENT) {
                   return (
                     <div className="mt-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3">
-                      <p className="text-sm text-amber-300 font-medium">Marge faible</p>
+                      <p className="text-sm text-amber-300 font-medium">{t('edit.margin.lowTitle')}</p>
                       <p className="text-xs text-amber-200/80 mt-1">
-                        Après la commission Woorri de {NEXIORA_COMMISSION_PERCENT}%, il vous reste {profit10.toFixed(2)}$ sur un produit à 10$ de coût.
-                        Viable, mais une hausse du prix fournisseur ou quelques retours réduiraient fortement votre rentabilité.
+                        {t('edit.margin.lowBody').replace('{commission}', String(NEXIORA_COMMISSION_PERCENT)).replace('{profit}', profit10.toFixed(2))}
                       </p>
                     </div>
                   );
                 }
                 return (
                   <p className="text-xs text-emerald-400/80 mt-2">
-                    Profit net estimé : {profit10.toFixed(2)}$ sur un produit à 10$ de coût (après commission Woorri de {NEXIORA_COMMISSION_PERCENT}%).
+                    {t('edit.margin.netProfit').replace('{profit}', profit10.toFixed(2)).replace('{commission}', String(NEXIORA_COMMISSION_PERCENT))}
                   </p>
                 );
               })()}
@@ -350,12 +349,12 @@ export default function EditPage() {
 
           {/* Round .99 — visible for mode 3 reseller & pod_custom */}
           {site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom') && (
-            <FieldSection label="Arrondi psychologique (.99)">
+            <FieldSection label={t('edit.round.label')}>
               <div className="flex gap-2 flex-wrap">
                 {[
-                  { value: 'off', label: 'Désactivé' },
-                  { value: 'down', label: ',99 inférieur' },
-                  { value: 'up', label: ',99 supérieur' },
+                  { value: 'off', label: t('edit.round.off') },
+                  { value: 'down', label: t('edit.round.down') },
+                  { value: 'up', label: t('edit.round.up') },
                 ].map((opt) => (
                   <button
                     key={opt.value}
@@ -371,7 +370,7 @@ export default function EditPage() {
                 ))}
               </div>
               <p className="text-xs text-slate-500 mt-1">
-                « Inférieur » : 18,40 → 17,99. « Supérieur » : 18,40 → 18,99. S'applique au catalogue et à la recherche.
+                {t('edit.round.help')}
               </p>
             </FieldSection>
           )}
@@ -429,7 +428,7 @@ export default function EditPage() {
                   />
                   {uploadingDesign ? 'Uploading…' : '+ Ajouter un design'}
                 </label>
-                <p className="text-xs text-slate-500">PNG, JPEG, SVG, WebP, TIFF ou PDF — max 50 MB. Résolution 300 DPI recommandée.</p>
+                <p className="text-xs text-slate-500">{t('edit.upload.formats')}</p>
                 {podDesigns.length > 0 && (
                   <div className="space-y-3">
                     <button
@@ -445,7 +444,7 @@ export default function EditPage() {
                       disabled={loadingCatalog}
                       className="w-full py-2 rounded-xl border border-white/20 text-sm text-slate-300 hover:border-[#FA5D1E] transition disabled:opacity-40"
                     >
-                      {loadingCatalog ? 'Chargement…' : podCatalog.length > 0 ? `${podCatalog.length} produits chargés — Modifier la sélection` : '📦 Choisir les produits à vendre'}
+                      {loadingCatalog ? t('edit.catalog.loading') : podCatalog.length > 0 ? t('edit.catalog.loaded').replace('{count}', String(podCatalog.length)) : t('edit.catalog.choose')}
                     </button>
                     {podCatalog.length > 0 && (
                       <div className="space-y-2 border border-white/10 rounded-xl p-3">
@@ -515,7 +514,7 @@ export default function EditPage() {
                           );
                         })}
                         <div className="text-xs text-slate-400 pt-1">
-                          {Object.values(selectedProducts).filter((v: any) => v.selected).length} produit(s) sélectionné(s)
+                          {t('edit.catalog.selected').replace('{count}', String(Object.values(selectedProducts).filter((v: any) => v.selected).length))}
                         </div>
                         </div>
                       </div>
@@ -526,7 +525,7 @@ export default function EditPage() {
                   <button
                     onClick={async () => {
                       setGeneratingMockups(true);
-                      setMessage('Sauvegarde des sélections…');
+                      setMessage(t('edit.catalog.saving'));
                       try {
                         // Auto-save selected_products before generating
                         const updatedDesigns = podDesigns.length > 0
@@ -542,7 +541,7 @@ export default function EditPage() {
                         for (let pass = 0; pass < 6; pass++) {
                           const passTasks: any[] = [];
                           for (let i = 0; i < selectedCount; i++) {
-                            setMessage(`Passe ${pass + 1} — produit ${i + 1}… (${totalGenerated} prêts)`);
+                            setMessage(t('edit.mockups.pass').replace('{pass}', String(pass + 1)).replace('{i}', String(i + 1)).replace('{total}', String(totalGenerated)));
                             const res = await fetch('/api/pod/generate-mockups', {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
@@ -556,7 +555,7 @@ export default function EditPage() {
                           }
                           if (passTasks.length === 0) break; // all done or nothing launchable
 
-                          setMessage(`Passe ${pass + 1} — ${passTasks.length} lancés, récupération…`);
+                          setMessage(t('edit.mockups.passLaunched').replace('{pass}', String(pass + 1)).replace('{count}', String(passTasks.length)));
                           let pollData: any = null;
                           for (let p = 0; p < 12; p++) {
                             await new Promise(r => setTimeout(r, 10000));
@@ -573,8 +572,8 @@ export default function EditPage() {
                           if (Array.isArray(pollData?.errors) && pollData.errors.length > 0) allErrors.push(...pollData.errors);
                           if ((pollData?.generated ?? 0) === 0) break; // no progress -> stop
                         }
-                        const okMsg = `${totalGenerated} mockups générés !`;
-                        setMessage(allErrors.length > 0 ? `${okMsg} ⚠️ ${allErrors.length} échec(s): ${allErrors.map(e => e.split(':')[0]).join(', ')}` : okMsg);
+                        const okMsg = t('edit.mockups.done').replace('{total}', String(totalGenerated));
+                        setMessage(allErrors.length > 0 ? t('edit.mockups.doneWithErrors').replace('{total}', String(totalGenerated)).replace('{count}', String(allErrors.length)).replace('{details}', allErrors.map(e => e.split(':')[0]).join(', ')) : okMsg);
                         const { data: updated } = await supabase.from('sites').select('pod_designs').eq('slug', slug).single();
                         if (updated?.pod_designs) setPodDesigns(updated.pod_designs);
                       } catch (err: any) {
@@ -586,7 +585,7 @@ export default function EditPage() {
                     disabled={generatingMockups}
                     className="w-full py-3 rounded-xl border border-white/20 text-sm font-medium text-slate-200 hover:border-[#FA5D1E] hover:text-white transition disabled:opacity-40"
                   >
-                    {generatingMockups ? 'Génération en cours…' : '🎨 Générer les mockups automatiquement'}
+                    {generatingMockups ? t('edit.mockups.generating') : t('edit.mockups.generate')}
                   </button>
                 )}
               </div>
