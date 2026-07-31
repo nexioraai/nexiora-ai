@@ -19,6 +19,7 @@ const FORMATS: { id: Format; icon: any; titleKey: TranslationKey; descKey: Trans
 ];
 
 function CopyBlock({ label, text }: { label: string; text: string }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     await navigator.clipboard.writeText(text);
@@ -31,7 +32,7 @@ function CopyBlock({ label, text }: { label: string; text: string }) {
         <span className="text-sm font-semibold text-white/80">{label}</span>
         <button onClick={copy}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-white/10 text-white/60 hover:text-white hover:border-white/30 transition-all">
-          {copied ? <><Check className="w-3.5 h-3.5" />Copié</> : <><Copy className="w-3.5 h-3.5" />Copier</>}
+          {copied ? <><Check className="w-3.5 h-3.5" />{t('mk.copied')}</> : <><Copy className="w-3.5 h-3.5" />{t('mk.copy')}</>}
         </button>
       </div>
       <pre className="px-5 py-4 text-sm text-white/70 whitespace-pre-wrap font-sans leading-relaxed">{text}</pre>
@@ -40,6 +41,7 @@ function CopyBlock({ label, text }: { label: string; text: string }) {
 }
 
 function ContentResult({ format, content }: { format: Format; content: any }) {
+  const { t } = useTranslation();
   if (format === 'article') {
     const structure = Array.isArray(content.structure)
       ? content.structure.map((h: any) => `${h.niveau?.toUpperCase() || ''} — ${h.texte || ''}`).join('\n')
@@ -52,7 +54,7 @@ function ContentResult({ format, content }: { format: Format; content: any }) {
               <span className="text-sm font-semibold text-white/80">Image de couverture</span>
               <a href={content.cover} target="_blank" rel="noopener noreferrer" download
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-white/10 text-white/60 hover:text-white hover:border-white/30 transition-all">
-                <Download className="w-3.5 h-3.5" />Télécharger
+                <Download className="w-3.5 h-3.5" />{t('mk.download')}
               </a>
             </div>
             <div className="p-5">
@@ -60,10 +62,10 @@ function ContentResult({ format, content }: { format: Format; content: any }) {
             </div>
           </div>
         )}
-        <CopyBlock label="Titre" text={content.titre || ''} />
-        <CopyBlock label="Méta-description" text={content.meta_description || ''} />
+        <CopyBlock label={t('mk.title')} text={content.titre || ''} />
+        <CopyBlock label={t('mk.metaDescription')} text={content.meta_description || ''} />
         {Array.isArray(content.mots_cles) && content.mots_cles.length > 0 && (
-          <CopyBlock label="Mots-clés" text={content.mots_cles.join(', ')} />
+          <CopyBlock label={t('mk.keywords')} text={content.mots_cles.join(', ')} />
         )}
         {structure && <CopyBlock label="Structure (Hn)" text={structure} />}
         <CopyBlock label="Article complet" text={content.contenu || ''} />
@@ -78,10 +80,10 @@ function ContentResult({ format, content }: { format: Format; content: any }) {
         {content.image && (
           <div className="border border-white/8 rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)' }}>
             <div className="flex items-center justify-between px-5 py-3 border-b border-white/8">
-              <span className="text-sm font-semibold text-white/80">Visuel généré</span>
+              <span className="text-sm font-semibold text-white/80">{t('mk.visualGenerated')}</span>
               <a href={content.image} download="woorri-visuel.png"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-white/10 text-white/60 hover:text-white hover:border-white/30 transition-all">
-                <Download className="w-3.5 h-3.5" />Télécharger
+                <Download className="w-3.5 h-3.5" />{t('mk.download')}
               </a>
             </div>
             <div className="p-5 flex justify-center">
@@ -98,7 +100,7 @@ function ContentResult({ format, content }: { format: Format; content: any }) {
   return (
     <div className="flex flex-col gap-4">
       <CopyBlock label="Objet" text={content.objet || ''} />
-      <CopyBlock label="Pré-en-tête" text={content.preheader || ''} />
+      <CopyBlock label={t('mk.preheader')} text={content.preheader || ''} />
       <CopyBlock label="Corps de l'email" text={content.corps || ''} />
       <CopyBlock label="Bouton CTA" text={content.bouton_cta || ''} />
     </div>
@@ -148,12 +150,12 @@ export default function MarketingPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'Échec de la génération.');
+        setError(data.error || t('mk.genFailed'));
       } else {
         setResult({ format: data.format, content: data.content });
       }
     } catch (e) {
-      setError('Une erreur est survenue. Réessayez.');
+      setError(t('mk.genError'));
     } finally {
       setGenerating(false);
     }

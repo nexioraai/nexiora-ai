@@ -57,7 +57,7 @@ type Language = string;
 
 export default function OnboardingFlow() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const [step, setStep] = useState<Step>(1);
   const [prompt, setPrompt] = useState('');
   const [language, setLanguage] = useState<Language>('auto');
@@ -68,7 +68,8 @@ export default function OnboardingFlow() {
   const [authLoaded, setAuthLoaded] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
 
-  const LOADING_STEPS = LOADING_BY_LANG[language] || LOADING_BY_LANG.fr;
+  const effectiveLang = language === 'auto' ? lang : language;
+  const LOADING_STEPS = LOADING_BY_LANG[effectiveLang] || LOADING_BY_LANG[lang] || LOADING_BY_LANG.fr;
 
   useEffect(() => {
     if (step !== 3) { setLoadingStep(0); return; }
