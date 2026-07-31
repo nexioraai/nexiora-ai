@@ -32,6 +32,7 @@ html, body {
   overscroll-behavior-y: none;
   touch-action: pan-y;
   background: #0a050e;
+  min-height: 100dvh;
 }
 body {
   background: #0a050e;

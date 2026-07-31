@@ -135,7 +135,7 @@ export default function AdminDashboard() {
 
       {/* Commandes a payer manuellement chez CJ */}
       {(stats.toPayOrders || []).length > 0 && (
-        <div className="bg-amber-500/10 border border-amber-500/40 rounded-2xl p-6 mb-10">
+        <div className="bg-amber-500/10 border border-amber-500/40 rounded-2xl p-6 mb-10 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.45)]">
           <div className="flex items-center gap-3 mb-4">
             <Truck className="w-5 h-5 text-amber-400" />
             <h2 className="text-lg font-semibold text-amber-100">
