@@ -45,17 +45,17 @@ const LOADING_BY_LANG: Record<string, string[]> = {
 const PLACEHOLDER_BY_LANG: Record<string, string[]> = {
   fr: [
     'Créer mon site web…',
-    'Lancer ma marque de vêtements, sans un sou…',
-    'Vendre sans stock, sans investir…',
-    'Ouvrir ma boutique, zéro risque…',
+    'Ma marque de vêtements, sans un sou…',
+    'Vendre sans stock ni argent…',
+    'Ma boutique, zéro risque…',
     'Vendre mes créations, sans avancer d\'argent…',
-    'Mes clients personnalisent, moi je vends…',
+    'Mes clients créent, je vends…',
   ],
   en: [
     'Build my website…',
-    'Launch my clothing brand, $0 down…',
-    'Sell with no stock, no investment…',
-    'Open my shop, zero risk…',
+    'My clothing brand, $0 down…',
+    'Sell with no stock, no cash…',
+    'My shop, zero risk…',
     'Sell my creations, nothing upfront…',
     'My customers design, I sell…',
   ],
@@ -119,9 +119,12 @@ export default function OnboardingChat() {
   const [siteMode, setSiteMode] = useState<number | null>(null);
   const [dropshipType, setDropshipType] = useState<string | null>(null);
   const [showDropshipPicker, setShowDropshipPicker] = useState(false);
-  const uiLang = detectUILang(
-    messages.filter((m) => m.role === 'user').map((m) => m.content).join(' ')
-  );
+  const typedText = messages.filter((m) => m.role === 'user').map((m) => m.content).join(' ');
+  const browserLang = typeof navigator !== 'undefined'
+    ? (navigator.language || 'fr').slice(0, 2).toLowerCase()
+    : 'fr';
+  const supportedLang = ['fr', 'en', 'es', 'ar'].includes(browserLang) ? browserLang : 'fr';
+  const uiLang = typedText.trim() ? detectUILang(typedText) : supportedLang;
   const LOADING_STEPS = LOADING_BY_LANG[uiLang] || LOADING_BY_LANG.fr;
   const PLACEHOLDERS = PLACEHOLDER_BY_LANG[uiLang] || PLACEHOLDER_BY_LANG.fr;
   const [typed, setTyped] = useState('');
