@@ -29,7 +29,6 @@ html, body {
   overflow-x: hidden;
   position: relative;
   overscroll-behavior-x: none;
-  overscroll-behavior-y: none;
   touch-action: pan-y;
   background: #0a050e;
   min-height: 100dvh;
