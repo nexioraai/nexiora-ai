@@ -3,11 +3,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useTranslation } from '@/lib/translations';
 
 type Mode = 'signup' | 'login' | 'forgot';
 
 export default function SignupPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [mode, setMode] = useState<Mode>('login');
   const [firstName, setFirstName] = useState('');
   const [email, setEmail] = useState('');
@@ -31,7 +33,7 @@ export default function SignupPage() {
         if (msg.includes('already') || msg.includes('registered') || msg.includes('exists')) {
           setMode('login');
           setPassword('');
-          setInfo('Cet email a déjà un compte. Connectez-vous avec votre mot de passe.');
+          setInfo(t('login.emailExists'));
         } else {
           setError(error.message);
         }
@@ -90,13 +92,13 @@ export default function SignupPage() {
   const isLogin = mode === 'login';
   const isForgot = mode === 'forgot';
 
-  const titleText = isSignup ? 'Créez votre compte'
-    : isLogin ? 'Connectez-vous à votre compte'
-    : 'Réinitialiser le mot de passe';
+  const titleText = isSignup ? t('login.titleSignup')
+    : isLogin ? t('login.titleLogin')
+    : t('login.titleReset');
 
   const submitText = loading
-    ? (isSignup ? 'Création du compte...' : isLogin ? 'Connexion...' : 'Envoi...')
-    : (isSignup ? 'Créer mon compte' : isLogin ? 'Se connecter' : 'Envoyer le lien');
+    ? (isSignup ? t('login.btnSignupLoading') : isLogin ? t('login.btnLoginLoading') : t('login.btnResetLoading'))
+    : (isSignup ? t('login.btnSignup') : isLogin ? t('login.btnLogin') : t('login.btnReset'));
 
   return (
     <div style={{
@@ -143,7 +145,7 @@ export default function SignupPage() {
             textAlign: 'center',
           }}>
             <p style={{ color: '#f5ede1', fontWeight: 600, fontSize: '0.95rem', margin: '0 0 1rem 0' }}>
-              ✉️ Vérifiez vos emails pour confirmer votre compte !
+              {t('login.checkEmailSignup')}
             </p>
             <button type="button" onClick={() => { setSuccess(false); switchTo('login'); }} style={{
               color: '#d97a4f',
@@ -154,7 +156,7 @@ export default function SignupPage() {
               padding: 0,
               fontFamily: 'inherit',
               fontSize: '0.95rem',
-            }}>Aller à la connexion →</button>
+            }}>{t('login.goToLogin')}</button>
           </div>
         ) : forgotSuccess ? (
           <div style={{
@@ -165,10 +167,10 @@ export default function SignupPage() {
             textAlign: 'center',
           }}>
             <p style={{ color: '#f5ede1', fontWeight: 600, fontSize: '0.95rem', margin: '0 0 0.5rem 0' }}>
-              ✉️ Email envoyé !
+              {t('login.emailSent')}
             </p>
             <p style={{ color: '#a89684', fontSize: '0.875rem', margin: '0 0 1rem 0', lineHeight: 1.5 }}>
-              Cliquez sur le lien dans votre boîte mail pour réinitialiser votre mot de passe.
+              {t('login.checkEmailReset')}
             </p>
             <button type="button" onClick={() => switchTo('login')} style={{
               color: '#d97a4f',
@@ -179,7 +181,7 @@ export default function SignupPage() {
               padding: 0,
               fontFamily: 'inherit',
               fontSize: '0.95rem',
-            }}>← Retour à la connexion</button>
+            }}>{t('login.backToLogin')}</button>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -200,7 +202,7 @@ export default function SignupPage() {
               <input
                 value={firstName}
                 onChange={e => setFirstName(e.target.value)}
-                placeholder="Prénom"
+                placeholder={t('login.firstName')}
                 type="text"
                 autoComplete="given-name"
                 style={{
@@ -229,7 +231,7 @@ export default function SignupPage() {
             <input
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="Email"
+              placeholder={t('login.email')}
               type="email"
               autoComplete="email"
               style={{
@@ -260,7 +262,7 @@ export default function SignupPage() {
                 <input
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder={isSignup ? 'Mot de passe (min. 6 caractères)' : 'Mot de passe'}
+                  placeholder={isSignup ? t('login.passwordSignup') : t('login.password')}
                   type={showPassword ? 'text' : 'password'}
                   autoComplete={isSignup ? 'new-password' : 'current-password'}
                   style={{
@@ -343,7 +345,7 @@ export default function SignupPage() {
                 }}
                 onMouseEnter={e => { e.currentTarget.style.color = '#d97a4f'; }}
                 onMouseLeave={e => { e.currentTarget.style.color = '#a89684'; }}
-              >Mot de passe oublié ?</button>
+              >{t('login.forgotPassword')}</button>
             )}
 
             {error && (
@@ -406,10 +408,10 @@ export default function SignupPage() {
                 padding: 0,
                 fontFamily: 'inherit',
                 fontSize: '0.9rem',
-              }}>← Retour à la connexion</button>
+              }}>{t('login.backToLogin')}</button>
             ) : (
               <>
-                {isSignup ? 'Déjà un compte ? ' : 'Pas encore de compte ? '}
+                {isSignup ? t('login.alreadyAccount') : t('login.noAccount')}
                 <button type="button" onClick={() => switchTo(isSignup ? 'login' : 'signup')} style={{
                   color: '#d97a4f',
                   fontWeight: 600,
@@ -419,7 +421,7 @@ export default function SignupPage() {
                   padding: 0,
                   fontFamily: 'inherit',
                   fontSize: '0.9rem',
-                }}>{isSignup ? 'Se connecter' : 'Créer un compte'}</button>
+                }}>{isSignup ? t('login.linkLogin') : t('login.linkSignup')}</button>
               </>
             )}
           </p>
@@ -430,7 +432,7 @@ export default function SignupPage() {
             color: '#5a4f42',
             fontSize: '0.85rem',
             textDecoration: 'none',
-          }}>← Retour à l'accueil</Link>
+          }}>{t('login.backHome')}</Link>
         </p>
       </div>
     </div>

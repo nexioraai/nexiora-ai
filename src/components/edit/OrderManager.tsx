@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useTranslation } from '@/lib/translations';
 import { Package, Truck, CheckCircle, XCircle } from 'lucide-react';
 
 const ACCENT = '#FA5D1E';
@@ -25,18 +26,18 @@ async function authHeaders() {
 }
 
 const TABS = [
-  { key: 'pending,paid', label: 'En cours', icon: 'Package', color: '#fbbf24' },
-  { key: 'shipped', label: 'Expédiées', icon: 'Truck', color: '#60a5fa' },
-  { key: 'delivered', label: 'Livrées', icon: 'CheckCircle', color: '#34d399' },
-  { key: 'canceled', label: 'Annulées', icon: 'XCircle', color: '#9ca3af' },
+  { key: 'pending,paid', tkey: 'om.tab.inProgress', icon: 'Package', color: '#fbbf24' },
+  { key: 'shipped', tkey: 'om.tab.shipped', icon: 'Truck', color: '#60a5fa' },
+  { key: 'delivered', tkey: 'om.tab.delivered', icon: 'CheckCircle', color: '#34d399' },
+  { key: 'canceled', tkey: 'om.tab.canceled', icon: 'XCircle', color: '#9ca3af' },
 ] as const;
 
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  pending: { label: 'En attente de paiement', color: '#fbbf24' },
-  paid: { label: 'Payée', color: '#34d399' },
-  shipped: { label: 'Expédiée', color: '#60a5fa' },
-  delivered: { label: 'Livrée', color: '#10b981' },
-  canceled: { label: 'Annulée', color: '#9ca3af' },
+const STATUS_LABELS: Record<string, { tkey: string; color: string }> = {
+  pending: { tkey: 'om.status.pending', color: '#fbbf24' },
+  paid: { tkey: 'om.status.paid', color: '#34d399' },
+  shipped: { tkey: 'om.status.shipped', color: '#60a5fa' },
+  delivered: { tkey: 'om.status.delivered', color: '#10b981' },
+  canceled: { tkey: 'om.status.canceled', color: '#9ca3af' },
 };
 
 const ICONS: Record<string, typeof Package> = { Package, Truck, CheckCircle, XCircle };
@@ -52,6 +53,7 @@ function formatDate(iso: string): string {
 }
 
 export default function OrderManager({ slug }: { slug: string }) {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -100,7 +102,7 @@ export default function OrderManager({ slug }: { slug: string }) {
 
   return (
     <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm mt-8">
-      <h2 className="text-xl font-bold mb-5">Commandes</h2>
+      <h2 className="text-xl font-bold mb-5">{t('om.title')}</h2>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
@@ -120,7 +122,7 @@ export default function OrderManager({ slug }: { slug: string }) {
               style={active ? { borderColor: tab.color, color: tab.color, background: `${tab.color}15` } : {}}
             >
               <Icon className="w-4 h-4" />
-              {tab.label}
+              {t(tab.tkey as any)}
               {count > 0 && (
                 <span
                   className="text-xs px-1.5 py-0.5 rounded-full font-bold"
@@ -138,17 +140,18 @@ export default function OrderManager({ slug }: { slug: string }) {
       {loading ? (
         <p className="text-sm text-white/40">Chargement…</p>
       ) : filtered.length === 0 ? (
-        <p className="text-sm text-white/40">Aucune commande dans cette section.</p>
+        <p className="text-sm text-white/40">{t('om.empty')}</p>
       ) : (
         <div className="space-y-4">
           {filtered.map((o) => {
-            const st = STATUS_LABELS[o.status] || { label: o.status, color: '#9ca3af' };
+            const st = STATUS_LABELS[o.status] || { tkey: '', color: '#9ca3af' };
+            const stLabel = st.tkey ? t(st.tkey as any) : o.status;
             return (
               <div key={o.id} className="border border-white/10 rounded-2xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full" style={{ background: st.color }} />
-                    <span className="text-sm font-semibold" style={{ color: st.color }}>{st.label}</span>
+                    <span className="text-sm font-semibold" style={{ color: st.color }}>{stLabel}</span>
                     <span className="text-xs text-white/30">{formatDate(o.created_at)}</span>
                   </div>
                   <span className="text-sm font-bold text-white">{o.total.toFixed(2)} {o.currency}</span>
@@ -171,7 +174,7 @@ export default function OrderManager({ slug }: { slug: string }) {
                 {o.status === 'paid' && (
                   <div className="flex items-center gap-2 pt-3 border-t border-white/10">
                     <input
-                      placeholder="N° de suivi (optionnel)"
+                      placeholder={t('om.trackingPlaceholder')}
                       value={tracking[o.id] || ''}
                       onChange={(e) => setTracking({ ...tracking, [o.id]: e.target.value })}
                       className="flex-1 bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#FA5D1E] transition"
@@ -182,7 +185,7 @@ export default function OrderManager({ slug }: { slug: string }) {
                       className="px-4 py-2 rounded-xl text-sm font-semibold transition disabled:opacity-40 whitespace-nowrap"
                       style={{ background: `${ACCENT}1a`, color: ACCENT, border: `1px solid ${ACCENT}33` }}
                     >
-                      {busyId === o.id ? '…' : 'Marquer expédiée'}
+                      {busyId === o.id ? '…' : t('om.markShipped')}
                     </button>
                   </div>
                 )}

@@ -3,9 +3,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useTranslation } from '@/lib/translations';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -35,7 +37,7 @@ export default function ResetPasswordPage() {
 
   const handleReset = async () => {
     if (password.length < 6) {
-      setError('Le mot de passe doit faire au moins 6 caractères');
+      setError(t('rp.tooShort'));
       return;
     }
     if (password !== confirmPassword) {
@@ -112,10 +114,10 @@ export default function ResetPasswordPage() {
           textAlign: 'center',
           fontSize: '0.95rem',
           margin: '0 0 2rem 0',
-        }}>Nouveau mot de passe</p>
+        }}>{t('rp.title')}</p>
 
         {checking ? (
-          <p style={{ color: '#a89684', textAlign: 'center', fontSize: '0.9rem' }}>Vérification du lien...</p>
+          <p style={{ color: '#a89684', textAlign: 'center', fontSize: '0.9rem' }}>{t('rp.verifying')}</p>
         ) : !validSession ? (
           <div style={{
             background: 'rgba(239, 106, 74, 0.08)',
@@ -125,10 +127,10 @@ export default function ResetPasswordPage() {
             textAlign: 'center',
           }}>
             <p style={{ color: '#ef6a4a', fontWeight: 600, fontSize: '0.95rem', margin: '0 0 1rem 0' }}>
-              Lien invalide ou expiré
+              {t('rp.invalidTitle')}
             </p>
             <p style={{ color: '#a89684', fontSize: '0.875rem', margin: '0 0 1rem 0', lineHeight: 1.5 }}>
-              Ce lien de réinitialisation n'est plus valide. Demandez-en un nouveau depuis la page de connexion.
+              {t('rp.invalidBody')}
             </p>
             <Link href="/login" style={{
               color: '#d97a4f',
@@ -146,7 +148,7 @@ export default function ResetPasswordPage() {
             textAlign: 'center',
           }}>
             <p style={{ color: '#f5ede1', fontWeight: 600, fontSize: '0.95rem', margin: '0 0 0.5rem 0' }}>
-              ✓ Mot de passe réinitialisé
+              {t('rp.success')}
             </p>
             <p style={{ color: '#a89684', fontSize: '0.875rem', margin: 0, lineHeight: 1.5 }}>
               Redirection vers le tableau de bord...
@@ -158,7 +160,7 @@ export default function ResetPasswordPage() {
               <input
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder="Nouveau mot de passe (min. 6 caractères)"
+                placeholder={t('rp.newPassword')}
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="new-password"
                 style={{ ...inputStyle, padding: '0.9rem 3rem 0.9rem 1rem' }}
@@ -205,7 +207,7 @@ export default function ResetPasswordPage() {
             <input
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
-              placeholder="Confirmer le mot de passe"
+              placeholder={t('rp.confirmPassword')}
               type={showPassword ? 'text' : 'password'}
               autoComplete="new-password"
               style={inputStyle}
@@ -252,7 +254,7 @@ export default function ResetPasswordPage() {
                 e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              {loading ? 'Réinitialisation...' : 'Réinitialiser le mot de passe'}
+              {loading ? t('rp.btnLoading') : t('rp.btn')}
             </button>
           </div>
         )}
@@ -262,7 +264,7 @@ export default function ResetPasswordPage() {
             color: '#5a4f42',
             fontSize: '0.85rem',
             textDecoration: 'none',
-          }}>← Retour à l'accueil</Link>
+          }}>{t('login.backHome')}</Link>
         </p>
       </div>
     </div>
