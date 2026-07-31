@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { ArrowUp, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useTranslation } from '@/lib/translations';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
@@ -101,6 +102,7 @@ function renderBold(text: string) {
 
 export default function OnboardingChat() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Msg[]>([{ role: 'assistant', content: GREETING }]);
   const [userEmail, setUserEmail] = useState('');
 
@@ -262,25 +264,25 @@ export default function OnboardingChat() {
     <section className={`max-w-2xl mx-auto px-4 sm:px-6 pb-10 flex flex-col h-[calc(100vh-120px)] ${messages.length === 1 && !loading && !generating ? 'justify-center' : ''}`}>
       <div className="flex items-center gap-2 justify-center mb-6 text-white/60">
         <Sparkles size={18} className="text-[#FA5D1E]" />
-        <span className="text-sm font-medium tracking-wide" translate="no">Woorri — Création sur mesure</span>
+        <span className="text-sm font-medium tracking-wide" translate="no">{t('home.hero.badge')}</span>
       </div>
 
       {messages.length === 1 && !loading && !generating ? (
         <div className="flex flex-col items-center justify-center text-center px-4 mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3 bg-gradient-to-br from-white to-white/60 bg-clip-text text-transparent">
-            Donnez vie à votre idée
+            {t('home.hero.title')}
           </h1>
           <p className="text-slate-400 text-base sm:text-lg mb-10 max-w-md">
-            Décrivez votre activité en quelques mots. Woorri conçoit en quelques secondes.
+            {t('home.hero.subtitle')}
           </p>
           <div className="flex flex-wrap gap-3 justify-center max-w-lg">
             {!showDropshipPicker ? (
               <>
               {[
-                { label: 'Site web', mode: 1 },
-                { label: 'Boutique en ligne', mode: 2 },
-                { label: 'Dropshipping', mode: 3 },
-              ].map(({ label, mode }) => (
+                { label: 'Site web', tkey: 'home.mode.website' as const, mode: 1 },
+                { label: 'Boutique en ligne', tkey: 'home.mode.store' as const, mode: 2 },
+                { label: 'Dropshipping', tkey: 'home.mode.dropshipping' as const, mode: 3 },
+              ].map(({ label, tkey, mode }) => (
                 <button
                   key={label}
                   onClick={() => {
@@ -293,13 +295,13 @@ export default function OnboardingChat() {
                   }}
                   className="px-5 py-2.5 rounded-full border text-sm transition bg-white/[0.04] border-white/12 text-slate-200 hover:border-[#FA5D1E] hover:text-white hover:bg-white/[0.07]"
                 >
-                  {label}
+                  {t(tkey)}
                 </button>
               ))}
               </>
             ) : (
               <>
-              <p className="w-full text-center text-sm text-slate-400 mb-2">Quel type de dropshipping ?</p>
+              <p className="w-full text-center text-sm text-slate-400 mb-2">{t('home.dropshipping.question')}</p>
               {[
                 { label: 'Revente de catalogue', type: 'reseller' },
                 { label: 'Votre marque', type: 'pod_brand' },
@@ -440,9 +442,9 @@ export default function OnboardingChat() {
 
       {messages.length === 1 && !loading && !generating && !showDropshipPicker && (
         <div className="mt-5 max-w-lg mx-auto text-left space-y-2 text-[13px] leading-relaxed text-slate-400">
-          <p><span className="text-slate-200 font-medium">Site web</span> — présenter votre activité en ligne (sans vente).</p>
-          <p><span className="text-slate-200 font-medium">Boutique en ligne</span> — vendre vos propres produits (vous gérez le stock).</p>
-          <p><span className="text-slate-200 font-medium">Dropshipping</span> — vendre sans stock ni capital : tout est automatisé, un fournisseur expédie directement à vos clients.</p>
+          <p><span className="text-slate-200 font-medium">{t('home.mode.website')}</span> — {t('home.mode.website.desc')}</p>
+          <p><span className="text-slate-200 font-medium">{t('home.mode.store')}</span> — {t('home.mode.store.desc')}</p>
+          <p><span className="text-slate-200 font-medium">{t('home.mode.dropshipping')}</span> — {t('home.mode.dropshipping.desc')}</p>
         </div>
       )}
     </section>
