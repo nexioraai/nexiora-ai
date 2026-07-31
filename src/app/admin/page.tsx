@@ -204,7 +204,7 @@ export default function AdminDashboard() {
           {grouped.length} incident{grouped.length > 1 ? "s" : ""} distinct{grouped.length > 1 ? "s" : ""}
         </span>
       </div>
-      <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 mb-10">
+      <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 mb-10 glass glass-hover">
         {anomalies.length === 0 ? (
           <p className="text-sm text-white/40">Aucune anomalie détectée.</p>
         ) : (
@@ -266,7 +266,7 @@ export default function AdminDashboard() {
           const published = data?.published || 0;
           const sites = data?.sites || [];
           return (
-            <div key={key} className="bg-white/[0.03] border border-white/10 rounded-2xl border border-white/10 p-6">
+            <div key={key} className="bg-white/[0.03] border border-white/10 rounded-2xl border border-white/10 p-6 glass glass-hover">
               <div className="flex items-center gap-3 mb-4">
                 <Icon className="w-5 h-5 text-[#FA5D1E]" />
                 <h3 className="text-lg font-semibold">{meta.label}</h3>
@@ -351,7 +351,7 @@ export default function AdminDashboard() {
 
 function StatCard({ icon: Icon, label, value, sub, color, href }: { icon: any; label: string; value: string | number; sub?: string; color?: string; href?: string }) {
   const inner = (
-    <div className={`bg-white/[0.03] border border-white/10 rounded-xl p-5 ${href ? "hover:bg-white/[0.06] transition cursor-pointer" : ""}`}>
+    <div className={`bg-white/[0.03] border border-white/10 rounded-xl p-5 glass glass-hover ${href ? "hover:bg-white/[0.06] transition cursor-pointer" : ""}`}>
       <div className="flex items-center gap-2 mb-2">
         <Icon className={`w-4 h-4 ${color || "text-white/50"}`} />
         <p className="text-xs text-white/50 uppercase tracking-wider">{label}</p>
