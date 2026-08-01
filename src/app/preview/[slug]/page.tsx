@@ -10,6 +10,7 @@ import {
 import EditorialTheme from '@/app/sites/[slug]/themes/EditorialTheme';
 import NoirTheme from '@/app/sites/[slug]/themes/NoirTheme';
 import VifTheme from '@/app/sites/[slug]/themes/VifTheme';
+import AuroraTheme from '@/app/sites/[slug]/themes/AuroraTheme';
 import CartShell from '@/app/sites/[slug]/themes/CartShell';
 import CatalogSearch from '@/app/sites/[slug]/themes/CatalogSearch';
 import PromoBanner from '@/app/sites/[slug]/themes/PromoBanner';
@@ -20,6 +21,7 @@ const themes = {
   editorial: EditorialTheme,
   noir: NoirTheme,
   vif: VifTheme,
+  aurora: AuroraTheme,
 };
 
 export default function PreviewPage() {
@@ -77,7 +79,7 @@ export default function PreviewPage() {
       <PromoBanner slug={site.slug} primary={primary} />
       <CartShell primary={primary} labels={cartLabels} slug={site.slug} mode={site.mode} shippingFlat={site.shipping_flat}>
         <Theme site={site} />
-        {site.mode === 3 && site.dropship_type !== 'pod_brand' && <CatalogSearch slug={site.slug} primary={primary} lang={site.lang} dropshipType={site.dropship_type || 'reseller'} />}
+        {site.mode === 3 && site.dropship_type !== 'pod_brand' && site.theme !== 'aurora' && <CatalogSearch slug={site.slug} primary={primary} lang={site.lang} dropshipType={site.dropship_type || 'reseller'} />}
       </CartShell>
       <ScrollRevealInit />
     </>
