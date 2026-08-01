@@ -69,7 +69,7 @@ export default function StorefrontDense({
       <div className="relative overflow-hidden rounded-[2rem] mb-8 min-h-[520px] md:min-h-[600px] flex items-end">
         {(heroImage || heroProduct?.image) ? (
           <>
-            <Image src={(heroImage || heroProduct?.image) as string} alt="" fill priority sizes="100vw" className="object-cover object-center" />
+            <Image src={(heroImage || heroProduct?.image) as string} alt="" fill priority sizes="100vw" className="object-cover object-top" />
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.25) 100%)' }} />
             <div className="absolute inset-0" style={{ background: `linear-gradient(105deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 40%, transparent 65%)` }} />
           </>
