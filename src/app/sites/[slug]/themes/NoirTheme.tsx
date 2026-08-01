@@ -37,7 +37,7 @@ export default function NoirTheme({ site }: { site: Site }) {
   )
   const contact = site.contact || {}
   const social = site.social_links || {}
-  const cta = site.cta || 'Contactez-nous'
+  const cta = site.cta || t.labels.contactCta
   const mode = site.mode || 1
   const ctaHref = (mode !== 1 && (products.length > 0 || mode === 3)) ? '#shop' : '#contact'
   const heroTitle = site.hero_title || site.name

@@ -8,6 +8,9 @@ export type CartLabels = {
   total: string;
   checkout: string;
   continue: string;
+  promoPlaceholder: string;
+  promoInvalid: string;
+  promoError: string;
 };
 
 const DICT: Record<string, CartLabels> = {
@@ -18,6 +21,9 @@ const DICT: Record<string, CartLabels> = {
     total: 'Total',
     checkout: 'Passer la commande',
     continue: 'Continuer mes achats',
+    promoPlaceholder: 'Code promo',
+    promoInvalid: 'Code invalide',
+    promoError: 'Erreur',
   },
   en: {
     addToCart: 'Add to cart',
@@ -26,6 +32,9 @@ const DICT: Record<string, CartLabels> = {
     total: 'Total',
     checkout: 'Checkout',
     continue: 'Continue shopping',
+    promoPlaceholder: 'Promo code',
+    promoInvalid: 'Invalid code',
+    promoError: 'Error',
   },
   es: {
     addToCart: 'Añadir al carrito',
@@ -34,6 +43,9 @@ const DICT: Record<string, CartLabels> = {
     total: 'Total',
     checkout: 'Finalizar compra',
     continue: 'Seguir comprando',
+    promoPlaceholder: 'Código promocional',
+    promoInvalid: 'Código no válido',
+    promoError: 'Error',
   },
   ar: {
     addToCart: 'أضف إلى السلة',
@@ -42,6 +54,9 @@ const DICT: Record<string, CartLabels> = {
     total: 'المجموع',
     checkout: 'إتمام الطلب',
     continue: 'متابعة التسوق',
+    promoPlaceholder: 'رمز الخصم',
+    promoInvalid: 'رمز غير صالح',
+    promoError: 'خطأ',
   },
 };
 

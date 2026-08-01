@@ -44,7 +44,7 @@ export default function AuroraTheme({ site }: { site: Site }) {
   const missionWord = missionWords[site.lang || 'fr'] || missionWords.en
   const visionWord = visionWords[site.lang || 'fr'] || visionWords.en
 
-  const cta = site.cta || 'Contactez-nous'
+  const cta = site.cta || t.labels.contactCta
   const mode = site.mode || 1
   const isShop = mode !== 1 && (products.length > 0 || mode === 3) && !hidden('Shop')
   const ctaHref = isShop ? '#shop' : '#contact'

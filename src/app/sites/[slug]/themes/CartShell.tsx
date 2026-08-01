@@ -2,14 +2,9 @@
 import { type ReactNode } from 'react';
 import { CartProvider } from './CartContext';
 import CartDrawer from './CartDrawer';
+import type { CartLabels } from './cartLabels';
 
-type Labels = {
-  cartTitle: string;
-  empty: string;
-  total: string;
-  checkout: string;
-  continue: string;
-};
+type Labels = CartLabels;
 
 export default function CartShell({
   children,

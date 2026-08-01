@@ -41,6 +41,7 @@ export type ThemeDict = {
     rightsReserved: string
     estimatedDelivery: string
     days: string
+    contactCta: string
   }
   form: {
     title: string
@@ -130,6 +131,7 @@ const en: ThemeDict = {
     followUs: 'Follow us',
     poweredBy: 'Powered by',
     rightsReserved: 'All rights reserved.',
+    contactCta: 'Contact us',
     estimatedDelivery: 'Estimated delivery:',
     days: 'days',
   },
@@ -221,6 +223,7 @@ const fr: ThemeDict = {
     followUs: 'Suivez-nous',
     poweredBy: 'Propulsé par',
     rightsReserved: 'Tous droits réservés.',
+    contactCta: 'Contactez-nous',
     estimatedDelivery: 'Livraison estimée :',
     days: 'jours',
   },
@@ -312,6 +315,7 @@ const es: ThemeDict = {
     followUs: 'Síguenos',
     poweredBy: 'Desarrollado por',
     rightsReserved: 'Todos los derechos reservados.',
+    contactCta: 'Contáctanos',
     estimatedDelivery: 'Entrega estimada:',
     days: 'días',
   },
@@ -403,6 +407,7 @@ const ar: ThemeDict = {
     followUs: 'تابعنا',
     poweredBy: 'مشغّل بواسطة',
     rightsReserved: 'جميع الحقوق محفوظة.',
+    contactCta: 'تواصل معنا',
     estimatedDelivery: 'التسليم المقدّر:',
     days: 'أيام',
   },

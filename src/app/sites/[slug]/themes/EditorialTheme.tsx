@@ -85,7 +85,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
   const whyWord = whyWords[site.lang || 'fr'] || whyWords.en
   const missionWord = missionWords[site.lang || 'fr'] || missionWords.en
   const visionWord = visionWords[site.lang || 'fr'] || visionWords.en
-  const cta = site.cta || 'Contactez-nous'
+  const cta = site.cta || t.labels.contactCta
   const mode = site.mode || 1
   const ctaHref = (products.length > 0 || mode === 3) ? '#shop' : '#contact'
 

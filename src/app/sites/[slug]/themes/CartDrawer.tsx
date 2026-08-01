@@ -2,14 +2,9 @@
 import { useState } from 'react';
 import { useCart } from './CartContext';
 import { X, ShoppingBag, Plus, Minus, Trash2 } from 'lucide-react';
+import type { CartLabels } from './cartLabels';
 
-type Labels = {
-  cartTitle: string;
-  empty: string;
-  total: string;
-  checkout: string;
-  continue: string;
-};
+type Labels = CartLabels;
 
 export default function CartDrawer({
   primary = '#111111',
@@ -105,10 +100,10 @@ export default function CartDrawer({
       } else {
         setPromoDiscount(0);
         setPromoValid(false);
-        setPromoMsg(data.error || 'Code invalide');
+        setPromoMsg(data.error || labels.promoInvalid);
       }
     } catch {
-      setPromoMsg('Erreur');
+      setPromoMsg(labels.promoError);
     } finally {
       setPromoBusy(false);
     }
@@ -344,7 +339,7 @@ export default function CartDrawer({
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                placeholder="Code promo"
+                placeholder={labels.promoPlaceholder}
                 value={promoCode}
                 onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoValid(false); setPromoDiscount(0); setPromoMsg(''); }}
                 onKeyDown={(e) => e.key === 'Enter' && handlePromo()}
