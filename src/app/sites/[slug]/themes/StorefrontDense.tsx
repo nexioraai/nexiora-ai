@@ -65,66 +65,41 @@ export default function StorefrontDense({
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 md:px-6 lg:px-8 pt-8 pb-16">
-      {/* ============ HERO (animated aura) ============ */}
-      <div className="relative overflow-hidden rounded-[2rem] mb-8 min-h-[380px] flex items-center">
-        <div
-          className="absolute inset-0 -z-10"
-          style={{ background: `linear-gradient(130deg, color-mix(in srgb, ${primary} 18%, white), color-mix(in srgb, ${primary} 5%, white))` }}
-        />
-        <div
-          className="au-blob absolute -top-24 -left-16 w-[34rem] h-[34rem] rounded-full blur-3xl opacity-50 pointer-events-none"
-          style={{ background: `radial-gradient(circle at 30% 30%, ${primary}, transparent 62%)` }}
-        />
-        <div
-          className="au-blob absolute -bottom-24 right-0 w-[30rem] h-[30rem] rounded-full blur-3xl opacity-40 pointer-events-none"
-          style={{ background: `radial-gradient(circle, color-mix(in srgb, ${primary} 45%, #fff), transparent 62%)`, animationDelay: '-7s' }}
-        />
-        <div className="relative grid md:grid-cols-2 gap-6 items-center w-full p-8 md:p-14">
-          <div className="au-rise">
-            {slogan && (
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-5 rounded-full bg-white/70 backdrop-blur-md border border-black/5 text-xs font-medium tracking-[0.15em] uppercase">
-                <Sparkles className="w-3.5 h-3.5" style={{ color: primary }} />
-                {slogan}
-              </div>
-            )}
-            <h1 className="text-4xl md:text-6xl font-semibold leading-[1.0] tracking-tight mb-5">
-              {heroTitle || siteName}
-            </h1>
-            {heroSubtitle && (
-              <p className="text-base md:text-lg text-neutral-600 max-w-md mb-7 leading-relaxed">{heroSubtitle}</p>
-            )}
-            <a
-              href="#grid"
-              className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-white font-medium transition hover:-translate-y-0.5 shadow-lg"
-              style={{ backgroundColor: primary }}
-            >
+      {/* ============ HERO (full-bleed premium) ============ */}
+      <div className="relative overflow-hidden rounded-[2rem] mb-8 min-h-[520px] md:min-h-[600px] flex items-end">
+        {(heroImage || heroProduct?.image) ? (
+          <>
+            <Image src={(heroImage || heroProduct?.image) as string} alt="" fill priority sizes="100vw" className="object-cover object-center" />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.35) 42%, rgba(0,0,0,0.10) 100%)' }} />
+            <div className="absolute inset-0" style={{ background: `linear-gradient(120deg, color-mix(in srgb, ${primary} 40%, transparent) 0%, transparent 55%)` }} />
+          </>
+        ) : (
+          <div className="absolute inset-0" style={{ background: `linear-gradient(130deg, color-mix(in srgb, ${primary} 60%, #111), color-mix(in srgb, ${primary} 20%, #000))` }} />
+        )}
+        <div className="au-blob absolute -top-20 -right-16 w-[28rem] h-[28rem] rounded-full blur-3xl opacity-30 pointer-events-none" style={{ background: `radial-gradient(circle, ${primary}, transparent 62%)` }} />
+        <div className="relative w-full p-8 md:p-16 au-rise">
+          {slogan && (
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-xs font-medium tracking-[0.15em] uppercase text-white">
+              <Sparkles className="w-3.5 h-3.5" />
+              {slogan}
+            </div>
+          )}
+          <h1 className="text-4xl md:text-7xl font-semibold leading-[1.02] tracking-tight mb-5 text-white max-w-3xl drop-shadow-sm">{heroTitle || siteName}</h1>
+          {heroSubtitle && (<p className="text-base md:text-xl text-white/80 max-w-xl mb-8 leading-relaxed">{heroSubtitle}</p>)}
+          <div className="flex items-center gap-4 flex-wrap">
+            <a href="#grid" className="group inline-flex items-center gap-2 px-8 py-4 rounded-full text-white font-medium transition hover:-translate-y-0.5 shadow-xl" style={{ backgroundColor: primary }}>
               {labels.newArrivals}
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </a>
-          </div>
-
-          {(heroImage || heroProduct?.image) && (
-            <div className="relative hidden md:block au-rise" style={{ animationDelay: '0.15s' }}>
-              <div className="relative mx-auto w-[22rem] h-[22rem]">
-                <div
-                  className="absolute inset-6 rounded-[2rem] blur-2xl opacity-60"
-                  style={{ background: `radial-gradient(circle, ${primary}, transparent 65%)` }}
-                />
-                <div className="au-float absolute inset-0 rounded-[2rem] overflow-hidden border border-white/60 bg-white/40 backdrop-blur-xl shadow-[0_24px_70px_-24px_rgba(0,0,0,0.35)]">
-                  <Image src={(heroImage || heroProduct?.image) as string} alt="" fill priority sizes="22rem" className="object-cover" />
-                </div>
-                {heroProduct?.price && (
-                  <div className="au-float absolute -bottom-3 -left-4 rounded-2xl bg-white/85 backdrop-blur-xl border border-black/5 px-4 py-2.5 shadow-lg" style={{ animationDelay: '-3.5s' }}>
-                    <div className="text-[11px] text-neutral-500 line-clamp-1 max-w-[9rem]">{heroProduct.name}</div>
-                    <div className="text-lg font-semibold" style={{ color: primary }}>{heroProduct.price}</div>
-                  </div>
-                )}
+            {heroProduct?.price && (
+              <div className="rounded-2xl bg-white/12 backdrop-blur-xl border border-white/20 px-5 py-2.5">
+                <div className="text-[11px] text-white/60 line-clamp-1 max-w-[10rem]">{heroProduct.name}</div>
+                <div className="text-lg font-semibold text-white">{heroProduct.price}</div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-
       {/* ============ SEARCH SLOT (real CatalogSearch) ============ */}
       {searchSlot}
 
