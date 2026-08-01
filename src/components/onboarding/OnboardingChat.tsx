@@ -134,7 +134,7 @@ export default function OnboardingChat() {
   const twChar = useRef(0);
   const twPhase = useRef<'typing' | 'pausing' | 'deleting'>('typing');
   useEffect(() => {
-    if (input || messages.length > 1) { setTyped(''); return; } // typewriter uniquement sur l'ecran d'accueil, fige des qu'on tape ou que le chat demarre
+    if (input) { setTyped(''); return; } // fige l'animation des que l'utilisateur tape
     // reinit propre a chaque changement de langue (evite un index invalide sur l'ancienne liste)
     twPhrase.current = 0;
     twChar.current = 0;
@@ -164,7 +164,7 @@ export default function OnboardingChat() {
     };
     timer = setTimeout(tick, 250);
     return () => clearTimeout(timer);
-  }, [input, uiLang, messages.length]);
+  }, [input, uiLang]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
