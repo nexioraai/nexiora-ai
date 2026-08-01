@@ -211,3 +211,15 @@ html {
     linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
   background-size: 40px 40px;
 }
+
+
+/* Anti-zoom iOS : sous 16px, Safari mobile zoome automatiquement au focus d'un champ
+   et laisse parfois le zoom colle au retour. Forcer 16px sur mobile empeche ce zoom.
+   N'affecte que <= 768px ; le desktop garde ses tailles d'origine. */
+@media (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
