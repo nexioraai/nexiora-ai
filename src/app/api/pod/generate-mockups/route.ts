@@ -54,7 +54,7 @@ export async function POST(req: Request) {
               // Lookup price from catalog
               const { data: cpRow } = await supabaseAdmin
                 .from('catalog_products')
-                .select('price, currency, shipping_days_min, shipping_days_max')
+                .select('id, supplier_id, price, currency, shipping_days_min, shipping_days_max')
                 .eq('supplier_id', 'printful')
                 .eq('supplier_product_id', String(tk.variant_id))
                 .single();
@@ -62,6 +62,8 @@ export async function POST(req: Request) {
                 product_name: tk.name,
                 product_id: tk.product_id,
                 variant_id: tk.variant_id,
+                catalog_product_id: cpRow?.id ?? null,
+                supplier_id: cpRow?.supplier_id ?? 'printful',
                 mockup_url: m.mockup_url,
                 extra: (m.extra || []).map((e: any) => ({ title: e.title, url: e.url })),
                 price: cpRow?.price ?? null,

@@ -396,7 +396,7 @@ export function mockupsToProducts(site: Site): Product[] {
       const cur = m.currency || "CAD"
       const variants = sel?.variants || []
       products.push({
-        id: `printful-${m.product_id}-${m.variant_id}`,
+        id: `catalog-${m.catalog_product_id}::${m.variant_id}`,
         name: m.product_name?.replace(/\s*—\s*.+$/, "") || "Produit",
         description: "",
         price: pr > 0 ? `${pr.toFixed(2)} ${cur}` : "",
