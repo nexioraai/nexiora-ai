@@ -170,12 +170,12 @@ export default function Navbar() {
             {!currentSection ? (
               <>
                 <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-xl font-bold text-white">Sections</h2>
+                  <h2 className="text-xl font-bold text-white">{t('naved.sections')}</h2>
                   <button onClick={() => setMenuOpen(false)} className="text-white/60 hover:text-white p-2"><X size={24} /></button>
                 </div>
                 {!slug && (
                   <div className="mb-4 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-300 text-sm">
-                    💡 Va sur un de tes sites depuis le Dashboard pour l'éditer
+                    💡 {t('naved.goToSite')}
                   </div>
                 )}
                 <div className="space-y-2">
@@ -193,7 +193,7 @@ export default function Navbar() {
                         className="flex-1 text-left px-4 py-3 text-white/80 hover:text-white transition font-medium disabled:cursor-not-allowed">
                         {section}
                       </button>
-                      <button onClick={() => toggleSection(section)} disabled={!slug} title={isHidden ? 'Afficher sur le site' : 'Masquer du site'}
+                      <button onClick={() => toggleSection(section)} disabled={!slug} title={isHidden ? t('naved.showOnSite') : t('naved.hideFromSite')}
                         className="px-3 py-3 text-white/50 hover:text-white transition disabled:opacity-40">
                         {isHidden ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
@@ -205,20 +205,20 @@ export default function Navbar() {
                   {(site?.pages || []).map((page: any, idx: number) => (
                     <button key={'page-' + idx} onClick={() => setCurrentSection('page:' + idx)}
                       className="w-full text-left px-4 py-3 rounded-xl bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition font-medium flex items-center justify-between">
-                      <span>{page.title || 'Untitled Page'}</span>
-                      <span className="text-xs text-[#FA5D1E]">Custom</span>
+                      <span>{page.title || t('naved.untitledPage')}</span>
+                      <span className="text-xs text-[#FA5D1E]">{t('naved.custom')}</span>
                     </button>
                   ))}
 
                   {/* Add Page Button */}
                   {slug && (
                     <button onClick={() => {
-                      const newPages = [...(site?.pages || []), { title: 'Nouvelle Page', content: '' }];
+                      const newPages = [...(site?.pages || []), { title: t('naved.newPage'), content: '' }];
                       setSite({ ...site, pages: newPages });
                       setCurrentSection('page:' + (newPages.length - 1));
                     }}
                       className="w-full px-4 py-3 rounded-xl bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] font-semibold transition border border-[#FA5D1E]/20 border-dashed flex items-center justify-center gap-2 mt-3">
-                      <Plus size={18} /> Add Page
+                      <Plus size={18} /> {t('naved.addPage')}
                     </button>
                   )}
                 </div>
@@ -237,7 +237,7 @@ export default function Navbar() {
                 </div>
                 <h2 className="text-2xl font-bold text-white mb-6">
                   {currentSection?.startsWith('page:') 
-                    ? site?.pages?.[parseInt(currentSection.split(':')[1])]?.title || 'Page'
+                    ? site?.pages?.[parseInt(currentSection.split(':')[1])]?.title || t('naved.page')
                     : currentSection}
                 </h2>
 
@@ -259,7 +259,7 @@ export default function Navbar() {
                         <div className="relative group rounded-xl overflow-hidden mb-3">
                           <img src={site.hero_image} alt="hero" className="w-full h-40 object-cover" />
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                            <label className="bg-[#FA5D1E] text-white p-2 rounded-lg cursor-pointer" title="Replace">
+                            <label className="bg-[#FA5D1E] text-white p-2 rounded-lg cursor-pointer" title={t('naved.replace')}>
                               <Upload size={16} />
                               <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                                 const file = e.target.files?.[0];
@@ -304,12 +304,12 @@ export default function Navbar() {
                           <span className="text-xs text-slate-400">Point #{idx + 1}</span>
                           <button onClick={() => removeArrayItem('whyus', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
                         </div>
-                        <input value={item.title || ''} onChange={(e) => updateArrayItem('whyus', idx, 'title', e.target.value)} placeholder="Titre" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
-                        <textarea value={item.text || ''} onChange={(e) => updateArrayItem('whyus', idx, 'text', e.target.value)} placeholder="Description" rows={2} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
+                        <input value={item.title || ''} onChange={(e) => updateArrayItem('whyus', idx, 'title', e.target.value)} placeholder={t('naved.phTitle')} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <textarea value={item.text || ''} onChange={(e) => updateArrayItem('whyus', idx, 'text', e.target.value)} placeholder={t('naved.phDescription')} rows={2} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
                       </div>
                     ))}
                     <button onClick={() => addArrayItem('whyus', { title: '', text: '' })} className="w-full px-4 py-3 rounded-xl bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] font-semibold transition border border-[#FA5D1E]/20 flex items-center justify-center gap-2">
-                      <Plus size={18} /> Add point
+                      <Plus size={18} /> {t('naved.addPoint')}
                     </button>
                   </div>
                 )}
@@ -320,15 +320,15 @@ export default function Navbar() {
                     {(site.services || []).map((service: any, idx: number) => (
                       <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-slate-400">Service #{idx + 1}</span>
+                          <span className="text-xs text-slate-400">{t('naved.service')} #{idx + 1}</span>
                           <button onClick={() => removeArrayItem('services', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
                         </div>
-                        <input value={service.name || service.title || ''} onChange={(e) => updateArrayItem('services', idx, 'name', e.target.value)} placeholder="Service name" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
-                        <textarea value={service.description || ''} onChange={(e) => updateArrayItem('services', idx, 'description', e.target.value)} placeholder="Description" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
+                        <input value={service.name || service.title || ''} onChange={(e) => updateArrayItem('services', idx, 'name', e.target.value)} placeholder={t('naved.phServiceName')} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <textarea value={service.description || ''} onChange={(e) => updateArrayItem('services', idx, 'description', e.target.value)} placeholder={t('naved.phDescription')} rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
                       </div>
                     ))}
                     <button onClick={() => addArrayItem('services', { name: '', description: '' })} className="w-full px-4 py-3 rounded-xl bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] font-semibold transition border border-[#FA5D1E]/20 flex items-center justify-center gap-2">
-                      <Plus size={18} /> Add Service
+                      <Plus size={18} /> {t('naved.addService')}
                     </button>
                   </div>
                 )}
@@ -339,16 +339,16 @@ export default function Navbar() {
                     {(site.testimonials || []).map((t: any, idx: number) => (
                       <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-slate-400">Review #{idx + 1}</span>
+                          <span className="text-xs text-slate-400">{t('naved.review')} #{idx + 1}</span>
                           <button onClick={() => removeArrayItem('testimonials', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
                         </div>
-                        <input value={t.name || t.author || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'name', e.target.value)} placeholder="Customer name" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
-                        <textarea value={t.content || t.text || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'content', e.target.value)} placeholder="Review content" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
-                        <input type="number" min="1" max="5" value={t.rating || 5} onChange={(e) => updateArrayItem('testimonials', idx, 'rating', parseInt(e.target.value))} placeholder="Rating (1-5)" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <input value={t.name || t.author || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'name', e.target.value)} placeholder={t('naved.phCustomerName')} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <textarea value={t.content || t.text || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'content', e.target.value)} placeholder={t('naved.phReviewContent')} rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
+                        <input type="number" min="1" max="5" value={t.rating || 5} onChange={(e) => updateArrayItem('testimonials', idx, 'rating', parseInt(e.target.value))} placeholder={t('naved.phRating')} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
                       </div>
                     ))}
                     <button onClick={() => addArrayItem('testimonials', { name: '', content: '', rating: 5 })} className="w-full px-4 py-3 rounded-xl bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] font-semibold transition border border-[#FA5D1E]/20 flex items-center justify-center gap-2">
-                      <Plus size={18} /> Add Review
+                      <Plus size={18} /> {t('naved.addReview')}
                     </button>
                   </div>
                 )}
@@ -357,15 +357,15 @@ export default function Navbar() {
                 {currentSection?.startsWith('page:') && site && (() => {
                   const pageIdx = parseInt(currentSection.split(':')[1]);
                   const page = site.pages?.[pageIdx];
-                  if (!page) return <div className="text-white/40">Page not found</div>;
+                  if (!page) return <div className="text-white/40">{t('naved.pageNotFound')}</div>;
                   return (
                     <div className="space-y-4">
-                      <Field label="Page Title" value={page.title || ''} onChange={(v) => updateArrayItem('pages', pageIdx, 'title', v)} />
+                      <Field label={t('naved.pageTitle')} value={page.title || ''} onChange={(v) => updateArrayItem('pages', pageIdx, 'title', v)} />
                       {page.image ? (
                         <div className="relative group rounded-lg overflow-hidden">
                           <img src={page.image} alt="" className="w-full h-32 object-cover" />
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                            <label className="bg-[#FA5D1E] hover:bg-[#FA5D1E]/80 text-white p-2 rounded-lg cursor-pointer transition" title="Replace">
+                            <label className="bg-[#FA5D1E] hover:bg-[#FA5D1E]/80 text-white p-2 rounded-lg cursor-pointer transition" title={t('naved.replace')}>
                               <Upload size={16} />
                               <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                                 const file = e.target.files?.[0];
@@ -374,14 +374,14 @@ export default function Navbar() {
                                 if (url) updateArrayItem('pages', pageIdx, 'image', url);
                               }} />
                             </label>
-                            <button onClick={() => updateArrayItem('pages', pageIdx, 'image', null)} className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition" title="Delete">
+                            <button onClick={() => updateArrayItem('pages', pageIdx, 'image', null)} className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition" title={t('naved.delete')}>
                               <Trash2 size={16} />
                             </button>
                           </div>
                         </div>
                       ) : (
                         <label className="block w-full text-center bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] py-3 rounded-lg cursor-pointer font-semibold transition border border-[#FA5D1E]/20 text-sm">
-                          <Plus size={16} className="inline mr-1" /> Add photo
+                          <Plus size={16} className="inline mr-1" /> {t('naved.addPhoto')}
                           <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (!file) return;
@@ -390,10 +390,10 @@ export default function Navbar() {
                           }} />
                         </label>
                       )}
-                      <TextArea label="Content" value={page.content || ''} onChange={(v) => updateArrayItem('pages', pageIdx, 'content', v)} rows={10} />
+                      <TextArea label={t('naved.content')} value={page.content || ''} onChange={(v) => updateArrayItem('pages', pageIdx, 'content', v)} rows={10} />
                       <button onClick={() => { removeArrayItem('pages', pageIdx); setCurrentSection(null); }}
                         className="w-full px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold transition border border-red-500/20 flex items-center justify-center gap-2">
-                        <Trash2 size={16} /> Delete Page
+                        <Trash2 size={16} /> {t('naved.deletePage')}
                       </button>
                     </div>
                   );
@@ -402,15 +402,15 @@ export default function Navbar() {
                 {/* CONTACT */}
                 {currentSection === 'Contact' && site && (
                   <div className="space-y-4">
-                    <Field label="📞 Phone" value={site.contact?.phone || ''} onChange={(v) => updateContact('phone', v)} />
-                    <Field label="📧 Email" value={site.contact?.email || ''} onChange={(v) => updateContact('email', v)} />
-                    <Field label="📍 Address" value={site.contact?.address || site.address || ''} onChange={(v) => updateContact('address', v)} />
+                    <Field label={t('naved.phone')} value={site.contact?.phone || ''} onChange={(v) => updateContact('phone', v)} />
+                    <Field label={t('naved.email')} value={site.contact?.email || ''} onChange={(v) => updateContact('email', v)} />
+                    <Field label={t('naved.address')} value={site.contact?.address || site.address || ''} onChange={(v) => updateContact('address', v)} />
                     <button onClick={geocodeAddress} disabled={geocoding} className="w-full px-4 py-2.5 rounded-xl bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] font-semibold text-sm transition border border-[#FA5D1E]/20 flex items-center justify-center gap-2 disabled:opacity-50">
                       {geocoding ? <Loader2 size={16} className="animate-spin" /> : <MapPin size={16} />}
-                      {geocoding ? 'Localisation...' : 'Localiser sur la carte'}
+                      {geocoding ? t('naved.locating') : t('naved.locateOnMap')}
                     </button>
                     <div className="pt-4 border-t border-white/10">
-                      <h3 className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-3">Réseaux sociaux</h3>
+                      <h3 className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-3">{t('naved.socialNetworks')}</h3>
                     </div>
                     <Field label="📘 Facebook" value={site.social_links?.facebook || ''} onChange={(v) => updateSocialLink('facebook', v)} />
                     <Field label="📸 Instagram" value={site.social_links?.instagram || ''} onChange={(v) => updateSocialLink('instagram', v)} />
@@ -429,14 +429,14 @@ export default function Navbar() {
                     {(site.products || []).map((product: any, idx: number) => (
                       <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-slate-400">Item #{idx + 1}</span>
+                          <span className="text-xs text-slate-400">{t('naved.item')} #{idx + 1}</span>
                           <button onClick={() => removeArrayItem('products', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
                         </div>
                         {product.image ? (
                           <div className="relative group rounded-lg overflow-hidden">
                             <img src={product.image} alt="" className="w-full h-32 object-cover" />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                              <label className="bg-[#FA5D1E] hover:bg-[#FA5D1E]/80 text-white p-2 rounded-lg cursor-pointer transition" title="Replace">
+                              <label className="bg-[#FA5D1E] hover:bg-[#FA5D1E]/80 text-white p-2 rounded-lg cursor-pointer transition" title={t('naved.replace')}>
                                 <Upload size={16} />
                                 <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                                   const file = e.target.files?.[0];
@@ -445,14 +445,14 @@ export default function Navbar() {
                                   if (url) updateArrayItem('products', idx, 'image', url);
                                 }} />
                               </label>
-                              <button onClick={() => updateArrayItem('products', idx, 'image', null)} className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition" title="Delete">
+                              <button onClick={() => updateArrayItem('products', idx, 'image', null)} className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition" title={t('naved.delete')}>
                                 <Trash2 size={16} />
                               </button>
                             </div>
                           </div>
                         ) : (
                           <label className="block w-full text-center bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] py-3 rounded-lg cursor-pointer font-semibold transition border border-[#FA5D1E]/20 text-sm">
-                            <Plus size={16} className="inline mr-1" /> Add photo
+                            <Plus size={16} className="inline mr-1" /> {t('naved.addPhoto')}
                             <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                               const file = e.target.files?.[0];
                               if (!file) return;
@@ -461,13 +461,13 @@ export default function Navbar() {
                             }} />
                           </label>
                         )}
-                        <input value={product.name || ''} onChange={(e) => updateArrayItem('products', idx, 'name', e.target.value)} placeholder="Name" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
-                        <input value={product.price || ''} onChange={(e) => updateArrayItem('products', idx, 'price', e.target.value)} placeholder="Price" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
-                        <textarea value={product.description || ''} onChange={(e) => updateArrayItem('products', idx, 'description', e.target.value)} placeholder="Description" rows={2} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
+                        <input value={product.name || ''} onChange={(e) => updateArrayItem('products', idx, 'name', e.target.value)} placeholder={t('naved.phName')} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <input value={product.price || ''} onChange={(e) => updateArrayItem('products', idx, 'price', e.target.value)} placeholder={t('naved.phPrice')} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <textarea value={product.description || ''} onChange={(e) => updateArrayItem('products', idx, 'description', e.target.value)} placeholder={t('naved.phDescription')} rows={2} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
                       </div>
                     ))}
                     <button onClick={() => addArrayItem('products', { name: '', price: '', description: '' })} className="w-full px-4 py-3 rounded-xl bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] font-semibold transition border border-[#FA5D1E]/20 flex items-center justify-center gap-2">
-                      <Plus size={18} /> Add Item
+                      <Plus size={18} /> {t('naved.addItem')}
                     </button>
                   </div>
                 )}
@@ -483,7 +483,7 @@ export default function Navbar() {
                             <div className="relative group rounded-lg overflow-hidden">
                               <img src={item.image} alt="" className="w-full h-32 object-cover" />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                                <label className="bg-[#FA5D1E] hover:bg-[#FA5D1E]/80 text-white p-2 rounded-lg cursor-pointer transition" title="Replace">
+                                <label className="bg-[#FA5D1E] hover:bg-[#FA5D1E]/80 text-white p-2 rounded-lg cursor-pointer transition" title={t('naved.replace')}>
                                   <Upload size={16} />
                                   <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                                     const file = e.target.files?.[0];
@@ -496,7 +496,7 @@ export default function Navbar() {
                             </div>
                           ) : (
                             <label className="block w-full text-center bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] py-3 rounded-lg cursor-pointer font-semibold transition border border-[#FA5D1E]/20 text-sm">
-                              <Plus size={16} className="inline mr-1" /> Add photo
+                              <Plus size={16} className="inline mr-1" /> {t('naved.addPhoto')}
                               <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                                 const file = e.target.files?.[0];
                                 if (!file) return;
@@ -505,10 +505,10 @@ export default function Navbar() {
                               }} />
                             </label>
                           )}
-                          <input value={item.title || ''} onChange={(e) => updateSectionItem(si, ii, 'title', e.target.value)} placeholder="Titre" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
-                          <textarea value={item.description || ''} onChange={(e) => updateSectionItem(si, ii, 'description', e.target.value)} placeholder="Description" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
+                          <input value={item.title || ''} onChange={(e) => updateSectionItem(si, ii, 'title', e.target.value)} placeholder={t('naved.phTitle')} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                          <textarea value={item.description || ''} onChange={(e) => updateSectionItem(si, ii, 'description', e.target.value)} placeholder={t('naved.phDescription')} rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
                           {item.price !== undefined && (
-                            <input value={item.price || ''} onChange={(e) => updateSectionItem(si, ii, 'price', e.target.value)} placeholder="Prix / badge" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                            <input value={item.price || ''} onChange={(e) => updateSectionItem(si, ii, 'price', e.target.value)} placeholder={t('naved.phPriceBadge')} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
                           )}
                         </div>
                       ))}
@@ -522,17 +522,17 @@ export default function Navbar() {
                     {(site.testimonials || []).map((item: any, idx: number) => (
                       <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-slate-400">Avis #{idx + 1}</span>
+                          <span className="text-xs text-slate-400">{t('naved.review')} #{idx + 1}</span>
                           <button onClick={() => removeArrayItem('testimonials', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
                         </div>
-                        <input value={item.name || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'name', e.target.value)} placeholder="Nom" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
-                        <input value={item.role || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'role', e.target.value)} placeholder="Rôle / société" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
-                        <input value={item.rating || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'rating', e.target.value)} placeholder="Note (1-5)" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
-                        <textarea value={item.content || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'content', e.target.value)} placeholder="Témoignage" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
+                        <input value={item.name || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'name', e.target.value)} placeholder={t('naved.phName')} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <input value={item.role || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'role', e.target.value)} placeholder={t('naved.phRole')} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <input value={item.rating || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'rating', e.target.value)} placeholder={t('naved.phRating')} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <textarea value={item.content || ''} onChange={(e) => updateArrayItem('testimonials', idx, 'content', e.target.value)} placeholder={t('naved.phTestimonial')} rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
                       </div>
                     ))}
                     <button onClick={() => addArrayItem('testimonials', { name: '', role: '', rating: '5', content: '' })} className="w-full px-4 py-3 rounded-xl bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] font-semibold transition border border-[#FA5D1E]/20 flex items-center justify-center gap-2">
-                      <Plus size={18} /> Add review
+                      <Plus size={18} /> {t('naved.addReview')}
                     </button>
                   </div>
                 )}
@@ -546,12 +546,12 @@ export default function Navbar() {
                           <span className="text-xs text-slate-400">Q{idx + 1}</span>
                           <button onClick={() => removeArrayItem('faq', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
                         </div>
-                        <input value={item.question || ''} onChange={(e) => updateArrayItem('faq', idx, 'question', e.target.value)} placeholder="Question" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
-                        <textarea value={item.answer || ''} onChange={(e) => updateArrayItem('faq', idx, 'answer', e.target.value)} placeholder="Réponse" rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
+                        <input value={item.question || ''} onChange={(e) => updateArrayItem('faq', idx, 'question', e.target.value)} placeholder={t('naved.phQuestion')} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <textarea value={item.answer || ''} onChange={(e) => updateArrayItem('faq', idx, 'answer', e.target.value)} placeholder={t('naved.phAnswer')} rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
                       </div>
                     ))}
                     <button onClick={() => addArrayItem('faq', { question: '', answer: '' })} className="w-full px-4 py-3 rounded-xl bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] font-semibold transition border border-[#FA5D1E]/20 flex items-center justify-center gap-2">
-                      <Plus size={18} /> Add question
+                      <Plus size={18} /> {t('naved.addQuestion')}
                     </button>
                   </div>
                 )}
@@ -566,7 +566,7 @@ export default function Navbar() {
                           <div key={idx} className="relative group rounded-xl overflow-hidden">
                             <img src={url} alt="" className="w-full h-36 object-cover" />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                              <label className="bg-[#FA5D1E] hover:bg-[#FA5D1E]/80 text-white p-2 rounded-lg cursor-pointer transition" title="Replace">
+                              <label className="bg-[#FA5D1E] hover:bg-[#FA5D1E]/80 text-white p-2 rounded-lg cursor-pointer transition" title={t('naved.replace')}>
                                 <Upload size={16} />
                                 <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                                   const file = e.target.files?.[0];
@@ -579,7 +579,7 @@ export default function Navbar() {
                                   }
                                 }} />
                               </label>
-                              <button onClick={() => removeArrayItem('gallery', idx)} className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition" title="Delete">
+                              <button onClick={() => removeArrayItem('gallery', idx)} className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition" title={t('naved.delete')}>
                                 <Trash2 size={16} />
                               </button>
                             </div>
@@ -593,7 +593,7 @@ export default function Navbar() {
                       })}
                     </div>
                     <label className="block w-full text-center bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] py-4 rounded-xl cursor-pointer font-semibold transition border border-[#FA5D1E]/20">
-                      <Plus size={18} className="inline mr-2" /> Add Image
+                      <Plus size={18} className="inline mr-2" /> {t('naved.addImage')}
                       <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
@@ -610,15 +610,15 @@ export default function Navbar() {
                     {(site.pages || []).map((page: any, idx: number) => (
                       <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-slate-400">Page #{idx + 1}</span>
+                          <span className="text-xs text-slate-400">{t('naved.page')} #{idx + 1}</span>
                           <button onClick={() => removeArrayItem('pages', idx)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
                         </div>
-                        <input value={page.title || ''} onChange={(e) => updateArrayItem('pages', idx, 'title', e.target.value)} placeholder="Page title (ex: Services, FAQ)" className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
-                        <textarea value={page.content || ''} onChange={(e) => updateArrayItem('pages', idx, 'content', e.target.value)} placeholder="Content" rows={4} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
+                        <input value={page.title || ''} onChange={(e) => updateArrayItem('pages', idx, 'title', e.target.value)} placeholder={t('naved.phPageTitleEx')} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E]" />
+                        <textarea value={page.content || ''} onChange={(e) => updateArrayItem('pages', idx, 'content', e.target.value)} placeholder={t('naved.content')} rows={4} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FA5D1E] resize-y" />
                       </div>
                     ))}
                     <button onClick={() => addArrayItem('pages', { title: '', content: '' })} className="w-full px-4 py-3 rounded-xl bg-[#FA5D1E]/10 hover:bg-[#FA5D1E]/20 text-[#FA5D1E] font-semibold transition border border-[#FA5D1E]/20 flex items-center justify-center gap-2">
-                      <Plus size={18} /> Add Page
+                      <Plus size={18} /> {t('naved.addPage')}
                     </button>
                   </div>
                 )}
