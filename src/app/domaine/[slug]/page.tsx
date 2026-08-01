@@ -5,12 +5,14 @@ import { use } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { supabase } from '@/lib/supabase'
+import { useTranslation } from '@/lib/translations'
 import { useEffect } from 'react'
 
 type Dns = { type: string; name: string; value: string }
 
 export default function DomainePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params)
+  const { t } = useTranslation()
   const [domain, setDomain] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -36,7 +38,7 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.access_token) {
-        setError('Session expiree. Reconnecte-toi.')
+        setError(t('domain.errSession'))
         setLoading(false)
         return
       }
@@ -50,13 +52,13 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error || 'Une erreur est survenue.')
+        setError(data.error || t('domain.errGeneric'))
       } else {
         setDns(data.dns)
         setConnected(data.domain)
       }
     } catch {
-      setError('Connexion impossible. Réessaie.')
+      setError(t('domain.errConnection'))
     }
     setLoading(false)
   }
@@ -66,13 +68,13 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
       <Navbar />
       <section className="max-w-2xl mx-auto px-6 pt-12 pb-24">
         <Link href="/dashboard" className="text-sm text-slate-400 hover:text-white transition mb-2 inline-block">
-          ← Dashboard
+          {t('domain.back')}
         </Link>
         <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-3">
-          Domaine <span className="text-nexiora">personnalisé</span>
+          {t('domain.title')} <span className="text-nexiora">{t('domain.titleAccent')}</span>
         </h1>
         <p className="text-slate-400 mb-10">
-          Achète un domaine via Woorri, ou connecte celui que tu possèdes déjà.
+          {t('domain.subtitle')}
         </p>
 
         {status?.purchased && (
@@ -84,20 +86,20 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
                 : status.purchased.status === 'failed' ? 'bg-red-900 text-red-300'
                 : 'bg-amber-900 text-amber-300'
               }`}>
-                {status.purchased.status === 'sitemap_submitted' ? 'En ligne et indexe'
-                  : status.purchased.status === 'failed' ? 'Probleme'
-                  : 'Configuration en cours'}
+                {status.purchased.status === 'sitemap_submitted' ? t('domain.statusOnline')
+                  : status.purchased.status === 'failed' ? t('domain.statusProblem')
+                  : t('domain.statusConfiguring')}
               </span>
             </div>
             <div className="space-y-2 text-sm">
-              <StatusLine done={!!status.purchased.purchased_at} label="Domaine achete" />
-              <StatusLine done={!!status.purchased.dns_configured_at} label="DNS configure" />
-              <StatusLine done={!!status.purchased.google_verified_at} label="Propriete verifiee par Google" />
-              <StatusLine done={!!status.purchased.sitemap_submitted_at} label="Soumis a Google" />
+              <StatusLine done={!!status.purchased.purchased_at} label={t('domain.stepPurchased')} />
+              <StatusLine done={!!status.purchased.dns_configured_at} label={t('domain.stepDns')} />
+              <StatusLine done={!!status.purchased.google_verified_at} label={t('domain.stepGoogle')} />
+              <StatusLine done={!!status.purchased.sitemap_submitted_at} label={t('domain.stepSubmitted')} />
             </div>
             {status.purchased.renews_at && (
               <p className="text-xs text-slate-500 mt-4">
-                Renouvellement le {new Date(status.purchased.renews_at).toLocaleDateString('fr-CA')}
+                {t('domain.renews').replace('{date}', new Date(status.purchased.renews_at).toLocaleDateString('fr-CA'))}
               </p>
             )}
             {status.purchased.last_error && (
@@ -113,9 +115,9 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="font-semibold mb-1">Acheter un domaine</p>
+                <p className="font-semibold mb-1">{t('domain.buyTitle')}</p>
                 <p className="text-sm text-slate-400">
-                  Woorri l&apos;achète, configure le DNS et met ton site en ligne. Aucune manipulation de ta part.
+                  {t('domain.buyDesc')}
                 </p>
               </div>
               <span className="text-slate-400 text-xl leading-none">&rarr;</span>
@@ -124,12 +126,12 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
         )}
 
         {!dns && !status?.purchased && (
-          <p className="text-sm text-slate-500 mb-4">Ou connecte un domaine que tu possèdes déjà :</p>
+          <p className="text-sm text-slate-500 mb-4">{t('domain.orConnect')}</p>
         )}
 
         {!dns && !status?.purchased ? (
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <label className="block text-sm font-semibold mb-2">Ton domaine</label>
+            <label className="block text-sm font-semibold mb-2">{t('domain.yourDomain')}</label>
             <input
               type="text"
               value={domain}
@@ -147,7 +149,7 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
                   : 'bg-white text-black hover:opacity-90'
               }`}
             >
-              {loading ? 'Connexion…' : 'Connecter'}
+              {loading ? t('domain.connecting') : t('domain.connect')}
             </button>
           </div>
         ) : (
@@ -155,22 +157,22 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
             <div className="flex items-center gap-2 mb-6">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
               <span className="font-semibold">{connected}</span>
-              <span className="text-amber-400 text-sm">— En attente de configuration</span>
+              <span className="text-amber-400 text-sm">{t('domain.pending')}</span>
             </div>
             <p className="text-sm text-slate-300 mb-4">
-              Ajoute ces 2 enregistrements chez ton registraire (GoDaddy, Namecheap, IONOS…) :
+              {t('domain.dnsInstructions')}
             </p>
             <div className="space-y-2 mb-6">
               {dns?.map((r, i) => (
                 <div key={i} className="grid grid-cols-3 gap-3 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono">
-                  <span><span className="text-slate-500">Type </span>{r.type}</span>
-                  <span><span className="text-slate-500">Nom </span>{r.name}</span>
-                  <span className="truncate"><span className="text-slate-500">Valeur </span>{r.value}</span>
+                  <span><span className="text-slate-500">{t('domain.colType')} </span>{r.type}</span>
+                  <span><span className="text-slate-500">{t('domain.colName')} </span>{r.name}</span>
+                  <span className="truncate"><span className="text-slate-500">{t('domain.colValue')} </span>{r.value}</span>
                 </div>
               ))}
             </div>
             <p className="text-xs text-slate-500">
-              La propagation DNS peut prendre quelques minutes à quelques heures. Le certificat SSL est généré automatiquement.
+              {t('domain.dnsNote')}
             </p>
           </div>
         )}
