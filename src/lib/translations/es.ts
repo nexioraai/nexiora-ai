@@ -351,4 +351,5 @@ export const es = {
   'naved.addQuestion': 'Añadir pregunta',
   'naved.addImage': 'Añadir imagen',
   'naved.phPageTitleEx': 'Título de la página (ej.: Servicios, FAQ)',
+  'nav.menu': 'Menú',
 };

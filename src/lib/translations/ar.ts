@@ -352,4 +352,5 @@ export const ar: Record<TranslationKey, string> = {
   'naved.addQuestion': 'إضافة سؤال',
   'naved.addImage': 'إضافة صورة',
   'naved.phPageTitleEx': 'عنوان الصفحة (مثال: الخدمات، الأسئلة الشائعة)',
+  'nav.menu': 'القائمة',
 };

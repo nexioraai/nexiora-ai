@@ -353,4 +353,5 @@ export const en: Record<TranslationKey, string> = {
   'naved.addQuestion': 'Add question',
   'naved.addImage': 'Add image',
   'naved.phPageTitleEx': 'Page title (e.g. Services, FAQ)',
+  'nav.menu': 'Menu',
 };

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Menu, X, Plus, LogOut } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslation } from '@/lib/translations'
 
 interface DashboardMobileNavProps {
   userEmail?: string
@@ -10,6 +11,7 @@ interface DashboardMobileNavProps {
 }
 
 export default function DashboardMobileNav({ userEmail, onLogout }: DashboardMobileNavProps) {
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   const closeMenu = () => setIsOpen(false)
 
@@ -19,7 +21,7 @@ export default function DashboardMobileNav({ userEmail, onLogout }: DashboardMob
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="p-2 rounded-lg hover:bg-white/10 transition-colors"
-        aria-label="Menu"
+        aria-label={t('nav.menu')}
       >
         {isOpen ? (
           <X className="w-6 h-6 text-white" />
@@ -50,7 +52,7 @@ export default function DashboardMobileNav({ userEmail, onLogout }: DashboardMob
             className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/10 text-white font-medium transition-colors"
           >
             <Plus className="w-5 h-5" />
-            Nouveau site
+            {t('dashboard.newSite')}
           </Link>
 
           {/* Email */}
@@ -69,7 +71,7 @@ export default function DashboardMobileNav({ userEmail, onLogout }: DashboardMob
             className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-500/10 text-red-400 font-medium transition-colors w-full text-left"
           >
             <LogOut className="w-5 h-5" />
-            Déconnexion
+            {t('sidebar.logout')}
           </button>
         </div>
       </div>

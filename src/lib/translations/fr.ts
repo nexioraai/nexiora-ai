@@ -363,6 +363,7 @@ export const fr = {
   'naved.addQuestion': 'Ajouter une question',
   'naved.addImage': 'Ajouter une image',
   'naved.phPageTitleEx': 'Titre de la page (ex : Services, FAQ)',
+  'nav.menu': 'Menu',
 };
 
 export type TranslationKey = keyof typeof fr;
