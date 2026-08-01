@@ -100,7 +100,12 @@ export default function CartDrawer({
       } else {
         setPromoDiscount(0);
         setPromoValid(false);
-        setPromoMsg(data.error || labels.promoInvalid);
+        const reasonMsg =
+          data.reason === 'expired' ? labels.promoExpired
+          : data.reason === 'depleted' ? labels.promoDepleted
+          : data.reason === 'min_order' ? labels.promoMinOrder.replace('{min}', `${data.min_order} ${currency}`)
+          : labels.promoInvalid;
+        setPromoMsg(reasonMsg);
       }
     } catch {
       setPromoMsg(labels.promoError);

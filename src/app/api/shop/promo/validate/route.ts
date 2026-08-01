@@ -26,22 +26,22 @@ export async function POST(req: NextRequest) {
       .eq('active', true)
       .single();
 
-    if (!promo) return NextResponse.json({ valid: false, error: 'Code invalide' });
+    if (!promo) return NextResponse.json({ valid: false, reason: 'invalid' });
 
     // Check expiry
     if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
-      return NextResponse.json({ valid: false, error: 'Code expiré' });
+      return NextResponse.json({ valid: false, reason: 'expired' });
     }
 
     // Check max uses
     if (promo.max_uses && promo.used_count >= promo.max_uses) {
-      return NextResponse.json({ valid: false, error: 'Code épuisé' });
+      return NextResponse.json({ valid: false, reason: 'depleted' });
     }
 
     // Check min order
     const sub = Number(subtotal) || 0;
     if (promo.min_order && sub < Number(promo.min_order)) {
-      return NextResponse.json({ valid: false, error: `Minimum ${promo.min_order}$ requis` });
+      return NextResponse.json({ valid: false, reason: 'min_order', min_order: Number(promo.min_order) });
     }
 
     // Calculate discount
