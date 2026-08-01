@@ -382,14 +382,17 @@ export function mockupsToProducts(site: Site): Product[] {
   if (site.dropship_type !== "pod_brand" || !site.pod_designs?.length) return []
   const designs = site.pod_designs
   const products: Product[] = []
+  // Prix unifie : le cout Printful (m.price / v.price) passe par la meme formule
+  // marge que le catalogue reseller. Le marchand fixe son %, le prix se calcule.
+  const { margin, roundMode } = sitePricing(site)
   for (const design of designs) {
     if (!design.mockups?.length) continue
     for (const m of design.mockups) {
       if (m.design_url && design.url && m.design_url !== design.url) continue
       const selProducts = design.selected_products || {}
       const sel = selProducts[String(m.product_id)]
-      const sellPrice = sel?.sellPrice ? Number(sel.sellPrice) : 0
-      const pr = sellPrice > 0 ? sellPrice : (m.price ? Number(m.price) : 0)
+      const cost = m.price ? Number(m.price) : 0
+      const pr = resolveDisplayPrice(cost, undefined, margin, roundMode)
       const cur = m.currency || "CAD"
       const variants = sel?.variants || []
       products.push({
@@ -405,7 +408,7 @@ export function mockupsToProducts(site: Site): Product[] {
         variants: variants.map((v: any) => ({
           variant_id: v.variant_id,
           label: v.label,
-          price: sellPrice > 0 ? sellPrice : (v.price || 0),
+          price: resolveDisplayPrice(v.price ? Number(v.price) : cost, undefined, margin, roundMode),
           currency: v.currency || cur,
         })),
       })

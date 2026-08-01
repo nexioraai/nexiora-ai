@@ -94,7 +94,7 @@ export default function EditPage() {
 
   const handleSave = async () => {
     // Verrou rentabilite : jamais de marge sous le seuil de perte (mode 3)
-    if (site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom')) {
+    if (site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom' || site?.dropship_type === 'pod_brand')) {
       const m = Number(site.cj_margin_percent ?? DEFAULT_MARGIN_PERCENT);
       if (m < MIN_MARGIN_PERCENT) {
         setMessage('Marge trop basse : minimum ' + MIN_MARGIN_PERCENT + '% pour ne pas vendre a perte (commission Woorri ' + NEXIORA_COMMISSION_PERCENT + '%).');
@@ -290,7 +290,7 @@ export default function EditPage() {
           </FieldSection>
 
           {/* Margin control — visible for mode 3 reseller & pod_custom */}
-          {site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom') && (
+          {site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom' || site?.dropship_type === 'pod_brand') && (
             <FieldSection label={t('edit.margin.label')}>
               <div className="flex items-center gap-3">
                 <input
@@ -348,7 +348,7 @@ export default function EditPage() {
           )}
 
           {/* Round .99 — visible for mode 3 reseller & pod_custom */}
-          {site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom') && (
+          {site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom' || site?.dropship_type === 'pod_brand') && (
             <FieldSection label={t('edit.round.label')}>
               <div className="flex gap-2 flex-wrap">
                 {[
@@ -594,7 +594,7 @@ export default function EditPage() {
 
           <button
             onClick={handleSave}
-            disabled={saving || (site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom') && Number(site.cj_margin_percent ?? DEFAULT_MARGIN_PERCENT) < MIN_MARGIN_PERCENT)}
+            disabled={saving || (site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom' || site?.dropship_type === 'pod_brand') && Number(site.cj_margin_percent ?? DEFAULT_MARGIN_PERCENT) < MIN_MARGIN_PERCENT)}
             className="w-full btn-nexiora py-4 rounded-2xl font-semibold text-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {saving ? 'Saving…' : 'Save Changes'}

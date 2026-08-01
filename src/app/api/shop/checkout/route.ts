@@ -223,7 +223,25 @@ export async function POST(req: Request) {
       let cost = 0;
       let serverPrice = 0;
 
-      if (item.id?.startsWith('catalog-')) {
+      if (item.id?.startsWith('printful-')) {
+        // Produit POD (pod_brand) : id = printful-{product_id}-{variant_id}.
+        // Le cout de base Printful est dans catalog_products (via supplier_product_id
+        // = variant_id). Prix = cout x (1 + marge du marchand), meme formule que le
+        // catalogue reseller (mockupsToProducts cote affichage). Jamais de prix client.
+        const variantId = item.id.split('-').pop() || '';
+        const { data: cp } = await supabaseAdmin
+          .from('catalog_products')
+          .select('price')
+          .eq('supplier_id', 'printful')
+          .eq('supplier_product_id', variantId)
+          .maybeSingle();
+        cost = Number(cp?.price) || 0;
+        if (cost <= 0) {
+          await logAnomaly({ type: 'pod_cost_missing', siteId: site.id, slug, details: { itemId: item.id } });
+          return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
+        }
+        serverPrice = resolveDisplayPrice(cost, undefined, margin, roundMode);
+      } else if (item.id?.startsWith('catalog-')) {
         const { realId } = parseCatalogId(item.id);
         const { data: cp } = await supabaseAdmin
           .from('catalog_products')
