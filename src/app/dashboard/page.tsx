@@ -150,7 +150,7 @@ export default function DashboardPage() {
                       </div>
                     );
                   })()}
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Link href={site.published ? `/sites/${site.slug}` : `/preview/${site.slug}`}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-white text-sm font-semibold transition-opacity hover:opacity-80"
                       style={{ background: site.primary_color || '#FA5D1E' }}>
