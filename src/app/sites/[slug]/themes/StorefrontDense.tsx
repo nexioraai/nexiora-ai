@@ -70,8 +70,8 @@ export default function StorefrontDense({
         {(heroImage || heroProduct?.image) ? (
           <>
             <Image src={(heroImage || heroProduct?.image) as string} alt="" fill priority sizes="100vw" className="object-cover object-center" />
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.35) 42%, rgba(0,0,0,0.10) 100%)' }} />
-            <div className="absolute inset-0" style={{ background: `linear-gradient(120deg, color-mix(in srgb, ${primary} 40%, transparent) 0%, transparent 55%)` }} />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.25) 100%)' }} />
+            <div className="absolute inset-0" style={{ background: `linear-gradient(105deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 40%, transparent 65%)` }} />
           </>
         ) : (
           <div className="absolute inset-0" style={{ background: `linear-gradient(130deg, color-mix(in srgb, ${primary} 60%, #111), color-mix(in srgb, ${primary} 20%, #000))` }} />
@@ -79,7 +79,7 @@ export default function StorefrontDense({
         <div className="au-blob absolute -top-20 -right-16 w-[28rem] h-[28rem] rounded-full blur-3xl opacity-30 pointer-events-none" style={{ background: `radial-gradient(circle, ${primary}, transparent 62%)` }} />
         <div className="relative w-full p-8 md:p-16 au-rise">
           {slogan && (
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-xs font-medium tracking-[0.15em] uppercase text-white">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-5 rounded-full bg-black/30 backdrop-blur-md border border-white/25 text-xs font-medium tracking-[0.15em] uppercase text-white">
               <Sparkles className="w-3.5 h-3.5" />
               {slogan}
             </div>
@@ -91,12 +91,7 @@ export default function StorefrontDense({
               {labels.newArrivals}
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </a>
-            {heroProduct?.price && (
-              <div className="rounded-2xl bg-white/12 backdrop-blur-xl border border-white/20 px-5 py-2.5">
-                <div className="text-[11px] text-white/60 line-clamp-1 max-w-[10rem]">{heroProduct.name}</div>
-                <div className="text-lg font-semibold text-white">{heroProduct.price}</div>
-              </div>
-            )}
+
           </div>
         </div>
       </div>
