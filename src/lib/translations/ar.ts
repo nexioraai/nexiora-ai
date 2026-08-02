@@ -11,6 +11,10 @@ export const ar: Record<TranslationKey, string> = {
   'footer.privacy': 'الخصوصية',
   'footer.terms': 'الشروط',
   'footer.cookies': 'ملفات تعريف الارتباط',
+  'cookieBanner.message': 'نستخدم ملفات تعريف الارتباط لتحسين تجربتك وقياس الزيارات. يمكنك قبول أو رفض ملفات تعريف الارتباط غير الأساسية.',
+  'cookieBanner.learnMore': 'اعرف المزيد',
+  'cookieBanner.accept': 'قبول',
+  'cookieBanner.decline': 'رفض',
 
   // Home / Hero
   'home.badge': 'مولّد المواقع بالذكاء الاصطناعي',

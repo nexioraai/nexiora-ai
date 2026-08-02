@@ -11,6 +11,10 @@ export const en: Record<TranslationKey, string> = {
   'footer.privacy': 'Privacy',
   'footer.terms': 'Terms',
   'footer.cookies': 'Cookies',
+  'cookieBanner.message': 'We use cookies to improve your experience and measure traffic. You can accept or decline non-essential cookies.',
+  'cookieBanner.learnMore': 'Learn more',
+  'cookieBanner.accept': 'Accept',
+  'cookieBanner.decline': 'Decline',
 
   // Home / Hero
   'home.badge': 'AI Website Builder',

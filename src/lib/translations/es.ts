@@ -9,6 +9,10 @@ export const es = {
   'footer.privacy': 'Privacidad',
   'footer.terms': 'Condiciones',
   'footer.cookies': 'Cookies',
+  'cookieBanner.message': 'Usamos cookies para mejorar su experiencia y medir el tráfico. Puede aceptar o rechazar las cookies no esenciales.',
+  'cookieBanner.learnMore': 'Más información',
+  'cookieBanner.accept': 'Aceptar',
+  'cookieBanner.decline': 'Rechazar',
 
   // Home / Hero
   'home.badge': 'Generador de sitios con IA',
