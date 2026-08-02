@@ -89,6 +89,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen nexiora-bg text-white flex">
+      <div className="grid-bg fixed inset-0 pointer-events-none z-0" aria-hidden="true" />
       <Sidebar />
       <div className="flex-1 min-w-0 max-w-6xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-10">
@@ -115,11 +116,16 @@ export default function DashboardPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {sites.map((site) => (
               <div key={site.slug}
-                className="group border border-white/8 rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-300 hover:-translate-y-1"
-                style={{ background: 'rgba(255,255,255,0.03)' }}>
+                className="group border border-white/[0.06] rounded-2xl overflow-hidden hover:border-white/[0.12] transition-all duration-300 hover:-translate-y-1"
+                style={{
+                  background: 'rgba(255,255,255,0.02)',
+                  backdropFilter: 'blur(20px) saturate(1.2)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(1.2)',
+                  boxShadow: `inset 0 2px 0 ${site.primary_color || '#FA5D1E'}, inset 0 1px 0 rgba(255,255,255,0.10), 0 0 40px ${site.primary_color || '#FA5D1E'}18`,
+                }}>
                 <div className="h-28 relative flex items-center justify-center overflow-hidden">
                   <div className="absolute inset-0"
-                    style={{ background: `radial-gradient(ellipse at 50% 50%, ${site.primary_color || '#FA5D1E'}50 0%, transparent 70%), #0a050e` }} />
+                    style={{ background: `radial-gradient(ellipse at 50% 50%, ${site.primary_color || '#FA5D1E'}45 0%, transparent 70%)` }} />
                   <div className="relative text-center px-4">
                     <h2 className="text-xl font-black text-white">{site.name}</h2>
                     <span className="text-xs px-3 py-1 rounded-full mt-2 inline-block font-medium"

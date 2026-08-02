@@ -106,9 +106,15 @@ export default function Sidebar() {
       {/* Desktop : sidebar fixe */}
       <div className="hidden lg:block w-60 flex-shrink-0" />
       <aside
-        className="hidden lg:flex flex-col w-60 h-screen fixed top-0 left-0 border-r border-white/8 px-4 py-5 z-40"
-        style={{ background: 'rgba(10,5,14,0.6)' }}
+        className="hidden lg:flex flex-col w-60 h-screen fixed top-0 left-0 border-r border-white/10 px-4 py-5 z-40 overflow-hidden"
+        style={{
+          background: 'rgba(10,5,14,0.15)',
+          backdropFilter: 'blur(10px) saturate(1.2)',
+          WebkitBackdropFilter: 'blur(10px) saturate(1.2)',
+          boxShadow: 'inset -1px 0 0 rgba(255,255,255,0.08)',
+        }}
       >
+        <div className="grid-bg absolute inset-0 pointer-events-none opacity-50 -z-10" aria-hidden="true" />
         {content}
       </aside>
 
