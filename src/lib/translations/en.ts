@@ -10,6 +10,7 @@ export const en: Record<TranslationKey, string> = {
   'footer.copyright': '© 2026 Woorri. All rights reserved.',
   'footer.privacy': 'Privacy',
   'footer.terms': 'Terms',
+  'footer.cookies': 'Cookies',
 
   // Home / Hero
   'home.badge': 'AI Website Builder',

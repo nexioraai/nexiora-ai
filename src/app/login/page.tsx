@@ -434,6 +434,11 @@ export default function SignupPage() {
             textDecoration: 'none',
           }}>{t('login.backHome')}</Link>
         </p>
+        <p style={{ textAlign: 'center', marginTop: '1rem', marginBottom: 0, display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Link href="/privacy" style={{ color: '#5a4f42', fontSize: '0.75rem', textDecoration: 'none' }}>{t('footer.privacy')}</Link>
+          <Link href="/terms" style={{ color: '#5a4f42', fontSize: '0.75rem', textDecoration: 'none' }}>{t('footer.terms')}</Link>
+          <Link href="/cookies" style={{ color: '#5a4f42', fontSize: '0.75rem', textDecoration: 'none' }}>{t('footer.cookies')}</Link>
+        </p>
       </div>
     </div>
   );

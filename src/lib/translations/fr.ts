@@ -8,6 +8,7 @@ export const fr = {
   'footer.copyright': '© 2026 Woorri. Tous droits réservés.',
   'footer.privacy': 'Confidentialité',
   'footer.terms': 'Conditions',
+  'footer.cookies': 'Témoins',
 
   // Home / Hero
   'home.badge': 'Générateur de sites IA',

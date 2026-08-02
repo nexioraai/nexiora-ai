@@ -10,6 +10,7 @@ export const ar: Record<TranslationKey, string> = {
   'footer.copyright': '© 2026 Woorri. جميع الحقوق محفوظة.',
   'footer.privacy': 'الخصوصية',
   'footer.terms': 'الشروط',
+  'footer.cookies': 'ملفات تعريف الارتباط',
 
   // Home / Hero
   'home.badge': 'مولّد المواقع بالذكاء الاصطناعي',
