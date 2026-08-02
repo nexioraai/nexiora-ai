@@ -42,11 +42,15 @@ body {
 /* ===== NEXIORA BRAND IDENTITY ===== */
 .nexiora-bg {
   background:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px),
     radial-gradient(ellipse at 15% 15%, rgba(79,110,245,0.35) 0%, transparent 50%),
     radial-gradient(ellipse at 85% 20%, rgba(224,112,64,0.35) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 80%, rgba(201,168,76,0.25) 0%, transparent 45%),
     radial-gradient(ellipse at 20% 85%, rgba(139,34,82,0.25) 0%, transparent 40%),
     #0a050e;
+  background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-attachment: fixed;
 }
 .btn-nexiora {
   background: linear-gradient(135deg, #4F6EF5 0%, #FA5D1E 60%, #C9A84C 100%);
