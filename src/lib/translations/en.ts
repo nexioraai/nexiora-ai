@@ -15,6 +15,10 @@ export const en: Record<TranslationKey, string> = {
   'cookieBanner.learnMore': 'Learn more',
   'cookieBanner.accept': 'Accept',
   'cookieBanner.decline': 'Decline',
+  "login.acceptPrefix": "I accept the",
+  "login.acceptTerms": "Terms of Service",
+  "login.acceptAnd": "and the",
+  "login.acceptPrivacy": "Privacy Policy",
 
   // Home / Hero
   'home.badge': 'AI Website Builder',

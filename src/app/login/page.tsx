@@ -20,6 +20,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [forgotSuccess, setForgotSuccess] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -360,18 +361,34 @@ export default function SignupPage() {
               }}>{error}</p>
             )}
 
+            {isSignup && (
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '1rem', fontSize: '0.85rem', color: '#8a7d6e', lineHeight: 1.5, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  style={{ marginTop: '0.2rem', accentColor: '#d97a4f', cursor: 'pointer', flexShrink: 0 }}
+                />
+                <span>
+                  {t('login.acceptPrefix')}{' '}
+                  <Link href="/terms" style={{ color: '#d97a4f', textDecoration: 'underline' }}>{t('login.acceptTerms')}</Link>{' '}
+                  {t('login.acceptAnd')}{' '}
+                  <Link href="/privacy" style={{ color: '#d97a4f', textDecoration: 'underline' }}>{t('login.acceptPrivacy')}</Link>
+                </span>
+              </label>
+            )}
             <button
               onClick={handleSubmit}
-              disabled={loading}
+              disabled={loading || (isSignup && !acceptedTerms)}
               style={{
-                background: loading ? 'rgba(217, 122, 79, 0.5)' : 'linear-gradient(135deg, #d97a4f 0%, #c0612d 100%)',
+                background: (loading || (isSignup && !acceptedTerms)) ? 'rgba(217, 122, 79, 0.5)' : 'linear-gradient(135deg, #d97a4f 0%, #c0612d 100%)',
                 color: '#f5ede1',
                 border: 'none',
                 padding: '0.95rem',
                 borderRadius: '10px',
                 fontSize: '1rem',
                 fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
+                cursor: (loading || (isSignup && !acceptedTerms)) ? 'not-allowed' : 'pointer',
                 fontFamily: 'inherit',
                 marginTop: '0.5rem',
                 transition: 'transform 0.15s, box-shadow 0.2s',

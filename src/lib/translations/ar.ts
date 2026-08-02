@@ -15,6 +15,10 @@ export const ar: Record<TranslationKey, string> = {
   'cookieBanner.learnMore': 'اعرف المزيد',
   'cookieBanner.accept': 'قبول',
   'cookieBanner.decline': 'رفض',
+  "login.acceptPrefix": "أوافق على",
+  "login.acceptTerms": "شروط الخدمة",
+  "login.acceptAnd": "و",
+  "login.acceptPrivacy": "سياسة الخصوصية",
 
   // Home / Hero
   'home.badge': 'مولّد المواقع بالذكاء الاصطناعي',

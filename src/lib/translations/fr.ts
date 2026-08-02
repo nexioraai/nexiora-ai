@@ -13,6 +13,10 @@ export const fr = {
   'cookieBanner.learnMore': 'En savoir plus',
   'cookieBanner.accept': 'Accepter',
   'cookieBanner.decline': 'Refuser',
+  "login.acceptPrefix": "J'accepte les",
+  "login.acceptTerms": "Conditions d'utilisation",
+  "login.acceptAnd": "et la",
+  "login.acceptPrivacy": "Politique de confidentialité",
 
   // Home / Hero
   'home.badge': 'Générateur de sites IA',
