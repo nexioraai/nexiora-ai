@@ -102,9 +102,8 @@ export default function SignupPage() {
     : (isSignup ? t('login.btnSignup') : isLogin ? t('login.btnLogin') : t('login.btnReset'));
 
   return (
-    <div style={{
+    <div className="nexiora-bg" style={{
       minHeight: '100vh',
-      background: 'radial-gradient(ellipse at top, #1a1208 0%, #0a0705 60%, #050302 100%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -112,15 +111,15 @@ export default function SignupPage() {
       fontFamily: 'var(--font-geist-sans), sans-serif',
     }}>
       <div style={{
-        background: 'rgba(26, 22, 18, 0.85)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        border: '1px solid rgba(217, 122, 79, 0.15)',
+        background: 'rgba(255, 255, 255, 0.04)',
+        backdropFilter: 'blur(20px) saturate(1.3)',
+        WebkitBackdropFilter: 'blur(20px) saturate(1.3)',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
         padding: 'clamp(2rem, 5vw, 3rem)',
-        borderRadius: '20px',
+        borderRadius: '24px',
         width: '100%',
         maxWidth: '420px',
-        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.14)',
       }}>
         <h1 style={{
           fontSize: 'clamp(2rem, 5vw, 2.5rem)',
