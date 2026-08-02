@@ -167,12 +167,13 @@ export default function EditPage() {
   return (
     <main className="min-h-screen nexiora-bg text-white">
       <Navbar />
+      <div className="grid-bg fixed inset-0 pointer-events-none z-0" aria-hidden="true" />
 
-      <section className="grid-bg max-w-3xl mx-auto px-6 pt-12 pb-24">
+      <section className="max-w-3xl mx-auto px-6 pt-12 pb-24">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
           <div>
-            <Link href="/dashboard" className="text-sm text-slate-400 hover:text-white transition mb-2 inline-block">
+            <Link href="/dashboard" className="text-sm text-slate-400 hover:text-white transition-all duration-200 mb-2 inline-block hover:-translate-x-1">
               ← Dashboard
             </Link>
             <h1 className="text-4xl md:text-5xl font-black tracking-tight">

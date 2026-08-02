@@ -59,6 +59,18 @@ body {
 .btn-nexiora:disabled {
   opacity: 0.5;
 }
+
+/* Lift au survol pour tous les boutons secondaires (hors .btn-nexiora qui gere deja son hover) */
+button:not(.btn-nexiora):not(:disabled) {
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
+}
+button:not(.btn-nexiora):not(:disabled):hover {
+  transform: translateY(-1px);
+}
+@media (prefers-reduced-motion: reduce) {
+  button:not(.btn-nexiora):not(:disabled) { transition: none; }
+  button:not(.btn-nexiora):not(:disabled):hover { transform: none; }
+}
 .text-nexiora {
   background: linear-gradient(135deg, #4F6EF5 0%, #FA5D1E 55%, #C9A84C 100%);
   -webkit-background-clip: text;
