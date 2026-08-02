@@ -167,7 +167,6 @@ export default function EditPage() {
   return (
     <main className="min-h-screen nexiora-bg text-white">
       <Navbar />
-      <div className="grid-bg fixed inset-0 pointer-events-none z-0" aria-hidden="true" />
 
       <section className="max-w-3xl mx-auto px-6 pt-12 pb-24">
         {/* Header */}

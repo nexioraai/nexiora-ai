@@ -114,7 +114,6 @@ export default function Sidebar() {
           boxShadow: 'inset -1px 0 0 rgba(255,255,255,0.08)',
         }}
       >
-        <div className="grid-bg absolute inset-0 pointer-events-none opacity-50 -z-10" aria-hidden="true" />
         {content}
       </aside>
 

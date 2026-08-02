@@ -89,7 +89,6 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen nexiora-bg text-white flex">
-      <div className="grid-bg fixed inset-0 pointer-events-none z-0" aria-hidden="true" />
       <Sidebar />
       <div className="flex-1 min-w-0 max-w-6xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-10">
