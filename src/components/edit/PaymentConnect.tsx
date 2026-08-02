@@ -83,7 +83,7 @@ export default function PaymentConnect({ slug, mode }: { slug: string; mode?: nu
   };
 
   return (
-    <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm mt-8">
+    <div className="glass glass-hover rounded-3xl p-6 md:p-8 mt-8">
       <h2 className="text-xl font-bold mb-2">Paiements</h2>
       <p className="text-sm text-white/50 mb-5">
         {isAutomated ? t('pc.introAutomated') : t('pc.introNormal')}
@@ -139,7 +139,7 @@ export default function PaymentConnect({ slug, mode }: { slug: string; mode?: nu
             step="0.01"
             value={shipping}
             onChange={(e) => setShipping(e.target.value)}
-            className="w-32 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FA5D1E] transition"
+            className="w-32 bg-white/[0.04] border border-white/10 backdrop-blur-sm rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FA5D1E] transition"
           />
           <button
             onClick={handleSaveShipping}

@@ -168,7 +168,7 @@ export default function EditPage() {
     <main className="min-h-screen nexiora-bg text-white">
       <Navbar />
 
-      <section className="max-w-3xl mx-auto px-6 pt-12 pb-24">
+      <section className="grid-bg max-w-3xl mx-auto px-6 pt-12 pb-24">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
           <div>
@@ -199,7 +199,7 @@ export default function EditPage() {
           const color = score >= 80 ? '#34d399' : score >= 50 ? '#FA5D1E' : '#f87171';
           const data = history.length >= 1 ? history : [{ score, date: "Aujourd'hui", reason: '' }];
           return (
-            <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm mb-8">
+            <div className="glass glass-hover rounded-3xl p-6 md:p-8 mb-8">
               <div className="flex flex-col md:flex-row md:items-stretch gap-6">
                 <div className="md:w-1/3 flex flex-col justify-center">
                   <p className="text-sm font-semibold text-white/60 mb-1">{t('edit.aivis.title')}</p>
@@ -259,7 +259,7 @@ export default function EditPage() {
         })()}
 
         {/* Form card */}
-        <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm space-y-6">
+        <div className="glass glass-hover rounded-3xl p-6 md:p-8 space-y-6">
 
           <ThemeSelector currentTheme={site.theme || "editorial"} onThemeChange={(t) => updateField("theme", t)} />
 
@@ -613,7 +613,7 @@ export default function EditPage() {
           )}
         </div>
 
-        {(site?.mode === 2 || site?.mode === 3) && <ProductManager slug={slug} />}
+        {(site?.mode === 2 || site?.mode === 3) && <div className="mt-8"><ProductManager slug={slug} /></div>}
 
         {(site?.mode === 2 || site?.mode === 3) && <PaymentConnect slug={slug} mode={site?.mode} />}
         {site?.mode === 3 && site?.dropship_type === 'reseller' && <CatalogSelections slug={slug} marginPercent={site.cj_margin_percent ?? DEFAULT_MARGIN_PERCENT} roundMode={site.cj_round_mode || undefined} />}

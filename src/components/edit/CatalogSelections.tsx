@@ -227,7 +227,7 @@ export default function CatalogSelections({
   const unenhancedCount = selections.filter(s => !s.custom_name).length;
 
   return (
-    <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm space-y-4">
+    <div className="glass glass-hover rounded-3xl p-6 md:p-8 space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-white">Mes Produits Catalogue</h2>

@@ -166,7 +166,7 @@ export default function ProductManager({ slug }: { slug: string }) {
   }
 
   return (
-    <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm space-y-6">
+    <div className="glass glass-hover rounded-3xl p-6 md:p-8 space-y-6">
       <div>
         <h3 className="text-lg font-semibold text-white">{t('pm.title')}</h3>
         <p className="text-sm text-white/40 mt-1">{t('pm.subtitle')}</p>

@@ -28,7 +28,7 @@ export default function FinanceDashboard({ slug }: { slug: string }) {
   const fmt = (n: number) => n.toFixed(2);
 
   return (
-    <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm mt-8">
+    <div className="glass glass-hover rounded-3xl p-6 md:p-8 mt-8">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold">Finances</h2>
         <div className="flex gap-2">
@@ -111,8 +111,15 @@ export default function FinanceDashboard({ slug }: { slug: string }) {
 
 function Card({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4">
-      <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">{label}</div>
+    <div
+      className="rounded-xl p-4 backdrop-blur-sm transition"
+      style={{
+        background: `color-mix(in srgb, ${color} 6%, transparent)`,
+        border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`,
+        boxShadow: `0 0 20px color-mix(in srgb, ${color} 15%, transparent), inset 0 1px 0 rgba(255,255,255,0.08)`,
+      }}
+    >
+      <div className="text-[10px] uppercase tracking-wider text-slate-400 mb-1">{label}</div>
       <div className="text-lg font-bold" style={{ color }}>{value}</div>
     </div>
   );

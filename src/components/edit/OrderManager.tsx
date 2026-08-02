@@ -101,7 +101,7 @@ export default function OrderManager({ slug }: { slug: string }) {
   const filtered = orders.filter((o) => statuses.includes(o.status));
 
   return (
-    <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm mt-8">
+    <div className="glass glass-hover rounded-3xl p-6 md:p-8 mt-8">
       <h2 className="text-xl font-bold mb-5">{t('om.title')}</h2>
 
       {/* Tabs */}
@@ -177,7 +177,7 @@ export default function OrderManager({ slug }: { slug: string }) {
                       placeholder={t('om.trackingPlaceholder')}
                       value={tracking[o.id] || ''}
                       onChange={(e) => setTracking({ ...tracking, [o.id]: e.target.value })}
-                      className="flex-1 bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#FA5D1E] transition"
+                      className="flex-1 bg-white/[0.04] border border-white/10 backdrop-blur-sm rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#FA5D1E] transition"
                     />
                     <button
                       onClick={() => markShipped(o.id)}
