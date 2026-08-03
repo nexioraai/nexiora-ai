@@ -16,13 +16,29 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState(false);
   const [checking, setChecking] = useState(true);
   const [validSession, setValidSession] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        setValidSession(true);
+    // Nouveau format : token_hash dans l'URL, vérifié via verifyOtp (immunisé contre les scanners email).
+    const params = new URLSearchParams(window.location.search);
+    const tokenHash = params.get('token_hash');
+    const type = params.get('type');
+
+    if (tokenHash && type === 'recovery') {
+      supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' }).then(({ error }) => {
+        if (!error) {
+          setValidSession(true);
+          supabase.auth.getUser().then(({ data }) => setUserEmail(data.user?.email ?? ''));
+        }
         setChecking(false);
-      }
+      });
+      return;
+    }
+
+    // Fallback : session déjà présente (ancien flux).
+    supabase.auth.getSession().then(({ data }) => {
+      setValidSession(Boolean(data.session));
+      setChecking(false);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY' || session) {
@@ -36,8 +52,18 @@ export default function ResetPasswordPage() {
   }, []);
 
   const handleReset = async () => {
-    if (password.length < 6) {
-      setError(t('rp.tooShort'));
+    // Règles fortes : min 8, lettre + chiffre + symbole, pas de ressemblance avec l'email.
+    if (password.length < 8) {
+      setError('Le mot de passe doit contenir au moins 8 caractères');
+      return;
+    }
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password) || !/[^a-zA-Z0-9]/.test(password)) {
+      setError('Le mot de passe doit mélanger lettres, chiffres et symboles');
+      return;
+    }
+    const emailLocal = userEmail.split('@')[0]?.toLowerCase() ?? '';
+    if (emailLocal.length >= 3 && password.toLowerCase().includes(emailLocal)) {
+      setError('Le mot de passe ne doit pas contenir votre nom ou email');
       return;
     }
     if (password !== confirmPassword) {
