@@ -54,16 +54,16 @@ export default function ResetPasswordPage() {
   const handleReset = async () => {
     // Règles fortes : min 8, lettre + chiffre + symbole, pas de ressemblance avec l'email.
     if (password.length < 8) {
-      setError('Le mot de passe doit contenir au moins 8 caractères');
+      setError(t('rp.tooShort'));
       return;
     }
     if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password) || !/[^a-zA-Z0-9]/.test(password)) {
-      setError('Le mot de passe doit mélanger lettres, chiffres et symboles');
+      setError(t('rp.needMix'));
       return;
     }
     const emailLocal = userEmail.split('@')[0]?.toLowerCase() ?? '';
     if (emailLocal.length >= 3 && password.toLowerCase().includes(emailLocal)) {
-      setError('Le mot de passe ne doit pas contenir votre nom ou email');
+      setError(t('rp.noName'));
       return;
     }
     if (password !== confirmPassword) {
@@ -230,6 +230,7 @@ export default function ResetPasswordPage() {
               </button>
             </div>
 
+            <p style={{ color: '#a89684', fontSize: '0.8rem', margin: '0.5rem 0 0.25rem 0', lineHeight: 1.4 }}>{t('rp.rules')}</p>
             <input
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
