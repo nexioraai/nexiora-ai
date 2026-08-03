@@ -17,6 +17,7 @@ export default function ResetPasswordPage() {
   const [checking, setChecking] = useState(true);
   const [validSession, setValidSession] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
     // Nouveau format : token_hash dans l'URL, vérifié via verifyOtp (immunisé contre les scanners email).
@@ -28,7 +29,12 @@ export default function ResetPasswordPage() {
       supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' }).then(({ error }) => {
         if (!error) {
           setValidSession(true);
-          supabase.auth.getUser().then(({ data }) => setUserEmail(data.user?.email ?? ''));
+          supabase.auth.getUser().then(({ data }) => {
+            setUserEmail(data.user?.email ?? '');
+            const meta = data.user?.user_metadata ?? {};
+            const name = meta.first_name || (meta.full_name || '').split(' ')[0] || '';
+            setUserName(String(name));
+          });
         }
         setChecking(false);
       });
@@ -61,8 +67,11 @@ export default function ResetPasswordPage() {
       setError(t('rp.needMix'));
       return;
     }
+    const pwLower = password.toLowerCase();
     const emailLocal = userEmail.split('@')[0]?.toLowerCase() ?? '';
-    if (emailLocal.length >= 3 && password.toLowerCase().includes(emailLocal)) {
+    const nameLower = userName.toLowerCase();
+    if ((emailLocal.length >= 3 && pwLower.includes(emailLocal)) ||
+        (nameLower.length >= 3 && pwLower.includes(nameLower))) {
       setError(t('rp.noName'));
       return;
     }
