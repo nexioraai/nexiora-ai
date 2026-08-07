@@ -1,6 +1,8 @@
 export const es = {
   // Navbar
   'nav.login': 'Iniciar sesión',
+  'nav.about': 'Acerca de',
+  'nav.pricing': 'Precios',
   'nav.signup': 'Crear una cuenta',
   'nav.dashboard': 'Mi panel',
 
@@ -9,6 +11,9 @@ export const es = {
   'footer.privacy': 'Privacidad',
   'footer.terms': 'Condiciones',
   'footer.cookies': 'Cookies',
+  'footer.about': 'Acerca de',
+  'footer.pricing': 'Precios',
+  'footer.contact': 'Contacto',
   'cookieBanner.message': 'Usamos cookies para mejorar su experiencia y medir el tráfico. Puede aceptar o rechazar las cookies no esenciales.',
   'cookieBanner.learnMore': 'Más información',
   'cookieBanner.accept': 'Aceptar',

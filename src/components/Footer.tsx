@@ -14,7 +14,7 @@ export default function Footer() {
             className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-black text-sm"
             style={{ background: 'radial-gradient(circle at 30% 30%, #4F6EF5 0%, transparent 60%), radial-gradient(circle at 70% 70%, #FA5D1E 0%, transparent 60%), #16090e' }}
           >
-            N
+            W
           </div>
           <span className="font-black text-sm text-nexiora">woorri</span>
         </div>
@@ -23,7 +23,10 @@ export default function Footer() {
           {t('footer.copyright')}
         </p>
 
-        <div className="flex gap-6 text-xs text-white/40">
+        <div className="flex flex-wrap gap-6 text-xs text-white/40 justify-center">
+          <Link href="/about" className="hover:text-white transition-colors">{t('footer.about')}</Link>
+          <Link href="/pricing" className="hover:text-white transition-colors">{t('footer.pricing')}</Link>
+          <a href="mailto:contact@woorri.com" className="hover:text-white transition-colors">{t('footer.contact')}</a>
           <Link href="/privacy" className="hover:text-white transition-colors">{t('footer.privacy')}</Link>
           <Link href="/terms" className="hover:text-white transition-colors">{t('footer.terms')}</Link>
           <Link href="/cookies" className="hover:text-white transition-colors">{t('footer.cookies')}</Link>

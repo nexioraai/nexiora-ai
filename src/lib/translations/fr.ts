@@ -1,6 +1,8 @@
 export const fr = {
   // Navbar
   'nav.login': 'Connexion',
+  'nav.about': 'À propos',
+  'nav.pricing': 'Tarifs',
   'nav.signup': 'Créer un compte',
   'nav.dashboard': 'Mon tableau de bord',
 
@@ -9,6 +11,9 @@ export const fr = {
   'footer.privacy': 'Confidentialité',
   'footer.terms': 'Conditions',
   'footer.cookies': 'Témoins',
+  'footer.about': 'À propos',
+  'footer.pricing': 'Tarifs',
+  'footer.contact': 'Contact',
   "cookieBanner.message": "Nous utilisons des témoins pour améliorer votre expérience et mesurer l'audience. Vous pouvez accepter ou refuser les témoins non essentiels.",
   'cookieBanner.learnMore': 'En savoir plus',
   'cookieBanner.accept': 'Accepter',

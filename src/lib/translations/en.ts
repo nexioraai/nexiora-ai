@@ -3,6 +3,8 @@ import type { TranslationKey } from './fr';
 export const en: Record<TranslationKey, string> = {
   // Navbar
   'nav.login': 'Sign in',
+  'nav.about': 'About',
+  'nav.pricing': 'Pricing',
   'nav.signup': 'Sign up',
   'nav.dashboard': 'My dashboard',
 
@@ -11,6 +13,9 @@ export const en: Record<TranslationKey, string> = {
   'footer.privacy': 'Privacy',
   'footer.terms': 'Terms',
   'footer.cookies': 'Cookies',
+  'footer.about': 'About',
+  'footer.pricing': 'Pricing',
+  'footer.contact': 'Contact',
   'cookieBanner.message': 'We use cookies to improve your experience and measure traffic. You can accept or decline non-essential cookies.',
   'cookieBanner.learnMore': 'Learn more',
   'cookieBanner.accept': 'Accept',

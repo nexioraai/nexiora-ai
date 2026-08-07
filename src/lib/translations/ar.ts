@@ -3,6 +3,8 @@ import type { TranslationKey } from './fr';
 export const ar: Record<TranslationKey, string> = {
   // Navbar
   'nav.login': 'تسجيل الدخول',
+  'nav.about': 'من نحن',
+  'nav.pricing': 'الأسعار',
   'nav.signup': 'إنشاء حساب',
   'nav.dashboard': 'لوحة التحكم',
 
@@ -11,6 +13,9 @@ export const ar: Record<TranslationKey, string> = {
   'footer.privacy': 'الخصوصية',
   'footer.terms': 'الشروط',
   'footer.cookies': 'ملفات تعريف الارتباط',
+  'footer.about': 'من نحن',
+  'footer.pricing': 'الأسعار',
+  'footer.contact': 'اتصل بنا',
   'cookieBanner.message': 'نستخدم ملفات تعريف الارتباط لتحسين تجربتك وقياس الزيارات. يمكنك قبول أو رفض ملفات تعريف الارتباط غير الأساسية.',
   'cookieBanner.learnMore': 'اعرف المزيد',
   'cookieBanner.accept': 'قبول',
