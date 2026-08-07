@@ -10,12 +10,8 @@ export default function Home() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        router.replace('/login');
-      } else {
-        setChecking(false);
-      }
+    supabase.auth.getSession().then(() => {
+      setChecking(false);
     });
   }, [router]);
 

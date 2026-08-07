@@ -184,6 +184,9 @@ export default function OnboardingChat() {
 
   const sendText = async (text: string, chosenMode?: number) => {
     if ((!text && !chosenMode) || loading || generating) return;
+    // Gate compte : la génération exige un compte. Sinon -> login.
+    const { data: { session: gateSession } } = await supabase.auth.getSession();
+    if (!gateSession?.access_token) { router.push('/login'); return; }
     setError('');
     const newMessages: Msg[] = [...messages, { role: 'user', content: text }];
     setMessages(newMessages);
@@ -285,7 +288,9 @@ export default function OnboardingChat() {
               ].map(({ label, tkey, mode }) => (
                 <button
                   key={label}
-                  onClick={() => {
+                  onClick={async () => {
+                    const { data: { session: gate } } = await supabase.auth.getSession();
+                    if (!gate?.access_token) { router.push('/login'); return; }
                     if (mode === 3) {
                       setShowDropshipPicker(true);
                     } else {

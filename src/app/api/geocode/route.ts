@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     const res = await fetch(
 
       `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`,
-      { headers: { 'User-Agent': 'Nexiora/1.0 (contact@nexiora.ca)' } }
+      { headers: { 'User-Agent': 'Woorri/1.0 (contact@woorri.com)' } }
     );
     const json = await res.json();
     if (Array.isArray(json) && json[0]) {

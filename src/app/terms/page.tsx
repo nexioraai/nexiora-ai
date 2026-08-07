@@ -87,7 +87,7 @@ const CONTENT = {
       {
         h: '12. Nous joindre',
         p: [
-          "Pour toute question relative aux présentes Conditions : contact@nexiora.ca.",
+          "Pour toute question relative aux présentes Conditions : contact@woorri.com.",
         ],
       },
     ],
@@ -174,7 +174,7 @@ const CONTENT = {
       {
         h: '12. Contact us',
         p: [
-          "For any question regarding these Terms: contact@nexiora.ca.",
+          "For any question regarding these Terms: contact@woorri.com.",
         ],
       },
     ],

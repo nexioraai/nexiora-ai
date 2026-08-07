@@ -467,7 +467,7 @@ Return ONLY valid JSON, no markdown:
       try {
         const geoRes = await fetch(
           `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(addr)}`,
-          { headers: { 'User-Agent': 'Nexiora/1.0 (contact@nexiora.ca)' } }
+          { headers: { 'User-Agent': 'Woorri/1.0 (contact@woorri.com)' } }
         );
         const geoJson = await geoRes.json();
         if (Array.isArray(geoJson) && geoJson[0]) {

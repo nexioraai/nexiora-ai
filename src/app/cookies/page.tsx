@@ -48,7 +48,7 @@ const CONTENT = {
       {
         h: '6. Nous joindre',
         p: [
-          "Pour toute question relative aux témoins : contact@nexiora.ca.",
+          "Pour toute question relative aux témoins : contact@woorri.com.",
         ],
       },
     ],
@@ -96,7 +96,7 @@ const CONTENT = {
       {
         h: '6. Contact us',
         p: [
-          "For any question regarding cookies: contact@nexiora.ca.",
+          "For any question regarding cookies: contact@woorri.com.",
         ],
       },
     ],
