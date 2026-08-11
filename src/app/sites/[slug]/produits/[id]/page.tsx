@@ -1,14 +1,13 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { fetchProduct } from './fetchProduct'
 import ProductPageView from './ProductPageView'
 import CartShell from '../../themes/CartShell'
 import { getCartLabels } from '../../themes/cartLabels'
+import { resolveSiteBaseUrl } from '../../themes/shared'
 
 export const revalidate = 60
-
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://woorri.com'
 
 type Props = { params: Promise<{ slug: string; id: string }> }
 
@@ -21,7 +20,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const rawDesc = product.description || product.name
   const description =
     rawDesc.length > 160 ? rawDesc.slice(0, 157).trimEnd() + '…' : rawDesc
-  const url = `${SITE_URL}/sites/${product.siteSlug}/produits/${encodeURIComponent(product.id)}`
+  const host = (await headers()).get('host')
+  const base = resolveSiteBaseUrl(
+    { slug: product.siteSlug, custom_domain: product.siteCustomDomain },
+    host,
+  )
+  const url = `${base}/produits/${encodeURIComponent(product.id)}`
   const images = product.images.length > 0 ? [{ url: product.images[0] }] : undefined
 
   return {
@@ -50,7 +54,12 @@ export default async function ProductPage({ params }: Props) {
   const product = await fetchProduct(slug, decodeURIComponent(id))
   if (!product) notFound()
 
-  const url = `${SITE_URL}/sites/${product.siteSlug}/produits/${encodeURIComponent(product.id)}`
+  const host = (await headers()).get('host')
+  const base = resolveSiteBaseUrl(
+    { slug: product.siteSlug, custom_domain: product.siteCustomDomain },
+    host,
+  )
+  const url = `${base}/produits/${encodeURIComponent(product.id)}`
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',

@@ -1,7 +1,8 @@
 // src/app/sites/[slug]/page.tsx
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
-import { fetchSite } from './themes/shared'
+import { fetchSite, resolveSiteBaseUrl } from './themes/shared'
 import JsonLd from './themes/JsonLd'
 import HtmlLang from './themes/HtmlLang'
 import EditorialTheme from './themes/EditorialTheme'
@@ -23,9 +24,6 @@ const themes = {
   aurora: AuroraTheme,
 } as const
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://woorri.com'
-
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ [key: string]: string | undefined }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -43,7 +41,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description =
     rawDesc.length > 160 ? rawDesc.slice(0, 157).trimEnd() + '…' : rawDesc
 
-  const url = `${SITE_URL}/sites/${site.slug}`
+  const host = (await headers()).get('host')
+  const url = resolveSiteBaseUrl(site, host)
   const images = site.hero_image ? [{ url: site.hero_image }] : undefined
 
   return {
@@ -74,6 +73,9 @@ export default async function SitePage({ params, searchParams }: Props) {
   const site = await fetchSite(slug, sp.paid === '1')
   if (!site) notFound()
 
+  const host = (await headers()).get('host')
+  const url = resolveSiteBaseUrl(site, host)
+
   const key = (site.theme as keyof typeof themes) || 'editorial'
   const Theme = themes[key] ?? EditorialTheme
 
@@ -83,7 +85,7 @@ export default async function SitePage({ params, searchParams }: Props) {
   return (
     <>
       <HtmlLang lang={site.lang} />
-      <JsonLd site={site} />
+      <JsonLd site={site} url={url} />
       <PromoBanner slug={site.slug} primary={primary} />
       <CartShell primary={primary} labels={cartLabels} slug={site.slug} mode={site.mode} shippingFlat={site.shipping_flat}>
         <Theme site={site} />

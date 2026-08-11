@@ -1,9 +1,6 @@
 // src/app/sites/[slug]/themes/JsonLd.tsx
 import type { Site } from './shared'
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://woorri.com'
-
 function resolveSchemaType(rawType?: string): {
   schemaType: string
   isPhysical: boolean
@@ -68,9 +65,8 @@ function resolveSchemaType(rawType?: string): {
   return { schemaType: 'LocalBusiness', isPhysical: true }
 }
 
-export default function JsonLd({ site }: { site: Site }) {
+export default function JsonLd({ site, url }: { site: Site; url: string }) {
   const { schemaType, isPhysical } = resolveSchemaType(site.type)
-  const url = `${SITE_URL}/sites/${site.slug}`
 
   const sameAs = site.social_links
     ? Object.values(site.social_links).filter(

@@ -2,7 +2,7 @@
 import type { MetadataRoute } from 'next'
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://woorri.com'
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.woorri.com'
 
 export default function robots(): MetadataRoute.Robots {
   return {

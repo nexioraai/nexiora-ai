@@ -1,11 +1,8 @@
 // src/app/sites/[slug]/llms.txt/route.ts
-import { fetchSite } from '../themes/shared'
-
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://woorri.com'
+import { fetchSite, resolveSiteBaseUrl, WOORRI_SITE_URL } from '../themes/shared'
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params
@@ -15,7 +12,7 @@ export async function GET(
     return new Response('Not found', { status: 404 })
   }
 
-  const url = SITE_URL + '/sites/' + site.slug
+  const url = resolveSiteBaseUrl(site, req.headers.get('host'))
   const lines: string[] = []
 
   lines.push('# ' + site.name)
@@ -111,7 +108,7 @@ export async function GET(
   if (site.created_at) {
     lines.push('Dernière mise à jour : ' + new Date(site.created_at).toISOString().split('T')[0])
   }
-  lines.push('Site généré et hébergé par Woorri — ' + SITE_URL)
+  lines.push('Site généré et hébergé par Woorri — ' + WOORRI_SITE_URL)
   lines.push('')
 
   return new Response(lines.join('\n'), {

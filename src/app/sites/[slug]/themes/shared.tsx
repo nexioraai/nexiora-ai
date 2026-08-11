@@ -26,6 +26,7 @@ name: string
 slogan?: string
 type?: string
 mode?: number
+custom_domain?: string | null
 dropship_type?: string
 primary_color?: string
 hero_title?: string
@@ -104,7 +105,42 @@ rating: number
 // ---------- Supabase ----------
 
 export const PUBLIC_COLS =
-'id,slug,name,slogan,type,mode,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image,lang,faq,whyus,mission,vision,geo_lat,geo_lng,area_served,price_range,hidden_sections,section_label,sections,created_at,dropship_type,pod_designs,product_families,cj_margin_percent,cj_round_mode,shipping_flat'
+'id,slug,name,slogan,type,mode,custom_domain,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image,lang,faq,whyus,mission,vision,geo_lat,geo_lng,area_served,price_range,hidden_sections,section_label,sections,created_at,dropship_type,pod_designs,product_families,cj_margin_percent,cj_round_mode,shipping_flat'
+
+// ---------- Resolution d'URL multi-domaines ----------
+//
+// Domaine canonique de Woorri elle-meme (jamais celui d'un site client) —
+// utilise uniquement comme repli quand un site n'a pas (ou n'est pas
+// accede via) son propre custom_domain. Meme convention que
+// src/app/sitemap.ts / robots.ts.
+export const WOORRI_SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.woorri.com'
+
+/**
+ * Determine l'URL de base a utiliser pour le canonical/OG/JSON-LD/sitemap
+ * d'un site genere, a partir du Host reel de la requete courante — jamais
+ * de NEXT_PUBLIC_SITE_URL utilisee aveuglement pour un site client.
+ *
+ * - Si le Host de la requete correspond exactement au custom_domain du
+ *   site (meme comparaison que fetchSiteByDomain/proxy.ts : host normalise
+ *   en minuscules, sans port), la page est reellement servie sur ce
+ *   domaine perso -> l'URL de base est ce domaine.
+ * - Sinon (acces via www.woorri.com/sites/{slug}, ou site sans
+ *   custom_domain) -> l'URL de base reste le chemin interne Woorri.
+ *
+ * Generique : ne connait ni YIA ni aucun site en particulier, uniquement
+ * le champ custom_domain deja porte par n'importe quel site.
+ */
+export function resolveSiteBaseUrl(
+  site: { slug: string; custom_domain?: string | null },
+  host: string | null | undefined,
+): string {
+  const normalizedHost = (host || '').split(':')[0].toLowerCase()
+  if (site.custom_domain && normalizedHost === site.custom_domain.toLowerCase()) {
+    return `https://${site.custom_domain}`
+  }
+  return `${WOORRI_SITE_URL}/sites/${site.slug}`
+}
 
 export async function fetchSite(
 slug: string,
