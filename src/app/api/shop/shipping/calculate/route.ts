@@ -1,20 +1,15 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { STRIPE_SHIPPING_COUNTRIES } from '@/lib/payments/countries';
-import { cjAdapter } from '@/lib/suppliers/cj-adapter';
-import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
-import { zendropAdapter } from '@/lib/suppliers/zendrop-adapter';
-import { printifyAdapter } from '@/lib/suppliers/printify-adapter';
+import { suppliersWithCapability } from '@/lib/suppliers/registry';
 import type { ShippingRequest } from '@/lib/suppliers/supplier-adapter';
 import type { ShippingTier } from '@/lib/cj/shipping-tiers';
 
-// Registry : chaque supplier_id pointe vers son adapter
-const adapters: Record<string, { calculateShipping: (items: ShippingRequest[], country: string, creds: Record<string, string>) => Promise<{ total_cost: number; currency: string; estimated_days_min: number; estimated_days_max: number }> }> = {
-  cj: cjAdapter as any,
-  printful: printfulAdapter as any,
-  printify: printifyAdapter as any,
-  zendrop: zendropAdapter as any,
-};
+// Derive : fournisseurs implementant reellement calculateShipping. Voir
+// registry.ts — source unique des adapters/credentials.
+const SHIPPING_SUPPLIERS = new Map(
+  suppliersWithCapability('calculateShipping').map((s) => [s.id, s])
+);
 
 export async function POST(req: Request) {
   try {
@@ -85,14 +80,6 @@ export async function POST(req: Request) {
       supplierGroups['cj'].push(...cjShopItems);
     }
 
-    // Credentials plateforme Nexiora — tous les produits transitent par le compte plateforme
-    const creds: Record<string, Record<string, string>> = {
-      cj: { email: process.env.CJ_EMAIL || '', apiKey: process.env.CJ_API_KEY || '' },
-      printful: { printful_token: process.env.PRINTFUL_API_TOKEN || '', state_code: stateCode || '' },
-      printify: { printify_token: process.env.PRINTIFY_API_TOKEN || '', printify_shop_id: process.env.PRINTIFY_SHOP_ID || '' },
-      zendrop: {},
-    };
-
     // Appeler calculateShipping pour chaque groupe
     let totalShipping = 0;
     let minDays = 999;
@@ -105,11 +92,15 @@ export async function POST(req: Request) {
     }
 
     for (const [supplierId, groupItems] of entries) {
-      const adapter = adapters[supplierId];
-      if (!adapter?.calculateShipping) continue;
-      const supplierCreds = creds[supplierId] || {};
+      const supplier = SHIPPING_SUPPLIERS.get(supplierId);
+      if (!supplier || !supplier.adapter.calculateShipping) continue;
+      // Printful : state_code depend de la requete (adresse acheteur), pas des
+      // credentials plateforme statiques — fusionne au moment de l'appel.
+      const supplierCreds = supplierId === 'printful'
+        ? { ...supplier.credentials, state_code: stateCode || '' }
+        : supplier.credentials;
       try {
-        const result = await adapter.calculateShipping(groupItems, countryCode, supplierCreds);
+        const result = await supplier.adapter.calculateShipping(groupItems, countryCode, supplierCreds);
         totalShipping += result.total_cost;
         if (result.estimated_days_min < minDays) minDays = result.estimated_days_min;
         if (result.estimated_days_max > maxDays) maxDays = result.estimated_days_max;

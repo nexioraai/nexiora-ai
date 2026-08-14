@@ -158,6 +158,12 @@ function mapCjStatus(cjStatus: string): TrackingStatus {
   return 'pending';
 }
 
+/** Credentials plateforme Nexiora pour CJ — jamais par marchand (voir catalog-stock.ts). */
+export const cjCredentials: Record<string, string> = {
+  email: NEXIORA_CJ_EMAIL,
+  apiKey: NEXIORA_CJ_API_KEY,
+};
+
 export const cjAdapter: SupplierAdapter = {
   supplierId: 'cj',
   displayName: 'CJ Dropshipping',

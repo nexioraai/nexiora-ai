@@ -2,8 +2,8 @@ import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 import { decrementStock } from '@/lib/shop';
 import { fulfillCjOrder } from '@/lib/cj/fulfill';
 import { fulfillPodOrder } from '@/lib/suppliers/pod-fulfill';
-import { fulfillZendropOrder } from '@/lib/suppliers/zendrop-fulfill';
 import { sendOrderConfirmationEmail } from '@/lib/email/sendOrderConfirmationEmail';
+import { logAnomaly } from '@/lib/anomaly';
 
 /**
  * Traite un paiement boutique reussi (checkout.session.completed, mode=payment).
@@ -46,22 +46,32 @@ export async function handlePaidCheckout(session: any): Promise<void> {
   if (!order) return;
 
   // Dropshipping CJ : cree les commandes fournisseur pour les lignes CJ.
+  // Paiement deja encaisse (status='paid' ci-dessus) : un echec ici ne doit
+  // jamais bloquer la suite (stock/email), seulement rester visible — le
+  // verrou cj_pay_status/cj_pay_attempts protege deja contre la double
+  // commande, cette anomalie ne fait qu'exposer un echec sinon invisible.
   try {
     await fulfillCjOrder(order.id);
   } catch (e) {
     console.error('CJ fulfill error:', e);
+    await logAnomaly({
+      type: 'cj_fulfill_failed',
+      siteId: order.site_id,
+      details: { orderId: order.id, reason: e instanceof Error ? e.message : String(e) },
+    });
   }
-  // Zendrop fulfill
-  try {
-    await fulfillZendropOrder(order.id);
-  } catch (e) {
-    console.error('Zendrop fulfill error:', e);
-  }
-  // POD fulfill (Printful/Printify) avec designs custom
+  // POD fulfill (Printful/Printify/Gelato) avec designs custom. Idempotence
+  // deja assuree par le moteur P0-3.7/3.8 (create_provider_submission) :
+  // meme logique, on ajoute uniquement la visibilite sur un echec inattendu.
   try {
     await fulfillPodOrder(order.id);
   } catch (e) {
     console.error('POD fulfill error:', e);
+    await logAnomaly({
+      type: 'pod_fulfill_failed',
+      siteId: order.site_id,
+      details: { orderId: order.id, reason: e instanceof Error ? e.message : String(e) },
+    });
   }
   // Decrement du stock uniquement pour les produits NON geres par CJ.
   const { data: orderItems } = await supabase

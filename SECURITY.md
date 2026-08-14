@@ -49,7 +49,7 @@ En retour, nous nous engageons à ne pas poursuivre en justice toute recherche m
 
 **Dans le périmètre :**
 - L'application web Nexiora (nexiora.ca et sous-domaines)
-- L'API de génération de sites et d'ERP
+- L'API de génération de sites
 - Les sites et applications générés par la plateforme
 
 **Hors périmètre :**

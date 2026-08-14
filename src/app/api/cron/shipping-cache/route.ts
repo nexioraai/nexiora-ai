@@ -28,6 +28,14 @@ const STALE_HOURS = 168;         // recalcul si plus vieux que 7 jours
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export async function GET(req: NextRequest) {
+  // P0-3.9.7 — Sécurité : cette route n'avait aucun contrôle CRON_SECRET,
+  // contrairement à toutes ses routes sœurs (catalog-sync, cj-tracking,
+  // etc.). Alignement sur le pattern déjà utilisé partout ailleurs.
+  const auth = req.headers.get('authorization');
+  if (process.env.CRON_SECRET && auth !== 'Bearer ' + process.env.CRON_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const runId = await startCronRun('shipping-cache');
   try {
     const result = await runShippingCache();

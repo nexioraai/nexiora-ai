@@ -28,6 +28,20 @@ import type {
 
 const PRINTFUL_BASE = 'https://api.printful.com';
 
+// Extrait de getTracking() (comportement inchangé) pour être réutilisable
+// par le module de normalisation du fulfillment (P0-3.7 Phase 7 —
+// responsabilité de normalisation unique par fournisseur).
+export const PRINTFUL_TRACKING_STATUS_MAP: Record<string, TrackingStatus> = {
+  draft: 'pending',
+  pending: 'processing',
+  failed: 'failed',
+  canceled: 'failed',
+  inprocess: 'processing',
+  onhold: 'processing',
+  partial: 'shipped',
+  fulfilled: 'delivered',
+};
+
 // ---------- API helper ----------
 
 async function pfFetch(path: string, token: string, init?: RequestInit): Promise<any> {
@@ -139,6 +153,11 @@ function mapPrintfulVariant(product: any, variant: any): CatalogProduct {
 }
 
 // ---------- Adapter ----------
+
+/** Credentials plateforme Nexiora pour Printful — jamais par marchand. */
+export const printfulCredentials: Record<string, string> = {
+  printful_token: process.env.PRINTFUL_API_TOKEN || '',
+};
 
 export const printfulAdapter: SupplierAdapter = {
   supplierId: 'printful',
@@ -347,24 +366,13 @@ export const printfulAdapter: SupplierAdapter = {
     try {
       const order = await pfFetch(`/orders/${supplierOrderId}`, token);
 
-      const statusMap: Record<string, TrackingStatus> = {
-        draft: 'pending',
-        pending: 'processing',
-        failed: 'failed',
-        canceled: 'failed',
-        inprocess: 'processing',
-        onhold: 'processing',
-        partial: 'shipped',
-        fulfilled: 'delivered',
-      };
-
       const shipment = Array.isArray(order.shipments) && order.shipments.length > 0
         ? order.shipments[0]
         : null;
 
       return {
         supplier_order_id: supplierOrderId,
-        status: statusMap[order.status] || 'pending',
+        status: PRINTFUL_TRACKING_STATUS_MAP[order.status] || 'pending',
         tracking_number: shipment?.tracking_number ? String(shipment.tracking_number) : undefined,
         carrier: shipment?.carrier || undefined,
         tracking_url: shipment?.tracking_url || undefined,

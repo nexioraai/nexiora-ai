@@ -40,6 +40,6 @@
     "node_modules",
     "_trash_orphan_pages",
     "src/app/api/_disabled",
-    "src/erp/_legacy"
+    "woorri-edu"
   ]
 }

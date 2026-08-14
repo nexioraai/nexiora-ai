@@ -235,7 +235,6 @@ export const es = {
   'marketing.locked.title': 'Publica un sitio para desbloquear el marketing',
   'marketing.locked.desc': 'La generación de contenido de marketing está reservada a los sitios en línea. Publica un sitio para empezar.',
   'marketing.locked.cta': 'Ir a mis proyectos',
-  'sidebar.erp': 'ERP',
   'sidebar.upgrade': 'Mejorar',
   'sidebar.settings': 'Ajustes',
   'sidebar.logout': 'Cerrar sesión',

@@ -237,7 +237,6 @@ export const en: Record<TranslationKey, string> = {
   'marketing.locked.title': 'Publish a site to unlock marketing',
   'marketing.locked.desc': 'Marketing content generation is reserved for live sites. Publish a site to get started.',
   'marketing.locked.cta': 'Go to my projects',
-  'sidebar.erp': 'ERP',
   'sidebar.upgrade': 'Upgrade',
   'sidebar.settings': 'Settings',
   'sidebar.logout': 'Log out',

@@ -25,8 +25,6 @@ Si une régression, incohérence ou dette existante est découverte hors périm�
 
 ## Interdictions absolues
 
-- NE JAMAIS toucher `src/erp/` ni les pages `/erp/`.
-- NE JAMAIS toucher `prisma/schema.prisma`.
 - NE JAMAIS faire `git push` sans validation explicite de l'utilisateur.
 - NE JAMAIS faire `vercel --prod` ou tout autre déploiement production sans validation explicite de l'utilisateur.
 - NE JAMAIS casser une fonctionnalité existante qui fonctionne.

@@ -1,10 +1,7 @@
 import 'server-only';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { cjAdapter } from '@/lib/suppliers/cj-adapter';
-import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
-import { printifyAdapter } from '@/lib/suppliers/printify-adapter';
-import { zendropAdapter } from '@/lib/suppliers/zendrop-adapter';
-import type { SupplierAdapter } from '@/lib/suppliers/supplier-adapter';
+import { suppliersWithCapability } from '@/lib/suppliers/registry';
+import { logAnomaly } from '@/lib/anomaly';
 
 type CatalogStockLine = {
   realId: string;        // UUID de catalog_products
@@ -12,20 +9,13 @@ type CatalogStockLine = {
   quantity: number;
 };
 
-const ADAPTERS: Record<string, SupplierAdapter> = {
-  cj: cjAdapter,
-  printful: printfulAdapter,
-  printify: printifyAdapter,
-  zendrop: zendropAdapter,
-};
-
+// Derive : tout fournisseur qui implemente reellement checkStock est
+// verifiable ici, sans liste recopiee a la main (cause du bug ou Gelato,
+// pourtant capable, etait absent de ce fichier — voir registry.ts).
 // Credentials Nexiora globales (le marchand n'a AUCUN compte fournisseur — Phase 2 automatisee)
-const CREDS: Record<string, Record<string, string>> = {
-  cj: { email: process.env.CJ_EMAIL || '', apiKey: process.env.CJ_API_KEY || '' },
-  printful: { printful_token: process.env.PRINTFUL_API_TOKEN || '' },
-  printify: { printify_token: process.env.PRINTIFY_API_TOKEN || '', printify_shop_id: process.env.PRINTIFY_SHOP_ID || '' },
-  zendrop: {},
-};
+const CHECK_STOCK_SUPPLIERS = new Map(
+  suppliersWithCapability('checkStock').map((s) => [s.id, s])
+);
 
 /**
  * Verifie le stock reel des produits catalog aupres du fournisseur (live).
@@ -68,10 +58,19 @@ export async function checkCatalogStock(
       return { ok: false, reason: `"${product.name}" n'est plus disponible.` };
     }
 
-    const adapter = ADAPTERS[product.supplier_id];
-    const creds = CREDS[product.supplier_id];
-    if (!adapter || !creds) {
+    const supplier = CHECK_STOCK_SUPPLIERS.get(product.supplier_id);
+    if (!supplier) {
       if (strict) {
+        // Mode 3 : un produit dont le supplier_id ne resout plus vers aucun
+        // fournisseur enregistre bloque une vente en silence — c'est
+        // exactement le mecanisme qui a cause le bug Gelato (produit
+        // autorise mais absent du registre de verification). Anomalie
+        // structuree pour que ce cas soit visible avant de redevenir un
+        // incident decouvert a posteriori.
+        await logAnomaly({
+          type: 'catalog_supplier_unavailable',
+          details: { productId: product.id, supplierId: product.supplier_id },
+        });
         return { ok: false, reason: `"${product.name}" n'est pas disponible a la vente.` };
       }
       continue; // mode 2 : fournisseur inconnu -> on ne bloque pas
@@ -79,7 +78,7 @@ export async function checkCatalogStock(
 
     // 3. Verification live aupres du fournisseur
     try {
-      const result = await adapter.checkStock(
+      const result = await supplier.adapter.checkStock(
         {
           supplier_product_id: product.supplier_product_id,
           variant_id: line.variantId || product.supplier_product_id,
@@ -87,7 +86,7 @@ export async function checkCatalogStock(
           quantity: line.quantity,
           destination_country: destinationCountry || 'US',
         },
-        creds
+        supplier.credentials
       );
       if (!result.available) {
         return { ok: false, reason: `"${product.name}" n'est plus disponible.` };
@@ -95,7 +94,13 @@ export async function checkCatalogStock(
     } catch (e) {
       console.error(`[checkCatalogStock] ${product.supplier_id} echec pour ${product.id}:`, e);
       if (strict) {
-        // Mode 3 : pas de confirmation fournisseur = pas de vente.
+        // Mode 3 : Nexiora avancerait l'argent sans confirmation fournisseur
+        // reelle — vente refusee, et l'echec API doit rester visible (pas
+        // seulement en console) puisqu'une vente est perdue a cause de lui.
+        await logAnomaly({
+          type: 'catalog_stock_check_failed',
+          details: { productId: product.id, supplierId: product.supplier_id, reason: e instanceof Error ? e.message : String(e) },
+        });
         return { ok: false, reason: `Stock non confirme pour "${product.name}".` };
       }
       // Mode 2 : le cache in_stock fait deja garde-fou.

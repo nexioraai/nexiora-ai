@@ -23,7 +23,6 @@ export function GET() {
 - **Boutique en ligne (e-commerce)** : création de boutiques avec pages produits, panier, encaissement et suivi des commandes
 - **AI Visibility** : mesure réelle de la visibilité de votre marque sur les moteurs IA (Perplexity, ChatGPT), avec score et historique
 - **SEO / GEO** : optimisation technique automatique (Schema.org, données structurées, llms.txt, balises sémantiques) pour Google et pour les moteurs IA
-- **ERP / CRM** : génération d'applications de gestion d'entreprise sur mesure — tableaux de bord, gestion clients, systèmes métier
 
 ## Questions fréquentes
 

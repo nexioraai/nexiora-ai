@@ -13,8 +13,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           '/api/',
           '/dashboard/',
-          '/erp/',
-          '/erp-dashboard/',
           '/edit/',
           '/login/',
           '/reset-password/',

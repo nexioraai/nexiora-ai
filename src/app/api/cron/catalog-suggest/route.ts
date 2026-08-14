@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
     .from('catalog_products')
     .select('id, supplier_id, supplier_product_id, name, category, price, currency, images, shipping_days_min')
     .eq('in_stock', true)
-    .in('supplier_id', ['cj', 'zendrop'])
+    .in('supplier_id', ['cj'])
     .gte('last_synced_at', oneWeekAgo)
     .order('last_synced_at', { ascending: false })
     .limit(200);

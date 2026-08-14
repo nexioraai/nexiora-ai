@@ -5,12 +5,16 @@ import { checkStock } from '@/lib/shop';
 import { checkCatalogStock } from '@/lib/catalog-stock';
 import type { CartItem } from '@/lib/payments/types';
 import { STRIPE_SHIPPING_COUNTRIES } from '@/lib/payments/countries';
-import { cjAdapter } from '@/lib/suppliers/cj-adapter';
-import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
-import { printifyAdapter } from '@/lib/suppliers/printify-adapter';
+import { suppliersWithCapability } from '@/lib/suppliers/registry';
 import type { ShippingRequest } from '@/lib/suppliers/supplier-adapter';
 import { calcSellPrice, sitePricing, NEXIORA_COMMISSION_PERCENT, resolveDisplayPrice } from '@/lib/pricing';
 import { logAnomaly } from '@/lib/anomaly';
+
+// Derive : fournisseurs implementant reellement calculateShipping. Voir
+// registry.ts — source unique des adapters/credentials.
+const SHIPPING_SUPPLIERS = new Map(
+  suppliersWithCapability('calculateShipping').map((s) => [s.id, s])
+);
 
 /** Décode un id panier catalog : "catalog-{uuid}::{variantId}" -> { realId: uuid, variantId }.
  *  variantId est optionnel (produits sans variantes). */
@@ -72,17 +76,6 @@ export async function POST(req: Request) {
 
     if (countryCode && STRIPE_SHIPPING_COUNTRIES.includes(countryCode as any)) {
       try {
-        const adapters: Record<string, any> = {
-          cj: cjAdapter,
-          printful: printfulAdapter,
-          printify: printifyAdapter,
-        };
-        const creds: Record<string, Record<string, string>> = {
-          cj: { email: process.env.CJ_EMAIL || '', apiKey: process.env.CJ_API_KEY || '' },
-          printful: { printful_token: process.env.PRINTFUL_API_TOKEN || '', state_code: '' },
-          printify: { printify_token: process.env.PRINTIFY_API_TOKEN || '', printify_shop_id: process.env.PRINTIFY_SHOP_ID || '' },
-        };
-
         // Separer shop vs catalog
         const shopItems = items.filter((i) => !i.id?.startsWith('catalog-'));
         const catalogItems = items.filter((i) => i.id?.startsWith('catalog-'));
@@ -177,10 +170,15 @@ export async function POST(req: Request) {
         let maxDays = 0;
         for (const [supplierId, groupItems] of Object.entries(supplierGroups)) {
           if (!groupItems || groupItems.length === 0) continue;
-          const adapter = adapters[supplierId];
-          if (!adapter?.calculateShipping) continue;
+          const supplier = SHIPPING_SUPPLIERS.get(supplierId);
+          if (!supplier?.adapter.calculateShipping) continue;
+          // Printful : state_code non fourni par cette route (pas de champ dedie
+          // dans le body) — toujours '', comportement historique inchange.
+          const supplierCreds = supplierId === 'printful'
+            ? { ...supplier.credentials, state_code: '' }
+            : supplier.credentials;
           try {
-            const result = await adapter.calculateShipping(groupItems, countryCode, creds[supplierId] || {});
+            const result = await supplier.adapter.calculateShipping(groupItems, countryCode, supplierCreds);
             totalShipping += result.total_cost;
             if (result.estimated_days_max > maxDays) maxDays = result.estimated_days_max;
           } catch (err: any) {

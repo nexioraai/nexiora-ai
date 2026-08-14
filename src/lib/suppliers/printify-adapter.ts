@@ -148,6 +148,12 @@ function mapPrintifyVariant(
 // Adapter
 // ============================================================
 
+/** Credentials plateforme Nexiora pour Printify — jamais par marchand. */
+export const printifyCredentials: Record<string, string> = {
+  printify_token: process.env.PRINTIFY_API_TOKEN || '',
+  printify_shop_id: process.env.PRINTIFY_SHOP_ID || '',
+};
+
 export const printifyAdapter: SupplierAdapter = {
   supplierId: 'printify',
   displayName: 'Printify',

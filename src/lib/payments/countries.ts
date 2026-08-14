@@ -33,3 +33,18 @@ export const STRIPE_SHIPPING_COUNTRIES = [
   'YE','YT',
   'ZA','ZM','ZW',
 ] as const;
+
+/**
+ * P0-3.9.7 — Pays où l'onboarding Stripe Connect (le marchand qui reçoit
+ * des paiements) est effectivement confirmé pour Woorri — DISTINCT de
+ * STRIPE_SHIPPING_COUNTRIES ci-dessus (qui ne couvre que la collecte
+ * d'adresse de LIVRAISON côté acheteur, une liste Stripe globale très
+ * permissive qui inclut des pays où Stripe Connect n'est pas disponible
+ * pour un marchand — ex. le Tchad y figure).
+ *
+ * Volontairement minimale : seul le Canada est confirmé aujourd'hui.
+ * Étendre cette liste est une décision produit/données (quels marchés
+ * sont réellement couverts), pas une décision architecturale — à faire
+ * quand ces marchés seront confirmés, sans changer resolvePaymentProvider().
+ */
+export const STRIPE_CONNECT_SUPPORTED_COUNTRIES = ['CA'] as const;

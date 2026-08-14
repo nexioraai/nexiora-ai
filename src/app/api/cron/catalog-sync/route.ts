@@ -4,7 +4,6 @@ import { cjAdapter } from '@/lib/suppliers/cj-adapter';
 import { printfulAdapter } from '@/lib/suppliers/printful-adapter';
 import { gelatoAdapter } from '@/lib/suppliers/gelato-adapter';
 // import { printifyAdapter } from '@/lib/suppliers/printify-adapter'; // desactive : voir bloc SUPPLIERS
-// import { zendropAdapter } from '@/lib/suppliers/zendrop-adapter'; // desactive : pas de variantes au catalogue
 import type { CatalogProduct } from '@/lib/suppliers/supplier-adapter';
 import { startCronRun, finishCronRun } from '@/lib/cron-tracker';
 
@@ -130,17 +129,6 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // --- Zendrop : DESACTIVE ---
-  // Zendrop n'expose pas les variantes (taille/couleur) au niveau catalogue via son API.
-  // Impossible de laisser un acheteur choisir sa variante -> risque de commande invalide.
-  // Debranche de l'ingestion. Adapter conserve : rebranchable si leur API evolue.
-  // try {
-  //   const zdResult = await zendropAdapter.syncCatalog({ categories: niches });
-  //   const zdUpserted = await upsertProducts(zdResult.products);
-  //   totalSynced += zdUpserted;
-  // } catch (e: any) {
-  //   errors.push(`Zendrop: ${e.message}`);
-  // }
   // --- Spocket (futur) ---
   // try {
   //   const result = await spocketAdapter.syncCatalog({ categories: niches });

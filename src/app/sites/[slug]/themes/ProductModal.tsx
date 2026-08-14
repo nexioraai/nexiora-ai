@@ -64,7 +64,7 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
   const [liveVariants, setLiveVariants] = useState<any[]>([]);
   const [loadingVariants, setLoadingVariants] = useState(false);
 
-  // Les variantes ne sont pas stockees en cache (CJ/Zendrop). On les recupere
+  // Les variantes ne sont pas stockees en cache (CJ/Printful/Printify). On les recupere
   // en direct chez le fournisseur a l'ouverture du modal.
   useEffect(() => {
     if (cachedVariants.length > 0) return;

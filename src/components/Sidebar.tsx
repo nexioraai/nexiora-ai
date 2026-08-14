@@ -38,7 +38,6 @@ export default function Sidebar() {
   const modules = [
     { label: t('sidebar.aiVisibility'), href: '/visibilite-ia', icon: BarChart3 },
     { label: t('sidebar.marketing'), href: '/dashboard/marketing', icon: Megaphone },
-    // { label: t("sidebar.erp"), href: null, icon: Database },
     // { label: t("sidebar.upgrade"), href: null, icon: Zap },
   ];
 

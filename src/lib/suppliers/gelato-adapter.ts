@@ -154,6 +154,14 @@ function mapGelatoStatus(status: string): TrackingStatus {
 }
 
 // ============================================================
+/**
+ * Gelato n'utilise aucune credential par appel : la clé plateforme
+ * (NEXIORA_GELATO_KEY) est lue directement dans glFetch(). Objet vide
+ * conservé pour la cohérence de forme avec les autres fournisseurs dans
+ * le registre central — voir supplier-adapter.ts sur merchantCredentials.
+ */
+export const gelatoCredentials: Record<string, string> = {};
+
 export const gelatoAdapter: SupplierAdapter = {
   supplierId: 'gelato',
   displayName: 'Gelato',

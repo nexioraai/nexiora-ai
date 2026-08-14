@@ -236,7 +236,6 @@ export const ar: Record<TranslationKey, string> = {
   'marketing.locked.title': 'انشر موقعاً لإلغاء قفل التسويق',
   'marketing.locked.desc': 'إنشاء المحتوى التسويقي مخصص للمواقع المنشورة. انشر موقعاً للبدء.',
   'marketing.locked.cta': 'الذهاب إلى مشاريعي',
-  'sidebar.erp': 'تخطيط الموارد',
   'sidebar.upgrade': 'الترقية',
   'sidebar.settings': 'الإعدادات',
   'sidebar.logout': 'تسجيل الخروج',
