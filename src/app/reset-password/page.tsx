@@ -143,7 +143,7 @@ export default function ResetPasswordPage() {
           color: '#f5ede1',
           letterSpacing: '-0.02em',
           margin: '0 0 0.5rem 0',
-        }}>Woorri</h1>
+        }}>Deribfy</h1>
         <p style={{
           color: '#a89684',
           textAlign: 'center',
