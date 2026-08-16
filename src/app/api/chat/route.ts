@@ -240,7 +240,7 @@ export async function POST(req: Request) {
           max_tokens: 250,
           messages: [{
             role: 'user',
-            content: `You are Woorri, a friendly AI website builder. Analyze this user input: "${message}"
+            content: `You are Deribfy, a friendly AI website builder. Analyze this user input: "${message}"
 
 Respond with ONLY a JSON object (no markdown, no code fences):
 
@@ -327,9 +327,9 @@ BUSINESS MODE CLASSIFICATION (CRITICAL — you MUST return the correct integer m
 - mode = 1 (SHOWCASE / VITRINE): restaurants, cafés, bars, food trucks, bakeries, hair salons, barbers, spas, gyms, clinics, dentists, doctors, lawyers, accountants, real estate agents, plumbers, electricians, mechanics, artisans, photographers, event planners, coaches, consultants, schools, any local service, any perishable food business, any made-to-order craft. NEVER anything else.
 - mode = 2 (LOCAL BOUTIQUE with own inventory): physical boutique selling THEIR OWN stock — local clothing store, bookstore, jewelry maker, florist, artisan shop, brand with warehouse. The owner physically holds inventory.
 - mode = 3 (DROPSHIPPING / PRINT-ON-DEMAND): Online store powered by supplier fulfillment. Three sub-types exist (indicated by the "Dropship type" field above):
-  * "reseller" — Resale of trending manufactured goods. Products: gadgets, accessories, phone cases, home decor, fitness gear, beauty tools, small electronics. The store auto-curates 30 trending products and customers can search the full 7,000+ product catalog. Fulfillment is 100% automated by Woorri.
-  * "pod_brand" — Merchant's OWN brand: they upload their original designs/logos which are printed on premium blank products (t-shirts, mugs, hoodies, etc.). The store displays the merchant's designed mockups as products. Production and fulfillment are 100% automated by Woorri.
-  * "pod_custom" — Visitor customization: the store displays blank products, and each VISITOR uploads their own design/logo/image at purchase time. The design is printed on the chosen product. Production and fulfillment are 100% automated by Woorri.
+  * "reseller" — Resale of trending manufactured goods. Products: gadgets, accessories, phone cases, home decor, fitness gear, beauty tools, small electronics. The store auto-curates 30 trending products and customers can search the full 7,000+ product catalog. Fulfillment is 100% automated by Deribfy.
+  * "pod_brand" — Merchant's OWN brand: they upload their original designs/logos which are printed on premium blank products (t-shirts, mugs, hoodies, etc.). The store displays the merchant's designed mockups as products. Production and fulfillment are 100% automated by Deribfy.
+  * "pod_custom" — Visitor customization: the store displays blank products, and each VISITOR uploads their own design/logo/image at purchase time. The design is printed on the chosen product. Production and fulfillment are 100% automated by Deribfy.
   NEVER assign mode 3 to perishables, food, services, made-to-order, or anything requiring local expertise.
 
 STRICT RULES:
@@ -348,10 +348,10 @@ BOUTIQUE CLASSIQUE (mode 2) SPECIFIC RULES:
 - heroTitle/heroSubtitle: emphasize the boutique's unique identity, curated selection, local/artisanal quality. Tone = authentic, inviting, personal.
 - slogan: about the boutique's identity, craftsmanship, or curated taste.
 - cta: "Discover our shop" / "Découvrir la boutique" / equivalent in site language. Action = browse the shop.
-- about: describe a local boutique with its own inventory, personal curation, and unique identity. The owner selects and manages their own products. NEVER mention suppliers, dropshipping, automated fulfillment, or Woorri handling anything.
+- about: describe a local boutique with its own inventory, personal curation, and unique identity. The owner selects and manages their own products. NEVER mention suppliers, dropshipping, automated fulfillment, or Deribfy handling anything.
 - faq: 4 questions about shipping (handled by the merchant), return/exchange policy (merchant's own policy), secure payment (Stripe — the merchant's own Stripe account), and product availability (real physical inventory).
 - whyus: 3 trust signals — unique/curated selection, personal customer service, secure payment.
-- CRITICAL: Mode 2 is a self-managed boutique. The merchant connects their OWN Stripe account via Stripe Connect. Payments go DIRECTLY to the merchant. There is NO platform commission, NO automated fulfillment, NO supplier integration. The merchant handles their own stock, shipping, and customer service. NEVER mention Woorri, suppliers, or automation in any generated text.
+- CRITICAL: Mode 2 is a self-managed boutique. The merchant connects their OWN Stripe account via Stripe Connect. Payments go DIRECTLY to the merchant. There is NO platform commission, NO automated fulfillment, NO supplier integration. The merchant handles their own stock, shipping, and customer service. NEVER mention Deribfy, suppliers, or automation in any generated text.
 
 DROPSHIPPING (mode 3) SPECIFIC RULES — ADAPT BY DROPSHIP TYPE:
 
@@ -366,7 +366,7 @@ IF dropship_type = "reseller":
 - heroTitle/heroSubtitle: emphasize trending products, unbeatable prices, worldwide shipping, huge selection. Tone = bold e-commerce energy.
 - slogan: about smart shopping, best deals, curated trending products.
 - cta: "Discover our products" / "Découvrir nos produits" / equivalent in site language. Action = browse the shop.
-- about: describe a modern online store curating the best trending products at competitive prices, shipped worldwide. All orders are fulfilled automatically — the merchant focuses on their brand while Woorri handles everything.
+- about: describe a modern online store curating the best trending products at competitive prices, shipped worldwide. All orders are fulfilled automatically — the merchant focuses on their brand while Deribfy handles everything.
 - faq: 4 questions about shipping times (7-15 business days international), return policy, secure payment (Stripe), product quality and sourcing.
 - whyus: 3 trust signals — competitive pricing, fast worldwide shipping, secure payment & buyer protection.
 - IMPORTANT: Customers see 30 curated trending products on the storefront AND can search the full 7,000+ product catalog via the search bar to find anything they want.

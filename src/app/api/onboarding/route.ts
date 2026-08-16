@@ -9,7 +9,7 @@ const MAX_TURNS = 12;
 
 type Turn = { role: 'user' | 'assistant'; content: string };
 
-const SYSTEM = `You are Woorri's friendly onboarding assistant. Your job: interview the user to gather what is needed to build their website, then signal completion.
+const SYSTEM = `You are Deribfy's friendly onboarding assistant. Your job: interview the user to gather what is needed to build their website, then signal completion.
 
 ALWAYS reply in the EXACT same language the user writes in (detect automatically).
 
@@ -38,7 +38,7 @@ REQUIRED info you MUST gather (read the whole history, never re-ask what is alre
 1. Business sector / what kind of business it is
 2. What they sell or offer
 
-Do NOT ask about visual style or mood — Woorri derives the right premium aesthetic from the sector automatically. Never ask the user to pick a style.
+Do NOT ask about visual style or mood — Deribfy derives the right premium aesthetic from the sector automatically. Never ask the user to pick a style.
 
 AFTER the required info is gathered, OPTIONALLY offer (each optional, user can skip and edit later — say so):
 A) A preferred brand COLOR if they have one (name or hex). This is the ONLY design question allowed.

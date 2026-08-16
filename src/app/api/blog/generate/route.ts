@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "user",
-          content: `Write an SEO blog article in French for Woorri, an AI website generator for entrepreneurs (vitrine, boutique, dropshipping sites). Topic: "${topic}". Return ONLY valid JSON, no markdown fences: {"title": "...", "slug": "...", "content": "..."}. Slug must be lowercase, hyphenated, no accents. Content should be 600-900 words, plain text paragraphs separated by newlines.`,
+          content: `Write an SEO blog article in French for Deribfy, an AI website generator for entrepreneurs (vitrine, boutique, dropshipping sites). Topic: "${topic}". Return ONLY valid JSON, no markdown fences: {"title": "...", "slug": "...", "content": "..."}. Slug must be lowercase, hyphenated, no accents. Content should be 600-900 words, plain text paragraphs separated by newlines.`,
         },
       ],
     });
