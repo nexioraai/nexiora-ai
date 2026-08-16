@@ -13,6 +13,7 @@ import { Instagram, Facebook, TikTok, WhatsApp } from './BrandIcons'
 import MobileNav from './MobileNav'
 import ClickableProductCard from './ClickableProductCard'
 import ContactForm from '../ContactForm'
+import { WOORRI_SITE_URL } from './shared'
 import {
   type Site,
   normalizeService,
@@ -731,8 +732,8 @@ export default function EditorialTheme({ site }: { site: Site }) {
             <div>© {new Date().getFullYear()} {site.name}. {t.labels.rightsReserved}</div>
             <div className="flex items-center gap-2">
               <span>{t.labels.poweredBy}</span>
-              <a href="https://woorri.com" target="_blank" rel="noopener noreferrer" className="font-medium text-white/70 hover:text-white transition-colors">
-                Woorri
+              <a href={WOORRI_SITE_URL} target="_blank" rel="noopener noreferrer" className="font-medium text-white/70 hover:text-white transition-colors">
+                Deribfy
               </a>
             </div>
           </div>
