@@ -107,7 +107,7 @@ export async function handlePaidCheckout(session: any): Promise<void> {
       currency: session.currency || 'usd',
       estimatedDelivery: order.estimated_delivery || undefined,
       cancelToken: (order as any).cancel_token || undefined,
-      siteOrigin: process.env.NEXT_PUBLIC_SITE_URL || 'https://deribfy.com',
+      siteOrigin: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.deribfy.com',
     });
   } catch (emailErr) {
     console.error('Order confirmation email error:', emailErr);

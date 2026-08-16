@@ -3,7 +3,7 @@ import type { MetadataRoute } from 'next'
 import { supabase } from '@/lib/supabase'
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://deribfy.com'
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.deribfy.com'
 
 export const revalidate = 3600
 

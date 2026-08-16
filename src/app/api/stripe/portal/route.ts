@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
     const session = await stripe.billingPortal.sessions.create({
       customer: stripeCustomerId,
-      return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://deribfy.com'}/parametres`,
+      return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.deribfy.com'}/parametres`,
     });
 
     return NextResponse.json({ url: session.url });

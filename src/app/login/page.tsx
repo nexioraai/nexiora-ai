@@ -69,7 +69,7 @@ export default function SignupPage() {
       }
     } else {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://deribfy.com/reset-password',
+        redirectTo: 'https://www.deribfy.com/reset-password',
       });
       if (error) {
         setError(error.message);

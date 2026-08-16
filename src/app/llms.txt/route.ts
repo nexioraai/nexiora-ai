@@ -1,6 +1,6 @@
 // src/app/llms.txt/route.ts
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://deribfy.com'
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.deribfy.com'
 
 export function GET() {
   const today = new Date().toISOString().split('T')[0]
