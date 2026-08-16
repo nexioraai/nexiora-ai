@@ -1,8 +1,8 @@
-# API Woorri (nexiora-ai) — Référence
+# API Deribfy (nexiora-ai) — Référence
 
 Documentation des routes API existantes sous `src/app/api/`, produite pour
 satisfaire l'exigence "APIs documentées" de la Feuille de Route Maître
-Woorri (Section 10 — Environnement développeur).
+Deribfy (Section 10 — Environnement développeur).
 
 **Méthode de production** : chaque route a été relue directement
 (méthode HTTP, mécanisme d'authentification, objet manipulé) ; rien n'est
@@ -37,7 +37,7 @@ ci-dessous par domaine. Légende authentification :
 | POST | `/api/shop/shipping/calculate` | Devis de livraison en temps réel par fournisseur, avec le pays de destination (`countryCode`) transmis à chaque adaptateur. | Public |
 | POST | `/api/shipping-estimate` | Devis de livraison CJ seul (3 paliers eco/standard/express) pour un produit vers un pays — lit `shipping_cache` d'abord, appel CJ live en repli seulement. Body : `{siteId, countryCode, products}`. | Public |
 | POST | `/api/shop/upload-design` | Upload d'un visuel personnalisé (POD) par le visiteur ; retourne l'URL publique de stockage. Multipart, limite 10 Mo. | Public |
-| POST | `/api/checkout` | **Distinct du précédent** : abonnement du *marchand lui-même* à Woorri (crée/réutilise un customer Stripe pour le `site`). | Utilisateur |
+| POST | `/api/checkout` | **Distinct du précédent** : abonnement du *marchand lui-même* à Deribfy (crée/réutilise un customer Stripe pour le `site`). | Utilisateur |
 | POST | `/api/stripe/portal` | Ouvre le portail Stripe de gestion d'abonnement pour le marchand. Body : `{siteSlug}`. | Public (aucune vérification propriétaire trouvée — voir §8 Constats) |
 
 ## 2. Boutique — espace marchand (propriétaire de site)
@@ -154,7 +154,7 @@ modification fonctionnelle demandée).
 
 - `/api/stripe/portal`, `/api/blog/generate` : aucun mécanisme
   d'authentification détecté dans le code source à date de rédaction.
-- `/api/checkout` (abonnement marchand → Woorri) et `/api/shop/checkout`
+- `/api/checkout` (abonnement marchand → Deribfy) et `/api/shop/checkout`
   (achat client → boutique marchande) sont deux routes distinctes qui
   partagent un nom proche — à ne pas confondre lors de la lecture du code.
 

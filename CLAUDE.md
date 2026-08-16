@@ -1,4 +1,4 @@
-# CLAUDE.md — Règles d'exécution Woorri
+# CLAUDE.md — Règles d'exécution Deribfy
 
 ## Principe fondamental
 
@@ -134,13 +134,13 @@ Déploiement production uniquement après accord explicite distinct si nécessai
 
 ---
 
-## Design system — Redesign Woorri
+## Design system — Redesign Deribfy
 
 ### Palette
 
 Palette officielle :
 
-- Accent Woorri : `#FA5D1E`
+- Accent Deribfy : `#FA5D1E`
 - Background deep : `#0A050E`
 - Brand blue : `#4F6EF5`
 - Brand gold : `#C9A84C`
@@ -162,7 +162,7 @@ Créer un nouveau token uniquement si son rôle est justifié et réutilisable.
 
 ### Direction visuelle
 
-Woorri suit une direction :
+Deribfy suit une direction :
 
 **AI Commerce Command Center**
 
