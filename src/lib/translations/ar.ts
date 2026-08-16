@@ -9,7 +9,7 @@ export const ar: Record<TranslationKey, string> = {
   'nav.dashboard': 'لوحة التحكم',
 
   // Footer
-  'footer.copyright': '© 2026 Woorri. جميع الحقوق محفوظة.',
+  'footer.copyright': '© 2026 Deribfy. جميع الحقوق محفوظة.',
   'footer.privacy': 'الخصوصية',
   'footer.terms': 'الشروط',
   'footer.cookies': 'ملفات تعريف الارتباط',
@@ -29,7 +29,7 @@ export const ar: Record<TranslationKey, string> = {
   'home.badge': 'مولّد المواقع بالذكاء الاصطناعي',
   'home.title.part1': 'أطلق مشروعك',
   'home.title.part2': 'بالذكاء الاصطناعي',
-  'home.subtitle': 'تنشئ Woorri تلقائيًا مواقع ولوحات تحكم وتطبيقات لأصحاب المشاريع.',
+  'home.subtitle': 'تنشئ Deribfy تلقائيًا مواقع ولوحات تحكم وتطبيقات لأصحاب المشاريع.',
   'home.dashboardLink': '← الذهاب إلى لوحة التحكم',
 
   // Onboarding step 1
@@ -299,7 +299,7 @@ export const ar: Record<TranslationKey, string> = {
   'domain.back': '← لوحة التحكم',
   'domain.title': 'نطاق',
   'domain.titleAccent': 'مخصّص',
-  'domain.subtitle': 'اشترِ نطاقًا عبر Woorri، أو اربط نطاقًا تملكه بالفعل.',
+  'domain.subtitle': 'اشترِ نطاقًا عبر Deribfy، أو اربط نطاقًا تملكه بالفعل.',
   'domain.statusOnline': 'متصل ومفهرس',
   'domain.statusProblem': 'مشكلة',
   'domain.statusConfiguring': 'الإعداد قيد التنفيذ',
@@ -309,7 +309,7 @@ export const ar: Record<TranslationKey, string> = {
   'domain.stepSubmitted': 'تم الإرسال إلى Google',
   'domain.renews': 'يتجدّد في {date}',
   'domain.buyTitle': 'شراء نطاق',
-  'domain.buyDesc': 'يشتريه Woorri ويُعِدّ DNS ويجعل موقعك متصلاً. لا شيء عليك فعله.',
+  'domain.buyDesc': 'يشتريه Deribfy ويُعِدّ DNS ويجعل موقعك متصلاً. لا شيء عليك فعله.',
   'domain.orConnect': 'أو اربط نطاقًا تملكه بالفعل:',
   'domain.yourDomain': 'نطاقك',
   'domain.connecting': 'جارٍ الاتصال…',

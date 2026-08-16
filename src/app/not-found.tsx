@@ -18,7 +18,7 @@ export default function NotFound() {
 
       <div className="relative z-10 w-full max-w-md text-center">
         <div className="mb-10 text-xs uppercase tracking-[0.25em] text-white/45">
-          Woorri
+          Deribfy
         </div>
 
         <div
