@@ -11,21 +11,21 @@ export async function POST(req: Request) {
     }
 
     await resend.emails.send({
-      from: 'Woorri <no-reply@woorri.com>',
+      from: 'Deribfy <no-reply@deribfy.com>',
       to: email,
-      subject: 'Bienvenue chez Woorri 🎉 / Welcome to Woorri 🎉',
+      subject: 'Bienvenue chez Deribfy 🎉 / Welcome to Deribfy 🎉',
       html: `
         <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#1a1208;">
-          <h1 style="font-size:24px;font-weight:800;margin:0 0 24px;background:linear-gradient(135deg,#d97a4f,#c0612d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Woorri</h1>
+          <h1 style="font-size:24px;font-weight:800;margin:0 0 24px;background:linear-gradient(135deg,#d97a4f,#c0612d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Deribfy</h1>
           <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">Bonjour,</p>
-          <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">Votre compte Woorri est activé. Décrivez votre idée, et notre IA génère en quelques secondes votre site vitrine, boutique en ligne ou dropshipping.</p>
-          <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">Une question ? Écrivez-nous à <a href="mailto:contact@woorri.com" style="color:#d97a4f;">contact@woorri.com</a>, nous répondons sous 24h.</p>
-          <p style="font-size:15px;line-height:1.6;margin:0 0 24px;">À très vite,<br/>L'équipe Woorri</p>
+          <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">Votre compte Deribfy est activé. Décrivez votre idée, et notre IA génère en quelques secondes votre site vitrine, boutique en ligne ou dropshipping.</p>
+          <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">Une question ? Écrivez-nous à <a href="mailto:contact@deribfy.com" style="color:#d97a4f;">contact@deribfy.com</a>, nous répondons sous 24h.</p>
+          <p style="font-size:15px;line-height:1.6;margin:0 0 24px;">À très vite,<br/>L'équipe Deribfy</p>
           <hr style="border:none;border-top:1px solid #eee;margin:24px 0;"/>
           <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">Hi,</p>
-          <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">Your Woorri account is now active. Describe your idea, and our AI generates your showcase site, online store, or dropshipping in seconds.</p>
-          <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">Questions? Email us at <a href="mailto:contact@woorri.com" style="color:#d97a4f;">contact@woorri.com</a>, we reply within 24h.</p>
-          <p style="font-size:15px;line-height:1.6;margin:0;">See you soon,<br/>The Woorri team</p>
+          <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">Your Deribfy account is now active. Describe your idea, and our AI generates your showcase site, online store, or dropshipping in seconds.</p>
+          <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">Questions? Email us at <a href="mailto:contact@deribfy.com" style="color:#d97a4f;">contact@deribfy.com</a>, we reply within 24h.</p>
+          <p style="font-size:15px;line-height:1.6;margin:0;">See you soon,<br/>The Deribfy team</p>
         </div>
       `,
     });
