@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import PricingContent from './PricingContent';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.woorri.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://deribfy.com';
 
 const TITLE = 'Tarifs — Woorri';
 const DESCRIPTION =

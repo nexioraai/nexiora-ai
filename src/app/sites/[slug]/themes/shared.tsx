@@ -114,7 +114,7 @@ export const PUBLIC_COLS =
 // accede via) son propre custom_domain. Meme convention que
 // src/app/sitemap.ts / robots.ts.
 export const WOORRI_SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.woorri.com'
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://deribfy.com'
 
 /**
  * Determine l'URL de base a utiliser pour le canonical/OG/JSON-LD/sitemap
