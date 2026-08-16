@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fetchSiteByDomain } from './app/sites/[slug]/themes/shared'
 
-const INTERNAL_HOSTS = ['nexiora.ca', 'www.nexiora.ca', 'woorri.com', 'www.woorri.com', 'localhost']
+const INTERNAL_HOSTS = ['nexiora.ca', 'www.nexiora.ca', 'woorri.com', 'www.woorri.com', 'deribfy.com', 'www.deribfy.com', 'localhost']
 
 export async function proxy(req: NextRequest) {
   const host = (req.headers.get('host') || '').split(':')[0].toLowerCase()
@@ -11,7 +11,8 @@ export async function proxy(req: NextRequest) {
     INTERNAL_HOSTS.includes(host) ||
     host.endsWith('.vercel.app') ||
     host.endsWith('.nexiora.ca') ||
-    host.endsWith('.woorri.com')
+    host.endsWith('.woorri.com') ||
+    host.endsWith('.deribfy.com')
   ) {
     return NextResponse.next()
   }
