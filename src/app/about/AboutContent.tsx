@@ -45,7 +45,7 @@ const CONTENT = {
     contactH: 'Nous contacter',
     contactP: 'Une question, un partenariat, une demande presse ?',
     contactCta: 'Écrivez-nous',
-    email: 'contact@woorri.com',
+    email: 'contact@deribfy.com',
   },
   en: {
     home: 'Home',
@@ -87,7 +87,7 @@ const CONTENT = {
     contactH: 'Get in touch',
     contactP: 'A question, a partnership, a press inquiry?',
     contactCta: 'Contact us',
-    email: 'contact@woorri.com',
+    email: 'contact@deribfy.com',
   },
 };
 

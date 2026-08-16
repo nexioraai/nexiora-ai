@@ -17,7 +17,7 @@ const CONTENT = {
         h: '1. Qui est responsable de vos renseignements',
         p: [
           "Woorri est un service exploité par Dougma IA Technologies, une entreprise enregistrée au Québec (Canada). Toute question relative à la protection des renseignements personnels peut être adressée à notre responsable de la protection des renseignements personnels :",
-          "Responsable de la protection des renseignements personnels\nDougma IA Technologies (exploitant « Woorri »)\nMontréal, Québec, Canada\nCourriel : contact@woorri.com",
+          "Responsable de la protection des renseignements personnels\nDougma IA Technologies (exploitant « Deribfy »)\nMontréal, Québec, Canada\nCourriel : contact@deribfy.com",
         ],
       },
       {
@@ -72,7 +72,7 @@ const CONTENT = {
         p: [
           "Conformément à la Loi 25 et à la LPRPDE, vous avez le droit de :",
           "• Accéder aux renseignements personnels que nous détenons à votre sujet;\n• Demander leur rectification s'ils sont inexacts;\n• Demander leur suppression, sous réserve des obligations légales;\n• Retirer votre consentement;\n• Déposer une plainte auprès de nous ou de la Commission d'accès à l'information du Québec (CAI).",
-          "Pour exercer ces droits, contactez-nous à contact@woorri.com. Nous répondrons dans les délais prévus par la loi.",
+          "Pour exercer ces droits, contactez-nous à contact@deribfy.com. Nous répondrons dans les délais prévus par la loi.",
         ],
       },
       {
@@ -101,7 +101,7 @@ const CONTENT = {
         h: '1. Who is responsible for your information',
         p: [
           "Woorri is a service operated by Dougma IA Technologies, a company registered in Quebec, Canada. Any question regarding the protection of personal information may be directed to our privacy officer:",
-          "Privacy Officer\nDougma IA Technologies (operating as “Woorri”)\nMontreal, Quebec, Canada\nEmail: contact@woorri.com",
+          "Privacy Officer\nDougma IA Technologies (operating as “Deribfy”)\nMontreal, Quebec, Canada\nEmail: contact@deribfy.com",
         ],
       },
       {
@@ -156,7 +156,7 @@ const CONTENT = {
         p: [
           "In accordance with Law 25 and PIPEDA, you have the right to:",
           "• Access the personal information we hold about you;\n• Request its correction if it is inaccurate;\n• Request its deletion, subject to legal obligations;\n• Withdraw your consent;\n• File a complaint with us or with the Commission d'accès à l'information du Québec (CAI).",
-          "To exercise these rights, contact us at contact@woorri.com. We will respond within the timeframes required by law.",
+          "To exercise these rights, contact us at contact@deribfy.com. We will respond within the timeframes required by law.",
         ],
       },
       {

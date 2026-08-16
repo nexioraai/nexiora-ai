@@ -26,7 +26,7 @@ export default function Footer() {
         <div className="flex flex-wrap gap-6 text-xs text-white/40 justify-center">
           <Link href="/about" className="hover:text-white transition-colors">{t('footer.about')}</Link>
           <Link href="/pricing" className="hover:text-white transition-colors">{t('footer.pricing')}</Link>
-          <a href="mailto:contact@woorri.com" className="hover:text-white transition-colors">{t('footer.contact')}</a>
+          <a href="mailto:contact@deribfy.com" className="hover:text-white transition-colors">{t('footer.contact')}</a>
           <Link href="/privacy" className="hover:text-white transition-colors">{t('footer.privacy')}</Link>
           <Link href="/terms" className="hover:text-white transition-colors">{t('footer.terms')}</Link>
           <Link href="/cookies" className="hover:text-white transition-colors">{t('footer.cookies')}</Link>

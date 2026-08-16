@@ -2,7 +2,7 @@ import 'server-only';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM_ADDRESS = 'no-reply@woorri.com';
+const FROM_ADDRESS = 'no-reply@deribfy.com';
 
 interface OrderConfirmationParams {
   to: string;

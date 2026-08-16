@@ -4,8 +4,8 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Adresse d'envoi : domaine Resend par defaut (fonctionne sans verif domaine).
-// Adresse d'envoi Woorri (domaine verifie chez Resend).
-const FROM_ADDRESS = 'no-reply@woorri.com';
+// Adresse d'envoi Deribfy (domaine verifie chez Resend).
+const FROM_ADDRESS = 'no-reply@deribfy.com';
 
 interface ShippingEmailParams {
   to: string;            // email du client
