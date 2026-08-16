@@ -11,12 +11,12 @@ const CONTENT = {
     title: 'Politique de confidentialité',
     updated: `Dernière mise à jour : ${LAST_UPDATED}`,
     intro:
-      "La présente politique explique quels renseignements personnels Woorri recueille, pourquoi, comment ils sont utilisés et protégés, et quels sont vos droits. Woorri est un service exploité par Dougma IA Technologies (Montréal, Québec, Canada), ci-après « Woorri », « nous » ou « notre ». Nous nous conformons à la Loi 25 du Québec (Loi modernisant des dispositions législatives en matière de protection des renseignements personnels) ainsi qu'à la loi fédérale canadienne (LPRPDE / PIPEDA).",
+      "La présente politique explique quels renseignements personnels Deribfy recueille, pourquoi, comment ils sont utilisés et protégés, et quels sont vos droits. Deribfy est un service exploité par Dougma IA Technologies (Montréal, Québec, Canada), ci-après « Deribfy », « nous » ou « notre ». Nous nous conformons à la Loi 25 du Québec (Loi modernisant des dispositions législatives en matière de protection des renseignements personnels) ainsi qu'à la loi fédérale canadienne (LPRPDE / PIPEDA).",
     sections: [
       {
         h: '1. Qui est responsable de vos renseignements',
         p: [
-          "Woorri est un service exploité par Dougma IA Technologies, une entreprise enregistrée au Québec (Canada). Toute question relative à la protection des renseignements personnels peut être adressée à notre responsable de la protection des renseignements personnels :",
+          "Deribfy est un service exploité par Dougma IA Technologies, une entreprise enregistrée au Québec (Canada). Toute question relative à la protection des renseignements personnels peut être adressée à notre responsable de la protection des renseignements personnels :",
           "Responsable de la protection des renseignements personnels\nDougma IA Technologies (exploitant « Deribfy »)\nMontréal, Québec, Canada\nCourriel : contact@deribfy.com",
         ],
       },
@@ -24,7 +24,7 @@ const CONTENT = {
         h: '2. Renseignements que nous recueillons',
         p: [
           "Nous recueillons uniquement les renseignements nécessaires à la fourniture de nos services :",
-          "• Renseignements de compte : votre prénom, votre adresse courriel et votre mot de passe (chiffré) lorsque vous créez un compte.\n• Renseignements de facturation : les données nécessaires au traitement de votre abonnement, gérées par notre prestataire de paiement Stripe. Woorri ne stocke pas vos numéros de carte de crédit.\n• Renseignements sur vos boutiques : le contenu que vous créez (nom de boutique, produits, textes, images).\n• Données d'utilisation : informations techniques sur votre utilisation de la plateforme (pages visitées, actions effectuées), afin d'améliorer le service.",
+          "• Renseignements de compte : votre prénom, votre adresse courriel et votre mot de passe (chiffré) lorsque vous créez un compte.\n• Renseignements de facturation : les données nécessaires au traitement de votre abonnement, gérées par notre prestataire de paiement Stripe. Deribfy ne stocke pas vos numéros de carte de crédit.\n• Renseignements sur vos boutiques : le contenu que vous créez (nom de boutique, produits, textes, images).\n• Données d'utilisation : informations techniques sur votre utilisation de la plateforme (pages visitées, actions effectuées), afin d'améliorer le service.",
         ],
       },
       {
@@ -38,21 +38,21 @@ const CONTENT = {
       {
         h: '4. Consentement',
         p: [
-          "En créant un compte et en utilisant Woorri, vous consentez à la collecte et à l'utilisation de vos renseignements telles que décrites dans la présente politique. Vous pouvez retirer votre consentement à tout moment en fermant votre compte ou en nous contactant, sous réserve des obligations légales et contractuelles qui pourraient subsister.",
+          "En créant un compte et en utilisant Deribfy, vous consentez à la collecte et à l'utilisation de vos renseignements telles que décrites dans la présente politique. Vous pouvez retirer votre consentement à tout moment en fermant votre compte ou en nous contactant, sous réserve des obligations légales et contractuelles qui pourraient subsister.",
         ],
       },
       {
         h: '5. Partage et transferts hors du Québec',
         p: [
-          "Pour fonctionner, Woorri fait appel à des prestataires de services situés à l'extérieur du Québec et du Canada. Ces prestataires n'ont accès qu'aux renseignements nécessaires à l'exécution de leurs fonctions et sont tenus de les protéger :",
+          "Pour fonctionner, Deribfy fait appel à des prestataires de services situés à l'extérieur du Québec et du Canada. Ces prestataires n'ont accès qu'aux renseignements nécessaires à l'exécution de leurs fonctions et sont tenus de les protéger :",
           "• Stripe (paiements) — États-Unis;\n• Vercel (hébergement) — États-Unis;\n• Supabase (base de données) — hébergement pouvant être situé hors du Canada;\n• Fournisseurs d'exécution des commandes (CJ Dropshipping, Printful, Printify) — pour les boutiques concernées;\n• Anthropic (traitement par intelligence artificielle) — États-Unis.",
-          "Conformément à la Loi 25, nous avons évalué que ces transferts bénéficient d'une protection adéquate. En utilisant Woorri, vous reconnaissez que vos renseignements peuvent être traités à l'extérieur du Québec.",
+          "Conformément à la Loi 25, nous avons évalué que ces transferts bénéficient d'une protection adéquate. En utilisant Deribfy, vous reconnaissez que vos renseignements peuvent être traités à l'extérieur du Québec.",
         ],
       },
       {
         h: '6. Responsabilité des marchands envers leurs clients',
         p: [
-          "Woorri est un outil qui permet aux marchands de créer et d'exploiter leurs propres boutiques en ligne. Lorsqu'un marchand utilise Woorri pour vendre à ses propres clients, c'est le marchand — et non Woorri — qui est responsable des renseignements personnels de ses clients acheteurs. Le marchand agit comme responsable du traitement de ces données; Woorri n'agit qu'à titre de fournisseur technique. Chaque marchand est responsable de sa propre conformité légale envers ses clients, y compris sa propre politique de confidentialité.",
+          "Deribfy est un outil qui permet aux marchands de créer et d'exploiter leurs propres boutiques en ligne. Lorsqu'un marchand utilise Deribfy pour vendre à ses propres clients, c'est le marchand — et non Deribfy — qui est responsable des renseignements personnels de ses clients acheteurs. Le marchand agit comme responsable du traitement de ces données; Deribfy n'agit qu'à titre de fournisseur technique. Chaque marchand est responsable de sa propre conformité légale envers ses clients, y compris sa propre politique de confidentialité.",
         ],
       },
       {
@@ -78,7 +78,7 @@ const CONTENT = {
       {
         h: '10. Témoins (cookies)',
         p: [
-          "Woorri utilise des témoins et technologies similaires. Pour en savoir plus, consultez notre Politique relative aux témoins.",
+          "Deribfy utilise des témoins et technologies similaires. Pour en savoir plus, consultez notre Politique relative aux témoins.",
         ],
       },
       {
@@ -95,12 +95,12 @@ const CONTENT = {
     title: 'Privacy Policy',
     updated: `Last updated: ${LAST_UPDATED}`,
     intro:
-      "This policy explains what personal information Woorri collects, why, how it is used and protected, and what your rights are. Woorri is a service operated by Dougma IA Technologies (Montreal, Quebec, Canada), referred to below as “Woorri,” “we,” or “our.” We comply with Quebec's Law 25 (Act to modernize legislative provisions as regards the protection of personal information) and with Canadian federal law (PIPEDA).",
+      "This policy explains what personal information Deribfy collects, why, how it is used and protected, and what your rights are. Deribfy is a service operated by Dougma IA Technologies (Montreal, Quebec, Canada), referred to below as “Deribfy,” “we,” or “our.” We comply with Quebec's Law 25 (Act to modernize legislative provisions as regards the protection of personal information) and with Canadian federal law (PIPEDA).",
     sections: [
       {
         h: '1. Who is responsible for your information',
         p: [
-          "Woorri is a service operated by Dougma IA Technologies, a company registered in Quebec, Canada. Any question regarding the protection of personal information may be directed to our privacy officer:",
+          "Deribfy is a service operated by Dougma IA Technologies, a company registered in Quebec, Canada. Any question regarding the protection of personal information may be directed to our privacy officer:",
           "Privacy Officer\nDougma IA Technologies (operating as “Deribfy”)\nMontreal, Quebec, Canada\nEmail: contact@deribfy.com",
         ],
       },
@@ -108,7 +108,7 @@ const CONTENT = {
         h: '2. Information we collect',
         p: [
           "We collect only the information necessary to provide our services:",
-          "• Account information: your first name, email address, and password (encrypted) when you create an account.\n• Billing information: data needed to process your subscription, handled by our payment provider Stripe. Woorri does not store your credit card numbers.\n• Store information: the content you create (store name, products, text, images).\n• Usage data: technical information about your use of the platform (pages visited, actions taken), to improve the service.",
+          "• Account information: your first name, email address, and password (encrypted) when you create an account.\n• Billing information: data needed to process your subscription, handled by our payment provider Stripe. Deribfy does not store your credit card numbers.\n• Store information: the content you create (store name, products, text, images).\n• Usage data: technical information about your use of the platform (pages visited, actions taken), to improve the service.",
         ],
       },
       {
@@ -122,21 +122,21 @@ const CONTENT = {
       {
         h: '4. Consent',
         p: [
-          "By creating an account and using Woorri, you consent to the collection and use of your information as described in this policy. You may withdraw your consent at any time by closing your account or contacting us, subject to any legal and contractual obligations that may remain.",
+          "By creating an account and using Deribfy, you consent to the collection and use of your information as described in this policy. You may withdraw your consent at any time by closing your account or contacting us, subject to any legal and contractual obligations that may remain.",
         ],
       },
       {
         h: '5. Sharing and transfers outside Quebec',
         p: [
-          "To operate, Woorri relies on service providers located outside Quebec and Canada. These providers only have access to the information necessary to perform their functions and are required to protect it:",
+          "To operate, Deribfy relies on service providers located outside Quebec and Canada. These providers only have access to the information necessary to perform their functions and are required to protect it:",
           "• Stripe (payments) — United States;\n• Vercel (hosting) — United States;\n• Supabase (database) — hosting that may be located outside Canada;\n• Order fulfillment providers (CJ Dropshipping, Printful, Printify) — for the relevant stores;\n• Anthropic (artificial intelligence processing) — United States.",
-          "In accordance with Law 25, we have assessed that these transfers benefit from adequate protection. By using Woorri, you acknowledge that your information may be processed outside Quebec.",
+          "In accordance with Law 25, we have assessed that these transfers benefit from adequate protection. By using Deribfy, you acknowledge that your information may be processed outside Quebec.",
         ],
       },
       {
         h: '6. Merchant responsibility toward their customers',
         p: [
-          "Woorri is a tool that allows merchants to create and operate their own online stores. When a merchant uses Woorri to sell to their own customers, it is the merchant — not Woorri — who is responsible for the personal information of their buyers. The merchant acts as the controller of that data; Woorri acts only as a technical provider. Each merchant is responsible for their own legal compliance toward their customers, including their own privacy policy.",
+          "Deribfy is a tool that allows merchants to create and operate their own online stores. When a merchant uses Deribfy to sell to their own customers, it is the merchant — not Deribfy — who is responsible for the personal information of their buyers. The merchant acts as the controller of that data; Deribfy acts only as a technical provider. Each merchant is responsible for their own legal compliance toward their customers, including their own privacy policy.",
         ],
       },
       {
@@ -162,7 +162,7 @@ const CONTENT = {
       {
         h: '10. Cookies',
         p: [
-          "Woorri uses cookies and similar technologies. To learn more, see our Cookie Policy.",
+          "Deribfy uses cookies and similar technologies. To learn more, see our Cookie Policy.",
         ],
       },
       {

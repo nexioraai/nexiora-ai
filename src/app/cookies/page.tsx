@@ -11,7 +11,7 @@ const CONTENT = {
     title: 'Politique relative aux témoins',
     updated: `Dernière mise à jour : ${LAST_UPDATED}`,
     intro:
-      "La présente politique explique ce que sont les témoins (« cookies »), lesquels Woorri utilise, à quelles fins et comment vous pouvez les gérer. Woorri est un service exploité par Dougma IA Technologies (Montréal, Québec, Canada). Conformément à la Loi 25 du Québec, nous demandons votre consentement avant de déposer les témoins qui ne sont pas strictement nécessaires au fonctionnement du service.",
+      "La présente politique explique ce que sont les témoins (« cookies »), lesquels Deribfy utilise, à quelles fins et comment vous pouvez les gérer. Deribfy est un service exploité par Dougma IA Technologies (Montréal, Québec, Canada). Conformément à la Loi 25 du Québec, nous demandons votre consentement avant de déposer les témoins qui ne sont pas strictement nécessaires au fonctionnement du service.",
     sections: [
       {
         h: "1. Qu'est-ce qu'un témoin",
@@ -22,7 +22,7 @@ const CONTENT = {
       {
         h: '2. Témoins que nous utilisons',
         p: [
-          "Témoins strictement nécessaires : indispensables au fonctionnement de Woorri. Ils permettent notamment de vous authentifier et de maintenir votre session ouverte. Sans eux, le service ne peut pas fonctionner. Ces témoins ne nécessitent pas votre consentement.",
+          "Témoins strictement nécessaires : indispensables au fonctionnement de Deribfy. Ils permettent notamment de vous authentifier et de maintenir votre session ouverte. Sans eux, le service ne peut pas fonctionner. Ces témoins ne nécessitent pas votre consentement.",
           "Témoins de préférences : mémorisent vos choix, comme la langue d'affichage, afin d'améliorer votre expérience.",
           "Témoins de mesure d'audience : nous utilisons des outils d'analyse (notamment Vercel Analytics et Speed Insights) pour comprendre de façon agrégée comment la plateforme est utilisée et en améliorer la performance. Ces témoins ne sont déposés qu'avec votre consentement.",
         ],
@@ -36,7 +36,7 @@ const CONTENT = {
       {
         h: '4. Gérer les témoins dans votre navigateur',
         p: [
-          "La plupart des navigateurs vous permettent de refuser ou de supprimer les témoins dans leurs paramètres. Notez que la désactivation de certains témoins peut affecter le bon fonctionnement de Woorri.",
+          "La plupart des navigateurs vous permettent de refuser ou de supprimer les témoins dans leurs paramètres. Notez que la désactivation de certains témoins peut affecter le bon fonctionnement de Deribfy.",
         ],
       },
       {
@@ -59,7 +59,7 @@ const CONTENT = {
     title: 'Cookie Policy',
     updated: `Last updated: ${LAST_UPDATED}`,
     intro:
-      "This policy explains what cookies are, which ones Woorri uses, for what purposes, and how you can manage them. Woorri is a service operated by Dougma IA Technologies (Montreal, Quebec, Canada). In accordance with Quebec's Law 25, we ask for your consent before placing cookies that are not strictly necessary for the service to function.",
+      "This policy explains what cookies are, which ones Deribfy uses, for what purposes, and how you can manage them. Deribfy is a service operated by Dougma IA Technologies (Montreal, Quebec, Canada). In accordance with Quebec's Law 25, we ask for your consent before placing cookies that are not strictly necessary for the service to function.",
     sections: [
       {
         h: '1. What is a cookie',
@@ -70,7 +70,7 @@ const CONTENT = {
       {
         h: '2. Cookies we use',
         p: [
-          "Strictly necessary cookies: essential for Woorri to function. They allow us to authenticate you and keep your session open. Without them, the service cannot work. These cookies do not require your consent.",
+          "Strictly necessary cookies: essential for Deribfy to function. They allow us to authenticate you and keep your session open. Without them, the service cannot work. These cookies do not require your consent.",
           "Preference cookies: remember your choices, such as your display language, to improve your experience.",
           "Analytics cookies: we use analytics tools (including Vercel Analytics and Speed Insights) to understand, in aggregate, how the platform is used and to improve its performance. These cookies are only placed with your consent.",
         ],
@@ -84,7 +84,7 @@ const CONTENT = {
       {
         h: '4. Managing cookies in your browser',
         p: [
-          "Most browsers let you refuse or delete cookies in their settings. Note that disabling certain cookies may affect how Woorri works.",
+          "Most browsers let you refuse or delete cookies in their settings. Note that disabling certain cookies may affect how Deribfy works.",
         ],
       },
       {
