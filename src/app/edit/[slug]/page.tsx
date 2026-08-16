@@ -97,7 +97,7 @@ export default function EditPage() {
     if (site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom' || site?.dropship_type === 'pod_brand')) {
       const m = Number(site.cj_margin_percent ?? DEFAULT_MARGIN_PERCENT);
       if (m < MIN_MARGIN_PERCENT) {
-        setMessage('Marge trop basse : minimum ' + MIN_MARGIN_PERCENT + '% pour ne pas vendre a perte (commission Woorri ' + NEXIORA_COMMISSION_PERCENT + '%).');
+        setMessage('Marge trop basse : minimum ' + MIN_MARGIN_PERCENT + '% pour ne pas vendre a perte (commission Deribfy ' + NEXIORA_COMMISSION_PERCENT + '%).');
         return;
       }
     }

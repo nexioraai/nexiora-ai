@@ -131,7 +131,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen nexiora-bg text-white flex">
       <Sidebar />
       <main className="flex-1 min-w-0 px-6 lg:pl-40 lg:pr-12 pt-24 lg:pt-10 pb-10">
-      <h1 className="text-3xl font-bold mb-8">Woorri Admin</h1>
+      <h1 className="text-3xl font-bold mb-8">Deribfy Admin</h1>
 
       {/* Commandes a payer manuellement chez CJ */}
       {(stats.toPayOrders || []).length > 0 && (
@@ -183,7 +183,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-3 gap-4">
           <MiniCard label="Ventes totales" value={`$${fmt(stats.revenue.total)}`} />
           <MiniCard label="Coût fournisseurs" value={`$${fmt(stats.revenue.supplierCost)}`} />
-          <MiniCard label="Commission Woorri (5%)" value={`$${fmt(stats.revenue.commission)}`} />
+          <MiniCard label="Commission Deribfy (5%)" value={`$${fmt(stats.revenue.commission)}`} />
         </div>
       </div>
 

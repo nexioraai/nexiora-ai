@@ -304,7 +304,7 @@ export async function POST(
       const { margin_percent } = tool_input;
       const margin = Number(margin_percent);
       if (isNaN(margin) || margin < MIN_MARGIN_PERCENT) {
-        return NextResponse.json({ error: `Marge invalide : minimum ${MIN_MARGIN_PERCENT}% pour couvrir la commission Woorri, les remboursements et les litiges.` }, { status: 400 });
+        return NextResponse.json({ error: `Marge invalide : minimum ${MIN_MARGIN_PERCENT}% pour couvrir la commission Deribfy, les remboursements et les litiges.` }, { status: 400 });
       }
       // La marge du site est la source de verite. Les prix sont calcules a l'affichage
       // par resolveDisplayPrice(). Ne jamais ecrire dans sell_price ici : ce champ est

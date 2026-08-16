@@ -151,7 +151,7 @@ export default function AcheterDomainePage({ params }: { params: Promise<{ slug:
         </Link>
         <h1 className="text-4xl font-bold mb-2">Acheter un domaine</h1>
         <p className="text-white/60 mb-8">
-          Woorri achete, configure et met ton site en ligne. Tu n&apos;as rien a parametrer.
+          Deribfy achete, configure et met ton site en ligne. Tu n&apos;as rien a parametrer.
         </p>
 
         {done ? (
