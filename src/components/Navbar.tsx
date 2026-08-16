@@ -145,7 +145,7 @@ export default function Navbar() {
             style={{ background: 'radial-gradient(circle at 30% 30%, #4F6EF5 0%, transparent 60%), radial-gradient(circle at 70% 70%, #FA5D1E 0%, transparent 60%), #16090e' }}>
             W
           </div>
-          <span className="text-xl font-black tracking-tight text-nexiora hidden sm:block" translate="no">woorri</span>
+          <span className="text-xl font-black tracking-tight text-nexiora hidden sm:block" translate="no">deribfy</span>
         </Link>
         <div className="flex items-center gap-3 sm:gap-4">
           <Link href="/about" className="text-white/70 hover:text-white text-sm font-medium transition-colors hidden sm:inline">{t('nav.about')}</Link>

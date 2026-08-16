@@ -16,7 +16,7 @@ export default function Footer() {
           >
             W
           </div>
-          <span className="font-black text-sm text-nexiora">woorri</span>
+          <span className="font-black text-sm text-nexiora">deribfy</span>
         </div>
 
         <p className="text-white/30 text-xs text-center">
