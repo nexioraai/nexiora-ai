@@ -3,7 +3,7 @@ import AboutContent from './AboutContent';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://deribfy.com';
 
-const TITLE = 'À propos de Woorri — Notre mission, vision et approche IA';
+const TITLE = 'À propos de Deribfy — Notre mission, vision et approche IA';
 const RAW_DESCRIPTION =
   "Woorri est une plateforme SaaS propulsée par l'intelligence artificielle qui réunit, dans une seule interface, les outils dont une entreprise a besoin pour lancer et faire croître son activité en ligne : création de sites, e-commerce, marketing, automatisation, analyse de données et IA conversationnelle.";
 const DESCRIPTION =
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: `${SITE_URL}/about`,
-    siteName: 'Woorri',
+    siteName: 'Deribfy',
     type: 'website',
   },
 };

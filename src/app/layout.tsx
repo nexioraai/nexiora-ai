@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Woorri — Create Your Dropshipping, Store, or Website with AI in 60 Seconds",
+  title: "Deribfy — Create Your Dropshipping, Store, or Website with AI in 60 Seconds",
   description: "Generate your dropshipping, store, or showcase website with AI in 60 seconds. Describe your business, get a complete professional site instantly.",
   other: {
     google: "notranslate",
