@@ -278,7 +278,7 @@ export const gelatoAdapter: SupplierAdapter = {
       shipmentMethodUid: 'normal',
       shippingAddress: {
         firstName: 'Quote', lastName: 'Request', addressLine1: '1 Main St',
-        city: 'City', postCode: '00000', country: countryCode, email: 'quote@woorri.com',
+        city: 'City', postCode: '00000', country: countryCode, email: 'quote@deribfy.com',
       },
     };
     const res = await glFetch(ORDER_BASE, '/v3/orders:quote', {
@@ -337,7 +337,7 @@ export const gelatoAdapter: SupplierAdapter = {
         state: addr.province_state || undefined,
         postCode: addr.postal_code,
         country: addr.country,
-        email: 'orders@woorri.com',
+        email: 'orders@deribfy.com',
         phone: addr.phone || undefined,
       },
     };
