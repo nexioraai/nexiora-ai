@@ -317,9 +317,9 @@ export default function EditorialTheme({ site }: { site: Site }) {
                         <img src={s.image} alt={s.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       </div>
                     )}
-                    <div className="flex items-start justify-between gap-3 mb-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
                       <h3
-                        className="font-serif text-2xl md:text-3xl leading-tight"
+                        className="font-serif text-2xl md:text-3xl leading-tight min-w-0"
                         style={{ fontFamily: 'var(--font-fraunces), serif' }}
                       >
                         {s.title}
