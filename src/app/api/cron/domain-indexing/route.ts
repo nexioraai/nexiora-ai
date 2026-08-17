@@ -43,24 +43,48 @@ export async function GET(req: NextRequest) {
     let verified = 0;
     let submitted = 0;
     let pending = 0;
+    let failedTerminal = 0;
 
     for (const row of rows) {
       const now = new Date().toISOString();
+      const attempts = (row.gsc_attempts || 0) + 1;
       await supabaseAdmin
         .from('site_domains')
-        .update({ gsc_attempts: (row.gsc_attempts || 0) + 1, gsc_last_attempt_at: now })
+        .update({ gsc_attempts: attempts, gsc_last_attempt_at: now })
         .eq('id', row.id);
+
+      // Au-dela de MAX_ATTEMPTS, une tentative de plus n'apporterait rien :
+      // si Google n'a toujours pas vu le TXT apres ~2 jours, rejouer la meme
+      // verification ne resout pas un probleme qui n'est plus transitoire
+      // (permissions du compte de service, TLD non standard, etc.). On sort
+      // dans un etat terminal explicite plutot que de laisser la ligne
+      // s'arreter silencieusement hors du WHERE gsc_attempts < MAX_ATTEMPTS.
+      const markTerminal = async (msg: string) => {
+        await supabaseAdmin
+          .from('site_domains')
+          .update({ status: 'google_failed', last_error: msg.slice(0, 500) })
+          .eq('id', row.id);
+        failedTerminal++;
+      };
 
       try {
         // Verification de propriete, si pas deja acquise.
         if (row.status === 'dns_configured') {
           if (!row.gsc_token) {
+            if (attempts >= MAX_ATTEMPTS) {
+              await markTerminal('Jeton Google jamais genere apres ' + MAX_ATTEMPTS + ' tentatives.');
+              continue;
+            }
             pending++;
             continue;
           }
           const ok = await verifyDomain(row.domain);
           if (!ok) {
             // Propagation DNS incomplete : on repassera.
+            if (attempts >= MAX_ATTEMPTS) {
+              await markTerminal('Propriete Google non verifiee apres ' + MAX_ATTEMPTS + ' tentatives (TXT jamais vu par Google).');
+              continue;
+            }
             pending++;
             continue;
           }
@@ -86,16 +110,21 @@ export async function GET(req: NextRequest) {
           .eq('id', row.id);
         submitted++;
       } catch (e: any) {
-        await supabaseAdmin
-          .from('site_domains')
-          .update({ last_error: String(e?.message || e).slice(0, 500) })
-          .eq('id', row.id);
-        console.error('[domain-indexing]', row.domain, e?.message || e);
+        const msg = String(e?.message || e);
+        if (attempts >= MAX_ATTEMPTS) {
+          await markTerminal(msg);
+        } else {
+          await supabaseAdmin
+            .from('site_domains')
+            .update({ last_error: msg.slice(0, 500) })
+            .eq('id', row.id);
+        }
+        console.error('[domain-indexing]', row.domain, msg);
       }
     }
 
     await finishCronRun(runId, { itemsProcessed: rows.length });
-    return NextResponse.json({ done: true, processed: rows.length, verified, submitted, pending });
+    return NextResponse.json({ done: true, processed: rows.length, verified, submitted, pending, failedTerminal });
   } catch (e: any) {
     await finishCronRun(runId, { itemsProcessed: 0, status: 'error', errorMessage: e.message });
     return NextResponse.json({ error: e.message }, { status: 500 });

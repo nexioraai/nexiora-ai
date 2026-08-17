@@ -70,7 +70,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Ce domaine est deja rattache a un autre site' }, { status: 409 });
     }
     domainId = existing.id;
-    if (existing.status === 'indexed' || existing.status === 'dns_configured') {
+    // Voir provision.ts : 'dns_configured' est intermediaire, pas termine.
+    if (existing.status === 'sitemap_submitted') {
       return NextResponse.json({ ok: true, status: existing.status, alreadyDone: true });
     }
   } else {

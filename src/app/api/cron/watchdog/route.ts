@@ -125,6 +125,60 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // #2bis \u2014 Domaines bloques sur la verification Google apres epuisement des
+  // tentatives (domaine en ligne et fonctionnel, seule l'indexation Google
+  // est bloquee \u2014 categorie distincte de #2, qui couvre l'echec de
+  // provisioning lui-meme).
+  const { data: googleFailedDomains } = await supabaseAdmin
+    .from('site_domains')
+    .select('id, domain, site_id, last_error, updated_at')
+    .eq('status', 'google_failed');
+
+  if (googleFailedDomains && googleFailedDomains.length > 0) {
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: 'Deribfy Alerts <no-reply@deribfy.com>',
+        to: ADMIN_EMAIL,
+        subject: `\u26a0\ufe0f ${googleFailedDomains.length} domaine(s) bloqu\u00e9(s) sur Google Search Console`,
+        html: [
+          '<p>Domaines en ligne mais dont la v\u00e9rification Google Search Console n\'a jamais abouti (intervention manuelle requise) :</p>',
+          '<ul>',
+          ...googleFailedDomains.map(d => `<li><strong>${d.domain}</strong> \u2014 ${d.last_error || 'pas de d\u00e9tail'}</li>`),
+          '</ul>',
+        ].join(''),
+      });
+    } catch (e) {
+      console.error('Watchdog Google domain alert failed:', e);
+    }
+  }
+
+  // #2ter — Meme categorie, pour les domaines BYOD (colonnes sites.custom_domain_google_*,
+  // jamais site_domains).
+  const { data: byodGoogleFailed } = await supabaseAdmin
+    .from('sites')
+    .select('id, slug, custom_domain, custom_domain_google_last_error')
+    .eq('custom_domain_google_status', 'failed');
+
+  if (byodGoogleFailed && byodGoogleFailed.length > 0) {
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: 'Deribfy Alerts <no-reply@deribfy.com>',
+        to: ADMIN_EMAIL,
+        subject: `⚠️ ${byodGoogleFailed.length} domaine(s) BYOD bloqué(s) sur Google Search Console`,
+        html: [
+          '<p>Domaines BYOD dont la vérification Google Search Console n\'a jamais abouti (intervention manuelle requise) :</p>',
+          '<ul>',
+          ...byodGoogleFailed.map(d => `<li><strong>${d.custom_domain}</strong> (${d.slug}) — ${d.custom_domain_google_last_error || 'pas de détail'}</li>`),
+          '</ul>',
+        ].join(''),
+      });
+    } catch (e) {
+      console.error('Watchdog BYOD Google domain alert failed:', e);
+    }
+  }
+
   return NextResponse.json({
     checked: Object.keys(EXPECTED_CRONS).length,
     missing,

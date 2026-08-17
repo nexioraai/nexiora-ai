@@ -105,7 +105,9 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
       ? { dot: 'bg-emerald-400', text: 'text-emerald-400', label: t('domain.stepSubmitted') }
       : byodGoogle.status === 'verified'
         ? { dot: 'bg-emerald-400', text: 'text-emerald-400', label: t('domain.stepGoogle') }
-        : { dot: 'bg-amber-400', text: 'text-amber-400', label: t('domain.statusConfiguring') }
+        : byodGoogle.status === 'failed'
+          ? { dot: 'bg-red-400', text: 'text-red-400', label: t('domain.statusProblem') }
+          : { dot: 'bg-amber-400', text: 'text-amber-400', label: t('domain.statusConfiguring') }
   const byodGoogleTxt = byodGoogle?.token
     ? [{ type: 'TXT', name: '@', value: byodGoogle.token }]
     : []
@@ -130,11 +132,11 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
               <p className="font-semibold">{status.purchased.domain}</p>
               <span className={`text-xs px-2 py-0.5 rounded ${
                 status.purchased.status === 'sitemap_submitted' ? 'bg-emerald-900 text-emerald-300'
-                : status.purchased.status === 'failed' ? 'bg-red-900 text-red-300'
+                : (status.purchased.status === 'failed' || status.purchased.status === 'google_failed') ? 'bg-red-900 text-red-300'
                 : 'bg-amber-900 text-amber-300'
               }`}>
                 {status.purchased.status === 'sitemap_submitted' ? t('domain.statusOnline')
-                  : status.purchased.status === 'failed' ? t('domain.statusProblem')
+                  : (status.purchased.status === 'failed' || status.purchased.status === 'google_failed') ? t('domain.statusProblem')
                   : t('domain.statusConfiguring')}
               </span>
             </div>

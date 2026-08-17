@@ -18,12 +18,17 @@ import { checkExistingMail } from '@/lib/domains/mail-guard';
 export async function provisionDomain(domainId: string): Promise<{ ok: boolean; status: string }> {
   const { data: row } = await supabaseAdmin
     .from('site_domains')
-    .select('id, domain, price_cents, status, purchased_at, dns_configured_at, site_id')
+    .select('id, domain, price_cents, status, purchased_at, dns_configured_at, site_id, gsc_token')
     .eq('id', domainId)
     .maybeSingle();
 
   if (!row) return { ok: false, status: 'introuvable' };
-  if (row.status === 'indexed' || row.status === 'dns_configured') {
+  // 'dns_configured' est un etat INTERMEDIAIRE (Google pas encore traite),
+  // pas un etat termine : le considerer comme "deja fait" ici bloquait toute
+  // reprise manuelle (via cette meme route) d'un domaine reste bloque a cette
+  // etape apres un echec transitoire du TXT Google. Seul 'sitemap_submitted'
+  // signifie reellement que plus rien ne reste a faire.
+  if (row.status === 'sitemap_submitted') {
     return { ok: true, status: row.status };
   }
 
@@ -152,23 +157,30 @@ export async function provisionDomain(domainId: string): Promise<{ ok: boolean; 
   // 4. TXT de verification Google, pose des maintenant pour laisser le temps
   //    a la propagation DNS. La verification elle-meme est faite plus tard par
   //    le cron : Google echoue s'il interroge le DNS trop tot.
-  try {
-    const token = await getDnsVerificationToken(row.domain);
-    await createDnsRecord(row.domain, { type: 'TXT', name: '', content: token });
-    await supabaseAdmin
-      .from('site_domains')
-      .update({ gsc_token: token })
-      .eq('id', domainId);
-  } catch (e: any) {
-    // Non bloquant : le domaine fonctionne meme si l'indexation attend.
-    // Le cron reessaiera. Mais l'erreur doit rester visible : sans trace,
-    // un domaine reste indefiniment non indexe sans que personne ne le sache.
-    const msg = 'TXT Google : ' + (e?.message || String(e));
-    console.error('[provision]', row.domain, msg);
-    await supabaseAdmin
-      .from('site_domains')
-      .update({ last_error: msg.slice(0, 500) })
-      .eq('id', domainId);
+  //    Uniquement si aucun token n'existe deja : provisionDomain est rejoue a
+  //    chaque renouvellement Stripe annuel (invoice.paid), et regenerer un
+  //    jeton deja obtenu ajouterait un nouveau TXT sans jamais supprimer
+  //    l'ancien (accumulation en zone DNS au fil des annees), pour un domaine
+  //    deja verifie ou en cours de l'etre.
+  if (!row.gsc_token) {
+    try {
+      const token = await getDnsVerificationToken(row.domain);
+      await createDnsRecord(row.domain, { type: 'TXT', name: '', content: token });
+      await supabaseAdmin
+        .from('site_domains')
+        .update({ gsc_token: token })
+        .eq('id', domainId);
+    } catch (e: any) {
+      // Non bloquant : le domaine fonctionne meme si l'indexation attend.
+      // Le cron reessaiera. Mais l'erreur doit rester visible : sans trace,
+      // un domaine reste indefiniment non indexe sans que personne ne le sache.
+      const msg = 'TXT Google : ' + (e?.message || String(e));
+      console.error('[provision]', row.domain, msg);
+      await supabaseAdmin
+        .from('site_domains')
+        .update({ last_error: msg.slice(0, 500) })
+        .eq('id', domainId);
+    }
   }
 
   // 5. Le site pointe desormais sur ce domaine.
