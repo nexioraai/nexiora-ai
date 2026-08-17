@@ -1,18 +1,28 @@
-// src/app/sites/[slug]/sitemap.xml/route.ts
+// src/app/api/internal/site-sitemap/[slug]/route.ts
 //
-// Route litterale (memes conventions que ../llms.txt/route.ts et
-// ../robots.txt/route.ts) — sans elle, /sitemap.xml sur un domaine
-// personnalise (rewrite src/proxy.ts) tombe dans le catch-all
-// [...rest]/page.tsx qui appelle notFound(). Generique : ne connait aucun
-// site en particulier, fonctionne pour n'importe quel slug.
+// Genere le sitemap XML d'un site marchand. Deliberement place hors de
+// l'arborescence src/app/sites/[slug]/ (qui contient un catch-all
+// [...rest]/page.tsx) et loin de tout nom reserve par les conventions de
+// metadonnees de Next.js (sitemap.ts / sitemap.xml / robots.txt) : un
+// dossier "sitemap.xml" imbrique sous un segment dynamique avec un
+// catch-all frere provoquait un 404/500 en production Vercel (jamais
+// reproduit en local avec next start, code identique) — comportement
+// documente comme un probleme connu du pipeline de routage des fichiers
+// de metadonnees de Next.js 15/16 sur Vercel, pas un bug de la logique
+// applicative elle-meme (verifiee correcte dans les deux cas).
+//
+// L'URL publique /sitemap.xml (chemin plateforme ou domaine personnalise)
+// est reecrite vers cette route par src/proxy.ts — jamais exposee
+// directement sous ce chemin interne.
 //
 // fetchSite() ne renvoie que des produits deja filtres (shop_products
 // published=true, site_catalog_selections merchant_approved=true — voir
-// themes/shared.tsx) : rien de prive, rien de supprime, rien qui 404 n'est
-// jamais inclus ici. Le site n'a qu'une seule page publique routable (les
-// sections de "site.pages" sont des ancres sur la meme page, pas des URLs
-// distinctes) — seuls les produits ont leur propre route.
-import { fetchSite, resolveSiteBaseUrl } from '../themes/shared'
+// ../../../../sites/[slug]/themes/shared.tsx) : rien de prive, rien de
+// supprime, rien qui 404 n'est jamais inclus ici. Le site n'a qu'une
+// seule page publique routable (les sections de "site.pages" sont des
+// ancres sur la meme page, pas des URLs distinctes) — seuls les produits
+// ont leur propre route.
+import { fetchSite, resolveSiteBaseUrl } from '@/app/sites/[slug]/themes/shared'
 
 function escapeXml(value: string): string {
   return value
@@ -34,6 +44,8 @@ export async function GET(
 
   // Meme domaine que celui reellement utilise pour servir la requete —
   // jamais NEXT_PUBLIC_SITE_URL aveuglement (voir resolveSiteBaseUrl).
+  // Le Host original est preserve par NextResponse.rewrite() dans
+  // proxy.ts, meme si le chemin interne a change.
   const base = resolveSiteBaseUrl(site, req.headers.get('host'))
   const lastmod = site.created_at ? new Date(site.created_at).toISOString() : new Date().toISOString()
 
