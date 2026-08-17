@@ -69,6 +69,10 @@
       "schedule": "15 */2 * * *"
     },
     {
+      "path": "/api/cron/route-canary",
+      "schedule": "45 */2 * * *"
+    },
+    {
       "path": "/api/cron/shipping-cache",
       "schedule": "0 4 * * *"
     },
