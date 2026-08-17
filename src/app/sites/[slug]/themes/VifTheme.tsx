@@ -307,8 +307,8 @@ export default function VifTheme({ site }: { site: Site }) {
                       </div>
                     )}
                     <div className="p-7">
-                      <div className="flex items-start justify-between gap-3 mb-3">
-                        <h3 className="text-xl md:text-2xl leading-tight" style={{ fontFamily: 'var(--font-fraunces), serif' }}>
+                      <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+                        <h3 className="text-xl md:text-2xl leading-tight min-w-0" style={{ fontFamily: 'var(--font-fraunces), serif' }}>
                           {s.title}
                         </h3>
                         {s.price && (
@@ -417,11 +417,11 @@ export default function VifTheme({ site }: { site: Site }) {
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {testimonials.map((r: any, i: number) => (
                   <div key={i} className="rounded-3xl p-8 bg-white border border-black/[0.06]">
-                    <p className="leading-relaxed mb-6" style={{ color: 'rgba(20,18,16,0.8)' }}>&ldquo;{r.quote}&rdquo;</p>
+                    <p className="leading-relaxed mb-6" style={{ color: 'rgba(20,18,16,0.8)' }}>&ldquo;{r.content}&rdquo;</p>
                     <div className="flex items-center gap-3">
-                      {r.avatar && <img src={r.avatar} alt={r.author} className="w-11 h-11 rounded-full object-cover" />}
+                      {r.avatar && <img src={r.avatar} alt={r.name} className="w-11 h-11 rounded-full object-cover" />}
                       <div>
-                        <div className="text-sm font-semibold">{r.author}</div>
+                        <div className="text-sm font-semibold">{r.name}</div>
                         {r.role && <div className="text-xs" style={{ color: 'rgba(20,18,16,0.55)' }}>{r.role}</div>}
                       </div>
                     </div>
