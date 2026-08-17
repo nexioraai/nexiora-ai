@@ -16,12 +16,16 @@ export default defineConfig({
     // du bug Gelato pré-checkout).
     // Phase 1 — D3 : src/lib/shop/ ajouté pour handlePaidCheckout.ts
     // (aucune couverture avant ce correctif).
+    // Chantier Site Web / Mode 1 : src/lib/domains/ ajouté pour verrouiller
+    // provisionDomain() (idempotence achat, non-régénération du token Google
+    // au renouvellement) avant le premier test réel avec achat Porkbun.
     include: [
       'src/lib/__tests__/**/*.test.ts',
       'src/lib/shop/**/*.test.ts',
       'src/lib/fulfillment/**/*.test.ts',
       'src/lib/suppliers/**/*.test.ts',
       'src/lib/payments/**/*.test.ts',
+      'src/lib/domains/**/*.test.ts',
       'src/app/api/webhooks/**/*.test.ts',
       'src/app/api/shop/**/*.test.ts',
       'src/app/api/stripe/**/*.test.ts',
