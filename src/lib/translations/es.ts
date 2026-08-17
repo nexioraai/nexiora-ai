@@ -302,6 +302,8 @@ export const es = {
   'domain.statusOnline': 'En línea e indexado',
   'domain.statusProblem': 'Problema',
   'domain.statusConfiguring': 'Configuración en curso',
+  'domain.statusVerified': 'Dominio verificado',
+  'domain.statusUnknown': 'Verificación no disponible',
   'domain.stepPurchased': 'Dominio comprado',
   'domain.stepDns': 'DNS configurado',
   'domain.stepGoogle': 'Propiedad verificada por Google',

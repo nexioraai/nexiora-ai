@@ -314,6 +314,8 @@ export const fr = {
   'domain.statusOnline': 'En ligne et indexé',
   'domain.statusProblem': 'Problème',
   'domain.statusConfiguring': 'Configuration en cours',
+  'domain.statusVerified': 'Domaine vérifié',
+  'domain.statusUnknown': 'Vérification indisponible',
   'domain.stepPurchased': 'Domaine acheté',
   'domain.stepDns': 'DNS configuré',
   'domain.stepGoogle': 'Propriété vérifiée par Google',

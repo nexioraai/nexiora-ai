@@ -303,6 +303,8 @@ export const ar: Record<TranslationKey, string> = {
   'domain.statusOnline': 'متصل ومفهرس',
   'domain.statusProblem': 'مشكلة',
   'domain.statusConfiguring': 'الإعداد قيد التنفيذ',
+  'domain.statusVerified': 'تم التحقق من النطاق',
+  'domain.statusUnknown': 'التحقق غير متاح حاليًا',
   'domain.stepPurchased': 'تم شراء النطاق',
   'domain.stepDns': 'تم إعداد DNS',
   'domain.stepGoogle': 'تم التحقق من الملكية عبر Google',

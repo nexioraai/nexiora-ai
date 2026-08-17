@@ -304,6 +304,8 @@ export const en: Record<TranslationKey, string> = {
   'domain.statusOnline': 'Live and indexed',
   'domain.statusProblem': 'Problem',
   'domain.statusConfiguring': 'Setup in progress',
+  'domain.statusVerified': 'Domain verified',
+  'domain.statusUnknown': 'Verification unavailable',
   'domain.stepPurchased': 'Domain purchased',
   'domain.stepDns': 'DNS configured',
   'domain.stepGoogle': 'Ownership verified by Google',
