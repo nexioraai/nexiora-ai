@@ -1,10 +1,89 @@
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { z } from 'zod';
 import { supabase as supabaseAnon } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { computeAiScore } from '@/app/lib/aiScore';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+// Valide la sortie JSON du modele avant toute utilisation — jusqu'ici
+// JSON.parse() seul, sans garantie de champ present ni de type correct.
+// Couvre les 3 modes (1/2/3) generes par le meme appel IA ; volontairement
+// permissif sur les champs decoratifs pour ne pas rejeter une reponse mode
+// 2/3 valide hors perimetre de cet audit (MODE 1 uniquement).
+const SectionItemSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  price: z.string().optional().default(''),
+  imageQuery: z.string().optional().default(''),
+});
+
+const SectionSchema = z.object({
+  name: z.string(),
+  items: z.array(SectionItemSchema).optional().default([]),
+});
+
+const FaqSchema = z.object({
+  question: z.string(),
+  answer: z.string(),
+});
+
+const WhyUsSchema = z.object({
+  title: z.string(),
+  text: z.string(),
+});
+
+const TestimonialSchema = z.object({
+  name: z.string(),
+  role: z.string(),
+  content: z.string(),
+  rating: z.number(),
+});
+
+const ContactSchema = z.object({
+  phone: z.string().optional().default(''),
+  email: z.string().optional().default(''),
+  address: z.string().optional().default(''),
+});
+
+const SocialLinksSchema = z.object({
+  instagram: z.string().optional().default(''),
+  whatsapp: z.string().optional().default(''),
+  facebook: z.string().optional().default(''),
+  tiktok: z.string().optional().default(''),
+});
+
+const GeneratedSiteSchema = z.object({
+  name: z.string().min(1),
+  slogan: z.string().optional().default(''),
+  type: z.string().optional().default(''),
+  niche_keywords: z.array(z.string()).optional().default([]),
+  lang: z.string().optional().default('fr'),
+  primaryColor: z.string().optional().default('#1E40AF'),
+  heroTitle: z.string().min(1),
+  heroSubtitle: z.string().optional().default(''),
+  heroImageQuery: z.string().optional().default(''),
+  imageQuery: z.string().optional().default(''),
+  about: z.string().min(1),
+  sections: z.array(SectionSchema).optional().default([]),
+  faq: z.array(FaqSchema).optional().default([]),
+  whyus: z.array(WhyUsSchema).optional().default([]),
+  mission: z.string().optional().default(''),
+  vision: z.string().optional().default(''),
+  areaServed: z.string().optional().default(''),
+  priceRange: z.string().optional().default(''),
+  mode: z.coerce.number().int().refine((v) => v === 1 || v === 2 || v === 3, {
+    message: 'mode doit etre 1, 2 ou 3',
+  }),
+  testimonials: z.array(TestimonialSchema).optional().default([]),
+  gallery: z.array(z.string()).optional().default([]),
+  contact: ContactSchema.optional().default({ phone: '', email: '', address: '' }),
+  pages: z.array(z.string()).optional().default([]),
+  cta: z.string().optional().default(''),
+  products: z.array(z.any()).optional().default([]),
+  socialLinks: SocialLinksSchema.optional().default({ instagram: '', whatsapp: '', facebook: '', tiktok: '' }),
+});
 
 // Service role pour les inserts (bypass RLS — sécurisé car validé via Bearer token avant)
 
@@ -455,7 +534,17 @@ Return ONLY valid JSON, no markdown:
 
     const text = response.content.map((item: any) => item.type === 'text' ? item.text : '').join('');
     const clean = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    const parsed = JSON.parse(clean);
+
+    let parsed: z.infer<typeof GeneratedSiteSchema>;
+    try {
+      parsed = GeneratedSiteSchema.parse(JSON.parse(clean));
+    } catch (e: any) {
+      console.error('AI JSON validation failed:', e?.message || e, '\nRaw text:', text.slice(0, 2000));
+      return NextResponse.json(
+        { error: "La génération IA a produit un résultat invalide. Merci de réessayer." },
+        { status: 502 }
+      );
+    }
 
     const slug = generateSlug(parsed.name);
 
@@ -544,11 +633,14 @@ Return ONLY valid JSON, no markdown:
           if (l === 'ar') return ['الرئيسية', 'من نحن', 'اتصل بنا'];
           return ['Home', 'About', 'Contact'];
         }
-        // Mode 1 (vitrine/service) : jamais de page vente en ligne (Boutique/Shop/Catalogue).
-        // Les autres pages metier (Galerie, Menu, Portfolio...) restent libres.
-        if (m === 1 && Array.isArray(parsed.pages)) {
-          const SELL_PAGE = /\b(boutique|shop|store|tienda|catalog|catalogue|catálogo|متجر|تسوق)\b/i;
-          return parsed.pages.filter((pg: any) => typeof pg === 'string' && !SELL_PAGE.test(pg));
+        // Mode 1 (vitrine/service) : ce champ n'a aucun effet sur le rendu
+        // (verifie sur les 4 themes — seul hidden_sections pilote la
+        // visibilite des sections ; le bloc "CUSTOM PAGES" des themes
+        // attend des objets {title,content,image}, jamais produits ici).
+        // On arrete de persister une valeur inerte plutot que de la filtrer
+        // pour rien.
+        if (m === 1) {
+          return [];
         }
         return parsed.pages;
       })(),
