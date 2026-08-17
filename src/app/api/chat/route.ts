@@ -561,6 +561,7 @@ Return ONLY valid JSON, no markdown:
       products: productsWithImages,
       social_links: parsed.socialLinks,
       owner_email,
+      owner_id,
       mode: siteMode ?? (parsed.mode === 2 || parsed.mode === 3 ? parsed.mode : 1),
       lang: detectedLang || parsed.lang || "fr",
       geo_lat,
