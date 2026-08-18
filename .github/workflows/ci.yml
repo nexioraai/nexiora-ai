@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    # `next build` instancie certains clients (Supabase, Stripe, OpenAI, Resend) au
+    # chargement de module pour quelques routes API. Ces valeurs ne sont jamais
+    # utilisées pour un vrai appel réseau pendant le build — elles servent
+    # uniquement à satisfaire les constructeurs. Aucun secret réel n'est requis ici.
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder-ci.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key-for-ci
+      SUPABASE_SERVICE_ROLE_KEY: placeholder-service-key-for-ci
+      STRIPE_SECRET_KEY: sk_test_placeholder
+      OPENAI_API_KEY: sk-placeholder
+      RESEND_API_KEY: re_placeholder
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npx vitest run
+
+      - name: Build
+        run: npx next build
+
+      # Non-bloquant pour l'instant : 699 problèmes ESLint pré-existants dans le
+      # projet (hors périmètre de ce chantier). Bloquer la CI dessus la rendrait
+      # rouge dès le premier commit pour une dette non liée aux changements en
+      # cours. À rendre bloquant une fois cette dette traitée séparément.
+      - name: Lint (informatif, non bloquant)
+        run: npx eslint .
+        continue-on-error: true
