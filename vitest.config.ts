@@ -22,6 +22,9 @@ export default defineConfig({
     // Isolation Mode 1 (Phase 1) : src/app/sites/[slug]/themes/ ajouté pour
     // verrouiller que le rendu Mode 1 (Editorial/Vif) n'embarque jamais le
     // panier ni la section Shop — via renderToStaticMarkup, sans jsdom.
+    // Bloc 2 (surveillance anti-régression) : src/lib/architecture/ ajouté
+    // pour le moteur générique de frontières de domaine (DOMAIN_REGISTRY),
+    // indépendant du nombre de modes/produits enregistrés.
     include: [
       'src/lib/__tests__/**/*.test.ts',
       'src/lib/shop/**/*.test.ts',
@@ -29,6 +32,7 @@ export default defineConfig({
       'src/lib/suppliers/**/*.test.ts',
       'src/lib/payments/**/*.test.ts',
       'src/lib/domains/**/*.test.ts',
+      'src/lib/architecture/**/*.test.ts',
       'src/app/api/webhooks/**/*.test.ts',
       'src/app/api/shop/**/*.test.ts',
       'src/app/api/stripe/**/*.test.ts',

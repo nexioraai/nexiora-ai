@@ -1,6 +1,4 @@
 import { describe, it, expect, vi } from 'vitest';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 // ============================================================
@@ -21,8 +19,6 @@ import VifTheme from '../VifTheme';
 import CartShell from '../CartShell';
 import { getCartLabels } from '../cartLabels';
 import { getModeCapabilities } from '../modeCapabilities';
-
-const THEMES_DIR = join(__dirname, '..');
 
 type SiteOverrides = Record<string, unknown>;
 
@@ -184,40 +180,8 @@ describe('getModeCapabilities — cohérence avec le rendu', () => {
   });
 });
 
-describe('Frontière statique — le tronc commun Mode 1 ne référence jamais le panier', () => {
-  // Verifie le CODE SOURCE, pas le rendu : protege contre l'ajout futur,
-  // par erreur, d'un appel useCart()/AddToCartButton/ShippingEstimate
-  // ailleurs dans le fichier que dans l'import de la section Shop extraite.
-  // C'est le garde-fou qui manquait avant cette Phase 1 -- celui qui aurait
-  // detecte le couplage diagnostique avant qu'il ne se produise.
-  const FORBIDDEN_PATTERNS = [/\buseCart\s*\(/, /\bAddToCartButton\b/, /\bShippingEstimate\b/];
-
-  function sourceWithoutShopImportLine(fileName: string): string {
-    const raw = readFileSync(join(THEMES_DIR, fileName), 'utf8');
-    return raw
-      .split('\n')
-      .filter((line) => !/^import .*ShopSection/.test(line.trim()))
-      .join('\n');
-  }
-
-  it('EditorialTheme.tsx ne contient aucune référence directe au panier hors de l\'import de la section Shop', () => {
-    const source = sourceWithoutShopImportLine('EditorialTheme.tsx');
-    for (const pattern of FORBIDDEN_PATTERNS) {
-      expect(source).not.toMatch(pattern);
-    }
-  });
-
-  it('VifTheme.tsx ne contient aucune référence directe au panier hors de l\'import de la section Shop', () => {
-    const source = sourceWithoutShopImportLine('VifTheme.tsx');
-    for (const pattern of FORBIDDEN_PATTERNS) {
-      expect(source).not.toMatch(pattern);
-    }
-  });
-
-  it('MobileNav.tsx (partagé) ne référence jamais le panier', () => {
-    const source = readFileSync(join(THEMES_DIR, 'MobileNav.tsx'), 'utf8');
-    for (const pattern of FORBIDDEN_PATTERNS) {
-      expect(source).not.toMatch(pattern);
-    }
-  });
-});
+// La frontière statique (le tronc commun Mode 1 ne référence jamais le
+// panier en dur) est désormais vérifiée par le moteur générique de
+// domaines — voir src/lib/architecture/domainRegistry.ts (domaine
+// "mode-1-theme-rendering") et src/lib/architecture/__tests__/domainBoundaries.test.ts.
+// Elle n'est plus dupliquée ici pour éviter que les deux copies divergent.
