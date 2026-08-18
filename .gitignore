@@ -73,3 +73,6 @@ _trash_backups/
 
 *.bak
 *.backup
+
+# Artefact genere par la CI (etape "Report system health") -- jamais versionne.
+vitest-results.json

@@ -33,6 +33,7 @@ export default defineConfig({
       'src/lib/payments/**/*.test.ts',
       'src/lib/domains/**/*.test.ts',
       'src/lib/architecture/**/*.test.ts',
+      'src/lib/systemHealth/**/*.test.ts',
       'src/app/api/webhooks/**/*.test.ts',
       'src/app/api/shop/**/*.test.ts',
       'src/app/api/stripe/**/*.test.ts',

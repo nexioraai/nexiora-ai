@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Users, Globe, ShoppingCart, DollarSign, Monitor, Store, Truck, AlertTriangle, Cpu } from "lucide-react";
+import { Users, Globe, ShoppingCart, DollarSign, Monitor, Store, Truck, AlertTriangle, Cpu, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 
@@ -175,6 +175,7 @@ export default function AdminDashboard() {
         <StatCard icon={AlertTriangle} label="Anomalies bloquantes" value={blockedCount} sub={`${warningCount} avertissement${warningCount > 1 ? "s" : ""}`} color={blockedCount > 0 ? "text-red-400" : "text-white/50"} />
         <StatCard icon={DollarSign} label="Revenus plateforme" value={`$${fmt(stats.revenue.commission)}`} sub={`$${fmt(stats.revenue.total)} total ventes`} color="text-amber-400" />
         <StatCard icon={Cpu} label="Consommation IA" value="Voir détails" sub="Coût par boutique" color="text-cyan-400" href="/admin/ai-usage" />
+        <StatCard icon={ShieldCheck} label="Surveillance technique" value="Voir détails" sub="Santé anti-régression" color="text-[#FA5D1E]" href="/admin/system-health" />
       </div>
 
       {/* Revenue detail */}

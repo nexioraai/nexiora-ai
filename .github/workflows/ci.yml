@@ -30,13 +30,25 @@ jobs:
 
       - run: npm ci
 
+      # continue-on-error + id sur les 3 étapes bloquantes : on a besoin que
+      # l'étape "Report system health" tourne même si l'une d'elles échoue
+      # (sinon un échec ne serait jamais remonté à l'Admin). Le vrai gate
+      # est l'étape "Gate" tout en bas, qui échoue explicitement le job si
+      # l'une de ces 3 étapes n'a pas réussi — le comportement bloquant du
+      # Bloc 1 est donc préservé, pas affaibli.
       - name: Type check
+        id: typecheck
+        continue-on-error: true
         run: npx tsc --noEmit
 
       - name: Test
-        run: npx vitest run
+        id: test
+        continue-on-error: true
+        run: npx vitest run --reporter=default --reporter=json --outputFile=vitest-results.json
 
       - name: Build
+        id: build
+        continue-on-error: true
         run: npx next build
 
       # Non-bloquant pour l'instant : 699 problèmes ESLint pré-existants dans le
@@ -46,3 +58,31 @@ jobs:
       - name: Lint (informatif, non bloquant)
         run: npx eslint .
         continue-on-error: true
+
+      # Remonte le résultat de ce run vers l'Admin Deribfy (/admin/system-health).
+      # Purement informatif : n'affecte jamais l'issue du job (voir le script
+      # lui-même — il ne sort jamais en erreur). SUPABASE_SERVICE_ROLE_KEY doit
+      # être ajoutée comme secret du repository GitHub (Settings > Secrets and
+      # variables > Actions) — valeur réelle, PAS le placeholder utilisé plus
+      # haut pour le build. NEXT_PUBLIC_SUPABASE_URL n'est pas un secret (valeur
+      # publique, déjà exposée côté client) : elle est donc écrite en clair ici.
+      - name: Report system health
+        if: always()
+        env:
+          SUPABASE_URL: https://lefumezaxfsttigpmzhr.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TYPECHECK_STATUS: ${{ steps.typecheck.outcome }}
+          BUILD_STATUS: ${{ steps.build.outcome }}
+          COMMIT_SHA: ${{ github.sha }}
+          BRANCH: ${{ github.ref_name }}
+          WORKFLOW_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/report-system-health.ts
+
+      - name: Gate — échoue si une étape bloquante a échoué
+        if: always()
+        run: |
+          if [ "${{ steps.typecheck.outcome }}" != "success" ] || [ "${{ steps.test.outcome }}" != "success" ] || [ "${{ steps.build.outcome }}" != "success" ]; then
+            echo "Étape(s) en échec — typecheck=${{ steps.typecheck.outcome }} test=${{ steps.test.outcome }} build=${{ steps.build.outcome }}"
+            exit 1
+          fi
+          echo "Toutes les étapes bloquantes ont réussi."
