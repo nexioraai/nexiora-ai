@@ -9,40 +9,34 @@ import ContactForm from '../ContactForm'
 import {
   type Site,
   normalizeTestimonial,
-  normalizeProduct,
-  mockupsToProducts,
   ContactMap,
 } from './shared'
 import { getDict } from './i18n'
 import Reveal from './Reveal'
 import TiltCard from './TiltCard'
-import ClickableProductCard from './ClickableProductCard'
-import AddToCartButton from './AddToCartButton'
-import ShippingEstimate from './ShippingEstimate'
-import { getCartLabels } from './cartLabels'
+import { getModeCapabilities } from './modeCapabilities'
+import VifShopSection from './VifShopSection'
 import { socialUrl } from '@/lib/social'
 
 // Palette Gusto clair-editorial (fixe, signature du theme)
-const CREAM = '#EFE6D4'
-const CREAM_DEEP = '#EFE6D4'
-const INK = '#B08847'
-const GOLD = '#B08847'
+export const CREAM = '#EFE6D4'
+export const CREAM_DEEP = '#EFE6D4'
+export const INK = '#B08847'
+export const GOLD = '#B08847'
 
 export default function VifTheme({ site }: { site: Site }) {
   const hidden = (name: string) => (site.hidden_sections || []).includes(name)
   const t = getDict(site.lang)
-  const cartT = getCartLabels(site.lang)
   const sections = site.sections || []
   const testimonials = (site.testimonials || []).map(normalizeTestimonial)
-  const products = [...(site.products || []).map(normalizeProduct), ...mockupsToProducts(site)]
   const gallery: string[] = (site.gallery || []).filter(
     (u: any) => typeof u === 'string' && u.length > 0 && u.startsWith('http')
   )
   const contact = site.contact || {}
   const social = site.social_links || {}
   const cta = site.cta || t.labels.contactCta
-  const mode = site.mode || 1
-  const ctaHref = (mode !== 1 && (products.length > 0 || mode === 3)) ? '#shop' : '#contact'
+  const { hasShop } = getModeCapabilities(site)
+  const ctaHref = hasShop ? '#shop' : '#contact'
 
   const heroTitle = site.hero_title || site.name
   const heroWords = heroTitle.trim().split(/\s+/)
@@ -91,7 +85,7 @@ export default function VifTheme({ site }: { site: Site }) {
             {!hidden('Home') && <a href="#home" className="hover:opacity-100 transition-opacity">{t.nav.home}</a>}
             {!hidden('About') && <a href="#about" className="hover:opacity-100 transition-opacity">{t.nav.about}</a>}
             {!hidden('Services') && <a href="#services" className="hover:opacity-100 transition-opacity">{sections[0]?.name || t.nav.services}</a>}
-            {mode !== 1 && (products.length > 0 || mode === 3) && !hidden('Shop') && (
+            {hasShop && !hidden('Shop') && (
               <a href="#shop" className="hover:opacity-100 transition-opacity">{t.nav.shop}</a>
             )}
             {!hidden('Gallery') && <a href="#gallery" className="hover:opacity-100 transition-opacity">{t.nav.gallery}</a>}
@@ -331,53 +325,7 @@ export default function VifTheme({ site }: { site: Site }) {
         ))}
 
         {/* =================== SHOP =================== */}
-        {mode !== 1 && (products.length > 0 || mode === 3) && !hidden('Shop') && (
-          <section id="shop" className="reveal py-28 md:py-36" style={{ borderTop: '1px solid rgba(20,18,16,0.08)', backgroundColor: CREAM_DEEP }}>
-            <div className="max-w-7xl mx-auto px-6 md:px-10">
-              <div className="text-center max-w-2xl mx-auto mb-20">
-                <div className="text-xs font-medium tracking-[0.25em] uppercase mb-4" style={{ color: GOLD }}>
-                  {t.sections.shopKicker}
-                </div>
-                <h2 className="text-4xl md:text-5xl leading-tight" style={{ fontFamily: 'var(--font-fraunces), serif' }}>
-                  {t.sections.shopTitle}
-                </h2>
-              </div>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {products.map((p: any, i: number) => (
-                  <ClickableProductCard slug={site.slug} key={i} product={p} primary={INK} lang={site.lang}>
-                  <TiltCard className="group rounded-3xl overflow-hidden bg-white border border-black/[0.06]">
-                    {p.image && (
-                      <div className="relative w-full h-56 overflow-hidden">
-                        <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                      </div>
-                    )}
-                    <div className="p-6">
-                      <h3 className="text-lg mb-1" style={{ fontFamily: 'var(--font-fraunces), serif' }}>{p.name}</h3>
-                      {p.price && <div className="text-sm font-semibold mb-4" style={{ color: GOLD }}>{p.price}</div>}
-                      <AddToCartButton
-                        id={p.id}
-                        name={p.name}
-                        priceNumber={p.priceNumber}
-                        currency={p.currency || 'CAD'}
-                        image={p.image}
-                        primary={INK}
-                        label={cartT.addToCart}
-                      />
-                      {p.cjVid && <ShippingEstimate siteId={site.id} cjVid={p.cjVid} primary={GOLD} deliveryLabel={t.labels.estimatedDelivery} daysLabel={t.labels.days} />}
-                      {!p.cjVid && p.shippingDaysMin && (
-                        <p className="text-sm mt-1 flex items-center gap-1.5" style={{ color: GOLD }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-                          {t.labels.estimatedDelivery} {p.shippingDaysMin}{p.shippingDaysMax && p.shippingDaysMax !== p.shippingDaysMin ? `-${p.shippingDaysMax}` : ''} {t.labels.days}
-                        </p>
-                      )}
-                    </div>
-                  </TiltCard>
-                  </ClickableProductCard>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
+        {hasShop && !hidden('Shop') && <VifShopSection site={site} />}
 
         {/* =================== GALLERY =================== */}
         {gallery.length > 0 && !hidden('Gallery') && (

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Menu, X, ArrowRight } from 'lucide-react'
 import { getDict } from './i18n'
+import { getModeCapabilities } from './modeCapabilities'
 
 interface MobileNavProps {
   site: {
@@ -12,6 +13,7 @@ interface MobileNavProps {
     products?: any[]
     lang?: string
     hidden_sections?: string[]
+    mode?: number | null
   }
   cta: string
   ctaHref: string
@@ -21,7 +23,13 @@ export default function MobileNav({ site, cta, ctaHref }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false)
   const primary = site.primary_color || '#111111'
   const t = getDict(site.lang)
-  const hasShop = (site.products?.length || 0) > 0
+  // Avant correction : (site.products?.length || 0) > 0, sans jamais
+  // verifier le mode -- un site Mode 1 avec des lignes "products" orphelines
+  // affichait un lien Shop mort, ET un site Mode 3 sans produit charge
+  // masquait a tort son lien Shop (incoherent avec la nav desktop, qui
+  // affiche toujours Shop en mode 3). Meme source de verite que partout
+  // ailleurs desormais.
+  const { hasShop } = getModeCapabilities(site)
   const hidden = (name: string) => (site.hidden_sections || []).includes(name)
   const closeMenu = () => setIsOpen(false)
 

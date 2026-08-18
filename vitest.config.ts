@@ -19,6 +19,9 @@ export default defineConfig({
     // Chantier Site Web / Mode 1 : src/lib/domains/ ajouté pour verrouiller
     // provisionDomain() (idempotence achat, non-régénération du token Google
     // au renouvellement) avant le premier test réel avec achat Porkbun.
+    // Isolation Mode 1 (Phase 1) : src/app/sites/[slug]/themes/ ajouté pour
+    // verrouiller que le rendu Mode 1 (Editorial/Vif) n'embarque jamais le
+    // panier ni la section Shop — via renderToStaticMarkup, sans jsdom.
     include: [
       'src/lib/__tests__/**/*.test.ts',
       'src/lib/shop/**/*.test.ts',
@@ -30,6 +33,8 @@ export default defineConfig({
       'src/app/api/shop/**/*.test.ts',
       'src/app/api/stripe/**/*.test.ts',
       'src/app/api/cron/**/*.test.ts',
+      'src/app/sites/**/*.test.ts',
+      'src/app/sites/**/*.test.tsx',
     ],
     environment: 'node',
   },
