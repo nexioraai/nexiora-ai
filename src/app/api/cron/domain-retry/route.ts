@@ -7,8 +7,16 @@ export const maxDuration = 120;
 
 const MAX_ATTEMPTS = 5;
 
+// provisionDomain() enchaine Porkbun + Vercel + DNS + Google en serie : si
+// la fonction est interrompue en route (timeout, deploiement), la ligne
+// peut rester bloquee a 'paid' sans jamais devenir 'failed' — et sans passer
+// par ce cron, qui ne surveillait jusqu'ici que 'failed'. Un domaine reste
+// 'paid' au-dela de ce delai n'est plus une execution legitime en cours.
+const PAID_STALE_MS = 10 * 60 * 1000;
+
 /**
- * Cron : reprend les provisionings de domaine en echec.
+ * Cron : reprend les provisionings de domaine en echec, ainsi que les
+ * paiements encaisses dont le provisioning ne s'est jamais termine.
  * provisionDomain est idempotent : chaque etape deja aboutie n'est pas rejouee.
  * Au-dela de MAX_ATTEMPTS on arrete : le watchdog alerte, traitement manuel.
  */
@@ -21,10 +29,11 @@ export async function GET(req: NextRequest) {
   const runId = await startCronRun('domain-retry');
 
   try {
+    const staleSince = new Date(Date.now() - PAID_STALE_MS).toISOString();
     const { data: rows } = await supabaseAdmin
       .from('site_domains')
       .select('id, domain, provision_attempts')
-      .eq('status', 'failed')
+      .or(`status.eq.failed,and(status.eq.paid,updated_at.lt.${staleSince})`)
       .lt('provision_attempts', MAX_ATTEMPTS)
       .order('last_attempt_at', { ascending: true, nullsFirst: true })
       .limit(10);

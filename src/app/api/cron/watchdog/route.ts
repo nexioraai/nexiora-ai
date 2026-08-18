@@ -179,6 +179,38 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // #2quater — Paiement encaissé mais provisioning jamais terminé, y compris
+  // après épuisement des tentatives de domain-retry (provision_attempts a
+  // atteint son plafond sans que le statut n'ait jamais avancé au-delà de
+  // 'paid'). Cas volontairement distinct de #2 : ici aucune erreur explicite
+  // n'a jamais été capturée par provisionDomain (sinon le statut serait déjà
+  // 'failed') — le domaine est resté bloqué avant même le premier essai réel,
+  // typiquement une fonction interrompue en route.
+  const { data: stuckPaid } = await supabaseAdmin
+    .from('site_domains')
+    .select('id, domain, updated_at')
+    .eq('status', 'paid')
+    .gte('provision_attempts', 5);
+
+  if (stuckPaid && stuckPaid.length > 0) {
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: 'Deribfy Alerts <no-reply@deribfy.com>',
+        to: ADMIN_EMAIL,
+        subject: `⚠️ ${stuckPaid.length} domaine(s) payé(s) jamais provisionnés`,
+        html: [
+          '<p>Domaines encaissés dont le provisioning ne s\'est jamais terminé, même après plusieurs tentatives (intervention manuelle requise) :</p>',
+          '<ul>',
+          ...stuckPaid.map(d => `<li><strong>${d.domain}</strong> — payé le ${d.updated_at}</li>`),
+          '</ul>',
+        ].join(''),
+      });
+    } catch (e) {
+      console.error('Watchdog stuck-paid domain alert failed:', e);
+    }
+  }
+
   return NextResponse.json({
     checked: Object.keys(EXPECTED_CRONS).length,
     missing,

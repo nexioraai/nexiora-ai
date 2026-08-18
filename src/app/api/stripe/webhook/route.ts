@@ -4,6 +4,14 @@ import { getStripe } from '@/lib/stripe';
 import { handlePaidCheckout } from '@/lib/shop/handlePaidCheckout';
 import { provisionDomain } from '@/lib/domains/provision';
 
+// provisionDomain() enchaine Porkbun + Vercel + plusieurs ecritures DNS +
+// Google, en serie : sans ce delai plus long (meme valeur que la route de
+// provisioning manuel domains/provision/route.ts, qui fait exactement la
+// meme chaine), Vercel pouvait couper la fonction avant la fin sur un achat
+// lent, laissant le domaine bloque en 'paid' sans qu'aucun cron ne le
+// reprenne (domain-retry ne surveille que 'failed').
+export const maxDuration = 120;
+
 export async function POST(req: Request) {
   const body = await req.text();
   const sig = req.headers.get('stripe-signature');
@@ -36,6 +44,11 @@ export async function POST(req: Request) {
             renews_at: (sub as any).current_period_end
               ? new Date((sub as any).current_period_end * 1000).toISOString()
               : null,
+            // Marqueur de fraicheur explicite : domain-retry s'en sert pour
+            // reprendre un provisioning coupe en route (fonction interrompue
+            // avant que provisionDomain n'ait pu ecrire un statut plus
+            // avance), sans dependre d'un trigger DB non verifiable ici.
+            updated_at: new Date().toISOString(),
           })
           .eq('id', domainId)
           .eq('status', 'pending');
