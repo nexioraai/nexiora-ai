@@ -534,11 +534,33 @@ Return ONLY valid JSON, no markdown:
   }
 }`;
 
-    const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 4500,
-      messages: [{ role: 'user', content: PROMPT + sectorPrompt + '\n\nBusiness request: ' + message }],
-    });
+    // max_tokens releve de 4500 -> 8000 (audit FUNC-04) : mesure reelle sur
+    // 3 essais identiques (secteur restaurant, prompt HEAD) : 4227 et 4416
+    // tokens en succes, un 3e tronque exactement a 4500 -- la valeur
+    // precedente etait fixee DANS la marge de variance naturelle du modele,
+    // pas au-dessus. 8000 aligne sur le precedent deja en production dans ce
+    // depot pour le meme modele (catalog/enhance/route.ts), avec une marge
+    // reelle (~1.8x) au-dessus du point de troncature observe.
+    const MAIN_MAX_TOKENS = 8000;
+    const mainCallParams = {
+      model: 'claude-haiku-4-5-20251001' as const,
+      max_tokens: MAIN_MAX_TOKENS,
+      messages: [{ role: 'user' as const, content: PROMPT + sectorPrompt + '\n\nBusiness request: ' + message }],
+    };
+    let response = await anthropic.messages.create(mainCallParams);
+
+    // Retry unique, strictement conditionne a une troncature reelle (audit
+    // FUNC-04) : jamais sur end_turn, jamais sur une erreur reseau (qui leve
+    // avant ce point et n'atteint jamais cette ligne), jamais sur un JSON
+    // invalide pour une autre raison ou un echec Zod (evalues plus bas,
+    // hors de cette portee). Aucune boucle : une seule tentative
+    // supplementaire, jamais rejouee si elle echoue aussi -- le chemin
+    // d'erreur existant (JSON.parse/Zod, deja instrumente par OBS-05) prend
+    // le relais normalement si la 2e tentative est encore tronquee.
+    if (response.stop_reason === 'max_tokens') {
+      console.warn('[chat] max_tokens atteint au 1er essai, retry unique', { sector, siteMode });
+      response = await anthropic.messages.create(mainCallParams);
+    }
 
     const text = response.content.map((item: any) => item.type === 'text' ? item.text : '').join('');
     const clean = text.replace(/```json/g, '').replace(/```/g, '').trim();
