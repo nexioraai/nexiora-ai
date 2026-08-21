@@ -20,11 +20,14 @@ export type ProductPage = {
 }
 
 export async function fetchProduct(slug: string, rawId: string): Promise<ProductPage | null> {
+  // LOT 1 : sites_public (published=true AND archived_at IS NULL déjà
+  // appliqué par la vue -- corrige au passage l'absence de vérification
+  // archived_at qui existait ici). `published` retiré du select : toujours
+  // vrai par construction de la vue, jamais lu par le reste de la fonction.
   const { data: site } = await supabase
-    .from('sites')
-    .select('id, name, slug, mode, custom_domain, dropship_type, product_families, cj_margin_percent, cj_round_mode, primary_color, theme, lang, shipping_flat, published')
+    .from('sites_public')
+    .select('id, name, slug, mode, custom_domain, dropship_type, product_families, cj_margin_percent, cj_round_mode, primary_color, theme, lang, shipping_flat')
     .eq('slug', slug)
-    .eq('published', true)
     .maybeSingle()
   if (!site) return null
 

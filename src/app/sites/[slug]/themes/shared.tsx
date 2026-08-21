@@ -146,12 +146,22 @@ export async function fetchSite(
 slug: string,
 allowUnpublished = false
 ): Promise<Site | null> {
-let query = supabase
-.from('sites')
-.select(PUBLIC_COLS)
+// Audit Mode 3/POD BRAND, LOT 1 : sites_public (vue, colonnes = PUBLIC_COLS,
+// WHERE published=true AND archived_at IS NULL déjà appliqué par la vue
+// elle-même) remplace un accès direct à `sites` qui exposait des colonnes
+// sensibles (owner_email, stripe_customer_id, payment_account_id, owner_id)
+// à quiconque via select=*. `allowUnpublished` était déjà sans effet
+// observable en production : ce composant serveur utilise le client anon
+// (@/lib/supabase, sans transfert de session navigateur), et la RLS
+// bloquait déjà tout accès à un site non publié même via un JWT
+// authentifié réel n'en étant pas propriétaire (prouvé en direct, comptes
+// jetables). La vue ne peut par construction jamais renvoyer de ligne non
+// publiée -- comportement inchangé, pas une régression.
+const { data, error } = await supabase
+.from('sites_public')
+.select('*')
 .eq('slug', slug)
-if (!allowUnpublished) query = query.eq('published', true)
-const { data, error } = await query.single()
+.single()
 
 if (error || !data) {
 console.error(error)
@@ -230,11 +240,14 @@ data.products = [...catalogProducts, ...existing]
 export async function fetchSiteByDomain(
 domain: string
 ): Promise<string | null> {
+// LOT 1 : sites_public applique déjà published=true AND archived_at IS
+// NULL -- corrige au passage l'absence de vérification archived_at qui
+// existait ici (un site archivé, compte supprimé, restait résolvable par
+// domaine custom si published était resté true).
 const { data, error } = await supabase
-.from('sites')
+.from('sites_public')
 .select('slug')
 .eq('custom_domain', domain)
-.eq('published', true)
 .single()
 if (error || !data) return null
 return (data as any).slug as string
@@ -255,11 +268,11 @@ export type SiteBrand = {
 export async function fetchSiteBrandByDomain(
   domain: string
 ): Promise<SiteBrand | null> {
+  // LOT 1 : sites_public, même raison que fetchSiteByDomain ci-dessus.
   const { data, error } = await supabase
-    .from('sites')
+    .from('sites_public')
     .select('slug,name,primary_color,theme,lang')
     .eq('custom_domain', domain)
-    .eq('published', true)
     .maybeSingle()
   if (error || !data) return null
   const d = data as any
