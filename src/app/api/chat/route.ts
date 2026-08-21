@@ -55,7 +55,7 @@ const SocialLinksSchema = z.object({
   tiktok: z.string().optional().default(''),
 });
 
-const GeneratedSiteSchema = z.object({
+export const GeneratedSiteSchema = z.object({
   name: z.string().min(1),
   slogan: z.string().optional().default(''),
   type: z.string().optional().default(''),
@@ -78,7 +78,15 @@ const GeneratedSiteSchema = z.object({
     message: 'mode doit etre 1, 2 ou 3',
   }),
   testimonials: z.array(TestimonialSchema).optional().default([]),
-  gallery: z.array(z.string()).optional().default([]),
+  // Volontairement permissif (audit /api/chat, FUNC-05) : parsed.gallery
+  // n'est JAMAIS consomme -- toujours ecrase par de vraies images Pexels
+  // avant tout usage (voir plus bas, `const gallery = await
+  // fetchPexelsImages(...)`). Le modele n'a aucune consigne claire pour ce
+  // champ en mode 1 (contrairement aux modes 2/3), et improvise une
+  // structure d'objets au lieu d'un tableau de chaines -- z.array(string())
+  // rejetait alors TOUTE la generation pour une valeur qui ne sert jamais a
+  // rien. Meme traitement que `products` ci-dessous, pour la meme raison.
+  gallery: z.array(z.any()).optional().default([]),
   contact: ContactSchema.optional().default({ phone: '', email: '', address: '' }),
   pages: z.array(z.string()).optional().default([]),
   cta: z.string().optional().default(''),
@@ -394,6 +402,7 @@ IMPORTANT CONTEXT:
 - areaServed: the city or region this business serves (e.g. "Montréal" or "Grand Montréal"). Short.
 - priceRange: estimated price level for this sector, one of "$", "$$", "$$$", or "$$$$".
 - niche_keywords (CRITICAL for mode 3 dropshipping): an array of 8-10 GENERIC single-word English search terms used to search the supplier product catalog by product name. Use BROAD category words, NOT specific product names. The catalog will NOT match "yoga mat" or "resistance band", but WILL match "yoga", "fitness", "gym". Example for a fitness store: ["fitness", "gym", "yoga", "workout", "exercise", "training", "sport", "weight", "running", "muscle"]. Example for a pet store: ["pet", "dog", "cat", "puppy", "collar", "leash", "grooming", "animal", "feeding"]. Example for a tech gadget store: ["phone", "charger", "LED", "USB", "bluetooth", "wireless", "earbuds", "gadget", "smart", "cable"]. For mode 1 and 2, return an empty array [].
+- gallery: ALWAYS return an empty array [], regardless of mode or sector. Gallery images are selected automatically from a stock photo library after your response — never invent URLs, objects, or descriptions for this field.
 
 DESIGN DIRECTION (CRITICAL — every site must look modern, premium and DISTINCT from others):
 - primaryColor: pick a BOLD, DISTINCTIVE color that fits THIS specific business and sector. NEVER default to generic corporate blue (#1E40AF, #2563EB and similar) unless the brand truly demands it. Explore the full spectrum — deep emerald, terracotta, burgundy, warm amber, plum, teal, charcoal with a vivid accent, etc. Each business should feel visually unique.
@@ -424,7 +433,6 @@ BOUTIQUE CLASSIQUE (mode 2) SPECIFIC RULES:
 - sections: 1-2 sections showcasing the type of products this boutique sells (e.g. "Nos Collections", "Nos Créations"). Items are EXAMPLES to inspire the merchant — they will replace them with their real products. Each item has title, description, price, imageQuery as usual.
 - products: return an EMPTY array [] — the merchant adds their own products manually after site generation.
 - testimonials: 3 realistic testimonials (like mode 1).
-- gallery: generate gallery images matching the boutique's aesthetic.
 - heroTitle/heroSubtitle: emphasize the boutique's unique identity, curated selection, local/artisanal quality. Tone = authentic, inviting, personal.
 - slogan: about the boutique's identity, craftsmanship, or curated taste.
 - cta: "Discover our shop" / "Découvrir la boutique" / equivalent in site language. Action = browse the shop.
@@ -439,7 +447,6 @@ COMMON TO ALL MODE 3 (reseller, pod_brand, pod_custom):
 - pages MUST be ["Home", "About", "FAQ", "Contact"] — NO Gallery, NO Reviews, NO Services. The shop/catalog appears automatically.
 - sections: return an EMPTY array [] — products come from suppliers, not manual entry.
 - testimonials: return an EMPTY array [] — no fake reviews.
-- gallery: return an EMPTY array [] — no gallery needed.
 - products: return an EMPTY array [] — products are auto-curated from supplier catalog.
 
 IF dropship_type = "reseller":
