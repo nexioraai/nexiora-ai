@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { supabase as supabaseAnon } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { computeAiScore } from '@/app/lib/aiScore';
+import { logGenerationFailure } from '@/lib/generationFailures';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -537,7 +538,36 @@ Return ONLY valid JSON, no markdown:
 
     let parsed: z.infer<typeof GeneratedSiteSchema>;
     try {
-      parsed = GeneratedSiteSchema.parse(JSON.parse(clean));
+      // Deux causes distinctes, avant fusionnees dans le meme catch generique
+      // (audit /api/chat, OBS-05/FUNC-05) : JSON.parse peut lever (texte
+      // tronque/mal forme) AVANT meme d'atteindre Zod, qui lui rejette une
+      // structure JSON valide mais non conforme au schema (issues precises,
+      // champ par champ). Separees ici pour que generation_failures puisse
+      // enregistrer laquelle des deux s'est produite.
+      let asJson: unknown;
+      try {
+        asJson = JSON.parse(clean);
+      } catch (jsonErr: unknown) {
+        const msg = jsonErr instanceof Error ? jsonErr.message : String(jsonErr);
+        await logGenerationFailure({
+          owner_id, owner_email, requested_mode: siteMode, detected_sector: sector,
+          failure_type: 'json_parse', stop_reason: response.stop_reason ?? null,
+          parse_error: msg, raw_response_tail: text.slice(-3000),
+          message_excerpt: message.slice(0, 500),
+        });
+        throw jsonErr;
+      }
+      try {
+        parsed = GeneratedSiteSchema.parse(asJson);
+      } catch (zodErr: unknown) {
+        await logGenerationFailure({
+          owner_id, owner_email, requested_mode: siteMode, detected_sector: sector,
+          failure_type: 'schema_validation', stop_reason: response.stop_reason ?? null,
+          zod_issues: zodErr instanceof z.ZodError ? zodErr.issues : String(zodErr),
+          raw_response_tail: text.slice(-3000), message_excerpt: message.slice(0, 500),
+        });
+        throw zodErr;
+      }
     } catch (e: any) {
       console.error('AI JSON validation failed:', e?.message || e, '\nRaw text:', text.slice(0, 2000));
       return NextResponse.json(
