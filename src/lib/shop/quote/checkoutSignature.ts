@@ -1,30 +1,33 @@
 import 'server-only';
 
 // ============================================================
-// SIGNATURE D'IDEMPOTENCE DU CHECKOUT (LOT 3).
+// DEUX IDENTITES DISTINCTES (LOT 4) -- a ne jamais confondre.
 //
-// CAUSE RACINE -- la cle etait derivee cote NAVIGATEUR, a partir du panier
-// client, alors que la requete envoyee a Stripe est construite cote SERVEUR.
-// Les deux pouvaient donc diverger :
+//   quoteHash             = f(etat commercial SERVEUR)
+//   checkoutIdempotencyKey = f(buyerNonce, origin, quoteHash)
 //
-//   1. COLLISION ENTRE ACHETEURS (P0, actif en production avant ce lot) --
-//      la chaine canonique ne contenait aucun composant propre a l'acheteur.
-//      Deux acheteurs anonymes avec le meme panier obtenaient la MEME cle,
-//      donc la MEME session Stripe : le second payait dans la commande du
-//      premier (payment_ref UNIQUE -> conflit -> meme URL renvoyee).
+// Elles repondent a deux questions differentes :
+//   quoteHash  -- "est-ce le MEME DEVIS ?" Deux acheteurs qui voient le meme
+//                 prix doivent obtenir le MEME hash : c'est ce qui permettra
+//                 de detecter qu'un prix a change entre l'affichage du panier
+//                 et le paiement, plutot que de debiter silencieusement un
+//                 montant different de celui affiche.
+//   idempotencyKey -- "est-ce la MEME TENTATIVE D'ACHAT ?" Deux acheteurs
+//                 doivent obtenir des cles DIFFERENTES, meme a devis
+//                 identique.
 //
-//   2. PARAMETRES SERVEUR ABSENTS DE LA CLE -- prix serveur, montant de
-//      livraison, remise reelle et application_fee sont recalcules ici. Si
-//      l'un changeait entre deux tentatives (marchand modifiant un prix,
-//      cache de livraison rafraichi), la cle restait identique alors que les
-//      parametres envoyes a Stripe changeaient -> `idempotency_error`.
-//
-// LA CLE = f(identite de l'acheteur, etat commercial SERVEUR).
-// Aucune des deux moities ne suffit seule : voir buyerNonce.ts.
+// P0 CORRIGE AU LOT 3, A NE JAMAIS REINTRODUIRE -- la cle etait derivee du
+// seul contenu du panier, sans composant propre a l'acheteur. Deux acheteurs
+// anonymes au panier identique obtenaient la meme cle, donc Stripe leur
+// servait LA MEME SESSION DE PAIEMENT : le second payait dans la commande du
+// premier. C'est precisement pourquoi `quoteHash` ne doit JAMAIS servir seul
+// de cle d'idempotence -- il est, par construction, identique entre
+// acheteurs. Le seul point d'entree autorise pour Stripe est
+// buildCheckoutIdempotencyKey().
 //
 // Determinisme : tous les montants entrent en CENTIMES ENTIERS. Le LOT 1 les
-// a deja rendus exacts au centime, donc `Math.round(x * 100)` est stable --
-// sans quoi une derive flottante produirait deux cles pour un meme montant.
+// a rendus exacts au centime, donc `Math.round(x * 100)` est stable -- sans
+// quoi une derive flottante produirait deux hash pour un meme montant.
 // ============================================================
 
 /** Une ligne de panier, telle qu'elle sera reellement envoyee a Stripe. */
@@ -38,12 +41,51 @@ export type SignatureLine = {
   designUrls?: string[];
 };
 
-export type CheckoutSignatureInput = {
-  /** Identite de l'acheteur (navigateur). Sans elle : collision entre acheteurs. */
-  buyerNonce: string;
+/**
+ * Etat commercial du devis. Strictement ce qui determine le PRIX et les
+ * CONDITIONS de la vente -- rien qui identifie l'acheteur, rien de technique.
+ *
+ * INCLUS, et pourquoi :
+ *   siteId          le compte Stripe destinataire depend du site ; le slug est
+ *                   volontairement exclu (renommable, non stable).
+ *   currency        change le montant reellement debite.
+ *   lines           cartId + quantite + prix unitaire SERVEUR = le devis
+ *                   ligne a ligne. L'ORDRE est significatif : voir plus bas.
+ *   designUrls      ne changent aucun montant, mais changent le produit
+ *                   FABRIQUE -- deux devis identiques au centime pres mais
+ *                   portant des visuels differents ne sont pas le meme devis.
+ *   shippingAmount  montant de livraison retenu (marge incluse, LOT 2).
+ *   shipmentTier    determine le transporteur ; deux paliers au meme prix
+ *                   restent deux conditions commerciales distinctes.
+ *   promoId + discountAmount  le montant pilote la remise ; l'identifiant
+ *                   distingue deux codes de meme valeur, dont la consommation
+ *                   (used_count) n'est pas la meme.
+ *   applicationFee  part prelevee par Nexiora : condition commerciale de la
+ *                   vente, meme si l'acheteur ne la voit pas.
+ *
+ * EXCLUS, et pourquoi -- chaque exclusion evite un hash qui varierait SANS
+ * qu'aucune condition commerciale ne change :
+ *   buyerNonce      identifie l'acheteur, pas le devis. L'inclure rendrait le
+ *                   hash inutilisable pour comparer deux acheteurs -- et
+ *                   surtout, ce serait confondre les deux identites.
+ *   origin          determine success_url / cancel_url. Ce sont des
+ *                   parametres Stripe, pas des conditions commerciales : le
+ *                   prix ne change pas selon le domaine d'acces. Il entre
+ *                   donc dans la CLE, pas dans le devis.
+ *   quote.source    n'est transmis a Stripe nulle part. Un cache expirant
+ *                   alors que le live renvoie le MEME montant ne change pas
+ *                   le devis.
+ *   logisticName    consequence du palier, deja present. Un renommage de
+ *                   transporteur chez CJ ne change pas le devis.
+ *   estimatedDelivery, supplierCost, merchantProfit  derives des composants
+ *                   ci-dessus ; supplierCost et merchantProfit sont de la
+ *                   comptabilite interne, jamais des conditions de vente.
+ *   priceNumber client, horodatages, cancel_token  sans autorite ou non
+ *                   deterministes.
+ */
+export type QuoteState = {
   siteId: string;
   currency: string;
-  origin: string;
   lines: SignatureLine[];
   shippingAmount: number;
   shipmentTier: string | null;
@@ -52,74 +94,8 @@ export type CheckoutSignatureInput = {
   applicationFee: number;
 };
 
-/** Montant -> centimes entiers. Stable car les montants sont deja exacts au centime (LOT 1). */
+/** Montant -> centimes entiers. Stable car les montants sont exacts au centime (LOT 1). */
 const cents = (n: number): number => Math.round((Number.isFinite(n) ? n : 0) * 100);
-
-/**
- * Representation canonique de l'etat commercial.
- *
- * INCLUS, et pourquoi :
- *   buyerNonce       identifie la TENTATIVE ; sans lui, deux acheteurs au
- *                    panier identique partagent une session Stripe.
- *   siteId           le compte Stripe destinataire depend du site ; le slug
- *                    est volontairement exclu (renommable, non stable).
- *   currency         change le montant reellement debite.
- *   origin           determine success_url / cancel_url, qui SONT des
- *                    parametres Stripe : un origin different sans changement
- *                    de cle provoquerait `idempotency_error`.
- *   lines            cartId + quantite + prix unitaire serveur = line_items.
- *                    L'ORDRE est significatif : line_items est un tableau
- *                    ordonne, deux ordres sont deux requetes differentes.
- *   designUrls       ne changent aucun montant, mais changent le produit
- *                    FABRIQUE ; reutiliser la session reutiliserait la
- *                    commande, donc les designs du premier acheteur.
- *   shippingAmount   shipping_rate_data.fixed_amount.
- *   shipmentTier     determine le transporteur et shop_orders.shipment_tier ;
- *                    deux paliers au meme prix restent deux etats distincts.
- *   promoId + discountAmount  le montant pilote amount_off ; l'identifiant
- *                    distingue deux codes de meme valeur, dont la
- *                    consommation (used_count) n'est pas la meme.
- *   applicationFee   payment_intent_data.application_fee_amount.
- *
- * EXCLUS, et pourquoi -- chaque exclusion evite une cle qui varierait SANS
- * qu'aucun parametre Stripe ne change, ce qui creerait des sessions inutiles :
- *   quote.source     n'est envoye a Stripe nulle part. Un cache expirant
- *                    alors que le live renvoie le MEME montant ne doit pas
- *                    produire une nouvelle session.
- *   logisticName     consequence du palier, deja present. Un simple renommage
- *                    de transporteur chez CJ ne doit rien changer.
- *   estimatedDelivery, supplierCost, merchantProfit  jamais transmis a
- *                    Stripe ; derives des composants deja inclus.
- *   priceNumber client  aucune autorite sur le montant (recalcule serveur).
- *   cancel_token, horodatages, email/nom acheteur  non deterministes ou
- *                    collectes par Stripe lui-meme.
- */
-function canonical(input: CheckoutSignatureInput): string {
-  const lines = input.lines
-    .map((l) =>
-      [
-        l.cartId,
-        l.quantity,
-        cents(l.unitPrice),
-        (l.designUrls ?? []).join('+'),
-      ].join('~')
-    )
-    .join('|');
-
-  return [
-    'v1',
-    input.buyerNonce,
-    input.siteId,
-    input.currency,
-    input.origin,
-    cents(input.shippingAmount),
-    input.shipmentTier ?? '',
-    input.promoId ?? '',
-    cents(input.discountAmount),
-    cents(input.applicationFee),
-    lines,
-  ].join('#');
-}
 
 /** FNV-1a 32 bits. Deux graines distinctes -> 64 bits effectifs. */
 function fnv1a(s: string, seed: number): number {
@@ -132,19 +108,73 @@ function fnv1a(s: string, seed: number): number {
 }
 
 /**
- * Signature courte et deterministe de l'etat commercial complet.
- *
- * Stripe borne ses cles d'idempotence a 255 caracteres et `stripe.ts` y
- * ajoute un suffixe (`:tax`, `:notax`, `:coupon`) : la sortie est compacte
- * par construction, quelle que soit la taille du panier.
- *
- * Une collision produirait une `idempotency_error` visible cote Stripe,
- * jamais une charge silencieusement erronee -- la longueur canonique est
- * incluse dans la signature pour rendre ce cas encore plus improbable.
+ * Empreinte compacte et deterministe d'une chaine canonique.
+ * La longueur canonique est incluse : deux etats de longueurs differentes ne
+ * peuvent pas collisionner sur les seuls 64 bits de hachage.
  */
-export function buildCheckoutSignature(input: CheckoutSignatureInput): string {
-  const c = canonical(input);
-  const a = fnv1a(c, 0x811c9dc5).toString(16).padStart(8, '0');
-  const b = fnv1a(c, 0x9e3779b1).toString(16).padStart(8, '0');
-  return `co_v1_${c.length.toString(36)}_${a}${b}`;
+function digest(prefix: string, canonical: string): string {
+  const a = fnv1a(canonical, 0x811c9dc5).toString(16).padStart(8, '0');
+  const b = fnv1a(canonical, 0x9e3779b1).toString(16).padStart(8, '0');
+  return `${prefix}_v1_${canonical.length.toString(36)}_${a}${b}`;
+}
+
+/**
+ * Serialisation canonique de l'etat commercial.
+ *
+ * L'ORDRE DES LIGNES EST SIGNIFICATIF, et ce n'est pas un choix par defaut :
+ * `line_items` est un tableau ordonne cote Stripe. Deux ordres produisent
+ * deux requetes differentes. Pretendre que deux ordres donnent "le meme
+ * devis" serait affirmer une egalite que le checkout ne respecte pas -- et,
+ * si cette egalite etait propagee a la cle d'idempotence, provoquerait une
+ * `idempotency_error`, c'est-a-dire une panne de paiement.
+ */
+function canonicalQuote(q: QuoteState): string {
+  const lines = q.lines
+    .map((l) => [l.cartId, l.quantity, cents(l.unitPrice), (l.designUrls ?? []).join('+')].join('~'))
+    .join('|');
+
+  return [
+    'q1',
+    q.siteId,
+    q.currency,
+    cents(q.shippingAmount),
+    q.shipmentTier ?? '',
+    q.promoId ?? '',
+    cents(q.discountAmount),
+    cents(q.applicationFee),
+    lines,
+  ].join('#');
+}
+
+/**
+ * Identite COMMERCIALE du devis -- independante de l'acheteur.
+ *
+ * Deux acheteurs voyant exactement le meme prix obtiennent le meme hash.
+ * C'est la propriete recherchee : elle permettra de comparer le devis
+ * affiche au panier et le devis recalcule au paiement.
+ *
+ * NE JAMAIS l'utiliser seul comme cle d'idempotence Stripe : il est identique
+ * entre acheteurs, ce qui est exactement le P0 corrige au LOT 3.
+ */
+export function buildQuoteHash(state: QuoteState): string {
+  return digest('q', canonicalQuote(state));
+}
+
+/**
+ * Identite d'une TENTATIVE D'ACHAT -- seule valeur transmise a Stripe.
+ *
+ * Combine l'identite de l'acheteur, les parametres Stripe qui ne sont pas
+ * commerciaux (`origin`, via success_url / cancel_url) et l'identite du devis.
+ * Aucune des trois composantes ne suffit seule :
+ *   - devis seul       -> collision entre acheteurs (P0 du LOT 3) ;
+ *   - acheteur seul    -> insensible aux changements de prix serveur ;
+ *   - sans origin      -> meme cle rejouee avec d'autres success_url
+ *                         -> `idempotency_error`.
+ */
+export function buildCheckoutIdempotencyKey(params: {
+  buyerNonce: string;
+  origin: string;
+  quoteHash: string;
+}): string {
+  return digest('co', ['k1', params.buyerNonce, params.origin, params.quoteHash].join('#'));
 }

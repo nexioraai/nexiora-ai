@@ -6,7 +6,7 @@ import { checkCatalogStock } from '@/lib/catalog-stock';
 import type { CartItem } from '@/lib/payments/types';
 import { STRIPE_SHIPPING_COUNTRIES } from '@/lib/payments/countries';
 import { buildSupplierGroups, resolveShipping } from '@/lib/shop/quote/resolveShipping';
-import { buildCheckoutSignature } from '@/lib/shop/quote/checkoutSignature';
+import { buildQuoteHash, buildCheckoutIdempotencyKey } from '@/lib/shop/quote/checkoutSignature';
 import { sitePricing, NEXIORA_COMMISSION_PERCENT, resolveDisplayPrice, roundMoney } from '@/lib/pricing';
 import { logAnomaly } from '@/lib/anomaly';
 import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
@@ -530,31 +530,39 @@ export async function POST(req: Request) {
       typeof checkoutNonce === 'string' && checkoutNonce.length > 0 && checkoutNonce.length <= 200
         ? checkoutNonce
         : '';
+    // LOT 4 -- DEUX identites distinctes, jamais confondues :
+    //   quoteHash      = f(etat commercial serveur), independant de
+    //                    l'acheteur. Deux acheteurs voyant le meme prix
+    //                    obtiennent le meme hash.
+    //   idempotencyKey = f(buyerNonce, origin, quoteHash). Seule valeur
+    //                    transmise a Stripe. `quoteHash` seul serait
+    //                    identique entre acheteurs -- exactement le P0
+    //                    corrige au LOT 3.
+    const quoteHash = buildQuoteHash({
+      siteId: site.id,
+      currency: resolvedCurrency ?? '',
+      shippingAmount,
+      shipmentTier: shipmentTier ?? null,
+      promoId: appliedPromoId,
+      discountAmount: promoDiscount,
+      applicationFee: applicationFeeAmount,
+      lines: items.map((i) => ({
+        cartId: i.id,
+        quantity: i.quantity,
+        unitPrice: i.priceNumber ?? 0,
+        designUrls:
+          Array.isArray(i.customDesigns) && i.customDesigns.length > 0
+            ? i.customDesigns
+                .map((d: { url?: string }) => d?.url)
+                .filter((u): u is string => typeof u === 'string' && u.length > 0)
+            : i.customDesignUrl
+              ? [i.customDesignUrl]
+              : [],
+      })),
+    });
+
     const checkoutSignature = buyerNonce
-      ? buildCheckoutSignature({
-          buyerNonce,
-          siteId: site.id,
-          currency: resolvedCurrency ?? '',
-          origin,
-          shippingAmount,
-          shipmentTier: shipmentTier ?? null,
-          promoId: appliedPromoId,
-          discountAmount: promoDiscount,
-          applicationFee: applicationFeeAmount,
-          lines: items.map((i) => ({
-            cartId: i.id,
-            quantity: i.quantity,
-            unitPrice: i.priceNumber ?? 0,
-            designUrls:
-              Array.isArray(i.customDesigns) && i.customDesigns.length > 0
-                ? i.customDesigns
-                    .map((d: { url?: string }) => d?.url)
-                    .filter((u): u is string => typeof u === 'string' && u.length > 0)
-                : i.customDesignUrl
-                  ? [i.customDesignUrl]
-                  : [],
-          })),
-        })
+      ? buildCheckoutIdempotencyKey({ buyerNonce, origin, quoteHash })
       : undefined;
 
     const provider = getProvider(site.payment_provider);

@@ -442,6 +442,15 @@ describe("LOT 3 -- cle d'idempotence derivee de l'etat commercial SERVEUR", () =
     expect(b).not.toBe(a);
   });
 
+  it("E7 -- LOT 4 : la route transmet la CLE COMPLETE a Stripe, jamais le quoteHash seul", async () => {
+    // Le quoteHash est identique entre acheteurs par construction : l'employer
+    // seul comme cle d'idempotence reintroduirait exactement le P0 du LOT 3.
+    // Le prefixe distingue les deux identites -- 'co_' (cle) vs 'q_' (devis).
+    const sig = await signature('buyer-1');
+    expect(sig).toMatch(/^co_v1_/);
+    expect(sig).not.toMatch(/^q_v1_/);
+  });
+
   it("E6 -- aucun nonce fourni -> aucune cle transmise (comportement historique, jamais de cle devinee)", async () => {
     createCheckoutMock.mockClear();
     setupSig();

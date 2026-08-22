@@ -1,21 +1,25 @@
 import { describe, it, expect } from 'vitest';
-import { buildCheckoutSignature, type CheckoutSignatureInput } from '../checkoutSignature';
+import {
+  buildQuoteHash,
+  buildCheckoutIdempotencyKey,
+  type QuoteState,
+} from '../checkoutSignature';
 
 // ============================================================
-// LOT 3 -- la cle d'idempotence doit satisfaire DEUX proprietes opposees :
-//   STABILITE    meme etat commercial -> meme cle (sinon : double session,
-//                donc double charge possible au double-clic) ;
-//   SENSIBILITE  etat commercial different -> cle differente (sinon : Stripe
-//                rejette le rejeu avec d'autres parametres, ou pire, sert la
-//                session d'un autre acheteur).
-// Un test qui ne verifierait qu'une des deux laisserait passer l'autre.
+// LOT 3 + LOT 4 -- deux identites, deux jeux de proprietes OPPOSEES.
+//
+//   quoteHash       "est-ce le MEME DEVIS ?"        -> IDENTIQUE entre acheteurs
+//   idempotencyKey  "est-ce la MEME TENTATIVE ?"    -> DIFFERENTE entre acheteurs
+//
+// Confondre les deux, c'est reintroduire le P0 du LOT 3 : deux acheteurs au
+// panier identique recevant la MEME session Stripe, le second payant dans la
+// commande du premier. Les tests 3 et 11 existent uniquement pour rendre
+// cette reintroduction impossible sans faire echouer la suite.
 // ============================================================
 
-const BASE: CheckoutSignatureInput = {
-  buyerNonce: 'buyer-aaa',
+const QUOTE: QuoteState = {
   siteId: 'site-1',
   currency: 'usd',
-  origin: 'https://www.deribfy.com',
   shippingAmount: 3.6,
   shipmentTier: 'standard',
   promoId: null,
@@ -27,106 +31,138 @@ const BASE: CheckoutSignatureInput = {
   ],
 };
 
-const clone = (o: CheckoutSignatureInput): CheckoutSignatureInput => JSON.parse(JSON.stringify(o));
-const key = (mut: (i: CheckoutSignatureInput) => void = () => {}) => {
-  const i = clone(BASE);
-  mut(i);
-  return buildCheckoutSignature(i);
+const ORIGIN = 'https://www.deribfy.com';
+const clone = (o: QuoteState): QuoteState => JSON.parse(JSON.stringify(o));
+const hash = (mut: (q: QuoteState) => void = () => {}) => {
+  const q = clone(QUOTE);
+  mut(q);
+  return buildQuoteHash(q);
 };
+const keyFor = (buyerNonce: string, mut: (q: QuoteState) => void = () => {}, origin = ORIGIN) =>
+  buildCheckoutIdempotencyKey({ buyerNonce, origin, quoteHash: hash(mut) });
 
-describe('LOT 3 -- stabilite (protection double-clic / deux onglets)', () => {
-  it('1 -- meme panier, meme quantite, meme livraison, meme promo -> MEME cle', () => {
-    expect(key()).toBe(key());
+// ------------------------------------------------------------
+describe('LOT 4 -- quoteHash : identite COMMERCIALE, independante de l\'acheteur', () => {
+  it('1 -- meme etat commercial, acheteurs A et B -> quoteHash IDENTIQUE', () => {
+    // Le quoteHash ne prend pas d'acheteur en entree : sa signature de type
+    // rend l'erreur impossible. Ce test verrouille l'intention.
+    expect(hash()).toBe(hash());
+    expect(keyFor('A')).not.toBe(keyFor('B')); // ... alors que les cles divergent
   });
 
-  it('8 -- deux calculs successifs sur des objets distincts -> cle strictement identique', () => {
-    const a = buildCheckoutSignature(clone(BASE));
-    const b = buildCheckoutSignature(clone(BASE));
-    const c = buildCheckoutSignature(clone(BASE));
-    expect(new Set([a, b, c]).size).toBe(1);
+  it('11 -- quoteHash ne contient jamais le buyerNonce', () => {
+    // Preuve structurelle : un buyerNonce tres distinctif ne peut pas
+    // influencer un hash qui ne le recoit pas. On le verifie en montrant que
+    // deux cles construites sur des acheteurs differents partagent bien le
+    // MEME quoteHash sous-jacent.
+    const q = hash();
+    const kA = buildCheckoutIdempotencyKey({ buyerNonce: 'AAAAAAAA', origin: ORIGIN, quoteHash: q });
+    const kB = buildCheckoutIdempotencyKey({ buyerNonce: 'BBBBBBBB', origin: ORIGIN, quoteHash: q });
+    expect(kA).not.toBe(kB);
+    expect(q).toBe(hash());
+    expect(q).not.toContain('AAAAAAAA');
+    expect(q).not.toContain('BBBBBBBB');
   });
 
-  it('9 -- une derive flottante sur un meme montant au centime ne produit PAS deux cles', () => {
-    // 3.5999999999999996 et 3.6 valent tous deux 360 centimes.
-    const drifted = key((i) => { i.shippingAmount = 3.5999999999999996; i.applicationFee = 15.399999999999999; });
-    expect(drifted).toBe(key());
-  });
-
-  it('10 -- seuls les champs declares participent : deux entrees identiques champ a champ coincident', () => {
-    // `source` et `logisticName` du devis ne sont deliberement PAS des
-    // entrees : ils ne sont transmis a Stripe nulle part. Les inclure ferait
-    // varier la cle -- donc creerait une session inutile -- lorsqu'un cache
-    // expire alors que le live renvoie exactement le meme montant.
-    const rebuilt: CheckoutSignatureInput = {
-      buyerNonce: 'buyer-aaa', siteId: 'site-1', currency: 'usd',
-      origin: 'https://www.deribfy.com', shippingAmount: 3.6,
-      shipmentTier: 'standard', promoId: null, discountAmount: 0, applicationFee: 15.4,
-      lines: [
-        { cartId: 'catalog-cat-1', quantity: 1, unitPrice: 30 },
-        { cartId: 'p2', quantity: 2, unitPrice: 9.99 },
-      ],
-    };
-    expect(buildCheckoutSignature(rebuilt)).toBe(key());
-  });
-});
-
-describe('LOT 3 -- sensibilite (evite idempotency_error et collisions)', () => {
-  const variants: Array<[string, (i: CheckoutSignatureInput) => void]> = [
-    ['2 -- quantite differente', (i) => { i.lines[0].quantity = 3; }],
-    ['3 -- palier de livraison different', (i) => { i.shipmentTier = 'express'; }],
-    ['4 -- montant de livraison different', (i) => { i.shippingAmount = 4.8; }],
-    ['5 -- promo appliquee differente (identifiant)', (i) => { i.promoId = 'promo-x'; }],
-    ['5b -- montant de remise different', (i) => { i.discountAmount = 6; }],
-    ['6 -- total different (prix unitaire serveur)', (i) => { i.lines[0].unitPrice = 31; }],
-    ['produit different', (i) => { i.lines[0].cartId = 'catalog-autre'; }],
-    ['variante differente du meme produit', (i) => { i.lines[0].cartId = 'catalog-cat-1::v2'; }],
-    ['article ajoute', (i) => { i.lines.push({ cartId: 'p3', quantity: 1, unitPrice: 5 }); }],
-    ['article retire', (i) => { i.lines.pop(); }],
-    ['devise differente', (i) => { i.currency = 'cad'; }],
-    ['site different', (i) => { i.siteId = 'site-2'; }],
-    ['origin different (success_url / cancel_url)', (i) => { i.origin = 'https://boutique.example'; }],
-    ['commission Nexiora differente', (i) => { i.applicationFee = 16; }],
-    ['design personnalise ajoute', (i) => { i.lines[0].designUrls = ['https://x/y.png']; }],
-    ['design personnalise different', (i) => { i.lines[0].designUrls = ['https://x/z.png']; }],
+  const commercialChanges: Array<[string, (q: QuoteState) => void]> = [
+    ['5 -- montant de livraison', (q) => { q.shippingAmount = 4.8; }],
+    ['6 -- palier de livraison', (q) => { q.shipmentTier = 'express'; }],
+    ['7 -- quantite', (q) => { q.lines[0].quantity = 3; }],
+    ['8 -- prix serveur', (q) => { q.lines[0].unitPrice = 31; }],
+    ['9a -- promo appliquee (identifiant)', (q) => { q.promoId = 'promo-x'; }],
+    ['9b -- montant de remise', (q) => { q.discountAmount = 6; }],
+    ['devise', (q) => { q.currency = 'cad'; }],
+    ['site', (q) => { q.siteId = 'site-2'; }],
+    ['commission Nexiora', (q) => { q.applicationFee = 16; }],
+    ['produit', (q) => { q.lines[0].cartId = 'catalog-autre'; }],
+    ['variante du meme produit', (q) => { q.lines[0].cartId = 'catalog-cat-1::v2'; }],
+    ['article ajoute', (q) => { q.lines.push({ cartId: 'p3', quantity: 1, unitPrice: 5 }); }],
+    ['article retire', (q) => { q.lines.pop(); }],
+    ['design personnalise', (q) => { q.lines[0].designUrls = ['https://x/y.png']; }],
   ];
 
-  it.each(variants)('%s -> cle DIFFERENTE', (_n, mut) => {
-    expect(key(mut)).not.toBe(key());
+  it.each(commercialChanges)('2 -- %s modifie -> quoteHash DIFFERENT', (_n, mut) => {
+    expect(hash(mut)).not.toBe(hash());
   });
 
-  it("CRITIQUE -- deux ACHETEURS au panier identique obtiennent des cles differentes", () => {
-    // Defaut corrige par ce lot : la cle precedente etait derivee du seul
-    // contenu du panier. Deux acheteurs anonymes avec le meme panier
-    // recevaient la MEME session Stripe -- le second payait dans la commande
-    // du premier. C'est le test qui protege contre une reintroduction.
-    expect(key((i) => { i.buyerNonce = 'buyer-bbb'; })).not.toBe(key());
+  it('10 -- deux flottants representant le MEME centime -> quoteHash IDENTIQUE', () => {
+    expect(hash((q) => { q.shippingAmount = 3.5999999999999996; q.applicationFee = 15.399999999999999; }))
+      .toBe(hash());
   });
 
-  it("7 -- l'ORDRE des articles change la cle, deliberement", () => {
-    // `line_items` est un TABLEAU ORDONNE cote Stripe : deux ordres sont deux
-    // requetes differentes. Ignorer l'ordre dans la cle sans trier aussi ce
-    // qui est envoye a Stripe provoquerait une `idempotency_error` -- une
-    // panne de checkout. Une cle differente ne cree qu'une session
-    // supplementaire, jamais une erreur.
-    expect(key((i) => { i.lines.reverse(); })).not.toBe(key());
+  it("l'ordre des lignes change le quoteHash, deliberement", () => {
+    // `line_items` est un tableau ORDONNE cote Stripe. Affirmer que deux
+    // ordres donnent "le meme devis" serait affirmer une egalite que le
+    // checkout ne respecte pas -- et, propagee a la cle, provoquerait une
+    // `idempotency_error`, donc une panne de paiement.
+    expect(hash((q) => { q.lines.reverse(); })).not.toBe(hash());
+  });
+
+  it("origin n'entre PAS dans le devis : le prix ne depend pas du domaine d'acces", () => {
+    const q = hash();
+    expect(buildCheckoutIdempotencyKey({ buyerNonce: 'A', origin: ORIGIN, quoteHash: q }))
+      .not.toBe(buildCheckoutIdempotencyKey({ buyerNonce: 'A', origin: 'https://autre.test', quoteHash: q }));
+    // ... mais le devis lui-meme est inchange : meme hash des deux cotes.
+    expect(q).toBe(hash());
   });
 });
 
-describe('LOT 3 -- contraintes de format', () => {
-  it('reste tres en deca de la limite de 255 caracteres de Stripe, suffixe compris', () => {
-    const big = clone(BASE);
+// ------------------------------------------------------------
+describe("LOT 4 -- idempotencyKey : identite d'une TENTATIVE D'ACHAT", () => {
+  it('3 -- meme devis, acheteurs differents -> cles DIFFERENTES (P0 du LOT 3)', () => {
+    expect(keyFor('buyer-A')).not.toBe(keyFor('buyer-B'));
+  });
+
+  it('4 -- meme devis, meme acheteur -> cle IDENTIQUE (double-clic, deux onglets)', () => {
+    expect(keyFor('buyer-A')).toBe(keyFor('buyer-A'));
+  });
+
+  it.each(commercialChangesForKey())('devis modifie (%s) -> cle DIFFERENTE', (_n, mut) => {
+    expect(keyFor('buyer-A', mut)).not.toBe(keyFor('buyer-A'));
+  });
+
+  it('origin different -> cle DIFFERENTE (success_url / cancel_url sont des parametres Stripe)', () => {
+    expect(keyFor('buyer-A', () => {}, 'https://autre.test')).not.toBe(keyFor('buyer-A'));
+  });
+
+  it('deterministe : trois calculs successifs donnent la meme valeur', () => {
+    expect(new Set([keyFor('buyer-A'), keyFor('buyer-A'), keyFor('buyer-A')]).size).toBe(1);
+  });
+});
+
+function commercialChangesForKey(): Array<[string, (q: QuoteState) => void]> {
+  return [
+    ['livraison', (q) => { q.shippingAmount = 4.8; }],
+    ['quantite', (q) => { q.lines[0].quantity = 3; }],
+    ['prix serveur', (q) => { q.lines[0].unitPrice = 31; }],
+    ['remise', (q) => { q.discountAmount = 6; }],
+  ];
+}
+
+// ------------------------------------------------------------
+describe('LOT 4 -- format', () => {
+  it('les deux identites sont distinguables par leur prefixe', () => {
+    expect(hash()).toMatch(/^q_v1_/);
+    expect(keyFor('buyer-A')).toMatch(/^co_v1_/);
+  });
+
+  it('la cle reste tres en deca de la limite de 255 caracteres de Stripe, suffixe compris', () => {
+    const big = clone(QUOTE);
     big.lines = Array.from({ length: 300 }, (_, n) => ({
       cartId: `catalog-produit-au-nom-tres-long-${n}::variante-${n}`,
       quantity: n + 1,
       unitPrice: 12.34,
       designUrls: [`https://exemple.test/designs/${n}/chemin/tres/long.png`],
     }));
-    const k = buildCheckoutSignature(big);
-    expect(k.length).toBeLessThanOrEqual(200);   // + ':notax' reste < 255
-    expect(k).toMatch(/^co_v1_/);
+    const k = buildCheckoutIdempotencyKey({
+      buyerNonce: 'b'.repeat(200), origin: ORIGIN, quoteHash: buildQuoteHash(big),
+    });
+    expect(k.length).toBeLessThanOrEqual(64);   // + ':notax' reste tres loin de 255
   });
 
-  it('panier vide : signature produite sans erreur', () => {
-    expect(buildCheckoutSignature({ ...clone(BASE), lines: [] })).toMatch(/^co_v1_/);
+  it('panier vide : les deux identites sont produites sans erreur', () => {
+    const q = buildQuoteHash({ ...clone(QUOTE), lines: [] });
+    expect(q).toMatch(/^q_v1_/);
+    expect(buildCheckoutIdempotencyKey({ buyerNonce: 'A', origin: ORIGIN, quoteHash: q })).toMatch(/^co_v1_/);
   });
 });
