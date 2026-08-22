@@ -5,27 +5,10 @@ import { checkStock } from '@/lib/shop';
 import { checkCatalogStock } from '@/lib/catalog-stock';
 import type { CartItem } from '@/lib/payments/types';
 import { STRIPE_SHIPPING_COUNTRIES } from '@/lib/payments/countries';
-import { suppliersWithCapability } from '@/lib/suppliers/registry';
-import type { ShippingRequest } from '@/lib/suppliers/supplier-adapter';
+import { buildSupplierGroups, resolveShipping } from '@/lib/shop/quote/resolveShipping';
 import { sitePricing, NEXIORA_COMMISSION_PERCENT, resolveDisplayPrice, roundMoney } from '@/lib/pricing';
 import { logAnomaly } from '@/lib/anomaly';
-import type { ShippingTier } from '@/lib/cj/shipping-tiers';
 import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
-
-/** Ligne shipping_cache telle que selectionnee pour le fallback CJ. */
-type ShippingCacheRow = {
-  supplier_product_id: string;
-  shipping_cost: number;
-  days_min: number | null;
-  days_max: number | null;
-  tiers: ShippingTier[] | null;
-};
-
-// Derive : fournisseurs implementant reellement calculateShipping. Voir
-// registry.ts — source unique des adapters/credentials.
-const SHIPPING_SUPPLIERS = new Map(
-  suppliersWithCapability('calculateShipping').map((s) => [s.id, s])
-);
 
 /** Décode un id panier catalog : "catalog-{uuid}::{variantId}" -> { realId: uuid, variantId }.
  *  variantId est optionnel (produits sans variantes). */
@@ -99,127 +82,27 @@ export async function POST(req: Request) {
 
     if (countryCode && (STRIPE_SHIPPING_COUNTRIES as readonly string[]).includes(countryCode)) {
       try {
-        // Separer shop vs catalog
-        const shopItems = items.filter((i) => !i.id?.startsWith('catalog-'));
-        const catalogItems = items.filter((i) => i.id?.startsWith('catalog-'));
+        // LOT 2 -- le calcul du devis vit desormais dans resolveShipping(),
+        // partage a l'identique avec shop/shipping/calculate (l'affichage du
+        // panier). Auparavant chaque route portait sa propre copie, dans un
+        // ORDRE DE SOURCES different -- cause racine des divergences C3/C4.
+        // Ordre canonique : cache d'abord, live en dernier recours. Aucun
+        // appel fournisseur supplementaire n'est introduit ici.
+        const groups = await buildSupplierGroups(items.map((i) => ({ id: i.id, quantity: i.quantity })));
+        const quote = await resolveShipping({
+          groups,
+          countryCode,
+          flat,
+          requestedTier: shipmentTier,
+          // Comportement historique conserve : cette route ne recoit pas de
+          // state_code dans son body, Printful est donc appele sans.
+          stateCode: '',
+        });
 
-        // Shop products => CJ direct
-        const supplierGroups: Record<string, ShippingRequest[]> = {};
-        if (shopItems.length > 0) {
-          const { data: prods } = await supabaseAdmin
-            .from('shop_products')
-            .select('id, cj_vid')
-            .in('id', shopItems.map((i) => i.id));
-          for (const p of (prods || [])) {
-            if (!p.cj_vid) continue;
-            const item = shopItems.find((i) => i.id === p.id);
-            if (!item) continue;
-            if (!supplierGroups['cj']) supplierGroups['cj'] = [];
-            supplierGroups['cj'].push({ supplier_product_id: p.cj_vid, quantity: item.quantity });
-          }
-        }
-
-        // Catalog products => grouper par supplier_id
-        if (catalogItems.length > 0) {
-          const realIds = catalogItems.map((i) => parseCatalogId(i.id).realId);
-          const { data: catProds } = await supabaseAdmin
-            .from('catalog_products')
-            .select('id, supplier_id, supplier_product_id')
-            .in('id', realIds);
-          for (const cp of (catProds || [])) {
-            if (!cp.supplier_product_id || !cp.supplier_id) continue;
-            const item = catalogItems.find((i) => parseCatalogId(i.id).realId === cp.id);
-            if (!item) continue;
-            // CJ tarifie la livraison au PRODUIT (pas a la variante) :
-            // calculateShipping attend supplier_product_id, checkStock attend le vid.
-            if (!supplierGroups[cp.supplier_id]) supplierGroups[cp.supplier_id] = [];
-            supplierGroups[cp.supplier_id].push({
-              supplier_product_id: cp.supplier_product_id,
-              quantity: item.quantity,
-            });
-          }
-        }
-
-        // Lecture du cache CJ (shipping_cache) AVANT tout appel live.
-        // Le cache stocke le PRIX BRUT ; la marge de securite +20% est appliquee ici.
-        // Un groupe entierement couvert par le cache n'appelle jamais CJ.
-        const SHIPPING_MARGIN = 1.20;
-        const cjGroup = supplierGroups['cj'];
-        let cjCacheCost = 0;
-        let cjCacheMaxDays = 0;
-        let cjFromCache = false;
-        if (cjGroup && cjGroup.length > 0) {
-          const cjIds = cjGroup.map((g) => g.supplier_product_id);
-          const { data: cacheRowsRaw } = await supabaseAdmin
-            .from('shipping_cache')
-            .select('supplier_product_id, shipping_cost, days_min, days_max, tiers')
-            .eq('supplier_id', 'cj')
-            .eq('country_code', countryCode)
-            .in('supplier_product_id', cjIds);
-          const cacheRows = cacheRowsRaw as ShippingCacheRow[] | null;
-          const cacheMap = new Map((cacheRows || []).map((r) => [r.supplier_product_id, r]));
-          // Le cache n'est utilise que s'il couvre TOUS les produits CJ du panier.
-          const allCovered = cjIds.every((id) => cacheMap.has(id));
-          if (allCovered) {
-            // Verifier que le tier choisi est disponible sur TOUS les produits.
-            const tierAvailable = shipmentTier && cjGroup.every((g) => {
-              const row = cacheMap.get(g.supplier_product_id);
-              return Array.isArray(row?.tiers) && row.tiers.some((t) => t.tier === shipmentTier);
-            });
-            for (const g of cjGroup) {
-              const row = cacheMap.get(g.supplier_product_id)!;
-              if (tierAvailable) {
-                // Cout du tier choisi par l'acheteur (eco/standard/express).
-                const t = row.tiers!.find((x) => x.tier === shipmentTier)!;
-                cjCacheCost += Number(t.cost) * g.quantity;
-                if (t.name && !chosenLogisticName) chosenLogisticName = String(t.name);
-                const d = Number(t.days_max) || 0;
-                if (d > cjCacheMaxDays) cjCacheMaxDays = d;
-              } else {
-                // Fallback : borne basse (comportement historique).
-                cjCacheCost += Number(row.shipping_cost) * g.quantity;
-                const d = Number(row.days_max) || 0;
-                if (d > cjCacheMaxDays) cjCacheMaxDays = d;
-              }
-            }
-            // Marge de securite appliquee sur le cout du cache.
-            cjCacheCost = cjCacheCost * SHIPPING_MARGIN;
-            supplierGroups['cj'] = []; // groupe CJ traite : la boucle live le saute
-            cjFromCache = true;
-          }
-        }
-
-        // Appeler calculateShipping pour chaque groupe (fallback live si pas en cache)
-        let totalShipping = 0;
-        let maxDays = 0;
-        for (const [supplierId, groupItems] of Object.entries(supplierGroups)) {
-          if (!groupItems || groupItems.length === 0) continue;
-          const supplier = SHIPPING_SUPPLIERS.get(supplierId);
-          if (!supplier?.adapter.calculateShipping) continue;
-          // Printful : state_code non fourni par cette route (pas de champ dedie
-          // dans le body) — toujours '', comportement historique inchange.
-          const supplierCreds = supplierId === 'printful'
-            ? { ...supplier.credentials, state_code: '' }
-            : supplier.credentials;
-          try {
-            const result = await supplier.adapter.calculateShipping(groupItems, countryCode, supplierCreds);
-            totalShipping += result.total_cost;
-            if (result.estimated_days_max > maxDays) maxDays = result.estimated_days_max;
-          } catch (err: unknown) {
-            const stack = err instanceof Error ? err.stack : undefined;
-            console.error('[checkout/shipping]', supplierId, 'failed:', err instanceof Error ? err.message : String(err), stack);
-          }
-        }
-
-        // Ajouter le resultat du cache CJ (s'il y en a un)
-        if (cjFromCache) {
-          totalShipping += cjCacheCost;
-          if (cjCacheMaxDays > maxDays) maxDays = cjCacheMaxDays;
-        }
-
-        if (totalShipping > 0) {
-          shippingAmount = Math.round(totalShipping * 100) / 100;
-          estimatedDelivery = maxDays > 0 ? String(maxDays) + ' days' : null;
+        if (quote.source !== 'flat' && quote.amount > 0) {
+          shippingAmount = quote.amount;
+          chosenLogisticName = quote.logisticName;
+          estimatedDelivery = quote.estimatedMaxDays ? String(quote.estimatedMaxDays) + ' days' : null;
           shippingResolved = true;
         }
       } catch {

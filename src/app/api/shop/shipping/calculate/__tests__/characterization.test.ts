@@ -73,7 +73,7 @@ function setup(opts: { tiers?: unknown; catalog?: boolean } = {}) {
     },
     shop_products: { data: [] },
     shipping_cache: {
-      data: [{ supplier_product_id: 'VID1', tiers: opts.tiers === undefined ? CACHE_TIERS : opts.tiers }],
+      data: [{ supplier_product_id: 'VID1', shipping_cost: 2, days_min: 7, days_max: 15, tiers: opts.tiers === undefined ? CACHE_TIERS : opts.tiers }],
     },
   });
 }
@@ -108,34 +108,42 @@ describe('CARACTERISATION -- route d\'affichage du panier', () => {
     expect(JSON.stringify(json.cjTiers)).not.toContain('CJPacket');
   });
 
-  it("C2 -- DIVERGENCE FIGEE : `shipping` (live, SANS marge) et `cjTiers` (cache, AVEC marge) coexistent dans la meme reponse", async () => {
+  it("C2 -- CORRIGE : `shipping` et le palier affiche proviennent de la MEME source", async () => {
     setup();
     const json = await (await POST(cart())).json();
-    expect(json.shipping).toBe(2);                        // live, marge absente
-    expect(json.cjTiers[1].cost).toBe(3.6);               // cache, marge presente
-    expect(json.source).toBe('cj');
+    // Avant LOT 2 : shipping=2 (live, sans marge) coexistait avec
+    // cjTiers.standard=3.60 (cache, avec marge) dans la MEME reponse.
+    expect(json.shipping).toBe(3.6);
+    expect(json.cjTiers[1].cost).toBe(3.6);
+    expect(json.source).toBe('cache');
   });
 
-  it("C3 -- DEFAUT FIGE : cache sans paliers -> le panier affiche 2.00 alors que le checkout facturera 2.40", async () => {
-    // tiers null -> cjTiers non calcule -> CartDrawer retombe sur `shipping`
-    // (live, sans marge). Le checkout, lui, lit shipping_cost du cache et
-    // applique x1.20. Affiche != facture, de 20 %.
+  it("C3 -- CORRIGE : cache sans paliers -> le panier affiche 2.40, exactement ce que le checkout facture", async () => {
+    // Avant LOT 2 : cjTiers null -> le panier retombait sur `shipping` (live,
+    // SANS marge) = 2.00, pendant que le checkout lisait shipping_cost du
+    // cache et appliquait x1.20 = 2.40. Vingt pour cent d'ecart entre le
+    // montant montre et le montant debite. Les deux lisent desormais la meme
+    // source, dans le meme ordre.
     setup({ tiers: null });
     const json = await (await POST(cart())).json();
     expect(json.cjTiers).toBeNull();
-    expect(json.shipping).toBe(2);
+    expect(json.shipping).toBe(2.4);
+    expect(json.source).toBe('cache');
   });
 
-  it('C4 -- DEFAUT FIGE : aucun adaptateur ne repond -> `unavailable` AVANT tout calcul de paliers, meme avec un cache complet', async () => {
-    // Retour anticipe (`sources.length === 0`) place AVANT le bloc cjTiers :
-    // un cache parfaitement valide devient inutilisable pour l'affichage des
-    // que le fournisseur live echoue -- alors que le checkout, lui, saurait
-    // facturer depuis ce meme cache.
+  it("C4 -- CORRIGE : adaptateur live en echec + cache complet -> le cache reste utilisable", async () => {
+    // Avant LOT 2 : le retour anticipe `unavailable` precedait le calcul des
+    // paliers ; un cache parfaitement valide devenait inutilisable pour
+    // l'affichage des que le fournisseur live echouait, alors que le checkout
+    // savait le facturer. Le cache est desormais consulte EN PREMIER : le
+    // live n'est meme pas appele.
     calculateShippingMock.mockRejectedValue(new Error('CJ down'));
     setup();
     const json = await (await POST(cart())).json();
-    expect(json).toEqual({ shipping: 0, source: 'unavailable' });
-    expect(json.cjTiers).toBeUndefined();
+    expect(json.source).toBe('cache');
+    expect(json.shipping).toBe(3.6);
+    expect(json.cjTiers).toHaveLength(3);
+    expect(calculateShippingMock).not.toHaveBeenCalled();
   });
 
   it('C5 -- DEFAUT FIGE : qty 2 -> paliers multiplies lineairement (3 x 2 x 1.20 = 7.20)', async () => {
@@ -147,6 +155,21 @@ describe('CARACTERISATION -- route d\'affichage du panier', () => {
   it('C6 -- aucun produit fournisseur -> forfait du site', async () => {
     setup({ catalog: false });
     const json = await (await POST(req({ slug: 'boutique', countryCode: 'CA', items: [{ id: 'catalog-inconnu', quantity: 1 }] }))).json();
-    expect(json).toEqual({ shipping: 5, source: 'flat' });
+    expect(json.shipping).toBe(5);
+    expect(json.source).toBe('flat');
+    expect(json.cjTiers).toBeNull();
   });
+
+  it("C7 -- aucune source exploitable (pas de cache, live en echec) -> `unavailable`", async () => {
+    calculateShippingMock.mockRejectedValue(new Error('CJ down'));
+    setupTables({
+      sites: { data: { id: 'site-1', shipping_flat: 5 } },
+      catalog_products: { data: [{ id: 'cat-1', supplier_id: 'cj', supplier_product_id: 'VID1' }] },
+      shop_products: { data: [] },
+      shipping_cache: { data: [] },
+    });
+    const json = await (await POST(cart())).json();
+    expect(json).toEqual({ shipping: 0, source: 'unavailable' });
+  });
+
 });

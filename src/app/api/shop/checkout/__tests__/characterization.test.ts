@@ -268,10 +268,14 @@ describe('CARACTERISATION -- Mode 3 (cache CJ + marge 20%)', () => {
     expect(f.orderTotal).toBe(60);
   });
 
-  it('B5 -- palier demande indisponible -> repli sur shipping_cost (2 x 1.20 = 2.40)', async () => {
+  it("B5 -- CHANGEMENT LOT 2 : palier demande inconnu MAIS paliers disponibles -> repli sur 'standard' (3.60), plus sur shipping_cost", async () => {
+    // Avant LOT 2 : repli sur shipping_cost x1.20 = 2.40, alors que le panier
+    // affichait deja les paliers avec 'standard' preselectionne a 3.60 --
+    // c'etait C3 en sens inverse (facturer MOINS que ce qui est montre).
+    // Le repli sur shipping_cost reste actif quand AUCUN palier n'existe (B6).
     const chains = setupMode3();
     await POST(order({ shipmentTier: 'inexistant' }));
-    expect(fingerprint(chains).orderShipping).toBe(2.4);
+    expect(fingerprint(chains).orderShipping).toBe(3.6);
   });
 
   it('B6 -- aucun palier en cache -> repli sur shipping_cost, marge appliquee quand meme', async () => {
