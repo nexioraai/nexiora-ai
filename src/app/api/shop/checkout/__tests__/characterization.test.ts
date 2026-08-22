@@ -461,3 +461,122 @@ describe("LOT 3 -- cle d'idempotence derivee de l'etat commercial SERVEUR", () =
     expect(sigOf()).toBeUndefined();
   });
 });
+
+// ------------------------------------------------------------
+// LOT 4 (flux bout en bout) -- contrat "affiche = facture".
+// Le devis renvoye au panier et celui facture proviennent du MEME chemin de
+// code : le mode apercu s'arrete juste avant la session Stripe. Ces tests
+// verifient surtout ce qui NE doit PAS arriver -- aucune session, aucune
+// commande -- quand le devis a change.
+// ------------------------------------------------------------
+describe('LOT 4 -- garde de devis perime (409)', () => {
+  function setupQuote(opts: { sellPrice?: number } = {}) {
+    return setupTables({
+      sites: { data: SITE_MODE3 },
+      catalog_products: {
+        data: [{ id: 'cat-1', supplier_id: 'cj', supplier_product_id: 'VID1', price: 10, currency: 'usd' }],
+      },
+      site_catalog_selections: { data: { sell_price: opts.sellPrice ?? 30 } },
+      shipping_cache: {
+        data: [{ supplier_product_id: 'VID1', shipping_cost: 2, days_min: 7, days_max: 15, tiers: CACHE_TIERS }],
+      },
+      promo_codes: { data: null },
+      shop_orders: { data: { id: 'order-1' } },
+      shop_order_items: { data: [{ id: 'item-1' }] },
+    });
+  }
+  const body = (extra: Record<string, unknown> = {}, quantity = 1) => ({
+    slug: 'boutique', countryCode: 'CA', shipmentTier: 'standard', checkoutNonce: 'buyer-1',
+    items: [{ id: 'catalog-cat-1', quantity, name: 'P', currency: 'usd' }],
+    ...extra,
+  });
+
+  it("Q1 -- l'apercu renvoie le devis faisant foi sans creer NI session Stripe NI commande", async () => {
+    const chains = setupQuote();
+    const res = await POST(req(body({ preview: true })));
+    const json = await res.json();
+    expect(res.status).toBe(200);
+    expect(json.preview).toBe(true);
+    expect(json.quoteHash).toMatch(/^q_v1_/);
+    expect(json.total).toBe(30);
+    expect(json.shipping).toBe(3.6);
+    expect(createCheckoutMock).not.toHaveBeenCalled();
+    expect(chains.get('shop_orders')?.insert).toBeUndefined();
+  });
+
+  it('Q2 -- CAS NOMINAL : hash client = hash serveur -> checkout normal, session creee', async () => {
+    setupQuote();
+    const quote = await (await POST(req(body({ preview: true })))).json();
+    createCheckoutMock.mockClear();
+    setupQuote();
+    const res = await POST(req(body({ quoteHash: quote.quoteHash })));
+    expect(res.status).toBe(200);
+    expect((await res.json()).url).toBeTruthy();
+    expect(createCheckoutMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("Q3 -- CAS OBLIGATOIRE : le PRIX SERVEUR change sans que le payload client bouge -> 409, AUCUNE session, AUCUNE commande", async () => {
+    setupQuote({ sellPrice: 30 });
+    const quote = await (await POST(req(body({ preview: true })))).json();
+
+    // Le marchand modifie son prix. Le panier envoie exactement le meme corps.
+    createCheckoutMock.mockClear();
+    const chains = setupQuote({ sellPrice: 31 });
+    const res = await POST(req(body({ quoteHash: quote.quoteHash })));
+    const json = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(json.code).toBe('quote_changed');
+    expect(createCheckoutMock).not.toHaveBeenCalled();
+    expect(chains.get('shop_orders')?.insert).toBeUndefined();
+    // La reponse porte le devis faisant foi : le panier peut se mettre a jour.
+    expect(json.total).toBe(31);
+    expect(json.quoteHash).not.toBe(quote.quoteHash);
+    expect(logAnomalyMock).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'quote_changed_before_payment' })
+    );
+  });
+
+  it.each([
+    ['quantite', (q: string) => ({ quoteHash: q }), 2],
+    ['palier de livraison', (q: string) => ({ quoteHash: q, shipmentTier: 'express' }), 1],
+  ])('Q4 -- mutation commerciale (%s) -> 409 sans session', async (_n, extra, qty) => {
+    setupQuote();
+    const quote = await (await POST(req(body({ preview: true })))).json();
+    createCheckoutMock.mockClear();
+    setupQuote();
+    const res = await POST(req(body(extra(quote.quoteHash), qty)));
+    expect(res.status).toBe(409);
+    expect(createCheckoutMock).not.toHaveBeenCalled();
+  });
+
+  it("Q5 -- un hash MALFORME est une pretention fausse, jamais un laissez-passer -> 409", async () => {
+    setupQuote();
+    const res = await POST(req(body({ quoteHash: 'pas-un-hash' })));
+    expect(res.status).toBe(409);
+    expect(createCheckoutMock).not.toHaveBeenCalled();
+  });
+
+  it("Q6 -- hash ABSENT : aucune pretention sur le prix -> checkout normal (retro-compatible)", async () => {
+    // Refuser casserait tout appelant qui n'en envoie pas, dont la version
+    // deployee du panier, sans rien proteger de plus : le prix reste
+    // integralement recalcule cote serveur dans tous les cas.
+    setupQuote();
+    const res = await POST(req(body()));
+    expect(res.status).toBe(200);
+    expect(createCheckoutMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('Q7 -- apres un 409, rejouer avec le NOUVEAU hash aboutit : pas de boucle', async () => {
+    setupQuote({ sellPrice: 30 });
+    const stale = await (await POST(req(body({ preview: true })))).json();
+    setupQuote({ sellPrice: 31 });
+    const conflict = await (await POST(req(body({ quoteHash: stale.quoteHash })))).json();
+
+    createCheckoutMock.mockClear();
+    setupQuote({ sellPrice: 31 });
+    const res = await POST(req(body({ quoteHash: conflict.quoteHash })));
+    expect(res.status).toBe(200);
+    expect(createCheckoutMock).toHaveBeenCalledTimes(1);
+  });
+});

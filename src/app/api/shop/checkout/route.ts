@@ -23,7 +23,7 @@ function parseCatalogId(cartId: string): { realId: string; variantId?: string } 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { slug, items, countryCode, shipmentTier, checkoutNonce, promoCode } = body as { slug?: string; items?: CartItem[]; countryCode?: string; shipmentTier?: string; checkoutNonce?: string; promoCode?: string };
+    const { slug, items, countryCode, shipmentTier, checkoutNonce, promoCode, quoteHash: clientQuoteHash, preview: previewOnly } = body as { slug?: string; items?: CartItem[]; countryCode?: string; shipmentTier?: string; checkoutNonce?: string; promoCode?: string; quoteHash?: string; preview?: boolean };
     if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
     if (!items || items.length === 0) return NextResponse.json({ error: 'Panier vide' }, { status: 400 });
 
@@ -560,6 +560,61 @@ export async function POST(req: Request) {
               : [],
       })),
     });
+
+    // ---- Contrat "affiche = facture" (LOT 4, flux bout en bout) ----
+    // Le devis renvoye au panier et celui facture ici sont produits par LE
+    // MEME chemin de code : le mode apercu ci-dessous s'arrete juste avant
+    // la creation de la session Stripe et de la commande. Cette identite est
+    // donc STRUCTURELLE, pas maintenue a la main -- une route d'affichage
+    // separee qui recalculerait le devis de son cote pourrait diverger, ce
+    // qui est exactement le defaut C3 corrige au LOT 2.
+    //
+    // Rien de ce qui suit ne fait confiance au hash recu : le serveur
+    // recalcule integralement son propre devis, puis compare.
+    if (previewOnly) {
+      return NextResponse.json({
+        preview: true,
+        quoteHash,
+        currency: resolvedCurrency ?? null,
+        total: discountedTotal,
+        shipping: shippingAmount,
+        discount: promoDiscount,
+        shipmentTier: shipmentTier ?? null,
+      });
+    }
+
+    // Un hash FOURNI qui ne correspond pas au devis recalcule interrompt le
+    // checkout AVANT toute session Stripe et AVANT tout INSERT de commande :
+    // aucun paiement ne peut donc etre engage sur un devis perime.
+    //
+    // Un hash ABSENT n'est pas traite comme "valide" : c'est l'absence de
+    // toute pretention du client sur le prix. Le refuser casserait tout
+    // appelant qui n'en envoie pas (dont la version deployee du panier)
+    // sans rien protéger de plus -- le prix reste, dans tous les cas,
+    // integralement recalcule cote serveur. Un hash MALFORME, lui, est une
+    // pretention fausse : il est traite comme une divergence.
+    if (typeof clientQuoteHash === 'string' && clientQuoteHash.length > 0 && clientQuoteHash !== quoteHash) {
+      await logAnomaly({
+        type: 'quote_changed_before_payment',
+        severity: 'info',
+        siteId: site.id,
+        slug,
+        details: { received: clientQuoteHash.slice(0, 64), computed: quoteHash },
+      });
+      return NextResponse.json(
+        {
+          error: 'Les prix de votre panier ont ete mis a jour. Verifiez le nouveau total avant de payer.',
+          code: 'quote_changed',
+          quoteHash,
+          currency: resolvedCurrency ?? null,
+          total: discountedTotal,
+          shipping: shippingAmount,
+          discount: promoDiscount,
+          shipmentTier: shipmentTier ?? null,
+        },
+        { status: 409 }
+      );
+    }
 
     const checkoutSignature = buyerNonce
       ? buildCheckoutIdempotencyKey({ buyerNonce, origin, quoteHash })
