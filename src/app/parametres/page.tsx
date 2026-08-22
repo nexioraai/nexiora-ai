@@ -35,6 +35,7 @@ export default function ParametresPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteInput, setDeleteInput] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
@@ -125,20 +126,38 @@ export default function ParametresPage() {
   const handleDelete = async () => {
     if (deleteInput !== 'SUPPRIMER') return;
     setDeleting(true);
+    setDeleteError(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-      await fetch('/api/account/delete', {
+      const res = await fetch('/api/account/delete', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
         },
       });
+      const data = await res.json().catch(() => ({}));
+      // Ne jamais déconnecter/rediriger sur la seule foi de l'appel réseau :
+      // vérifier explicitement le succès renvoyé par l'API (audit ownership/RLS
+      // -- l'ancien code ignorait la réponse et redirigeait dans tous les cas).
+      if (!res.ok || !data.success) {
+        if (data.blockedSites?.length) {
+          const list = data.blockedSites
+            .map((b: any) => `${b.slug} (${b.blockingStatuses.join(', ')})`)
+            .join(' · ');
+          setDeleteError(`${t('settings.deleteBlocked')} ${list}`);
+        } else {
+          setDeleteError(data.error || t('settings.deleteFailed'));
+        }
+        setDeleting(false);
+        return;
+      }
       await supabase.auth.signOut();
       router.push('/login');
     } catch (e) {
       console.error(e);
+      setDeleteError(t('settings.deleteFailed'));
       setDeleting(false);
     }
   };
@@ -326,11 +345,16 @@ export default function ParametresPage() {
                     className="px-4 py-2 rounded-xl text-sm font-semibold bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
                     {deleting ? '...' : t('settings.confirmDelete')}
                   </button>
-                  <button onClick={() => { setShowDeleteConfirm(false); setDeleteInput(''); }}
+                  <button onClick={() => { setShowDeleteConfirm(false); setDeleteInput(''); setDeleteError(null); }}
                     className="px-4 py-2 rounded-xl text-sm text-white/40 hover:text-white/60 transition-colors">
                     {t('settings.cancel')}
                   </button>
                 </div>
+                {deleteError && (
+                  <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2.5">
+                    {deleteError}
+                  </p>
+                )}
               </div>
             )}
           </div>

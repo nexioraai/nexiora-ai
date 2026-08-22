@@ -3,8 +3,155 @@ import { useState } from 'react';
 import { useCart } from './CartContext';
 import { X, ShoppingBag, Plus, Minus, Trash2 } from 'lucide-react';
 import type { CartLabels } from './cartLabels';
+import { checkoutNonceFor } from '@/lib/shop/checkoutNonce';
 
 type Labels = CartLabels;
+
+// CART-01 : meme categorie de probleme deja corrigee sur CatalogSearch
+// (DEBT-008), ContactMap (DEBT-010), MerchantProductModal (DEBT-011),
+// CookieConsent (DEBT-012) -- un composant partage codait en dur un fond
+// clair (bg-white, text-neutral-*), invisible en tant que "bug" tant qu'on
+// ne l'ouvre pas reellement sur un storefront sombre. Verifie a l'ecran sur
+// Cosmopo (Noir) : le tiroir panier s'ouvrait en panneau blanc pur sur un
+// site entierement noir, au moment precis de l'intention d'achat.
+// Meme principe que MerchantProductModal (variant?: 'light'|'dark',
+// retro-compatible, defaut 'light' = comportement actuel inchange pour
+// Editorial/Vif/Aurora qui ne passent pas la prop) mais exprime en classes
+// Tailwind plutot qu'en style inline, pour rester dans l'idiome deja utilise
+// par ce fichier precis (CartDrawer est 100% Tailwind, contrairement a
+// MerchantProductModal qui est 100% style inline -- chaque composant garde
+// son propre idiome existant plutot que d'en importer un nouveau).
+// Palette dark reprise telle quelle de MerchantProductModal (#161109 /
+// #F5F3EE) pour que les deux panneaux sombres que l'utilisateur peut voir
+// l'un apres l'autre (fiche produit -> panier) restent visuellement
+// coherents entre eux.
+type Variant = 'light' | 'dark';
+
+const SKIN: Record<Variant, {
+  drawerBg: string;
+  // Couleur de base posee sur <aside> lui-meme : plusieurs elements du
+  // panier (icones Minus/Plus, chiffre de quantite) n'ont jamais eu de
+  // classe de couleur de texte propre dans le composant d'origine -- ils
+  // heritaient implicitement du <body> (proche du noir, invisible une fois
+  // le fond du panier assombri pour Noir). Rendu explicite ici plutot que
+  // de dependre d'un heritage silencieux, decouvert en ouvrant reellement
+  // le panier sur Cosmopo : icones -/+ invisibles sur le tiroir sombre.
+  bodyText: string;
+  headerBorder: string;
+  titleText: string;
+  closeHoverBg: string;
+  closeIconText: string;
+  emptyText: string;
+  itemImageBorder: string;
+  itemImagePlaceholderBg: string;
+  itemTitleText: string;
+  itemPriceText: string;
+  qtyBtnBorder: string;
+  qtyBtnHoverBg: string;
+  removeBtnText: string;
+  footerBorder: string;
+  labelMutedText: string;
+  valueText: string;
+  helperText: string;
+  inputBorder: string;
+  inputText: string;
+  inputBg: string;
+  inputFocusBorder: string;
+  tierBorderDefault: string;
+  tierBgDefault: string;
+  tierHoverBorder: string;
+  tierSelectedBorder: string;
+  tierSelectedBg: string;
+  tierRadioBorderSelected: string;
+  tierRadioBorderDefault: string;
+  tierRadioDotBg: string;
+  tierLabelText: string;
+  tierMetaText: string;
+  tierPriceText: string;
+  totalLabelText: string;
+  totalValueText: string;
+  continueText: string;
+  continueHoverText: string;
+}> = {
+  light: {
+    drawerBg: 'bg-white',
+    bodyText: 'text-neutral-900',
+    headerBorder: 'border-neutral-100',
+    titleText: 'text-neutral-900',
+    closeHoverBg: 'hover:bg-neutral-100',
+    closeIconText: 'text-neutral-500',
+    emptyText: 'text-neutral-400',
+    itemImageBorder: 'border-neutral-100',
+    itemImagePlaceholderBg: 'bg-neutral-100',
+    itemTitleText: 'text-neutral-900',
+    itemPriceText: 'text-neutral-500',
+    qtyBtnBorder: 'border-neutral-200',
+    qtyBtnHoverBg: 'hover:bg-neutral-50',
+    removeBtnText: 'text-neutral-400',
+    footerBorder: 'border-neutral-100',
+    labelMutedText: 'text-neutral-500',
+    valueText: 'text-neutral-700',
+    helperText: 'text-neutral-400',
+    inputBorder: 'border-neutral-200',
+    inputText: 'text-neutral-900',
+    inputBg: 'bg-white',
+    inputFocusBorder: 'focus:border-neutral-400',
+    tierBorderDefault: 'border-neutral-200',
+    tierBgDefault: 'bg-white',
+    tierHoverBorder: 'hover:border-neutral-300',
+    tierSelectedBorder: 'border-neutral-900',
+    tierSelectedBg: 'bg-neutral-50',
+    tierRadioBorderSelected: 'border-neutral-900',
+    tierRadioBorderDefault: 'border-neutral-300',
+    tierRadioDotBg: 'bg-neutral-900',
+    tierLabelText: 'text-neutral-900',
+    tierMetaText: 'text-neutral-500',
+    tierPriceText: 'text-neutral-900',
+    totalLabelText: 'text-neutral-500',
+    totalValueText: 'text-neutral-900',
+    continueText: 'text-neutral-500',
+    continueHoverText: 'hover:text-neutral-700',
+  },
+  dark: {
+    drawerBg: 'bg-[#161109]',
+    bodyText: 'text-[#F5F3EE]',
+    headerBorder: 'border-[rgba(245,243,238,0.12)]',
+    titleText: 'text-[#F5F3EE]',
+    closeHoverBg: 'hover:bg-[rgba(245,243,238,0.08)]',
+    closeIconText: 'text-[rgba(245,243,238,0.55)]',
+    emptyText: 'text-[rgba(245,243,238,0.35)]',
+    itemImageBorder: 'border-[rgba(245,243,238,0.12)]',
+    itemImagePlaceholderBg: 'bg-[rgba(245,243,238,0.08)]',
+    itemTitleText: 'text-[#F5F3EE]',
+    itemPriceText: 'text-[rgba(245,243,238,0.55)]',
+    qtyBtnBorder: 'border-[rgba(245,243,238,0.18)]',
+    qtyBtnHoverBg: 'hover:bg-[rgba(245,243,238,0.08)]',
+    removeBtnText: 'text-[rgba(245,243,238,0.4)]',
+    footerBorder: 'border-[rgba(245,243,238,0.12)]',
+    labelMutedText: 'text-[rgba(245,243,238,0.55)]',
+    valueText: 'text-[rgba(245,243,238,0.8)]',
+    helperText: 'text-[rgba(245,243,238,0.4)]',
+    inputBorder: 'border-[rgba(245,243,238,0.18)]',
+    inputText: 'text-[#F5F3EE]',
+    inputBg: 'bg-[#1F1810]',
+    inputFocusBorder: 'focus:border-[rgba(245,243,238,0.4)]',
+    tierBorderDefault: 'border-[rgba(245,243,238,0.18)]',
+    tierBgDefault: 'bg-transparent',
+    tierHoverBorder: 'hover:border-[rgba(245,243,238,0.35)]',
+    tierSelectedBorder: 'border-[#F5F3EE]',
+    tierSelectedBg: 'bg-[rgba(245,243,238,0.08)]',
+    tierRadioBorderSelected: 'border-[#F5F3EE]',
+    tierRadioBorderDefault: 'border-[rgba(245,243,238,0.3)]',
+    tierRadioDotBg: 'bg-[#F5F3EE]',
+    tierLabelText: 'text-[#F5F3EE]',
+    tierMetaText: 'text-[rgba(245,243,238,0.55)]',
+    tierPriceText: 'text-[#F5F3EE]',
+    totalLabelText: 'text-[rgba(245,243,238,0.55)]',
+    totalValueText: 'text-[#F5F3EE]',
+    continueText: 'text-[rgba(245,243,238,0.55)]',
+    continueHoverText: 'hover:text-[#F5F3EE]',
+  },
+};
 
 export default function CartDrawer({
   primary = '#111111',
@@ -12,18 +159,21 @@ export default function CartDrawer({
   slug,
   mode,
   shippingFlat = 0,
+  variant = 'light',
 }: {
   primary?: string;
   labels: Labels;
   slug: string;
   mode?: number | null;
   shippingFlat?: number;
+  variant?: Variant;
 }) {
   const { items, isOpen, total, currency, count, setQuantity, removeItem, closeCart } = useCart();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [country, setCountry] = useState('');
   const [stateCode, setStateCode] = useState('');
+  const s = SKIN[variant];
 
   // Auto-detect country + state from timezone
   const tzStateMap: Record<string, { country: string; state: string }> = {
@@ -174,24 +324,44 @@ export default function CartDrawer({
     setBusy(true);
     setError('');
     try {
+      const payload = {
+        slug,
+        countryCode: country,
+        items: items.map((i) => ({
+          id: i.id,
+          name: i.name,
+          priceNumber: i.priceNumber,
+          currency: i.currency,
+          quantity: i.quantity,
+          customDesignUrl: i.customDesignUrl,
+          customDesignPosition: i.customDesignPosition,
+          customDesigns: i.customDesigns,
+        })),
+        stateCode,
+        shipmentTier: selectedTier,
+        // Passe de cloture (P-1) : on transmet UNIQUEMENT le code saisi,
+        // jamais `promoDiscount` calcule ici. Le serveur re-resout le code
+        // dans le contexte de CE site et recalcule la remise a partir des
+        // prix serveur -- la valeur affichee ci-dessus n'a qu'un role
+        // indicatif et n'a aucune autorite sur le montant facture.
+        // Envoye seulement si le code a ete valide, pour ne pas faire
+        // echouer un checkout sur un code a moitie saisi.
+        promoCode: promoValid ? promoCode.trim().toUpperCase() : undefined,
+      };
       const res = await fetch('/api/shop/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          slug,
-          countryCode: country,
-          items: items.map((i) => ({
-            id: i.id,
-            name: i.name,
-            priceNumber: i.priceNumber,
-            currency: i.currency,
-            quantity: i.quantity,
-            customDesignUrl: i.customDesignUrl,
-            customDesignPosition: i.customDesignPosition,
-            customDesigns: i.customDesigns,
-          })),
-          stateCode,
-          shipmentTier: selectedTier,
+          ...payload,
+          // Audit final (phase 2) -- `stripe.ts` derive ses trois cles
+          // d'idempotence Stripe de ce champ, et `checkout/route.ts`
+          // l'accepte depuis le lot "perfectionnement", mais ce composant --
+          // seul appelant reel de la route -- ne l'envoyait JAMAIS : la
+          // protection contre le double-clic et les deux onglets etait
+          // inerte en production (toutes les cles valaient `undefined`).
+          // Derivee du panier lui-meme, pas d'un alea persiste : voir
+          // src/lib/shop/checkoutNonce.ts pour le raisonnement.
+          checkoutNonce: checkoutNonceFor(payload),
         }),
       });
       const data = await res.json();
@@ -215,27 +385,27 @@ export default function CartDrawer({
 
       {/* Drawer */}
       <aside
-        className={`fixed top-0 right-0 h-full w-full max-w-md bg-white z-[61] shadow-2xl flex flex-col transition-transform duration-300 ${
+        className={`fixed top-0 right-0 h-full w-full max-w-md ${s.drawerBg} ${s.bodyText} z-[61] shadow-2xl flex flex-col transition-transform duration-300 ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-100">
+        <div className={`flex items-center justify-between px-6 py-5 border-b ${s.headerBorder}`}>
           <div className="flex items-center gap-2">
             <ShoppingBag className="w-5 h-5" style={{ color: primary }} />
-            <h2 className="text-lg font-medium text-neutral-900">
+            <h2 className={`text-lg font-medium ${s.titleText}`}>
               {labels.cartTitle} {count > 0 && `(${count})`}
             </h2>
           </div>
-          <button onClick={closeCart} className="p-1 rounded-lg hover:bg-neutral-100 transition" aria-label="Fermer">
-            <X className="w-5 h-5 text-neutral-500" />
+          <button onClick={closeCart} className={`p-1 rounded-lg ${s.closeHoverBg} transition`} aria-label="Fermer">
+            <X className={`w-5 h-5 ${s.closeIconText}`} />
           </button>
         </div>
 
         {/* Items */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center text-neutral-400">
+            <div className={`flex flex-col items-center justify-center h-full text-center ${s.emptyText}`}>
               <ShoppingBag className="w-12 h-12 mb-3 opacity-30" />
               <p>{labels.empty}</p>
             </div>
@@ -244,24 +414,24 @@ export default function CartDrawer({
               {items.map((item, idx) => (
                 <div key={`${item.id}-${idx}`} className="flex gap-4 items-center">
                   {item.image ? (
-                    <img src={item.image} alt={item.name} className="w-16 h-16 rounded-xl object-cover border border-neutral-100" />
+                    <img src={item.image} alt={item.name} className={`w-16 h-16 rounded-xl object-cover border ${s.itemImageBorder}`} />
                   ) : (
-                    <div className="w-16 h-16 rounded-xl bg-neutral-100 flex items-center justify-center text-xl font-medium" style={{ color: primary }}>
+                    <div className={`w-16 h-16 rounded-xl ${s.itemImagePlaceholderBg} flex items-center justify-center text-xl font-medium`} style={{ color: primary }}>
                       {item.name.charAt(0).toUpperCase()}
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-neutral-900 truncate">{item.name}</p>
-                    <p className="text-sm text-neutral-500">{(item.priceNumber ?? 0).toFixed(2)} {item.currency}</p>
+                    <p className={`font-medium ${s.itemTitleText} truncate`}>{item.name}</p>
+                    <p className={`text-sm ${s.itemPriceText}`}>{(item.priceNumber ?? 0).toFixed(2)} {item.currency}</p>
                     <div className="flex items-center gap-2 mt-2">
-                      <button onClick={() => setQuantity(item.id, item.quantity - 1)} className="w-7 h-7 rounded-lg border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 transition">
+                      <button onClick={() => setQuantity(item.id, item.quantity - 1)} className={`w-7 h-7 rounded-lg border ${s.qtyBtnBorder} flex items-center justify-center ${s.qtyBtnHoverBg} transition`}>
                         <Minus className="w-3.5 h-3.5" />
                       </button>
                       <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
-                      <button onClick={() => setQuantity(item.id, item.quantity + 1)} className="w-7 h-7 rounded-lg border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 transition">
+                      <button onClick={() => setQuantity(item.id, item.quantity + 1)} className={`w-7 h-7 rounded-lg border ${s.qtyBtnBorder} flex items-center justify-center ${s.qtyBtnHoverBg} transition`}>
                         <Plus className="w-3.5 h-3.5" />
                       </button>
-                      <button onClick={() => removeItem(item.id)} className="ml-auto p-1.5 rounded-lg hover:bg-red-50 text-neutral-400 hover:text-red-500 transition" aria-label="Retirer">
+                      <button onClick={() => removeItem(item.id)} className={`ml-auto p-1.5 rounded-lg hover:bg-red-50 ${s.removeBtnText} hover:text-red-500 transition`} aria-label="Retirer">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -274,20 +444,20 @@ export default function CartDrawer({
 
         {/* Footer */}
         {items.length > 0 && (
-          <div className="border-t border-neutral-100 px-6 py-5 space-y-4">
+          <div className={`border-t ${s.footerBorder} px-6 py-5 space-y-4`}>
             {mode === 2 ? (
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-500">Livraison</span>
-                <span className="text-neutral-700">{shippingFlat > 0 ? `${shippingFlat.toFixed(2)} ${currency}` : 'Gratuite'}</span>
+                <span className={s.labelMutedText}>Livraison</span>
+                <span className={s.valueText}>{shippingFlat > 0 ? `${shippingFlat.toFixed(2)} ${currency}` : 'Gratuite'}</span>
               </div>
             ) : (
               <>
               <div>
-                <label className="block text-sm text-neutral-500 mb-1.5">Pays de livraison</label>
+                <label className={`block text-sm ${s.labelMutedText} mb-1.5`}>Pays de livraison</label>
                 <select
                   value={country}
                   onChange={(e) => handleCountryChange(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-neutral-200 text-neutral-900 bg-white focus:outline-none focus:border-neutral-400 transition"
+                  className={`w-full px-4 py-3 rounded-xl border ${s.inputBorder} ${s.inputText} ${s.inputBg} focus:outline-none ${s.inputFocusBorder} transition`}
                 >
                   <option value="">Sélectionnez votre pays…</option>
                   {countries.map((co) => (
@@ -296,43 +466,43 @@ export default function CartDrawer({
                 </select>
               </div>
               {!country && (
-                <p className="text-sm text-neutral-400 text-center">Sélectionnez votre pays pour calculer la livraison.</p>
+                <p className={`text-sm ${s.helperText} text-center`}>Sélectionnez votre pays pour calculer la livraison.</p>
               )}
               {country && (
                 <>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-neutral-500">Livraison estimée</span>
-                  <span className="text-neutral-700">
+                  <span className={s.labelMutedText}>Livraison estimée</span>
+                  <span className={s.valueText}>
                     {calcBusy ? '…' : shipping === -1 ? 'Non disponible' : shipping !== null ? `${shipping.toFixed(2)} ${currency}` : '—'}
                   </span>
                 </div>
                 {aging && !tiers && (
-                  <p className="text-xs text-neutral-500 mt-1">
+                  <p className={`text-xs ${s.labelMutedText} mt-1`}>
                     {aging}
                   </p>
                 )}
                 {tiers && tiers.length > 0 && (
                   <div className="mt-2 space-y-2">
-                    <p className="text-xs text-neutral-500">Choisissez votre livraison :</p>
+                    <p className={`text-xs ${s.labelMutedText}`}>Choisissez votre livraison :</p>
                     {tiers.map((t) => (
                       <button
                         key={t.tier}
                         type="button"
                         onClick={() => pickTier(t)}
-                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-left transition ${selectedTier === t.tier ? 'border-neutral-900 bg-neutral-50' : 'border-neutral-200 bg-white hover:border-neutral-300'}`}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-left transition ${selectedTier === t.tier ? `${s.tierSelectedBorder} ${s.tierSelectedBg}` : `${s.tierBorderDefault} ${s.tierBgDefault} ${s.tierHoverBorder}`}`}
                       >
                         <span className="flex items-center gap-2">
-                          <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${selectedTier === t.tier ? 'border-neutral-900' : 'border-neutral-300'}`}>
-                            {selectedTier === t.tier && <span className="w-1.5 h-1.5 rounded-full bg-neutral-900" />}
+                          <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${selectedTier === t.tier ? s.tierRadioBorderSelected : s.tierRadioBorderDefault}`}>
+                            {selectedTier === t.tier && <span className={`w-1.5 h-1.5 rounded-full ${s.tierRadioDotBg}`} />}
                           </span>
                           <span className="text-sm">
-                            <span className="font-medium text-neutral-900">{t.label}</span>
+                            <span className={`font-medium ${s.tierLabelText}`}>{t.label}</span>
                             {(t.days_min || t.days_max) && (
-                              <span className="text-neutral-500"> · {t.days_min}-{t.days_max} j</span>
+                              <span className={s.tierMetaText}> · {t.days_min}-{t.days_max} j</span>
                             )}
                           </span>
                         </span>
-                        <span className="text-sm text-neutral-900">{t.cost.toFixed(2)} {currency}</span>
+                        <span className={`text-sm ${s.tierPriceText}`}>{t.cost.toFixed(2)} {currency}</span>
                       </button>
                     ))}
                   </div>
@@ -348,7 +518,7 @@ export default function CartDrawer({
                 value={promoCode}
                 onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoValid(false); setPromoDiscount(0); setPromoMsg(''); }}
                 onKeyDown={(e) => e.key === 'Enter' && handlePromo()}
-                className="flex-1 px-3 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-900 bg-white focus:outline-none focus:border-neutral-400"
+                className={`flex-1 px-3 py-2 rounded-lg border ${s.inputBorder} text-sm ${s.inputText} ${s.inputBg} focus:outline-none ${s.inputFocusBorder}`}
               />
               <button
                 onClick={handlePromo}
@@ -365,8 +535,8 @@ export default function CartDrawer({
               </p>
             )}
             <div className="flex items-center justify-between">
-              <span className="text-neutral-500">{labels.total}</span>
-              <span className="text-xl font-semibold text-neutral-900">
+              <span className={s.totalLabelText}>{labels.total}</span>
+              <span className={`text-xl font-semibold ${s.totalValueText}`}>
                 {(total + (mode === 2 ? shippingFlat : (shipping ?? 0)) - promoDiscount).toFixed(2)} {currency}
               </span>
             </div>
@@ -379,7 +549,7 @@ export default function CartDrawer({
               {busy ? '…' : labels.checkout}
             </button>
             {error && <p className="text-sm text-red-500 text-center">{error}</p>}
-            <button onClick={closeCart} className="w-full text-sm text-neutral-500 hover:text-neutral-700 transition">
+            <button onClick={closeCart} className={`w-full text-sm ${s.continueText} ${s.continueHoverText} transition`}>
               {labels.continue}
             </button>
           </div>

@@ -16,6 +16,7 @@ import FinanceDashboard from '@/components/edit/FinanceDashboard';
 import HealthBadge from '@/components/edit/HealthBadge';
 import { MIN_MARGIN_PERCENT, LOW_MARGIN_PERCENT, NEXIORA_COMMISSION_PERCENT, DEFAULT_MARGIN_PERCENT, merchantProfit } from '@/lib/pricing';
 import { supabase } from '@/lib/supabase';
+import { fetchOwnedSite, updateOwnedSite } from '@/lib/supabase-owned-site';
 import { computeAiScore } from '@/app/lib/aiScore';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -46,7 +47,7 @@ export default function EditPage() {
         router.push('/login');
         return;
       }
-      supabase.from('sites').select('*').eq('slug', slug).eq('owner_email', data.user.email!).maybeSingle().then(({ data: siteData }) => {
+      fetchOwnedSite(slug, data.user.email!).then((siteData) => {
         setSite(siteData);
         if (siteData) {
           initialPassed.current = computeAiScore(siteData as any).passed;
@@ -56,15 +57,32 @@ export default function EditPage() {
           if (designs[0]?.selected_products) {
             setSelectedProducts(designs[0].selected_products);
           }
+          // Fermeture DEBT-021 (audit Mode 3/POD BRAND, perfectionnement) --
+          // cause racine : cette lecture tournait AVANT ce correctif en
+          // parallele, independamment de la verification d'ownership
+          // ci-dessus (`.eq('slug', slug)` seul, sans lien avec `siteData`).
+          // score_history n'a pas de colonne owner_id/owner_email propre
+          // (verifie : le schema n'expose que slug/score/reason/created_at)
+          // -- le bon point d'ancrage d'ownership est donc `siteData`,
+          // deja verifie par fetchOwnedSite() juste au-dessus, exactement
+          // le meme patron deja utilise (et deja sur) par dashboard/page.tsx
+          // et visibilite-ia/page.tsx (score_history derive TOUJOURS d'une
+          // liste de slugs deja filtree par ownership, jamais interrogee a
+          // partir d'un slug brut). Verifie en direct (comptes jetables,
+          // crees puis supprimes) : RLS bloque deja SELECT et INSERT pour
+          // tout non-proprietaire (403 sur l'INSERT, 0 ligne sur le SELECT)
+          // -- ce correctif est une coherence de code (jamais emettre une
+          // requete forcement vouee a l'echec/vide), pas la fermeture d'une
+          // faille exploitee en production.
+          supabase.from('score_history').select('score, created_at, reason').eq('slug', slug).order('created_at', { ascending: true }).then(({ data: hist }) => {
+            setHistory((hist || []).map((h: any) => ({
+              score: h.score,
+              reason: h.reason || '',
+              date: new Date(h.created_at).toLocaleString('fr-CA', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+            })));
+          });
         }
         setLoading(false);
-      });
-      supabase.from('score_history').select('score, created_at, reason').eq('slug', slug).order('created_at', { ascending: true }).then(({ data: hist }) => {
-        setHistory((hist || []).map((h: any) => ({
-          score: h.score,
-          reason: h.reason || '',
-          date: new Date(h.created_at).toLocaleString('fr-CA', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
-        })));
       });
     });
   }, [slug]);
@@ -93,6 +111,11 @@ export default function EditPage() {
   };
 
   const handleSave = async () => {
+    // Garde defensive (coherente avec Navbar.tsx) : cette fonction n'est
+    // normalement jamais atteignable UI sans `site` deja charge (rendu
+    // conditionnel plus bas), mais ne jamais reposer uniquement sur le JSX
+    // comme protection -- voir CLAUDE.md.
+    if (!site) return;
     // Verrou rentabilite : jamais de marge sous le seuil de perte (mode 3)
     if (site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom' || site?.dropship_type === 'pod_brand')) {
       const m = Number(site.cj_margin_percent ?? DEFAULT_MARGIN_PERCENT);
@@ -103,25 +126,33 @@ export default function EditPage() {
     }
     setSaving(true);
     setMessage('');
-    const { error } = await supabase
-      .from('sites')
-      .update({
-        name: site.name,
-        slogan: site.slogan,
-        type: site.type,
-        about: site.about,
-        hero_title: site.hero_title,
-        hero_subtitle: site.hero_subtitle,
-        primary_color: site.primary_color,
-        hero_image: site.hero_image,
-        theme: site.theme,
-        cj_margin_percent: site.cj_margin_percent,
-        cj_round_mode: site.cj_round_mode,
-        pod_designs: podDesigns.length > 0
-          ? podDesigns.map((d: any, i: number) => i === 0 ? { ...d, selected_products: selectedProducts } : d)
-          : podDesigns,
-      })
-      .eq('slug', slug);
+    // Audit Mode 3/POD BRAND, perfectionnement -- cet UPDATE part
+    // directement du navigateur (client Supabase anon, PostgREST), sans
+    // passer par une route API serveur qui revaliderait l'ownership --
+    // contrairement a TOUTE autre ecriture de ce projet (requireSiteOwner,
+    // owner_email dans authSite(), etc.). updateOwnedSite() (lot 2, voir
+    // src/lib/supabase-owned-site.ts) applique le meme filtre en defense en
+    // profondeur que le SELECT initial (fetchOwnedSite), independamment de
+    // l'etat reel de RLS (non verifiable depuis cet environnement,
+    // DEBT-004) : avec ce filtre, un attaquant authentifie qui changerait
+    // `slug` dans l'URL pour cibler la boutique d'un autre marchand ne peut
+    // affecter aucune ligne (owner_email ne correspond jamais a la sienne).
+    const { error } = await updateOwnedSite(slug, site.owner_email, {
+      name: site.name,
+      slogan: site.slogan,
+      type: site.type,
+      about: site.about,
+      hero_title: site.hero_title,
+      hero_subtitle: site.hero_subtitle,
+      primary_color: site.primary_color,
+      hero_image: site.hero_image,
+      theme: site.theme,
+      cj_margin_percent: site.cj_margin_percent,
+      cj_round_mode: site.cj_round_mode,
+      pod_designs: podDesigns.length > 0
+        ? podDesigns.map((d: any, i: number) => i === 0 ? { ...d, selected_products: selectedProducts } : d)
+        : podDesigns,
+    });
     setSaving(false);
     if (error) {
       setMessage('Error: ' + error.message);
@@ -435,7 +466,14 @@ export default function EditPage() {
                       onClick={async () => {
                         setLoadingCatalog(true);
                         try {
-                          const res = await fetch('/api/pod/catalog');
+                          // LOT K -- /api/pod/catalog exige desormais la
+                          // propriete du site (requireSiteOwner cote serveur,
+                          // expose le cout fournisseur reel) -- meme patron
+                          // que generate-mockups ci-dessus.
+                          const { data: { session } } = await supabase.auth.getSession();
+                          const res = await fetch(`/api/pod/catalog?slug=${encodeURIComponent(slug)}`, {
+                            headers: { Authorization: `Bearer ${session?.access_token || ''}` },
+                          });
                           const data = await res.json();
                           setPodCatalog(data.products || []);
                         } catch (e) { console.error(e); }
@@ -527,11 +565,19 @@ export default function EditPage() {
                       setGeneratingMockups(true);
                       setMessage(t('edit.catalog.saving'));
                       try {
+                        // Audit Mode 3/POD BRAND, lot mockups : /api/pod/generate-mockups
+                        // exige desormais la propriete du site (requireSiteOwner cote
+                        // serveur) -- le jeton doit etre transmis.
+                        const { data: { session } } = await supabase.auth.getSession();
+                        const authHeaders = { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` };
+
                         // Auto-save selected_products before generating
                         const updatedDesigns = podDesigns.length > 0
                           ? podDesigns.map((d: any, i: number) => i === 0 ? { ...d, selected_products: selectedProducts } : d)
                           : podDesigns;
-                        await supabase.from('sites').update({ pod_designs: updatedDesigns }).eq('slug', slug);
+                        // Meme filtre de defense en profondeur qu'handleSave ci-dessus
+                        // (ecriture directe navigateur -> PostgREST, sans route serveur).
+                        await updateOwnedSite(slug, site.owner_email, { pod_designs: updatedDesigns });
                         setPodDesigns(updatedDesigns);
 
                         const selectedCount = Object.values(selectedProducts).filter((v: any) => v.selected).length;
@@ -544,7 +590,7 @@ export default function EditPage() {
                             setMessage(t('edit.mockups.pass').replace('{pass}', String(pass + 1)).replace('{i}', String(i + 1)).replace('{total}', String(totalGenerated)));
                             const res = await fetch('/api/pod/generate-mockups', {
                               method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
+                              headers: authHeaders,
                               body: JSON.stringify({ slug, index: i }),
                             });
                             const data = await res.json();
@@ -561,7 +607,7 @@ export default function EditPage() {
                             await new Promise(r => setTimeout(r, 10000));
                             const pollRes = await fetch('/api/pod/generate-mockups', {
                               method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
+                              headers: authHeaders,
                               body: JSON.stringify({ slug, action: 'poll', task_keys: passTasks }),
                             });
                             pollData = await pollRes.json();
@@ -574,7 +620,12 @@ export default function EditPage() {
                         }
                         const okMsg = t('edit.mockups.done').replace('{total}', String(totalGenerated));
                         setMessage(allErrors.length > 0 ? t('edit.mockups.doneWithErrors').replace('{total}', String(totalGenerated)).replace('{count}', String(allErrors.length)).replace('{details}', allErrors.map(e => e.split(':')[0]).join(', ')) : okMsg);
-                        const { data: updated } = await supabase.from('sites').select('pod_designs').eq('slug', slug).single();
+                        // Audit Mode 3/POD BRAND, perfectionnement (lot 2) -- cette
+                        // lecture n'avait aucun filtre d'ownership (contrairement au
+                        // chargement initial de la page) ; corrigee par coherence,
+                        // meme si `slug` n'est ici jamais qu'un rechargement du site
+                        // deja en cours d'edition par ce meme utilisateur authentifie.
+                        const updated = await fetchOwnedSite<{ pod_designs?: any[] }>(slug, site.owner_email, 'pod_designs');
                         if (updated?.pod_designs) setPodDesigns(updated.pod_designs);
                       } catch (err: any) {
                         setMessage('Erreur: ' + (err.message || err));

@@ -92,6 +92,7 @@ export default async function ProductPage({ params }: Props) {
         slug={product.siteSlug}
         mode={product.mode}
         shippingFlat={product.shippingFlat ?? undefined}
+        variant={product.theme === 'noir' ? 'dark' : 'light'}
       >
         <ProductPageView product={product} />
       </CartShell>

@@ -472,6 +472,7 @@ export function ContactMap({
   lng,
   className = '',
   accent = '#6366f1',
+  dark = false,
 }: {
   lat?: number | null
   lng?: number | null
@@ -487,11 +488,19 @@ export function ContactMap({
       className={`rounded-2xl overflow-hidden ${className}`}
       style={{ border: `1px solid ${accent}33` }}
     >
+      {/* `dark` etait declare mais jamais lu (dette identifiee DEBT-010) --
+          l'embed officiel OpenStreetMap n'expose aucune variante sombre via
+          ses parametres d'URL publics, donc pas de correctif cote source.
+          Un filtre CSS sur l'iframe (inversion + rotation de teinte) est la
+          technique standard pour obtenir une carte plausible en mode sombre
+          sans changer de fournisseur de tuiles ni ajouter de dependance/cle
+          API -- teste a l'ecran, ajuste pour rester lisible (routes, eau,
+          espaces verts distinguables) plutot que de produire un negatif brut. */}
       <iframe
         title="Map"
         width="100%"
         height="260"
-        style={{ border: 0, display: 'block' }}
+        style={{ border: 0, display: 'block', filter: dark ? 'invert(0.92) hue-rotate(180deg) brightness(0.95) contrast(0.9) saturate(0.9)' : undefined }}
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"
         src={src}

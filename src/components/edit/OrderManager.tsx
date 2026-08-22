@@ -3,13 +3,21 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/lib/translations';
 import { Package, Truck, CheckCircle, XCircle } from 'lucide-react';
+import type { OrderStatus } from '@/lib/shop/orderStatusMachine';
 
 const ACCENT = '#FA5D1E';
 
+// Audit Mode 3 global (F-ORDER-01, LOT H) -- OrderStatus importe depuis la
+// meme source unique que le PATCH serveur (orderStatusMachine.ts) plutot
+// que redeclare localement : Record<OrderStatus, ...> ci-dessous devient
+// exhaustif, un futur statut backend ajoute sans etre reflete ici est
+// desormais une ERREUR DE COMPILATION (tsc), pas un oubli silencieux comme
+// 'refunded' l'a ete (ecrit par handlePaidCheckout.ts depuis le cas F7,
+// jamais visible ni comptabilise dans ce dashboard jusqu'a ce correctif).
 type OrderItem = { product_name: string; quantity: number; unit_price: number };
 type Order = {
   id: string;
-  status: string;
+  status: OrderStatus;
   total: number;
   currency: string;
   customer_email: string | null;
@@ -25,19 +33,33 @@ async function authHeaders() {
   return { Authorization: `Bearer ${data.session?.access_token ?? ''}` };
 }
 
+// Audit Mode 3/POD BRAND, lot mockups/fulfillment : 'processing' (posé par
+// pod-fulfill.ts après création réelle d'au moins une commande fournisseur
+// POD) n'apparaissait dans AUCUN onglet ni AUCUNE étiquette de statut --
+// une commande POD devenait invisible dans ce tableau de bord dès le
+// paiement, sans qu'aucune action (automatique ou manuelle) ne puisse
+// jamais la faire progresser. Ajouté à "en cours" (même bucket que
+// pending/paid, avant expédition), comme pending/paid le sont déjà.
+// Audit Mode 3 global (F-ORDER-01, LOT H) -- 'refunded' est un onglet
+// distinct de 'canceled' : ce sont deux evenements metier differents (une
+// annulation marchand/client vs un remboursement automatique F7 apres
+// paiement deja encaisse) que le marchand doit pouvoir distinguer.
 const TABS = [
-  { key: 'pending,paid', tkey: 'om.tab.inProgress', icon: 'Package', color: '#fbbf24' },
+  { key: 'pending,paid,processing', tkey: 'om.tab.inProgress', icon: 'Package', color: '#fbbf24' },
   { key: 'shipped', tkey: 'om.tab.shipped', icon: 'Truck', color: '#60a5fa' },
   { key: 'delivered', tkey: 'om.tab.delivered', icon: 'CheckCircle', color: '#34d399' },
   { key: 'canceled', tkey: 'om.tab.canceled', icon: 'XCircle', color: '#9ca3af' },
+  { key: 'refunded', tkey: 'om.tab.refunded', icon: 'XCircle', color: '#f87171' },
 ] as const;
 
-const STATUS_LABELS: Record<string, { tkey: string; color: string }> = {
+const STATUS_LABELS: Record<OrderStatus, { tkey: string; color: string }> = {
   pending: { tkey: 'om.status.pending', color: '#fbbf24' },
   paid: { tkey: 'om.status.paid', color: '#34d399' },
+  processing: { tkey: 'om.status.processing', color: '#38bdf8' },
   shipped: { tkey: 'om.status.shipped', color: '#60a5fa' },
   delivered: { tkey: 'om.status.delivered', color: '#10b981' },
   canceled: { tkey: 'om.status.canceled', color: '#9ca3af' },
+  refunded: { tkey: 'om.status.refunded', color: '#f87171' },
 };
 
 const ICONS: Record<string, typeof Package> = { Package, Truck, CheckCircle, XCircle };
@@ -86,6 +108,31 @@ export default function OrderManager({ slug }: { slug: string }) {
         method: 'PATCH',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ slug, orderId, trackingNumber: tracking[orderId] || '' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur');
+      await load();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  // Audit Mode 3/POD BRAND, perfectionnement -- shipped -> delivered
+  // n'était atteignable nulle part sur toute la plateforme (aucun webhook
+  // transporteur, aucune action marchand), alors que l'onglet et
+  // l'étiquette "livrée" existaient déjà dans ce composant sans jamais
+  // pouvoir être atteints.
+  const markDelivered = async (orderId: string) => {
+    setBusyId(orderId);
+    setError('');
+    try {
+      const headers = await authHeaders();
+      const res = await fetch('/api/shop/orders', {
+        method: 'PATCH',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, orderId, targetStatus: 'delivered' }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erreur');
@@ -171,7 +218,12 @@ export default function OrderManager({ slug }: { slug: string }) {
                   <p><span className="text-white/30">Livraison :</span> {formatAddress(o.shipping_address)}</p>
                 </div>
 
-                {o.status === 'paid' && (
+                {/* 'processing' (commande POD, cf. TABS ci-dessus) : aucune
+                    transition automatique vers 'shipped' n'existe pour le
+                    fournisseur POD -- le marchand doit pouvoir saisir le
+                    suivi manuellement exactement comme pour 'paid' (CJ),
+                    sans quoi la commande reste bloquée indéfiniment. */}
+                {(o.status === 'paid' || o.status === 'processing') && (
                   <div className="flex items-center gap-2 pt-3 border-t border-white/10">
                     <input
                       placeholder={t('om.trackingPlaceholder')}
@@ -186,6 +238,19 @@ export default function OrderManager({ slug }: { slug: string }) {
                       style={{ background: `${ACCENT}1a`, color: ACCENT, border: `1px solid ${ACCENT}33` }}
                     >
                       {busyId === o.id ? '…' : t('om.markShipped')}
+                    </button>
+                  </div>
+                )}
+
+                {o.status === 'shipped' && (
+                  <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/10">
+                    <button
+                      onClick={() => markDelivered(o.id)}
+                      disabled={busyId === o.id}
+                      className="px-4 py-2 rounded-xl text-sm font-semibold transition disabled:opacity-40 whitespace-nowrap"
+                      style={{ background: '#10b98120', color: '#10b981', border: '1px solid #10b98150' }}
+                    >
+                      {busyId === o.id ? '…' : t('om.markDelivered')}
                     </button>
                   </div>
                 )}

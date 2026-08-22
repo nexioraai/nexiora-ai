@@ -24,17 +24,17 @@ export type ThemeMetadata = {
   supportedModes: number[]
   specialization: 'generic'
   // Confirmé par le travail d'isolation Mode 1 (getModeCapabilities,
-  // CartShell, tests dédiés) : true seulement pour Editorial et Vif.
-  // Noir et Aurora n'ont jamais été audités pour ce même risque de
-  // couplage — c'est explicitement le périmètre du Bloc 4, pas de celui-ci.
+  // CartShell, tests dédiés) : true pour les 4 thèmes actuels — Noir et
+  // Aurora l'ont rejoint via le Bloc 4 (getModeCapabilities() consolidé,
+  // couvert par __tests__/noir-isolation.test.tsx et
+  // __tests__/aurora-isolation.test.tsx).
   isolationVerified: boolean
   // 'sequential' : la section Shop est un bloc ajouté dans un flux narratif
   // fixe (Hero -> About -> [Shop] -> Gallery -> Témoignages -> Contact).
   // 'shop-swap' : le contenu principal est intégralement remplacé par une
   // mise en page catalogue (StorefrontDense) quand hasShop est vrai, au
   // lieu d'ajouter une section — structurellement plus proche de ce qui
-  // sera visé pour de futurs thèmes Mode 2/3-natifs, mais non vérifié pour
-  // autant (voir isolationVerified).
+  // sera visé pour de futurs thèmes Mode 2/3-natifs.
   layout: ThemeLayout
   // Identifiants de section réels, dans l'ordre réel du rendu, tels
   // qu'observés dans le code source (grep + lecture, pas une intention).
@@ -45,7 +45,10 @@ export type ThemeMetadata = {
   // Comment ce thème calcule aujourd'hui s'il doit afficher le Shop —
   // 'centralized' = passe par getModeCapabilities (Bloc "isolation Mode 1").
   // 'duplicated-inline' = recalcule sa propre copie de la même expression,
-  // jamais consolidée — risque de divergence future, candidat du Bloc 4.
+  // jamais consolidée — risque de divergence future. Les 4 thèmes actuels
+  // sont 'centralized' (Noir/Aurora consolidés au Bloc 4) ; cette valeur
+  // reste utile pour signaler un futur thème qui recopierait l'expression
+  // au lieu de réutiliser getModeCapabilities.
   capabilitySource: 'centralized' | 'duplicated-inline'
   notes?: string
 }
@@ -76,24 +79,39 @@ export const THEME_REGISTRY: ThemeMetadata[] = [
     name: 'Noir',
     supportedModes: [1, 2, 3],
     specialization: 'generic',
-    isolationVerified: false,
+    // Mis à jour (perfectionnement Noir/Deribfy) : NoirTheme.tsx importe et
+    // appelle déjà getModeCapabilities() (un seul appel, hasShop dérivé de
+    // cette unique source — vérifié en lisant le fichier, plus de
+    // duplication à 3 endroits). Couvert par une suite de tests dédiée
+    // (__tests__/noir-isolation.test.tsx, rendu réel via
+    // renderToStaticMarkup, pas une lecture de code) qui vérifie
+    // explicitement l'absence de Shop en Mode 1 y compris avec des produits
+    // orphelins en base, et la cohérence de hasShop aux 3 anciens points de
+    // duplication (ctaHref, nav, section). Les deux champs ci-dessous
+    // étaient restés à leur valeur d'avant ce correctif alors que le code et
+    // les tests avaient déjà changé — ce fichier se déclare lui-même
+    // "source de vérité", il ne doit pas mentir sur l'état réel.
+    isolationVerified: true,
     layout: 'sequential',
     sectionOrder: ['home', 'about', 'shop', 'gallery', 'testimonials', 'contact'],
-    capabilitySource: 'duplicated-inline',
-    notes:
-      "L'expression de capacité (mode !== 1 && (products.length > 0 || mode === 3)) est recopiée telle quelle à 3 endroits du fichier (ctaHref, nav, section Shop) — jamais consolidée via getModeCapabilities. Pas de bug actif détecté (les 3 copies sont identiques entre elles), mais aucune protection contre une future divergence.",
+    capabilitySource: 'centralized',
   },
   {
     id: 'aurora',
     name: 'Aurora',
     supportedModes: [1, 2, 3],
     specialization: 'generic',
-    isolationVerified: false,
+    // Mis à jour (perfectionnement Noir/Deribfy) : même constat que Noir —
+    // AuroraTheme.tsx appelle déjà getModeCapabilities() une seule fois,
+    // plus de duplication. Couvert par __tests__/aurora-isolation.test.tsx
+    // (rendu réel), qui vérifie notamment que le Mode 1 ne bascule jamais
+    // vers StorefrontDense, y compris avec des produits orphelins.
+    isolationVerified: true,
     layout: 'shop-swap',
     sectionOrder: ['home'],
-    capabilitySource: 'duplicated-inline',
+    capabilitySource: 'centralized',
     notes:
-      "Seul thème dont le mode Shop remplace entièrement le contenu principal par StorefrontDense au lieu d'ajouter une section — structure la plus proche d'un futur thème Mode 2/3-natif, mais jamais vérifiée pour l'isolation Mode 1. Même expression de capacité dupliquée (non centralisée) que Noir.",
+      "Seul thème dont le mode Shop remplace entièrement le contenu principal par StorefrontDense au lieu d'ajouter une section — structure la plus proche d'un futur thème Mode 2/3-natif.",
   },
 ]
 

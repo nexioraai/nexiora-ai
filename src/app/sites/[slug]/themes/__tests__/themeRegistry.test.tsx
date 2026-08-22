@@ -16,6 +16,7 @@ import AuroraTheme from '../AuroraTheme';
 import CartShell from '../CartShell';
 import { getCartLabels } from '../cartLabels';
 import { THEME_REGISTRY, getThemeMetadata } from '../themeRegistry';
+import { checkSectionOrder } from '../checkSectionOrder';
 
 const THEMES: Record<string, any> = { editorial: EditorialTheme, vif: VifTheme, noir: NoirTheme, aurora: AuroraTheme };
 
@@ -74,15 +75,9 @@ describe('THEME_REGISTRY — sectionOrder reflète le rendu réel (thèmes "sequ
 
   it.each(sequentialThemes.map((t) => [t.id, t]))('%s : chaque section déclarée apparaît, dans le bon ordre', (_id, theme) => {
     const html = renderWithCartShell(THEMES[theme.id], makeSite());
-
-    const positions = theme.sectionOrder.map((sectionId) => {
-      const idx = html.indexOf(`id="${sectionId}"`);
-      expect(idx, `id="${sectionId}" absent du rendu de ${theme.id} (registre désynchronisé du code réel)`).toBeGreaterThanOrEqual(0);
-      return idx;
-    });
-
-    const sorted = [...positions].sort((a, b) => a - b);
-    expect(positions, `l'ordre réel des sections de ${theme.id} ne correspond plus à sectionOrder`).toEqual(sorted);
+    const result = checkSectionOrder(html, theme.sectionOrder);
+    expect(result.missing, `sections absentes du rendu de ${theme.id} (registre désynchronisé du code réel)`).toEqual([]);
+    expect(result.outOfOrder, `l'ordre réel des sections de ${theme.id} ne correspond plus à sectionOrder`).toBe(false);
   });
 });
 

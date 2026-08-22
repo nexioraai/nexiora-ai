@@ -25,6 +25,7 @@ import { getCartLabels } from './cartLabels'
 import { socialUrl } from '@/lib/social'
 import StorefrontDense from './StorefrontDense'
 import CatalogSearch from './CatalogSearch'
+import { getModeCapabilities } from './modeCapabilities'
 
 export default function AuroraTheme({ site }: { site: Site }) {
   const hidden = (name: string) => (site.hidden_sections || []).includes(name)
@@ -45,8 +46,8 @@ export default function AuroraTheme({ site }: { site: Site }) {
   const visionWord = visionWords[site.lang || 'fr'] || visionWords.en
 
   const cta = site.cta || t.labels.contactCta
-  const mode = site.mode || 1
-  const isShop = mode !== 1 && (products.length > 0 || mode === 3) && !hidden('Shop')
+  const { hasShop } = getModeCapabilities(site)
+  const isShop = hasShop && !hidden('Shop')
   const ctaHref = isShop ? '#shop' : '#contact'
   const auraB = `color-mix(in srgb, ${primary} 45%, #ffffff)`
 
@@ -95,7 +96,7 @@ export default function AuroraTheme({ site }: { site: Site }) {
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-600">
             {!hidden('Home') && <a href="#home" className="hover:text-neutral-900 transition-colors">{t.nav.home}</a>}
             {!hidden('About') && <a href="#about" className="hover:text-neutral-900 transition-colors">{t.nav.about}</a>}
-            {isShop && <a href="#grid" className="hover:text-neutral-900 transition-colors">{t.nav.shop}</a>}
+            {isShop && <a href="#shop" className="hover:text-neutral-900 transition-colors">{t.nav.shop}</a>}
             {testimonials.length > 0 && !hidden('Reviews') && <a href="#testimonials" className="hover:text-neutral-900 transition-colors">{t.nav.reviews}</a>}
             {!hidden('Contact') && <a href="#contact" className="hover:text-neutral-900 transition-colors">{t.nav.contact}</a>}
           </nav>

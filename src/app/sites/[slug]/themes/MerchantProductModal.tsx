@@ -22,6 +22,16 @@ interface Props {
   primary: string;
   lang?: string;
   onClose: () => void;
+  // Optionnel, retro-compatible : Editorial/Vif/Aurora ne le passent pas et
+  // conservent donc exactement la fiche blanche actuelle (aucun diff visuel).
+  // 'dark' n'est utilise que par Noir -- meme categorie de probleme deja
+  // corrigee sur CatalogSearch/ContactForm/MobileNav : une fiche produit
+  // entierement blanche, seule interaction ouverte sur la quasi-totalite
+  // des visites (parcourir un produit), rompait completement l'identite
+  // sombre de Noir. Palette generique (pas d'import des tons NoirTheme :
+  // ce composant reste theme-agnostique, reutilisable par d'autres themes
+  // sombres futurs).
+  variant?: 'light' | 'dark';
 }
 
 const LABELS: Record<string, Record<string, string>> = {
@@ -29,8 +39,28 @@ const LABELS: Record<string, Record<string, string>> = {
   fr: { addToCart: 'Ajouter au panier', description: 'Description', chooseOption: 'Choisissez une option', loadingVariants: 'Chargement des options\u2026', options: 'Options' },
 };
 
-export default function MerchantProductModal({ product: p, primary, lang = 'en', onClose }: Props) {
+const TOKENS = {
+  light: {
+    cardBg: '#ffffff', text: '#0a0a0a',
+    imageBg: '#f7f7f7',
+    labelMuted: 'rgba(0,0,0,0.55)',
+    border: 'rgba(0,0,0,0.08)',
+    variantBorder: 'rgba(0,0,0,0.12)',
+    descText: 'rgba(0,0,0,0.7)',
+  },
+  dark: {
+    cardBg: '#161109', text: '#F5F3EE',
+    imageBg: '#1F1810',
+    labelMuted: 'rgba(245,243,238,0.55)',
+    border: 'rgba(245,243,238,0.12)',
+    variantBorder: 'rgba(245,243,238,0.18)',
+    descText: 'rgba(245,243,238,0.75)',
+  },
+}
+
+export default function MerchantProductModal({ product: p, primary, lang = 'en', onClose, variant = 'light' }: Props) {
   const t = LABELS[lang] || LABELS.en;
+  const c = TOKENS[variant]
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const cachedVariants = Array.isArray(p.variants) ? p.variants : [];
   const [liveVariants, setLiveVariants] = useState<any[]>([]);
@@ -79,7 +109,7 @@ export default function MerchantProductModal({ product: p, primary, lang = 'en',
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          background: '#ffffff', color: '#0a0a0a',
+          background: c.cardBg, color: c.text,
           borderRadius: 20, maxWidth: 900, width: '100%', maxHeight: '92vh',
           overflow: 'auto', position: 'relative',
           boxShadow: '0 25px 80px rgba(0,0,0,0.5)',
@@ -99,7 +129,7 @@ export default function MerchantProductModal({ product: p, primary, lang = 'en',
         ><X size={20} /></button>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 0 }} className="merchant-modal-grid">
-          <div style={{ background: '#f7f7f7', minHeight: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: c.imageBg, minHeight: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {p.image ? (
               <img src={p.image} alt={p.name} style={{ width: '100%', height: 480, objectFit: 'contain', display: 'block' }} />
             ) : (
@@ -115,7 +145,7 @@ export default function MerchantProductModal({ product: p, primary, lang = 'en',
 
             {variants.length > 0 && (
               <div style={{ marginBottom: 20 }}>
-                <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(0,0,0,0.55)' }}>
+                <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em', color: c.labelMuted }}>
                   {lang === 'fr' ? 'Taille / Couleur' : 'Size / Color'}
                 </p>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -125,9 +155,9 @@ export default function MerchantProductModal({ product: p, primary, lang = 'en',
                       onClick={() => setSelectedVariant(v.variant_id === selectedVariant ? null : v.variant_id)}
                       style={{
                         padding: '8px 16px', borderRadius: 8, fontSize: 13, cursor: 'pointer', fontWeight: 500,
-                        border: v.variant_id === selectedVariant ? '2px solid ' + primary : '1.5px solid rgba(0,0,0,0.12)',
+                        border: v.variant_id === selectedVariant ? '2px solid ' + primary : '1.5px solid ' + c.variantBorder,
                         background: v.variant_id === selectedVariant ? primary + '15' : 'transparent',
-                        color: '#0a0a0a', transition: 'all 0.15s',
+                        color: c.text, transition: 'all 0.15s',
                       }}
                     >{v.label}</button>
                   ))}
@@ -148,9 +178,9 @@ export default function MerchantProductModal({ product: p, primary, lang = 'en',
             />
 
             {p.description && (
-              <div style={{ marginTop: 28, borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 20 }}>
-                <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(0,0,0,0.55)' }}>{t.description}</p>
-                <p style={{ fontSize: 14, lineHeight: 1.65, color: 'rgba(0,0,0,0.7)', margin: 0, whiteSpace: 'pre-wrap' }}>{p.description}</p>
+              <div style={{ marginTop: 28, borderTop: '1px solid ' + c.border, paddingTop: 20 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em', color: c.labelMuted }}>{t.description}</p>
+                <p style={{ fontSize: 14, lineHeight: 1.65, color: c.descText, margin: 0, whiteSpace: 'pre-wrap' }}>{p.description}</p>
               </div>
             )}
           </div>

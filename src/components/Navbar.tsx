@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { fetchOwnedSite, updateOwnedSite } from '@/lib/supabase-owned-site';
 import { useTranslation } from '@/lib/translations';
 import LanguageSwitcher from './LanguageSwitcher';
 import { Menu as MenuIcon, X, ArrowLeft, Plus, Trash2, Check, Loader2, Upload, Eye, EyeOff, MapPin } from 'lucide-react';
@@ -29,18 +30,37 @@ export default function Navbar() {
     });
   }, []);
 
+  // Audit Mode 3/POD BRAND, perfectionnement (lot 2) -- cause racine :
+  // Navbar est un "editeur de site complet" (voir historique git) monte sur
+  // TOUTE page /edit/[slug], y compris quand edit/[slug]/page.tsx affiche
+  // deja "site introuvable" (utilisateur non proprietaire) -- ce fetch
+  // tournait pourtant independamment, sans AUCUN filtre d'ownership
+  // (`select('*').eq('slug', slug)` seul), chargeant l'integralite du site
+  // d'un tiers dans l'etat local `site`, ensuite reecrivable via l'effet
+  // d'auto-sync ci-dessous. Attend desormais `userEmail` (memes garanties
+  // que le filtre deja applique par edit/[slug]/page.tsx et
+  // requireSiteOwner cote serveur) avant toute lecture -- fetchOwnedSite()
+  // ne peut renvoyer que le site DU vrai proprietaire authentifie.
   useEffect(() => {
-    if (slug) {
-      initialLoad.current = true;
-      supabase.from('sites').select('*').eq('slug', slug).maybeSingle().then(({ data }) => {
-        setSite(data);
-      });
+    if (!slug || !authLoaded) return;
+    if (!userEmail) {
+      setSite(null);
+      return;
     }
-  }, [slug]);
+    initialLoad.current = true;
+    fetchOwnedSite(slug, userEmail).then((data) => {
+      setSite(data);
+    });
+  }, [slug, userEmail, authLoaded]);
 
   // Generic auto-sync: update ALL columns automatically
   useEffect(() => {
-    if (!site || !slug) return;
+    // site.owner_email necessaire pour reconstruire le meme filtre que la
+    // lecture ci-dessus : `site` ne peut avoir ete charge que via
+    // fetchOwnedSite() (filtre par owner_email), donc site.owner_email est
+    // necessairement celui de l'utilisateur authentifie courant -- jamais
+    // une valeur controlable differemment par un tiers.
+    if (!site || !slug || !site.owner_email) return;
     if (initialLoad.current) {
       initialLoad.current = false;
       return;
@@ -57,7 +77,7 @@ export default function Navbar() {
       delete updates.created_at;
       delete updates.updated_at;
 
-      const { error } = await supabase.from('sites').update(updates).eq('slug', slug);
+      const { error } = await updateOwnedSite(slug, site.owner_email, updates);
       if (!error) {
         setSyncStatus('saved');
         setTimeout(() => setSyncStatus('idle'), 2000);
@@ -72,13 +92,23 @@ export default function Navbar() {
     };
   }, [site, slug]);
 
-  const updateField = (field: string, value: any) => setSite({ ...site, [field]: value });
-  const updateSocialLink = (key: string, value: string) => setSite({ ...site, social_links: { ...(site.social_links || {}), [key]: value } });
-  const updateContact = (key: string, value: string) => setSite({ ...site, contact: { ...(site.contact || {}), [key]: value } });
+  // Audit Mode 3/POD BRAND, perfectionnement (lot 2) -- garde defensive
+  // ajoutee sur TOUS les mutateurs locaux : avant ce lot, `site` etait
+  // TOUJOURS non-null pour un slug valide (fetch sans filtre), donc ces
+  // fonctions n'avaient jamais besoin de gerer `site === null`. Depuis le
+  // correctif ci-dessus, un visiteur authentifie mais non-proprietaire a
+  // desormais `site === null` -- plusieurs boutons ne sont gardes que par
+  // `disabled={!slug}` dans le JSX (ex. le bouton masquer/afficher une
+  // section), pas par `!site` : sans cette garde, les cliquer sur
+  // /edit/{slug-d-un-tiers} aurait fait planter le composant
+  // (`Cannot read properties of null`) plutot que de ne rien faire.
+  const updateField = (field: string, value: any) => { if (!site) return; setSite({ ...site, [field]: value }); };
+  const updateSocialLink = (key: string, value: string) => { if (!site) return; setSite({ ...site, social_links: { ...(site.social_links || {}), [key]: value } }); };
+  const updateContact = (key: string, value: string) => { if (!site) return; setSite({ ...site, contact: { ...(site.contact || {}), [key]: value } }); };
   const [geocoding, setGeocoding] = useState(false);
   const geocodeAddress = async () => {
     const addr = site?.contact?.address;
-    if (!addr) return;
+    if (!addr || !site?.owner_email) return;
     setGeocoding(true);
     try {
       const res = await fetch('/api/geocode', {
@@ -89,7 +119,7 @@ export default function Navbar() {
       const data = await res.json();
       if (data.lat != null && data.lng != null) {
         setSite((prev: any) => ({ ...prev, geo_lat: data.lat, geo_lng: data.lng }));
-        await supabase.from('sites').update({ geo_lat: data.lat, geo_lng: data.lng }).eq('slug', slug);
+        await updateOwnedSite(slug!, site.owner_email, { geo_lat: data.lat, geo_lng: data.lng });
       }
     } catch (e) {
       console.error('Geocode failed:', e);
@@ -100,20 +130,23 @@ export default function Navbar() {
 
   // Generic array helpers
   const updateArrayItem = (field: string, idx: number, key: string, value: any) => {
+    if (!site) return;
     const arr = [...(site[field] || [])];
     arr[idx] = { ...arr[idx], [key]: value };
     setSite({ ...site, [field]: arr });
   };
   const toggleSection = (section: string) => {
+    if (!site) return;
     const hidden = site.hidden_sections || [];
     const next = hidden.includes(section) ? hidden.filter((x: string) => x !== section) : [...hidden, section];
     setSite({ ...site, hidden_sections: next });
   };
-  const addArrayItem = (field: string, template: any) => setSite({ ...site, [field]: [...(site[field] || []), template] });
-  const removeArrayItem = (field: string, idx: number) => setSite({ ...site, [field]: site[field].filter((_: any, i: number) => i !== idx) });
+  const addArrayItem = (field: string, template: any) => { if (!site) return; setSite({ ...site, [field]: [...(site[field] || []), template] }); };
+  const removeArrayItem = (field: string, idx: number) => { if (!site) return; setSite({ ...site, [field]: site[field].filter((_: any, i: number) => i !== idx) }); };
 
   // Nested section item helpers (sections[si].items[ii].key)
   const updateSectionItem = (si: number, ii: number, key: string, value: any) => {
+    if (!site) return;
     const secs = [...(site.sections || [])];
     const items = [...(secs[si].items || [])];
     items[ii] = { ...items[ii], [key]: value };
@@ -121,6 +154,7 @@ export default function Navbar() {
     setSite({ ...site, sections: secs });
   };
   const updateSectionName = (si: number, value: string) => {
+    if (!site) return;
     const secs = [...(site.sections || [])];
     secs[si] = { ...secs[si], name: value };
     setSite({ ...site, sections: secs });

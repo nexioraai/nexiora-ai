@@ -12,7 +12,7 @@ import AuroraTheme from './themes/AuroraTheme'
 import CartShell from './themes/CartShell'
 import { getCartLabels } from './themes/cartLabels'
 import ScrollRevealInit from './themes/ScrollRevealInit'
-import CatalogSearch from './themes/CatalogSearch'
+import CatalogSearch, { type ThemeKey } from './themes/CatalogSearch'
 import PromoBanner from './themes/PromoBanner'
 
 export const revalidate = 60
@@ -87,9 +87,9 @@ export default async function SitePage({ params, searchParams }: Props) {
       <HtmlLang lang={site.lang} />
       <JsonLd site={site} url={url} />
       <PromoBanner slug={site.slug} primary={primary} />
-      <CartShell primary={primary} labels={cartLabels} slug={site.slug} mode={site.mode} products={site.products} shippingFlat={site.shipping_flat}>
+      <CartShell primary={primary} labels={cartLabels} slug={site.slug} mode={site.mode} products={site.products} shippingFlat={site.shipping_flat} variant={key === 'noir' ? 'dark' : 'light'}>
         <Theme site={site} />
-        {site.mode === 3 && site.dropship_type !== 'pod_brand' && site.theme !== 'aurora' && <CatalogSearch slug={site.slug} primary={primary} lang={site.lang} dropshipType={site.dropship_type || 'reseller'} />}
+        {site.mode === 3 && site.dropship_type !== 'pod_brand' && site.theme !== 'aurora' && <CatalogSearch slug={site.slug} primary={primary} lang={site.lang} theme={key as ThemeKey} dropshipType={site.dropship_type || 'reseller'} />}
       </CartShell>
       <ScrollRevealInit />
     </>
