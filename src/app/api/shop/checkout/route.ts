@@ -7,7 +7,7 @@ import type { CartItem } from '@/lib/payments/types';
 import { STRIPE_SHIPPING_COUNTRIES } from '@/lib/payments/countries';
 import { suppliersWithCapability } from '@/lib/suppliers/registry';
 import type { ShippingRequest } from '@/lib/suppliers/supplier-adapter';
-import { sitePricing, NEXIORA_COMMISSION_PERCENT, resolveDisplayPrice } from '@/lib/pricing';
+import { sitePricing, NEXIORA_COMMISSION_PERCENT, resolveDisplayPrice, roundMoney } from '@/lib/pricing';
 import { logAnomaly } from '@/lib/anomaly';
 import type { ShippingTier } from '@/lib/cj/shipping-tiers';
 import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
@@ -456,6 +456,13 @@ export async function POST(req: Request) {
       totalAmount += serverPrice * item.quantity;
     }
 
+    // LOT 1 -- arrondi au centime APRES accumulation, jamais a chaque addition :
+    // arrondir chaque terme ferait diverger le total de la somme des lignes
+    // envoyees a Stripe (qui arrondit chaque unit_amount separement, puis
+    // multiplie par la quantite). Un seul arrondi, sur le resultat.
+    supplierCost = roundMoney(supplierCost);
+    totalAmount = roundMoney(totalAmount);
+
     // Stripe n'accepte qu'une seule devise par Checkout Session : plutot que
     // de laisser Stripe echouer avec une erreur opaque, on rejette ici,
     // proprement, si les devises desormais server-authoritative (ci-dessus)
@@ -561,8 +568,13 @@ export async function POST(req: Request) {
     const discountedTotal = Math.round((totalAmount - promoDiscount) * 100) / 100;
 
     // OPTION A : commission calculee sur le prix AVANT remise.
-    const nexioraCommission = totalAmount * (NEXIORA_COMMISSION_PERCENT / 100);
-    const applicationFeeAmount = site.mode === 3 ? (supplierCost + shippingAmount + nexioraCommission) : 0;
+    // LOT 1 : arrondie au centime -- c'est un montant reellement preleve par
+    // Stripe (via application_fee_amount) et enregistre en base, pas une
+    // grandeur intermediaire. Voir roundMoney() pour la cause racine.
+    const nexioraCommission = roundMoney(totalAmount * (NEXIORA_COMMISSION_PERCENT / 100));
+    const applicationFeeAmount = site.mode === 3
+      ? roundMoney(supplierCost + shippingAmount + nexioraCommission)
+      : 0;
 
     // ---- Garde-fou applicable a TOUS les modes (DEBT-029b) ----
     // Audit final phase 2 : tous les garde-fous financiers etaient enfermes
@@ -665,7 +677,7 @@ export async function POST(req: Request) {
         country_code: countryCode || null,
         supplier_cost: supplierCost,
         nexiora_commission: nexioraCommission,
-        merchant_profit: amount - supplierCost - nexioraCommission,
+        merchant_profit: roundMoney(amount - supplierCost - nexioraCommission),
         // P-4 : la consommation reelle du code (increment de used_count) a
         // lieu au PAIEMENT confirme (handlePaidCheckout), pas ici -- une
         // session abandonnee ne doit jamais consommer une utilisation. On se

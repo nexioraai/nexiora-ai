@@ -284,14 +284,19 @@ describe('CARACTERISATION -- Mode 3 (cache CJ + marge 20%)', () => {
 // ------------------------------------------------------------
 // Derive flottante -- ce que le LOT 1 (centimes entiers) doit supprimer
 // ------------------------------------------------------------
-describe('CARACTERISATION -- derive flottante ECRITE EN BASE', () => {
-  it("D1 -- DEFAUT FIGE : nexiora_commission vaut 1.7999999999999998, pas 1.8", async () => {
+// ------------------------------------------------------------
+// LOT 1 -- precision monetaire. D1 figeait un DEFAUT ; il est desormais
+// inverse pour figer le comportement CORRIGE. Les tests D2/D3 couvrent les
+// deux causes distinctes que roundMoney() traite.
+// ------------------------------------------------------------
+describe('LOT 1 -- precision monetaire des valeurs ECRITES EN BASE', () => {
+  function setupMoney(opts: { sellPrice: number; cost: number; quantity?: number }) {
     const chains = setupTables({
       sites: { data: SITE_MODE3 },
       catalog_products: {
-        data: [{ id: 'cat-1', supplier_id: 'cj', supplier_product_id: 'VID1', price: 10, currency: 'usd' }],
+        data: [{ id: 'cat-1', supplier_id: 'cj', supplier_product_id: 'VID1', price: opts.cost, currency: 'usd' }],
       },
-      site_catalog_selections: { data: { sell_price: 30 } },
+      site_catalog_selections: { data: { sell_price: opts.sellPrice } },
       shipping_cache: {
         data: [{ supplier_product_id: 'VID1', shipping_cost: 2, days_min: 7, days_max: 15, tiers: CACHE_TIERS }],
       },
@@ -299,17 +304,61 @@ describe('CARACTERISATION -- derive flottante ECRITE EN BASE', () => {
       shop_orders: { data: { id: 'order-1' } },
       shop_order_items: { data: [{ id: 'item-1' }] },
     });
-    await POST(req({
+    return { chains, quantity: opts.quantity ?? 1 };
+  }
+  const send = (quantity: number) =>
+    POST(req({
       slug: 'boutique', countryCode: 'CA', shipmentTier: 'standard',
-      items: [{ id: 'catalog-cat-1', quantity: 1, name: 'P', currency: 'usd' }],
+      items: [{ id: 'catalog-cat-1', quantity, name: 'P', currency: 'usd' }],
     }));
-    const row = (chains.get('shop_orders')!.insert as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    // 30 * (6/100) en IEEE754. La valeur derivee est PERSISTEE telle quelle :
-    // toute agregation comptable en herite. Corrige au LOT 1 (centimes entiers).
-    expect(row.nexiora_commission).toBe(1.7999999999999998);
-    expect(row.nexiora_commission).not.toBe(1.8);
-    // Le fee envoye a Stripe est arrondi au centime par stripe.ts, la derive
-    // ne se propage donc PAS jusqu'a la charge reelle.
-    expect(Math.round((10 + 3.6 + row.nexiora_commission) * 100)).toBe(1540);
+  const insertedRow = (chains: Map<string, ReturnType<typeof tableChain>>) =>
+    (chains.get('shop_orders')!.insert as ReturnType<typeof vi.fn>).mock.calls[0][0];
+
+  /** Un montant monetaire ne doit jamais avoir plus de 2 decimales. */
+  const isCentExact = (n: number) => Number.isInteger(Math.round(n * 100)) && Math.abs(n * 100 - Math.round(n * 100)) < 1e-9;
+
+  it('D1 -- CORRIGE : nexiora_commission vaut exactement 1.8 (derive IEEE754 eliminee)', async () => {
+    const { chains } = setupMoney({ sellPrice: 30, cost: 10 });
+    await send(1);
+    const row = insertedRow(chains);
+    // Avant LOT 1 : 1.7999999999999998, persiste tel quel en base.
+    expect(row.nexiora_commission).toBe(1.8);
+    expect(row.merchant_profit).toBe(18.2);
+    expect(row.supplier_cost).toBe(10);
+  });
+
+  it('D2 -- CORRIGE : une commission SOUS-LE-CENTIME est ramenee au centime facturable', async () => {
+    // 19.99 x 3 = 59.97 ; 59.97 x 6% = 3.5982 -> non facturable par Stripe,
+    // qui ne connait que des centimes entiers. La base enregistrait pourtant
+    // 3.5982. Desormais alignee sur ce qui est reellement preleve.
+    const { chains } = setupMoney({ sellPrice: 19.99, cost: 5 });
+    await send(3);
+    const row = insertedRow(chains);
+    expect(row.total).toBe(59.97);
+    expect(row.nexiora_commission).toBe(3.6);
+    expect(row.supplier_cost).toBe(15);
+  });
+
+  it('D3 -- toutes les valeurs monetaires ecrites en base sont exactes au centime', async () => {
+    const { chains } = setupMoney({ sellPrice: 19.99, cost: 7.77 });
+    await send(3);
+    const row = insertedRow(chains);
+    for (const field of ['total', 'shipping_amount', 'supplier_cost', 'nexiora_commission', 'merchant_profit'] as const) {
+      expect(isCentExact(row[field] as number), `${field} = ${row[field]}`).toBe(true);
+    }
+    // Coherence comptable : le profit reste la difference exacte des trois autres.
+    expect(row.merchant_profit).toBe(
+      Math.round(((row.total as number) - (row.supplier_cost as number) - (row.nexiora_commission as number)) * 100) / 100
+    );
+  });
+
+  it("D4 -- l'arrondi a la source ne change PAS le montant reellement charge par Stripe", async () => {
+    const { chains } = setupMoney({ sellPrice: 30, cost: 10 });
+    await send(1);
+    const f = fingerprint(chains);
+    // application_fee = 10 + 3.60 + 1.80 = 15.40 -> 1540 centimes, identique
+    // a la valeur pre-LOT 1 (15.399999999999999 -> 1540).
+    expect(f.stripeApplicationFee).toBe(15.4);
+    expect(Math.round((f.stripeApplicationFee as number) * 100)).toBe(1540);
   });
 });
