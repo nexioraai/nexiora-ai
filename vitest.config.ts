@@ -63,6 +63,17 @@ export default defineConfig({
     // src/app/api/catalog/ ajouté -- même constat, aucune route catalog/*
     // n'était couverte malgré catalog/curate, catalog/enhance et
     // catalog/selections déjà protégés par requireSiteOwner.
+    // LOT I (Mode 3 global, F-I-2) : src/app/api/backfill-hero/ ajouté --
+    // cette route n'avait aucune couverture et n'était surtout PAS incluse
+    // ici avant ce lot ; un test créé sans cette ligne s'exécute avec
+    // succès en isolation (`vitest run <fichier>`) mais n'est JAMAIS
+    // collecté par `vitest run` sans argument (donc jamais en CI) --
+    // silencieusement, sans erreur ni avertissement. Détecté en vérifiant
+    // le delta de comptage de tests attendu après l'ajout du fichier de
+    // test dédié à cette route dans ce même lot.
+    // LOT K (Mode 3 global) : src/app/api/shipping-estimate/ ajouté (même
+    // constat que backfill-hero -- route top-level hors de tout préfixe
+    // déjà couvert, jamais collectée sans cette ligne).
     include: [
       'src/lib/__tests__/**/*.test.ts',
       'src/lib/http/**/*.test.ts',
@@ -91,6 +102,13 @@ export default defineConfig({
       'src/app/api/account/**/*.test.ts',
       'src/app/sites/**/*.test.ts',
       'src/app/sites/**/*.test.tsx',
+      'src/app/api/backfill-hero/**/*.test.ts',
+      'src/app/api/shipping-estimate/**/*.test.ts',
+      // Passe de cloture (reporting) : src/app/api/admin/ ajoute -- aucune
+      // route admin n'etait couverte, et le prefixe n'etait pas inclus ici :
+      // un test ecrit sans cette ligne passe en isolation mais n'est JAMAIS
+      // collecte par `vitest run` (donc jamais en CI), silencieusement.
+      'src/app/api/admin/**/*.test.ts',
     ],
     environment: 'node',
   },
