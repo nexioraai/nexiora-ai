@@ -1,0 +1,53 @@
+-- Audit Mode 3/POD BRAND, perfectionnement -- contrainte UNIQUE manquante
+-- sur shop_orders.payment_ref.
+-- A executer manuellement dans l'editeur SQL Supabase (aucun outillage de
+-- migration automatise n'existe dans ce repo -- meme convention que
+-- fulfillment_tables.sql / generation_failures.sql).
+--
+-- CAUSE RACINE : src/app/api/shop/checkout/route.ts gere deja le code
+-- erreur Postgres 23505 (violation UNIQUE) sur l'INSERT de shop_orders
+-- comme le signe qu'un checkoutNonce a deja ete traite (deux onglets,
+-- resoumission reseau) -- ce chemin est documente dans le code depuis le
+-- lot idempotence Stripe, mais la contrainte elle-meme n'avait jamais ete
+-- appliquee en base : sans elle, deux INSERT concurrents avec le meme
+-- payment_ref (session Stripe dedupliquee par Stripe lui-meme via
+-- idempotencyKey) reussissent TOUS LES DEUX -- deux commandes Deribfy pour
+-- un seul paiement Stripe reel, jamais detecte, jamais fusionne.
+--
+-- CORRECTIF (fermeture des contraintes UNIQUE, lot suivant) : la version
+-- initiale de ce fichier utilisait `alter table ... add constraint ...
+-- unique`, qui ne supporte PAS `if not exists` en Postgres vanilla --
+-- incoherent avec la convention etablie partout ailleurs dans ce repo
+-- (`create table if not exists`, `create index if not exists`,
+-- `on conflict (...) do nothing`) et non rejouable sans erreur si jamais
+-- executee deux fois. Remplace par `create unique index if not exists` :
+-- une contrainte UNIQUE et un index UNIQUE appliquent EXACTEMENT la meme
+-- garantie (meme verrou, meme erreur 23505 a la violation) -- Postgres
+-- implemente d'ailleurs une contrainte UNIQUE via un index unique en
+-- interne. Seule différence pratique : un index n'apparait pas comme
+-- "constraint" nommee dans certains outils d'introspection -- sans
+-- consequence ici, rien dans ce repo ne depend de cette distinction
+-- (ON CONFLICT / gestion 23505 cote applicatif fonctionnent identiquement
+-- dans les deux cas).
+--
+-- AVANT D'EXECUTER : verifier qu'aucun doublon n'existe deja sur les
+-- commandes reelles (l'index echoue sinon) :
+--
+--   select payment_ref, count(*) from shop_orders
+--   group by payment_ref having count(*) > 1;
+--
+-- Si des doublons existent, les investiguer et les fusionner/annuler
+-- manuellement avant d'executer l'index ci-dessous.
+--
+-- Taille de table au moment de l'ecriture (verifie en direct, service_role,
+-- lecture seule) : 25 lignes -- un CREATE INDEX standard (verrou SHARE,
+-- bloque les ecritures concurrentes sur cette table le temps de la
+-- construction, jamais les lectures) suffit largement ; CREATE INDEX
+-- CONCURRENTLY (qui evite meme ce verrou bref, au prix de ne pouvoir
+-- s'executer dans une transaction et de pouvoir laisser un index "invalid"
+-- si interrompu) serait une complexite non justifiee a ce volume -- a
+-- reconsiderer seulement si cette table grossit significativement avant
+-- l'execution de ce fichier.
+
+create unique index if not exists shop_orders_payment_ref_unique
+  on shop_orders (payment_ref);

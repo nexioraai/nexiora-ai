@@ -1,0 +1,63 @@
+-- VERIFIE EN PRODUCTION (audit Mode 3/POD BRAND, perfectionnement lot 3,
+-- 2026-08-21) : `select count(*) from sites where owner_id is null` = 0
+-- (14/14 sites reels ont deja owner_id renseigne, verifie via requete REST
+-- reelle service_role). Ce fichier n'a PAS besoin d'etre execute
+-- actuellement -- conserve pour un futur environnement ou l'ecart
+-- reapparaitrait (nouveau site cree hors du chemin normal, restauration
+-- partielle, etc.), toujours idempotent et sans risque (WHERE owner_id is
+-- null ne retrouve alors aucune ligne).
+--
+-- Étape 2/N — backfill owner_id (chantier ownership/RLS sites).
+-- A executer manuellement dans l'editeur SQL Supabase, APRES
+-- sites_owner_id_step1_add_column.sql (convention du repo : aucun
+-- outillage de migration automatise n'existe ici).
+--
+-- CAUSE RACINE (audit Mode 3/POD BRAND, perfectionnement) : owner_id a ete
+-- ajoutee par step1 comme colonne additive SANS backfill -- seuls les sites
+-- crees APRES ce chantier (src/app/api/chat/route.ts, qui renseigne les
+-- deux colonnes a la creation) l'ont reellement. src/lib/auth/require-site-owner.ts
+-- compare desormais owner_id en priorite (avec repli sur owner_email tant
+-- qu'owner_id est null) -- ce fichier ferme le trou : une fois execute et
+-- verifie, tous les sites reels ont owner_id renseigne et ce repli ne
+-- s'exerce plus jamais en pratique.
+--
+-- Additive et idempotente : ne touche que les lignes ou owner_id est
+-- encore null ET dont l'owner_email correspond a un compte auth.users
+-- existant. Rejouable sans effet si deja execute (WHERE owner_id is null
+-- ne retrouve plus aucune ligne a mettre a jour la seconde fois).
+--
+-- AVANT D'EXECUTER : verifier l'ampleur de ce qui va etre backfille, et
+-- surtout l'absence d'email en double dans auth.users pour un meme
+-- sites.owner_email (l'UPDATE ci-dessous prendrait alors arbitrairement
+-- l'un des deux comptes via la jointure -- cas qui ne devrait jamais se
+-- produire, Supabase Auth impose l'unicite d'email par defaut, mais a
+-- verifier explicitement plutot que suppose) :
+--
+--   select count(*) from sites where owner_id is null;
+--
+--   select owner_email, count(*) from auth.users
+--   group by owner_email having count(*) > 1;
+--   -- (remplacer owner_email par la colonne email reelle de auth.users
+--   -- selon la version Supabase -- verifier son nom exact avant d'executer)
+--
+--   select s.id, s.slug, s.owner_email
+--   from sites s
+--   where s.owner_id is null
+--     and not exists (select 1 from auth.users u where u.email = s.owner_email);
+--   -- Sites dont owner_email ne correspond a AUCUN compte auth.users
+--   -- existant (compte supprime depuis ?) -- resteront owner_id null
+--   -- apres ce backfill ; a investiguer manuellement au cas par cas,
+--   -- PAS un cas que cette migration doit gerer silencieusement.
+--
+-- APRES EXECUTION : reverifier que le premier SELECT ci-dessus renvoie 0
+-- (ou seulement les sites orphelins identifies par le 3e SELECT) avant de
+-- considerer le repli owner_email de require-site-owner.ts comme
+-- definitivement obsolete en pratique. Le code n'a PAS besoin d'etre
+-- modifie apres ce backfill (le repli devient simplement un chemin mort,
+-- sans risque a le laisser en place -- voir require-site-owner.ts).
+
+update sites s
+set owner_id = u.id
+from auth.users u
+where s.owner_id is null
+  and s.owner_email = u.email;

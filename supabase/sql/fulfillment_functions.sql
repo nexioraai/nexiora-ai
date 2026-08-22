@@ -12,6 +12,15 @@
 -- Appelees depuis TypeScript via supabaseAdmin.rpc('nom_fonction', {...}).
 -- Executees sous le contexte service_role (deja utilise par supabaseAdmin
 -- partout ailleurs) => bypass RLS nativement, pas besoin de SECURITY DEFINER.
+--
+-- CORRECTIF SECURITE (audit OBS-03/OBS-04) : la version initiale de ce
+-- fichier ne restreignait l'execution d'aucune des 5 fonctions ci-dessous,
+-- contrairement au pattern deja etabli et deux fois valide dans ce projet
+-- (sites_archive_rpc.sql, shop_stock_functions.sql : REVOKE ALL ... GRANT
+-- EXECUTE ... TO service_role). Sans ce correctif, ces fonctions auraient
+-- ete potentiellement appelables directement via /rpc/ par anon/authenticated,
+-- permettant de manipuler le moteur fulfillment pour des commandes
+-- arbitraires. Ajoute ci-dessous, apres chaque fonction.
 
 -- ============================================================
 -- create_provider_submission
@@ -132,6 +141,11 @@ begin
 end;
 $$;
 
+revoke all on function create_provider_submission(uuid, text, text, uuid[]) from public;
+revoke all on function create_provider_submission(uuid, text, text, uuid[]) from anon;
+revoke all on function create_provider_submission(uuid, text, text, uuid[]) from authenticated;
+grant execute on function create_provider_submission(uuid, text, text, uuid[]) to service_role;
+
 -- ============================================================
 -- claim_provider_submission_attempt
 --
@@ -163,6 +177,11 @@ begin
   return jsonb_build_object('success', true, 'attempt_count', v_attempt_count);
 end;
 $$;
+
+revoke all on function claim_provider_submission_attempt(uuid) from public;
+revoke all on function claim_provider_submission_attempt(uuid) from anon;
+revoke all on function claim_provider_submission_attempt(uuid) from authenticated;
+grant execute on function claim_provider_submission_attempt(uuid) to service_role;
 
 -- ============================================================
 -- transition_submission_status
@@ -199,6 +218,11 @@ begin
   return jsonb_build_object('success', true);
 end;
 $$;
+
+revoke all on function transition_submission_status(uuid, text, text[], jsonb) from public;
+revoke all on function transition_submission_status(uuid, text, text[], jsonb) from anon;
+revoke all on function transition_submission_status(uuid, text, text[], jsonb) from authenticated;
+grant execute on function transition_submission_status(uuid, text, text[], jsonb) to service_role;
 
 -- ============================================================
 -- upsert_provider_order
@@ -271,6 +295,11 @@ begin
 end;
 $$;
 
+revoke all on function upsert_provider_order(uuid, text, text, text, text, jsonb, uuid[]) from public;
+revoke all on function upsert_provider_order(uuid, text, text, text, text, jsonb, uuid[]) from anon;
+revoke all on function upsert_provider_order(uuid, text, text, text, text, jsonb, uuid[]) from authenticated;
+grant execute on function upsert_provider_order(uuid, text, text, text, text, jsonb, uuid[]) to service_role;
+
 -- ============================================================
 -- apply_provider_order_status
 --
@@ -327,3 +356,8 @@ begin
   return jsonb_build_object('success', true, 'from_status', v_current, 'to_status', p_new_normalized_status);
 end;
 $$;
+
+revoke all on function apply_provider_order_status(uuid, text, text) from public;
+revoke all on function apply_provider_order_status(uuid, text, text) from anon;
+revoke all on function apply_provider_order_status(uuid, text, text) from authenticated;
+grant execute on function apply_provider_order_status(uuid, text, text) to service_role;
