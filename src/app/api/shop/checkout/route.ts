@@ -50,15 +50,34 @@ export async function POST(req: Request) {
     const stock = await checkStock(items.map((i) => ({ id: i.id, quantity: i.quantity })));
     if (!stock.ok) return NextResponse.json({ error: stock.reason }, { status: 409 });
 
-    // Verification stock catalog (live aupres du fournisseur) : le client n'achete jamais du vide.
-    const catalogStockLines = items
-      .filter((i) => i.id?.startsWith('catalog-'))
-      .map((i) => {
-        const { realId, variantId } = parseCatalogId(i.id);
-        return { realId, variantId, quantity: i.quantity };
-      });
-    const catStock = await checkCatalogStock(catalogStockLines, countryCode || 'US', site.mode === 3);
-    if (!catStock.ok) return NextResponse.json({ error: catStock.reason }, { status: 409 });
+    // Verification stock catalog (live aupres du fournisseur) : le client
+    // n'achete jamais du vide.
+    //
+    // IGNOREE EN MODE APERCU, deliberement. Le stock n'est PAS une entree de
+    // quoteHash : l'ignorer ici preserve donc l'identite du devis a l'octet
+    // pres. Et il n'apporte aucune garantie supplementaire -- la seule
+    // verification qui fait foi est celle du checkout REEL, ci-dessous
+    // inchangee, puisque le stock peut de toute facon changer entre les deux
+    // passes.
+    //
+    // Ce qu'elle coute reellement : un `cjGetInventory` PAR LIGNE, qui
+    // traverse acquireCjSlot() -- la file globale partagee avec la creation
+    // des commandes fournisseur (fulfill.ts). L'executer aussi en apercu
+    // doublait la contention du parcours d'achat avec le fulfillment, en
+    // contradiction directe avec le modele dropshipping semi-automatise.
+    // NB : l'identifiant exact de la fonction de creation CJ n'est pas cite
+    // ici -- une garde structurelle (cj/__tests__/singleCreationPath) verifie
+    // qu'il n'apparait que dans client.ts et fulfill.ts.
+    if (!previewOnly) {
+      const catalogStockLines = items
+        .filter((i) => i.id?.startsWith('catalog-'))
+        .map((i) => {
+          const { realId, variantId } = parseCatalogId(i.id);
+          return { realId, variantId, quantity: i.quantity };
+        });
+      const catStock = await checkCatalogStock(catalogStockLines, countryCode || 'US', site.mode === 3);
+      if (!catStock.ok) return NextResponse.json({ error: catStock.reason }, { status: 409 });
+    }
 
     const origin = new URL(req.url).origin;
     const successUrl = `${origin}/sites/${slug}?paid=1`;
@@ -79,7 +98,9 @@ export async function POST(req: Request) {
     }
 
     // CJ limite a 1 req/s : on laisse retomber le quota apres la verif de stock.
-    await new Promise((r) => setTimeout(r, 1100));
+    // Sans cette verification (mode apercu), il n'y a aucun quota a laisser
+    // retomber : la temporisation n'aurait plus d'objet.
+    if (!previewOnly) await new Promise((r) => setTimeout(r, 1100));
 
     if (countryCode && (STRIPE_SHIPPING_COUNTRIES as readonly string[]).includes(countryCode)) {
       try {

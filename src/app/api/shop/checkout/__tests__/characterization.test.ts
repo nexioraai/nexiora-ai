@@ -580,3 +580,101 @@ describe('LOT 4 -- garde de devis perime (409)', () => {
     expect(createCheckoutMock).toHaveBeenCalledTimes(1);
   });
 });
+
+// ------------------------------------------------------------
+// LOT 4 (correction) -- le mode apercu n'execute plus la verification de
+// stock live. Elle consommait un `cjGetInventory` PAR LIGNE, qui traverse
+// acquireCjSlot() -- la file globale partagee avec la creation des commandes
+// fournisseur. L'executer aussi en apercu doublait la contention du parcours
+// d'achat avec le fulfillment.
+// Le stock n'etant pas une entree de quoteHash, l'ignorer en apercu preserve
+// l'identite du devis a l'octet pres.
+// ------------------------------------------------------------
+describe('LOT 4 -- apercu sans verification de stock live', () => {
+  function setupStock() {
+    return setupTables({
+      sites: { data: SITE_MODE3 },
+      catalog_products: {
+        data: [{ id: 'cat-1', supplier_id: 'cj', supplier_product_id: 'VID1', price: 10, currency: 'usd' }],
+      },
+      site_catalog_selections: { data: { sell_price: 30 } },
+      shipping_cache: {
+        data: [{ supplier_product_id: 'VID1', shipping_cost: 2, days_min: 7, days_max: 15, tiers: CACHE_TIERS }],
+      },
+      promo_codes: { data: null },
+      shop_orders: { data: { id: 'order-1' } },
+      shop_order_items: { data: [{ id: 'item-1' }] },
+    });
+  }
+  const body = (extra: Record<string, unknown> = {}) => ({
+    slug: 'boutique', countryCode: 'CA', shipmentTier: 'standard', checkoutNonce: 'buyer-1',
+    items: [{ id: 'catalog-cat-1', quantity: 1, name: 'P', currency: 'usd' }],
+    ...extra,
+  });
+
+  it('S1 -- APERCU : checkCatalogStock n\'est PAS appele (aucun creneau CJ consomme)', async () => {
+    setupStock();
+    const res = await POST(req(body({ preview: true })));
+    expect(res.status).toBe(200);
+    expect(checkCatalogStockMock).not.toHaveBeenCalled();
+  });
+
+  it('S2 -- CHECKOUT REEL : checkCatalogStock EST appele', async () => {
+    setupStock();
+    await POST(req(body()));
+    expect(checkCatalogStockMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('S3 -- le devis produit par l\'apercu reste IDENTIQUE (le stock n\'entre pas dans quoteHash)', async () => {
+    setupStock();
+    const quote = await (await POST(req(body({ preview: true })))).json();
+    expect(quote.quoteHash).toMatch(/^q_v1_/);
+    expect(quote.total).toBe(30);
+    expect(quote.shipping).toBe(3.6);
+
+    // Ce hash est accepte tel quel par le checkout reel : preuve que les deux
+    // passes calculent bien le meme devis malgre le stock ignore en apercu.
+    createCheckoutMock.mockClear();
+    setupStock();
+    const res = await POST(req(body({ quoteHash: quote.quoteHash })));
+    expect(res.status).toBe(200);
+    expect(createCheckoutMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('S4/S6 -- stock indisponible au checkout REEL -> 409, AUCUNE session Stripe, AUCUNE commande', async () => {
+    // Le controle qui fait foi reste avant createCheckout : son echec
+    // interrompt la requete sans rien creer.
+    checkCatalogStockMock.mockResolvedValue({ ok: false, reason: '"P" n\'est plus disponible.' });
+    const chains = setupStock();
+    const res = await POST(req(body()));
+    expect(res.status).toBe(409);
+    expect(createCheckoutMock).not.toHaveBeenCalled();
+    expect(chains.get('shop_orders')?.insert).toBeUndefined();
+  });
+
+  it('S5 -- produit devenu indisponible ENTRE apercu et checkout -> l\'apercu passe, le checkout refuse', async () => {
+    setupStock();
+    const quote = await (await POST(req(body({ preview: true })))).json();
+    expect(quote.quoteHash).toBeTruthy();
+
+    checkCatalogStockMock.mockResolvedValue({ ok: false, reason: 'rupture' });
+    createCheckoutMock.mockClear();
+    setupStock();
+    const res = await POST(req(body({ quoteHash: quote.quoteHash })));
+    expect(res.status).toBe(409);
+    expect(createCheckoutMock).not.toHaveBeenCalled();
+  });
+
+  it('S7 -- l\'idempotence est inchangee : meme acheteur + meme devis -> meme cle', async () => {
+    setupStock();
+    createCheckoutMock.mockClear();
+    await POST(req(body()));
+    const k1 = createCheckoutMock.mock.calls[0][7];
+    createCheckoutMock.mockClear();
+    setupStock();
+    await POST(req(body()));
+    const k2 = createCheckoutMock.mock.calls[0][7];
+    expect(k1).toMatch(/^co_v1_/);
+    expect(k2).toBe(k1);
+  });
+});
