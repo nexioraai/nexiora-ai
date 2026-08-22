@@ -366,3 +366,89 @@ describe('LOT 1 -- precision monetaire des valeurs ECRITES EN BASE', () => {
     expect(Math.round((f.stripeApplicationFee as number) * 100)).toBe(1540);
   });
 });
+
+// ------------------------------------------------------------
+// LOT 3 -- la cle d'idempotence est construite SERVEUR.
+// Ces tests passent par la route reelle : eux seuls peuvent prouver que la
+// cle reagit a une donnee que le navigateur ne connait pas.
+// ------------------------------------------------------------
+describe("LOT 3 -- cle d'idempotence derivee de l'etat commercial SERVEUR", () => {
+  function setupSig(opts: { sellPrice?: number; tierCost?: number } = {}) {
+    const tiers = CACHE_TIERS.map((t) =>
+      t.tier === 'standard' ? { ...t, cost: opts.tierCost ?? 3 } : t
+    );
+    return setupTables({
+      sites: { data: SITE_MODE3 },
+      catalog_products: {
+        data: [{ id: 'cat-1', supplier_id: 'cj', supplier_product_id: 'VID1', price: 10, currency: 'usd' }],
+      },
+      site_catalog_selections: { data: { sell_price: opts.sellPrice ?? 30 } },
+      shipping_cache: {
+        data: [{ supplier_product_id: 'VID1', shipping_cost: 2, days_min: 7, days_max: 15, tiers }],
+      },
+      promo_codes: { data: null },
+      shop_orders: { data: { id: 'order-1' } },
+      shop_order_items: { data: [{ id: 'item-1' }] },
+    });
+  }
+  const send = (nonce: string, quantity = 1) =>
+    POST(req({
+      slug: 'boutique', countryCode: 'CA', shipmentTier: 'standard', checkoutNonce: nonce,
+      items: [{ id: 'catalog-cat-1', quantity, name: 'P', currency: 'usd' }],
+    }));
+  const sigOf = () => createCheckoutMock.mock.calls[0]?.[7];
+
+  async function signature(nonce: string, opts: Parameters<typeof setupSig>[0] = {}, quantity = 1) {
+    createCheckoutMock.mockClear();
+    setupSig(opts);
+    await send(nonce, quantity);
+    return sigOf();
+  }
+
+  it('E1 -- deux requetes identiques -> MEME cle (le double-clic retombe sur la meme session)', async () => {
+    const a = await signature('buyer-1');
+    const b = await signature('buyer-1');
+    expect(a).toBeTruthy();
+    expect(b).toBe(a);
+  });
+
+  it("E2 -- CRITIQUE : deux ACHETEURS au panier identique -> cles DIFFERENTES", async () => {
+    // Avant LOT 3, la cle etait derivee du seul panier : ces deux acheteurs
+    // auraient recu la MEME session Stripe.
+    const a = await signature('buyer-1');
+    const b = await signature('buyer-2');
+    expect(b).not.toBe(a);
+  });
+
+  it("E3 -- le PRIX SERVEUR change (le navigateur l'ignore) -> cle DIFFERENTE", async () => {
+    // Le marchand modifie son prix entre deux tentatives. Le panier envoie
+    // exactement le meme corps ; seule la base a change. Avec l'ancienne cle
+    // derivee du client, Stripe recevait la meme cle avec d'autres montants
+    // -> idempotency_error, puis repli silencieux sur une session SANS TAXE.
+    const a = await signature('buyer-1', { sellPrice: 30 });
+    const b = await signature('buyer-1', { sellPrice: 31 });
+    expect(b).not.toBe(a);
+  });
+
+  it('E4 -- le COUT DE LIVRAISON en cache change -> cle DIFFERENTE', async () => {
+    const a = await signature('buyer-1', { tierCost: 3 });
+    const b = await signature('buyer-1', { tierCost: 4 });
+    expect(b).not.toBe(a);
+  });
+
+  it('E5 -- la quantite change -> cle DIFFERENTE', async () => {
+    const a = await signature('buyer-1', {}, 1);
+    const b = await signature('buyer-1', {}, 2);
+    expect(b).not.toBe(a);
+  });
+
+  it("E6 -- aucun nonce fourni -> aucune cle transmise (comportement historique, jamais de cle devinee)", async () => {
+    createCheckoutMock.mockClear();
+    setupSig();
+    await POST(req({
+      slug: 'boutique', countryCode: 'CA', shipmentTier: 'standard',
+      items: [{ id: 'catalog-cat-1', quantity: 1, name: 'P', currency: 'usd' }],
+    }));
+    expect(sigOf()).toBeUndefined();
+  });
+});

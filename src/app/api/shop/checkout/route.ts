@@ -6,6 +6,7 @@ import { checkCatalogStock } from '@/lib/catalog-stock';
 import type { CartItem } from '@/lib/payments/types';
 import { STRIPE_SHIPPING_COUNTRIES } from '@/lib/payments/countries';
 import { buildSupplierGroups, resolveShipping } from '@/lib/shop/quote/resolveShipping';
+import { buildCheckoutSignature } from '@/lib/shop/quote/checkoutSignature';
 import { sitePricing, NEXIORA_COMMISSION_PERCENT, resolveDisplayPrice, roundMoney } from '@/lib/pricing';
 import { logAnomaly } from '@/lib/anomaly';
 import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
@@ -511,16 +512,50 @@ export async function POST(req: Request) {
       }
     }
 
-    // Audit Mode 3/POD BRAND, perfectionnement -- nonce d'idempotence
-    // optionnel fourni par le client (persiste cote navigateur, partage
-    // entre onglets). Jamais fait confiance tel quel : borne en longueur,
-    // sinon ignore silencieusement (comportement historique, aucune
-    // idempotence Stripe) plutot que de risquer un rejet Stripe sur une
-    // valeur malformee.
-    const safeCheckoutNonce =
+    // ---- Cle d'idempotence Stripe (LOT 3) ----
+    // Elle etait auparavant calculee cote NAVIGATEUR a partir du panier, ce
+    // qui produisait deux defauts distincts :
+    //   - COLLISION ENTRE ACHETEURS : la chaine ne contenait aucun composant
+    //     propre a l'acheteur ; deux acheteurs au panier identique
+    //     obtenaient la MEME cle, donc la MEME session Stripe.
+    //   - PARAMETRES SERVEUR ABSENTS : prix, livraison, remise et
+    //     application_fee sont recalcules ICI ; s'ils changeaient entre deux
+    //     tentatives, la cle restait identique alors que la requete Stripe
+    //     changeait -> idempotency_error.
+    // La signature est desormais construite SERVEUR, a partir de l'etat
+    // commercial reellement envoye a Stripe, combine a l'identite de
+    // l'acheteur (le nonce du navigateur n'a plus aucune autorite
+    // financiere : il ne sert qu'a distinguer deux acheteurs).
+    const buyerNonce =
       typeof checkoutNonce === 'string' && checkoutNonce.length > 0 && checkoutNonce.length <= 200
         ? checkoutNonce
-        : undefined;
+        : '';
+    const checkoutSignature = buyerNonce
+      ? buildCheckoutSignature({
+          buyerNonce,
+          siteId: site.id,
+          currency: resolvedCurrency ?? '',
+          origin,
+          shippingAmount,
+          shipmentTier: shipmentTier ?? null,
+          promoId: appliedPromoId,
+          discountAmount: promoDiscount,
+          applicationFee: applicationFeeAmount,
+          lines: items.map((i) => ({
+            cartId: i.id,
+            quantity: i.quantity,
+            unitPrice: i.priceNumber ?? 0,
+            designUrls:
+              Array.isArray(i.customDesigns) && i.customDesigns.length > 0
+                ? i.customDesigns
+                    .map((d: { url?: string }) => d?.url)
+                    .filter((u): u is string => typeof u === 'string' && u.length > 0)
+                : i.customDesignUrl
+                  ? [i.customDesignUrl]
+                  : [],
+          })),
+        })
+      : undefined;
 
     const provider = getProvider(site.payment_provider);
     const { url, orderId } = await provider.createCheckout(
@@ -531,7 +566,7 @@ export async function POST(req: Request) {
       cancelUrl,
       shippingAmount,
       applicationFeeAmount,
-      safeCheckoutNonce,
+      checkoutSignature,
       promoDiscount
     );
 
@@ -577,7 +612,7 @@ export async function POST(req: Request) {
     // conflit sur la contrainte UNIQUE de shop_orders.payment_ref. Ce n'est
     // PAS un echec : la commande existe deja, on renvoie la MEME URL de
     // paiement plutot qu'une erreur ou une seconde commande. Sans nonce
-    // (safeCheckoutNonce absent), orderId est toujours une session Stripe
+    // (checkoutSignature absent), orderId est toujours une session Stripe
     // fraiche : ce conflit ne peut alors jamais se produire (comportement
     // historique inchange). NB : ce garde-fou ne devient effectif qu'une
     // fois la contrainte UNIQUE (shop_orders.payment_ref) ajoutee en base --

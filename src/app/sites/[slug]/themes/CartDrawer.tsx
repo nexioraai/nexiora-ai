@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useCart } from './CartContext';
 import { X, ShoppingBag, Plus, Minus, Trash2 } from 'lucide-react';
 import type { CartLabels } from './cartLabels';
-import { checkoutNonceFor } from '@/lib/shop/checkoutNonce';
+import { getBuyerNonce } from '@/lib/shop/buyerNonce';
 
 type Labels = CartLabels;
 
@@ -353,15 +353,15 @@ export default function CartDrawer({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...payload,
-          // Audit final (phase 2) -- `stripe.ts` derive ses trois cles
-          // d'idempotence Stripe de ce champ, et `checkout/route.ts`
-          // l'accepte depuis le lot "perfectionnement", mais ce composant --
-          // seul appelant reel de la route -- ne l'envoyait JAMAIS : la
-          // protection contre le double-clic et les deux onglets etait
-          // inerte en production (toutes les cles valaient `undefined`).
-          // Derivee du panier lui-meme, pas d'un alea persiste : voir
-          // src/lib/shop/checkoutNonce.ts pour le raisonnement.
-          checkoutNonce: checkoutNonceFor(payload),
+          // LOT 3 -- identifiant d'ACHETEUR, aleatoire et persiste, PAS une
+          // empreinte du panier. La version precedente derivait ce nonce du
+          // contenu du panier : deux acheteurs au panier identique
+          // produisaient la meme cle d'idempotence et Stripe leur servait la
+          // MEME session de paiement. La cle reelle est desormais construite
+          // cote serveur, a partir de l'etat commercial recalcule, combine a
+          // cet identifiant (voir quote/checkoutSignature.ts). Ce champ n'a
+          // plus aucune autorite financiere.
+          checkoutNonce: getBuyerNonce(),
         }),
       });
       const data = await res.json();
