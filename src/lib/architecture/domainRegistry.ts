@@ -49,27 +49,61 @@ export type DomainDefinition = {
   contractTestsPath?: string
 }
 
+// Partagé par les domaines "mode-1-theme-rendering-*" ci-dessous : même
+// motif interdit, même raison métier, un seul endroit à faire évoluer si
+// la règle change un jour. Ce n'est PAS un raccourci générique — chaque
+// domaine reste une entrée distincte, avec son propre ownedFiles et sa
+// propre identité dans les rapports (Bloc 4 : un thème = un domaine, pour
+// qu'une régression identifie immédiatement LEQUEL est cassé, plutôt
+// qu'une alerte générique regroupant les 4 thèmes).
+const NO_CART_IN_MODE_1: ForbiddenImportRule[] = [
+  { pattern: /\buseCart\s*\(/, reason: 'Mode 1 ne doit jamais dépendre du contexte panier (CartContext).' },
+  { pattern: /\bAddToCartButton\b/, reason: 'Mode 1 ne doit jamais rendre un bouton d’ajout au panier.' },
+  { pattern: /\bShippingEstimate\b/, reason: 'Mode 1 ne doit jamais afficher d’estimation de livraison (fonctionnalité e-commerce).' },
+]
+const IGNORE_SHOP_SECTION_IMPORT = /^import .*ShopSection/
+
 export const DOMAIN_REGISTRY: DomainDefinition[] = [
   {
-    id: 'mode-1-theme-rendering',
-    description:
-      "Rendu des thèmes Mode 1 (vitrine) — ne doit jamais embarquer le panier ni la logique Shop en dur, quelle que soit l'évolution des modes 2/3.",
-    ownedFiles: [
-      'src/app/sites/[slug]/themes/EditorialTheme.tsx',
-      'src/app/sites/[slug]/themes/VifTheme.tsx',
-      // MobileNav.tsx est partagé par tous les modes, mais sa correction
-      // (bug trouvé en Phase 1) fait partie de la garantie Mode 1 : il ne
-      // doit jamais coder en dur un accès direct au panier, seulement passer
-      // par getModeCapabilities. C'est le mécanisme exact par lequel un
-      // changement Mode 2/3 pourrait un jour recasser Mode 1 silencieusement.
-      'src/app/sites/[slug]/themes/MobileNav.tsx',
-    ],
-    forbiddenPatterns: [
-      { pattern: /\buseCart\s*\(/, reason: 'Mode 1 ne doit jamais dépendre du contexte panier (CartContext).' },
-      { pattern: /\bAddToCartButton\b/, reason: 'Mode 1 ne doit jamais rendre un bouton d’ajout au panier.' },
-      { pattern: /\bShippingEstimate\b/, reason: 'Mode 1 ne doit jamais afficher d’estimation de livraison (fonctionnalité e-commerce).' },
-    ],
-    ignoreLinePattern: /^import .*ShopSection/,
+    id: 'mode-1-theme-rendering-editorial',
+    description: "Thème Editorial — ne doit jamais embarquer le panier ni la logique Shop en dur en Mode 1.",
+    ownedFiles: ['src/app/sites/[slug]/themes/EditorialTheme.tsx'],
+    forbiddenPatterns: NO_CART_IN_MODE_1,
+    ignoreLinePattern: IGNORE_SHOP_SECTION_IMPORT,
+    capabilities: ['hasShop'],
+    contractTestsPath: 'src/app/sites/[slug]/themes/__tests__/mode1-isolation.test.tsx',
+  },
+  {
+    id: 'mode-1-theme-rendering-vif',
+    description: "Thème Vif — ne doit jamais embarquer le panier ni la logique Shop en dur en Mode 1.",
+    ownedFiles: ['src/app/sites/[slug]/themes/VifTheme.tsx'],
+    forbiddenPatterns: NO_CART_IN_MODE_1,
+    ignoreLinePattern: IGNORE_SHOP_SECTION_IMPORT,
+    capabilities: ['hasShop'],
+    contractTestsPath: 'src/app/sites/[slug]/themes/__tests__/mode1-isolation.test.tsx',
+  },
+  {
+    id: 'mode-1-theme-rendering-noir',
+    description: "Thème Noir — ne doit jamais embarquer le panier ni la logique Shop en dur en Mode 1 (Bloc 4).",
+    ownedFiles: ['src/app/sites/[slug]/themes/NoirTheme.tsx'],
+    forbiddenPatterns: NO_CART_IN_MODE_1,
+    ignoreLinePattern: IGNORE_SHOP_SECTION_IMPORT,
+    capabilities: ['hasShop'],
+    contractTestsPath: 'src/app/sites/[slug]/themes/__tests__/noir-isolation.test.tsx',
+  },
+  {
+    id: 'mode-1-theme-rendering-aurora',
+    description: "Thème Aurora — ne doit jamais embarquer le panier ni la logique Shop en dur en Mode 1 (Bloc 4). Pas de section Shop extraite : la bascule catalogue (StorefrontDense) est déléguée à un fichier séparé, jamais présente dans ce fichier.",
+    ownedFiles: ['src/app/sites/[slug]/themes/AuroraTheme.tsx'],
+    forbiddenPatterns: NO_CART_IN_MODE_1,
+    capabilities: ['hasShop'],
+    contractTestsPath: 'src/app/sites/[slug]/themes/__tests__/aurora-isolation.test.tsx',
+  },
+  {
+    id: 'mode-1-shared-navigation',
+    description: "MobileNav — partagé par les 4 thèmes. Ne doit jamais coder en dur un accès au panier, uniquement passer par getModeCapabilities (bug trouvé et corrigé en Phase 1) : c'est le mécanisme exact par lequel un changement Mode 2/3 pourrait recasser silencieusement le Mode 1 de n'importe quel thème.",
+    ownedFiles: ['src/app/sites/[slug]/themes/MobileNav.tsx'],
+    forbiddenPatterns: NO_CART_IN_MODE_1,
     capabilities: ['hasShop'],
     contractTestsPath: 'src/app/sites/[slug]/themes/__tests__/mode1-isolation.test.tsx',
   },

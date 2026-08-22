@@ -15,6 +15,7 @@ import type {
   ShippingResult,
   ProductVariant,
 } from './supplier-adapter';
+import { fetchWithTimeout } from '@/lib/http/fetchWithTimeout';
 
 // ============================================================
 // Printful — Supplier Adapter Implementation
@@ -45,7 +46,7 @@ export const PRINTFUL_TRACKING_STATUS_MAP: Record<string, TrackingStatus> = {
 // ---------- API helper ----------
 
 async function pfFetch(path: string, token: string, init?: RequestInit): Promise<any> {
-  const res = await fetch(`${PRINTFUL_BASE}${path}`, {
+  const res = await fetchWithTimeout(`${PRINTFUL_BASE}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',

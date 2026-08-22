@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { purchaseDomain, previewPurchase, createDnsRecord, deleteDnsByNameType } from '@/lib/domains/porkbun';
+import { purchaseDomain, previewPurchase, createDnsRecord, deleteDnsByNameType, listAllDomains } from '@/lib/domains/porkbun';
 import {
   addDomainToVercel,
   getVercelDomainStatus,
@@ -9,16 +9,32 @@ import {
 } from '@/lib/domains/vercel';
 import { getDnsVerificationToken } from '@/lib/domains/searchconsole';
 import { checkExistingMail } from '@/lib/domains/mail-guard';
+import { logAnomaly } from '@/lib/anomaly';
 
 /**
  * Chaine complete apres encaissement : achat Porkbun, DNS, Vercel.
  * Chaque etape horodate site_domains, donc une reprise apres echec sait ou
  * elle en est. Aucune etape n'est rejouee si elle a deja abouti.
  */
+// Audit Mode 3/POD BRAND, perfectionnement (fermeture dette Porkbun/DEBT-019) --
+// delai de securite avant de conclure qu'un domaine 'purchase_uncertain' n'a
+// PAS ete achete. listAllDomains() (deja utilise pour la verification BYOD,
+// domains/provision/route.ts) interroge l'etat REEL du compte Porkbun --
+// autorite verifiable, contrairement a une simple hypothese sur l'Idempotency-Key.
+// Ce delai protege contre une eventuelle latence de coherence cote Porkbun
+// (achat qui vient de reussir mais n'apparait pas encore dans listAll) : sans
+// lui, un "non trouve" premature ferait repasser la ligne a 'failed', que le
+// chemin d'echec normal retenterait reellement des le prochain passage --
+// risque de double achat identique a celui que ce mecanisme existe pour
+// eliminer. domain-retry tourne toutes les 2h (vercel.json) : ce delai est
+// largement couvert par UN SEUL intervalle de cron, donc n'introduit pas de
+// tentative gaspillee en pratique.
+const PURCHASE_UNCERTAIN_RECHECK_COOLDOWN_MS = 30 * 60 * 1000;
+
 export async function provisionDomain(domainId: string): Promise<{ ok: boolean; status: string }> {
   const { data: row } = await supabaseAdmin
     .from('site_domains')
-    .select('id, domain, price_cents, status, purchased_at, dns_configured_at, site_id, gsc_token')
+    .select('id, domain, price_cents, status, purchased_at, dns_configured_at, site_id, gsc_token, updated_at')
     .eq('id', domainId)
     .maybeSingle();
 
@@ -30,6 +46,74 @@ export async function provisionDomain(domainId: string): Promise<{ ok: boolean; 
   // signifie reellement que plus rien ne reste a faire.
   if (row.status === 'sitemap_submitted') {
     return { ok: true, status: row.status };
+  }
+  // Audit Mode 3/POD BRAND, perfectionnement (fermeture dette Porkbun/DEBT-019) --
+  // cause racine du precedent correctif ("purchase_uncertain necessite une
+  // intervention manuelle indefinie") : il n'existait aucun moyen de VERIFIER
+  // l'etat reel cote Porkbun, seulement de deviner -- d'ou l'arret complet et
+  // permanent. listAllDomains() (deja fiable, deja utilise pour BYOD) leve
+  // cette ambiguite : c'est la source de verite du fournisseur, pas une
+  // supposition sur l'Idempotency-Key. Ceci transforme 'purchase_uncertain'
+  // d'un etat terminal necessitant du SQL manuel en un etat auto-guerissable,
+  // sans jamais retenter purchaseDomain() a l'aveugle :
+  //   - domaine trouve dans le compte Porkbun -> l'achat A REUSSI, on confirme
+  //     purchased_at et on reprend le pipeline normalement (aucun rachat).
+  //   - domaine absent APRES le delai de securite -> jamais achete pour de
+  //     vrai, on repasse a 'failed' (chemin d'echec normal, deja borne par
+  //     domain-retry/MAX_ATTEMPTS) -- un retry legitime devient a nouveau
+  //     possible, en connaissance de cause plutot qu'a l'aveugle.
+  //   - domaine absent MAIS delai pas encore ecoule, ou listAllDomains() elle-
+  //     meme indisponible -> on ne conclut RIEN, on reste en attente plutot
+  //     que de deviner dans un sens ou l'autre.
+  if (row.status === 'purchase_uncertain') {
+    let owned: { domain: string }[] = [];
+    try {
+      owned = await listAllDomains();
+    } catch (e: any) {
+      console.warn('[provision] listAllDomains indisponible, reconciliation purchase_uncertain reportee', row.domain, e?.message || e);
+      return { ok: false, status: 'purchase_uncertain' };
+    }
+    const reallyOwned = owned.some((d) => d.domain.toLowerCase() === row.domain.toLowerCase());
+
+    if (reallyOwned) {
+      const { error: confirmErr } = await supabaseAdmin
+        .from('site_domains')
+        .update({ status: 'purchased', purchased_at: new Date().toISOString(), last_error: null })
+        .eq('id', domainId)
+        .eq('status', 'purchase_uncertain');
+      if (confirmErr) {
+        console.error('[provision] reconciliation purchase_uncertain : achat confirme chez Porkbun mais ecriture de confirmation en echec', row.domain, confirmErr.message);
+        await logAnomaly({
+          type: 'domain_reconciliation_write_failed',
+          severity: 'blocked',
+          siteId: row.site_id,
+          details: { domainId, domain: row.domain, error: confirmErr.message },
+        });
+        return { ok: false, status: 'purchase_uncertain' };
+      }
+      // Reappel plutot que de dupliquer la suite du pipeline ici : relit la
+      // ligne fraiche (purchased_at desormais renseigne) et reprend
+      // normalement les etapes 2 a 5, exactement comme un premier passage
+      // reussi -- un seul niveau de recursion, non reentrant sur ce meme
+      // statut (purchased_at est maintenant renseigne, cette branche ne peut
+      // plus etre reprise).
+      return provisionDomain(domainId);
+    }
+
+    const uncertainSinceMs = row.updated_at ? Date.now() - new Date(row.updated_at).getTime() : Infinity;
+    if (uncertainSinceMs < PURCHASE_UNCERTAIN_RECHECK_COOLDOWN_MS) {
+      return { ok: false, status: 'purchase_uncertain' };
+    }
+    await supabaseAdmin
+      .from('site_domains')
+      .update({
+        status: 'failed',
+        last_error: 'Achat jamais confirme chez Porkbun (listAllDomains, apres delai de securite) -- nouvel essai autorise',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', domainId)
+      .eq('status', 'purchase_uncertain');
+    return { ok: false, status: 'failed' };
   }
 
   const fail = async (msg: string) => {
@@ -51,10 +135,69 @@ export async function provisionDomain(domainId: string): Promise<{ ok: boolean; 
         return fail('Achat impossible : ' + (preview.message || 'controles Porkbun echoues'));
       }
       await purchaseDomain(row.domain, row.price_cents, domainId);
-      await supabaseAdmin
-        .from('site_domains')
-        .update({ status: 'purchased', purchased_at: new Date().toISOString(), last_error: null })
-        .eq('id', domainId);
+      // Audit Mode 3/POD BRAND, perfectionnement -- cause racine : Porkbun
+      // vient d'etre reellement facture ; si l'ecriture ci-dessous echoue
+      // (probleme reseau/DB transitoire), purchased_at reste null et
+      // domain-retry (qui cible status='failed' ou 'paid' perime) rappelle
+      // provisionDomain() -- qui, ne voyant toujours pas purchased_at,
+      // racheterait reellement le domaine une seconde fois chez Porkbun
+      // (rien dans ce repo ne prouve que l'Idempotency-Key envoyee a Porkbun
+      // protege contre ce cas precis, voir porkbun.ts). Retry court sur
+      // l'ECRITURE (pas sur l'achat, deja fait) pour fermer la fenetre la
+      // plus probable (contention/latence transitoire).
+      let writeOk = false;
+      let lastWriteErr: unknown = null;
+      for (let attempt = 0; attempt < 3 && !writeOk; attempt++) {
+        if (attempt > 0) await new Promise((r) => setTimeout(r, 500 * attempt));
+        const { error: writeErr } = await supabaseAdmin
+          .from('site_domains')
+          .update({ status: 'purchased', purchased_at: new Date().toISOString(), last_error: null })
+          .eq('id', domainId);
+        if (!writeErr) writeOk = true;
+        else lastWriteErr = writeErr;
+      }
+      if (!writeOk) {
+        // Correctif (revue de ce lot) : se contenter de logAnomaly() ici
+        // laissait la ligne a status='paid' -- exactement la valeur que
+        // domain-retry (PAID_STALE_MS = 10 min, cron/domain-retry/route.ts)
+        // reprend automatiquement. Sans changement de statut ACTIF, ce cron
+        // aurait rappele provisionDomain() 10 minutes plus tard, qui aurait
+        // retente reellement purchaseDomain() -- l'anomalie loggee n'etait
+        // qu'informative, elle ne bloquait rien mecaniquement. status
+        // devient desormais 'purchase_uncertain', une valeur qu'AUCUNE
+        // requete de domain-retry ne cible (`status.eq.failed,and(status.eq.paid,...)`)
+        // -- ce domaine ne sera plus jamais retente automatiquement tant
+        // qu'une intervention humaine n'a pas confirme l'etat reel cote
+        // Porkbun et corrige la ligne manuellement. watchdog (cron) alerte
+        // immediatement sur toute ligne dans cet etat (voir watchdog/route.ts).
+        // Tentative best-effort, independante de celle qui vient d'echouer :
+        // si le probleme etait localise (ex. conflit sur cette ligne
+        // precise) plutot qu'une panne DB totale, celle-ci a de bonnes
+        // chances de reussir malgre l'echec des 3 precedentes.
+        const msg = 'Achat Porkbun reussi mais ecriture purchased_at en echec apres 3 tentatives -- ' +
+          'intervention manuelle requise, NE PAS racheter automatiquement : ' +
+          (lastWriteErr instanceof Error ? lastWriteErr.message : String(lastWriteErr));
+        console.error('[provision]', row.domain, msg);
+        const { error: markErr } = await supabaseAdmin
+          .from('site_domains')
+          // updated_at horodate explicitement le debut du delai de securite
+          // de reconciliation (PURCHASE_UNCERTAIN_RECHECK_COOLDOWN_MS,
+          // voir plus haut) -- sans lui, une ligne dont l'ecriture initiale
+          // 'paid' remonte a des jours serait a tort consideree "deja
+          // suffisamment attendue" des la premiere reconciliation.
+          .update({ status: 'purchase_uncertain', last_error: msg.slice(0, 500), updated_at: new Date().toISOString() })
+          .eq('id', domainId);
+        if (markErr) {
+          console.error('[provision]', row.domain, 'echec ADDITIONNEL du passage a purchase_uncertain -- la ligne reste a status=\'paid\', domain-retry pourrait la reprendre dans 10 minutes:', markErr.message);
+        }
+        await logAnomaly({
+          type: 'domain_purchase_write_failed',
+          severity: 'blocked',
+          siteId: row.site_id,
+          details: { domainId, domain: row.domain, error: msg, statusMarked: !markErr },
+        });
+        return { ok: false, status: markErr ? 'paid' : 'purchase_uncertain' };
+      }
     } catch (e: any) {
       return fail('Porkbun : ' + (e?.message || 'echec achat'));
     }
@@ -184,10 +327,36 @@ export async function provisionDomain(domainId: string): Promise<{ ok: boolean; 
   }
 
   // 5. Le site pointe desormais sur ce domaine.
-  await supabaseAdmin
+  // Audit Mode 3/POD BRAND, perfectionnement (fermeture contraintes UNIQUE) --
+  // cause racine trouvee en verifiant que la contrainte site_domains_domain_unique
+  // / sites_custom_domain_unique couvre bien TOUTES les voies d'ecriture : cette
+  // ecriture-ci ignorait totalement son erreur. Avec l'index UNIQUE partiel sur
+  // sites(lower(custom_domain)) desormais en place, une collision ici (theorique --
+  // le garde-fou croise de domains/purchase et domains/route.ts, plus l'unicite
+  // de site_domains.domain elle-meme, la rendent quasi impossible en usage normal,
+  // mais pas prouvee impossible pour un futur chemin de code ou une correction
+  // manuelle en base) levait un 23505 silencieusement avale -- la fonction
+  // retournait quand meme {ok:true, status:'dns_configured'} alors que le site
+  // n'etait PAS reellement rattache a son domaine (le storefront public resout
+  // par sites.custom_domain, jamais site_domains). Domaine entierement
+  // provisionne cote Porkbun/Vercel/DNS mais invisible cote application, sans
+  // aucune trace. Desormais detecte et signale.
+  const { error: linkErr } = await supabaseAdmin
     .from('sites')
     .update({ custom_domain: row.domain })
     .eq('id', row.site_id);
+
+  if (linkErr) {
+    const msg = 'DNS/Vercel/Porkbun termines mais rattachement sites.custom_domain en echec : ' + linkErr.message;
+    console.error('[provision]', row.domain, msg);
+    await logAnomaly({
+      type: 'domain_link_failed',
+      severity: 'blocked',
+      siteId: row.site_id,
+      details: { domainId, domain: row.domain, error: linkErr.message, code: (linkErr as any).code },
+    });
+    return { ok: false, status: 'link_failed' };
+  }
 
   return { ok: true, status: 'dns_configured' };
 }

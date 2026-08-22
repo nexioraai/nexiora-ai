@@ -16,7 +16,7 @@ import type {
   ProductVariant,
 } from './supplier-adapter';
 
-import { cjSearchProductsV2, cjGetInventory, cjCalculateFreight, cjCreateOrder, cjGetOrderDetail, cjGetVariants, cjGetCategories } from '../cj/client';
+import { cjSearchProductsV2, cjGetInventory, cjCalculateFreight, cjGetOrderDetail, cjGetVariants, cjGetCategories } from '../cj/client';
 
 // ============================================================
 // CJ Dropshipping — Supplier Adapter Implementation
@@ -292,47 +292,25 @@ export const cjAdapter: SupplierAdapter = {
     };
   },
 
-  // ---- POST-PAIEMENT (clés du marchand) ----
-  async createOrder(
-    order: OrderRequest,
-    creds: Record<string, string>
-  ): Promise<OrderResult> {
-    const { email, apiKey } = creds as { email: string; apiKey: string };
-
-    const cjPayload = {
-      orderNumber: order.merchant_order_id,
-      shippingZip: order.shipping_address.postal_code,
-      shippingCountryCode: order.shipping_address.country,
-      shippingCountry: order.shipping_address.country,
-      shippingProvince: order.shipping_address.province_state,
-      shippingCity: order.shipping_address.city,
-      shippingAddress: order.shipping_address.address_line1,
-      shippingAddress2: order.shipping_address.address_line2 || '',
-      shippingCustomerName: order.shipping_address.full_name,
-      shippingPhone: order.shipping_address.phone,
-      products: [
-        {
-          vid: order.variant_id,
-          quantity: order.quantity,
-        },
-      ],
-    };
-
-    try {
-      const data = await cjCreateOrder(email, apiKey, cjPayload);
-      return {
-        success: true,
-        supplier_order_id: data?.orderId || data?.orderNum || '',
-        estimated_shipping_days: 15,
-      };
-    } catch (e: any) {
-      return {
-        success: false,
-        supplier_order_id: '',
-        estimated_shipping_days: 0,
-        error_message: e.message,
-      };
-    }
+  // ---- POST-PAIEMENT ----
+  // DÉLIBÉRÉMENT DÉSACTIVÉ pour CJ (audit hostile rate-limit/idempotence,
+  // Phase 4). La méthode DOIT rester présente (SupplierAdapter.createOrder
+  // est un membre requis de l'interface, partagé par Printful/Gelato/
+  // Printify) mais ne doit JAMAIS exécuter de logique de création réelle
+  // pour CJ : le SEUL chemin autorisé est src/lib/cj/fulfill.ts, qui
+  // implémente le verrou atomique, la réconciliation obligatoire avant
+  // création et la gestion 1603003 -- rien de tout cela n'existe ici.
+  // Un appel accidentel (refactor futur qui "unifierait" CJ dans le moteur
+  // générique POD) échoue donc bruyamment et immédiatement plutôt que de
+  // créer silencieusement une commande CJ sans aucune protection
+  // d'idempotence, jamais un échec silencieux qui masquerait le problème.
+  async createOrder(): Promise<OrderResult> {
+    throw new Error(
+      'cj-adapter.ts:createOrder() est désactivé intentionnellement. ' +
+      'La création de commande CJ doit exclusivement passer par fulfillCjOrder() ' +
+      '(src/lib/cj/fulfill.ts) — seul chemin avec verrou atomique, réconciliation ' +
+      'obligatoire avant création, et gestion 1603003.'
+    );
   },
 
   // ---- TRACKING (clés du marchand) ----
@@ -342,9 +320,15 @@ export const cjAdapter: SupplierAdapter = {
   ): Promise<TrackingResult> {
     const { email, apiKey } = creds as { email: string; apiKey: string };
 
+    // cjGetOrderDetail renvoie desormais un resultat discrimine (found /
+    // not_found / unknown) -- audit Reseller/CJ, distinction NOT_FOUND vs
+    // UNKNOWN necessaire cote fulfillment CJ. Ce mapping generique (affichage
+    // TrackingStatus) n'a pas besoin de cette distinction : les deux cas
+    // "pas trouve" et "reponse ambigue" retombent identiquement sur
+    // 'pending', comme avant ce changement de contrat.
     const detail = await cjGetOrderDetail(email, apiKey, supplierOrderId);
 
-    if (!detail) {
+    if (detail.outcome !== 'found') {
       return {
         supplier_order_id: supplierOrderId,
         status: 'pending',
@@ -352,13 +336,14 @@ export const cjAdapter: SupplierAdapter = {
       };
     }
 
+    const data = detail.data;
     return {
       supplier_order_id: supplierOrderId,
-      status: mapCjStatus(detail.orderStatus || ''),
-      tracking_number: detail.trackNumber || detail.trackingNumber || undefined,
-      carrier: detail.logisticName || undefined,
-      tracking_url: detail.trackNumber
-        ? `https://t.17track.net/en#nums=${detail.trackNumber}`
+      status: mapCjStatus(data.orderStatus || ''),
+      tracking_number: data.trackNumber || data.trackingNumber || undefined,
+      carrier: data.logisticName || undefined,
+      tracking_url: data.trackNumber
+        ? `https://t.17track.net/en#nums=${data.trackNumber}`
         : undefined,
       events: [],
     };
