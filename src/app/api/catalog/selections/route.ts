@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
+import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
 
 export const maxDuration = 10;
 
@@ -124,17 +125,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'slug et catalogProductId requis' }, { status: 400 });
     }
 
-    const auth = await requireSiteOwner(req, slug);
+    const auth = await requireSiteOwner(req, slug, 'id, dropship_type');
     if (!auth.ok) return auth.response;
 
     const { data: product } = await supabaseAdmin
       .from('catalog_products')
-      .select('id')
+      .select('id, supplier_id')
       .eq('id', catalogProductId)
       .maybeSingle();
 
     if (!product) {
       return NextResponse.json({ error: 'Produit introuvable au catalogue' }, { status: 404 });
+    }
+
+    // Audit Mode 3 global (N2, meme cause racine que N1) -- cette route
+    // n'importait pas suppliersForDropshipType (source unique deja utilisee
+    // par curate/search), permettant a un marchand reseller d'ajouter
+    // manuellement un produit Printful/Gelato a sa selection -- visible
+    // ensuite dans la recherche "curated" et achetable en contradiction avec
+    // l'invariant du sous-mode.
+    const eligibleSuppliers = suppliersForDropshipType((auth.site as any).dropship_type);
+    if (!product.supplier_id || !eligibleSuppliers.includes(product.supplier_id)) {
+      return NextResponse.json({ error: 'Ce produit ne correspond pas au sous-mode de cette boutique' }, { status: 409 });
     }
 
     const { data, error } = await supabaseAdmin

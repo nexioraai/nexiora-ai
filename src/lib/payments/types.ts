@@ -30,7 +30,21 @@ export interface PaymentProvider {
     successUrl: string,
     cancelUrl: string,
     shippingFlat: number,
-    applicationFeeAmount?: number
+    applicationFeeAmount?: number,
+    /**
+     * Nonce d'idempotence fourni par le client (persistant cote navigateur,
+     * partage entre onglets) -- un rejeu du meme nonce avec des parametres
+     * identiques renvoie la MEME session Stripe au lieu d'en creer une
+     * nouvelle. Absent (undefined) : comportement historique inchange,
+     * chaque appel cree une session distincte.
+     */
+    checkoutNonce?: string,
+    /**
+     * Remise promo, en unite monetaire (pas en centimes), DEJA validee et
+     * recalculee cote serveur par checkout/route.ts -- jamais une valeur
+     * transmise par le navigateur. 0 ou absent = aucune remise.
+     */
+    promoDiscount?: number
   ): Promise<CheckoutResult>;
   getStatus(accountId: string): Promise<{ ready: boolean }>;
   /** Rembourse un paiement (avec reverse transfer vers le marchand). */

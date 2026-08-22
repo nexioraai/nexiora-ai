@@ -1,4 +1,5 @@
 import 'server-only';
+import { fetchWithTimeout } from '@/lib/http/fetchWithTimeout';
 
 /**
  * Authentification CJ Dropshipping — CÔTÉ SERVEUR UNIQUEMENT.
@@ -16,7 +17,7 @@ export async function getCjToken(email: string, apiKey: string): Promise<string>
     return cached.token;
   }
 
-  const res = await fetch(`${CJ_BASE}/authentication/getAccessToken`, {
+  const res = await fetchWithTimeout(`${CJ_BASE}/authentication/getAccessToken`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ apiKey }),

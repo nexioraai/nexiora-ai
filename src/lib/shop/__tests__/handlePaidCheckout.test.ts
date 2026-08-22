@@ -9,6 +9,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // (le flux continue toujours vers stock/email, jamais de throw) reste
 // identique, et que l'idempotence (fulfillCjOrder/fulfillPodOrder
 // appelés une seule fois chacun, aucun retry ajouté) est inchangée.
+//
+// F7 (audit stock Mode 2) — étendu pour prouver : la garde d'idempotence
+// webhook (.eq('status','pending')) bloque bien tout traitement en double ;
+// un échec de decrementStock() déclenche un remboursement automatique,
+// jamais l'email "commande confirmée" ; un remboursement qui échoue est
+// journalisé plutôt que de laisser une commande payée mais infulfillable
+// silencieusement.
 // ============================================================
 
 const fulfillCjOrderMock = vi.fn();
@@ -36,12 +43,32 @@ vi.mock('@/lib/anomaly', () => ({
   logAnomaly: (...a: unknown[]) => logAnomalyMock(...a),
 }));
 
-function tableChain(response: { data: unknown; error?: unknown }) {
+const refundPaymentMock = vi.fn();
+vi.mock('@/lib/payments', () => ({
+  getProvider: vi.fn(() => ({ refundPayment: (...a: unknown[]) => refundPaymentMock(...a) })),
+}));
+
+const { updateCalls } = vi.hoisted(() => ({
+  updateCalls: [] as { table: string; payload: Record<string, unknown>; eqCalls: [string, unknown][] }[],
+}));
+
+function tableChain(table: string, response: { data: unknown; error?: unknown }) {
   const chain: Record<string, unknown> = {};
+  const eqCalls: [string, unknown][] = [];
   const self = () => chain;
-  chain.update = vi.fn(self);
+  // Trace chaque .update() (table + payload + filtres .eq() appliqués
+  // ensuite) pour pouvoir vérifier précisément QUEL update a été demandé --
+  // notamment le passage à status:'refunded' (F7), sans dépendre de l'ordre
+  // d'appel ni d'un chaînage fragile.
+  chain.update = vi.fn((payload: Record<string, unknown>) => {
+    updateCalls.push({ table, payload, eqCalls });
+    return chain;
+  });
   chain.select = vi.fn(self);
-  chain.eq = vi.fn(self);
+  chain.eq = vi.fn((col: string, val: unknown) => {
+    eqCalls.push([col, val]);
+    return chain;
+  });
   chain.in = vi.fn(self);
   const narrowed = Array.isArray(response.data)
     ? { data: response.data[0] ?? null, error: response.error ?? null }
@@ -59,11 +86,11 @@ vi.mock('@/lib/supabase-admin', () => ({
 
 import { handlePaidCheckout } from '../handlePaidCheckout';
 
-const ORDER = { id: 'order-1', estimated_delivery: null, site_id: 'site-1', cancel_token: 'tok' };
+const ORDER = { id: 'order-1', estimated_delivery: null, site_id: 'site-1', cancel_token: 'tok', payment_provider: 'stripe' };
 
 type Handlers = Record<string, { data: unknown; error?: unknown }>;
 function setupTables(handlers: Handlers, fallback: { data: unknown; error?: unknown } = { data: [], error: null }) {
-  fromMock.mockImplementation((table: string) => tableChain(handlers[table] ?? fallback));
+  fromMock.mockImplementation((table: string) => tableChain(table, handlers[table] ?? fallback));
 }
 
 function session(overrides: Record<string, unknown> = {}) {
@@ -79,14 +106,20 @@ function session(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   fromMock.mockReset();
+  updateCalls.length = 0;
   fulfillCjOrderMock.mockReset();
   fulfillPodOrderMock.mockReset();
   decrementStockMock.mockReset();
   sendOrderConfirmationEmailMock.mockReset();
   logAnomalyMock.mockReset();
+  refundPaymentMock.mockReset();
   fulfillCjOrderMock.mockResolvedValue([]);
   fulfillPodOrderMock.mockResolvedValue([]);
   sendOrderConfirmationEmailMock.mockResolvedValue(true);
+  // F7 : chemin nominal par défaut -- décrémentation réussie. Les tests de
+  // la section "stock insuffisant" ci-dessous le redéfinissent explicitement.
+  decrementStockMock.mockResolvedValue({ ok: true });
+  refundPaymentMock.mockResolvedValue({ id: 're_1', status: 'succeeded', amount: 3000 });
 });
 
 describe('handlePaidCheckout — commande introuvable', () => {
@@ -99,8 +132,23 @@ describe('handlePaidCheckout — commande introuvable', () => {
   });
 });
 
+describe('handlePaidCheckout — F4/F7 : garde d\'idempotence webhook (.eq(status, pending))', () => {
+  it('commande déjà traitée (statut non "pending" au moment du webhook) -> comportement identique à "introuvable", aucun traitement en double', async () => {
+    // La garde .eq('status','pending') fait que .maybeSingle() ne retrouve
+    // aucune ligne pour un second appel sur une commande déjà passée à
+    // 'paid' -- simulé ici exactement comme le cas "introuvable" : c'est
+    // la MÊME conséquence observable côté appelant (order === null).
+    setupTables({ shop_orders: { data: null, error: null } });
+    await handlePaidCheckout(session());
+    expect(fulfillCjOrderMock).not.toHaveBeenCalled();
+    expect(decrementStockMock).not.toHaveBeenCalled();
+    expect(sendOrderConfirmationEmailMock).not.toHaveBeenCalled();
+    expect(refundPaymentMock).not.toHaveBeenCalled();
+  });
+});
+
 describe('handlePaidCheckout — chemin nominal (aucun échec)', () => {
-  it('aucune anomalie loggée quand CJ et POD réussissent tous les deux', async () => {
+  it('aucune anomalie loggée quand CJ et POD réussissent tous les deux, email envoyé', async () => {
     setupTables({
       shop_orders: { data: [ORDER], error: null },
       shop_order_items: { data: [], error: null },
@@ -113,6 +161,7 @@ describe('handlePaidCheckout — chemin nominal (aucun échec)', () => {
     expect(fulfillPodOrderMock).toHaveBeenCalledTimes(1);
     expect(logAnomalyMock).not.toHaveBeenCalled();
     expect(sendOrderConfirmationEmailMock).toHaveBeenCalledTimes(1);
+    expect(refundPaymentMock).not.toHaveBeenCalled();
   });
 });
 
@@ -197,5 +246,113 @@ describe('handlePaidCheckout — D3 : les deux échouent', () => {
     expect(logAnomalyMock).toHaveBeenNthCalledWith(2, expect.objectContaining({ type: 'pod_fulfill_failed' }));
     // Toujours pas de throw : le paiement reste encaisse, la commande reste 'paid'.
     expect(sendOrderConfirmationEmailMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('handlePaidCheckout — F7 : stock insuffisant après paiement confirmé', () => {
+  function setupStockShortfall() {
+    setupTables({
+      shop_orders: { data: [ORDER], error: null },
+      shop_order_items: { data: [{ product_id: 'sp1', quantity: 5 }], error: null },
+      shop_products: { data: [{ id: 'sp1', cj_vid: null }], error: null },
+      sites: { data: [{ name: 'Ma Boutique' }], error: null },
+    });
+    decrementStockMock.mockResolvedValue({ ok: false, reason: 'INSUFFICIENT_STOCK', productId: 'sp1' });
+  }
+
+  it('déclenche logAnomaly(stock_insufficient_after_payment) avec le détail exact', async () => {
+    setupStockShortfall();
+    await handlePaidCheckout(session());
+    expect(logAnomalyMock).toHaveBeenCalledWith({
+      type: 'stock_insufficient_after_payment',
+      severity: 'blocked',
+      siteId: 'site-1',
+      details: { orderId: 'order-1', reason: 'INSUFFICIENT_STOCK', productId: 'sp1' },
+    });
+  });
+
+  it('rembourse automatiquement via le payment_intent de la session', async () => {
+    setupStockShortfall();
+    await handlePaidCheckout(session({ payment_intent: 'pi_specifique' }));
+    expect(refundPaymentMock).toHaveBeenCalledWith('pi_specifique');
+  });
+
+  it('email "commande confirmée" JAMAIS envoyé quand le stock manque', async () => {
+    setupStockShortfall();
+    await handlePaidCheckout(session());
+    expect(sendOrderConfirmationEmailMock).not.toHaveBeenCalled();
+  });
+
+  it('remboursement réussi -> statut de la commande passe à "refunded", gardé par .eq("status","paid")', async () => {
+    setupStockShortfall();
+    await handlePaidCheckout(session());
+    const refundedUpdate = updateCalls.find(
+      (u) => u.table === 'shop_orders' && (u.payload as Record<string, unknown>)?.status === 'refunded'
+    );
+    expect(refundedUpdate).toBeDefined();
+    expect(refundedUpdate!.eqCalls).toContainEqual(['id', 'order-1']);
+    expect(refundedUpdate!.eqCalls).toContainEqual(['status', 'paid']);
+  });
+
+  it('échec du remboursement lui-même -> logAnomaly(refund_failed), pas de throw, pas d\'email', async () => {
+    setupStockShortfall();
+    refundPaymentMock.mockRejectedValue(new Error('Stripe API down'));
+    await handlePaidCheckout(session());
+    expect(logAnomalyMock).toHaveBeenCalledWith({
+      type: 'refund_failed',
+      severity: 'blocked',
+      siteId: 'site-1',
+      details: { orderId: 'order-1', reason: 'Stripe API down' },
+    });
+    expect(sendOrderConfirmationEmailMock).not.toHaveBeenCalled();
+  });
+
+  it('CJ/POD ne sont pas affectés par un échec de stock (chemins indépendants)', async () => {
+    setupStockShortfall();
+    await handlePaidCheckout(session());
+    expect(fulfillCjOrderMock).toHaveBeenCalledTimes(1);
+    expect(fulfillPodOrderMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('handlePaidCheckout — audit adresse Reseller/CJ, partie 7 : fusion du téléphone', () => {
+  it('customer_details.phone présent -> fusionné dans shipping_address (jamais une colonne séparée)', async () => {
+    setupTables({
+      shop_orders: { data: [ORDER], error: null },
+      shop_order_items: { data: [], error: null },
+      sites: { data: [{ name: 'Ma Boutique' }], error: null },
+    });
+    await handlePaidCheckout(session({
+      shipping_details: { address: { line1: '1 rue Test', city: 'Montreal', country: 'CA', postal_code: 'H1A1A1', state: 'QC' } },
+      customer_details: { email: 'client@test.com', name: 'Client Test', phone: '+15145551234' },
+    }));
+    const write = updateCalls.find((u) => u.table === 'shop_orders' && (u.payload as any).status === 'paid');
+    expect((write!.payload as any).shipping_address).toMatchObject({
+      line1: '1 rue Test', city: 'Montreal', country: 'CA', phone: '+15145551234',
+    });
+  });
+
+  it('customer_details.phone absent -> shipping_address.phone undefined, pas de valeur fabriquée ici', async () => {
+    setupTables({
+      shop_orders: { data: [ORDER], error: null },
+      shop_order_items: { data: [], error: null },
+      sites: { data: [{ name: 'Ma Boutique' }], error: null },
+    });
+    await handlePaidCheckout(session({
+      shipping_details: { address: { line1: '1 rue Test', city: 'Montreal', country: 'CA', postal_code: 'H1A1A1' } },
+    }));
+    const write = updateCalls.find((u) => u.table === 'shop_orders' && (u.payload as any).status === 'paid');
+    expect((write!.payload as any).shipping_address.phone).toBeUndefined();
+  });
+
+  it('pas d\'adresse de livraison du tout -> shipping_address reste null, jamais un objet {phone} orphelin', async () => {
+    setupTables({
+      shop_orders: { data: [ORDER], error: null },
+      shop_order_items: { data: [], error: null },
+      sites: { data: [{ name: 'Ma Boutique' }], error: null },
+    });
+    await handlePaidCheckout(session({ customer_details: { email: 'c@test.com', phone: '+15145551234' } }));
+    const write = updateCalls.find((u) => u.table === 'shop_orders' && (u.payload as any).status === 'paid');
+    expect((write!.payload as any).shipping_address).toBeNull();
   });
 });

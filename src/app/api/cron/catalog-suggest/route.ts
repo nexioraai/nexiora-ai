@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { startCronRun, finishCronRun } from '@/lib/cron-tracker';
+import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
 
 export const maxDuration = 300;
 
@@ -13,8 +14,11 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
  * Fréquence recommandée : 1x/semaine.
  */
 export async function GET(req: NextRequest) {
+  // Fail-closed (lot crons fail-open) : un secret absent doit refuser
+  // l'acces, jamais le desactiver silencieusement.
   const auth = req.headers.get('authorization');
-  if (process.env.CRON_SECRET && auth !== 'Bearer ' + process.env.CRON_SECRET) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || auth !== 'Bearer ' + secret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -33,12 +37,20 @@ export async function GET(req: NextRequest) {
   }
 
   // 2. Produits récents (syncés dans les 7 derniers jours)
+  // LOT L (Mode 3 global, dette technique) -- `['cj']` codé en dur ici
+  // dupliquait la règle réelle (suppliersForDropshipType('reseller'),
+  // dropship/suppliers.ts, source unique déjà établie et utilisée partout
+  // ailleurs dans ce dépôt) : ce cron ne cible QUE dropship_type='reseller'
+  // (ligne 31), donc la valeur coïncidait avec la règle réelle, mais une
+  // duplication silencieuse -- si la règle changeait un jour côté source
+  // unique, ce cron continuerait à suggérer des produits d'un fournisseur
+  // périmé sans qu'aucun test ni erreur ne le signale.
   const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const { data: newProducts } = await supabaseAdmin
     .from('catalog_products')
     .select('id, supplier_id, supplier_product_id, name, category, price, currency, images, shipping_days_min')
     .eq('in_stock', true)
-    .in('supplier_id', ['cj'])
+    .in('supplier_id', suppliersForDropshipType('reseller'))
     .gte('last_synced_at', oneWeekAgo)
     .order('last_synced_at', { ascending: false })
     .limit(200);

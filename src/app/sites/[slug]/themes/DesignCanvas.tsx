@@ -35,12 +35,14 @@ interface Props {
   onDesignChange: (designs: DesignEntry[]) => void;
   primary?: string;
   lang?: string;
+  /** LOT J (F-CUSTOM-01) : lie l'upload au site courant (design_uploads.site_id). */
+  slug: string;
 }
 
 const LABELS: Record<string, Record<string, string>> = {
   en: {
     title: 'Customize your product',
-    hint: 'PNG, JPG or SVG — max 10 MB',
+    hint: 'PNG, JPG or WEBP — max 10 MB',
     dragHint: 'Drag & drop or click to browse',
     uploading: 'Uploading...',
     adjust: 'Drag to move · pinch or slider to resize',
@@ -55,7 +57,7 @@ const LABELS: Record<string, Record<string, string>> = {
   },
   fr: {
     title: 'Personnalisez votre produit',
-    hint: 'PNG, JPG ou SVG — max 10 Mo',
+    hint: 'PNG, JPG ou WEBP — max 10 Mo',
     dragHint: 'Glissez-deposez ou cliquez pour parcourir',
     uploading: 'Envoi en cours...',
     adjust: 'Glissez pour deplacer · curseur pour redimensionner',
@@ -72,7 +74,7 @@ const LABELS: Record<string, Record<string, string>> = {
 
 // Print area and template image come straight from Printful — nothing guessed.
 
-export default function DesignCanvas({ productImage, variantId, onDesignChange, primary = '#111', lang = 'en' }: Props) {
+export default function DesignCanvas({ productImage, variantId, onDesignChange, primary = '#111', lang = 'en', slug }: Props) {
   const t = LABELS[lang] || LABELS.en;
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -142,12 +144,15 @@ export default function DesignCanvas({ productImage, variantId, onDesignChange, 
   const handleFile = async (file: File) => {
     setError(null);
     if (file.size > 10 * 1024 * 1024) { setError(t.error); return; }
-    const allowed = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'];
+    // LOT J (F-CUSTOM-01) : SVG retire (risque de script embarque si l'URL
+    // publique est un jour ouverte directement) -- voir upload-design/route.ts.
+    const allowed = ['image/png', 'image/jpeg', 'image/webp'];
     if (!allowed.includes(file.type)) { setError(t.error); return; }
     setUploading(true);
     try {
       const fd = new FormData();
       fd.append('file', file);
+      fd.append('slug', slug);
       const res = await fetch('/api/shop/upload-design', { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -350,7 +355,7 @@ export default function DesignCanvas({ productImage, variantId, onDesignChange, 
       )}
 
       {error && <p style={{ color: '#e00', fontSize: 12, marginTop: 6 }}>{error}</p>}
-      <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
+      <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
       <style>{'@keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }'}</style>
     </div>
   );

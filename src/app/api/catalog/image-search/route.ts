@@ -38,6 +38,28 @@ export async function POST(req: Request) {
       return NextResponse.json({ products: [], keywords: '', total: 0 });
     }
 
+    // Audit Mode 3/POD BRAND, perfectionnement -- cause racine : route
+    // publique (visiteur storefront, pas de compte) declenchant un appel
+    // Claude Vision reellement facture, sans authentification NI limite de
+    // debit -- contrairement a generate-mockups (facture Printful), deja
+    // durci pour ce meme risque. Un tiers pouvait boucler des requetes avec
+    // un `slug` public (trivialement enumerable) pour faire monter la
+    // facture IA d'un marchand tiers sans aucune limite. Limite simple,
+    // DB-native (ai_usage_log deja alimentee par logAiUsage ci-dessous) :
+    // rejette si ce site a deja declenche 10+ analyses d'image dans la
+    // derniere minute -- un visiteur legitime n'en fait jamais autant
+    // (une recherche = une photo), un usage automatise en boucle si.
+    const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString();
+    const { count: recentCount } = await supabaseAdmin
+      .from('ai_usage_log')
+      .select('id', { count: 'exact', head: true })
+      .eq('site_id', site.id)
+      .eq('usage_type', 'image')
+      .gte('created_at', oneMinuteAgo);
+    if ((recentCount ?? 0) >= 10) {
+      return NextResponse.json({ error: 'Trop de requetes, reessayez dans une minute.' }, { status: 429 });
+    }
+
     const msg = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 150,

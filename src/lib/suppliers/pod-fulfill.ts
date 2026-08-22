@@ -8,6 +8,7 @@ import {
 } from '@/lib/fulfillment/submission-service';
 import { upsertProviderOrder } from '@/lib/fulfillment/provider-order-service';
 import { classifyProviderError } from '@/lib/fulfillment/provider-error-classification';
+import { logAnomaly } from '@/lib/anomaly';
 
 /**
  * Fulfil POD items (Printful/Printify) for a paid order.
@@ -27,6 +28,27 @@ export async function fulfillPodOrder(orderId: string): Promise<string[]> {
     .eq('id', orderId)
     .maybeSingle();
   if (!order) return [];
+
+  // Audit Mode 3 global (F-CUSTOM-02/03) -- deuxieme barriere independante
+  // de celle posee au checkout (checkout/route.ts) : ne fait jamais
+  // confiance au fait qu'order_item_designs ne contient QUE des lignes
+  // legitimes -- une commande deja persistee avant ce correctif, un futur
+  // chemin d'ecriture qui contournerait le checkout, ou toute anomalie de
+  // donnee doivent tous aboutir au meme refus. Requete separee (PAS un
+  // embed PostgREST `sites(dropship_type)` -- jamais prouve fonctionnel
+  // dans ce projet, voir audit ; ce depot a deja eu un incident de
+  // production cause par une hypothese non verifiee sur le comportement
+  // d'un embed) : source de verite identique a celle deja utilisee au
+  // checkout, jamais un site_id fourni par un appelant. Fail-closed par
+  // construction : si la lecture echoue ou ne retourne rien, orderSite est
+  // null/undefined, dropship_type ne matche ni 'pod_brand' ni 'pod_custom',
+  // designAllowed reste false.
+  const { data: orderSite } = await supabaseAdmin
+    .from('sites')
+    .select('dropship_type')
+    .eq('id', order.site_id)
+    .maybeSingle();
+  const designAllowed = orderSite?.dropship_type === 'pod_brand' || orderSite?.dropship_type === 'pod_custom';
 
   const { data: items } = await supabaseAdmin
     .from('shop_order_items')
@@ -61,6 +83,19 @@ export async function fulfillPodOrder(orderId: string): Promise<string[]> {
     list.push({ url: d.design_url, placement: d.placement || 'front', position: d.position });
     designsByItemId.set(d.order_item_id, list);
   });
+
+  // Une commande non-pod_brand/pod_custom ne devrait jamais avoir de design
+  // en base (le checkout les efface desormais) -- si c'est quand meme le
+  // cas (donnee historique pre-correctif, ou tentative de contournement),
+  // c'est une anomalie a tracer, pas une erreur a faire echouer le
+  // fulfillment lui-meme (les items non-design continuent d'etre traites).
+  if (!designAllowed && designsByItemId.size > 0) {
+    await logAnomaly({
+      type: 'pod_fulfill_design_stripped',
+      siteId: order.site_id,
+      details: { orderId: order.id, dropshipType: orderSite?.dropship_type ?? null },
+    });
+  }
 
   const addr: any = order.shipping_address || {};
   const shippingAddress = {
@@ -126,10 +161,10 @@ export async function fulfillPodOrder(orderId: string): Promise<string[]> {
         // order.id car TypeScript ne propage pas le narrowing du garde
         // `if (!order) return []` dans une closure de fonction imbriquée.
         merchant_order_id: orderId,
-        design_url: designRow?.url || undefined,
-        design_position: designRow?.position || undefined,
-        design_placement: designRow?.placement || undefined,
-        design_files: designList.length > 0 ? designList : undefined,
+        design_url: designAllowed ? (designRow?.url || undefined) : undefined,
+        design_position: designAllowed ? (designRow?.position || undefined) : undefined,
+        design_placement: designAllowed ? (designRow?.placement || undefined) : undefined,
+        design_files: designAllowed ? (designList.length > 0 ? designList : undefined) : undefined,
       },
     };
   }
@@ -309,11 +344,24 @@ export async function fulfillPodOrder(orderId: string): Promise<string[]> {
     }
   }
 
+  // Audit Mode 3 global (F-POD-01, LOT H) -- cette ecriture n'avait aucune
+  // garde (ni CAS applicatif, ni barriere DB), seule ecriture de statut de
+  // tout le projet dans ce cas. Passe desormais par apply_shop_order_status()
+  // (supabase/sql/shop_order_status_machine.sql), garde CAS explicite
+  // (transition autorisee uniquement depuis 'paid', l'etat garanti par le
+  // CAS pending->paid de handlePaidCheckout qui precede systematiquement cet
+  // appel) + barriere DB independante (trigger, rejette toute transition
+  // hors du graphe legal quel que soit l'appelant, y compris un futur appel
+  // direct qui oublierait cette garde).
   if (supplierOrderIds.length > 0) {
-    await supabaseAdmin
-      .from('shop_orders')
-      .update({ status: 'processing' })
-      .eq('id', order.id);
+    const { data: result } = await supabaseAdmin.rpc('apply_shop_order_status', {
+      p_order_id: order.id,
+      p_target_status: 'processing',
+      p_allowed_current: ['paid'],
+    });
+    if (!result?.success) {
+      console.error('[pod-fulfill] apply_shop_order_status(processing) failed:', result?.reason);
+    }
   }
 
   return supplierOrderIds;

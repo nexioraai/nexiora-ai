@@ -36,10 +36,24 @@ export async function POST(req: Request) {
       }
       case 'checkout.session.expired': {
         const session: any = event.data.object;
+        // Audit Mode 3/POD BRAND, perfectionnement -- cause racine : seule
+        // ecriture de statut de tout le repo sans garde CAS (`.eq('status', ...)`),
+        // contrairement au patron systematiquement applique ailleurs
+        // (handlePaidCheckout.ts, orders/route.ts PATCH, cj-tracking/route.ts,
+        // cancel-order/route.ts via cancelShopOrderAtomic). Stripe ne devrait
+        // jamais emettre 'expired' pour une session deja 'completed', mais
+        // rien ne garantit l'ORDRE de livraison des webhooks (retry, deux
+        // webhooks Stripe distincts pour la meme session -- ce projet en a
+        // deux, voir handlePaidCheckout.ts) : sans garde, un 'expired' recu
+        // apres un 'completed' deja traite ecraserait silencieusement une
+        // commande payee (voire deja expediee) en 'canceled'. Une session
+        // n'expire legitimement que si elle n'a jamais ete payee -- la
+        // commande doit donc etre encore 'pending'.
         await supabase
           .from('shop_orders')
           .update({ status: 'canceled' })
-          .eq('payment_ref', session.id);
+          .eq('payment_ref', session.id)
+          .eq('status', 'pending');
         break;
       }
     }

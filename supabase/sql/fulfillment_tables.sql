@@ -10,6 +10,17 @@
 --
 -- Ne PAS executer en aval de shop_orders / shop_order_items si ces tables
 -- n'existent pas encore dans l'environnement cible.
+--
+-- CORRECTIF SECURITE (audit OBS-03/OBS-04) : la version initiale de ce
+-- fichier n'activait RLS sur aucune des 6 tables, contrairement au pattern
+-- deja etabli et verifie en direct dans ce meme projet (generation_failures.sql,
+-- system_health_checks.sql — RLS active, aucune policy permissive : seul
+-- service_role, deja utilise par tous les consommateurs TypeScript de ce
+-- moteur, peut lire/ecrire). Sans ce correctif, ces tables auraient ete
+-- potentiellement accessibles directement via PostgREST par anon/authenticated.
+-- Ajoute ci-dessous, une instruction par table, jamais de policy permissive
+-- ajoutee : aucun consommateur applicatif n'utilise autre chose que
+-- supabaseAdmin (service_role) pour ce moteur, verifie exhaustivement.
 
 -- ============================================================
 -- provider_submissions — un acte de soumission a UN fournisseur.
@@ -27,6 +38,10 @@ create table if not exists provider_submissions (
   constraint provider_submissions_provider_key_unique unique (provider, idempotency_key)
 );
 create index if not exists idx_provider_submissions_order on provider_submissions(order_id);
+alter table provider_submissions enable row level security;
+-- Aucune policy creee volontairement : anon/authenticated n'ont donc aucun
+-- acces. Seul service_role (supabaseAdmin, deja utilise par tous les
+-- consommateurs de ce moteur) peut lire/ecrire.
 
 -- ============================================================
 -- provider_submission_items — INTENTION : quels Fulfillment Units
@@ -38,6 +53,8 @@ create table if not exists provider_submission_items (
   primary key (submission_id, fulfillment_unit_id)
 );
 create index if not exists idx_provider_submission_items_unit on provider_submission_items(fulfillment_unit_id);
+alter table provider_submission_items enable row level security;
+-- Aucune policy creee volontairement : seul service_role a acces.
 
 -- ============================================================
 -- provider_orders — commande reelle creee chez le fournisseur
@@ -58,6 +75,8 @@ create table if not exists provider_orders (
   constraint provider_orders_id_submission_unique unique (id, submission_id)
 );
 create index if not exists idx_provider_orders_submission on provider_orders(submission_id);
+alter table provider_orders enable row level security;
+-- Aucune policy creee volontairement : seul service_role a acces.
 
 -- ============================================================
 -- provider_order_items — RESULTAT : quels Fulfillment Units sont
@@ -92,6 +111,8 @@ create table if not exists provider_order_items (
   constraint provider_order_items_submission_unit_unique unique (submission_id, fulfillment_unit_id)
 );
 create index if not exists idx_provider_order_items_unit on provider_order_items(fulfillment_unit_id);
+alter table provider_order_items enable row level security;
+-- Aucune policy creee volontairement : seul service_role a acces.
 
 -- ============================================================
 -- fulfillment_unit_active_submission — pointeur : UNE SEULE
@@ -106,6 +127,8 @@ create table if not exists fulfillment_unit_active_submission (
   updated_at timestamptz not null default now()
 );
 create index if not exists idx_active_submission_submission on fulfillment_unit_active_submission(active_submission_id);
+alter table fulfillment_unit_active_submission enable row level security;
+-- Aucune policy creee volontairement : seul service_role a acces.
 
 -- ============================================================
 -- Reference de rang pour la progression monotone des statuts de
@@ -125,3 +148,7 @@ insert into fulfillment_status_rank (status, rank) values
   ('in_transit', 4),
   ('delivered', 5)
 on conflict (status) do nothing;
+alter table fulfillment_status_rank enable row level security;
+-- Aucune policy creee volontairement : seul service_role a acces (table de
+-- reference statique, sans donnee sensible, mais pas de raison de l'exposer
+-- directement via PostgREST sans besoin applicatif demontre).

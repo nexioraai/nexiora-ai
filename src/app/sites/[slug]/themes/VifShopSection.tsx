@@ -30,7 +30,7 @@ export default function VifShopSection({ site }: { site: Site }) {
           </h2>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.map((p: any, i: number) => (
+          {products.map((p, i) => (
             <ClickableProductCard slug={site.slug} key={i} product={p} primary={INK} lang={site.lang}>
             <TiltCard className="group rounded-3xl overflow-hidden bg-white border border-black/[0.06]">
               {p.image && (
@@ -41,15 +41,21 @@ export default function VifShopSection({ site }: { site: Site }) {
               <div className="p-6">
                 <h3 className="text-lg mb-1" style={{ fontFamily: 'var(--font-fraunces), serif' }}>{p.name}</h3>
                 {p.price && <div className="text-sm font-semibold mb-4" style={{ color: GOLD }}>{p.price}</div>}
-                <AddToCartButton
-                  id={p.id}
-                  name={p.name}
-                  priceNumber={p.priceNumber}
-                  currency={p.currency || 'CAD'}
-                  image={p.image}
-                  primary={INK}
-                  label={cartT.addToCart}
-                />
+                {p.id && p.priceNumber != null ? (
+                  <AddToCartButton
+                    id={p.id}
+                    name={p.name}
+                    priceNumber={p.priceNumber}
+                    currency={p.currency || 'CAD'}
+                    image={p.image}
+                    primary={INK}
+                    label={cartT.addToCart}
+                  />
+                ) : (
+                  <a href="#contact" className="inline-flex items-center gap-1 text-sm font-medium" style={{ color: INK }}>
+                    {t.labels.request}
+                  </a>
+                )}
                 {p.cjVid && <ShippingEstimate siteId={site.id} cjVid={p.cjVid} primary={GOLD} deliveryLabel={t.labels.estimatedDelivery} daysLabel={t.labels.days} />}
                 {!p.cjVid && p.shippingDaysMin && (
                   <p className="text-sm mt-1 flex items-center gap-1.5" style={{ color: GOLD }}>

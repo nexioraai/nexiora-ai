@@ -62,11 +62,11 @@ describe('GET /api/cron/shipping-cache — avec secret valide', () => {
   });
 });
 
-describe('GET /api/cron/shipping-cache — CRON_SECRET non configuré (parité avec les routes sœurs)', () => {
-  it('si process.env.CRON_SECRET est absent, la route ne bloque pas (même comportement que ses 9 sœurs)', async () => {
+describe('GET /api/cron/shipping-cache — CRON_SECRET non configuré (fail-closed, lot crons fail-open)', () => {
+  it('si process.env.CRON_SECRET est absent, la route refuse desormais l\'acces (401) -- l\'ancien comportement fail-open etait le defaut, pas la parite a preserver', async () => {
     delete process.env.CRON_SECRET;
     const res = await GET(makeRequest());
-    expect(res.status).not.toBe(401);
-    expect(startCronRunMock).toHaveBeenCalledTimes(1);
+    expect(res.status).toBe(401);
+    expect(startCronRunMock).not.toHaveBeenCalled();
   });
 });

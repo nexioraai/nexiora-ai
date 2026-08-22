@@ -28,6 +28,14 @@ async function authProduct(req: Request, productId: string): Promise<{ ok: true 
 
 type Ctx = { params: Promise<{ id: string }> };
 
+// Audit Mode 3 global (CRIT-2) -- voir shop/products/route.ts pour le
+// raisonnement complet. Cette route excluait seulement 3 champs (`delete
+// patch.slug/site_id/id`) et laissait passer tout le reste, y compris
+// cj_vid/cost_price -- une liste noire de 3 champs sur une table qui en a
+// bien plus est fragile par construction (tout NOUVEAU champ sensible
+// ajoute plus tard resterait expose par defaut). Allowlist explicite.
+const ALLOWED_PRODUCT_FIELDS = ['name', 'description', 'price', 'currency', 'images', 'stock', 'published', 'position'] as const;
+
 /** PATCH /api/shop/products/[id] → met à jour un produit. */
 export async function PATCH(req: Request, { params }: Ctx) {
   try {
@@ -35,15 +43,16 @@ export async function PATCH(req: Request, { params }: Ctx) {
     const auth = await authProduct(req, id);
     if ('error' in auth) return auth.error;
 
-    const patch = await req.json();
-    delete patch.slug;
-    delete patch.site_id;
-    delete patch.id;
+    const body = await req.json();
+    const patch: Record<string, unknown> = {};
+    for (const field of ALLOWED_PRODUCT_FIELDS) {
+      if (field in body) patch[field] = body[field];
+    }
 
     const product = await updateProduct(id, patch);
     return NextResponse.json({ product });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
 }
 
@@ -56,7 +65,7 @@ export async function DELETE(req: Request, { params }: Ctx) {
 
     await deleteProduct(id);
     return NextResponse.json({ ok: true });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
 }

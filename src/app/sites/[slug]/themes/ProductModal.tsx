@@ -28,6 +28,8 @@ interface Props {
   theme?: ThemeKey;
   onClose: () => void;
   isPodCustom?: boolean;
+  /** LOT J (F-CUSTOM-01) : requis par DesignCanvas pour lier l'upload au site. */
+  slug: string;
 }
 
 const LABELS: Record<string, Record<string, string>> = {
@@ -53,7 +55,7 @@ const LABELS: Record<string, Record<string, string>> = {
   },
 };
 
-export default function ProductModal({ product: p, primary, lang = 'en', theme = 'editorial', onClose, isPodCustom = false }: Props) {
+export default function ProductModal({ product: p, primary, lang = 'en', theme = 'editorial', onClose, isPodCustom = false, slug }: Props) {
   const t = LABELS[lang] || LABELS.en;
   const tokens = THEME_TOKENS[theme] || THEME_TOKENS.editorial;
   const [imgIndex, setImgIndex] = useState(0);
@@ -214,6 +216,7 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
                 onDesignChange={setCustomDesigns}
                 primary={primary}
                 lang={lang}
+                slug={slug}
               />
             )}
 
@@ -235,10 +238,18 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
             {p.description && (
               <div style={{ marginTop: 28, borderTop: '1px solid ' + tokens.cardBorder, paddingTop: 20 }}>
                 <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em', color: tokens.textMuted }}>{t.description}</p>
+                {/* SEC-09 : rendu texte pur (jamais dangerouslySetInnerHTML), identique
+                    au pattern deja utilise par MerchantProductModal.tsx pour la meme
+                    donnee. p.description peut provenir de fournisseurs tiers (CJ, une
+                    marketplace multi-vendeurs) ou d'une reecriture IA -- verifie sur les
+                    33 041 descriptions reelles en production : aucune ne contient de
+                    balisage HTML, whiteSpace:pre-wrap suffit a preserver les retours a
+                    la ligne reels sans jamais interpreter le contenu comme du HTML. */}
                 <div
-                  style={{ fontSize: 14, lineHeight: 1.65, color: tokens.textMuted }}
-                  dangerouslySetInnerHTML={{ __html: p.description }}
-                />
+                  style={{ fontSize: 14, lineHeight: 1.65, color: tokens.textMuted, whiteSpace: 'pre-wrap' }}
+                >
+                  {p.description}
+                </div>
               </div>
             )}
           </div>

@@ -15,6 +15,7 @@ export default function CartShell({
   mode,
   products,
   shippingFlat,
+  variant = 'light',
 }: {
   children: ReactNode;
   primary: string;
@@ -23,6 +24,8 @@ export default function CartShell({
   mode?: number | null;
   products?: unknown[] | null;
   shippingFlat?: number;
+  // CART-01 : retro-compatible, cf. commentaire dans CartDrawer.tsx.
+  variant?: 'light' | 'dark';
 }) {
   // Calcule sa propre verite a partir des donnees brutes (mode, products)
   // plutot que de faire confiance a un booleen deja decide par l'appelant :
@@ -36,7 +39,7 @@ export default function CartShell({
   return (
     <CartProvider>
       {children}
-      <CartDrawer primary={primary} labels={labels} slug={slug} mode={mode} shippingFlat={shippingFlat} />
+      <CartDrawer primary={primary} labels={labels} slug={slug} mode={mode} shippingFlat={shippingFlat} variant={variant} />
     </CartProvider>
   );
 }

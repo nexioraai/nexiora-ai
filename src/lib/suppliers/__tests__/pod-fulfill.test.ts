@@ -27,9 +27,12 @@ function tableChain(response: { data: unknown; error: unknown }) {
   return chain;
 }
 
-const { fromMock } = vi.hoisted(() => ({ fromMock: vi.fn() }));
+const { fromMock, rpcMock } = vi.hoisted(() => ({ fromMock: vi.fn(), rpcMock: vi.fn() }));
 vi.mock('@/lib/supabase-admin', () => ({
-  supabaseAdmin: { from: (...args: unknown[]) => fromMock(...(args as [string])) },
+  supabaseAdmin: {
+    from: (...args: unknown[]) => fromMock(...(args as [string])),
+    rpc: (...args: unknown[]) => rpcMock(...args),
+  },
 }));
 
 const createOrderPrintfulMock = vi.fn();
@@ -62,12 +65,30 @@ vi.mock('@/lib/fulfillment/provider-order-service', () => ({
   upsertProviderOrder: (...a: unknown[]) => upsertProviderOrderMock(...a),
 }));
 
+const logAnomalyMock = vi.fn();
+vi.mock('@/lib/anomaly', () => ({
+  logAnomaly: (...a: unknown[]) => logAnomalyMock(...a),
+}));
+
 import { fulfillPodOrder } from '../pod-fulfill';
 
-function setupBaseTables(catalogItems: { id: string; product_id: string; quantity: number }[], catProds: { id: string; supplier_id: string; supplier_product_id: string }[]) {
+// dropshipType par defaut = 'pod_custom' (autorise) : ces tables/tests
+// preexistants portent sur l'orchestration des soumissions fournisseur,
+// pas sur la politique de design (F-CUSTOM-02/03, garde ajoutee
+// separement) -- ce defaut preserve leur comportement d'origine, ou rien
+// ne filtrait encore design_url/design_files.
+function setupBaseTables(
+  catalogItems: { id: string; product_id: string; quantity: number }[],
+  catProds: { id: string; supplier_id: string; supplier_product_id: string }[],
+  options: { dropshipType?: string | null; designs?: { order_item_id: string; design_url: string; placement?: string; position?: unknown }[] } = {}
+) {
+  const { dropshipType = 'pod_custom', designs = [] } = options;
   fromMock.mockImplementation((table: string) => {
     if (table === 'shop_orders') {
       return tableChain({ data: { id: ORDER_ID, site_id: 's1', shipping_address: {}, customer_name: 'C', customer_email: 'c@x.com' }, error: null });
+    }
+    if (table === 'sites') {
+      return tableChain({ data: { dropship_type: dropshipType }, error: null });
     }
     if (table === 'shop_order_items') {
       return tableChain({ data: catalogItems, error: null });
@@ -76,7 +97,7 @@ function setupBaseTables(catalogItems: { id: string; product_id: string; quantit
       return tableChain({ data: catProds, error: null });
     }
     if (table === 'order_item_designs') {
-      return tableChain({ data: [], error: null });
+      return tableChain({ data: designs, error: null });
     }
     return tableChain({ data: null, error: null });
   });
@@ -91,9 +112,12 @@ beforeEach(() => {
   claimSubmissionAttemptMock.mockReset();
   transitionSubmissionStatusMock.mockReset();
   upsertProviderOrderMock.mockReset();
+  logAnomalyMock.mockReset();
+  rpcMock.mockReset();
   claimSubmissionAttemptMock.mockResolvedValue({ success: true, attempt_count: 1 });
   transitionSubmissionStatusMock.mockResolvedValue({ success: true });
   upsertProviderOrderMock.mockResolvedValue({ success: true, provider_order_row_id: 'row', was_new: true, late_webhook: false });
+  rpcMock.mockResolvedValue({ data: { success: true }, error: null });
 });
 
 describe('1. Printful submission creation', () => {
@@ -354,5 +378,145 @@ describe('13. P0-3.9.6 Gap #3 — écriture de résultat acceptée depuis UNCERT
         expect(TERMINAL.has(s)).toBe(false);
       }
     }
+  });
+});
+
+describe('F-CUSTOM-02/03 — deuxième barrière indépendante : le design n\'est jamais transmis si dropship_type ne l\'autorise pas', () => {
+  it.each([
+    ['reseller', 'reseller'],
+    ['null', null],
+    ['valeur inattendue', 'legacy_mode_x'],
+  ])('dropship_type=%s -> design_url/design_files absents des orderParams malgré un design présent en base, anomalie journalisée', async (_label, dropshipType) => {
+    setupBaseTables(
+      [{ id: UNIT_A, product_id: `catalog-${UNIT_A}`, quantity: 1 }],
+      [{ id: UNIT_A, supplier_id: 'printful', supplier_product_id: 'pf-1' }],
+      { dropshipType, designs: [{ order_item_id: UNIT_A, design_url: 'https://evil.example/x.png', placement: 'front' }] }
+    );
+    createProviderSubmissionMock.mockResolvedValue({ success: true, submission_id: 'sub-gate' });
+    createOrderPrintfulMock.mockResolvedValue({ success: true, supplier_order_id: 'PF-GATE' });
+
+    await fulfillPodOrder(ORDER_ID);
+
+    expect(createOrderPrintfulMock).toHaveBeenCalledWith(
+      expect.objectContaining({ design_url: undefined, design_files: undefined }),
+      expect.anything()
+    );
+    expect(logAnomalyMock).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'pod_fulfill_design_stripped', siteId: 's1' })
+    );
+  });
+
+  it.each([
+    ['pod_brand', 'pod_brand'],
+    ['pod_custom', 'pod_custom'],
+  ])('dropship_type=%s -> design_url transmis normalement, aucune anomalie journalisée', async (_label, dropshipType) => {
+    setupBaseTables(
+      [{ id: UNIT_A, product_id: `catalog-${UNIT_A}`, quantity: 1 }],
+      [{ id: UNIT_A, supplier_id: 'printful', supplier_product_id: 'pf-1' }],
+      { dropshipType, designs: [{ order_item_id: UNIT_A, design_url: 'https://x.test/design.png', placement: 'front' }] }
+    );
+    createProviderSubmissionMock.mockResolvedValue({ success: true, submission_id: 'sub-ok' });
+    createOrderPrintfulMock.mockResolvedValue({ success: true, supplier_order_id: 'PF-OK' });
+
+    await fulfillPodOrder(ORDER_ID);
+
+    expect(createOrderPrintfulMock).toHaveBeenCalledWith(
+      expect.objectContaining({ design_url: 'https://x.test/design.png' }),
+      expect.anything()
+    );
+    expect(logAnomalyMock).not.toHaveBeenCalled();
+  });
+
+  it('lecture de sites introuvable/vide (orderSite null) -> fail-closed, design jamais transmis', async () => {
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'shop_orders') {
+        return tableChain({ data: { id: ORDER_ID, site_id: 's1', shipping_address: {}, customer_name: 'C', customer_email: 'c@x.com' }, error: null });
+      }
+      if (table === 'sites') return tableChain({ data: null, error: null });
+      if (table === 'shop_order_items') {
+        return tableChain({ data: [{ id: UNIT_A, product_id: `catalog-${UNIT_A}`, quantity: 1 }], error: null });
+      }
+      if (table === 'catalog_products') {
+        return tableChain({ data: [{ id: UNIT_A, supplier_id: 'printful', supplier_product_id: 'pf-1' }], error: null });
+      }
+      if (table === 'order_item_designs') {
+        return tableChain({ data: [{ order_item_id: UNIT_A, design_url: 'https://x.test/d.png', placement: 'front' }], error: null });
+      }
+      return tableChain({ data: null, error: null });
+    });
+    createProviderSubmissionMock.mockResolvedValue({ success: true, submission_id: 'sub-null-site' });
+    createOrderPrintfulMock.mockResolvedValue({ success: true, supplier_order_id: 'PF-NULLSITE' });
+
+    await fulfillPodOrder(ORDER_ID);
+
+    expect(createOrderPrintfulMock).toHaveBeenCalledWith(
+      expect.objectContaining({ design_url: undefined }),
+      expect.anything()
+    );
+  });
+
+  it('aucun design en base et dropship_type=reseller -> aucune anomalie journalisée (rien à signaler)', async () => {
+    setupBaseTables(
+      [{ id: UNIT_A, product_id: `catalog-${UNIT_A}`, quantity: 1 }],
+      [{ id: UNIT_A, supplier_id: 'printful', supplier_product_id: 'pf-1' }],
+      { dropshipType: 'reseller', designs: [] }
+    );
+    createProviderSubmissionMock.mockResolvedValue({ success: true, submission_id: 'sub-no-design' });
+    createOrderPrintfulMock.mockResolvedValue({ success: true, supplier_order_id: 'PF-ND' });
+
+    await fulfillPodOrder(ORDER_ID);
+
+    expect(logAnomalyMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('LOT H (F-POD-01) — la transition vers processing passe par apply_shop_order_status(), plus par un .update() nu', () => {
+  it('au moins une commande fournisseur créée -> RPC appelée avec order_id, processing, allowed_current=[paid]', async () => {
+    setupBaseTables(
+      [{ id: UNIT_A, product_id: `catalog-${UNIT_A}`, quantity: 1 }],
+      [{ id: UNIT_A, supplier_id: 'printful', supplier_product_id: 'pf-1' }],
+      { dropshipType: 'pod_custom' }
+    );
+    createProviderSubmissionMock.mockResolvedValue({ success: true, submission_id: 'sub-1' });
+    createOrderPrintfulMock.mockResolvedValue({ success: true, supplier_order_id: 'PF-1' });
+
+    await fulfillPodOrder(ORDER_ID);
+
+    expect(rpcMock).toHaveBeenCalledWith('apply_shop_order_status', {
+      p_order_id: ORDER_ID,
+      p_target_status: 'processing',
+      p_allowed_current: ['paid'],
+    });
+  });
+
+  it('aucune commande fournisseur créée (tous les items échouent) -> RPC jamais appelée', async () => {
+    setupBaseTables(
+      [{ id: UNIT_A, product_id: `catalog-${UNIT_A}`, quantity: 1 }],
+      [{ id: UNIT_A, supplier_id: 'printful', supplier_product_id: 'pf-1' }],
+      { dropshipType: 'pod_custom' }
+    );
+    createProviderSubmissionMock.mockResolvedValue({ success: true, submission_id: 'sub-1' });
+    createOrderPrintfulMock.mockResolvedValue({ success: false, error_message: 'Printful 422: invalid variant' });
+
+    await fulfillPodOrder(ORDER_ID);
+
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it('RPC retourne success:false (transition illégale rejetée par le trigger, ou CAS non satisfait) -> ne lève jamais, se contente de logger', async () => {
+    setupBaseTables(
+      [{ id: UNIT_A, product_id: `catalog-${UNIT_A}`, quantity: 1 }],
+      [{ id: UNIT_A, supplier_id: 'printful', supplier_product_id: 'pf-1' }],
+      { dropshipType: 'pod_custom' }
+    );
+    createProviderSubmissionMock.mockResolvedValue({ success: true, submission_id: 'sub-1' });
+    createOrderPrintfulMock.mockResolvedValue({ success: true, supplier_order_id: 'PF-1' });
+    rpcMock.mockResolvedValue({ data: { success: false, reason: 'ILLEGAL_STATUS_TRANSITION: canceled -> processing' }, error: null });
+
+    // Ne doit jamais lancer d'exception -- le fulfillment fournisseur a déjà
+    // réussi (supplierOrderIds non vide), seul le reflet local du statut a
+    // échoué ; l'appelant (handlePaidCheckout) ne doit pas planter pour
+    // autant.
+    await expect(fulfillPodOrder(ORDER_ID)).resolves.toEqual(['PF-1']);
   });
 });

@@ -217,6 +217,68 @@ html {
   }
 }
 
+/* Degrade par defaut du bouton "Accepter" -- identique a l'ancien style
+   inline, deplace ici pour que la variante par theme ci-dessous puisse le
+   surcharger via la cascade (un style inline ne peut jamais etre battu par
+   une regle de feuille de style, quelle que soit sa specificite). */
+.cookie-accept-btn {
+  background: linear-gradient(135deg, #4F6EF5 0%, #FA5D1E 60%, #C9A84C 100%);
+}
+
+/* ===== Bandeau cookies -- fond de base (DEBT-014) =====
+   .glass n'a que 8% d'opacite : sa lisibilite reelle depend presque
+   entierement du flou de ce qu'il y a DERRIERE lui (backdrop-filter), pas
+   d'une couleur propre au panneau -- correct sur un fond deja sombre
+   (Noir), mais sur un storefront clair (Editorial/Vif), le texte clair du
+   bouton "Decline" (text-slate-300) et son survol perdent presque tout
+   contraste car le flou capte la lumiere de la page. Verifie reellement :
+   DEBT-014, trouve en ouvrant la banniere sur un vrai storefront Vif.
+   Correction a la racine, scopee A CE COMPOSANT SEUL (pas de changement
+   de .glass, utilise ailleurs sur la plateforme/dashboard) : une opacite
+   de fond garantie, independante du contenu affiche derriere, qui rend
+   le texte clair existant (deja correct sur fond sombre) fiable partout
+   sans avoir a changer sa couleur theme par theme. Non conditionne par
+   data-storefront-theme : s'applique par defaut a Editorial/Vif/Aurora ET
+   Noir ; la regle Noir plus bas la surcharge ensuite avec sa propre teinte.
+   Opacite mesuree reellement (Playwright, pixels composites captures sur
+   Cosmopo/TechFlow en faisant defiler la page derriere le panneau fixed,
+   pas juste au premier flash a l'ouverture) : 62% restait insuffisant des
+   qu'une section claire du storefront passait derriere le panneau (ratio
+   Decline mesure jusqu'a 3.59:1 sur Vif, sous le seuil AA 4.5:1). 82%
+   garantit >=4.5:1 (mesure ~4.8:1) meme dans le pire cas realiste (fond
+   blanc pur derriere), avec marge pour l'imprecision du flou. */
+[data-cookie-consent-panel] {
+  background: color-mix(in srgb, var(--color-bg-deep) 82%, transparent);
+}
+
+/* ===== Bandeau cookies -- variante par theme storefront actif =====
+   Contenu/texte/comportement de consentement inchanges (voir
+   CookieConsent.tsx) : uniquement fond/bordure/accents. Cible via
+   data-storefront-theme pose sur <html> par le theme storefront monte
+   (ex. NoirTheme.tsx), jamais par une prop transmise a ce composant --
+   il reste un composant plateforme, sans connaissance du site/marchand.
+   Aucune regle definie pour les autres themes : ils gardent le fond de
+   base ci-dessus, seul l'accent/degrade officiel de la plateforme reste
+   inchange pour eux (voir .cookie-accept-btn). */
+html[data-storefront-theme="noir"] [data-cookie-consent-panel] {
+  /* Meme raisonnement/mesure que la regle de base ci-dessus (DEBT-014) :
+     55% laissait aussi Cosmopo (Noir) descendre a 3.27:1 des qu'une section
+     claire du site passait derriere le panneau -- Noir n'est pas uniformement
+     sombre partout. 82% (teinte #150F0A) mesure >=4.5:1 meme au pire cas. */
+  background: color-mix(in srgb, #150F0A 82%, transparent);
+  border-color: rgba(245, 230, 200, 0.16);
+}
+html[data-storefront-theme="noir"] [data-cookie-consent-panel] a {
+  color: #E8C468;
+}
+html[data-storefront-theme="noir"] [data-cookie-consent-panel] [data-cookie-accept] {
+  background: linear-gradient(135deg, #C9A24B 0%, #E8C468 100%);
+  color: #0A0806;
+}
+html[data-storefront-theme="noir"] [data-cookie-consent-panel] [data-cookie-decline] {
+  border-color: rgba(245, 230, 200, 0.16);
+}
+
 .glass-hover:hover {
   border-color: rgba(255, 255, 255, 0.22);
   box-shadow:

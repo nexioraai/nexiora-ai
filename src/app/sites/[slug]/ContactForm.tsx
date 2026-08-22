@@ -9,10 +9,24 @@ type Props = {
   slug: string
   brand?: string
   lang?: string
+  // Optionnel, retro-compatible : les 3 themes existants ne le passent pas
+  // et conservent donc exactement le rendu clair actuel (aucun diff visuel).
+  // 'dark' n'est utilise que par Noir, dont le fond sombre rendait les
+  // champs blancs incoherents avec le reste de la page (meme categorie de
+  // probleme que DEBT-008/CatalogSearch, decouvert en verifiant le rendu
+  // reel de la section Contact).
+  variant?: 'light' | 'dark'
 }
 
-export default function ContactForm({ slug, brand = '#111111', lang }: Props) {
+export default function ContactForm({ slug, brand = '#111111', lang, variant = 'light' }: Props) {
   const t = getDict(lang)
+  const isDark = variant === 'dark'
+  const fieldClass = isDark
+    ? 'w-full px-5 py-4 rounded-xl border bg-white/[0.04] text-[#F5F3EE] placeholder-white/35 focus:outline-none focus:ring-4 transition-all'
+    : 'w-full px-5 py-4 rounded-xl border border-neutral-200 bg-white text-neutral-900 placeholder-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-4 focus:ring-neutral-900/5 transition-all'
+  const fieldStyle = isDark
+    ? ({ borderColor: 'rgba(245,230,200,0.14)', '--tw-ring-color': `${brand}30` } as React.CSSProperties)
+    : undefined
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
@@ -45,7 +59,7 @@ export default function ContactForm({ slug, brand = '#111111', lang }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="text-xs font-bold uppercase tracking-[0.2em] text-neutral-600 mb-6">
+      <div className={`text-xs font-bold uppercase tracking-[0.2em] mb-6 ${isDark ? 'text-white/45' : 'text-neutral-600'}`}>
         {t.form.title}
       </div>
 
@@ -55,7 +69,8 @@ export default function ContactForm({ slug, brand = '#111111', lang }: Props) {
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder={t.form.name}
-        className="w-full px-5 py-4 rounded-xl border border-neutral-200 bg-white text-neutral-900 placeholder-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-4 focus:ring-neutral-900/5 transition-all"
+        className={fieldClass}
+        style={fieldStyle}
       />
 
       <input
@@ -64,7 +79,8 @@ export default function ContactForm({ slug, brand = '#111111', lang }: Props) {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder={t.form.email}
-        className="w-full px-5 py-4 rounded-xl border border-neutral-200 bg-white text-neutral-900 placeholder-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-4 focus:ring-neutral-900/5 transition-all"
+        className={fieldClass}
+        style={fieldStyle}
       />
 
       <textarea
@@ -73,7 +89,8 @@ export default function ContactForm({ slug, brand = '#111111', lang }: Props) {
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         placeholder={t.form.message}
-        className="w-full px-5 py-4 rounded-xl border border-neutral-200 bg-white text-neutral-900 placeholder-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-4 focus:ring-neutral-900/5 transition-all resize-none"
+        className={`${fieldClass} resize-none`}
+        style={fieldStyle}
       />
 
       <button

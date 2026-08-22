@@ -1,0 +1,84 @@
+-- Audit Mode 3/POD BRAND, perfectionnement -- unicite atomique du domaine.
+-- A executer manuellement dans l'editeur SQL Supabase (convention du repo,
+-- voir fulfillment_tables.sql).
+--
+-- CAUSE RACINE 1 (course a la reservation) : src/app/api/domains/purchase/route.ts
+-- fait un SELECT site_domains WHERE domain=clean puis, si absent (ou
+-- status='failed'), un INSERT status='pending' -- deux requetes distinctes,
+-- non transactionnelles. Deux POST concurrents pour le MEME domaine (deux
+-- onglets, retry reseau) peuvent tous les deux voir le SELECT vide et tous
+-- les deux reussir leur INSERT, chacun creant son propre abonnement Stripe
+-- annuel pour le meme nom de domaine -- au paiement des deux, provisionDomain()
+-- serait appele deux fois pour deux domainId distincts portant le meme
+-- domain, risquant un double achat facture chez Porkbun. Aucune preuve
+-- d'une contrainte UNIQUE protegeant deja ceci n'existe dans ce repo (grep
+-- exhaustif de supabase/sql/, aucun resultat).
+--
+-- CAUSE RACINE 2 (deux mecanismes non alignes) : src/app/api/domains/route.ts
+-- (BYOD, domaine deja possede par le marchand ailleurs) ecrit sites.custom_domain
+-- directement, avec son propre anti-doublon SELECT-puis-UPDATE (meme faiblesse
+-- structurelle). site_domains (achat Porkbun) et sites.custom_domain (BYOD) ne
+-- se verifient jamais l'un l'autre : un meme nom de domaine pourrait en
+-- theorie etre revendique en BYOD sur un site pendant qu'il est achete via
+-- Porkbun sur un autre.
+--
+-- Les index UNIQUE ci-dessous rendent les deux garde-fous applicatifs
+-- (SELECT-puis-INSERT/UPDATE) reellement atomiques -- la source de verite
+-- passe du code applicatif (contournable par une course) au moteur
+-- transactionnel Postgres (jamais contournable). Le code applicatif
+-- (garde-fous existants + gestion du code erreur 23505) reste la premiere
+-- ligne de defense pour un message d'erreur clair ; la contrainte DB est la
+-- garantie reelle.
+--
+-- CORRECTIF (revue de ce lot) : la version initiale de ce fichier utilisait
+-- `unique (domain)` / `unique (custom_domain)` -- SENSIBLES A LA CASSE en
+-- Postgres (comparaison texte standard), alors que TOUT le code applicatif
+-- normalise en minuscule avant comparaison/ecriture (`.toLowerCase()`,
+-- verifie dans purchase/route.ts, domains/route.ts, provision.ts). Une
+-- contrainte sur la colonne brute n'aurait donc PAS empeche `Example.com`
+-- et `example.com` de coexister comme deux lignes distinctes si un futur
+-- chemin de code (ou une correction manuelle en base) omettait la
+-- normalisation -- la "garantie DB reelle" revendiquee ci-dessus aurait ete
+-- plus faible que ce qui etait ecrit. Remplace par des INDEX UNIQUE
+-- fonctionnels sur `lower(...)` : la garantie porte desormais sur la meme
+-- notion d'identite de domaine que le code applicatif, jamais contournable
+-- par une variation de casse, quel que soit le chemin d'ecriture futur.
+-- (ALTER TABLE ... ADD CONSTRAINT ... UNIQUE n'accepte pas d'expression --
+-- CREATE UNIQUE INDEX si, d'ou le passage de contrainte a index.)
+--
+-- AVANT D'EXECUTER : verifier qu'aucun doublon (y compris de casse) n'existe
+-- deja parmi les donnees reelles -- les DEUX diagnostics ci-dessous
+-- utilisent `lower()`, pour rester coherents avec l'index reellement cree :
+--
+--   select lower(domain), count(*) from site_domains
+--   group by lower(domain) having count(*) > 1;
+--
+--   select lower(custom_domain), count(*) from sites
+--   where custom_domain is not null
+--   group by lower(custom_domain) having count(*) > 1;
+--
+-- Si des doublons existent, les investiguer et les resoudre manuellement
+-- avant d'executer les index ci-dessous.
+--
+-- Taille des tables au moment de l'ecriture (verifie en direct, service_role,
+-- lecture seule) : site_domains = 1 ligne, sites.custom_domain non-null = 1
+-- ligne -- CREATE INDEX standard (verrou SHARE, bloque les ecritures
+-- concurrentes sur la table concernee le temps de la construction, jamais
+-- les lectures) suffit largement a ce volume. CREATE INDEX CONCURRENTLY
+-- (evite meme ce verrou bref, au prix de ne pouvoir s'executer dans une
+-- transaction et de pouvoir laisser un index "invalid" si interrompu)
+-- serait une complexite non justifiee ici -- a reconsiderer seulement si
+-- ces tables grossissent significativement avant execution.
+
+create unique index if not exists site_domains_domain_unique
+  on site_domains (lower(domain));
+
+-- Partiel (WHERE ... IS NOT NULL) : custom_domain est null pour la grande
+-- majorite des sites (pas de domaine personnalise), un index UNIQUE plein
+-- sur une colonne nullable n'empeche de toute facon pas les doublons NULL
+-- (comportement standard Postgres), mais l'ecrire en index partiel
+-- documente l'intention explicitement et evite tout index inutile sur les
+-- lignes NULL.
+create unique index if not exists sites_custom_domain_unique
+  on sites (lower(custom_domain))
+  where custom_domain is not null;

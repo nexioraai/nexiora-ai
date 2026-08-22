@@ -87,7 +87,7 @@ export default function StorefrontDense({
           <h1 className="text-4xl md:text-7xl font-semibold leading-[1.02] tracking-tight mb-5 text-white max-w-3xl drop-shadow-sm">{heroTitle || siteName}</h1>
           {heroSubtitle && (<p className="text-base md:text-xl text-white/80 max-w-xl mb-8 leading-relaxed">{heroSubtitle}</p>)}
           <div className="flex items-center gap-4 flex-wrap">
-            <a href="#grid" className="group inline-flex items-center gap-2 px-8 py-4 rounded-full text-white font-medium transition hover:-translate-y-0.5 shadow-xl" style={{ backgroundColor: primary }}>
+            <a href="#shop" className="group inline-flex items-center gap-2 px-8 py-4 rounded-full text-white font-medium transition hover:-translate-y-0.5 shadow-xl" style={{ backgroundColor: primary }}>
               {labels.newArrivals}
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </a>

@@ -28,11 +28,13 @@ const STALE_HOURS = 168;         // recalcul si plus vieux que 7 jours
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export async function GET(req: NextRequest) {
-  // P0-3.9.7 — Sécurité : cette route n'avait aucun contrôle CRON_SECRET,
-  // contrairement à toutes ses routes sœurs (catalog-sync, cj-tracking,
-  // etc.). Alignement sur le pattern déjà utilisé partout ailleurs.
+  // P0-3.9.7 — Sécurité : cette route n'avait aucun contrôle CRON_SECRET.
+  // Lot crons fail-open : le pattern d'alignement d'origine (`secret && ...`)
+  // était lui-même fail-open -- corrige en fail-closed, un secret absent
+  // doit refuser l'acces, jamais le desactiver silencieusement.
   const auth = req.headers.get('authorization');
-  if (process.env.CRON_SECRET && auth !== 'Bearer ' + process.env.CRON_SECRET) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || auth !== 'Bearer ' + secret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

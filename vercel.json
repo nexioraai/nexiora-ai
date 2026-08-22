@@ -1,16 +1,20 @@
 {
   "crons": [
     {
-      "path": "/api/cron-analysis",
-      "schedule": "0 6 * * *"
-    },
-    {
       "path": "/api/ai-visibility",
       "schedule": "0 6 * * 1"
     },
     {
       "path": "/api/cron/cj-tracking",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/cj-fulfillment-reconciliation",
+      "schedule": "20 */2 * * *"
+    },
+    {
+      "path": "/api/cron/pod-reconciliation",
+      "schedule": "50 */2 * * *"
     },
     {
       "path": "/api/cron/catalog-suggest",

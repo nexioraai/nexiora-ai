@@ -66,9 +66,11 @@ async function askChatGPT(query: string): Promise<string | null> {
 }
 
 export async function GET(req: NextRequest) {
-  // Sécurité cron : header secret
-  const secret = req.headers.get('authorization')
-  if (process.env.CRON_SECRET && secret !== `Bearer ${process.env.CRON_SECRET}`) {
+  // Securite cron (fail-closed, lot crons fail-open) : un secret absent doit
+  // refuser l'acces, jamais le desactiver silencieusement.
+  const auth = req.headers.get('authorization')
+  const cronSecret = process.env.CRON_SECRET
+  if (!cronSecret || auth !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
 

@@ -3,9 +3,43 @@ import { Resend } from 'resend';
 
 const ADMIN_EMAIL = 'issayamiyoussouf@gmail.com';
 const ALERT_COOLDOWN_MS = 60 * 60 * 1000; // 1 email par type et par heure
-// Types qui exigent un email A CHAQUE occurrence (pas d'anti-spam) : chaque
-// commande CJ a payer doit etre signalee immediatement pour paiement rapide.
-const ALWAYS_EMAIL_TYPES = new Set(['cj_awaiting_manual_payment']);
+// Types qui exigent un email A CHAQUE occurrence (pas d'anti-spam). Audit
+// Reseller/CJ : principe explicite -- une commande client deja payee qui
+// necessite une intervention humaine ne doit jamais devenir silencieuse. Le
+// cooldown 1h n'a de sens que pour du bruit repetitif sans action distincte ;
+// chacun des types ci-dessous correspond a UNE commande precise necessitant
+// UNE action precise, jamais un evenement a regrouper.
+//   cj_awaiting_manual_payment : commande CJ creee, paiement manuel attendu.
+//   cj_address_incomplete      : adresse client insuffisante pour CJ.
+//   cj_fulfill_exhausted       : tentatives de creation epuisees ou echec permanent.
+//   cj_terminal_order_blocked  : commande CJ trouvee mais CANCELLED/TRASH.
+//   cj_reconciliation_unknown  : etat CJ indetermine (uniquement quand severity
+//                                'blocked' -- les occurrences 'info', premiere
+//                                tentative encore auto-recuperable, ne
+//                                declenchent jamais d'email, cf. plus bas).
+//   cj_product_resolution_failed : mapping produit/variante CJ casse de facon
+//                                persistante (uniquement severity 'blocked' --
+//                                la premiere tentative transitoire reste 'info',
+//                                cf. audit API Points, Finding 2).
+//   checkout_order_items_insert_failed / checkout_order_designs_insert_failed :
+//                                la commande existe et le client va recevoir
+//                                une URL de paiement valide, mais ses lignes
+//                                ou ses designs n'ont pas ete enregistres --
+//                                intervention humaine necessaire avant
+//                                fulfillment (audit gestion d'erreur checkout).
+// cj_shipping_cost_exceeds_charged reste volontairement HORS de cette liste
+// (comportement existant, cooldown 1h) -- extension a decider explicitement,
+// pas incluse unilateralement dans ce correctif.
+const ALWAYS_EMAIL_TYPES = new Set([
+  'cj_awaiting_manual_payment',
+  'cj_address_incomplete',
+  'cj_fulfill_exhausted',
+  'cj_terminal_order_blocked',
+  'cj_reconciliation_unknown',
+  'cj_product_resolution_failed',
+  'checkout_order_items_insert_failed',
+  'checkout_order_designs_insert_failed',
+]);
 
 export type AnomalySeverity = 'blocked' | 'warning' | 'info';
 

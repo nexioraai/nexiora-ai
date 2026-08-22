@@ -7,8 +7,19 @@ import type { CartItem } from '@/lib/payments/types';
 import { STRIPE_SHIPPING_COUNTRIES } from '@/lib/payments/countries';
 import { suppliersWithCapability } from '@/lib/suppliers/registry';
 import type { ShippingRequest } from '@/lib/suppliers/supplier-adapter';
-import { calcSellPrice, sitePricing, NEXIORA_COMMISSION_PERCENT, resolveDisplayPrice } from '@/lib/pricing';
+import { sitePricing, NEXIORA_COMMISSION_PERCENT, resolveDisplayPrice } from '@/lib/pricing';
 import { logAnomaly } from '@/lib/anomaly';
+import type { ShippingTier } from '@/lib/cj/shipping-tiers';
+import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
+
+/** Ligne shipping_cache telle que selectionnee pour le fallback CJ. */
+type ShippingCacheRow = {
+  supplier_product_id: string;
+  shipping_cost: number;
+  days_min: number | null;
+  days_max: number | null;
+  tiers: ShippingTier[] | null;
+};
 
 // Derive : fournisseurs implementant reellement calculateShipping. Voir
 // registry.ts — source unique des adapters/credentials.
@@ -28,14 +39,26 @@ function parseCatalogId(cartId: string): { realId: string; variantId?: string } 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { slug, items, countryCode, shipmentTier } = body as { slug?: string; items?: CartItem[]; countryCode?: string; shipmentTier?: string };
+    const { slug, items, countryCode, shipmentTier, checkoutNonce, promoCode } = body as { slug?: string; items?: CartItem[]; countryCode?: string; shipmentTier?: string; checkoutNonce?: string; promoCode?: string };
     if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
     if (!items || items.length === 0) return NextResponse.json({ error: 'Panier vide' }, { status: 400 });
 
+    // Hardening (prochaine priorite Mode 2, meme raisonnement que F7 : ne
+    // jamais faire confiance a une donnee panier non recalculee cote
+    // serveur) : quantite jamais validee avant ce point -- une quantite
+    // negative ou nulle fausserait totalAmount plus bas (serverPrice *
+    // item.quantity), avant meme d'atteindre Stripe ou la garde F7.
+    for (const item of items) {
+      if (!Number.isInteger(item.quantity) || item.quantity < 1) {
+        return NextResponse.json({ error: 'Quantité invalide' }, { status: 400 });
+      }
+    }
+
     const { data: site, error: siteError } = await supabaseAdmin
       .from('sites')
-      .select('id, payment_provider, payment_account_id, shipping_flat, mode, cj_margin_percent, cj_round_mode')
+      .select('id, payment_provider, payment_account_id, shipping_flat, mode, cj_margin_percent, cj_round_mode, dropship_type, pod_designs')
       .eq('slug', slug)
+      .is('archived_at', null)
       .single();
     if (siteError || !site) return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
     if (!site.payment_account_id) return NextResponse.json({ error: 'Paiements non configurés pour ce site' }, { status: 400 });
@@ -66,7 +89,7 @@ export async function POST(req: Request) {
     let shippingResolved = false;
 
     // Mode 3 : Nexiora avance les frais au fournisseur. Pas de livraison calculable = pas de vente.
-    if (site.mode === 3 && (!countryCode || !STRIPE_SHIPPING_COUNTRIES.includes(countryCode as any))) {
+    if (site.mode === 3 && (!countryCode || !(STRIPE_SHIPPING_COUNTRIES as readonly string[]).includes(countryCode))) {
       await logAnomaly({ type: 'shipping_country_unsupported', siteId: site.id, slug, details: { countryCode: countryCode || null } });
       return NextResponse.json({ error: 'Livraison indisponible pour cette destination' }, { status: 409 });
     }
@@ -74,7 +97,7 @@ export async function POST(req: Request) {
     // CJ limite a 1 req/s : on laisse retomber le quota apres la verif de stock.
     await new Promise((r) => setTimeout(r, 1100));
 
-    if (countryCode && STRIPE_SHIPPING_COUNTRIES.includes(countryCode as any)) {
+    if (countryCode && (STRIPE_SHIPPING_COUNTRIES as readonly string[]).includes(countryCode)) {
       try {
         // Separer shop vs catalog
         const shopItems = items.filter((i) => !i.id?.startsWith('catalog-'));
@@ -127,26 +150,27 @@ export async function POST(req: Request) {
         let cjFromCache = false;
         if (cjGroup && cjGroup.length > 0) {
           const cjIds = cjGroup.map((g) => g.supplier_product_id);
-          const { data: cacheRows } = await supabaseAdmin
+          const { data: cacheRowsRaw } = await supabaseAdmin
             .from('shipping_cache')
             .select('supplier_product_id, shipping_cost, days_min, days_max, tiers')
             .eq('supplier_id', 'cj')
             .eq('country_code', countryCode)
             .in('supplier_product_id', cjIds);
-          const cacheMap = new Map((cacheRows || []).map((r: any) => [r.supplier_product_id, r]));
+          const cacheRows = cacheRowsRaw as ShippingCacheRow[] | null;
+          const cacheMap = new Map((cacheRows || []).map((r) => [r.supplier_product_id, r]));
           // Le cache n'est utilise que s'il couvre TOUS les produits CJ du panier.
           const allCovered = cjIds.every((id) => cacheMap.has(id));
           if (allCovered) {
             // Verifier que le tier choisi est disponible sur TOUS les produits.
             const tierAvailable = shipmentTier && cjGroup.every((g) => {
-              const row: any = cacheMap.get(g.supplier_product_id);
-              return Array.isArray(row?.tiers) && row.tiers.some((t: any) => t.tier === shipmentTier);
+              const row = cacheMap.get(g.supplier_product_id);
+              return Array.isArray(row?.tiers) && row.tiers.some((t) => t.tier === shipmentTier);
             });
             for (const g of cjGroup) {
-              const row: any = cacheMap.get(g.supplier_product_id);
+              const row = cacheMap.get(g.supplier_product_id)!;
               if (tierAvailable) {
                 // Cout du tier choisi par l'acheteur (eco/standard/express).
-                const t = row.tiers.find((x: any) => x.tier === shipmentTier);
+                const t = row.tiers!.find((x) => x.tier === shipmentTier)!;
                 cjCacheCost += Number(t.cost) * g.quantity;
                 if (t.name && !chosenLogisticName) chosenLogisticName = String(t.name);
                 const d = Number(t.days_max) || 0;
@@ -181,8 +205,9 @@ export async function POST(req: Request) {
             const result = await supplier.adapter.calculateShipping(groupItems, countryCode, supplierCreds);
             totalShipping += result.total_cost;
             if (result.estimated_days_max > maxDays) maxDays = result.estimated_days_max;
-          } catch (err: any) {
-            console.error('[checkout/shipping]', supplierId, 'failed:', err.message || err, err?.stack);
+          } catch (err: unknown) {
+            const stack = err instanceof Error ? err.stack : undefined;
+            console.error('[checkout/shipping]', supplierId, 'failed:', err instanceof Error ? err.message : String(err), stack);
           }
         }
 
@@ -197,7 +222,7 @@ export async function POST(req: Request) {
           estimatedDelivery = maxDays > 0 ? String(maxDays) + ' days' : null;
           shippingResolved = true;
         }
-      } catch (e) {
+      } catch {
         // Adapter indisponible -> mode 2 garde le forfait, mode 3 rejette plus bas.
       }
     }
@@ -225,7 +250,7 @@ export async function POST(req: Request) {
         const { realId } = parseCatalogId(item.id);
         const { data: cp } = await supabaseAdmin
           .from('catalog_products')
-          .select('price')
+          .select('price, currency, supplier_id')
           .eq('id', realId)
           .maybeSingle();
         cost = Number(cp?.price) || 0;
@@ -233,10 +258,32 @@ export async function POST(req: Request) {
           await logAnomaly({ type: 'catalog_cost_missing', siteId: site.id, slug, details: { itemId: item.id } });
           return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
         }
-        // Tout produit du catalogue est achetable sur toute boutique (via la
-        // recherche visiteur). Le prix suit TOUJOURS la marge du marchand.
-        // Si le marchand a selectionne ce produit et fixe un prix manuel,
-        // ce prix prime ; sinon on applique sa marge (resolveDisplayPrice gere null).
+        // Audit Mode 3 global (N1) -- cause racine : "tout produit du
+        // catalogue est achetable sur toute boutique" etait vrai pour le
+        // PRIX (toujours recalcule serveur, jamais un probleme) mais avait
+        // ete etendu par erreur a l'ELIGIBILITE du produit lui-meme -- rien
+        // ne verifiait que cp.supplier_id correspondait au sous-mode reel du
+        // site. Un site reseller pouvait ainsi etre force, par un appel
+        // direct a cette route, a acheter reellement un produit Printful/
+        // Gelato (fabrique et expedie, sans design puisque deja neutralise
+        // par ailleurs -- mais fabrique quand meme), en contradiction avec
+        // l'invariant "reseller -> CJ uniquement" (src/lib/dropship/
+        // suppliers.ts, deja la source unique pour la curation/recherche,
+        // jamais appliquee ici au moment de l'achat reel). Meme regle,
+        // meme fonction, applique desormais au point le plus critique.
+        const eligibleSuppliers = suppliersForDropshipType(site.dropship_type as any);
+        if (!cp?.supplier_id || !eligibleSuppliers.includes(cp.supplier_id)) {
+          await logAnomaly({
+            type: 'catalog_supplier_not_eligible',
+            siteId: site.id,
+            slug,
+            details: { itemId: item.id, supplierId: cp?.supplier_id ?? null, dropshipType: site.dropship_type ?? null },
+          });
+          return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
+        }
+        // Le prix suit TOUJOURS la marge du marchand. Si le marchand a
+        // selectionne ce produit et fixe un prix manuel, ce prix prime ;
+        // sinon on applique sa marge (resolveDisplayPrice gere null).
         const { data: selRow } = await supabaseAdmin
           .from('site_catalog_selections')
           .select('sell_price')
@@ -246,20 +293,160 @@ export async function POST(req: Request) {
         // Prix = sell_price manuel du marchand OU cout x (1 + marge du marchand),
         // avec plancher MIN_SELL_PRICE (protege contre la vente a perte).
         serverPrice = resolveDisplayPrice(cost, selRow?.sell_price, margin, roundMode);
+        // Devise jamais issue du client (voir raisonnement complet ci-dessous,
+        // branche shop_products) -- meme regle appliquee au catalogue.
+        item.currency = cp!.currency;
+
+        // Audit Mode 3/POD BRAND, perfectionnement -- cause racine double :
+        // (1) securite -- customDesignUrl/customDesigns venaient du panier
+        // client sans jamais etre verifies contre un design reellement genere
+        // par le marchand (generate-mockups) : n'importe quel appelant direct
+        // de cette route pouvait faire fabriquer, en Mode 3 (Nexiora avance
+        // le cout fournisseur), une image arbitraire sur un produit d'une
+        // boutique POD BRAND quelconque. (2) fonctionnel -- symetriquement,
+        // le frontend POD BRAND legitime (mockupsToProducts, shared.tsx) ne
+        // renseigne JAMAIS customDesignUrl (le design n'est pas un choix du
+        // client, contrairement a pod_custom) : sans ce correctif, un achat
+        // POD BRAND normal partait deja en fabrication SANS AUCUN design
+        // attache (order_item_designs vide, printful-adapter.ts envoie
+        // design_url=undefined). Le design d'un produit POD BRAND est
+        // desormais TOUJOURS resolu cote serveur depuis le mockup
+        // reellement genere pour ce catalog_product_id -- toute valeur
+        // envoyee par le client pour cet item est ignoree, meme raisonnement
+        // que le prix (SECURITE ci-dessus). N'affecte pas pod_custom (design
+        // choisi par le client, deja gere plus bas sans changement) ni les
+        // produits catalogue vendus sur un site pod_brand sans mockup
+        // correspondant (aucun design attache, comportement inchange).
+        //
+        // Audit Mode 3 global (F-CUSTOM-02/03) -- ce bloc ne couvrait QUE
+        // pod_brand ; pour toute AUTRE valeur (reseller, null, undefined,
+        // valeur corrompue), customDesignUrl/customDesigns du client
+        // passaient tels quels -- un site reseller pouvait ainsi faire
+        // fabriquer un design injecte par l'acheteur sur un produit
+        // catalogue source chez Printful/Gelato/Printify, en contradiction
+        // avec l'invariant "un reseller ne personnalise jamais". Politique
+        // desormais explicite et fail-closed (liste d'autorisation, pas de
+        // liste de refus) : seuls pod_brand (design resolu serveur) et
+        // pod_custom (design client, comportement inchange) peuvent
+        // transporter un design ; toute autre valeur -- y compris une
+        // valeur inattendue/corrompue -- l'efface systematiquement. Seconde
+        // barriere independante posee cote fulfillment (pod-fulfill.ts) qui
+        // revalide dropship_type separement, pour ne jamais dependre d'un
+        // seul point de controle.
+        if (site.dropship_type === 'pod_brand') {
+          const podDesignsArr = Array.isArray(site.pod_designs) ? site.pod_designs : [];
+          const mockups = Array.isArray(podDesignsArr[0]?.mockups) ? podDesignsArr[0].mockups : [];
+          const match = mockups.find((m: any) => String(m.catalog_product_id) === realId);
+          item.customDesigns = undefined;
+          item.customDesignUrl = match?.design_url || undefined;
+        } else if (site.dropship_type === 'pod_custom') {
+          // LOT J (F-CUSTOM-01/04) -- cause racine : cette branche laissait
+          // jusqu'ici passer customDesignUrl/customDesigns TELS QUELS,
+          // fournis par le client, sans aucune verification. Consequence
+          // prouvee par lecture du code : une URL cross-tenant (uploadee via
+          // un AUTRE site), reutilisee (deja servie a une commande
+          // anterieure) ou totalement arbitraire (contournement de l'upload)
+          // etait acceptee -- Nexiora payait alors le fournisseur POD pour
+          // fabriquer un produit a partir d'un contenu jamais valide.
+          // design_uploads (supabase/sql/design_uploads.sql) est desormais
+          // la seule source de verite : chaque URL doit y correspondre a une
+          // ligne appartenant a CE site (tenant-bound) et non deja consommee
+          // (single-use, consommation reelle plus bas au moment de l'ecriture
+          // de order_item_designs -- ne consomme jamais ici, une commande
+          // qui echoue avant paiement ne doit pas bruler le design).
+          const urls = Array.isArray(item.customDesigns) && item.customDesigns.length > 0
+            ? item.customDesigns.map((d: any) => d?.url).filter((u: unknown): u is string => typeof u === 'string' && u.length > 0)
+            : (typeof item.customDesignUrl === 'string' && item.customDesignUrl ? [item.customDesignUrl] : []);
+          for (const designUrl of urls) {
+            const { data: design } = await supabaseAdmin
+              .from('design_uploads')
+              .select('consumed_at')
+              .eq('site_id', site.id)
+              .eq('public_url', designUrl)
+              .maybeSingle();
+            if (!design || design.consumed_at) {
+              await logAnomaly({
+                type: 'custom_design_invalid_or_reused',
+                siteId: site.id,
+                slug,
+                details: { itemId: item.id, designUrl, reason: !design ? 'not_found_or_wrong_site' : 'already_consumed' },
+              });
+              return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
+            }
+          }
+        } else {
+          item.customDesigns = undefined;
+          item.customDesignUrl = undefined;
+        }
       } else {
-        const { data: sp } = await supabaseAdmin
+        // Hardening (prochaine priorite Mode 2, meme famille que F7) :
+        // cette requete ne filtrait avant ni par site_id ni par published --
+        // un acheteur pouvait payer, sur la boutique A, un produit id
+        // appartenant reellement a la boutique B (id trouvable simplement en
+        // visitant sa page produit publique /sites/[slug]/produits/[id]) :
+        // paiement encaisse par le compte Stripe de A, et le vrai stock de B
+        // decremente au paiement confirme (F7 cible uniquement par id, sans
+        // notion de site -- correct pour son propre perimetre, mais herite
+        // silencieusement de n'importe quel id que cette requete laissait
+        // passer). Meme requete pour un produit desactive par son marchand
+        // (published=false), toujours achetable si son id etait connu.
+        // LOT L (Mode 3 global, dette technique) -- BUG ACTIF CORRIGE : cette
+        // requete selectionnait `cost_price`, une colonne qui N'EXISTE PAS
+        // sur shop_products (confirme par introspection PostgREST en
+        // direct : colonnes reelles = cj_vid, created_at, currency,
+        // description, id, images, name, position, price, published,
+        // site_id, stock, unpublished_by). PostgREST renvoyait donc
+        // systematiquement une erreur 400 (42703) pour CETTE requete
+        // precise -- jamais verifiee (`const { data: sp } = ...`, `error`
+        // jamais destructure), donc `sp` valait TOUJOURS `null`, et le test
+        // `if (!sp || ...)` rejetait purement et simplement TOUT achat
+        // shop_products, sur TOUS les modes, sans exception -- un bug actif
+        // de production, pas de la dette morte ni un mismatch theorique.
+        //
+        // `cj_vid` reste lu ici (defense en profondeur) : recherche
+        // exhaustive confirmee -- AUCUN chemin d'ecriture reel de ce depot
+        // ne peuple jamais cj_vid (ALLOWED_PRODUCT_FIELDS, shop/products/
+        // route.ts ET [id]/route.ts, l'exclut explicitement). Un item
+        // shop_products avec cj_vid=null est traite en aval EXACTEMENT
+        // comme un item Mode 2 (stock marchand decrmente normalement,
+        // handlePaidCheckout.ts) -- aucun cout fournisseur Nexiora n'est
+        // jamais engage, donc aucune raison de bloquer. Un item avec
+        // cj_vid REELLEMENT rempli (hypothese defense en profondeur : futur
+        // chemin d'ecriture, service_role, SQL direct) resterait un vrai
+        // dropship a cout inconnu -- le garde-fou original (jamais
+        // acheter un item Mode 3 a cout fournisseur inconnu) est conserve,
+        // mais desormais base sur un signal reel (cj_vid), pas sur une
+        // colonne qui n'a jamais existe.
+        const { data: sp, error: spError } = await supabaseAdmin
           .from('shop_products')
-          .select('price, cost_price')
+          .select('price, currency, published, cj_vid')
           .eq('id', item.id)
+          .eq('site_id', site.id)
           .maybeSingle();
-        cost = Number(sp?.cost_price) || 0;
-        serverPrice = Number(sp?.price) || 0;
+        if (spError) {
+          await logAnomaly({ type: 'shop_product_query_failed', siteId: site.id, slug, details: { itemId: item.id, error: spError.message } });
+          return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
+        }
+        if (!sp || sp.published !== true) {
+          await logAnomaly({ type: 'shop_product_not_purchasable', siteId: site.id, slug, details: { itemId: item.id } });
+          return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
+        }
+        cost = 0;
+        serverPrice = Number(sp.price) || 0;
+        // Devise jamais issue du client (meme raisonnement que le prix,
+        // deja recalcule cote serveur juste au-dessus) : sans ceci, un appel
+        // direct a cette route (hors UI, aucune connaissance d'un autre site
+        // requise) pouvait faire encaisser 19.99 JPY au lieu de 19.99 CAD
+        // pour le meme unit_amount -- Stripe traite unit_amount comme un
+        // compte dans la plus petite unite de LA DEVISE FOURNIE, jamais
+        // reconvertie depuis le prix serveur.
+        item.currency = sp.currency;
         if (serverPrice <= 0) {
           await logAnomaly({ type: 'shop_price_missing', siteId: site.id, slug, details: { itemId: item.id } });
           return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
         }
-        if (site.mode === 3 && cost <= 0) {
-          await logAnomaly({ type: 'shop_cost_missing_mode3', siteId: site.id, slug, details: { itemId: item.id } });
+        if (site.mode === 3 && sp.cj_vid) {
+          await logAnomaly({ type: 'shop_product_dropship_cost_unknown', siteId: site.id, slug, details: { itemId: item.id } });
           return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
         }
       }
@@ -269,24 +456,155 @@ export async function POST(req: Request) {
       totalAmount += serverPrice * item.quantity;
     }
 
+    // Stripe n'accepte qu'une seule devise par Checkout Session : plutot que
+    // de laisser Stripe echouer avec une erreur opaque, on rejette ici,
+    // proprement, si les devises desormais server-authoritative (ci-dessus)
+    // divergent entre lignes -- ne devrait jamais arriver en usage normal
+    // (chaque produit d'un meme site partage la meme devise), mais protege
+    // aussi order.currency (qui ne stocke qu'une seule valeur, celle de la
+    // premiere ligne) de refleter silencieusement la mauvaise devise pour
+    // les autres lignes.
+    const resolvedCurrency = items[0]?.currency;
+    if (items.some((i) => i.currency !== resolvedCurrency)) {
+      await logAnomaly({ type: 'mixed_currency_cart', siteId: site.id, slug, details: { currencies: items.map((i) => i.currency) } });
+      return NextResponse.json({ error: 'Panier incohérent' }, { status: 409 });
+    }
+
+    // ---- Code promo (passe de cloture, P-1 a P-6) ----
+    // Cause racine : la remise etait calculee et AFFICHEE par le panier
+    // (CartDrawer.tsx) mais n'etait jamais transmise ni appliquee ici -- le
+    // client voyait "-20%" et payait le prix plein. Le correctif ne
+    // consiste PAS a faire confiance au montant calcule par le navigateur :
+    // seul le CODE transite, tout le reste est recalcule ici a partir de
+    // donnees serveur.
+    //
+    // Modele economique retenu (decision produit OPTION A, explicite) : le
+    // MARCHAND absorbe integralement la remise. La commission Nexiora reste
+    // donc calculee sur totalAmount AVANT remise, et applicationFeeAmount
+    // est inchange -- c'est le montant encaisse par le client qui baisse,
+    // donc la part nette du marchand. Les garde-fous Mode 3 existants ne
+    // sont PAS modifies : ils operent desormais sur le clientPays REEL
+    // (apres remise), ce qui les rend strictement plus stricts -- une remise
+    // economiquement intenable est refusee automatiquement.
+    //
+    // Isolation tenant : la recherche est filtree par site_id (le site
+    // resolu depuis le slug, jamais un identifiant fourni par le client) ET
+    // par egalite EXACTE sur le code. `ilike` est volontairement banni ici :
+    // il interpretait '%' et '_' comme des jokers, permettant a un acheteur
+    // de saisir '%' pour recuperer l'unique code actif d'une boutique sans
+    // le connaitre (P-2).
+    let promoDiscount = 0;
+    let appliedPromoId: string | null = null;
+    const rawPromo = typeof promoCode === 'string' ? promoCode.trim().toUpperCase() : '';
+    if (rawPromo.length > 0) {
+      if (rawPromo.length > 64) {
+        return NextResponse.json({ error: 'Code promo invalide' }, { status: 409 });
+      }
+      const { data: promo } = await supabaseAdmin
+        .from('promo_codes')
+        .select('id, discount_type, discount_value, min_order, max_uses, used_count, expires_at')
+        .eq('site_id', site.id)
+        .eq('code', rawPromo)
+        .eq('active', true)
+        .maybeSingle();
+
+      const nowMs = Date.now();
+      const expired = !!promo?.expires_at && new Date(promo.expires_at).getTime() < nowMs;
+      const depleted = promo?.max_uses != null && Number(promo.used_count ?? 0) >= Number(promo.max_uses);
+      // min_order compare au sous-total RECALCULE ci-dessus (totalAmount),
+      // jamais a une valeur transmise par le client (P-3).
+      const belowMin = promo?.min_order != null && totalAmount < Number(promo.min_order);
+
+      if (!promo || expired || depleted || belowMin) {
+        await logAnomaly({
+          type: 'promo_rejected',
+          severity: 'info',
+          siteId: site.id,
+          slug,
+          details: {
+            code: rawPromo,
+            reason: !promo ? 'not_found_or_wrong_site' : expired ? 'expired' : depleted ? 'depleted' : 'min_order',
+          },
+        });
+        // Refus explicite plutot qu'un encaissement silencieux au prix
+        // plein : c'est precisement le probleme de confiance que P-1 corrige.
+        return NextResponse.json({ error: 'Code promo invalide' }, { status: 409 });
+      }
+
+      const dv = Number(promo.discount_value);
+      if (!Number.isFinite(dv) || dv <= 0) {
+        await logAnomaly({ type: 'promo_invalid_config', siteId: site.id, slug, details: { code: rawPromo, discountValue: promo.discount_value } });
+        return NextResponse.json({ error: 'Code promo invalide' }, { status: 409 });
+      }
+      if (promo.discount_type === 'percent') {
+        if (dv > 100) {
+          await logAnomaly({ type: 'promo_invalid_config', siteId: site.id, slug, details: { code: rawPromo, percent: dv } });
+          return NextResponse.json({ error: 'Code promo invalide' }, { status: 409 });
+        }
+        promoDiscount = totalAmount * (dv / 100);
+      } else if (promo.discount_type === 'fixed') {
+        promoDiscount = dv;
+      } else {
+        // Liste d'autorisation stricte (P-6) : tout type inconnu est refuse,
+        // jamais interprete par defaut comme un montant fixe.
+        await logAnomaly({ type: 'promo_invalid_config', siteId: site.id, slug, details: { code: rawPromo, discountType: promo.discount_type } });
+        return NextResponse.json({ error: 'Code promo invalide' }, { status: 409 });
+      }
+
+      // Borne dure : la remise ne peut jamais depasser le sous-total ni etre
+      // negative -- clientPays reste >= shippingAmount >= 0 en toutes
+      // circonstances.
+      promoDiscount = Math.round(Math.min(Math.max(promoDiscount, 0), totalAmount) * 100) / 100;
+      appliedPromoId = promo.id;
+    }
+
+    const discountedTotal = Math.round((totalAmount - promoDiscount) * 100) / 100;
+
+    // OPTION A : commission calculee sur le prix AVANT remise.
     const nexioraCommission = totalAmount * (NEXIORA_COMMISSION_PERCENT / 100);
     const applicationFeeAmount = site.mode === 3 ? (supplierCost + shippingAmount + nexioraCommission) : 0;
+
+    // ---- Garde-fou applicable a TOUS les modes (DEBT-029b) ----
+    // Audit final phase 2 : tous les garde-fous financiers etaient enfermes
+    // dans le bloc `if (site.mode === 3)` ci-dessous. Une remise de 100 % en
+    // mode 1/2 avec livraison gratuite produit un montant total de 0, que
+    // Stripe refuse -- l'acheteur recevait une erreur opaque au lieu d'un
+    // refus explicite. Le mode 3 etait deja couvert (la garde
+    // `applicationFeeAmount >= clientPays` intercepte le cas), les autres
+    // modes ne l'etaient pas du tout.
+    if (!(discountedTotal + shippingAmount > 0)) {
+      await logAnomaly({
+        type: 'zero_amount_checkout',
+        severity: 'warning',
+        siteId: site.id,
+        slug,
+        details: { totalAmount, promoDiscount, shippingAmount, discountedTotal, mode: site.mode },
+      });
+      return NextResponse.json(
+        { error: 'Montant a payer nul — commande impossible' },
+        { status: 409 }
+      );
+    }
 
     // ---- Garde-fous financiers (mode 3) ----
     // Nexiora avance l'argent au fournisseur : aucune commande ne passe si les
     // montants sont incoherents. Mieux vaut une vente perdue qu'une perte seche.
     if (site.mode === 3) {
-      const clientPays = totalAmount + shippingAmount;
+      // Garde-fous INCHANGES dans leur logique -- mais evalues sur le
+      // montant REELLEMENT encaisse (apres remise). C'est ce qui rend une
+      // remise economiquement intenable automatiquement refusee, sans avoir
+      // eu a affaiblir ni contourner une seule protection existante.
+      const clientPays = discountedTotal + shippingAmount;
       if (supplierCost <= 0) {
         await logAnomaly({ type: 'supplier_cost_zero', siteId: site.id, slug, details: { totalAmount } });
         return NextResponse.json({ error: 'Commande impossible pour le moment' }, { status: 409 });
       }
       if (applicationFeeAmount >= clientPays) {
-        await logAnomaly({ type: 'fee_exceeds_payment', siteId: site.id, slug, details: { applicationFeeAmount, clientPays, supplierCost, shippingAmount } });
+        await logAnomaly({ type: 'fee_exceeds_payment', siteId: site.id, slug, details: { applicationFeeAmount, clientPays, supplierCost, shippingAmount, promoDiscount } });
         return NextResponse.json({ error: 'Commande impossible pour le moment' }, { status: 409 });
       }
-      if (totalAmount - supplierCost - nexioraCommission < 0) {
-        await logAnomaly({ type: 'negative_merchant_profit', siteId: site.id, slug, details: { totalAmount, supplierCost, nexioraCommission } });
+      if (discountedTotal - supplierCost - nexioraCommission < 0) {
+        await logAnomaly({ type: 'negative_merchant_profit', siteId: site.id, slug, details: { totalAmount, discountedTotal, supplierCost, nexioraCommission, promoDiscount } });
         return NextResponse.json({ error: 'Commande impossible pour le moment' }, { status: 409 });
       }
       if (shippingAmount > 40 && shippingAmount <= 150) {
@@ -298,6 +616,17 @@ export async function POST(req: Request) {
       }
     }
 
+    // Audit Mode 3/POD BRAND, perfectionnement -- nonce d'idempotence
+    // optionnel fourni par le client (persiste cote navigateur, partage
+    // entre onglets). Jamais fait confiance tel quel : borne en longueur,
+    // sinon ignore silencieusement (comportement historique, aucune
+    // idempotence Stripe) plutot que de risquer un rejet Stripe sur une
+    // valeur malformee.
+    const safeCheckoutNonce =
+      typeof checkoutNonce === 'string' && checkoutNonce.length > 0 && checkoutNonce.length <= 200
+        ? checkoutNonce
+        : undefined;
+
     const provider = getProvider(site.payment_provider);
     const { url, orderId } = await provider.createCheckout(
       site.payment_account_id,
@@ -306,11 +635,17 @@ export async function POST(req: Request) {
       successUrl,
       cancelUrl,
       shippingAmount,
-      applicationFeeAmount
+      applicationFeeAmount,
+      safeCheckoutNonce,
+      promoDiscount
     );
 
-    const amount = totalAmount;
-    const { data: order } = await supabaseAdmin
+    // `amount` = montant REELLEMENT encaisse hors livraison (apres remise).
+    // shop_orders.total doit refleter ce que le client a paye, pas un prix
+    // catalogue theorique -- sinon tout le reporting (admin/stats,
+    // finances) et les remboursements seraient fausses par la remise.
+    const amount = discountedTotal;
+    const { data: order, error: orderError } = await supabaseAdmin
       .from('shop_orders')
       .insert({
         site_id: site.id,
@@ -331,54 +666,173 @@ export async function POST(req: Request) {
         supplier_cost: supplierCost,
         nexiora_commission: nexioraCommission,
         merchant_profit: amount - supplierCost - nexioraCommission,
+        // P-4 : la consommation reelle du code (increment de used_count) a
+        // lieu au PAIEMENT confirme (handlePaidCheckout), pas ici -- une
+        // session abandonnee ne doit jamais consommer une utilisation. On se
+        // contente de memoriser QUEL code a ete applique.
+        promo_code_id: appliedPromoId,
       })
       .select('id')
       .single();
 
-    if (order) {
-      const { data: orderItems } = await supabaseAdmin.from('shop_order_items').insert(
-        items.map((i) => ({
-          order_id: order.id,
-          product_id: i.id,
-          product_name: i.name,
-          quantity: i.quantity,
-          unit_price: i.priceNumber,
-        }))
-      ).select('id');
+    // Rejeu du meme nonce (deux onglets, resoumission reseau) : Stripe a deja
+    // dedupe createCheckout() vers la MEME session (voir stripe.ts et son
+    // idempotencyKey derive de checkoutNonce), donc `orderId` (session.id)
+    // est identique a celui du premier appel -- l'INSERT ci-dessus entre en
+    // conflit sur la contrainte UNIQUE de shop_orders.payment_ref. Ce n'est
+    // PAS un echec : la commande existe deja, on renvoie la MEME URL de
+    // paiement plutot qu'une erreur ou une seconde commande. Sans nonce
+    // (safeCheckoutNonce absent), orderId est toujours une session Stripe
+    // fraiche : ce conflit ne peut alors jamais se produire (comportement
+    // historique inchange). NB : ce garde-fou ne devient effectif qu'une
+    // fois la contrainte UNIQUE (shop_orders.payment_ref) ajoutee en base --
+    // voir audit DB associe.
+    if (orderError?.code === '23505') {
+      const { data: existingOrder } = await supabaseAdmin
+        .from('shop_orders')
+        .select('id')
+        .eq('payment_ref', orderId)
+        .maybeSingle();
+      if (existingOrder) {
+        return NextResponse.json({ url });
+      }
+    }
+
+    // Ne jamais renvoyer une URL de paiement Stripe valide sans commande
+    // enregistree cote Deribfy -- sinon un client peut payer reellement pour
+    // un achat dont plus aucune trace n'existe (ex. site archive entre la
+    // resolution initiale et ce point, rejete par le trigger
+    // reject_order_if_site_archived sur shop_orders).
+    if (orderError || !order) {
+      const siteArchived = orderError?.message?.includes('SITE_ARCHIVED');
+      await logAnomaly({
+        type: siteArchived ? 'checkout_order_site_archived' : 'checkout_order_insert_failed',
+        siteId: site.id,
+        slug,
+        details: { error: orderError?.message },
+      });
+      return NextResponse.json(
+        { error: siteArchived ? 'Cette boutique n\'est plus disponible.' : 'Commande impossible pour le moment.' },
+        { status: siteArchived ? 409 : 500 }
+      );
+    }
+
+    const { data: orderItems, error: itemsError } = await supabaseAdmin.from('shop_order_items').insert(
+      items.map((i) => ({
+        order_id: order.id,
+        product_id: i.id,
+        product_name: i.name,
+        quantity: i.quantity,
+        unit_price: i.priceNumber,
+      }))
+    ).select('id');
+
+    if (itemsError || !orderItems) {
+      // La commande existe deja et le paiement peut suivre son cours (le
+      // client a deja une session Stripe valide a ce stade) -- on ne bloque
+      // pas l'achat pour un probleme de persistance des lignes, mais une
+      // intervention humaine est necessaire pour reconstruire la commande
+      // avant fulfillment.
+      await logAnomaly({
+        type: 'checkout_order_items_insert_failed',
+        siteId: site.id,
+        slug,
+        details: { orderId: order.id, error: itemsError?.message },
+      });
+    } else {
       // Save custom designs if any
-      if (orderItems) {
-        const designRows: { order_item_id: string; design_url: string; placement: string; position: any }[] = [];
-        items.forEach((item, idx) => {
-          if (!orderItems[idx]) return;
-          const orderItemId = orderItems[idx].id;
-          if (Array.isArray(item.customDesigns) && item.customDesigns.length > 0) {
-            // One row per print location (front, back, sleeves...)
-            item.customDesigns.forEach(d => {
-              if (!d?.url) return;
-              designRows.push({
-                order_item_id: orderItemId,
-                design_url: d.url,
-                placement: d.placement || 'front',
-                position: d.position || null,
-              });
-            });
-          } else if (item.customDesignUrl) {
+      const designRows: { order_item_id: string; design_url: string; placement: string; position: Record<string, number> | null }[] = [];
+      items.forEach((item, idx) => {
+        if (!orderItems[idx]) return;
+        const orderItemId = orderItems[idx].id;
+        if (Array.isArray(item.customDesigns) && item.customDesigns.length > 0) {
+          // One row per print location (front, back, sleeves...)
+          item.customDesigns.forEach(d => {
+            if (!d?.url) return;
             designRows.push({
               order_item_id: orderItemId,
-              design_url: item.customDesignUrl,
-              placement: 'front',
-              position: item.customDesignPosition || null,
+              design_url: d.url,
+              placement: d.placement || 'front',
+              position: d.position || null,
+            });
+          });
+        } else if (item.customDesignUrl) {
+          designRows.push({
+            order_item_id: orderItemId,
+            design_url: item.customDesignUrl,
+            placement: 'front',
+            position: item.customDesignPosition || null,
+          });
+        }
+      });
+      // LOT J (F-CUSTOM-01/04) -- consommation reelle des designs pod_custom
+      // (single-use) : la validation plus haut (existence + non-consomme)
+      // ne fait qu'AUTORISER le checkout a se poursuivre, elle ne reserve
+      // rien -- entre cette validation et ce point, une commande concurrente
+      // aurait pu consommer la MEME URL (fenetre de course, extremement
+      // etroite : quelques secondes, une seule action legitime possible :
+      // rejeu du meme design par le meme visiteur dans un autre onglet).
+      // UPDATE...WHERE consumed_at IS NULL agit comme CAS atomique -- un
+      // seul appelant peut reussir a consommer une ligne donnee. Le paiement
+      // est deja en cours a ce stade (session Stripe creee) : jamais
+      // bloquant, meme philosophie que checkout_order_items_insert_failed
+      // ci-dessus -- un design perdu a la course est simplement omis de
+      // order_item_designs (pod-fulfill.ts traite deja un item sans design
+      // comme un cas normal, non une erreur).
+      //
+      // Contre-audit hostile (LOT J) -- REGRESSION trouvee et corrigee avant
+      // de considerer ce lot termine : une premiere version consommait
+      // CHAQUE ligne de designRows independamment, y compris quand la MEME
+      // URL apparait plusieurs fois (cas legitime et courant : le meme
+      // visuel applique a la fois devant ET dos du produit). La 2e tentative
+      // de consommation de la meme URL trouvait alors consumed_at deja pose
+      // par la 1ere (la MEME requete, pas une course externe) et echouait a
+      // tort -- perte silencieuse du design pour un des deux emplacements
+      // dans un usage parfaitement legitime. Deduplique desormais par URL
+      // AVANT de consommer : chaque URL distincte n'est reclamee qu'UNE
+      // fois, le resultat s'applique a TOUTES les lignes qui la partagent.
+      let finalDesignRows = designRows;
+      if (site.dropship_type === 'pod_custom' && designRows.length > 0) {
+        const uniqueUrls = [...new Set(designRows.map((r) => r.design_url))];
+        const claimedUrls = new Set<string>();
+        for (const url of uniqueUrls) {
+          const owningRow = designRows.find((r) => r.design_url === url)!;
+          const { data: claim } = await supabaseAdmin
+            .from('design_uploads')
+            .update({ consumed_at: new Date().toISOString(), consumed_by_order_item_id: owningRow.order_item_id })
+            .eq('site_id', site.id)
+            .eq('public_url', url)
+            .is('consumed_at', null)
+            .select('id');
+          if (claim && claim.length > 0) {
+            claimedUrls.add(url);
+          } else {
+            await logAnomaly({
+              type: 'custom_design_consume_race_lost',
+              severity: 'warning',
+              siteId: site.id,
+              slug,
+              details: { orderId: order.id, orderItemId: owningRow.order_item_id, designUrl: url },
             });
           }
-        });
-        if (designRows.length > 0) {
-          await supabaseAdmin.from('order_item_designs').insert(designRows);
+        }
+        finalDesignRows = designRows.filter((r) => claimedUrls.has(r.design_url));
+      }
+      if (finalDesignRows.length > 0) {
+        const { error: designsError } = await supabaseAdmin.from('order_item_designs').insert(finalDesignRows);
+        if (designsError) {
+          await logAnomaly({
+            type: 'checkout_order_designs_insert_failed',
+            siteId: site.id,
+            slug,
+            details: { orderId: order.id, error: designsError.message },
+          });
         }
       }
     }
 
     return NextResponse.json({ url });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
 }

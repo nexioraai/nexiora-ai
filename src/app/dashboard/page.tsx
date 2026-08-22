@@ -54,7 +54,18 @@ export default function DashboardPage() {
 
   const handleDelete = async (slug: string) => {
     if (!confirm(t('dashboard.confirmDelete'))) return;
-    await supabase.from('sites').delete().eq('slug', slug);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { router.push('/login'); return; }
+    const res = await fetch(`/api/sites/${slug}/archive`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) {
+      const statuses = data.blockingStatuses?.length ? ` (${data.blockingStatuses.join(', ')})` : '';
+      alert((data.error === 'site_archive_blocked' ? t('dashboard.archiveBlocked') : t('dashboard.deleteFailed')) + statuses);
+      return;
+    }
     setSites(sites.filter(s => s.slug !== slug));
   };
 

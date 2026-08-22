@@ -1,4 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+// Audit hostile rate-limit CJ : cjFetch (client.ts, importé transitivement
+// via cj-adapter.ts -> registry.ts) dépend désormais de supabaseAdmin pour
+// le rate-limiter global (rateLimiter.ts) -- ce test ne testait que la
+// structure du registre, jamais un appel réseau réel, mais l'import seul
+// suffit à déclencher le throw de garde de supabase-admin.ts sans ce mock,
+// même pattern déjà utilisé partout ailleurs dans la suite CJ.
+vi.mock('@/lib/supabase-admin', () => ({ supabaseAdmin: { from: vi.fn() } }));
+
 import { getSupplier, allSuppliers, suppliersWithCapability } from '../registry';
 import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
 

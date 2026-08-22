@@ -20,8 +20,10 @@ interface Props {
   slug: string;
   children: React.ReactNode;
   className?: string;
+  // Optionnel, retro-compatible : voir MerchantProductModal.tsx.
+  variant?: 'light' | 'dark';
 }
-export default function ClickableProductCard({ product, primary, lang, slug, children, className }: Props) {
+export default function ClickableProductCard({ product, primary, lang, slug, children, className, variant }: Props) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -38,6 +40,7 @@ export default function ClickableProductCard({ product, primary, lang, slug, chi
           product={product}
           primary={primary}
           lang={lang}
+          variant={variant}
           onClose={() => setOpen(false)}
         />,
         document.body

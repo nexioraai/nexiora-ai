@@ -13,6 +13,7 @@ import type {
   ShippingRequest,
   ShippingResult,
 } from './supplier-adapter';
+import { fetchWithTimeout } from '@/lib/http/fetchWithTimeout';
 
 // ============================================================
 // Gelato — Supplier Adapter Implementation
@@ -35,7 +36,7 @@ const STATUS_BASE = 'https://api.gelato.com';
 const NEXIORA_GELATO_KEY = process.env.GELATO_API_KEY || '';
 
 async function glFetch(base: string, path: string, init?: RequestInit): Promise<any> {
-  const res = await fetch(`${base}${path}`, {
+  const res = await fetchWithTimeout(`${base}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',

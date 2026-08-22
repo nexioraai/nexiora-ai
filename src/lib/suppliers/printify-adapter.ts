@@ -15,6 +15,7 @@ import type {
   ShippingResult,
   ProductVariant,
 } from './supplier-adapter';
+import { fetchWithTimeout } from '@/lib/http/fetchWithTimeout';
 
 // ============================================================
 // Printify — Supplier Adapter Implementation
@@ -31,7 +32,7 @@ const PRINTIFY_BASE = 'https://api.printify.com/v1';
 // ---------- API helper ----------
 
 async function pyFetch(path: string, token: string, init?: RequestInit): Promise<any> {
-  const res = await fetch(`${PRINTIFY_BASE}${path}`, {
+  const res = await fetchWithTimeout(`${PRINTIFY_BASE}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',

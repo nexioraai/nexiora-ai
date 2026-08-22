@@ -33,25 +33,41 @@ export async function GET(req: Request) {
 
     const products = await getAllProducts(auth.siteId);
     return NextResponse.json({ products });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
 }
+
+// Audit Mode 3 global (CRIT-2) -- `const { slug, ...productData } = body`
+// spreadait tout le JSON client (type `any`, aucun excess-property-check
+// TypeScript possible sur un spread de `any`) directement dans
+// createProduct(). shop_products.cj_vid (declenche une VRAIE commande CJ
+// reelle, cj/fulfill.ts:325-334) et cost_price (source du garde-fou
+// financier Mode 3, checkout/route.ts) n'ont AUCUN chemin d'ecriture
+// legitime dans toute l'application (grep exhaustif : aucune UI, aucune
+// route de sync ne les ecrit jamais) -- seule cette route les exposait,
+// sans le vouloir. Allowlist explicite desormais, miroir du patron deja
+// utilise par catalog/selections PATCH (`const allowed = [...]`).
+const ALLOWED_PRODUCT_FIELDS = ['name', 'description', 'price', 'currency', 'images', 'stock', 'published', 'position'] as const;
 
 /** POST /api/shop/products → crée un produit. Body: { slug, name, price, ... } */
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { slug, ...productData } = body;
-    if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
-    if (!productData.name) return NextResponse.json({ error: 'Missing name' }, { status: 400 });
+    if (!body.slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
+    if (!body.name) return NextResponse.json({ error: 'Missing name' }, { status: 400 });
 
-    const auth = await authSite(req, slug);
+    const auth = await authSite(req, body.slug);
     if ('error' in auth) return auth.error;
 
-    const product = await createProduct({ site_id: auth.siteId, ...productData });
+    const productData: Record<string, unknown> = {};
+    for (const field of ALLOWED_PRODUCT_FIELDS) {
+      if (field in body) productData[field] = body[field];
+    }
+
+    const product = await createProduct({ site_id: auth.siteId, ...productData } as Parameters<typeof createProduct>[0]);
     return NextResponse.json({ product });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
 }

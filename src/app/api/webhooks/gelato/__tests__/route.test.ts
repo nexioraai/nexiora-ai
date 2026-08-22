@@ -2,13 +2,20 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { encodeIdempotencyKey } from '@/lib/fulfillment/idempotency-key';
 
 // ============================================================
-// P0-3.9.7 Audit #2 — Route webhook Gelato. Mocks uniquement, AUCUN appel
-// réseau réel (getGelatoOrderById et processWebhookEvent sont tous deux
-// mockés). Couvre les 11 cas listés dans l'audit de clôture.
+// P0-3.9.7 Audit #2, puis LOT I (F-I-1) — Route webhook Gelato. Mocks
+// uniquement, AUCUN appel réseau réel (getGelatoOrderById et
+// processWebhookEvent sont tous deux mockés). Couvre les 11 cas listés
+// dans l'audit de clôture P0-3.9.7 + les cas d'authentification LOT I.
+//
+// LOT I : l'authentification par secret est désormais fail-closed
+// (webhook-auth.ts) -- GELATO_WEBHOOK_SECRET est TOUJOURS défini dans
+// beforeEach et TOUTES les requêtes de ce fichier (hors bloc dédié
+// "authentification") portent l'en-tête X-Webhook-Secret correspondant.
 // ============================================================
 
 const UNIT_A = '11111111-1111-1111-1111-111111111111';
 const UNIT_B = '22222222-2222-2222-2222-222222222222';
+const SECRET = 'test-gelato-secret';
 
 const processWebhookEventMock = vi.fn();
 vi.mock('@/lib/fulfillment/webhook-handler', () => ({
@@ -27,18 +34,21 @@ vi.mock('@/lib/fulfillment/observability', () => ({
 
 import { POST } from '../route';
 
-function makeRequest(body: unknown) {
-  return new Request('https://woorri.test/api/webhooks/gelato', {
-    method: 'POST',
-    body: JSON.stringify(body),
-  });
+function makeRequest(body: unknown, opts: { secret?: string | null; useQuery?: boolean } = {}) {
+  const { secret = SECRET, useQuery = false } = opts;
+  const url = useQuery && secret
+    ? `https://woorri.test/api/webhooks/gelato?secret=${encodeURIComponent(secret)}`
+    : 'https://woorri.test/api/webhooks/gelato';
+  const headers: Record<string, string> = {};
+  if (secret && !useQuery) headers['x-webhook-secret'] = secret;
+  return new Request(url, { method: 'POST', headers, body: JSON.stringify(body) });
 }
 
 beforeEach(() => {
   processWebhookEventMock.mockReset();
   getGelatoOrderByIdMock.mockReset();
   reportReconciliationConflictMock.mockReset();
-  delete process.env.GELATO_WEBHOOK_SECRET;
+  process.env.GELATO_WEBHOOK_SECRET = SECRET;
   processWebhookEventMock.mockResolvedValue({ outcome: 'processed', providerOrderRowId: 'row-1', lateWebhook: false, submissionResolved: true });
 });
 
@@ -210,11 +220,33 @@ describe('Gelato webhook route — cas 11 : Submission terminale', () => {
   });
 });
 
-describe('Gelato webhook route — secret partagé', () => {
-  it('401 si GELATO_WEBHOOK_SECRET est configuré et absent/incorrect dans la query', async () => {
-    process.env.GELATO_WEBHOOK_SECRET = 's3cr3t';
+describe('Gelato webhook route — authentification (LOT I, F-I-1)', () => {
+  it('fail-closed : GELATO_WEBHOOK_SECRET absent -> 401 même avec un secret fourni côté requête', async () => {
+    delete process.env.GELATO_WEBHOOK_SECRET;
     const res = await POST(makeRequest({ orderReferenceId: 'ref-abc', orderId: 'gl-1' }));
     expect(res.status).toBe(401);
-    delete process.env.GELATO_WEBHOOK_SECRET;
+    expect(getGelatoOrderByIdMock).not.toHaveBeenCalled();
+  });
+
+  it('secret absent de la requête -> 401', async () => {
+    const res = await POST(makeRequest({ orderReferenceId: 'ref-abc', orderId: 'gl-1' }, { secret: null }));
+    expect(res.status).toBe(401);
+  });
+
+  it('secret incorrect (en-tête) -> 401', async () => {
+    const res = await POST(makeRequest({ orderReferenceId: 'ref-abc', orderId: 'gl-1' }, { secret: 'wrong' }));
+    expect(res.status).toBe(401);
+  });
+
+  it('secret correct via en-tête X-Webhook-Secret -> 200', async () => {
+    getGelatoOrderByIdMock.mockResolvedValue({ found: true, items: [{ itemReferenceId: encodeIdempotencyKey(UNIT_A) }], fulfillmentStatus: 'shipped', raw: {} });
+    const res = await POST(makeRequest({ orderReferenceId: 'ref-abc', orderId: 'gl-1' }));
+    expect(res.status).toBe(200);
+  });
+
+  it('secret correct via ?secret= en repli (rétro-compatibilité dashboard déjà configuré) -> 200', async () => {
+    getGelatoOrderByIdMock.mockResolvedValue({ found: true, items: [{ itemReferenceId: encodeIdempotencyKey(UNIT_A) }], fulfillmentStatus: 'shipped', raw: {} });
+    const res = await POST(makeRequest({ orderReferenceId: 'ref-abc', orderId: 'gl-1' }, { useQuery: true }));
+    expect(res.status).toBe(200);
   });
 });

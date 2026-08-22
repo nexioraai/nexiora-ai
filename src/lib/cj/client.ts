@@ -1,17 +1,54 @@
 import 'server-only';
 import { getCjToken } from './auth';
+import { acquireCjSlot } from './rateLimiter';
+import { fetchWithTimeout } from '@/lib/http/fetchWithTimeout';
 
 const CJ_BASE = 'https://developers.cjdropshipping.com/api2.0/v1';
 
-/** Appel générique authentifié à l'API CJ — CÔTÉ SERVEUR UNIQUEMENT. */
+/**
+ * Erreur API CJ enrichie du code numérique CJ (ex: 1600300, 1603003) et du
+ * statut HTTP réel quand présents. Champs additifs : tout appelant existant
+ * qui ne lit que `.message` continue de fonctionner a l'identique.
+ *
+ * `httpStatus` (audit hostile, Phase 4) : CJ ne documente aucun code CJ
+ * distinct pour le rate-limit (contrairement à 1603003/1600300) -- le statut
+ * HTTP réel est un signal plus fiable qu'une comparaison de sous-chaîne du
+ * message quand il vaut effectivement 429. Les deux signaux sont combinés
+ * (fulfill.ts:isRateLimitError) car on ne sait pas avec certitude si CJ
+ * renvoie systématiquement un vrai 429 HTTP ou parfois un 200 avec enveloppe
+ * d'erreur -- non documenté, non prouvable sans appel réel de test.
+ */
+export class CjApiError extends Error {
+  code: number | null;
+  httpStatus: number | null;
+  constructor(message: string, code: number | null, httpStatus: number | null = null) {
+    super(message);
+    this.name = 'CjApiError';
+    this.code = code;
+    this.httpStatus = httpStatus;
+  }
+}
+
+/**
+ * Appel générique authentifié à l'API CJ — CÔTÉ SERVEUR UNIQUEMENT.
+ *
+ * Rate-limit GLOBAL (audit hostile, Phase 1-2) : `acquireCjSlot()` réclame
+ * atomiquement le prochain créneau via une ligne Supabase partagée avant
+ * tout appel réseau réel -- couvre automatiquement TOUS les appelants
+ * (fulfillment, réconciliation, tracking, crons catalogue, route
+ * shipping-estimate visiteur, cj-adapter) sans dépendre d'un throttle
+ * mémoire local à chaque site d'appel, qui ne protège qu'une seule
+ * invocation serverless à la fois.
+ */
 export async function cjFetch(
   email: string,
   apiKey: string,
   path: string,
   options: { method?: string; body?: any } = {}
 ): Promise<any> {
+  await acquireCjSlot();
   const token = await getCjToken(email, apiKey);
-  const res = await fetch(`${CJ_BASE}${path}`, {
+  const res = await fetchWithTimeout(`${CJ_BASE}${path}`, {
     method: options.method || 'GET',
     headers: {
       'CJ-Access-Token': token,
@@ -21,7 +58,7 @@ export async function cjFetch(
   });
   const data = await res.json();
   if (!data.result) {
-    throw new Error(`Erreur API CJ (${path}) : ${data.message || 'inconnue'}`);
+    throw new CjApiError(`Erreur API CJ (${path}) : ${data.message || 'inconnue'}`, data.code ?? null, res.status);
   }
   return data.data;
 }
@@ -95,25 +132,44 @@ export async function cjCancelOrder(
   );
 }
 
+export type CjOrderDetailResult =
+  | { outcome: 'found'; data: any }
+  | { outcome: 'not_found' }
+  | { outcome: 'unknown'; reason: string };
+
 /**
- * Récupère le détail d'une commande CJ par orderId.
- * Accepte aussi notre orderNumber custom (= id Supabase de la commande).
- * Renvoie null si aucune commande n'existe (garde-fou anti double-création).
+ * Récupère le détail d'une commande CJ par orderId. Accepte aussi notre
+ * orderNumber custom (= id Supabase de la commande) -- vérifié empiriquement
+ * en lecture réelle sur des commandes historiques (audit Reseller/CJ).
+ *
+ * Distingue explicitement 3 issues, jamais 2 (audit Reseller/CJ §3-4) :
+ *   - 'not_found' : CJ confirme l'absence (code 1600300, "order not found").
+ *     Seul ce cas autorise une éventuelle création côté appelant.
+ *   - 'found' : la commande existe, `data.orderStatus` doit être classifié
+ *     via statusMap.ts par l'appelant, jamais comparé ici directement.
+ *   - 'unknown' : timeout, réseau, 429, 5xx, code CJ inattendu, réponse
+ *     malformée -- toute autre situation. Ne doit JAMAIS être traité comme
+ *     'not_found' : une commande peut très bien exister chez CJ sans que
+ *     nous ayons pu l'obtenir (c'est précisément le scénario crash/timeout
+ *     après createOrderV2 que ce type existe pour représenter fidèlement).
  */
 export async function cjGetOrderDetail(
   email: string,
   apiKey: string,
   orderId: string
-): Promise<any | null> {
+): Promise<CjOrderDetailResult> {
   try {
-    return await cjFetch(
+    const data = await cjFetch(
       email,
       apiKey,
       `/shopping/order/getOrderDetail?orderId=${encodeURIComponent(orderId)}`
     );
-  } catch {
-    // CJ renvoie une erreur "order not found" → pas de commande existante.
-    return null;
+    return { outcome: 'found', data };
+  } catch (e: unknown) {
+    if (e instanceof CjApiError && e.code === 1600300) {
+      return { outcome: 'not_found' };
+    }
+    return { outcome: 'unknown', reason: e instanceof Error ? e.message : String(e) };
   }
 }
 
