@@ -71,6 +71,25 @@ describe('GET /api/cron/domain-retry — reprise des paiements bloqués', () => 
     expect(currentMock.orCalls[0]).toMatch(/updated_at\.lt\./);
   });
 
+  // Audit Mode 3/POD BRAND, perfectionnement (fermeture dette Porkbun/DEBT-019) --
+  // 'purchase_uncertain' est desormais REPRIS par ce cron (changement
+  // deliberer par rapport au lot precedent, qui l'excluait totalement).
+  // Ce n'est plus un risque de rachat a l'aveugle : provisionDomain()
+  // reconcilie cet etat via listAllDomains() (verite Porkbun reelle) avant
+  // toute action, avec son propre delai de securite interne (30 min,
+  // largement couvert par l'intervalle de ce cron, 2h) -- voir
+  // src/lib/domains/provision.ts et ses tests dedies pour la preuve que la
+  // reconciliation elle-meme ne retente jamais purchaseDomain() a l'aveugle.
+  it("cible desormais aussi 'purchase_uncertain' (reconciliation Porkbun sure, plus un dead-end manuel)", async () => {
+    currentMock = makeSupabaseMock([]);
+
+    const { GET } = await import('../route');
+    await GET(makeRequest());
+
+    expect(currentMock.orCalls[0]).toContain('status.eq.purchase_uncertain');
+    expect(currentMock.orCalls.length).toBe(1); // une seule requête .or() au total
+  });
+
   it('reprend réellement une ligne "paid" retournée par la requête (provisionDomain rappelé, idempotent)', async () => {
     currentMock = makeSupabaseMock([{ id: 'dom-stuck', domain: 'coince-paid.com', provision_attempts: 0 }]);
 

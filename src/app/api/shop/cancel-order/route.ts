@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { cjCancelOrder } from '@/lib/cj/client';
 import { getProvider } from '@/lib/payments';
+import { cancelShopOrderAtomic } from '@/lib/shop';
 import { logAnomaly } from '@/lib/anomaly';
 
 const CJ_EMAIL = process.env.CJ_EMAIL || '';
@@ -15,10 +16,33 @@ const CJ_API_KEY = process.env.CJ_API_KEY || '';
  *
  * Flux :
  *   1. Verif du token secret (seul le destinataire de l'email peut annuler)
- *   2. Annulation chez CJ (DELETE deleteOrder)
- *   3. Si CJ accepte -> remboursement Stripe (reverse_transfer : l'argent est
- *      repris au marchand, Nexiora ne paie pas de sa poche) + statut canceled
- *   4. Si CJ refuse (deja expediee) -> on ne rembourse pas, on explique
+ *   2. Annulation chez CJ (DELETE deleteOrder) -- Mode 3/CJ uniquement,
+ *      inchange par F9/F10 (voir note plus bas).
+ *   3. Transition atomique + restauration de stock (F9/F10, cancel_shop_order)
+ *   4. Si un paiement a ete restaure -> remboursement Stripe (reverse_transfer :
+ *      l'argent est repris au marchand, Nexiora ne paie pas de sa poche)
+ *
+ * F9/F10 (audit Mode 2, ce correctif) : avant ce correctif, cette route
+ * lisait le statut UNE FOIS puis ecrivait 'canceled' SANS aucune garde
+ * conditionnelle -- une commande qui passait 'pending' -> 'paid' (webhook)
+ * exactement entre cette lecture et cette ecriture pouvait etre ecrasee en
+ * 'canceled' sans jamais avoir ete remboursee, ET son stock decremente par
+ * le webhook n'etait alors jamais restaure (F9 : aucun mecanisme de
+ * restauration n'existait nulle part dans ce repo, verifie par recherche
+ * exhaustive). cancelShopOrderAtomic() (supabase/sql/shop_stock_functions.sql,
+ * cancel_shop_order) remplace la lecture-puis-ecriture par une transition
+ * d'etat atomique cote Postgres : elle relit et decide dans la MEME
+ * transaction, jamais a partir d'un statut lu par ce fichier avant l'appel --
+ * la meme garantie de concurrence que decrement_shop_stock_batch (F7),
+ * demontree reellement sous course dans ce meme audit.
+ *
+ * Note Mode 3/CJ : l'appel a cjCancelOrder() ci-dessous reste base sur la
+ * lecture initiale de cj_order_id (comportement historique, inchange). Une
+ * course symetrique existe theoriquement ici aussi (cj_order_id peut se
+ * remplir entre cette lecture et l'appel CJ, si fulfillCjOrder() vient
+ * juste de tourner) -- hors perimetre de F9/F10 (qui concernent le stock
+ * local Mode 2 et la course avec le webhook de PAIEMENT, pas le fournisseur
+ * CJ), signale pour un futur audit dedie, non corrige ici.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -29,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     const { data: order } = await supabaseAdmin
       .from('shop_orders')
-      .select('id, site_id, status, cj_order_id, cancel_token, payment_intent_id, payment_provider, total, currency')
+      .select('id, site_id, status, cj_order_id, cancel_token, payment_provider')
       .eq('id', orderId)
       .maybeSingle();
 
@@ -37,7 +61,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Lien invalide ou expire' }, { status: 403 });
     }
 
-    if (order.status === 'canceled') {
+    // F9/F10 : 'refunded' ajoute a la garde d'idempotence UX -- c'est l'etat
+    // emprunte par le chemin F7 (stock insuffisant apres paiement), qui n'a
+    // jamais decremente le moindre stock pour cette commande : rien a
+    // restaurer, rien a rembourser une seconde fois. Le lien d'annulation
+    // n'est de toute facon jamais envoye pour ce chemin (email de
+    // confirmation non envoye si stockFailed, handlePaidCheckout.ts) ; cette
+    // garde reste neanmoins la reponse correcte si ce chemin etait jamais
+    // atteint (defense en profondeur, pas une dependance a la livraison de
+    // l'email).
+    if (order.status === 'canceled' || order.status === 'refunded') {
       return NextResponse.json({ ok: true, alreadyCanceled: true, message: 'Cette commande est deja annulee.' });
     }
 
@@ -49,12 +82,12 @@ export async function POST(req: NextRequest) {
       }, { status: 409 });
     }
 
-    // 1. Demander l'annulation a CJ (source de verite)
+    // 1. Demander l'annulation a CJ (source de verite, Mode 3 uniquement)
     if (order.cj_order_id) {
       try {
         await cjCancelOrder(CJ_EMAIL, CJ_API_KEY, order.cj_order_id);
-      } catch (e: any) {
-        const msg = String(e?.message || e);
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
         await logAnomaly({
           type: 'cancel_refused_by_supplier',
           severity: 'warning',
@@ -69,21 +102,65 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 2. CJ a accepte : on rembourse l'acheteur
+    // 2. Transition atomique + restauration de stock (F9/F10) -- decide et
+    // agit dans une seule transaction Postgres, contre l'etat REEL au
+    // moment de l'appel, jamais contre le statut lu plus haut.
+    const result = await cancelShopOrderAtomic(order.id);
+
+    if (!result.ok) {
+      // Course perdue (webhook/autre annulation concurrente juste avant cet
+      // appel) ou etat deja terminal atteint entre notre lecture et cet
+      // appel. Reponse honnete plutot qu'un succes suppose : on relit
+      // l'etat reel pour distinguer "deja annulee entretemps" (message
+      // rassurant) d'un vrai conflit a reessayer.
+      const { data: fresh } = await supabaseAdmin
+        .from('shop_orders')
+        .select('status')
+        .eq('id', order.id)
+        .maybeSingle();
+      if (fresh?.status === 'canceled' || fresh?.status === 'refunded') {
+        return NextResponse.json({ ok: true, alreadyCanceled: true, message: 'Cette commande est deja annulee.' });
+      }
+      return NextResponse.json({
+        ok: false,
+        reason: 'conflict',
+        message: "Votre commande vient d'etre mise a jour. Merci de reessayer dans un instant.",
+      }, { status: 409 });
+    }
+
+    // 3. Stock jamais decremente (commande encore 'pending') : rien a
+    // rembourser, deja annulee par cancelShopOrderAtomic ci-dessus.
+    if (!result.restocked) {
+      return NextResponse.json({
+        ok: true,
+        canceled: true,
+        refundId: null,
+        message: 'Votre commande a bien ete annulee.',
+      });
+    }
+
+    // 4. Paiement confirme : stock deja restaure atomiquement -- rembourser
+    // le client. payment_intent_id vient de cancelShopOrderAtomic (lu
+    // fraichement dans la meme transaction que la restauration), jamais
+    // d'une lecture anterieure a cet appel.
     let refundId: string | null = null;
-    if (order.payment_intent_id) {
+    if (result.paymentIntentId) {
       try {
         const provider = getProvider(order.payment_provider);
-        const refund = await provider.refundPayment(order.payment_intent_id);
+        const refund = await provider.refundPayment(result.paymentIntentId);
         refundId = refund.id;
-      } catch (e: any) {
-        // La commande est annulee chez CJ mais le remboursement a echoue :
-        // situation a traiter manuellement, on alerte immediatement.
+      } catch (e: unknown) {
+        // La commande est deja annulee et son stock deja restaure (les deux
+        // atomiquement, via cancel_shop_order) : rembourser en echec est une
+        // situation a traiter manuellement, jamais un pretexte pour annuler
+        // la restauration de stock deja effectuee (memes principes que F7 :
+        // le stock reflete la realite -- cette commande ne sera pas honoree
+        // -- independamment du succes du remboursement lui-meme).
         await logAnomaly({
           type: 'refund_failed',
           severity: 'blocked',
           siteId: order.site_id,
-          details: { orderId: order.id, paymentIntent: order.payment_intent_id, reason: String(e?.message || e) },
+          details: { orderId: order.id, paymentIntent: result.paymentIntentId, reason: e instanceof Error ? e.message : String(e) },
         });
         return NextResponse.json({
           ok: false,
@@ -93,19 +170,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3. Marquer la commande annulee
-    await supabaseAdmin
-      .from('shop_orders')
-      .update({ status: 'canceled', cj_pay_status: 'canceled' })
-      .eq('id', order.id);
-
     return NextResponse.json({
       ok: true,
       canceled: true,
       refundId,
       message: 'Votre commande a bien ete annulee. Le remboursement apparaitra sur votre moyen de paiement sous quelques jours.',
     });
-  } catch (e: any) {
-    return NextResponse.json({ error: String(e?.message || e) }, { status: 500 });
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
 }

@@ -85,9 +85,18 @@ export async function GET(req: NextRequest) {
   }
 
   // ====== 2. Search global catalog ======
+  // LOT K (Mode 3 global, fuites d'info) -- cause racine : `.select('*')` +
+  // `{...p}` plus bas exposaient TOUT catalog_products au visiteur public de
+  // ce storefront, y compris `_cost` (le cout fournisseur reel, jamais
+  // destine au client final -- seul l'editeur marchand a besoin de voir sur
+  // quoi la marge s'applique, cf. commentaire d'origine ligne 144) et toute
+  // colonne future ajoutee a cette table sans jamais etre revue pour cet
+  // endpoint precis. Liste explicite desormais (meme convention que
+  // catalog/image-search/route.ts, deja correcte) : seules les colonnes
+  // reellement necessaires a l'affichage storefront quittent la DB.
   let query2 = supabaseAdmin
     .from('catalog_products')
-    .select('*', { count: 'exact' })
+    .select('id, supplier_id, supplier_product_id, name, description, category, images, variants, price, currency, shipping_days_min, shipping_days_max, warehouse_country', { count: 'exact' })
     // Meme regle qu'ailleurs : seul un false explicite masque le produit.
     .not('in_stock', 'is', false);
 
@@ -141,9 +150,28 @@ export async function GET(req: NextRequest) {
     .filter((p: any) => !curatedIds.has(`catalog-${p.id}`))
     .map((p: any) => {
       const cost = p.price ? Number(p.price) : 0;
-      // price = prix de vente. Le cout fournisseur reste expose pour l'editeur
-      // marchand, qui doit voir sur quoi la marge s'applique.
-      return { ...p, id: `catalog-${p.id}`, price: calcPrice(cost), _cost: cost, _curated: false };
+      // LOT K -- objet de reponse construit explicitement (jamais `{...p}`) :
+      // seul `price` (marque, calcPrice(cost)) est renvoye, jamais `cost`/
+      // `_cost` ni aucune colonne non listee ici. Le cout fournisseur reste
+      // consultable par l'editeur marchand via ses propres routes
+      // authentifiees (catalog/curate, catalog/enhance -- requireSiteOwner),
+      // jamais via un endpoint public.
+      return {
+        id: `catalog-${p.id}`,
+        supplier_id: p.supplier_id,
+        supplier_product_id: p.supplier_product_id,
+        name: p.name,
+        description: p.description || '',
+        category: p.category,
+        images: p.images || [],
+        variants: p.variants,
+        price: calcPrice(cost),
+        currency: p.currency || 'CAD',
+        shipping_days_min: p.shipping_days_min,
+        shipping_days_max: p.shipping_days_max,
+        warehouse_country: p.warehouse_country,
+        _curated: false,
+      };
     });
 
   // ====== 3. Merge: curated first, then global ======

@@ -26,7 +26,9 @@ export const maxDuration = 120;
  */
 
 const BATCH_SIZE = 10;
-const MAX_ATTEMPTS = 20;
+// ~1 tentative reelle par passage une fois Vercel verifie (cron toutes les
+// 2h) : 20 tentatives = ~1.7 jour, coherent avec le pipeline achat (~2 jours).
+export const MAX_ATTEMPTS = 20;
 const RETRY_DELAY_MS = 30 * 60 * 1000;
 
 type Candidate = {
@@ -38,8 +40,11 @@ type Candidate = {
 };
 
 export async function GET(req: NextRequest) {
+  // Fail-closed (lot crons fail-open) : un secret absent doit refuser
+  // l'acces, jamais le desactiver silencieusement.
   const auth = req.headers.get('authorization');
-  if (process.env.CRON_SECRET && auth !== 'Bearer ' + process.env.CRON_SECRET) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || auth !== 'Bearer ' + secret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

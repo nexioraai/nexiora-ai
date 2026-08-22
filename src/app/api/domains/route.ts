@@ -46,6 +46,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Ce domaine est deja utilise.' }, { status: 409 })
     }
 
+    // Audit Mode 3/POD BRAND, perfectionnement -- ce garde-fou verifiait
+    // uniquement sites.custom_domain, jamais site_domains (domaines achetes
+    // via Porkbun, deja payes ou en cours de provisioning). Sans ceci, un
+    // domaine reserve/achete par un marchand pouvait etre revendique en BYOD
+    // par un autre pendant la fenetre pending/paid/purchased -- les deux
+    // mecanismes ne se recoupaient jamais.
+    const { data: reserved } = await supabaseAdmin
+      .from('site_domains')
+      .select('id, status')
+      .eq('domain', clean)
+      .maybeSingle()
+    if (reserved && reserved.status !== 'failed') {
+      return NextResponse.json({ error: 'Ce domaine est deja reserve.' }, { status: 409 })
+    }
+
     try {
       await addDomainToVercel(clean)
     } catch (e: any) {
@@ -76,6 +91,15 @@ export async function POST(req: NextRequest) {
       .eq('slug', slug)
 
     if (dbError) {
+      // Audit Mode 3/POD BRAND, perfectionnement -- filet de securite pour la
+      // course residuelle (deux BYOD concurrents sur le meme domaine, deux
+      // sites differents) : le check-then-set ci-dessus reste non
+      // transactionnel, la contrainte UNIQUE partielle sur sites.custom_domain
+      // (voir supabase/sql/domains_unique_constraints.sql) est la garantie
+      // reelle -- ce code la traduit en message clair plutot qu'un 500 opaque.
+      if ((dbError as any).code === '23505') {
+        return NextResponse.json({ error: 'Ce domaine est deja utilise.' }, { status: 409 })
+      }
       return NextResponse.json({ error: 'Erreur base de données.' }, { status: 500 })
     }
 

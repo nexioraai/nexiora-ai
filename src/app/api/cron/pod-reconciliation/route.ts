@@ -38,8 +38,15 @@ const STALE_PROCESSING_MS = 10 * 60 * 1000;
  * pas la conclusion de reconciliation elle-meme).
  */
 export async function GET(req: NextRequest) {
+  // Correctif au moment du cablage vercel.json (audit fulfillment) : le
+  // pattern `process.env.CRON_SECRET && ...` deja identifie comme fail-open
+  // sur 11 autres crons (secret absent = verification desactivee) n'est PAS
+  // reconduit ici. Ce cron modifie desormais un moteur qui touche des
+  // commandes reelles payees -- fail-closed explicite (secret absent = 401,
+  // jamais un acces ouvert).
   const auth = req.headers.get('authorization');
-  if (process.env.CRON_SECRET && auth !== 'Bearer ' + process.env.CRON_SECRET) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || auth !== 'Bearer ' + secret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

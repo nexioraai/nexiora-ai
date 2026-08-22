@@ -343,15 +343,40 @@ export async function POST(
       if (!code || !discount_type || !discount_value) {
         return NextResponse.json({ error: 'code, discount_type et discount_value requis' }, { status: 400 });
       }
+      // Passe de cloture (P-6) -- bornes explicites a la CREATION : rien
+      // n'empechait jusqu'ici un agent IA (ou un appel direct) de creer une
+      // remise a 500 %, negative, ou d'un type arbitraire (tout type inconnu
+      // etait auparavant traite par defaut comme un montant fixe cote
+      // validation). Defense en profondeur : ces memes bornes sont revalidees
+      // a la consommation dans checkout/route.ts, car des lignes anterieures
+      // a ce correctif peuvent deja exister en base.
+      const dvNum = Number(discount_value);
+      if (discount_type !== 'percent' && discount_type !== 'fixed') {
+        return NextResponse.json({ error: "discount_type doit valoir 'percent' ou 'fixed'" }, { status: 400 });
+      }
+      if (!Number.isFinite(dvNum) || dvNum <= 0) {
+        return NextResponse.json({ error: 'discount_value doit etre un nombre strictement positif' }, { status: 400 });
+      }
+      if (discount_type === 'percent' && dvNum > 100) {
+        return NextResponse.json({ error: 'Une remise en pourcentage ne peut pas depasser 100 %' }, { status: 400 });
+      }
+      const minOrderNum = Number(min_order) || 0;
+      if (minOrderNum < 0) {
+        return NextResponse.json({ error: 'min_order ne peut pas etre negatif' }, { status: 400 });
+      }
+      const maxUsesNum = max_uses == null ? null : Number(max_uses);
+      if (maxUsesNum !== null && (!Number.isInteger(maxUsesNum) || maxUsesNum < 1)) {
+        return NextResponse.json({ error: 'max_uses doit etre un entier >= 1' }, { status: 400 });
+      }
       const { error: promoErr } = await supabase
         .from('promo_codes')
         .insert({
           site_id: site.id,
           code: code.toUpperCase().trim(),
           discount_type,
-          discount_value: Number(discount_value),
-          min_order: Number(min_order) || 0,
-          max_uses: max_uses || null,
+          discount_value: dvNum,
+          min_order: minOrderNum,
+          max_uses: maxUsesNum,
           active: true,
         });
       if (promoErr) return NextResponse.json({ error: promoErr.message }, { status: 500 });

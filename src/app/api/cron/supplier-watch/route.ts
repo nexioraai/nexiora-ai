@@ -53,7 +53,22 @@ function parseLowPrice(sellPrice: unknown): number | null {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
+// LOT K (Mode 3 global, F-CRON-01) -- cette route n'avait AUCUN controle
+// CRON_SECRET (le parametre `req` n'etait meme pas lu). N'importe qui
+// pouvait la declencher : appels CJ reels consommant le quota/points de
+// l'API (ressource limitee et partagee avec le checkout/fulfillment reel),
+// ecritures reelles sur catalog_products (in_stock, last_checked_at), et
+// declenchement d'emails d'alerte admin. Meme pattern fail-closed que
+// toutes les autres routes cron du depot (cf. cj-tracking/route.ts,
+// pod-reconciliation/route.ts -- deja identifie et corrige partout ailleurs,
+// cette route avait ete manquee).
 export async function GET(req: NextRequest) {
+  const auth = req.headers.get('authorization');
+  const secret = process.env.CRON_SECRET;
+  if (!secret || auth !== 'Bearer ' + secret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const runId = await startCronRun('supplier-watch');
   try {
     const res = await runWatch();

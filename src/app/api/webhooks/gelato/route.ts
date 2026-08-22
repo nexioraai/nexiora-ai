@@ -3,6 +3,7 @@ import { processWebhookEvent } from '@/lib/fulfillment/webhook-handler';
 import { decodeIdempotencyKey } from '@/lib/fulfillment/idempotency-key';
 import { getGelatoOrderById } from '@/lib/fulfillment/provider-lookup';
 import { reportReconciliationConflict } from '@/lib/fulfillment/observability';
+import { verifyWebhookSecret } from '@/lib/fulfillment/webhook-auth';
 
 // ============================================================
 // P0-3.7Z Phase 10-12, P0-3.9.6 Gap #1A — Webhook Gelato.
@@ -14,21 +15,26 @@ import { reportReconciliationConflict } from '@/lib/fulfillment/observability';
 // orderReferenceId + orderId, la liste d'items fiable est récupérée via
 // GET /v4/orders/{orderId} (confirmé [OFFICIEL], schéma OpenAPI officiel,
 // P0-3.9.1), jamais devinée depuis le payload webhook. Lecture seule,
-// aucune commande créée/modifiée.
+// aucune commande créée/modifiée. Ce ré-appel authentifié (X-API-KEY, nos
+// propres credentials) EST déjà la vérification croisée que LOT I a dû
+// ajouter séparément côté Printful (voir webhooks/printful/route.ts) — rien
+// à ajouter ici sur ce point.
 //
-// Mécanisme de signature webhook Gelato : [NON DÉMONTRÉ], protection
-// minimale par secret partagé, comme pour Printful (P0-3.9.3/3.9.4 :
-// migration JWT recommandée pour un futur round, hors périmètre ici).
+// LOT I (F-I-1) — recherche documentaire menée avant ce lot : Gelato ne
+// documente pas de signature HMAC pour l'API Order (order.gelatoapis.com,
+// celle utilisée ici) — un mécanisme JWT/iss existe mais appartient à un
+// produit distinct, "GelatoConnect" (connect-api.live.gelato.tech), non
+// utilisé par ce projet (confirmé : gelato-adapter.ts et provider-lookup.ts
+// n'appellent que order.gelatoapis.com/api.gelato.com). La documentation
+// Gelato pour l'API réellement utilisée ici décrit un secret configurable
+// au choix du marchand (en-tête HTTP OU paramètre de requête) au moment de
+// la création du webhook dans le dashboard -- authentification déportée
+// vers webhook-auth.ts (fail-closed, supporte les deux transports).
 // ============================================================
 
 export async function POST(req: Request) {
-  const expectedSecret = process.env.GELATO_WEBHOOK_SECRET;
-  if (expectedSecret) {
-    const url = new URL(req.url);
-    const provided = url.searchParams.get('secret');
-    if (provided !== expectedSecret) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  if (!verifyWebhookSecret(req, process.env.GELATO_WEBHOOK_SECRET)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   let body: Record<string, unknown>;

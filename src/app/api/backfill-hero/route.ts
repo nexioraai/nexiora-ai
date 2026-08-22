@@ -5,9 +5,20 @@ import { getPhotos } from '@/lib/pexels'
 // One-shot backfill: donne une image hero Pexels à tous les sites existants
 // qui n'en ont pas (tous modes, tous thèmes, publiés ou non).
 // Protégé par CRON_SECRET pour éviter tout appel non autorisé.
+//
+// LOT I (F-I-2, audit Mode 3 global) -- trouvé lors de la vérification
+// exhaustive du correctif instant-payout (même cause racine : interpolation
+// `Bearer ${process.env.CRON_SECRET}` fail-open si la variable est absente,
+// "Bearer undefined" devient une valeur littéralement envoyable). Hors du
+// périmètre logique de LOT I (fournisseurs/financier/webhooks — cette route
+// est un utilitaire de contenu, pas du dropshipping), mais faiblesse
+// identique au correctif en cours dans ce même lot -- corrigée ici plutôt
+// que simplement signalée, avec le même correctif déjà appliqué et testé
+// sur instant-payout.
 export async function GET(req: Request) {
   const auth = req.headers.get('authorization')
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  const secret = process.env.CRON_SECRET
+  if (!secret || auth !== `Bearer ${secret}`) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
 

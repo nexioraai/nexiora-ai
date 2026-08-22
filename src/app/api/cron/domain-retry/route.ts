@@ -5,7 +5,7 @@ import { startCronRun, finishCronRun } from '@/lib/cron-tracker';
 
 export const maxDuration = 120;
 
-const MAX_ATTEMPTS = 5;
+export const MAX_ATTEMPTS = 5;
 
 // provisionDomain() enchaine Porkbun + Vercel + DNS + Google en serie : si
 // la fonction est interrompue en route (timeout, deploiement), la ligne
@@ -21,8 +21,14 @@ const PAID_STALE_MS = 10 * 60 * 1000;
  * Au-dela de MAX_ATTEMPTS on arrete : le watchdog alerte, traitement manuel.
  */
 export async function GET(req: NextRequest) {
+  // Fail-closed (lot crons fail-open) : un secret absent doit refuser
+  // l'acces, jamais le desactiver silencieusement -- particulierement
+  // important ici, ce cron declenche provisionDomain() (effets reels
+  // Porkbun/Vercel, idempotent mais un appel non autorise consommerait tout
+  // de meme du quota API reel).
   const auth = req.headers.get('authorization');
-  if (process.env.CRON_SECRET && auth !== 'Bearer ' + process.env.CRON_SECRET) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || auth !== 'Bearer ' + secret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -30,10 +36,20 @@ export async function GET(req: NextRequest) {
 
   try {
     const staleSince = new Date(Date.now() - PAID_STALE_MS).toISOString();
+    // Audit Mode 3/POD BRAND, perfectionnement (fermeture dette Porkbun/DEBT-019) --
+    // 'purchase_uncertain' est desormais repris ici aussi : provisionDomain()
+    // reconcilie cet etat via listAllDomains() (verite Porkbun reelle) avant
+    // toute action, avec son propre delai de securite interne
+    // (PURCHASE_UNCERTAIN_RECHECK_COOLDOWN_MS = 30 min, tres largement couvert
+    // par l'intervalle de ce cron, 2h) -- jamais un rachat a l'aveugle. Aucun
+    // filtre de fraicheur supplementaire necessaire ici : la garde vit dans
+    // provisionDomain() elle-meme (retourne immediatement, sans appel Porkbun
+    // ni ecriture, si le delai n'est pas encore ecoule), source unique de
+    // verite plutot que dupliquee dans la requete du cron.
     const { data: rows } = await supabaseAdmin
       .from('site_domains')
       .select('id, domain, provision_attempts')
-      .or(`status.eq.failed,and(status.eq.paid,updated_at.lt.${staleSince})`)
+      .or(`status.eq.failed,and(status.eq.paid,updated_at.lt.${staleSince}),status.eq.purchase_uncertain`)
       .lt('provision_attempts', MAX_ATTEMPTS)
       .order('last_attempt_at', { ascending: true, nullsFirst: true })
       .limit(10);

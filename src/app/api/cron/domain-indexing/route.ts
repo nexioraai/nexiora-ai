@@ -13,12 +13,21 @@ export const maxDuration = 120;
  */
 
 const BATCH_SIZE = 10;
-const MAX_ATTEMPTS = 20;      // ~2 jours a 4 passages par jour
+// 4 passages/jour reels (vercel.json : 0 2,10,14,22h UTC) -- RETRY_DELAY_MS
+// (30min) ne filtre jamais rien en pratique a cette cadence, l'espacement
+// reel entre deux tentatives est donc celui du cron lui-meme. 8 tentatives
+// = ~2 jours, corrige d'un ecart avec le commentaire d'origine qui visait
+// 2 jours mais utilisait une valeur (20) correspondant en realite a ~5
+// jours -- inutilement long pour un DNS entierement controle par Nexiora.
+export const MAX_ATTEMPTS = 8; // ~2 jours a 4 passages par jour
 const RETRY_DELAY_MS = 30 * 60 * 1000;
 
 export async function GET(req: NextRequest) {
+  // Fail-closed (lot crons fail-open) : un secret absent doit refuser
+  // l'acces, jamais le desactiver silencieusement.
   const auth = req.headers.get('authorization');
-  if (process.env.CRON_SECRET && auth !== 'Bearer ' + process.env.CRON_SECRET) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || auth !== 'Bearer ' + secret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -53,26 +62,42 @@ export async function GET(req: NextRequest) {
         .update({ gsc_attempts: attempts, gsc_last_attempt_at: now })
         .eq('id', row.id);
 
+      // Suit le statut reellement applique (pas row.status, fige a la
+      // lecture initiale) -- necessaire pour garder les gardes CAS
+      // ci-dessous correctes apres une transition reussie dans cette meme
+      // iteration, symetrique du pattern deja valide sur le sibling BYOD
+      // (domain-indexing-byod/route.ts, `let status = row....`).
+      let status = row.status;
+
       // Au-dela de MAX_ATTEMPTS, une tentative de plus n'apporterait rien :
       // si Google n'a toujours pas vu le TXT apres ~2 jours, rejouer la meme
       // verification ne resout pas un probleme qui n'est plus transitoire
       // (permissions du compte de service, TLD non standard, etc.). On sort
       // dans un etat terminal explicite plutot que de laisser la ligne
       // s'arreter silencieusement hors du WHERE gsc_attempts < MAX_ATTEMPTS.
-      const markTerminal = async (msg: string) => {
-        await supabaseAdmin
+      //
+      // Garde CAS (audit timeouts/CAS, lot prioritaire) : deux passages du
+      // cron qui se chevauchent (blocage anormal, declenchement manuel
+      // duplique -- chevauchement normal quasi impossible vu l'espacement
+      // reel de plusieurs heures) ne doivent pas ecraser une transition deja
+      // appliquee par l'autre. `.eq('status', expectedStatus)` + verification
+      // du nombre de lignes affectees, meme primitif que le sibling BYOD.
+      const markTerminal = async (msg: string, expectedStatus: string) => {
+        const { data: claimed } = await supabaseAdmin
           .from('site_domains')
           .update({ status: 'google_failed', last_error: msg.slice(0, 500) })
-          .eq('id', row.id);
-        failedTerminal++;
+          .eq('id', row.id)
+          .eq('status', expectedStatus)
+          .select('id');
+        if (claimed && claimed.length > 0) failedTerminal++;
       };
 
       try {
         // Verification de propriete, si pas deja acquise.
-        if (row.status === 'dns_configured') {
+        if (status === 'dns_configured') {
           if (!row.gsc_token) {
             if (attempts >= MAX_ATTEMPTS) {
-              await markTerminal('Jeton Google jamais genere apres ' + MAX_ATTEMPTS + ' tentatives.');
+              await markTerminal('Jeton Google jamais genere apres ' + MAX_ATTEMPTS + ' tentatives.', status);
               continue;
             }
             pending++;
@@ -82,37 +107,45 @@ export async function GET(req: NextRequest) {
           if (!ok) {
             // Propagation DNS incomplete : on repassera.
             if (attempts >= MAX_ATTEMPTS) {
-              await markTerminal('Propriete Google non verifiee apres ' + MAX_ATTEMPTS + ' tentatives (TXT jamais vu par Google).');
+              await markTerminal('Propriete Google non verifiee apres ' + MAX_ATTEMPTS + ' tentatives (TXT jamais vu par Google).', status);
               continue;
             }
             pending++;
             continue;
           }
-          await supabaseAdmin
+          const { data: claimed } = await supabaseAdmin
             .from('site_domains')
             .update({ status: 'google_verified', google_verified_at: now, last_error: null })
-            .eq('id', row.id);
+            .eq('id', row.id)
+            .eq('status', 'dns_configured')
+            .select('id');
+          if (!claimed || claimed.length === 0) continue; // course perdue, un autre passage a deja transitionne cette ligne
+          status = 'google_verified';
           verified++;
         }
 
-        // Propriete de type domaine : couvre www, non-www et sous-domaines.
-        const siteUrl = 'sc-domain:' + row.domain;
-        await addSite(siteUrl);
-        await submitSitemap(siteUrl, 'https://' + row.domain + '/sitemap.xml');
+        if (status === 'google_verified') {
+          // Propriete de type domaine : couvre www, non-www et sous-domaines.
+          const siteUrl = 'sc-domain:' + row.domain;
+          await addSite(siteUrl);
+          await submitSitemap(siteUrl, 'https://' + row.domain + '/sitemap.xml');
 
-        await supabaseAdmin
-          .from('site_domains')
-          .update({
-            status: 'sitemap_submitted',
-            sitemap_submitted_at: new Date().toISOString(),
-            last_error: null,
-          })
-          .eq('id', row.id);
-        submitted++;
+          const { data: claimed } = await supabaseAdmin
+            .from('site_domains')
+            .update({
+              status: 'sitemap_submitted',
+              sitemap_submitted_at: new Date().toISOString(),
+              last_error: null,
+            })
+            .eq('id', row.id)
+            .eq('status', 'google_verified')
+            .select('id');
+          if (claimed && claimed.length > 0) submitted++;
+        }
       } catch (e: any) {
         const msg = String(e?.message || e);
         if (attempts >= MAX_ATTEMPTS) {
-          await markTerminal(msg);
+          await markTerminal(msg, status);
         } else {
           await supabaseAdmin
             .from('site_domains')

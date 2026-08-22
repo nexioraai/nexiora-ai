@@ -88,8 +88,9 @@ beforeEach(() => {
 
 describe('GET /api/cron/domain-indexing-byod — comptage des tentatives', () => {
   it('un marchand qui n\'a pas encore fini son DNS externe (Vercel non vérifié) ne compte pas dans custom_domain_google_attempts', async () => {
+    const { MAX_ATTEMPTS } = await import('../route');
     currentMock = makeSupabaseMock([
-      { id: 'site-1', custom_domain: 'marchand-lent.com', custom_domain_google_status: null, custom_domain_google_token: null, custom_domain_google_attempts: 19 },
+      { id: 'site-1', custom_domain: 'marchand-lent.com', custom_domain_google_status: null, custom_domain_google_token: null, custom_domain_google_attempts: MAX_ATTEMPTS - 1 },
     ]);
     getVercelDomainStatusMock.mockResolvedValue({ attached: true, verified: false, verification: [] });
 
@@ -103,8 +104,9 @@ describe('GET /api/cron/domain-indexing-byod — comptage des tentatives', () =>
   });
 
   it('une fois Vercel vérifié, les tentatives sont comptées et un état terminal apparaît à MAX_ATTEMPTS', async () => {
+    const { MAX_ATTEMPTS } = await import('../route');
     currentMock = makeSupabaseMock([
-      { id: 'site-2', custom_domain: 'stuck.com', custom_domain_google_status: 'token_issued', custom_domain_google_token: 'tok', custom_domain_google_attempts: 19 },
+      { id: 'site-2', custom_domain: 'stuck.com', custom_domain_google_status: 'token_issued', custom_domain_google_token: 'tok', custom_domain_google_attempts: MAX_ATTEMPTS - 1 },
     ]);
     getVercelDomainStatusMock.mockResolvedValue({ attached: true, verified: true, verification: [] });
     verifyDomainMock.mockResolvedValue(false);
@@ -112,7 +114,7 @@ describe('GET /api/cron/domain-indexing-byod — comptage des tentatives', () =>
     const { GET } = await import('../route');
     await GET(makeRequest());
 
-    const attemptsUpdate = currentMock.updateCalls.find((u) => u.table === 'sites' && u.payload.custom_domain_google_attempts === 20);
+    const attemptsUpdate = currentMock.updateCalls.find((u) => u.table === 'sites' && u.payload.custom_domain_google_attempts === MAX_ATTEMPTS);
     expect(attemptsUpdate).toBeDefined();
     const failedUpdate = currentMock.updateCalls.find((u) => u.payload.custom_domain_google_status === 'failed');
     expect(failedUpdate).toBeDefined();

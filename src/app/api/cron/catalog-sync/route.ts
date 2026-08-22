@@ -16,8 +16,11 @@ export const maxDuration = 300;
  * Fréquence recommandée : toutes les 6h.
  */
 export async function GET(req: NextRequest) {
+  // Fail-closed (lot crons fail-open) : un secret absent doit refuser
+  // l'acces, jamais le desactiver silencieusement.
   const auth = req.headers.get('authorization');
-  if (process.env.CRON_SECRET && auth !== 'Bearer ' + process.env.CRON_SECRET) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || auth !== 'Bearer ' + secret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

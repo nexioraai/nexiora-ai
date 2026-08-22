@@ -210,7 +210,7 @@ function validatePrompt(message: string, lang: string): { valid: boolean; reason
   return { valid: true };
 }
 
-function detectSector(message: string): string {
+export function detectSector(message: string): string {
   const lower = message.toLowerCase();
   if (/\b(restaurant|café|cafe|coffee|bar|brasserie|bistro|pizzeria|fast.?food|food.?truck|cantine|traiteur|boulangerie|pâtisserie|patisserie|cuisine|chef|menu|plat|repas|food)\b/i.test(lower)) return 'restaurant';
   if (/\b(boutique|shop|store|magasin|épicerie|epicerie|marché|marche|e-commerce|ecommerce|vente|produit|product|vêtement|vetement|mode|clothing)\b/i.test(lower)) return 'shop';
@@ -219,23 +219,40 @@ function detectSector(message: string): string {
   return 'general';
 }
 
-function getSectorPrompt(sector: string): string {
+// Bug reel corrige (incident "boutique en ligne mode 2") : ce prompt sectoriel
+// exigeait "MUST generate products array" sans jamais savoir si les regles du
+// Mode courant (mode 2/3, lues plus haut dans le meme appel) demandaient au
+// contraire products: [] -- contradiction directe dans le meme message envoye
+// au modele, "boutique" declenchant a la fois le secteur 'shop' ET pouvant
+// etre un Mode 2/3 legitime. `knownMode` permet de supprimer la clause produits
+// a la source quand le mode est deja connu avant l'appel (chemin onboarding-chat,
+// prefixe "mode: X"). Quand knownMode est null (chemin wizard classique, ou le
+// modele determine mode ET secteur dans le meme appel, code incapable de savoir
+// a l'avance), la clause reste presente mais explicitement subordonnee aux
+// regles de Mode enoncees plus haut dans le prompt (voir INSTRUCTION PRECEDENCE) --
+// protege les deux chemins, pas seulement celui ou le mode est deja connu.
+export function getSectorPrompt(sector: string, knownMode: number | null): string {
+  const modeAlreadyDictatesProducts = knownMode === 2 || knownMode === 3;
   if (sector === 'restaurant') {
     return `
 
-CRITICAL SECTOR - RESTAURANT/CAFE/FOOD:
+SECTOR DETAIL - RESTAURANT/CAFE/FOOD (subordinate to the MODE rules above -- if those rules already specify how to fill "products", follow them and ignore any products guidance below):${
+  modeAlreadyDictatesProducts ? '' : `
 - MUST generate "products" array with 6-10 realistic menu items
 - Each item MUST have: {"name": "dish name", "description": "1-sentence description", "price": "amount with currency", "imageQuery": "precise English photo search: concrete subject + mood/lighting, e.g. 'grilled salmon plated dark moody'. Never the business name."}
-- Mix: starters, mains, desserts, drinks
+- Mix: starters, mains, desserts, drinks`
+}
 - Set "type" to specific cuisine (e.g. "Restaurant marocain")
 - Include "Menu" in pages array`;
   }
   if (sector === 'shop') {
     return `
 
-CRITICAL SECTOR - SHOP/BOUTIQUE:
+SECTOR DETAIL - SHOP/BOUTIQUE (subordinate to the MODE rules above -- if those rules already specify how to fill "products", follow them and ignore any products guidance below):${
+  modeAlreadyDictatesProducts ? '' : `
 - MUST generate "products" array with 6-10 realistic products
-- Each MUST have: {"name", "description", "price" with currency, "imageQuery": "precise English photo search: concrete product + mood/lighting, e.g. 'car brake disc dark studio'. Never the business name."}
+- Each MUST have: {"name", "description", "price" with currency, "imageQuery": "precise English photo search: concrete product + mood/lighting, e.g. 'car brake disc dark studio'. Never the business name."}`
+}
 - Set "type" to specific store category
 - Include "Shop" in pages array`;
   }
@@ -254,6 +271,46 @@ CRITICAL SECTOR - PORTFOLIO/CREATIVE:
 - Set "type" to creative profession`;
   }
   return '';
+}
+
+// Source unique de resolution du mode final -- remplacait avant 4 copies
+// independantes de la meme expression (pages, hidden_sections, mode, et la
+// declaration finalMode plus bas pour la curation Mode 3), avec le risque de
+// divergence future que ca implique. siteMode (connu avant l'appel IA, via
+// le prefixe "mode: X" pose par l'entretien onboarding) reste prioritaire ;
+// parsed.mode (la propre classification du modele dans sa reponse JSON) ne
+// sert de repli que si siteMode est absent (chemin wizard classique, ou
+// echec du classifieur d'entretien a fournir un mode exploitable).
+export function resolveFinalMode(siteMode: number | null, parsedMode: unknown): number {
+  return siteMode ?? (parsedMode === 2 || parsedMode === 3 ? (parsedMode as number) : 1);
+}
+
+// Audit Mode 3 global (N10) -- dropshipType venait du body client et etait
+// insere tel quel dans sites.dropship_type, sans validation d'enum (aucun
+// schema Zod, aucune contrainte CHECK en base). Une valeur garbage y aurait
+// ete persistee de facon PERMANENTE (dropship_type n'est jamais modifiable
+// apres creation -- confirme par grep exhaustif, aucune UPDATE nulle part
+// dans ce depot), bloquant definitivement le marchand hors des outils de
+// curation catalogue lies au sous-mode (getToolsForSite compare par egalite
+// stricte). null reste une valeur legitime (site Mode 3 sans sous-type
+// encore choisi -- 3 sites reels en production dans cet etat).
+export function isValidDropshipType(value: unknown): value is 'reseller' | 'pod_brand' | 'pod_custom' | null {
+  return value === null || value === 'reseller' || value === 'pod_brand' || value === 'pod_custom';
+}
+
+// Garantie deterministe (incident reel "boutique en ligne mode 2", genere
+// avec 10 produits malgre B+A) : Mode 2 et Mode 3 n'ont JAMAIS de produits a
+// la generation initiale, par definition produit -- Mode 2 attend que le
+// marchand les ajoute via ProductManager.tsx, Mode 3 les recoit ensuite du
+// pipeline de curation catalogue. B+A (prompt) restent en place pour eviter
+// que le modele gaspille des tokens a en generer inutilement, mais ils
+// restent des instructions qu'un modele peut choisir de ne pas suivre
+// (prouve empiriquement) -- cette fonction ne depend d'aucune obeissance du
+// modele : elle s'applique APRES le parsing/validation Zod de la reponse IA,
+// avant tout enrichissement image et avant l'insertion Supabase. Mode 1
+// inchange : ses produits generes (menu, catalogue vitrine) restent legitimes.
+export function enforceModeProducts<T>(finalMode: number, rawProducts: T[]): T[] {
+  return (finalMode === 2 || finalMode === 3) ? [] : rawProducts;
 }
 
 export async function POST(req: Request) {
@@ -289,7 +346,12 @@ export async function POST(req: Request) {
     const modeMatch = typeof message === 'string' ? message.match(/^\s*mode:\s*([123])/i) : null;
     const siteMode: number | null = modeMatch ? parseInt(modeMatch[1], 10) : null;
     const location = body.location || '';
-    const dropshipType = body.dropshipType || null;
+    // N10 -- voir isValidDropshipType() ci-dessus pour le raisonnement complet.
+    const rawDropshipType = body.dropshipType || null;
+    if (!isValidDropshipType(rawDropshipType)) {
+      return NextResponse.json({ error: 'dropshipType invalide' }, { status: 400 });
+    }
+    const dropshipType = rawDropshipType;
     const language = body.language || 'auto';
 
     if (!message) return NextResponse.json({ error: 'Message is required' }, { status: 400 });
@@ -372,8 +434,8 @@ Return ONLY the JSON.`
 
     // ============ DÉTECTION SECTEUR AUTOMATIQUE ============
     const sector = detectSector(message);
-    const sectorPrompt = getSectorPrompt(sector);
-    console.log('[Generation] Detected sector:', sector, '| Lang:', detectedLang);
+    const sectorPrompt = getSectorPrompt(sector, siteMode);
+    console.log('[Generation] Detected sector:', sector, '| knownMode:', siteMode, '| Lang:', detectedLang);
 
     const phonePrefix = location ? getPhonePrefix(location) : '+1';
     const currency = location ? getCurrency(location) : 'USD';
@@ -427,6 +489,9 @@ STRICT RULES:
 - If the user explicitly says "boutique" with local stock → mode 2.
 - If the user explicitly says "dropshipping" or "resell imported products" → mode 3.
 - When in doubt → mode 1 (safer default).
+
+INSTRUCTION PRECEDENCE (ABSOLUTE — read before anything else below):
+This prompt has two layers: (1) the MODE-SPECIFIC RULES you are about to read (mode 1/2/3 sections below, including how each mode wants "products" filled), and (2) a SECTOR DETAIL block appended at the very end of this prompt, adding industry-specific tone and wording for the business's sector. On ANY conflict between the two — especially about whether/how to fill "products" — the MODE-SPECIFIC RULE ALWAYS WINS. The sector block exists only to add flavor and detail INSIDE the boundaries the mode has already set; it can never override a mode's data rules. If a mode section below says "products: return an empty array []", that instruction stands even if the sector block later tells you to generate product entries — ignore that part of the sector block in that case.
 
 BOUTIQUE CLASSIQUE (mode 2) SPECIFIC RULES:
 - pages MUST be ["Home", "About", "Shop", "Contact"] — the Shop displays products the merchant adds manually in their dashboard. NO supplier catalog, NO search bar for external products, NO automated product curation.
@@ -567,12 +632,14 @@ Return ONLY valid JSON, no markdown:
 
     let parsed: z.infer<typeof GeneratedSiteSchema>;
     try {
-      // Deux causes distinctes, avant fusionnees dans le meme catch generique
-      // (audit /api/chat, OBS-05/FUNC-05) : JSON.parse peut lever (texte
-      // tronque/mal forme) AVANT meme d'atteindre Zod, qui lui rejette une
-      // structure JSON valide mais non conforme au schema (issues precises,
-      // champ par champ). Separees ici pour que generation_failures puisse
-      // enregistrer laquelle des deux s'est produite.
+      // Deux causes distinctes, avant fusionnees dans le meme catch generique :
+      // JSON.parse peut lever (texte tronque/mal forme) AVANT meme d'atteindre
+      // Zod, qui lui rejette une structure JSON valide mais non conforme au
+      // schema (issues precises, champ par champ). Separees ici pour que
+      // generation_failures puisse enregistrer laquelle des deux s'est
+      // produite, plutot qu'un message generique impossible a distinguer
+      // apres coup (incident "boutique en ligne mode 2" : cause reelle jamais
+      // determinee faute de cette distinction).
       let asJson: unknown;
       try {
         asJson = JSON.parse(clean);
@@ -598,7 +665,7 @@ Return ONLY valid JSON, no markdown:
         throw zodErr;
       }
     } catch (e: any) {
-      console.error('AI JSON validation failed:', e?.message || e, '\nRaw text:', text.slice(0, 2000));
+      console.error('AI JSON validation failed:', e?.message || e, '\nRaw text (tail):', text.slice(-2000));
       return NextResponse.json(
         { error: "La génération IA a produit un résultat invalide. Merci de réessayer." },
         { status: 502 }
@@ -634,8 +701,17 @@ Return ONLY valid JSON, no markdown:
     const heroQuery = (parsed.heroImageQuery || pexelsQuery).trim();
     const heroImgs = await fetchPexelsImages(heroQuery, parsed.primaryColor);
     const heroImage = heroImgs[0] || gallery[0] || '';
+    // Source unique du mode final, calculee une seule fois et reutilisee
+    // partout ci-dessous (pages, hidden_sections, mode, products) -- voir
+    // resolveFinalMode(). Calculee ICI (avant l'enrichissement image) pour
+    // que enforceModeProducts() s'applique avant tout appel Pexels inutile
+    // sur des produits Mode 2/3 qui seront de toute facon jetes.
+    const finalMode = resolveFinalMode(siteMode, parsed.mode);
     // Image Pexels par produit (recherche par nom + type), en parallèle
-    const rawProducts = Array.isArray(parsed.products) ? parsed.products : [];
+    const rawProducts = enforceModeProducts(
+      finalMode,
+      Array.isArray(parsed.products) ? parsed.products : []
+    );
     const productsWithImages = await Promise.all(
       rawProducts.map(async (p: any) => {
         if (p.image) return p;
@@ -684,8 +760,7 @@ Return ONLY valid JSON, no markdown:
       hours: {},
       address: parsed.contact?.address || '',
       pages: (() => {
-        const m = siteMode ?? (parsed.mode === 2 || parsed.mode === 3 ? parsed.mode : 1);
-        if (m === 3) {
+        if (finalMode === 3) {
           const l = (detectedLang || parsed.lang || 'fr').toLowerCase();
           if (l === 'fr') return ['Accueil', 'À propos', 'Contact'];
           if (l === 'es') return ['Inicio', 'Acerca de', 'Contacto'];
@@ -698,22 +773,18 @@ Return ONLY valid JSON, no markdown:
         // attend des objets {title,content,image}, jamais produits ici).
         // On arrete de persister une valeur inerte plutot que de la filtrer
         // pour rien.
-        if (m === 1) {
+        if (finalMode === 1) {
           return [];
         }
         return parsed.pages;
       })(),
-      hidden_sections: (() => {
-        const m = siteMode ?? (parsed.mode === 2 || parsed.mode === 3 ? parsed.mode : 1);
-        if (m === 3) return ['Services', 'Gallery', 'Reviews'];
-        return [];
-      })(),
+      hidden_sections: finalMode === 3 ? ['Services', 'Gallery', 'Reviews'] : [],
       cta: parsed.cta,
       products: productsWithImages,
       social_links: parsed.socialLinks,
       owner_email,
       owner_id,
-      mode: siteMode ?? (parsed.mode === 2 || parsed.mode === 3 ? parsed.mode : 1),
+      mode: finalMode,
       lang: detectedLang || parsed.lang || "fr",
       geo_lat,
       geo_lng,
@@ -760,7 +831,7 @@ Return ONLY valid JSON, no markdown:
     }
 
     // Auto-curation pour sites reseller (mode 3) — non-bloquant
-    const finalMode = siteMode ?? (parsed.mode === 2 || parsed.mode === 3 ? parsed.mode : 1);
+    // (finalMode deja resolu plus haut, source unique -- voir resolveFinalMode)
     if (finalMode === 3 && dropshipType) {
       try {
         const { data: newSite } = await supabaseAdmin

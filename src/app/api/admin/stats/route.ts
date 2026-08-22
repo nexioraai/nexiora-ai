@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase as supabaseAnon } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { countsAsRevenue } from '@/lib/shop/orderStatusMachine';
 
 const ADMIN_EMAILS = ['issayamiyoussouf@gmail.com'];
 
@@ -35,7 +36,13 @@ export async function GET(req: NextRequest) {
   ]);
 
   // Revenue calculations
-  const paidOrders = (revenueData || []).filter((o: any) => o.status === 'paid' || o.status === 'shipped' || o.status === 'delivered');
+  // Passe de cloture (reporting) -- la liste des statuts comptables etait
+  // codee en dur ici et omettait 'processing' (commande POD deja payee,
+  // en preparation fournisseur), sous-evaluant le CA du POD par rapport au
+  // CJ. Source unique desormais : REVENUE_STATUSES (orderStatusMachine.ts),
+  // la meme ou vit deja la machine a etats validee en LOT H -- une seule
+  // definition, impossible de re-diverger.
+  const paidOrders = (revenueData || []).filter((o: any) => countsAsRevenue(o.status));
   const totalRevenue = paidOrders.reduce((sum: number, o: any) => sum + (o.total || 0), 0);
   const totalCommission = paidOrders.reduce((sum: number, o: any) => sum + (o.nexiora_commission || 0), 0);
   const totalSupplierCost = paidOrders.reduce((sum: number, o: any) => sum + (o.supplier_cost || 0), 0);

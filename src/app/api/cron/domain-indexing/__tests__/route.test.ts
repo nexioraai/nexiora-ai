@@ -64,9 +64,10 @@ beforeEach(() => {
 });
 
 describe('GET /api/cron/domain-indexing — état terminal google_failed', () => {
-  it('marque google_failed quand la vérification échoue à la dernière tentative autorisée (MAX_ATTEMPTS=20)', async () => {
+  it('marque google_failed quand la vérification échoue à la dernière tentative autorisée', async () => {
+    const { MAX_ATTEMPTS } = await import('../route');
     currentMock = makeSupabaseMock([
-      { id: 'dom-1', domain: 'bloque.com', status: 'dns_configured', gsc_token: 'tok', gsc_attempts: 19, gsc_last_attempt_at: null },
+      { id: 'dom-1', domain: 'bloque.com', status: 'dns_configured', gsc_token: 'tok', gsc_attempts: MAX_ATTEMPTS - 1, gsc_last_attempt_at: null },
     ]);
     verifyDomainMock.mockResolvedValue(false);
 
@@ -75,12 +76,13 @@ describe('GET /api/cron/domain-indexing — état terminal google_failed', () =>
 
     const terminal = currentMock.updateCalls.find((u) => u.status === 'google_failed');
     expect(terminal).toBeDefined();
-    expect(terminal.last_error).toMatch(/20 tentatives/);
+    expect(terminal.last_error).toMatch(new RegExp(`${MAX_ATTEMPTS} tentatives`));
   });
 
   it('ne marque PAS google_failed avant MAX_ATTEMPTS — reste retentable', async () => {
+    const { MAX_ATTEMPTS } = await import('../route');
     currentMock = makeSupabaseMock([
-      { id: 'dom-2', domain: 'en-cours.com', status: 'dns_configured', gsc_token: 'tok', gsc_attempts: 5, gsc_last_attempt_at: null },
+      { id: 'dom-2', domain: 'en-cours.com', status: 'dns_configured', gsc_token: 'tok', gsc_attempts: MAX_ATTEMPTS - 3, gsc_last_attempt_at: null },
     ]);
     verifyDomainMock.mockResolvedValue(false);
 
@@ -92,8 +94,9 @@ describe('GET /api/cron/domain-indexing — état terminal google_failed', () =>
   });
 
   it('ne marque pas google_failed si la vérification finit par réussir, même à la dernière tentative', async () => {
+    const { MAX_ATTEMPTS } = await import('../route');
     currentMock = makeSupabaseMock([
-      { id: 'dom-3', domain: 'juste-a-temps.com', status: 'dns_configured', gsc_token: 'tok', gsc_attempts: 19, gsc_last_attempt_at: null },
+      { id: 'dom-3', domain: 'juste-a-temps.com', status: 'dns_configured', gsc_token: 'tok', gsc_attempts: MAX_ATTEMPTS - 1, gsc_last_attempt_at: null },
     ]);
     verifyDomainMock.mockResolvedValue(true);
     addSiteMock.mockResolvedValue(undefined);

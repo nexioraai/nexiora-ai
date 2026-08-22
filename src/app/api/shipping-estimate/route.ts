@@ -11,6 +11,21 @@ const supabase = createClient(
 // Renvoie les 3 tiers de livraison (eco / standard / express) pour un produit
 // CJ vers un pays. Lit d'abord shipping_cache.tiers (rempli par le cron, zero
 // appel CJ). Fallback live via cjCalculateFreight uniquement si non cache.
+//
+// LOT K (Mode 3 global, fuites d'info) -- cause racine : route publique
+// (aucune authentification -- normal, un visiteur anonyme doit pouvoir
+// estimer sa livraison avant de creer un compte) qui renvoyait jusqu'ici le
+// cout de livraison BRUT (shipping_cache.tiers stocke le prix SANS la marge
+// de securite +20% -- cf. checkout/route.ts, qui l'applique uniquement au
+// moment d'encaisser). Le seul appelant reel (ShippingEstimate.tsx) ne lit
+// QUE `logisticAging` (delai), jamais le cout -- verifie par lecture directe
+// du composant. Le cout/prix n'a donc plus aucune raison de quitter le
+// serveur : retire de la reponse (jamais transmis, meme table/valeur
+// consultable par n'importe quel appelant direct de cet endpoint public).
+function stripCost(tiers: any[]) {
+  return tiers.map(({ cost, ...rest }) => rest);
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { siteId, countryCode, products } = await req.json()
@@ -38,11 +53,10 @@ export async function POST(req: NextRequest) {
         const std = tiers.find((t) => t.tier === 'standard') || tiers[0]
         return NextResponse.json({
           source: 'cache',
-          tiers,
+          tiers: stripCost(tiers),
           // Retro-compat : champs plats attendus par l'ancien affichage.
           logisticName: std.name,
           logisticAging: std.days_min && std.days_max ? `${std.days_min}-${std.days_max}` : '',
-          logisticPrice: std.cost,
         })
       }
     }
@@ -64,10 +78,9 @@ export async function POST(req: NextRequest) {
     const std = tiers.find((t) => t.tier === 'standard') || tiers[0]
     return NextResponse.json({
       source: 'live',
-      tiers,
+      tiers: stripCost(tiers),
       logisticName: std.name,
       logisticAging: std.days_min && std.days_max ? `${std.days_min}-${std.days_max}` : '',
-      logisticPrice: std.cost,
     })
   } catch (e: any) {
     return NextResponse.json({ error: e.message || 'Unknown error' }, { status: 500 })

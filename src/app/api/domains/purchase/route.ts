@@ -42,6 +42,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Ce domaine est deja reserve' }, { status: 409 });
   }
 
+  // Audit Mode 3/POD BRAND, perfectionnement -- ce garde-fou verifiait
+  // uniquement site_domains, jamais sites.custom_domain (BYOD, domaine deja
+  // apporte par un marchand). Sans ceci, un domaine deja rattache en BYOD a
+  // un site pouvait etre "achete" via Porkbun par un autre marchand pour le
+  // meme nom -- les deux mecanismes ne se recoupaient jamais.
+  const { data: byodConflict } = await supabaseAdmin
+    .from('sites')
+    .select('id')
+    .eq('custom_domain', clean)
+    .maybeSingle();
+  if (byodConflict) {
+    return NextResponse.json({ error: 'Ce domaine est deja utilise' }, { status: 409 });
+  }
+
   const tld = clean.split('.').pop() || '';
 
   try {
@@ -77,6 +91,17 @@ export async function POST(req: NextRequest) {
       .select('id')
       .single();
     if (insErr || !row) {
+      // Audit Mode 3/POD BRAND, perfectionnement -- filet de securite pour
+      // la course residuelle : le SELECT-puis-INSERT ci-dessus (etape 2)
+      // reste non transactionnel, et checkDomain()/getRegistrationRequirements()
+      // (appels reseau) elargissent encore la fenetre entre les deux. La
+      // contrainte UNIQUE reelle (voir supabase/sql/domains_unique_constraints.sql)
+      // est la garantie ; ceci traduit sa violation en message clair plutot
+      // qu'un 500 opaque si deux achats concurrents pour le meme domaine se
+      // resolvent l'un apres l'autre.
+      if ((insErr as any)?.code === '23505') {
+        return NextResponse.json({ error: 'Ce domaine est deja reserve' }, { status: 409 });
+      }
       return NextResponse.json({ error: 'Enregistrement impossible' }, { status: 500 });
     }
 

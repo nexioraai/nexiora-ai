@@ -11,10 +11,23 @@ export const maxDuration = 10;
  *
  * La route etait en POST : les crons Vercel appellent en GET, donc elle
  * renvoyait 405 a chaque execution et n'a jamais tourne.
+ *
+ * LOT I (F-I-2, audit Mode 3 global) -- cause racine : `authHeader !==
+ * \`Bearer ${process.env.CRON_SECRET}\`` est fail-open si CRON_SECRET est
+ * absent (interpolation produit litteralement "Bearer undefined", une
+ * chaine qu'un appelant externe peut envoyer telle quelle). Meme classe de
+ * bug deja identifiee et corrigee sur TOUTES les autres routes cron du
+ * depot sauf supplier-watch (LOT K, hors perimetre ici) -- confirme par
+ * recherche exhaustive sur les 13 routes cron, seule celle-ci utilisait
+ * encore l'ancien pattern. Impact reel si CRON_SECRET etait absent : appel
+ * arbitraire de stripe.payouts.create (argent reel de la plateforme).
+ * Aligne sur le pattern fail-closed deja standard ailleurs (cf.
+ * cj-tracking/route.ts, pod-reconciliation/route.ts).
  */
 export async function GET(req: Request) {
   const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || authHeader !== `Bearer ${secret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

@@ -33,13 +33,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Site not found or unauthorized' }, { status: 404 });
     }
 
-    // Récupérer ou créer le client Stripe
+    // Récupérer ou créer le client Stripe. Cle d'idempotence Stripe (audit
+    // Mode 3/POD BRAND, lot Stripe) : deux déclenchements quasi simultanés
+    // (double-clic, deux onglets) sans cette clé créaient deux clients
+    // Stripe réels distincts pour le même site -- le second écrasait
+    // silencieusement stripe_customer_id du premier dans `sites`, laissant
+    // une session de paiement "orpheline" que le webhook ne pourrait plus
+    // jamais rattacher à ce site (customer_id introuvable dans `sites`) :
+    // le marchand payait réellement sans que son site ne se publie jamais.
+    // Stripe garantit qu'un même idempotencyKey renvoie TOUJOURS le même
+    // objet côté Stripe (fenêtre 24h), quel que soit le nombre d'appels
+    // concurrents -- élimine la duplication à la source, plus robuste
+    // qu'une garde CAS côté Supabase sur l'écriture (qui n'empêcherait pas
+    // la création réelle du second client Stripe, seulement son enregistrement).
+    // Basé sur `slug` (stable, unique, déjà la clé de lookup partout dans ce
+    // fichier) plutôt qu'un identifiant généré à la volée à chaque appel.
     let customerId = site.stripe_customer_id;
     if (!customerId) {
-      const customer = await getStripe().customers.create({
-        email: user.email,
-        metadata: { slug: site.slug, owner_email: user.email },
-      });
+      const customer = await getStripe().customers.create(
+        {
+          email: user.email,
+          metadata: { slug: site.slug, owner_email: user.email },
+        },
+        { idempotencyKey: `nexiora_site_publish_customer_${site.slug}` }
+      );
       customerId = customer.id;
       await supabase
         .from('sites')
