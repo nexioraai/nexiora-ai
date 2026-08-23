@@ -221,6 +221,25 @@ export const DOMAIN_REGISTRY: DomainDefinition[] = [
     contractTestsPath: 'src/lib/architecture/__tests__/mode2Mode3Boundaries.test.ts',
   },
   {
+    id: 'order-domain-frontier',
+    description:
+      'Point de décision unique de la frontière (phase 1) — répond à « qui exécute cette vente ? » à partir du seul mode du site. C’est le SEUL module autorisé à connaître le mode pour en déduire un domaine ; en contrepartie il ne doit connaître ni sous-type, ni fournisseur, ni aucun des deux domaines. Une garde antérieure qui consultait `dropship_type` a modifié le comportement de pod_brand et pod_custom : cette entrée rend cette erreur détectable au moment où elle est écrite.',
+    ownedFiles: ['src/lib/order-domain/resolve.ts'],
+    forbiddenPatterns: [
+      {
+        pattern: /\bdropship_type\b/,
+        reason:
+          'La frontière est de niveau DOMAINE. Consulter le sous-type ici, c’est exactement l’erreur mesurée sur 13bec0e : elle n’apporte rien au Mode 2 et modifie le Mode 3.',
+      },
+      {
+        pattern: /from ['"]@\/lib\/(cj|suppliers|dropship|mode2|mode3)/,
+        reason:
+          'Le point de décision ne doit dépendre d’aucun domaine ni d’aucun fournisseur : c’est ce qui le rend vérifiable d’un seul regard.',
+      },
+    ],
+    contractTestsPath: 'src/lib/order-domain/__tests__/resolve.test.ts',
+  },
+  {
     id: 'mode-3-supplier-domain',
     description:
       'Domaine fournisseur (Mode 3) — CJ, Printful, Gelato, Printify, le registre fournisseur, le moteur transactionnel de soumissions et la règle de sous-type. Déjà physiquement isolé : ses seuls imports hors domaine sont anomaly, fetchWithTimeout et supabase-admin. Ne doit jamais dépendre du domaine marchand. Le contenu métier de ce domaine est HORS PÉRIMÈTRE du chantier de séparation.',

@@ -113,6 +113,12 @@ export default defineConfig({
       // un test ecrit sans cette ligne passe en isolation mais n'est JAMAIS
       // collecte par `vitest run` (donc jamais en CI), silencieusement.
       'src/app/api/admin/**/*.test.ts',
+      // Separation Mode 2 / Mode 3, PHASE 1 (docs/PLAN-SEPARATION-MODE2-MODE3.md) :
+      // src/lib/order-domain/ porte le point de decision unique de la frontiere.
+      // Sans cette ligne, son test passe en isolation mais n'est JAMAIS collecte
+      // -- exactement le piege documente ci-dessus. Verifie par le delta de
+      // comptage de tests apres ajout.
+      'src/lib/order-domain/**/*.test.ts',
     ],
     environment: 'node',
   },

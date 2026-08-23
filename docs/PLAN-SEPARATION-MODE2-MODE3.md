@@ -454,7 +454,7 @@ déplacées · banc 12 cas avant/après · comptage de tests.
 | Phase | État | SHA | Fichiers | Tests | Résultat | Prochaine |
 |---|---|---|---|---|---|---|
 | 0 — Préparation | ✅ **VALIDÉE** | `13bec0e` (non committé) | `domainRegistry.ts` (+161, **0 suppression**) · `__tests__/mode2Mode3Boundaries.test.ts` (neuf) · `__tests__/fixtures/mode2Mode3Violating.ts` (neuf) | **1112 → 1129** (+17) · 110 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | 2 domaines déclarés · 7 règles · 5 mutations sur 6 attrapées | **Phase 1** |
-| 1 — Fondation | ⏳ EN ATTENTE | — | — | — | — | — |
+| 1 — Fondation | ✅ **VALIDÉE** | `8665dc8` → *(checkpoint phase 1)* | `order-domain/resolve.ts` (neuf) · `order-domain/__tests__/resolve.test.ts` (neuf) · `domainRegistry.ts` (+1 domaine) · `vitest.config.ts` (+1 ligne d'inclusion) | **1129 → 1159** (+30) · 111 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | résolveur total, fail-closed, 2 mutations sur 2 attrapées | **Phase 2** |
 | 2 — `fulfillment_domain` | ⏳ EN ATTENTE — **bloquée par §12** | — | — | — | — | — |
 | 3 — Fulfillment | ⏳ EN ATTENTE | — | — | — | — | — |
 | 4 — Mode 2 | ⏳ EN ATTENTE | — | — | — | — | — |
@@ -523,11 +523,44 @@ ne sont **pas installables sur le SHA de départ**, pour des raisons factuelles 
 en phase 3, `resolveShipping` et `catalog-stock` en phase 5. Un fichier admis ne peut plus
 régresser. Le registre devient ainsi la mémoire de progression du chantier.
 
-**Point à trancher avant la phase 3** : `13bec0e` contient la garde M2-07 dans sa forme
-**rejetée par D3** (elle lit `dropship_type`). La phase 3 la remplace par la garde de
-domaine. Faut-il l'annuler avant, ou la laisser être remplacée ? *(Recommandation : la
-laisser — l'annuler serait une modification de code hors phase, et la phase 3 la réécrit
-de toute façon.)*
+**Décision actée** : `13bec0e` contient la garde M2-07 dans sa forme **rejetée par D3**.
+Elle **n'est pas annulée** et son contenu **n'est pas modifié hors phase** ; la **phase 3**
+la remplace par la garde de domaine, conformément à D3.
+
+---
+
+### PHASE 1 — VALIDÉE
+
+**Ce qui a été fait** : création de `src/lib/order-domain/resolve.ts`, point de décision
+unique de la frontière. Deux exports : `resolveFulfillmentDomain(siteMode: unknown)` —
+**total**, ne lève jamais, `'supplier'` **si et seulement si** le mode vaut exactement 3 ;
+et `isRecognisedSiteMode` — prédicat d'observabilité séparé, pour que l'appelant puisse
+tracer une valeur inattendue sans que le résolveur décide à sa place d'émettre une anomalie.
+**Le module n'importe rien** et ne mentionne ni sous-type, ni fournisseur.
+
+**Aucun fichier produit existant modifié** hors les deux ajouts d'infrastructure ci-dessous.
+
+**Ajout d'infrastructure nécessaire** : `vitest.config.ts` + 1 ligne d'inclusion pour
+`src/lib/order-domain/`. Sans elle, le test passe en isolation mais **n'est jamais
+collecté** — le piège explicitement documenté dans ce fichier. Preuve que la ligne opère :
+le comptage passe de **1129 à 1159**.
+
+**Cliquet appliqué** : nouvelle entrée `order-domain-frontier` dans `DOMAIN_REGISTRY`.
+Le module est le **seul** autorisé à lire le mode pour en déduire un domaine ; en
+contrepartie, deux règles lui interdisent le sous-type et toute dépendance de domaine ou
+de fournisseur. **2 mutations sur 2 attrapées.**
+
+**Trois échecs pendant la phase, tous de mon fait, tous rattrapés avant validation :**
+
+| Échec | Attrapé par | Correction |
+|---|---|---|
+| Littéral BigInt dans un test | `tsc` | retiré |
+| Le commentaire d'en-tête écrivait le nom du champ de sous-type | **la règle que je venais d'écrire** | reformulé — le nom exact vit dans le `reason` du registre |
+| Le commentaire nommait l'identifiant de création de commande fournisseur | **`singleCreationPath.test.ts`**, garde préexistante | reformulé — **le fichier n'a PAS été ajouté à son allowlist** : affaiblir une protection existante pour un commentaire aurait été inacceptable |
+
+**Enseignement conservé** : une règle structurelle s'applique aux lignes brutes,
+commentaires compris. Documenter une interdiction en la nommant la déclenche. Le nom exact
+appartient au registre ; le module dit « le sous-type », pas le champ.
 
 **Registre transversal** *(signalé, hors périmètre)* : `fulfill.ts:443-445` sans filtre
 `supplier_id` · annulation POD absente de `cancel-order` · 4 colonnes CJ sur `shop_orders` ·
