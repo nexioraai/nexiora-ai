@@ -3,7 +3,9 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { roundMoney } from '@/lib/pricing';
 import { suppliersWithCapability } from '@/lib/suppliers/registry';
 import type { ShippingRequest } from '@/lib/suppliers/supplier-adapter';
-import type { ShippingTier } from '@/lib/cj/shipping-tiers';
+import { pickThreeTiers, type ShippingTier } from '@/lib/cj/shipping-tiers';
+import { cjCalculateFreight } from '@/lib/cj/client';
+import { buildBasketHash } from './basketHash';
 
 // ============================================================
 // SOURCE CANONIQUE DU DEVIS DE LIVRAISON (LOT 2).
@@ -40,6 +42,212 @@ import type { ShippingTier } from '@/lib/cj/shipping-tiers';
 // ============================================================
 
 const SHIPPING_MARGIN = 1.2;
+
+// ============================================================
+// DEVIS PANIER CJ -- ce que la mesure du 2026-08-22 a etabli.
+//
+// 203 options CJ reelles, pays CA, deux produits, quantites 1/2/3/5/10/20 :
+//
+//   1. Le tarif CJ est fortement DEGRESSIF. Ratio prix(q) / (q x prix(1))
+//      mesure jusqu'a 0,15. Or le cron met en cache un tarif a QUANTITE 1
+//      (shipping-cache : `[{ vid, quantity: 1 }]`) et ce module le multipliait
+//      par la quantite. Consequence chiffree, panier eco : 10 unites facturees
+//      69,72 quand CJ facture 28,80 ; 20 unites facturees 139,44 pour 52,95
+//      reels. L'ACHETEUR ETAIT SURFACTURE, des deux unites.
+//
+//   2. Un devis PANIER coute 25 a 50 % de moins que la somme des devis
+//      unitaires des memes produits (mesure sur trois paniers).
+//
+//   3. Le classement des options VARIE avec la quantite, et certaines
+//      disparaissent : l'option la moins chere a q1 (`CJPacket JYSP
+//      Sensitive`) est absente du devis a q20. Un palier vendu depuis un
+//      tarif q1 pouvait donc designer une methode que CJ ne propose plus --
+//      que le fulfillment refuse alors (`promised_not_offered`).
+//
+// Ces trois faits ont UNE cause unique : le devis affiche etait une
+// EXTRAPOLATION LINEAIRE d'un tarif unitaire, la ou CJ tarife le panier reel.
+// Le correctif ne corrige pas trois defauts, il supprime l'extrapolation.
+//
+// Le garde-fou du fulfillment ne pouvait pas rattraper cela : il bloque quand
+// le cout reel DEPASSE l'encaisse. Ici le cout reel est INFERIEUR -- la
+// commande passait silencieusement.
+//
+// CE QUI N'A PAS CHANGE : `pickThreeTiers` recoit exactement la meme forme de
+// liste d'options, simplement issue du panier reel au lieu d'un produit seul.
+// La marge x1,20 s'applique a l'identique. Le chemin par produit (cache du
+// cron + intersection multi-produits du P0) subsiste INTACT comme repli.
+// ============================================================
+
+/** Duree de validite d'un devis panier. Volontairement bien plus courte que
+ *  les 7 jours du cache par produit : ce devis EST le prix facture, et un
+ *  cache perime qui sous-cote fait refuser la commande au fulfillment par le
+ *  garde-fou de cout -- c'est-a-dire une commande payee bloquee.
+ *  LIMITE ASSUMEE : la volatilite reelle des tarifs CJ n'est pas mesuree.
+ *  24 h est un choix prudent, pas un fait etabli. */
+const BASKET_TTL_MS = 24 * 60 * 60 * 1000;
+
+/** Attente maximale d'un devis panier. `cjCalculateFreight` passe par la file
+ *  globale `acquireCjSlot()`, partagee avec la creation des commandes
+ *  fournisseur : un pic de fulfillment ferait patienter l'acheteur. Au-dela de
+ *  ce delai on ne le fait pas attendre -- on retombe sur le chemin par
+ *  produit, qui donne un devis moins juste mais immediat. */
+const BASKET_MAX_WAIT_MS = 3000;
+
+/**
+ * Au-dela de ce delai, une entree est SUPPRIMEE, pas seulement ignoree.
+ *
+ * 7 jours, soit exactement la convention deja en vigueur pour le cache par
+ * produit (`shipping-cache : STALE_HOURS = 168`) -- une seule notion de
+ * peremption dans le systeme plutot que deux.
+ *
+ * Volontairement 7x plus long que BASKET_TTL_MS : une entree cessant d'etre
+ * SERVIE a 24 h est conservee bien au-dela avant d'etre effacee. Aucune entree
+ * encore valide ne peut donc etre supprimee, meme en cas de derive d'horloge
+ * ou de purge concurrente. Une entree effacee a tort ne couterait de toute
+ * facon qu'un devis a redemander.
+ */
+const BASKET_PURGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+type CjOption = { logisticName?: unknown; logisticPrice?: unknown; logisticAging?: unknown };
+
+/**
+ * Palier retenu : celui demande, sinon 'standard', sinon le premier
+ * disponible. Le repli sur 'standard' reproduit exactement ce que fait le
+ * panier (CartDrawer) quand il recoit les paliers sans en avoir choisi un --
+ * sans cela, l'affichage retomberait sur shipping_cost pendant que l'acheteur
+ * voit, lui, le prix du palier standard.
+ *
+ * Regle EXTRAITE telle quelle du chemin par produit : les deux sources
+ * (devis panier et cache produit) doivent selectionner a l'identique, sans
+ * quoi le prix dependrait de la source -- exactement la divergence que le
+ * LOT 2 a supprimee.
+ */
+function selectTier(
+  tiers: ShippingTierQuote[] | null,
+  requestedTier?: string | null
+): ShippingTierQuote | null {
+  return (
+    tiers?.find((t) => t.tier === requestedTier) ??
+    tiers?.find((t) => t.tier === 'standard') ??
+    tiers?.[0] ??
+    null
+  );
+}
+
+/** Paliers -> devis presentables. Le cout d'un palier issu du devis panier est
+ *  DEJA le total du panier : il n'est jamais multiplie par une quantite. */
+function tiersToQuotes(tiers: ShippingTier[]): ShippingTierQuote[] {
+  return tiers.map((t) => ({
+    tier: t.tier,
+    label: TIER_LABELS[t.tier],
+    logisticName: String(t.name ?? '').trim() || null,
+    amount: roundMoney(Number(t.cost) * SHIPPING_MARGIN),
+    daysMin: t.days_min || null,
+    daysMax: t.days_max || null,
+  }));
+}
+
+/**
+ * Devis CJ du panier reel, aux quantites reelles. `null` = indisponible :
+ * l'appelant retombe alors sur le chemin par produit, inchange.
+ *
+ * Cache d'abord, appel CJ ensuite -- meme ordre de preference que le reste du
+ * module, pour la meme raison : moins d'appels CJ, donc moins de contention
+ * sur la file partagee avec le fulfillment.
+ */
+async function resolveCjBasket(
+  lines: ShippingRequest[],
+  countryCode: string
+): Promise<ShippingTierQuote[] | null> {
+  const basketHash = buildBasketHash(lines);
+
+  const { data: cached } = await supabaseAdmin
+    .from('shipping_quote_cache')
+    .select('options, updated_at')
+    .eq('supplier_id', 'cj')
+    .eq('basket_hash', basketHash)
+    .eq('country_code', countryCode)
+    .maybeSingle();
+
+  const row = cached as { options: unknown; updated_at: string } | null;
+  if (row && Date.now() - new Date(row.updated_at).getTime() < BASKET_TTL_MS) {
+    const tiers = pickThreeTiers(row.options);
+    if (tiers && tiers.length > 0) return tiersToQuotes(tiers);
+    // Entree en cache inexploitable : on ne la rejoue pas indefiniment, on
+    // laisse l'appel live ci-dessous la remplacer.
+  }
+
+  let options: CjOption[] | null = null;
+  try {
+    const live = cjCalculateFreight(
+      process.env.CJ_EMAIL || '',
+      process.env.CJ_API_KEY || '',
+      countryCode,
+      lines.map((l) => ({ vid: l.supplier_product_id, quantity: l.quantity }))
+    );
+    // La course borne l'attente de l'acheteur ; la promesse perdante est
+    // neutralisee pour ne jamais produire de rejet non gere.
+    const timeout = new Promise<null>((r) => setTimeout(() => r(null), BASKET_MAX_WAIT_MS));
+    const res = await Promise.race([live.catch(() => null), timeout]);
+    options = Array.isArray(res) ? (res as CjOption[]) : null;
+  } catch {
+    options = null;
+  }
+  if (!options || options.length === 0) return null;
+
+  const tiers = pickThreeTiers(options);
+  if (!tiers || tiers.length === 0) return null;
+
+  // Le devis brut est conserve tel quel : la derivation en paliers reste faite
+  // a la lecture, pour qu'une evolution de `pickThreeTiers` n'invalide jamais
+  // le cache et que la donnee fournisseur reste verifiable telle que recue.
+  try {
+    await supabaseAdmin.from('shipping_quote_cache').upsert(
+      {
+        supplier_id: 'cj',
+        basket_hash: basketHash,
+        country_code: countryCode,
+        options,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'supplier_id,basket_hash,country_code' }
+    );
+
+    // ---- PURGE, adossee a l'ECRITURE et a elle seule ----
+    // La table ne grandit qu'ici : l'upsert remplace l'entree d'un panier deja
+    // connu, seule une forme de panier INEDITE ajoute une ligne. Rattacher la
+    // purge a ce point la declenche donc exactement quand la croissance a
+    // lieu, et jamais autrement -- si tous les paniers sont servis par le
+    // cache, rien n'est ecrit, rien n'a besoin d'etre purge.
+    //
+    // Pourquoi pas ailleurs :
+    //   - un cron dedie ajouterait une surface pour un DELETE d'une ligne ;
+    //   - le cron shipping existant est gele, et sa cadence (2 h) n'a aucun
+    //     rapport avec la croissance de cette table ;
+    //   - sur le chemin de LECTURE, la purge s'executerait a chaque affichage
+    //     de panier, y compris quand rien n'a ete ajoute.
+    //
+    // Cout : ce chemin vient de payer un appel CJ (~1 s). Un DELETE indexe sur
+    // `updated_at` y est negligeable, et il n'est jamais atteint sur un succes
+    // de cache (retour anticipe plus haut).
+    //
+    // Concurrence : deux requetes emettant ce meme DELETE est sans effet de
+    // bord -- il est idempotent et ne verrouille aucune ligne encore servie
+    // (horizon 7 jours contre 24 h de validite). Supprimer une entree qu'une
+    // autre requete s'apprete a lire ne peut au pire que lui couter un devis
+    // a redemander.
+    await supabaseAdmin
+      .from('shipping_quote_cache')
+      .delete()
+      .lt('updated_at', new Date(Date.now() - BASKET_PURGE_MS).toISOString());
+  } catch (err: unknown) {
+    // Ni la memorisation ni la purge ne conditionnent la justesse du devis :
+    // un echec ici est journalise, jamais propage a l'acheteur.
+    console.error('[resolveShipping] cache panier (ecriture/purge) :', err instanceof Error ? err.message : String(err));
+  }
+
+  return tiersToQuotes(tiers);
+}
 
 /** Derive : fournisseurs implementant reellement calculateShipping. */
 const SHIPPING_SUPPLIERS = new Map(
@@ -179,7 +387,27 @@ export async function resolveShipping(params: {
   let cjMaxDays: number | null = null;
 
   const cjGroup = groups['cj'];
+
+  // ---- 0. DEVIS PANIER CJ -- source prioritaire ----
+  // Seule source qui ne suppose rien : CJ a cote CE panier, a CES quantites.
+  // Indisponible (cache absent, CJ en echec, delai depasse) -> on retombe sur
+  // le chemin par produit ci-dessous, strictement inchange.
   if (cjGroup && cjGroup.length > 0) {
+    const basketTiers = await resolveCjBasket(cjGroup, countryCode);
+    const chosen = selectTier(basketTiers, requestedTier);
+    if (chosen && Number.isFinite(chosen.amount)) {
+      cjTiers = basketTiers;
+      cjAmount = chosen.amount;
+      cjSelected = chosen.tier;
+      cjLogisticName = chosen.logisticName;
+      cjMinDays = chosen.daysMin;
+      cjMaxDays = chosen.daysMax;
+      cjResolved = true;
+    }
+  }
+
+  // ---- 1. CACHE PAR PRODUIT -- repli, inchange (cron + intersection P0) ----
+  if (cjGroup && cjGroup.length > 0 && !cjResolved) {
     const ids = cjGroup.map((g) => g.supplier_product_id);
     const { data: rowsRaw } = await supabaseAdmin
       .from('shipping_cache')
@@ -254,11 +482,7 @@ export async function resolveShipping(params: {
       // le panier (CartDrawer) quand il recoit les paliers sans en avoir
       // choisi un -- sans cela, l'affichage retomberait sur shipping_cost
       // pendant que l'acheteur voit, lui, le prix du palier standard.
-      const chosen =
-        cjTiers?.find((t) => t.tier === requestedTier) ??
-        cjTiers?.find((t) => t.tier === 'standard') ??
-        cjTiers?.[0] ??
-        null;
+      const chosen = selectTier(cjTiers, requestedTier);
       if (chosen) {
         cjAmount = chosen.amount;
         cjSelected = chosen.tier;
