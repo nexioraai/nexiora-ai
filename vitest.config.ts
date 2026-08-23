@@ -104,6 +104,10 @@ export default defineConfig({
       'src/app/sites/**/*.test.tsx',
       'src/app/api/backfill-hero/**/*.test.ts',
       'src/app/api/shipping-estimate/**/*.test.ts',
+      // M1-02 : premiere couverture de /api/contact. Sans cette ligne, le test
+      // passe en isolation mais n'est JAMAIS collecte par `vitest run` -- le
+      // piege deja documente plus bas dans ce fichier.
+      'src/app/api/contact/**/*.test.ts',
       // Passe de cloture (reporting) : src/app/api/admin/ ajoute -- aucune
       // route admin n'etait couverte, et le prefixe n'etait pas inclus ici :
       // un test ecrit sans cette ligne passe en isolation mais n'est JAMAIS

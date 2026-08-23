@@ -15,7 +15,14 @@ import ScrollRevealInit from './themes/ScrollRevealInit'
 import CatalogSearch, { type ThemeKey } from './themes/CatalogSearch'
 import PromoBanner from './themes/PromoBanner'
 
-export const revalidate = 60
+// M1-08 : `revalidate` retire, il etait TROMPEUR. Cette page appelle
+// `headers()` (resolution du domaine perso pour le canonical), ce qui la
+// bascule en rendu dynamique : la revalidation ne s'appliquait jamais. La
+// declarer laissait croire a une strategie de cache qui n'existait pas.
+//
+// Le rendu dynamique est CONSERVE volontairement : il garantit qu'aucune page
+// d'un marchand ne peut etre servie depuis un cache partage avec un autre --
+// la performance ne doit pas s'acheter au prix d'un risque inter-locataire.
 
 const themes = {
   editorial: EditorialTheme,

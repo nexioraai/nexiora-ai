@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cjCalculateFreight } from '@/lib/cj/client'
 import { pickThreeTiers, parseAging } from '@/lib/cj/shipping-tiers'
 import { createClient } from '@supabase/supabase-js'
+import { logAnomaly } from '@/lib/anomaly'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,20 +33,76 @@ export async function POST(req: NextRequest) {
     if (!siteId || !countryCode || !Array.isArray(products) || products.length === 0) {
       return NextResponse.json({ error: 'Missing siteId, countryCode or products' }, { status: 400 })
     }
+    const firstVidRaw = products[0]?.vid ? String(products[0].vid) : ''
+    if (!firstVidRaw) {
+      return NextResponse.json({ error: 'Missing vid' }, { status: 400 })
+    }
 
     const { data: site } = await supabase.from('sites').select('id').eq('id', siteId).single()
     if (!site) return NextResponse.json({ error: 'Site not found' }, { status: 404 })
 
+    // ---- M1-06 : le `vid` doit APPARTENIR a ce site ----
+    // Cause : `siteId` etait verifie EXISTANT, mais le `vid` etait pris tel
+    // quel dans le corps de requete et transmis a CJ sans qu'aucun lien avec
+    // ce site ne soit etabli. Trois consequences, sur une route publique et
+    // non authentifiee :
+    //   1. `cjCalculateFreight` passe par `acquireCjSlot()` -- file GLOBALE
+    //      partagee avec la CREATION DES COMMANDES fournisseur (client.ts:49).
+    //      Un visiteur pouvait donc retarder le fulfillment de commandes
+    //      reellement payees.
+    //   2. Les points API CJ de Nexiora etaient consommables a volonte.
+    //   3. `shipping_cache` est cle sur (supplier_id, supplier_product_id,
+    //      country_code) -- jamais sur le site : les paliers de n'importe quel
+    //      produit de n'importe quel marchand etaient lisibles.
+    //
+    // La liaison se fait sur `shop_products.cj_vid`, seule origine possible :
+    // les produits issus du catalogue portent `supplierProductId` et jamais
+    // `cjVid` (shared.tsx, loadCatalogSelections), et `ShippingEstimate` n'est
+    // rendu que lorsque `p.cjVid` existe.
+    const { data: owned } = await supabase
+      .from('shop_products')
+      .select('id')
+      .eq('site_id', siteId)
+      .eq('cj_vid', firstVidRaw)
+      .eq('published', true)
+      .maybeSingle()
+    if (!owned) {
+      return NextResponse.json({ error: 'Product not available for this site' }, { status: 403 })
+    }
+
+    // ---- M1-06 : borne de debit ----
+    // Meme mecanisme DB-native que promo/validate et catalog/image-search --
+    // aucune infrastructure ajoutee. La borne protege la file CJ partagee, pas
+    // la confidentialite : un visiteur legitime consulte quelques produits,
+    // jamais 30 par minute.
+    const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString()
+    const { count: recent } = await supabase
+      .from('checkout_anomalies')
+      .select('id', { count: 'exact', head: true })
+      .eq('site_id', siteId)
+      .eq('type', 'shipping_estimate_request')
+      .gte('created_at', oneMinuteAgo)
+    if ((recent ?? 0) >= 30) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    }
+    // severity 'info' : jamais d'email (cf. logAnomaly) -- c'est un compteur,
+    // pas une alerte.
+    await logAnomaly({
+      type: 'shipping_estimate_request',
+      severity: 'info',
+      siteId,
+      details: { vid: firstVidRaw, country: countryCode },
+    })
+
     // 1. Cache d'abord. On lit les tiers du (des) produit(s) demande(s).
     //    Panier mono-produit dans l'usage courant ; si plusieurs, on prend le
     //    premier pour l'estimation (le checkout recalcule le total exact).
-    const firstVid = products[0]?.vid ? String(products[0].vid) : ''
-    if (firstVid) {
+    if (firstVidRaw) {
       const { data: cached } = await supabase
         .from('shipping_cache')
         .select('tiers')
         .eq('supplier_id', 'cj')
-        .eq('supplier_product_id', firstVid)
+        .eq('supplier_product_id', firstVidRaw)
         .eq('country_code', countryCode)
         .maybeSingle()
       if (cached?.tiers && Array.isArray(cached.tiers) && cached.tiers.length > 0) {
@@ -67,7 +124,9 @@ export async function POST(req: NextRequest) {
     if (!cjEmail || !cjApiKey) {
       return NextResponse.json({ error: 'Shipping estimate unavailable' }, { status: 503 })
     }
-    const freight = await cjCalculateFreight(cjEmail, cjApiKey, countryCode, products)
+    // Seul le vid verifie est transmis : `products` pouvait contenir des
+    // entrees supplementaires non liees a ce site.
+    const freight = await cjCalculateFreight(cjEmail, cjApiKey, countryCode, [{ vid: firstVidRaw, quantity: 1 }])
     if (!Array.isArray(freight) || freight.length === 0) {
       return NextResponse.json({ error: 'No shipping options available' }, { status: 404 })
     }
