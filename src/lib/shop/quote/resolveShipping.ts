@@ -108,6 +108,45 @@ const BASKET_MAX_WAIT_MS = 3000;
  */
 const BASKET_PURGE_MS = 7 * 24 * 60 * 60 * 1000;
 
+// ---- BUDGET D'APPELS CJ POUR LES DEVIS PANIER ----
+//
+// `/api/shop/shipping/calculate` est PUBLIQUE, sans authentification ni
+// limitation de debit, et peut desormais declencher un appel CJ. Un visiteur
+// anonyme faisant varier les quantites produit des empreintes de panier
+// toujours inedites, donc des echecs de cache, donc des appels CJ. Ceux-ci
+// passent par `acquireCjSlot()` -- file GLOBALE partagee avec la creation des
+// commandes fournisseur. La consequence n'est pas d'inonder CJ (la file
+// l'empeche) : c'est de SATURER cette file et de retarder le fulfillment de
+// commandes reellement payees.
+//
+// Ce qui NE fonctionNE PAS, et pourquoi : plafonner la quantite par ligne.
+// Avec N produits et une quantite plafonnee a Q, l'espace des paniers
+// distincts reste Q^N. Cela supprime le cas trivial, pas l'attaque -- et
+// introduirait une constante sans fondement mesure.
+//
+// Ce qui fonctionne : borner le NOMBRE D'APPELS, independamment de la
+// diversite des paniers. Au-dela du budget, on ne degrade rien de force -- on
+// emprunte le repli qui existe deja et qui est deja teste (chemin par
+// produit). L'acheteur obtient toujours un devis, simplement moins exact.
+//
+// LE COMPTEUR N'EST PAS UN NOUVEL ETAT : chaque appel CJ live ecrit
+// exactement une ligne avec `updated_at = maintenant`. Compter les lignes
+// recentes revient donc a compter les appels recents, exactement. Aucune
+// table supplementaire, aucun SQL a executer, et l'index sur `updated_at`
+// cree pour la purge sert ici une seconde fois.
+//
+// PROPRIETE ESSENTIELLE : le budget ne s'applique qu'APRES un echec de cache.
+// Un acheteur legitime qui reaffiche son panier est servi par le cache et
+// n'est JAMAIS ralenti. Le budget ne freine donc que les paniers INEDITS,
+// c'est-a-dire exactement la forme de l'abus.
+//
+// LIMITE ASSUMEE : ceci borne definitivement la saturation de la file (le
+// fulfillment conserve la majorite des creneaux). La consommation d'API
+// Points CJ est reduite d'autant, mais sa securite absolue n'est pas
+// demontrable sans connaitre le quota du compte, que nous n'avons pas mesure.
+const QUOTE_BUDGET = 20;
+const QUOTE_BUDGET_WINDOW_MS = 60_000;
+
 type CjOption = { logisticName?: unknown; logisticPrice?: unknown; logisticAging?: unknown };
 
 /**
@@ -175,6 +214,26 @@ async function resolveCjBasket(
     if (tiers && tiers.length > 0) return tiersToQuotes(tiers);
     // Entree en cache inexploitable : on ne la rejoue pas indefiniment, on
     // laisse l'appel live ci-dessous la remplacer.
+  }
+
+  // Budget : verifie APRES l'echec de cache, jamais avant -- un panier deja
+  // connu n'est jamais soumis a cette limite. `acquireCjSlot()` accorde ~54
+  // creneaux CJ par minute ; en plafonner 20 laisse la majorite a la creation
+  // des commandes, qui est le chemin critique du revenu.
+  try {
+    const { count } = await supabaseAdmin
+      .from('shipping_quote_cache')
+      .select('id', { count: 'exact', head: true })
+      .gte('updated_at', new Date(Date.now() - QUOTE_BUDGET_WINDOW_MS).toISOString());
+    if ((count ?? 0) >= QUOTE_BUDGET) {
+      console.warn('[resolveShipping] budget de devis panier atteint (%d/min) -- repli par produit', QUOTE_BUDGET);
+      return null;
+    }
+  } catch {
+    // Budget indeterminable : on ne bloque pas un acheteur pour autant, mais
+    // on ne suppose pas non plus qu'il reste du budget -- le repli par produit
+    // est la reponse sure, et il rend toujours un devis.
+    return null;
   }
 
   let options: CjOption[] | null = null;

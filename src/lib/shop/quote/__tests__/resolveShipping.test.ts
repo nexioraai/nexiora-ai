@@ -14,12 +14,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // multi-produits -- le defaut etait donc entierement decouvert.
 // ============================================================
 
-const { cacheRows, basketRow, upserts, deletes, upsertFails } = vi.hoisted(() => ({
+const { cacheRows, basketRow, upserts, deletes, upsertFails, recentQuotes } = vi.hoisted(() => ({
   cacheRows: { value: [] as unknown[] },       // shipping_cache (par produit)
   basketRow: { value: null as unknown },       // shipping_quote_cache (par panier)
   upserts: [] as unknown[],
   deletes: [] as { col: string; val: string }[],
   upsertFails: { value: false },
+  recentQuotes: { value: 0, fails: false },     // budget d'appels CJ (fenetre 60 s)
 }));
 vi.mock('@/lib/supabase-admin', () => ({
   supabaseAdmin: {
@@ -35,6 +36,9 @@ vi.mock('@/lib/supabase-admin', () => ({
           if (upsertFails.value) return Promise.reject(new Error('upsert KO'));
           return Promise.resolve({ error: null });
         };
+        chain.gte = () => recentQuotes.fails
+          ? Promise.reject(new Error('count KO'))
+          : Promise.resolve({ count: recentQuotes.value });
         chain.delete = () => chain;
         chain.lt = (col: string, val: string) => { deletes.push({ col, val }); return Promise.resolve({ error: null }); };
         return chain;
@@ -85,6 +89,8 @@ beforeEach(() => {
   upserts.length = 0;
   deletes.length = 0;
   upsertFails.value = false;
+  recentQuotes.value = 0;
+  recentQuotes.fails = false;
 });
 
 describe('P0 -- multi-produits : un palier exige le MEME transporteur reel', () => {
@@ -400,5 +406,52 @@ describe('DEVIS PANIER -- purge du cache', () => {
     });
     expect(q.amount).toBe(11.09);                // le devis reste juste
     expect(q.logisticName).toBe('CJPacket Ordinary');
+  });
+});
+
+describe('DEVIS PANIER -- budget d appels CJ (route panier PUBLIQUE)', () => {
+  const oneItem = { cj: [{ supplier_product_id: 'V1', quantity: 1 }] };
+
+  it('sous le budget -> le devis panier est demande normalement', async () => {
+    recentQuotes.value = 19;                     // < 20
+    freight.value = [opt('CJPacket Ordinary', 9.24, '8-12')];
+    const q = await resolveShipping({ groups: oneItem, countryCode: 'CA', flat: 0 });
+    expect(q.amount).toBe(11.09);
+    expect(upserts).toHaveLength(1);
+  });
+
+  it('BUDGET ATTEINT -> aucun appel CJ, repli par produit, l acheteur garde un devis', async () => {
+    recentQuotes.value = 20;
+    cacheRows.value = CACHE_Q1;
+    freight.value = new Error('CJ ne doit PAS etre appele');   // leve si atteint
+    const q = await resolveShipping({
+      groups: { cj: [{ supplier_product_id: 'V1', quantity: 2 }] },
+      countryCode: 'CA', flat: 0,
+    });
+    expect(q.amount).toBe(14.81);                // repli : 6.17 x 2 x 1.20
+    expect(upserts).toHaveLength(0);             // rien n'a ete devise
+  });
+
+  it('un panier DEJA CONNU n est jamais soumis au budget', async () => {
+    // Propriete essentielle : le budget ne freine que les paniers INEDITS,
+    // c'est-a-dire exactement la forme de l'abus. Un acheteur legitime qui
+    // reaffiche son panier passe par le cache et n'est jamais ralenti.
+    recentQuotes.value = 10_000;                 // tres au-dela du budget
+    basketRow.value = { options: [opt('CJPacket Ordinary', 9.24, '8-12')], updated_at: new Date().toISOString() };
+    freight.value = new Error('CJ ne doit PAS etre appele');
+    const q = await resolveShipping({ groups: oneItem, countryCode: 'CA', flat: 0 });
+    expect(q.amount).toBe(11.09);                // servi par le cache
+    expect(q.logisticName).toBe('CJPacket Ordinary');
+  });
+
+  it('budget indeterminable -> repli, jamais un appel CJ suppose autorise', async () => {
+    recentQuotes.fails = true;
+    cacheRows.value = CACHE_Q1;
+    freight.value = new Error('CJ ne doit PAS etre appele');
+    const q = await resolveShipping({
+      groups: { cj: [{ supplier_product_id: 'V1', quantity: 2 }] },
+      countryCode: 'CA', flat: 0,
+    });
+    expect(q.amount).toBe(14.81);
   });
 });
