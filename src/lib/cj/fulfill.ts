@@ -2,6 +2,9 @@ import 'server-only';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { cjCalculateFreight, cjCreateOrder, cjGetVariants, CjApiError } from './client';
 import { reconcileWithCj, type ReconciliationOutcome } from './reconcile';
+// Meme parseur de delai que le cache (cron shipping-cache) : les deux cotes de
+// la comparaison de delai proviennent ainsi du meme champ CJ et du meme code.
+import { parseAging } from './shipping-tiers';
 import { logAnomaly } from '@/lib/anomaly';
 
 // Exportes : le cron cj-fulfillment-reconciliation utilise les memes valeurs
@@ -210,6 +213,31 @@ async function applyReconciliationOutcome(
 }
 
 /**
+ * Delai MAXIMUM communique a l'acheteur, relu depuis shop_orders.
+ *
+ * FORMAT REEL, ecrit a un seul endroit (checkout/route.ts) :
+ *   `String(quote.estimatedMaxDays) + ' days'`  -> "15 days", ou NULL.
+ * `estimatedMaxDays` n'est pas garanti entier (il vient de `Number()` sur un
+ * segment de `logisticAging`), d'ou `parseFloat` et non `parseInt`.
+ *
+ * Toute valeur non reconnue -- y compris d'eventuelles lignes historiques
+ * dans un format anterieur -- vaut `null` : la contrainte de delai devient
+ * alors INACTIVE. Jamais `0`, qui rendrait toute option inadmissible et
+ * bloquerait indistinctement toutes les commandes.
+ *
+ * Ce champ est la SEULE trace persistee de ce que Deribfy s'est engage a
+ * faire : il est envoye a l'acheteur par email (handlePaidCheckout ->
+ * sendOrderConfirmationEmail, "Livraison estimee").
+ */
+export function parsePromisedMaxDays(raw: unknown): number | null {
+  if (typeof raw !== 'string') return null;
+  const m = raw.trim().match(/^(\d+(?:\.\d+)?)\s*(?:days?|jours?)?$/i);
+  if (!m) return null;
+  const n = parseFloat(m[1]);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/**
  * Exécute le dropshipping CJ pour une commande payée (côté client).
  * Lignes avec cj_vid → commande CJ. Lignes sans cj_vid → ignorées (stock).
  * Credentials Nexiora (CJ_EMAIL / CJ_API_KEY) : le marchand ne connecte pas
@@ -233,7 +261,7 @@ async function applyReconciliationOutcome(
 export async function fulfillCjOrder(orderId: string): Promise<string[]> {
   const { data: orderRaw } = await supabaseAdmin
     .from('shop_orders')
-    .select('id, site_id, shipping_address, customer_name, customer_email, cj_pay_status, cj_pay_attempts, cj_pay_locked_at, shipping_amount, shipment_logistic_name, total')
+    .select('id, site_id, shipping_address, customer_name, customer_email, cj_pay_status, cj_pay_attempts, cj_pay_locked_at, shipping_amount, shipment_logistic_name, estimated_delivery, total')
     .eq('id', orderId)
     .maybeSingle();
   if (!orderRaw) return [];
@@ -469,56 +497,200 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
     return [];
   }
 
-  // --- Meilleur transporteur + GARDE-FOU cout reel ---
-  // On revérifie le vrai shipping CJ juste avant l'envoi. Regle d'or : Nexiora
-  // n'absorbe jamais un cout inconnu. Si le vrai cout depasse ce qu'on a encaisse
-  // (shipping_amount, marge +20% incluse), on BLOQUE plutot que de perdre de l'argent.
-  let logisticName: string | undefined;
-  let realShippingCost: number | null = null;
-  try {
-    const freight = await cjCalculateFreight(CJ_EMAIL, CJ_API_KEY, endCountryCode, cjProducts);
-    if (Array.isArray(freight) && freight.length > 0) {
-      // Transporteur choisi par l'acheteur (tier eco/standard/express), si CJ le
-      // propose encore ; sinon on retombe sur la borne basse.
-      const chosen = (order as any).shipment_logistic_name
-        ? freight.find((o: any) => o.logisticName === (order as any).shipment_logistic_name)
-        : null;
-      logisticName = chosen ? chosen.logisticName : freight[0].logisticName;
-      // Borne basse des options (la moins chere), comme le cache.
-      const prices = freight
-        .map((o: any) => Number(o?.logisticPrice ?? o?.price ?? o?.freightAmount))
-        .filter((n: number) => Number.isFinite(n) && n >= 0);
-      if (prices.length > 0) realShippingCost = Math.min(...prices);
-    }
-  } catch (e) {
-    console.error('CJ freight calc failed:', e);
-  }
+  // --- Reconciliation AVANT toute decision TERMINALE ---
+  // Elle precedait deja toute CREATION ; elle precede desormais aussi tout
+  // REFUS. Le garde-fou cout etait place avant elle : il pouvait donc ecrire
+  // 'failed' sur une commande DEJA CREEE chez CJ par un passage anterieur
+  // (crash/timeout sans ecriture d'etat). La reconciliation n'etait alors
+  // jamais atteinte, et cette commande devenait definitivement invisible --
+  // chaque rejeu du cron rebloquant au meme endroit.
+  //
+  // Ce deplacement ne protege PAS contre une double creation : cette
+  // protection existait deja (la reconciliation precedait createOrderV2). Il
+  // traite le cas de la commande ORPHELINE, et rien d'autre.
+  const outcome = await reconcileWithCj(CJ_EMAIL, CJ_API_KEY, order.id);
+  const vids = cjProducts.map((p) => p.vid);
+  const handled = await applyReconciliationOutcome(order as OrderRow, outcome, vids, resumedStale);
+  if (handled.done) return handled.vids;
 
-  // Comparaison : vrai cout vs montant encaisse.
+  // ============================================================
+  // DEVIS CJ + SELECTION DE L'OPTION REELLEMENT EXPEDIEE
+  //
+  // Ce qui a ete supprime ici, et pourquoi :
+  //
+  //   1. `freight[0]` -- l'option etait choisie par son RANG dans le tableau
+  //      CJ quand le transporteur enregistre n'etait plus propose. Aucun ordre
+  //      n'est documente par CJ. Le depot condamne d'ailleurs explicitement ce
+  //      procede (shipping-tiers.ts : "ne laisser jamais l'ordre arbitraire du
+  //      tableau CJ decider silencieusement du resultat").
+  //
+  //   2. `Math.min(...prices)` -- le garde-fou validait le prix de l'option la
+  //      MOINS CHERE, alors que la commande partait sur une AUTRE option.
+  //      Contre-exemple : transporteur promis a 15, encaisse 10.80, une option
+  //      economique a 4 -> min(4) <= 10.80, la commande passait, et Nexiora
+  //      expediait a 15. Le controle porte desormais sur le prix de l'option
+  //      QUE L'ON ENVOIE.
+  //
+  // ADMISSIBILITE -- les deux seules dimensions que Deribfy a effectivement
+  // promises et que nous pouvons verifier :
+  //     prix  <= montant encaisse           (shop_orders.shipping_amount)
+  //     delai <= delai communique           (shop_orders.estimated_delivery,
+  //                                          envoye par email a l'acheteur)
+  //
+  // Nous ne savons pas, et n'affirmons pas, qu'une option retenue offre le
+  // meme service que celle initialement enregistree : suivi, assurance et
+  // manutention ne sont pas fournis par freightCalculate. Cet ecart n'est pas
+  // comble -- il est JOURNALISE (cj_shipping_option_reselected) pour rester
+  // verifiable apres coup.
+  //
+  // Les deux valeurs comparees pour le delai proviennent du MEME champ CJ
+  // (`logisticAging`) et du MEME parseur (`parseAging`), cote cache comme cote
+  // fulfillment : elles sont homogenes quelle que soit l'unite reelle de CJ,
+  // que sa documentation ne precise pas et que nous ne supposons donc pas.
+  // ============================================================
   const charged = Number((order as any).shipping_amount) || 0;
-  if (realShippingCost !== null && charged > 0 && realShippingCost > charged) {
-    console.error(
-      `CJ fulfill BLOQUE ${order.id}: vrai shipping ${realShippingCost}$ > encaisse ${charged}$`
-    );
+  const promisedMaxDays = parsePromisedMaxDays((order as any).estimated_delivery);
+  const promised = ((order as any).shipment_logistic_name as string | null) || null;
+
+  /** Refus terminal : statut + anomalie, sans jamais consommer cj_pay_attempts
+   *  (ce compteur mesure les appels reels a cjCreateOrder -- aucun n'a lieu
+   *  ici. L'y melanger empecherait une recuperation legitime : prix et delais
+   *  CJ fluctuent, et une commande refusee aujourd'hui peut redevenir
+   *  expediable demain via le cron de reconciliation). */
+  const refuse = async (type: string, details: Record<string, unknown>) => {
+    console.error(`CJ fulfill BLOQUE ${order.id}: ${type}`, details);
     await supabaseAdmin
       .from('shop_orders')
       .update({ cj_pay_status: 'failed' })
       .eq('id', order.id)
       .in('cj_pay_status', ['pending', 'failed', 'processing']);
     await logAnomaly({
-      type: 'cj_shipping_cost_exceeds_charged',
+      type,
       severity: 'blocked',
       siteId: order.site_id,
-      details: {
-        orderId: order.id,
-        realShippingCost,
-        charged,
-        gap: Math.round((realShippingCost - charged) * 100) / 100,
-        country: endCountryCode,
-      },
+      details: { orderId: order.id, country: endCountryCode, ...details },
+    });
+    return [] as string[];
+  };
+
+  // --- Devis. Sans devis exploitable, AUCUNE creation : on ne construit pas
+  // une commande fournisseur a l'aveugle. Le statut reste 'processing' avec un
+  // verrou pose : le groupe 2 du cron de reconciliation reprend la commande
+  // une fois le verrou perime (STALE_LOCK_MS), donc au plus tard au passage
+  // suivant. Aucun statut terminal n'est ecrit -- l'echec est transitoire.
+  let freight: unknown[];
+  try {
+    const r = await cjCalculateFreight(CJ_EMAIL, CJ_API_KEY, endCountryCode, cjProducts);
+    freight = Array.isArray(r) ? r : [];
+  } catch (e) {
+    console.error('CJ freight calc failed:', e);
+    await logAnomaly({
+      type: 'cj_freight_unavailable',
+      severity: 'info',
+      siteId: order.site_id,
+      details: { orderId: order.id, reason: 'error', country: endCountryCode, message: e instanceof Error ? e.message.slice(0, 200) : String(e).slice(0, 200) },
     });
     return [];
   }
+  if (freight.length === 0) {
+    // Reponse VALIDE mais vide : CJ n'annonce aucune methode pour ce panier
+    // vers cette destination. Meme conclusion metier qu'une erreur -- aucune
+    // creation -- mais cause distincte, donc `reason` distinct.
+    await logAnomaly({
+      type: 'cj_freight_unavailable',
+      severity: 'info',
+      siteId: order.site_id,
+      details: { orderId: order.id, reason: 'empty', country: endCountryCode },
+    });
+    return [];
+  }
+
+  type FreightOption = { name: string; price: number; daysMax: number | null };
+  const options: FreightOption[] = (freight as any[])
+    .map((o) => ({
+      name: String(o?.logisticName ?? '').trim(),
+      price: Number(o?.logisticPrice ?? o?.price ?? o?.freightAmount),
+      daysMax: parseAging(o?.logisticAging).max,
+    }))
+    .filter((o) => o.name.length > 0 && Number.isFinite(o.price) && o.price >= 0);
+
+  // `charged <= 0` : le garde-fou prix reste inactif sur une livraison
+  // facturee zero -- comportement EXISTANT, conserve tel quel (dette signalee,
+  // hors perimetre de ce lot).
+  const priceOk = (o: FreightOption) => charged <= 0 || o.price <= charged;
+  // Un delai inconnu ne peut pas etre compare : quand une promesse de delai
+  // existe, une option sans delai annonce n'est pas admissible. On ne verifie
+  // pas ce qu'on ignore.
+  const delayOk = (o: FreightOption) =>
+    promisedMaxDays === null || (o.daysMax !== null && o.daysMax <= promisedMaxDays);
+
+  let picked: FreightOption | undefined;
+
+  if (promised) {
+    // Une methode a ete enregistree pour cette commande. On n'en substitue
+    // AUCUNE autre : soit celle-la part, soit rien ne part.
+    const found = options.find((o) => o.name === promised);
+    if (!found) {
+      return await refuse('cj_shipping_no_admissible_option', { reason: 'promised_not_offered', promised, offered: options.length });
+    }
+    if (!priceOk(found)) {
+      return await refuse('cj_shipping_cost_exceeds_charged', {
+        realShippingCost: found.price,
+        charged,
+        gap: Math.round((found.price - charged) * 100) / 100,
+        logisticName: found.name,
+      });
+    }
+    if (!delayOk(found)) {
+      return await refuse('cj_shipping_no_admissible_option', { reason: 'promised_too_slow', promised, daysMax: found.daysMax, promisedMaxDays });
+    }
+    picked = found;
+  } else {
+    // Aucune methode enregistree. `null` a QUATRE origines indistinguables
+    // avec les donnees persistees (panier multi-produits sans transporteur
+    // commun ; palier reellement vendu dont le nom CJ etait vide ; repli sur
+    // shipping_cost ; devis d'origine live). On ne cherche donc pas a
+    // determiner laquelle : on n'interroge jamais `null`, seulement le
+    // montant encaisse et le delai communique.
+    //
+    // REGLE METIER, arbitree explicitement (option C) : sans delai
+    // communique, une seule des deux contraintes serait opposable et la
+    // selection pourrait retenir l'option la plus LENTE sans aucun controle.
+    // On refuse plutot que d'expedier sur une seule dimension.
+    if (promisedMaxDays === null) {
+      return await refuse('cj_shipping_no_admissible_option', { reason: 'no_promise_no_delay', charged });
+    }
+    const candidates = options.filter((o) => priceOk(o) && delayOk(o));
+    if (candidates.length === 0) {
+      return await refuse('cj_shipping_no_admissible_option', { reason: 'none_admissible', charged, promisedMaxDays, offered: options.length });
+    }
+    // Departage CONVENTIONNEL, non fonde sur une regle CJ : la moins chere.
+    // CJ ne documente aucun ordre de preference et toutes les candidates
+    // honorent deja prix et delai -- elles sont indiscernables sur l'axe
+    // contractuel, le departage ne peut donc etre qu'une convention. Celle-ci
+    // est deja en vigueur ailleurs dans le systeme (lowestPrice() alimente
+    // shipping_cache.shipping_cost, le palier `eco`, et le repli sans palier
+    // facture cette meme borne basse) : la retenir n'introduit aucun critere
+    // nouveau.
+    picked = candidates.reduce((a, b) => (b.price < a.price ? b : a));
+    await logAnomaly({
+      type: 'cj_shipping_option_reselected',
+      severity: 'info',
+      siteId: order.site_id,
+      details: {
+        orderId: order.id,
+        promised: null,
+        sent: picked.name,
+        sentPrice: picked.price,
+        sentDaysMax: picked.daysMax,
+        charged,
+        promisedMaxDays,
+        candidates: candidates.length,
+      },
+    });
+  }
+
+  const logisticName: string = picked.name;
 
   const baseOrder = {
     orderNumber: order.id,
@@ -541,13 +713,8 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
     products: cjProducts,
   };
 
-  // --- Reconciliation AVANT toute creation, toujours (principe fondamental) ---
-  const outcome = await reconcileWithCj(CJ_EMAIL, CJ_API_KEY, order.id);
-  const vids = cjProducts.map((p) => p.vid);
-  const handled = await applyReconciliationOutcome(order as OrderRow, outcome, vids, resumedStale);
-  if (handled.done) return handled.vids;
-
-  // outcome.kind === 'NOT_FOUND' uniquement ici : creation autorisee.
+  // outcome.kind === 'NOT_FOUND' uniquement ici : creation autorisee
+  // (reconciliation effectuee plus haut, avant toute decision terminale).
   // NOTE : pas de garde-fou solde en mode semi-auto (payType 3). La commande
   // est CREEE chez CJ sans paiement ; Youssouf la paie ensuite a la main.
   try {

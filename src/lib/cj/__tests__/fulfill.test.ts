@@ -57,7 +57,7 @@ vi.mock('@/lib/supabase-admin', () => ({
   supabaseAdmin: { from: (...a: unknown[]) => fromMock(...(a as [string])) },
 }));
 
-import { fulfillCjOrder, MAX_CREATE_ATTEMPTS } from '../fulfill';
+import { fulfillCjOrder, MAX_CREATE_ATTEMPTS, parsePromisedMaxDays } from '../fulfill';
 import { CjApiError } from '../client';
 
 function chainFor(table: string, response: { data: unknown; error?: unknown } = { data: null, error: null }) {
@@ -88,7 +88,12 @@ const ORDER = {
   cj_pay_attempts: 0,
   cj_pay_locked_at: null,
   shipping_amount: 10,
-  shipment_logistic_name: null,
+  // Commande NOMINALE : une methode a ete enregistree et un delai a ete
+  // communique a l'acheteur. La fixture portait auparavant `null` sur les deux,
+  // ce qui ne modelisait aucune commande reelle -- et qu'aucun test n'exercait,
+  // le fulfillment ne lisant alors ni l'un ni l'autre.
+  shipment_logistic_name: 'Standard',
+  estimated_delivery: '12 days',
   total: 50,
 };
 const ITEMS = [{ product_id: 'sp1', quantity: 1 }];
@@ -137,7 +142,9 @@ beforeEach(() => {
   cjGetVariantsMock.mockReset();
   reconcileWithCjMock.mockReset();
   logAnomalyMock.mockReset();
-  cjCalculateFreightMock.mockResolvedValue([{ logisticName: 'Standard', logisticPrice: '5' }]);
+  // CJ renvoie logisticAging sur cet endpoint : le cron shipping-cache appelle
+  // la MEME fonction et en derive days_min/days_max via parseAging.
+  cjCalculateFreightMock.mockResolvedValue([{ logisticName: 'Standard', logisticPrice: '5', logisticAging: '7-12' }]);
 });
 
 describe('fulfillCjOrder — état déjà résolu : sortie immédiate', () => {
@@ -369,7 +376,11 @@ describe('fulfillCjOrder — rate-limit CJ (QPS + API Points, audit hostile + au
 describe('fulfillCjOrder — garde-fou coût réel > encaissé', () => {
   it('bloque et alerte, comportement existant préservé', async () => {
     queueStandardClaimedSetup({ shipping_amount: 1 });
-    cjCalculateFreightMock.mockResolvedValue([{ logisticName: 'Standard', logisticPrice: '99' }]);
+    // La reconciliation precede desormais toute decision terminale : ce refus
+    // ne peut plus etre prononce sans qu'elle ait eu lieu (correctif de la
+    // commande orpheline). L'intention du test est inchangee.
+    reconcileWithCjMock.mockResolvedValue({ kind: 'NOT_FOUND' });
+    cjCalculateFreightMock.mockResolvedValue([{ logisticName: 'Standard', logisticPrice: '99', logisticAging: '7-12' }]);
     queueWrite();
     const result = await fulfillCjOrder('order-1');
     expect(result).toEqual([]);
@@ -591,5 +602,247 @@ describe('fulfillCjOrder — échecs de création (non-1603003)', () => {
     expect(logAnomalyMock).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'cj_fulfill_exhausted', severity: 'blocked', details: expect.objectContaining({ permanent: true }) })
     );
+  });
+});
+
+// ============================================================
+// P1 FULFILLMENT -- SELECTION DE L'OPTION REELLEMENT EXPEDIEE
+//
+// Les tests sont regroupes par INVARIANT METIER, pas par branche de code :
+// chacun doit rester valide si l'implementation change.
+//
+// I1  l'option envoyee existe reellement dans le devis CJ du moment
+// I2  son prix n'excede jamais le montant encaisse
+// I3  son delai n'excede jamais le delai communique a l'acheteur
+// I4  aucune selection par rang de tableau ; CJ ne choisit jamais
+// I5  aucune creation sans devis exploitable
+// I6  la reconciliation precede toute decision terminale
+// I7  tout ecart promis/envoye est journalise
+// I8  non-regression du modele semi-automatise
+// I9  robustesse du parsing du delai promis
+// I10 cj_pay_attempts conserve sa semantique
+// ============================================================
+
+/** Sequence complete d'une commande reelle, jusqu'a la decision d'expedition. */
+function setupOrder(overrides: Record<string, unknown> = {}) {
+  queueStandardClaimedSetup(overrides);
+  reconcileWithCjMock.mockResolvedValue({ kind: 'NOT_FOUND' });
+  cjCreateOrderMock.mockResolvedValue({ orderId: 'cj-order-1' });
+  queueWrite();
+}
+const sentOption = () => (cjCreateOrderMock.mock.calls[0]?.[2] as any)?.logisticName;
+const anomaly = (type: string) =>
+  logAnomalyMock.mock.calls.map((c) => c[0] as any).find((a) => a.type === type);
+
+describe('P1/I1+I2 — le garde-fou porte sur l’option ENVOYÉE, jamais sur une autre', () => {
+  it('méthode enregistrée retrouvée et admissible -> c’est ELLE qui part', async () => {
+    setupOrder();
+    cjCalculateFreightMock.mockResolvedValue([
+      { logisticName: 'CJPacket', logisticPrice: '4', logisticAging: '15-25' },
+      { logisticName: 'Standard', logisticPrice: '9', logisticAging: '7-12' },
+    ]);
+    await fulfillCjOrder('order-1');
+    expect(cjCreateOrderMock).toHaveBeenCalledTimes(1);
+    expect(sentOption()).toBe('Standard');           // pas la moins chere
+  });
+
+  it('CONTRE-EXEMPLE Math.min : promis à 15, encaissé 10.80, éco à 4 -> REFUS', async () => {
+    // Ce panier passait AVANT le correctif : min(4) <= 10.80 validait le
+    // garde-fou, et la commande partait sur l'option a 15.
+    setupOrder({ shipping_amount: 10.8 });
+    cjCalculateFreightMock.mockResolvedValue([
+      { logisticName: 'CJPacket', logisticPrice: '4', logisticAging: '15-25' },
+      { logisticName: 'Standard', logisticPrice: '15', logisticAging: '7-12' },
+    ]);
+    const r = await fulfillCjOrder('order-1');
+    expect(r).toEqual([]);
+    expect(cjCreateOrderMock).not.toHaveBeenCalled();
+    expect(anomaly('cj_shipping_cost_exceeds_charged')).toMatchObject({
+      severity: 'blocked',
+      details: expect.objectContaining({ realShippingCost: 15, charged: 10.8 }),
+    });
+  });
+});
+
+describe('P1/I3 — le délai communiqué à l’acheteur borne l’expédition', () => {
+  it('méthode enregistrée devenue trop lente -> REFUS (prix pourtant admissible)', async () => {
+    setupOrder({ estimated_delivery: '12 days' });
+    cjCalculateFreightMock.mockResolvedValue([{ logisticName: 'Standard', logisticPrice: '5', logisticAging: '20-40' }]);
+    const r = await fulfillCjOrder('order-1');
+    expect(r).toEqual([]);
+    expect(cjCreateOrderMock).not.toHaveBeenCalled();
+    expect(anomaly('cj_shipping_no_admissible_option')).toMatchObject({
+      details: expect.objectContaining({ reason: 'promised_too_slow' }),
+    });
+  });
+
+  it('option sans délai annoncé alors qu’un délai a été promis -> non admissible', async () => {
+    // On ne verifie pas ce qu'on ignore : un delai absent n'est pas un delai court.
+    setupOrder({ shipment_logistic_name: null, estimated_delivery: '12 days' });
+    cjCalculateFreightMock.mockResolvedValue([{ logisticName: 'Inconnu', logisticPrice: '2' }]);
+    const r = await fulfillCjOrder('order-1');
+    expect(r).toEqual([]);
+    expect(anomaly('cj_shipping_no_admissible_option')).toMatchObject({
+      details: expect.objectContaining({ reason: 'none_admissible' }),
+    });
+  });
+});
+
+describe('P1/I1+I4 — méthode enregistrée disparue : REFUS, jamais un remplacement', () => {
+  it('le transporteur promis n’est plus proposé -> refus, même si d’autres options conviennent', async () => {
+    setupOrder();
+    cjCalculateFreightMock.mockResolvedValue([
+      { logisticName: 'FedEx', logisticPrice: '3', logisticAging: '2-4' },   // admissible
+      { logisticName: 'DHL', logisticPrice: '4', logisticAging: '2-3' },     // admissible
+    ]);
+    const r = await fulfillCjOrder('order-1');
+    expect(r).toEqual([]);
+    expect(cjCreateOrderMock).not.toHaveBeenCalled();
+    expect(anomaly('cj_shipping_no_admissible_option')).toMatchObject({
+      details: expect.objectContaining({ reason: 'promised_not_offered', promised: 'Standard' }),
+    });
+  });
+
+  it('freight[0] n’est JAMAIS retenu par son rang', async () => {
+    setupOrder({ shipment_logistic_name: null, estimated_delivery: '20 days' });
+    cjCalculateFreightMock.mockResolvedValue([
+      { logisticName: 'PremierDuTableau', logisticPrice: '8', logisticAging: '5-9' },
+      { logisticName: 'MoinsChere', logisticPrice: '3', logisticAging: '10-18' },
+    ]);
+    await fulfillCjOrder('order-1');
+    expect(sentOption()).toBe('MoinsChere');
+    expect(sentOption()).not.toBe('PremierDuTableau');
+  });
+});
+
+describe('P1/I4+I7 — aucune méthode enregistrée (cas produit par le P0)', () => {
+  it('option admissible existante -> commande créée, PAS bloquée', async () => {
+    setupOrder({ shipment_logistic_name: null, estimated_delivery: '15 days' });
+    cjCalculateFreightMock.mockResolvedValue([
+      { logisticName: 'CJPacket', logisticPrice: '6', logisticAging: '9-15' },
+      { logisticName: 'DHL', logisticPrice: '40', logisticAging: '2-3' },
+    ]);
+    const r = await fulfillCjOrder('order-1');
+    expect(r).toEqual(['vid-1']);
+    expect(sentOption()).toBe('CJPacket');
+  });
+
+  it('la sélection est JOURNALISÉE, en info, sans e-mail ni effet métier', async () => {
+    setupOrder({ shipment_logistic_name: null, estimated_delivery: '15 days' });
+    cjCalculateFreightMock.mockResolvedValue([{ logisticName: 'CJPacket', logisticPrice: '6', logisticAging: '9-15' }]);
+    await fulfillCjOrder('order-1');
+    expect(anomaly('cj_shipping_option_reselected')).toMatchObject({
+      severity: 'info',                                  // severity info => logAnomaly sort avant tout envoi d'e-mail
+      details: expect.objectContaining({ promised: null, sent: 'CJPacket', sentPrice: 6, charged: 10, promisedMaxDays: 15 }),
+    });
+  });
+
+  it('aucune option admissible -> REFUS', async () => {
+    setupOrder({ shipment_logistic_name: null, estimated_delivery: '15 days' });
+    cjCalculateFreightMock.mockResolvedValue([{ logisticName: 'DHL', logisticPrice: '40', logisticAging: '2-3' }]);
+    const r = await fulfillCjOrder('order-1');
+    expect(r).toEqual([]);
+    expect(anomaly('cj_shipping_no_admissible_option')).toMatchObject({
+      details: expect.objectContaining({ reason: 'none_admissible' }),
+    });
+  });
+
+  it('OPTION C : aucune méthode ET aucun délai communiqué -> REFUS, jamais d’expédition sur une seule dimension', async () => {
+    setupOrder({ shipment_logistic_name: null, estimated_delivery: null });
+    cjCalculateFreightMock.mockResolvedValue([{ logisticName: 'Bateau', logisticPrice: '1', logisticAging: '60-90' }]);
+    const r = await fulfillCjOrder('order-1');
+    expect(r).toEqual([]);
+    expect(cjCreateOrderMock).not.toHaveBeenCalled();
+    expect(anomaly('cj_shipping_no_admissible_option')).toMatchObject({
+      details: expect.objectContaining({ reason: 'no_promise_no_delay' }),
+    });
+  });
+});
+
+describe('P1/I5 — aucune création sans devis exploitable', () => {
+  it('cjCalculateFreight en ERREUR -> aucune création, aucun statut terminal, rejouable', async () => {
+    queueStandardClaimedSetup();
+    reconcileWithCjMock.mockResolvedValue({ kind: 'NOT_FOUND' });
+    cjCalculateFreightMock.mockRejectedValue(new Error('CJ 429'));
+    const r = await fulfillCjOrder('order-1');
+    expect(r).toEqual([]);
+    expect(cjCreateOrderMock).not.toHaveBeenCalled();
+    expect(anomaly('cj_freight_unavailable')).toMatchObject({ severity: 'info', details: expect.objectContaining({ reason: 'error' }) });
+    // Aucun statut terminal : le verrou 'processing' subsiste, le groupe 2 du
+    // cron reprend la commande une fois le verrou perime.
+    expect(updateCalls.some((c) => (c.payload as any).cj_pay_status === 'failed')).toBe(false);
+  });
+
+  it('devis VIDE (réponse CJ valide) -> aucune création, cause distincte de l’erreur', async () => {
+    queueStandardClaimedSetup();
+    reconcileWithCjMock.mockResolvedValue({ kind: 'NOT_FOUND' });
+    cjCalculateFreightMock.mockResolvedValue([]);
+    const r = await fulfillCjOrder('order-1');
+    expect(r).toEqual([]);
+    expect(cjCreateOrderMock).not.toHaveBeenCalled();
+    expect(anomaly('cj_freight_unavailable')).toMatchObject({ details: expect.objectContaining({ reason: 'empty' }) });
+  });
+});
+
+describe('P1/I6 — la réconciliation précède toute décision terminale', () => {
+  it('commande DÉJÀ créée chez CJ + coût devenu excessif -> réconciliée, jamais refusée à tort', async () => {
+    // Defaut corrige : le garde-fou, place avant la reconciliation, ecrivait
+    // 'failed' sans jamais la declencher -- la commande CJ existante devenait
+    // definitivement invisible.
+    queueStandardClaimedSetup({ shipping_amount: 1 });
+    reconcileWithCjMock.mockResolvedValue({ kind: 'FOUND_AWAITING', cjOrderId: 'cj-existant' });
+    cjCalculateFreightMock.mockResolvedValue([{ logisticName: 'Standard', logisticPrice: '99', logisticAging: '7-12' }]);
+    queueWrite();
+    await fulfillCjOrder('order-1');
+    expect(updateCalls.find((c) => (c.payload as any).cj_order_id === 'cj-existant')).toBeTruthy();
+    expect(updateCalls.some((c) => (c.payload as any).cj_pay_status === 'failed')).toBe(false);
+    expect(cjCalculateFreightMock).not.toHaveBeenCalled();   // devis inutile : la commande existe
+    expect(cjCreateOrderMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('P1/I8+I10 — non-régression du modèle semi-automatisé', () => {
+  it('payType 3, awaiting_manual_payment et alerte manuelle inchangés', async () => {
+    setupOrder();
+    await fulfillCjOrder('order-1');
+    expect(cjCreateOrderMock.mock.calls[0][2]).toMatchObject({ payType: 3, logisticName: 'Standard' });
+    expect(updateCalls.find((c) => (c.payload as any).cj_pay_status === 'awaiting_manual_payment')).toBeTruthy();
+    expect(anomaly('cj_awaiting_manual_payment')).toBeTruthy();
+  });
+
+  it('un refus d’admissibilité NE consomme PAS cj_pay_attempts', async () => {
+    // Ce compteur mesure les appels reels a cjCreateOrder. L'incrementer ici
+    // empecherait une recuperation legitime : prix et delais CJ fluctuent.
+    setupOrder({ shipment_logistic_name: 'Disparu' });
+    cjCalculateFreightMock.mockResolvedValue([{ logisticName: 'Autre', logisticPrice: '2', logisticAging: '3-5' }]);
+    await fulfillCjOrder('order-1');
+    expect(updateCalls.every((c) => !('cj_pay_attempts' in (c.payload as any)))).toBe(true);
+    const failed = updateCalls.find((c) => (c.payload as any).cj_pay_status === 'failed');
+    expect(failed).toBeTruthy();                       // refus bien tracé
+  });
+});
+
+describe('P1/I9 — parsing du délai promis : jamais 0, jamais une supposition', () => {
+  it.each([
+    ['15 days', 15],
+    ['7.5 days', 7.5],
+    ['12 jours', 12],
+    ['  9  ', 9],
+    [null, null],
+    ['', null],
+    ['bientôt', null],
+    ['0 days', null],          // 0 rendrait TOUTE option inadmissible
+    [undefined, null],
+    [15, null],                 // non-chaîne
+  ])('parsePromisedMaxDays(%o) = %o', (input, expected) => {
+    expect(parsePromisedMaxDays(input)).toBe(expected);
+  });
+
+  it('délai illisible -> contrainte de délai INACTIVE, contrainte de prix seule', async () => {
+    setupOrder({ estimated_delivery: 'bientôt' });
+    cjCalculateFreightMock.mockResolvedValue([{ logisticName: 'Standard', logisticPrice: '5', logisticAging: '40-90' }]);
+    const r = await fulfillCjOrder('order-1');
+    expect(r).toEqual(['vid-1']);       // pas de blocage : rien n'a été promis par écrit
+    expect(sentOption()).toBe('Standard');
   });
 });
