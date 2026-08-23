@@ -1,0 +1,22 @@
+{
+  "label": "baseline",
+  "readAt": "2026-08-23T08:01:55.775Z",
+  "httpStatus": 200,
+  "response": {
+    "code": 200,
+    "result": true,
+    "message": "Success",
+    "data": {
+      "amount": 0,
+      "noWithdrawalAmount": 0,
+      "freezeAmount": 0
+    },
+    "requestId": "289e7d0ab244405c977dfc660e200d2d",
+    "pointsInfo": {
+      "total": 50422,
+      "usedToday": 2620,
+      "remaining": 50422
+    },
+    "success": true
+  }
+}

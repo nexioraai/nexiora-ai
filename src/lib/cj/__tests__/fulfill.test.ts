@@ -846,3 +846,150 @@ describe('P1/I9 — parsing du délai promis : jamais 0, jamais une supposition'
     expect(sentOption()).toBe('Standard');
   });
 });
+
+describe('P1/I2 — coût fournisseur absorbé : visible, jamais bloquant', () => {
+  it('encaissé = 0 et coût CJ > 0 -> anomalie tracée, ET la commande part quand même', async () => {
+    // Chemin ATTEIGNABLE : boutique mode 2 au sous-type non renseigne
+    // (suppliersForDropshipType(null) -> ['cj']), shipping_flat a 0, devis non
+    // resolu -> shipping_amount = 0. Le refus "cout non confirme" de checkout
+    // ne couvre que le mode 3, et handlePaidCheckout appelle fulfillCjOrder
+    // sans garde de mode.
+    setupOrder({ shipping_amount: 0, shipment_logistic_name: null, estimated_delivery: '12 days' });
+    cjCalculateFreightMock.mockResolvedValue([{ logisticName: 'CJPacket', logisticPrice: '7.4', logisticAging: '8-12' }]);
+    const r = await fulfillCjOrder('order-1');
+    // La livraison offerte VOLONTAIRE ne doit jamais etre cassee : la commande part.
+    expect(r).toEqual(['vid-1']);
+    expect(cjCreateOrderMock).toHaveBeenCalledTimes(1);
+    // Mais le montant avance par Nexiora n'est plus silencieux.
+    expect(anomaly('cj_shipping_cost_absorbed')).toMatchObject({
+      severity: 'warning',
+      details: expect.objectContaining({ absorbed: 7.4, charged: 0, logisticName: 'CJPacket' }),
+    });
+  });
+
+  it('encaissé = 0 et coût CJ = 0 -> rien à signaler, aucune anomalie', async () => {
+    setupOrder({ shipping_amount: 0, shipment_logistic_name: null, estimated_delivery: '12 days' });
+    cjCalculateFreightMock.mockResolvedValue([{ logisticName: 'Offert', logisticPrice: '0', logisticAging: '8-12' }]);
+    await fulfillCjOrder('order-1');
+    expect(anomaly('cj_shipping_cost_absorbed')).toBeUndefined();
+  });
+
+  it('chemin nominal (encaissé > 0) -> aucune anomalie d’absorption', async () => {
+    setupOrder();
+    await fulfillCjOrder('order-1');
+    expect(anomaly('cj_shipping_cost_absorbed')).toBeUndefined();
+    expect(cjCreateOrderMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('P1 — totalPostageFee : ecart trace, jamais interprete', () => {
+  // Montants issus de la mesure reelle FR (measures/raw/*__FR__*.json) :
+  // CJPacket Ordinary  logisticPrice 6.25  totalPostageFee 9.75  (+3.50)
+  // encaisse = 6.25 x 1.20 = 7.50  ->  perte nette 2.25
+  it('FR : totalPostageFee > encaisse -> anomalie tracee, commande NON bloquee', async () => {
+    setupOrder({ shipping_amount: 7.5, shipment_logistic_name: 'CJPacket Ordinary' });
+    cjCalculateFreightMock.mockResolvedValue([
+      { logisticName: 'CJPacket Ordinary', logisticPrice: '6.25', totalPostageFee: '9.75', logisticAging: '7-12' },
+    ]);
+    const r = await fulfillCjOrder('order-1');
+    // La base de FACTURATION reste logisticPrice : 6.25 <= 7.50 encaisse.
+    // Interpreter totalPostageFee comme du -- non prouve -- surfacturerait
+    // l'acheteur. On trace, on ne bloque pas, on ne re-facture pas.
+    expect(r).toEqual(['vid-1']);
+    expect(cjCreateOrderMock).toHaveBeenCalledTimes(1);
+    expect(anomaly('cj_shipping_total_exceeds_charged')).toMatchObject({
+      severity: 'warning',
+      details: expect.objectContaining({ logisticPrice: 6.25, totalPostageFee: 9.75, charged: 7.5, gap: 2.25 }),
+    });
+  });
+
+  it('CA/GB/BR : totalPostageFee == logisticPrice -> aucune anomalie', async () => {
+    setupOrder({ shipping_amount: 7.5, shipment_logistic_name: 'CJPacket Ordinary' });
+    cjCalculateFreightMock.mockResolvedValue([
+      { logisticName: 'CJPacket Ordinary', logisticPrice: '6.25', totalPostageFee: '6.25', logisticAging: '7-12' },
+    ]);
+    await fulfillCjOrder('order-1');
+    expect(anomaly('cj_shipping_total_exceeds_charged')).toBeUndefined();
+  });
+
+  it('ecart present mais couvert par la marge -> aucune anomalie', async () => {
+    // logisticPrice 20 -> encaisse 24 ; totalPostageFee 23.50 <= 24.
+    setupOrder({ shipping_amount: 24, shipment_logistic_name: 'CJPacket Ordinary' });
+    cjCalculateFreightMock.mockResolvedValue([
+      { logisticName: 'CJPacket Ordinary', logisticPrice: '20', totalPostageFee: '23.5', logisticAging: '7-12' },
+    ]);
+    await fulfillCjOrder('order-1');
+    expect(anomaly('cj_shipping_total_exceeds_charged')).toBeUndefined();
+  });
+
+  it.each([
+    ['absent', undefined],
+    ['nul', '0'],
+    ['invalide', 'abc'],
+    ['INFERIEUR au prix de base (incoherent)', '3'],
+  ])('totalPostageFee %s -> ignore, aucune anomalie, aucun effet sur le devis', async (_label, tpf) => {
+    setupOrder({ shipping_amount: 7.5, shipment_logistic_name: 'CJPacket Ordinary' });
+    cjCalculateFreightMock.mockResolvedValue([
+      { logisticName: 'CJPacket Ordinary', logisticPrice: '6.25', ...(tpf === undefined ? {} : { totalPostageFee: tpf }), logisticAging: '7-12' },
+    ]);
+    const r = await fulfillCjOrder('order-1');
+    expect(r).toEqual(['vid-1']);                                   // aucun effet
+    expect(anomaly('cj_shipping_total_exceeds_charged')).toBeUndefined();
+  });
+});
+
+describe('P1 — clearanceOperationFee : frais NOMMÉ par CJ, jamais lu jusqu’ici', () => {
+  // Mesure 2026-08-23 : non nul sur 46 options (DE/ES/IT, valeurs 0,70/0,80/2,40).
+  // 41 d'entre elles etaient couvertes par la marge x1,20 -- donc INVISIBLES.
+  it('ES : clearance 0,80 couverte par la marge -> tracee en info, sans e-mail', async () => {
+    // measures : CJPacket Euro Ordinary  logisticPrice 8.58  clearance 0.80
+    // totalPostageFee 10.16  <=  encaisse 10.30  -> aucun argent en jeu...
+    setupOrder({ shipping_amount: 10.3, shipment_logistic_name: 'CJPacket Euro Ordinary' });
+    cjCalculateFreightMock.mockResolvedValue([
+      { logisticName: 'CJPacket Euro Ordinary', logisticPrice: '8.58', clearanceOperationFee: '0.8', totalPostageFee: '10.16', logisticAging: '7-12' },
+    ]);
+    const r = await fulfillCjOrder('order-1');
+    expect(r).toEqual(['vid-1']);                       // ...donc rien n'est bloque
+    const a = anomaly('cj_shipping_named_fee_ignored');
+    expect(a).toMatchObject({
+      severity: 'info',                                  // info => aucun e-mail (anomaly.ts)
+      details: expect.objectContaining({ clearanceOperationFee: 0.8, logisticPrice: 8.58, totalPostageFee: 10.16, charged: 10.3 }),
+    });
+  });
+
+  it('clearance non nul ET total > encaissé -> un SEUL signal, le warning, qui la porte', async () => {
+    setupOrder({ shipping_amount: 9, shipment_logistic_name: 'CJPacket Euro Ordinary' });
+    cjCalculateFreightMock.mockResolvedValue([
+      { logisticName: 'CJPacket Euro Ordinary', logisticPrice: '8.58', clearanceOperationFee: '0.8', totalPostageFee: '10.16', logisticAging: '7-12' },
+    ]);
+    await fulfillCjOrder('order-1');
+    expect(anomaly('cj_shipping_total_exceeds_charged')).toMatchObject({
+      severity: 'warning',
+      details: expect.objectContaining({ clearanceOperationFee: 0.8, gap: 1.16 }),
+    });
+    expect(anomaly('cj_shipping_named_fee_ignored')).toBeUndefined();   // pas de doublon
+  });
+
+  it('clearance nulle (CA/GB/BR/US...) -> aucun signal', async () => {
+    setupOrder({ shipping_amount: 10, shipment_logistic_name: 'CJPacket' });
+    cjCalculateFreightMock.mockResolvedValue([
+      { logisticName: 'CJPacket', logisticPrice: '6.25', clearanceOperationFee: '0', totalPostageFee: '6.25', logisticAging: '7-12' },
+    ]);
+    await fulfillCjOrder('order-1');
+    expect(anomaly('cj_shipping_named_fee_ignored')).toBeUndefined();
+    expect(anomaly('cj_shipping_total_exceeds_charged')).toBeUndefined();
+  });
+
+  it.each([['absente', undefined], ['invalide', 'abc'], ['negative', '-1']])(
+    'clearance %s -> ignorée, aucun signal, aucun effet',
+    async (_l, v) => {
+      setupOrder({ shipping_amount: 10, shipment_logistic_name: 'CJPacket' });
+      cjCalculateFreightMock.mockResolvedValue([
+        { logisticName: 'CJPacket', logisticPrice: '6.25', ...(v === undefined ? {} : { clearanceOperationFee: v }), totalPostageFee: '6.25', logisticAging: '7-12' },
+      ]);
+      const r = await fulfillCjOrder('order-1');
+      expect(r).toEqual(['vid-1']);
+      expect(anomaly('cj_shipping_named_fee_ignored')).toBeUndefined();
+    }
+  );
+});
