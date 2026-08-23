@@ -14,7 +14,7 @@ voir plus bas), puis complétés à la main pour l'objectif de chacune.
 aujourd'hui. Il ne modifie aucune route, n'ajoute aucune validation, ne
 change aucun comportement runtime.
 
-**86 routes** au total (`find src/app/api -name route.ts | wc -l`), regroupées
+**67 routes** au total (`find src/app/api -name route.ts | wc -l`), regroupées
 ci-dessous par domaine. Légende authentification :
 
 - **Public** — aucune authentification (visiteur du site marchand, ou route interne appelée sans identité utilisateur).
@@ -109,6 +109,9 @@ ci-dessous par domaine. Légende authentification :
 | GET | `/api/admin/cron-runs` | Historique des exécutions cron (`cron-tracker`). | Admin |
 | DELETE | `/api/account/delete` | Suppression du compte et des sites de l'utilisateur courant. | Utilisateur |
 
+| GET | `/api/admin/system-health` | État de santé du système (résultats des vérifications remontées par la CI et les crons, entrées considérées périmées au-delà de 48 h). | Administrateur |
+| POST | `/api/admin/site-archive-override` | Archive un site **en ignorant** les commandes non résolues (litige, commande réellement bloquée) — contourne délibérément la garde de `/api/sites/[slug]/archive`. Même patron d'autorisation admin que `ai-usage`/`cron-runs`/`stats`. | Administrateur |
+
 ## 9. Cron (tâches planifiées internes)
 
 Toutes protégées par `Authorization: Bearer <CRON_SECRET>` sauf mention contraire. Jamais appelées par un utilisateur.
@@ -125,6 +128,10 @@ Toutes protégées par `Authorization: Bearer <CRON_SECRET>` sauf mention contra
 | GET | `/api/cron/instant-payout` | Déclenche un virement instantané si le solde plateforme Stripe dépasse 5 $. |
 | GET | `/api/cron/pod-reconciliation` | Réconciliation fulfillment POD (P0-3.7→3.9.7) — voir `src/lib/fulfillment/`, déjà testé en détail dans les rounds précédents. |
 | GET | `/api/cron/watchdog` | Vérifie que chaque cron a bien tourné dans sa fenêtre attendue, alerte sinon. |
+
+| GET | `/api/cron/cj-fulfillment-reconciliation` | Reprend les commandes CJ payées restées sans commande fournisseur : nouvelle tentative de création tant que le budget `cj_pay_attempts` n'est pas épuisé, et reprise des verrous `processing` abandonnés. Ne crée jamais directement — `fulfillCjOrder()` réconcilie avant toute création. | `CRON_SECRET` |
+| GET | `/api/cron/domain-indexing-byod` | Vérification de propriété Google et soumission de sitemap pour les domaines **BYOD** (le marchand possède sa propre zone DNS — contrairement au domaine acheté, Deribfy n'y écrit jamais). | `CRON_SECRET` |
+| GET | `/api/cron/route-canary` | Canari de production sur les routes sensibles au routage (`sitemap.xml`, `robots.txt`), plateforme **et** domaine personnalisé. Ne vérifie pas la logique applicative (couverte par les tests) mais le routage réel en production. | `CRON_SECRET` |
 
 ## 10. Webhooks
 
@@ -144,6 +151,9 @@ Toutes protégées par `Authorization: Bearer <CRON_SECRET>` sauf mention contra
 | POST | `/api/geocode` | Géocodage d'adresse (Nominatim/OpenStreetMap), appelé uniquement au blur d'un champ adresse. | Public |
 
 ---
+
+| POST | `/api/sites/[slug]/archive` | Archive un site (remplace la suppression physique). **Bloque** tant qu'une commande n'est pas dans un statut sûr — RPC `archive_sites_if_no_blocking_orders`, tout-ou-rien. | Propriétaire |
+| GET | `/api/internal/site-sitemap/[slug]` | Sitemap XML d'un site marchand. Placé **hors** de `src/app/sites/[slug]/` délibérément : un dossier `sitemap.xml` imbriqué sous `[slug]`, avec un catch-all frère, provoquait un 404/500 propre à la production Vercel. Atteint par réécriture depuis `src/proxy.ts`, jamais appelé directement. | Public (interne) |
 
 ## Constats (observations factuelles, non corrigées dans cette passe)
 

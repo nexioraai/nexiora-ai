@@ -55,6 +55,20 @@ jobs:
       # projet (hors périmètre de ce chantier). Bloquer la CI dessus la rendrait
       # rouge dès le premier commit pour une dette non liée aux changements en
       # cours. À rendre bloquant une fois cette dette traitée séparément.
+      # M1-R3 -- CAUSE RACINE de la derive documentaire : ce script existait,
+      # etait correct et bidirectionnel, mais n'etait LANCE NULLE PART. Sept
+      # routes ont donc pu s'ajouter sans entree de documentation, en silence.
+      # Corriger la documentation sans cabler le garde aurait garanti le retour
+      # de la derive.
+      #
+      # Bloquant, contrairement au lint : la verification est deterministe,
+      # instantanee, sans dette pre-existante (0 ecart au moment du cablage), et
+      # sa correction est evidente -- documenter la route qu'on vient d'ajouter.
+      - name: API docs coverage
+        id: apidocs
+        continue-on-error: true
+        run: node scripts/check-api-docs.mjs
+
       - name: Lint (informatif, non bloquant)
         run: npx eslint .
         continue-on-error: true
@@ -81,8 +95,8 @@ jobs:
       - name: Gate — échoue si une étape bloquante a échoué
         if: always()
         run: |
-          if [ "${{ steps.typecheck.outcome }}" != "success" ] || [ "${{ steps.test.outcome }}" != "success" ] || [ "${{ steps.build.outcome }}" != "success" ]; then
-            echo "Étape(s) en échec — typecheck=${{ steps.typecheck.outcome }} test=${{ steps.test.outcome }} build=${{ steps.build.outcome }}"
+          if [ "${{ steps.typecheck.outcome }}" != "success" ] || [ "${{ steps.test.outcome }}" != "success" ] || [ "${{ steps.build.outcome }}" != "success" ] || [ "${{ steps.apidocs.outcome }}" != "success" ]; then
+            echo "Étape(s) en échec — typecheck=${{ steps.typecheck.outcome }} test=${{ steps.test.outcome }} build=${{ steps.build.outcome }} apidocs=${{ steps.apidocs.outcome }}"
             exit 1
           fi
           echo "Toutes les étapes bloquantes ont réussi."
