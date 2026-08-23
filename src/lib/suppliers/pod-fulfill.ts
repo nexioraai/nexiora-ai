@@ -24,10 +24,44 @@ import { logAnomaly } from '@/lib/anomaly';
 export async function fulfillPodOrder(orderId: string): Promise<string[]> {
   const { data: order } = await supabaseAdmin
     .from('shop_orders')
-    .select('id, site_id, shipping_address, customer_name, customer_email')
+    .select('id, site_id, fulfillment_domain, shipping_address, customer_name, customer_email')
     .eq('id', orderId)
     .maybeSingle();
   if (!order) return [];
+
+  // ---- FRONTIERE DE DOMAINE (phase 3) ----
+  // Plan de reference : docs/PLAN-SEPARATION-MODE2-MODE3.md
+  //
+  // Ce moteur n'execute QUE des commandes dont le domaine vaut 'supplier'.
+  // Meme regle, meme source que le moteur CJ : la valeur est portee par la
+  // commande, decidee une fois a sa creation, immuable en base. Ce fichier ne
+  // lit jamais le mode du site (regle A9) -- il lit `dropship_type` plus bas,
+  // mais uniquement pour decider si un DESIGN est autorise, ce qui est une
+  // question interne au domaine fournisseur, pas une question de frontiere.
+  //
+  // MESURE QUI JUSTIFIE CETTE GARDE : sur le code deploye, une commande Mode 2
+  // portant un item catalogue Printful atteignait reellement
+  // `adapter.createOrder` et obtenait un identifiant de commande fournisseur.
+  // La garde CJ posee seule n'aurait ferme que la moitie de la fuite.
+  //
+  // DEUXIEME BARRIERE, PAS LA PREMIERE : l'aiguillage post-paiement n'appelle
+  // deja plus ce moteur pour une commande marchande. Si l'on arrive ici avec
+  // un domaine 'merchant', c'est que la frontiere a ete franchie ailleurs --
+  // d'ou la trace, en `info` : elle ne doit jamais se declencher en
+  // fonctionnement normal, et doit crier si elle se declenche.
+  if ((order as any).fulfillment_domain !== 'supplier') {
+    await logAnomaly({
+      type: 'pod_fulfill_domain_refuse',
+      severity: 'info',
+      siteId: (order as any).site_id,
+      details: {
+        domain: 'MODE_2',
+        orderId: (order as any).id,
+        fulfillmentDomain: (order as any).fulfillment_domain ?? null,
+      },
+    });
+    return [];
+  }
 
   // Audit Mode 3 global (F-CUSTOM-02/03) -- deuxieme barriere independante
   // de celle posee au checkout (checkout/route.ts) : ne fait jamais

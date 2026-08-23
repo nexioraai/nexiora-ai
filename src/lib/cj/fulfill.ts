@@ -5,9 +5,6 @@ import { reconcileWithCj, type ReconciliationOutcome } from './reconcile';
 // Meme parseur de delai que le cache (cron shipping-cache) : les deux cotes de
 // la comparaison de delai proviennent ainsi du meme champ CJ et du meme code.
 import { parseAging } from './shipping-tiers';
-// M2-07 : source UNIQUE de l'eligibilite fournisseur, deja partagee par la
-// curation et la recherche catalogue. Jamais reimplementer cette regle.
-import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
 import { logAnomaly } from '@/lib/anomaly';
 
 // Exportes : le cron cj-fulfillment-reconciliation utilise les memes valeurs
@@ -264,7 +261,7 @@ export function parsePromisedMaxDays(raw: unknown): number | null {
 export async function fulfillCjOrder(orderId: string): Promise<string[]> {
   const { data: orderRaw } = await supabaseAdmin
     .from('shop_orders')
-    .select('id, site_id, shipping_address, customer_name, customer_email, cj_pay_status, cj_pay_attempts, cj_pay_locked_at, shipping_amount, shipment_logistic_name, estimated_delivery, total')
+    .select('id, site_id, fulfillment_domain, shipping_address, customer_name, customer_email, cj_pay_status, cj_pay_attempts, cj_pay_locked_at, shipping_amount, shipment_logistic_name, estimated_delivery, total')
     .eq('id', orderId)
     .maybeSingle();
   if (!orderRaw) return [];
@@ -283,59 +280,38 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
     return [];
   }
 
-  // ---- M2-07 : le fulfillment CJ ne concerne QUE les sites eligibles ----
+  // ---- FRONTIERE DE DOMAINE (phase 3) ----
+  // Plan de reference : docs/PLAN-SEPARATION-MODE2-MODE3.md
   //
-  // `handlePaidCheckout:152` appelle cette fonction SANS garde de mode. Pour
-  // une commande Mode 2, tous les produits sont des `shop_products` dont
-  // `cj_vid` est nul : `resolutionErrors` se remplissait de
-  // `shop_product_missing_cj_vid` (transient: false), `cjProducts` restait
-  // vide, et la branche `cjProducts.length === 0` traitait cela comme un
-  // MAPPING CASSE -- ecrivant `cj_pay_status = 'failed'` sur une commande
-  // parfaitement legitime, emettant une anomalie `blocked`, et donc un e-mail
-  // (`cj_product_resolution_failed` est dans ALWAYS_EMAIL_TYPES). Sans
-  // incrementer `cj_pay_attempts`, la commande restait de surcroit eligible au
-  // cron a perpetuite : rejeu toutes les 2 h, e-mail a chaque fois.
+  // Ce moteur n'execute QUE des commandes dont le domaine vaut 'supplier'.
+  // La valeur est portee par la commande, decidee UNE FOIS a sa creation et
+  // rendue IMMUABLE en base (trigger trg_enforce_fulfillment_domain_immutable,
+  // prouve en production contre un role privilegie). Ce moteur ne la
+  // recalcule pas et n'a plus le droit de lire le mode du site -- regle A9 du
+  // registre de domaines, verifiee en CI.
   //
-  // Le defaut n'etait PAS dans la selection des produits -- elle est juste. Il
-  // etait dans l'INTERPRETATION d'un resultat vide : normal pour un site qui
-  // ne vend pas de CJ, anormal pour un reseller.
+  // CE QUE CETTE GARDE REMPLACE. La version precedente (13bec0e) lisait le
+  // site pour en tirer mode ET sous-type, puis decidait via la table des
+  // fournisseurs autorises. Mesure comparative sur les 12 cas du banc : elle
+  // MODIFIAIT deux des trois parcours Mode 3, qui fonctionnaient -- le
+  // sous-type n'apportait rien au Mode 2 et n'avait d'effet que sur le Mode 3.
+  // Une garde de niveau DOMAINE ne descend jamais au niveau du parcours. Il
+  // n'existe desormais plus qu'UNE SEULE logique de decision, et elle vit
+  // hors de ce fichier.
   //
-  // Mesure en base avant correction : 0 commande hors Mode 3, 0 anomalie de ce
-  // type jamais emise, aucune contrainte CHECK sur `cj_pay_status`. Defaut
-  // PROUVE mais LATENT -- il se serait declenche a la premiere vente Mode 2.
+  // POURQUOI UN ETAT TERMINAL, ET PAS UN SIMPLE RETOUR. Le cron de
+  // reconciliation selectionne par `cj_pay_status`, jamais par domaine (il
+  // n'est pas modifie par cette phase). Or `cj_pay_status` vaut 'pending' par
+  // defaut sur TOUTE commande de la plateforme : sans etat terminal, chaque
+  // commande marchande resterait dans son perimetre indefiniment -- rejeu
+  // toutes les 2 h, a perpetuite. `not_applicable` l'en sort definitivement,
+  // et la garde de statut ci-dessus la court-circuite des la premiere
+  // re-entree, en une seule requete.
   //
-  // ELIGIBILITE : `suppliersForDropshipType`, source unique deja partagee par
-  // la curation et la recherche catalogue -- JAMAIS `dropship_type ===
-  // 'reseller'` en dur. La difference n'est pas cosmetique : cette fonction
-  // retombe deliberement sur CJ quand le sous-type est nul ("comportement
-  // historique"), la ou une comparaison en dur bloquerait le fulfillment de
-  // tout site Mode 3 non type.
-  //
-  // FAIL-CLOSED, mais dans les DEUX sens : une lecture en echec ou un site
-  // introuvable n'ecrivent RIEN. Une erreur de lecture ne prouve pas qu'un
-  // site est ineligible -- ecrire un etat terminal sur cette base couperait
-  // definitivement un fulfillment legitime. La commande reste `pending` et le
-  // cron la reprendra, exactement comme pour toute erreur transitoire.
-  const { data: orderSite, error: siteErr } = await supabaseAdmin
-    .from('sites')
-    .select('mode, dropship_type')
-    .eq('id', order.site_id)
-    .maybeSingle();
-  if (siteErr || !orderSite) {
-    console.error('CJ fulfill: site illisible pour', order.id, siteErr);
-    return [];
-  }
-  const cjEligible =
-    (orderSite as any).mode === 3 &&
-    suppliersForDropshipType((orderSite as any).dropship_type).includes('cj');
-  if (!cjEligible) {
-    // Etat terminal explicite plutot que `pending` laisse en place : sans lui,
-    // chaque commande non-CJ resterait dans le perimetre du cron pour
-    // toujours. Aucune valeur existante ne signifie "sans objet", et aucune
-    // contrainte CHECK n'existe (verifie en base). Tous les consommateurs de
-    // `cj_pay_status` filtrent par correspondance POSITIVE (cron :41/:54,
-    // admin/stats :35) : une valeur nouvelle y est inerte, et la garde de
-    // statut ci-dessus la fait court-circuiter des la premiere re-entree.
+  // Aucune contrainte CHECK n'existe sur `cj_pay_status` (verifie en base) et
+  // tous ses consommateurs filtrent par correspondance POSITIVE (cron :41/:54,
+  // admin/stats :35) : la valeur y est inerte.
+  if ((order as any).fulfillment_domain !== 'supplier') {
     await supabaseAdmin
       .from('shop_orders')
       .update({ cj_pay_status: 'not_applicable' })
@@ -833,18 +809,24 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
   }
 
   // ---- Cout fournisseur absorbe : rendre visible, jamais bloquer ----
-  // `charged <= 0` desarme le garde-fou prix (comportement historique). Ce
-  // chemin est ATTEIGNABLE, demonstration complete :
-  //   1. `suppliersForDropshipType(null)` retombe sur ['cj'] (dropship/
-  //      suppliers.ts) : une boutique dont le sous-type n'est pas renseigne
-  //      peut donc selectionner des produits CJ au catalogue ;
-  //   2. le refus "aucun cout de livraison confirme" de checkout ne s'applique
-  //      QU'AU MODE 3 (`site.mode === 3 && !shippingResolved`) ;
-  //   3. en mode 2, un `shipping_flat` a 0 et un devis non resolu (cache
-  //      froid, CJ indisponible) laissent `shipping_amount = 0` ;
-  //   4. `handlePaidCheckout` appelle `fulfillCjOrder` SANS garde de mode.
-  // Nexiora avancait alors un cout fournisseur non borne, sans blocage et
-  // SANS AUCUNE TRACE.
+  // `charged <= 0` desarme le garde-fou prix (comportement historique).
+  //
+  // ATTEIGNABILITE -- REVISEE EN PHASE 3 : ce bloc documentait un chemin qui
+  // n'existe plus. La demonstration d'origine reposait sur quatre points dont
+  // trois portaient sur le Mode 2 -- une boutique sans sous-type selectionnant
+  // du CJ, un `shipping_amount` a 0 faute de devis, et surtout l'aiguillage
+  // post-paiement appelant ce moteur SANS aucune garde de mode. Cette derniere
+  // affirmation est desormais FAUSSE : l'aiguillage ne l'appelle plus que pour
+  // un domaine 'supplier', et la garde en tete de fonction le refuserait de
+  // toute facon. LE CHEMIN MODE 2 EST FERME.
+  //
+  // Le bloc reste NECESSAIRE, pour deux raisons distinctes :
+  //   1. commandes HISTORIQUES -- creees avant les gardes de checkout du
+  //      2026-07-18, elles peuvent porter `shipping_amount = 0` tout en
+  //      relevant du domaine fournisseur, et restent reprises par le cron ;
+  //   2. livraison offerte VOLONTAIREMENT par le marchand, qui produit
+  //      exactement le meme etat.
+  // Les deux cas sont indistinguables depuis shop_orders.
   //
   // POURQUOI NE PAS BLOQUER : une livraison offerte VOLONTAIREMENT par le
   // marchand produit exactement le meme etat (`shipping_amount = 0`), et les

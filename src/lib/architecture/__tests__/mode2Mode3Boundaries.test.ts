@@ -48,7 +48,7 @@ function violationsSur(id: string, fichier: string) {
 // 1. Les deux domaines sont bien enregistrés
 // ============================================================
 describe('Phase 0 — les domaines Mode 2 / Mode 3 sont enregistrés', () => {
-  it.each(['shared-commerce-core', 'mode-3-supplier-domain'])(
+  it.each(['shared-commerce-core', 'mode-3-supplier-domain', 'order-domain-frontier', 'order-dispatch'])(
     'le domaine "%s" existe et déclare au moins une règle',
     (id) => {
       const d = domaine(id)
@@ -83,10 +83,23 @@ describe('Phase 0 — contrôle positif : chaque motif interdit détecte sa viol
     ).toBe(true)
   })
 
-  it('mode-3-supplier-domain : un import de mode2/ est détecté', () => {
-    const violations = violationsSur('mode-3-supplier-domain', FIXTURE_VIOLANTE)
-    expect(violations).toHaveLength(1)
-    expect(violations[0].reason).toContain('Acyclicité')
+  it('mode-3-supplier-domain : import de mode2/ ET relecture du mode (A9) détectés', () => {
+    const detectes = violationsSur('mode-3-supplier-domain', FIXTURE_VIOLANTE).map((v) => v.reason)
+    expect(detectes.some((r) => r.includes('Acyclicité'))).toBe(true)
+    expect(
+      detectes.some((r) => r.startsWith('A9')),
+      'A9 ne detecte pas la relecture du mode : c\'est LE test anti-rechute, il ne peut pas etre muet'
+    ).toBe(true)
+  })
+
+  it.each(
+    domaine('order-dispatch').forbiddenPatterns.map((r) => [r.pattern.toString(), r.pattern] as const)
+  )('order-dispatch (A5) : la règle %s détecte au moins une ligne', (_label, pattern) => {
+    const violations = violationsSur('order-dispatch', FIXTURE_VIOLANTE)
+    expect(
+      violations.some((v) => v.pattern === pattern.toString()),
+      `la regle ${pattern} ne detecte RIEN dans la fixture violante`
+    ).toBe(true)
   })
 
   it('CONTRÔLE NÉGATIF — un fichier propre ne déclenche aucune règle', () => {

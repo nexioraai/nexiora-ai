@@ -86,7 +86,9 @@ vi.mock('@/lib/supabase-admin', () => ({
 
 import { handlePaidCheckout } from '../handlePaidCheckout';
 
-const ORDER = { id: 'order-1', estimated_delivery: null, site_id: 'site-1', cancel_token: 'tok', payment_provider: 'stripe' };
+// PHASE 3 : l'aiguillage ne descend dans les moteurs fournisseur que pour
+// un domaine 'supplier'. Cette fixture modelise une commande Mode 3.
+const ORDER = { id: 'order-1', fulfillment_domain: 'supplier' as const, estimated_delivery: null, site_id: 'site-1', cancel_token: 'tok', payment_provider: 'stripe' };
 
 type Handlers = Record<string, { data: unknown; error?: unknown }>;
 function setupTables(handlers: Handlers, fallback: { data: unknown; error?: unknown } = { data: [], error: null }) {
@@ -354,5 +356,65 @@ describe('handlePaidCheckout — audit adresse Reseller/CJ, partie 7 : fusion du
     await handlePaidCheckout(session({ customer_details: { email: 'c@test.com', phone: '+15145551234' } }));
     const write = updateCalls.find((u) => u.table === 'shop_orders' && (u.payload as any).status === 'paid');
     expect((write!.payload as any).shipping_address).toBeNull();
+  });
+});
+
+// ============================================================
+// PHASE 3 — L'AIGUILLAGE AIGUILLE.
+// Plan de reference : docs/PLAN-SEPARATION-MODE2-MODE3.md
+//
+// Ces tests existent parce qu'un controle de mutation a montre que rendre
+// l'aiguillage inconditionnel (`if (true)`) ne faisait echouer AUCUN test.
+// C'etait pourtant EXACTEMENT le defaut d'origine : les deux moteurs
+// fournisseur appeles sans aucune condition, et une commande Mode 2
+// atteignant reellement CJ et Printful sur le code deploye.
+//
+// Ils verrouillent aussi la separation entre ce qui est propre au domaine
+// fournisseur (les deux moteurs) et ce qui appartient au tronc commun (le
+// decrement de stock, l'e-mail acheteur) : une commande marchande doit etre
+// privee des premiers, jamais des seconds.
+// ============================================================
+describe('PHASE 3 — aiguillage par domaine', () => {
+  it.each([
+    ['merchant', 'merchant'],
+    ['absent (commande anterieure a la migration)', null],
+    ['valeur inattendue', 'autre'],
+  ])('domaine %s -> AUCUN moteur fournisseur appele', async (_l, domaine) => {
+    setupTables({
+      shop_orders: { data: [{ ...ORDER, fulfillment_domain: domaine }], error: null },
+      shop_order_items: { data: [{ product_id: 'p1', quantity: 1 }], error: null },
+      shop_products: { data: [{ id: 'p1', cj_vid: null }], error: null },
+      sites: { data: { name: 'S', slug: 'b' }, error: null },
+    });
+    decrementStockMock.mockResolvedValue({ success: true });
+    await handlePaidCheckout(session());
+    expect(fulfillCjOrderMock).not.toHaveBeenCalled();
+    expect(fulfillPodOrderMock).not.toHaveBeenCalled();
+  });
+
+  it('domaine merchant -> le stock marchand reste decremente (responsabilite COMMUNE)', async () => {
+    setupTables({
+      shop_orders: { data: [{ ...ORDER, fulfillment_domain: 'merchant' }], error: null },
+      shop_order_items: { data: [{ product_id: 'p1', quantity: 1 }], error: null },
+      shop_products: { data: [{ id: 'p1', cj_vid: null }], error: null },
+      sites: { data: { name: 'S', slug: 'b' }, error: null },
+    });
+    decrementStockMock.mockResolvedValue({ success: true });
+    await handlePaidCheckout(session());
+    expect(fulfillCjOrderMock).not.toHaveBeenCalled();
+    expect(decrementStockMock).toHaveBeenCalled();   // le tronc commun n'est pas ampute
+  });
+
+  it('domaine supplier -> les deux moteurs sont appeles, comme avant', async () => {
+    setupTables({
+      shop_orders: { data: [ORDER], error: null },
+      shop_order_items: { data: [{ product_id: 'p1', quantity: 1 }], error: null },
+      shop_products: { data: [{ id: 'p1', cj_vid: 'vid-1' }], error: null },
+      sites: { data: { name: 'S', slug: 'b' }, error: null },
+    });
+    decrementStockMock.mockResolvedValue({ success: true });
+    await handlePaidCheckout(session());
+    expect(fulfillCjOrderMock).toHaveBeenCalledWith('order-1');
+    expect(fulfillPodOrderMock).toHaveBeenCalledWith('order-1');
   });
 });

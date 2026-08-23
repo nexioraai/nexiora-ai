@@ -152,6 +152,18 @@ const MODE_3_MUST_NOT_DEPEND_ON_MODE_2: ForbiddenImportRule[] = [
     reason:
       'Acyclicité des domaines — mode3/ ne doit jamais importer mode2/. Sans cette règle, une évolution Mode 2 pourrait modifier le comportement Mode 3.',
   },
+  // Règle A9, installable depuis la phase 3 — c'est LE test anti-rechute.
+  // Le domaine d'une commande est décidé une seule fois, à sa création, et
+  // porté par la commande elle-même. Un moteur qui relirait `sites.mode`
+  // rouvrirait exactement le défaut que ce chantier corrige : deux sources
+  // de vérité concurrentes, dont l'une peut diverger de l'autre.
+  // `dropship_type` reste lisible ici — c'est une question interne au domaine
+  // fournisseur (quel parcours, quel design), pas une question de frontière.
+  {
+    pattern: /\.select\([^)]*\bmode\b/,
+    reason:
+      'A9 — un moteur de fulfillment ne doit jamais relire le mode du site. Le domaine se lit sur la commande (fulfillment_domain), décidé à la création et immuable en base.',
+  },
 ]
 
 export const DOMAIN_REGISTRY: DomainDefinition[] = [
@@ -219,6 +231,39 @@ export const DOMAIN_REGISTRY: DomainDefinition[] = [
     ],
     forbiddenPatterns: SHARED_MUST_STAY_NEUTRAL,
     contractTestsPath: 'src/lib/architecture/__tests__/mode2Mode3Boundaries.test.ts',
+  },
+  {
+    id: 'order-dispatch',
+    description:
+      "Aiguillage post-paiement (phase 3, regle A5) — le SEUL fichier partage autorise a referencer les points d'entree des domaines. En contrepartie il ne doit contenir AUCUNE decision metier : il lit le domaine porte par la commande et delegue. Un aiguillage qui ne decide rien ne peut pas redevenir un lieu de fusion entre Mode 2 et Mode 3 — c'est la propriete centrale de cette phase. Avant elle, ce fichier appelait les deux moteurs fournisseur INCONDITIONNELLEMENT, et une commande Mode 2 atteignait reellement CJ et Printful.",
+    ownedFiles: ['src/lib/shop/handlePaidCheckout.ts'],
+    forbiddenPatterns: [
+      {
+        pattern: /\bdropship_type\b/,
+        reason:
+          "A5 — l'aiguillage ne connait que le domaine. Le sous-type est interne au domaine fournisseur : le lire ici recreerait une seconde logique de decision.",
+      },
+      {
+        pattern: /\.\s*mode\b/,
+        reason:
+          "A5 — l'aiguillage ne lit jamais le mode d'un site. Le domaine a ete decide a la creation de la commande et n'a pas a etre recalcule.",
+      },
+      {
+        pattern: /\bsuppliersForDropshipType\b/,
+        reason:
+          "A5 — la selection du fournisseur appartient au domaine Mode 3, jamais a l'aiguillage.",
+      },
+      // Ancre sur l'IMPORT, pas sur le mot : c'est la dependance qui constitue
+      // la violation, pas une mention en prose. Les deux points d'entree de
+      // domaine (cj/fulfill, suppliers/pod-fulfill) restent autorises — c'est
+      // precisement le role de ce fichier.
+      {
+        pattern: /from ['"]@\/lib\/(cj\/client|dropship\/|suppliers\/[a-z-]*adapter|suppliers\/registry)/,
+        reason:
+          "A5 — l'aiguillage ne parle qu'aux points d'entree de domaine, jamais directement a un fournisseur, un adaptateur ou le registre fournisseur.",
+      },
+    ],
+    contractTestsPath: 'src/lib/shop/__tests__/handlePaidCheckout.test.ts',
   },
   {
     id: 'order-domain-frontier',

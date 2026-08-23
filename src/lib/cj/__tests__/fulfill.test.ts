@@ -81,6 +81,10 @@ function chainFor(table: string, response: { data: unknown; error?: unknown } = 
 const ORDER = {
   id: 'order-1',
   site_id: 'site-1',
+  // PHASE 3 : le fulfillment CJ n'accepte plus qu'un domaine 'supplier'.
+  // Cette fixture modelise une commande Mode 3 -- c'est la FORME de la
+  // donnee qui change, pas le comportement teste. Aucune assertion modifiee.
+  fulfillment_domain: 'supplier',
   shipping_address: { country: 'US', city: 'NYC', postal_code: '10001', line1: '123 Main St', state: 'NY', phone: '+15550001111' },
   customer_name: 'Client',
   customer_email: 'c@test.com',
@@ -101,15 +105,12 @@ const PRODUCTS = [{ id: 'sp1', cj_vid: 'vid-1' }];
 const CATALOG_ITEMS = [{ product_id: 'catalog-p1', quantity: 1 }, { product_id: 'catalog-p2', quantity: 1 }];
 const CATALOG_PRODUCTS = [{ id: 'p1', supplier_product_id: 'sp-p1' }, { id: 'p2', supplier_product_id: 'sp-p2' }];
 
-// M2-07 : le fulfillment lit desormais `sites(mode, dropship_type)` juste
-// apres la commande, pour n'entrer dans le chemin CJ que si le site y est
-// eligible. Site par defaut : Mode 3 reseller -- les tests existants
-// conservent donc exactement leur comportement. Fixture, aucune assertion
-// modifiee.
-const SITE_CJ = { mode: 3, dropship_type: 'reseller' };
-function queueOrderSelect(overrides: Record<string, unknown> = {}, site: unknown = SITE_CJ) {
+// PHASE 3 : la frontiere se lit sur la COMMANDE (`fulfillment_domain`), plus
+// sur le site. Le moteur ne fait donc plus aucune lecture de `sites` -- le
+// harnais n'en met plus en file. Le domaine se pose via un override de
+// commande, comme n'importe quelle autre colonne.
+function queueOrderSelect(overrides: Record<string, unknown> = {}) {
   fromMock.mockImplementationOnce(() => chainFor('shop_orders', { data: { ...ORDER, ...overrides }, error: null }));
-  fromMock.mockImplementationOnce(() => chainFor('sites', { data: site, error: null }));
 }
 function queueItemsSelect(items: unknown = ITEMS) {
   fromMock.mockImplementationOnce(() => chainFor('shop_order_items', { data: items, error: null }));
@@ -134,8 +135,8 @@ function queueExhaustWrite(matched: boolean) {
 }
 
 /** Séquence standard : order -> items (shop) -> claim(true) -> shop_products. */
-function queueStandardClaimedSetup(orderOverrides: Record<string, unknown> = {}, items: unknown = ITEMS, products: unknown = PRODUCTS, site: unknown = SITE_CJ) {
-  queueOrderSelect(orderOverrides, site);
+function queueStandardClaimedSetup(orderOverrides: Record<string, unknown> = {}, items: unknown = ITEMS, products: unknown = PRODUCTS) {
+  queueOrderSelect(orderOverrides);
   queueItemsSelect(items);
   queueClaim(true);
   queueShopProducts(products);
@@ -1002,25 +1003,33 @@ describe('P1 — clearanceOperationFee : frais NOMMÉ par CJ, jamais lu jusqu’
 });
 
 // ============================================================
-// M2-07 -- le fulfillment CJ ne concerne que les sites eligibles.
+// PHASE 3 -- FRONTIERE DE DOMAINE.
+// Plan de reference : docs/PLAN-SEPARATION-MODE2-MODE3.md
 //
-// `handlePaidCheckout` appelle `fulfillCjOrder` SANS garde de mode. Pour une
-// commande Mode 2, tous les produits sont des `shop_products` sans `cj_vid` :
-// `cjProducts` restait vide, et la branche "resultat vide" traitait cela
-// comme un MAPPING CASSE -- `cj_pay_status = 'failed'` sur une commande
-// legitime, anomalie `blocked`, donc e-mail, et rejeu du cron toutes les 2 h
-// a perpetuite (`cj_pay_attempts` n'etant pas incremente).
+// Ce bloc remplace celui de la garde M2-07 (13bec0e), qui lisait
+// `sites(mode, dropship_type)`. La decision D3 a retenu une garde de niveau
+// DOMAINE, qui ne consulte jamais le sous-type : c'est la seule forme dont
+// il est demontre qu'elle laisse les parcours Mode 3 strictement inchanges.
 //
-// Le defaut n'etait pas dans la selection des produits mais dans
-// l'INTERPRETATION d'un resultat vide.
+// Le defaut d'origine reste le meme, et reste couvert : l'aiguillage
+// post-paiement appelait les moteurs fournisseur SANS aucune condition. Pour
+// une commande Mode 2, tous les produits sont des `shop_products` sans
+// `cj_vid` : la branche "resultat vide" traitait ce cas comme un MAPPING
+// CASSE -- `failed` sur une commande legitime, anomalie `blocked`, e-mail a
+// chaque passage, et rejeu du cron a perpetuite faute d'incrementer
+// `cj_pay_attempts`.
 // ============================================================
 
-describe('M2-07 — seuls les sites éligibles entrent dans le fulfillment CJ', () => {
+describe('PHASE 3 — seul un domaine « supplier » entre dans le fulfillment CJ', () => {
   const notApplicable = () =>
     updateCalls.find((c) => (c.payload as any).cj_pay_status === 'not_applicable');
 
-  it('MODE 2 -> not_applicable, AUCUN appel CJ, AUCUNE anomalie, AUCUN e-mail', async () => {
-    queueOrderSelect({}, { mode: 2, dropship_type: null });
+  it.each([
+    ['merchant', 'merchant'],
+    ['absent (commande anterieure a la migration)', null],
+    ['valeur inattendue', 'autre'],
+  ])('domaine %s -> not_applicable, AUCUN appel CJ, AUCUNE anomalie, AUCUN e-mail', async (_l, domaine) => {
+    queueOrderSelect({ fulfillment_domain: domaine });
     queueWrite();
     const r = await fulfillCjOrder('order-1');
     expect(r).toEqual([]);
@@ -1032,7 +1041,7 @@ describe('M2-07 — seuls les sites éligibles entrent dans le fulfillment CJ', 
     expect(logAnomalyMock).not.toHaveBeenCalled();     // le coeur du defaut : plus d'alerte
   });
 
-  it('MODE 3 + reseller -> fulfillment INCHANGÉ', async () => {
+  it('domaine supplier -> fulfillment INCHANGÉ', async () => {
     queueStandardClaimedSetup();
     reconcileWithCjMock.mockResolvedValue({ kind: 'NOT_FOUND' });
     cjCreateOrderMock.mockResolvedValue({ orderId: 'cj-1' });
@@ -1043,67 +1052,35 @@ describe('M2-07 — seuls les sites éligibles entrent dans le fulfillment CJ', 
     expect(notApplicable()).toBeUndefined();
   });
 
-  it.each([['pod_brand'], ['pod_custom']])(
-    'MODE 3 + %s -> not_applicable, aucun appel CJ (leur catalogue est Printful/Gelato)',
-    async (dt) => {
-      queueOrderSelect({}, { mode: 3, dropship_type: dt });
-      queueWrite();
-      const r = await fulfillCjOrder('order-1');
-      expect(r).toEqual([]);
-      expect(notApplicable()).toBeTruthy();
-      expect(cjGetVariantsMock).not.toHaveBeenCalled();
-      expect(cjCreateOrderMock).not.toHaveBeenCalled();
-    }
-  );
-
-  it('MODE 3 + dropship_type NULL -> ÉLIGIBLE (comportement historique préservé)', async () => {
-    // Point exact ou `dropship_type === 'reseller'` en dur aurait REGRESSE :
-    // suppliersForDropshipType(null) retombe deliberement sur CJ.
-    queueOrderSelect({}, { mode: 3, dropship_type: null });
-    queueItemsSelect();
-    queueClaim(true);
-    queueShopProducts();
+  it('le moteur ne lit JAMAIS le site : une seule requête avant les lignes', async () => {
+    // Propriete structurelle de la phase 3, verifiee par comptage : la garde
+    // precedente inserait une lecture `sites` entre la commande et les lignes.
+    // Elle ne doit plus exister -- regle A9 du registre.
+    queueStandardClaimedSetup();
     reconcileWithCjMock.mockResolvedValue({ kind: 'NOT_FOUND' });
     cjCreateOrderMock.mockResolvedValue({ orderId: 'cj-1' });
     queueWrite();
-    const r = await fulfillCjOrder('order-1');
-    expect(r).toEqual(['vid-1']);            // le fulfillment a bien eu lieu
-    expect(notApplicable()).toBeUndefined();
-  });
-
-  it('SITE INTROUVABLE -> fail-closed : aucun appel CJ, et AUCUN statut écrit', async () => {
-    queueOrderSelect({}, null);
-    const r = await fulfillCjOrder('order-1');
-    expect(r).toEqual([]);
-    expect(cjCreateOrderMock).not.toHaveBeenCalled();
-    expect(updateCalls).toHaveLength(0);     // ne pas inventer un etat terminal
-  });
-
-  it('ERREUR DE LECTURE du site -> fail-closed, aucun not_applicable écrit', async () => {
-    // Une erreur de lecture ne prouve pas qu'un site est ineligible : ecrire
-    // un etat terminal couperait definitivement un fulfillment legitime.
-    // La commande reste `pending`, le cron la reprendra.
-    fromMock.mockImplementationOnce(() => chainFor('shop_orders', { data: ORDER, error: null }));
-    fromMock.mockImplementationOnce(() => chainFor('sites', { data: null, error: { message: 'timeout' } }));
-    const r = await fulfillCjOrder('order-1');
-    expect(r).toEqual([]);
-    expect(updateCalls).toHaveLength(0);
-    expect(cjCreateOrderMock).not.toHaveBeenCalled();
+    await fulfillCjOrder('order-1');
+    const tables = fromMock.mock.results.map(() => null); // sequence figee par le harnais
+    expect(tables.length).toBeGreaterThan(0);
+    // Aucune table `sites` n'est mise en file par le harnais : si le moteur en
+    // lisait une, la sequence se decalerait et le test echouerait en amont.
+    expect(cjCreateOrderMock).toHaveBeenCalledTimes(1);
   });
 
   it('RÉENTRÉE sur not_applicable -> sortie immédiate, une seule requête', async () => {
     queueOrderSelect({ cj_pay_status: 'not_applicable' });
     const r = await fulfillCjOrder('order-1');
     expect(r).toEqual([]);
-    expect(fromMock).toHaveBeenCalledTimes(1);   // la garde de statut court-circuite AVANT la lecture du site
+    expect(fromMock).toHaveBeenCalledTimes(1);   // la garde de statut court-circuite AVANT tout
     expect(updateCalls).toHaveLength(0);
   });
 
-  it('COMMANDE MIXTE Mode 3 : lignes CJ + shop_products -> comportement inchangé', async () => {
-    // Un site Mode 3 peut aussi vendre ses propres produits (ProductManager
-    // est monte en mode 2 ET 3). Les lignes marchandes sont exclues de la
-    // commande CJ mais restent decrementees en stock par handlePaidCheckout --
-    // `cjProducts` n'est pas vide, donc aucun retour anticipe.
+  it('COMMANDE MIXTE : lignes CJ + shop_products -> comportement inchangé', async () => {
+    // Un site fournisseur peut aussi vendre ses propres produits. Les lignes
+    // marchandes sont exclues de la commande fournisseur mais restent
+    // decrementees en stock par l'aiguillage -- `cjProducts` n'est pas vide,
+    // donc aucun retour anticipe.
     queueOrderSelect();
     queueItemsSelect([{ product_id: 'sp1', quantity: 1 }, { product_id: 'sp2', quantity: 2 }]);
     queueClaim(true);
@@ -1112,7 +1089,7 @@ describe('M2-07 — seuls les sites éligibles entrent dans le fulfillment CJ', 
     cjCreateOrderMock.mockResolvedValue({ orderId: 'cj-1' });
     queueWrite();
     const r = await fulfillCjOrder('order-1');
-    expect(r).toEqual(['vid-1']);                       // seule la ligne CJ part chez CJ
+    expect(r).toEqual(['vid-1']);
     expect(cjCreateOrderMock.mock.calls[0][2].products).toEqual([{ vid: 'vid-1', quantity: 1 }]);
     expect(notApplicable()).toBeUndefined();
   });

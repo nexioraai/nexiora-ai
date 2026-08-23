@@ -85,7 +85,7 @@ function setupBaseTables(
   const { dropshipType = 'pod_custom', designs = [] } = options;
   fromMock.mockImplementation((table: string) => {
     if (table === 'shop_orders') {
-      return tableChain({ data: { id: ORDER_ID, site_id: 's1', shipping_address: {}, customer_name: 'C', customer_email: 'c@x.com' }, error: null });
+      return tableChain({ data: { id: ORDER_ID, site_id: 's1', fulfillment_domain: 'supplier', shipping_address: {}, customer_name: 'C', customer_email: 'c@x.com' }, error: null });
     }
     if (table === 'sites') {
       return tableChain({ data: { dropship_type: dropshipType }, error: null });
@@ -430,7 +430,7 @@ describe('F-CUSTOM-02/03 — deuxième barrière indépendante : le design n\'es
   it('lecture de sites introuvable/vide (orderSite null) -> fail-closed, design jamais transmis', async () => {
     fromMock.mockImplementation((table: string) => {
       if (table === 'shop_orders') {
-        return tableChain({ data: { id: ORDER_ID, site_id: 's1', shipping_address: {}, customer_name: 'C', customer_email: 'c@x.com' }, error: null });
+        return tableChain({ data: { id: ORDER_ID, site_id: 's1', fulfillment_domain: 'supplier', shipping_address: {}, customer_name: 'C', customer_email: 'c@x.com' }, error: null });
       }
       if (table === 'sites') return tableChain({ data: null, error: null });
       if (table === 'shop_order_items') {
@@ -518,5 +518,81 @@ describe('LOT H (F-POD-01) — la transition vers processing passe par apply_sho
     // échoué ; l'appelant (handlePaidCheckout) ne doit pas planter pour
     // autant.
     await expect(fulfillPodOrder(ORDER_ID)).resolves.toEqual(['PF-1']);
+  });
+});
+
+// ============================================================
+// PHASE 3 — FRONTIERE DE DOMAINE.
+// Plan de reference : docs/PLAN-SEPARATION-MODE2-MODE3.md
+//
+// Ces tests existent parce qu'un controle de mutation a montre que sans eux,
+// retirer la garde de domaine de pod-fulfill.ts ne faisait echouer AUCUN
+// test. Une garde qu'aucun test ne protege n'est pas une garde.
+//
+// Ce qu'ils verrouillent : la mesure faite sur le code deploye avait montre
+// qu'une commande Mode 2 portant un item catalogue Printful atteignait
+// reellement `adapter.createOrder` et obtenait un identifiant de commande
+// fournisseur. C'est cette fuite, cote POD, qui est fermee ici.
+// ============================================================
+describe('PHASE 3 — seul un domaine « supplier » entre dans le fulfillment POD', () => {
+  function setupDomaine(domaine: unknown) {
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'shop_orders') {
+        return tableChain({ data: { id: ORDER_ID, site_id: 's1', fulfillment_domain: domaine, shipping_address: {}, customer_name: 'C', customer_email: 'c@x.com' }, error: null });
+      }
+      if (table === 'sites') return tableChain({ data: { dropship_type: 'pod_custom' }, error: null });
+      if (table === 'shop_order_items') return tableChain({ data: [{ id: 'i1', product_id: 'catalog-cp1', quantity: 1 }], error: null });
+      if (table === 'catalog_products') return tableChain({ data: [{ id: 'cp1', supplier_id: 'printful', supplier_product_id: 'PF-9' }], error: null });
+      if (table === 'order_item_designs') return tableChain({ data: [], error: null });
+      return tableChain({ data: null, error: null });
+    });
+  }
+
+  it.each([
+    ['merchant', 'merchant'],
+    ['absent (commande anterieure a la migration)', null],
+    ['valeur inattendue', 'autre'],
+  ])('domaine %s -> AUCUN appel Printful, AUCUN appel Gelato, AUCUNE soumission', async (_l, domaine) => {
+    setupDomaine(domaine);
+    const r = await fulfillPodOrder(ORDER_ID);
+    expect(r).toEqual([]);
+    expect(createOrderPrintfulMock).not.toHaveBeenCalled();
+    expect(createOrderGelatoMock).not.toHaveBeenCalled();
+    expect(createOrderPrintifyMock).not.toHaveBeenCalled();
+    expect(createProviderSubmissionMock).not.toHaveBeenCalled();
+  });
+
+  it('le refus est TRACÉ, jamais silencieux — le domaine concerné est identifiable', async () => {
+    // L'aiguillage n'appelle deja plus ce moteur pour une commande marchande :
+    // arriver ici signifie que la frontiere a ete franchie ailleurs. Ce canari
+    // ne doit jamais crier en fonctionnement normal -- et doit crier sinon.
+    setupDomaine('merchant');
+    await fulfillPodOrder(ORDER_ID);
+    expect(logAnomalyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'pod_fulfill_domain_refuse',
+        details: expect.objectContaining({ domain: 'MODE_2' }),
+      })
+    );
+  });
+
+  it('domaine supplier -> AUCUNE anomalie de frontiere (le canari ne crie pas pour rien)', async () => {
+    setupDomaine('supplier');
+    createProviderSubmissionMock.mockResolvedValue({ success: true, submission_id: 'sub-1' });
+    claimSubmissionAttemptMock.mockResolvedValue({ success: true });
+    createOrderPrintfulMock.mockResolvedValue({ success: true, supplier_order_id: 'PF-1' });
+    await fulfillPodOrder(ORDER_ID);
+    expect(logAnomalyMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'pod_fulfill_domain_refuse' })
+    );
+  });
+
+  it('domaine supplier -> le fulfillment POD se deroule normalement', async () => {
+    setupDomaine('supplier');
+    createProviderSubmissionMock.mockResolvedValue({ success: true, submission_id: 'sub-1' });
+    claimSubmissionAttemptMock.mockResolvedValue({ success: true });
+    createOrderPrintfulMock.mockResolvedValue({ success: true, supplier_order_id: 'PF-ORDER-1' });
+    await fulfillPodOrder(ORDER_ID);
+    expect(createOrderPrintfulMock).toHaveBeenCalled();
   });
 });

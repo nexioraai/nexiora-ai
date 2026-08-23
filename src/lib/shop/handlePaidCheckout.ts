@@ -27,6 +27,8 @@ interface PaidCheckoutSession {
 /** Ligne shop_orders telle que selectionnee apres la transition pending->paid. */
 type PaidOrderRow = {
   id: string;
+  /** Qui execute cette vente. Decide a la creation, immuable en base. */
+  fulfillment_domain: 'merchant' | 'supplier' | null;
   estimated_delivery: string | null;
   site_id: string;
   cancel_token: string | null;
@@ -98,7 +100,7 @@ export async function handlePaidCheckout(session: PaidCheckoutSession): Promise<
     .eq('payment_ref', session.id)
     // F4/F7 : garde d'idempotence -- voir commentaire de fonction ci-dessus.
     .eq('status', 'pending')
-    .select('id, estimated_delivery, site_id, cancel_token, payment_provider, promo_code_id')
+    .select('id, fulfillment_domain, estimated_delivery, site_id, cancel_token, payment_provider, promo_code_id')
     .maybeSingle();
   const order = orderRaw as PaidOrderRow | null;
 
@@ -143,33 +145,49 @@ export async function handlePaidCheckout(session: PaidCheckoutSession): Promise<
     }
   }
 
-  // Dropshipping CJ : cree les commandes fournisseur pour les lignes CJ.
-  // Paiement deja encaisse (status='paid' ci-dessus) : un echec ici ne doit
-  // jamais bloquer la suite (stock/email), seulement rester visible — le
-  // verrou cj_pay_status/cj_pay_attempts protege deja contre la double
-  // commande, cette anomalie ne fait qu'exposer un echec sinon invisible.
-  try {
-    await fulfillCjOrder(order.id);
-  } catch (e) {
-    console.error('CJ fulfill error:', e);
-    await logAnomaly({
-      type: 'cj_fulfill_failed',
-      siteId: order.site_id,
-      details: { orderId: order.id, reason: e instanceof Error ? e.message : String(e) },
-    });
-  }
-  // POD fulfill (Printful/Printify/Gelato) avec designs custom. Idempotence
-  // deja assuree par le moteur P0-3.7/3.8 (create_provider_submission) :
-  // meme logique, on ajoute uniquement la visibilite sur un echec inattendu.
-  try {
-    await fulfillPodOrder(order.id);
-  } catch (e) {
-    console.error('POD fulfill error:', e);
-    await logAnomaly({
-      type: 'pod_fulfill_failed',
-      siteId: order.site_id,
-      details: { orderId: order.id, reason: e instanceof Error ? e.message : String(e) },
-    });
+  // ---- AIGUILLAGE DE DOMAINE (phase 3) ----
+  // Plan de reference : docs/PLAN-SEPARATION-MODE2-MODE3.md
+  //
+  // Ce point n'est plus un moteur de decision : c'est une LECTURE. Le domaine
+  // a ete decide une seule fois, a la creation de la commande, et il est
+  // immuable en base. Rien ici ne consulte le mode du site, le sous-type, ni
+  // un fournisseur -- il n'y a donc aucune regle metier a y ecrire, et c'est
+  // precisement ce qui empeche ce point de redevenir un lieu de fusion entre
+  // les deux domaines.
+  //
+  // CE QUE CELA FERME. Avant cette phase, les deux moteurs fournisseur
+  // etaient appeles INCONDITIONNELLEMENT. Mesure sur le code deploye : une
+  // commande Mode 2 atteignait reellement la creation de commande chez CJ, et
+  // reellement `adapter.createOrder` chez Printful.
+  //
+  // Une commande marchande ne descend dans aucun de ces deux moteurs. Le
+  // decrement de stock et l'e-mail acheteur, eux, restent COMMUNS aux deux
+  // domaines et se poursuivent plus bas : ce sont des responsabilites du
+  // tronc commun, pas du domaine fournisseur.
+  //
+  // Paiement deja encaisse (status='paid' ci-dessus) : un echec de fulfillment
+  // ne doit jamais bloquer la suite, seulement rester visible.
+  if (order.fulfillment_domain === 'supplier') {
+    try {
+      await fulfillCjOrder(order.id);
+    } catch (e) {
+      console.error('CJ fulfill error:', e);
+      await logAnomaly({
+        type: 'cj_fulfill_failed',
+        siteId: order.site_id,
+        details: { orderId: order.id, reason: e instanceof Error ? e.message : String(e) },
+      });
+    }
+    try {
+      await fulfillPodOrder(order.id);
+    } catch (e) {
+      console.error('POD fulfill error:', e);
+      await logAnomaly({
+        type: 'pod_fulfill_failed',
+        siteId: order.site_id,
+        details: { orderId: order.id, reason: e instanceof Error ? e.message : String(e) },
+      });
+    }
   }
   // Decrement du stock uniquement pour les produits NON geres par CJ.
   // F7 : la commande entiere passe par decrement_shop_stock_batch() (RPC

@@ -39,3 +39,12 @@ export const SIGNATURE_TROP_LARGE = `export function f(site: Site) {}`
 
 /** Acyclicité — le domaine fournisseur importe le domaine marchand. */
 export const IMPORT_MODE_2_DEPUIS_MODE_3 = `from '@/lib/mode2/onOrderPaid'`
+
+/** A5 — l'aiguillage parle directement a un fournisseur. */
+export const IMPORT_FOURNISSEUR_DEPUIS_AIGUILLAGE = `from '@/lib/suppliers/cj-adapter'`
+
+/** A5 — l'aiguillage reimplemente la selection fournisseur. */
+export const SELECTION_FOURNISSEUR_DANS_AIGUILLAGE = `const s = suppliersForDropshipType(x)`
+
+/** A9 — un moteur relit le mode du site. C'est LA rechute a empecher. */
+export const MOTEUR_RELIT_LE_MODE = `.select('mode, dropship_type')`

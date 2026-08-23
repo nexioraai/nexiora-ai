@@ -456,7 +456,7 @@ déplacées · banc 12 cas avant/après · comptage de tests.
 | 0 — Préparation | ✅ **VALIDÉE** | `13bec0e` (non committé) | `domainRegistry.ts` (+161, **0 suppression**) · `__tests__/mode2Mode3Boundaries.test.ts` (neuf) · `__tests__/fixtures/mode2Mode3Violating.ts` (neuf) | **1112 → 1129** (+17) · 110 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | 2 domaines déclarés · 7 règles · 5 mutations sur 6 attrapées | **Phase 1** |
 | 1 — Fondation | ✅ **VALIDÉE** | `8665dc8` → *(checkpoint phase 1)* | `order-domain/resolve.ts` (neuf) · `order-domain/__tests__/resolve.test.ts` (neuf) · `domainRegistry.ts` (+1 domaine) · `vitest.config.ts` (+1 ligne d'inclusion) | **1129 → 1159** (+30) · 111 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | résolveur total, fail-closed, 2 mutations sur 2 attrapées | **Phase 2** |
 | 2 — `fulfillment_domain` | ✅ **VALIDÉE** — 4 étapes exécutées et vérifiées en production | `d63e885` → *(checkpoint phase 2)* | 3 fichiers SQL (`step1_add_column`, `step2_backfill`, `step3_not_null_and_immutability`) · `checkout/route.ts` (+capture) · `checkout/__tests__/route.test.ts` (+8 tests) | **1159 → 1167** (+8) · 111 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | mutation sur l'écriture → 4 tests en échec ✓ · **immutabilité prouvée en base** ✓ | **Phase 3** |
-| 3 — Fulfillment | ⏳ EN ATTENTE | — | — | — | — | — |
+| 3 — Fulfillment | ✅ **VALIDÉE** | `909a746` → *(checkpoint phase 3)* | `cj/fulfill.ts` · `suppliers/pod-fulfill.ts` · `shop/handlePaidCheckout.ts` · `domainRegistry.ts` (A5+A9) · 4 fichiers de tests · 1 fixture | **1167 → 1183** (+16) · 111 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **5 mutations / 5 attrapées** · **7 cas Mode 3 identiques à la production** | **Phase 4** |
 | 4 — Mode 2 | ⏳ EN ATTENTE | — | — | — | — | — |
 | 5 — SHARED | ⏳ EN ATTENTE | — | — | — | — | — |
 | 6 — Tests de frontière | ⏳ EN ATTENTE | — | — | — | — | — |
@@ -662,6 +662,71 @@ la colonne sans vouloir la changer.
 > **L'invariant I3/I4 du plan n'est plus une intention : il est vérifié en base, contre un
 > rôle privilégié.** Limite nommée, identique à celle déjà acceptée pour `status` : un
 > superuser peut désactiver un trigger — PostgreSQL n'offre pas mieux.
+
+---
+
+### PHASE 3 — VALIDÉE
+
+**Trois gardes posées** : `cj/fulfill.ts` et `suppliers/pod-fulfill.ts` refusent tout
+domaine ≠ `'supplier'` ; `handlePaidCheckout` devient un **aiguillage sans décision**.
+
+**Ancienne protection remplacée** : la garde M2-07 de `13bec0e` lisait
+`sites(mode, dropship_type)`. Elle est **entièrement supprimée**, conformément à **D3**.
+`cj/fulfill.ts` ne contient plus **aucune** occurrence du sous-type ni de
+`suppliersForDropshipType` — il n'existe plus qu'une seule logique de décision, et elle vit
+hors de ce fichier.
+
+**A5 et A9 activées** — `order-dispatch` (l'aiguillage ne peut ni brancher sur le mode, ni
+lire le sous-type, ni importer un fournisseur) et A9 sur `mode-3-supplier-domain` (aucun
+moteur ne relit `sites.mode`). **A9 est le test anti-rechute.**
+
+**Preuve B — les 7 comportements Mode 3 sont IDENTIQUES à la production** *(banc comparatif
+contre `origin/main` 0aed2c4, 12 cas)* : reseller, NULL, **pod_brand**, **pod_custom**,
+mixte, catalogue CJ, réentrée terminale. Mêmes `vid`, mêmes produits transmis, mêmes
+statuts, mêmes anomalies. **`pod_brand` et `pod_custom` — que la garde rejetée de `13bec0e`
+MODIFIAIT — reviennent au comportement de production. La décision D3 est validée par la
+mesure.** Les 5 cas Mode 2 changent : c'est la correction.
+
+**Fichiers Mode 3 protégés : empreintes inchangées** — `suppliers.ts`, `registry.ts`,
+`reconcile.ts`, les 3 adaptateurs, les 2 crons de réconciliation n'apparaissent même pas au
+diff.
+
+**Le contrôle de mutation a trouvé deux trous de couverture réels.** Retirer la garde POD
+ou rendre l'aiguillage inconditionnel ne faisait échouer **aucun** test. Les tests
+manquants ont été écrits, puis les 5 mutations re-contrôlées : **5 sur 5 attrapées**.
+
+**⚠️ ÉCART À VALIDER — assertions disparues.** Le bloc de tests de la garde M2-07 portait
+5 assertions qui décrivaient un comportement que **D3 supprime** :
+
+| Assertion supprimée | Pourquoi elle n'a plus d'objet |
+|---|---|
+| `pod_brand` → `not_applicable` | D3 : la garde ne lit plus le sous-type. Un ordre `pod_brand` est `'supplier'` et entre dans le fulfillment — **comportement de production restauré** |
+| `pod_custom` → `not_applicable` | idem |
+| `dropship_type NULL` → éligible | le sous-type n'est plus lu du tout ; couvert par « domaine supplier → inchangé » |
+| site introuvable → fail-closed | **le moteur ne lit plus `sites`** — le cas ne peut plus exister |
+| erreur de lecture du site → fail-closed | idem |
+
+Aucune de ces assertions n'a été supprimée **pour faire passer la suite** : chacune décrit un
+chemin que la décision D3 a supprimé. Les propriétés qui subsistent ont toutes été
+reportées.
+
+**ARBITRAGE ACTÉ** : les 5 anciennes assertions **ne doivent pas être réintroduites** — elles
+décrivent des comportements supprimés par D3. Les invariants de remplacement constituent
+désormais la protection correcte.
+
+**Preuve structurelle pour « site introuvable » et « erreur de lecture du site »** — ces deux
+modes de défaillance avaient été *créés* par l'existence d'une seconde requête. Supprimer la
+requête supprime le mode de défaillance : `cj/fulfill.ts` ne contient **zéro** occurrence de
+`from('sites')`, la décision se lit sur une colonne **déjà chargée** par la requête unique de
+la commande, et la règle A9 l'impose en CI. On ne peut pas échouer à lire ce qu'on ne lit pas.
+
+**Deux formulations de mon rapport de phase corrigées, sans changement de fond** :
+« CJ créé » désignait la colonne **AVANT** (le défaut), pas l'état après ; et « appel réel »
+signifiait *le code de production a atteint la frontière fournisseur avec un payload valide*,
+cette frontière étant substituée par un mock — **aucun appel HTTP n'a jamais eu lieu**. Les
+données brutes du banc confirment les deux points ligne à ligne.
+
+**M-1 reste hors phase 3** et ne doit pas y être rattachée rétroactivement.
 
 **Registre transversal** *(signalé, hors périmètre)* : `fulfill.ts:443-445` sans filtre
 `supplier_id` · annulation POD absente de `cancel-order` · 4 colonnes CJ sur `shop_orders` ·
