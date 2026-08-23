@@ -25,12 +25,49 @@ vi.mock('@/lib/payments', () => ({
   getProvider: vi.fn(() => ({ createCheckout: (...a: unknown[]) => createCheckoutMock(...a) })),
 }));
 
-// Aucun test ici n'exerce le chemin calculateShipping live (couvert par
-// la migration Supplier Registry) : la Map dérivée reste vide, ce qui
-// laisse le fallback CJ (shipping_cache) ou le rejet Mode 3 s'exprimer
-// exactement comme en production quand aucun adaptateur n'est disponible.
+// PHASE 4 (docs/PLAN-SEPARATION-MODE2-MODE3.md) -- option A'.
+//
+// Le mock d'origine rendait une liste VIDE : « la Map derivee reste vide, ce
+// qui laisse le fallback CJ (shipping_cache) ou le rejet Mode 3 s'exprimer
+// exactement comme en production quand aucun adaptateur n'est disponible ».
+// Cette hypothese reste vraie pour CJ -- elle est simplement completee.
+//
+// POURQUOI CE CHANGEMENT EST DEVENU NECESSAIRE. La decision produit D2
+// interdit a une boutique Mode 2 de vendre du catalogue fournisseur. Les
+// fixtures qui modelisaient un site Mode 2 porteur d'un sous-type Mode 3 --
+// sites semantiquement impossibles -- ont donc ete requalifies vers de vrais
+// sites Mode 3. Or le Mode 3 exige un devis fournisseur confirme, et un item
+// POD ne peut en obtenir aucun sans adaptateur : le repli `shipping_cache`
+// est reserve a CJ (resolveShipping.ts, `groups['cj']`).
+//
+// POURQUOI UN MOCK FIXE ET NON CONFIGURABLE PAR TEST. `SHIPPING_SUPPLIERS`
+// est un const de niveau module dans resolveShipping.ts : il est evalue une
+// seule fois, au chargement, donc AVANT tout `beforeEach`. Un mock modifiable
+// par test n'aurait aucun effet. Rendre cette Map paresseuse aurait exige de
+// modifier un fichier de production du chemin devis -- refuse, hors perimetre.
+//
+// RAYON D'ACTION NUL SUR L'EXISTANT, par construction : la boucle live fait
+// `SHIPPING_SUPPLIERS.get(supplierId)` puis `continue` si absent. Un
+// adaptateur enregistre sous `printful` est donc INERTE pour un groupe `cj`,
+// qui conserve exactement son chemin actuel -- cache d'abord, rejet Mode 3
+// sinon. Les quatre tests de rejet Mode 3 n'empruntent aucun groupe POD.
+// Toutes les autres capacites conservent la liste vide.
+const { stubPrintfulShipping } = vi.hoisted(() => ({
+  stubPrintfulShipping: {
+    id: 'printful',
+    credentials: {},
+    adapter: {
+      calculateShipping: async () => ({
+        total_cost: 5,
+        estimated_days_min: 3,
+        estimated_days_max: 7,
+      }),
+    },
+  },
+}));
 vi.mock('@/lib/suppliers/registry', () => ({
-  suppliersWithCapability: () => [],
+  suppliersWithCapability: (capability: string) =>
+    capability === 'calculateShipping' ? [stubPrintfulShipping] : [],
 }));
 
 const logAnomalyMock = vi.fn();
@@ -358,6 +395,10 @@ describe('POST /api/shop/checkout — LOT L : bug actif cost_price corrigé (sho
   });
 });
 
+// D2 (phase 4) : fixture requalifie de SITE_MODE2 vers SITE_MODE3. Il
+// modelisait un site Mode 2 portant un sous-type Mode 3 -- site
+// semantiquement impossible ; SITE_MODE2 servait de base commode et le
+// mode etait incident. AUCUNE assertion modifiee.
 describe('POST /api/shop/checkout — POD BRAND : design résolu côté serveur, jamais celui du client', () => {
   // Audit Mode 3/POD BRAND, perfectionnement -- cause racine double : (1)
   // securite -- customDesignUrl/customDesigns venaient du panier client
@@ -371,7 +412,7 @@ describe('POST /api/shop/checkout — POD BRAND : design résolu côté serveur,
   // avec cette resolution -- dropship_type/pod_designs sont independants
   // du champ mode.
   const SITE_POD_BRAND = {
-    ...SITE_MODE2,
+    ...SITE_MODE3,
     dropship_type: 'pod_brand',
     pod_designs: [{
       url: 'https://storage.example/brand-design.png',
@@ -384,7 +425,7 @@ describe('POST /api/shop/checkout — POD BRAND : design résolu côté serveur,
   it('un customDesignUrl injecté par le client est ignoré : le design réellement envoyé au fournisseur est celui du mockup généré par le marchand', async () => {
     const chains = setupTables({
       sites: { data: SITE_POD_BRAND, error: null },
-      catalog_products: { data: { price: 20, currency: 'usd', supplier_id: 'printful' }, error: null },
+      catalog_products: { data: [{ id: 'cp-1', supplier_product_id: 'sp-1', price: 20, currency: 'usd', supplier_id: 'printful' }], error: null },
       site_catalog_selections: { data: null, error: null },
       shop_orders: { data: { id: 'order-1' }, error: null },
       shop_order_items: { data: [{ id: 'item-1' }], error: null },
@@ -392,6 +433,7 @@ describe('POST /api/shop/checkout — POD BRAND : design résolu côté serveur,
 
     const res = await POST(req({
       slug: 'boutique',
+      countryCode: 'US',
       items: [{
         id: 'catalog-cp-1::111',
         quantity: 1,
@@ -416,7 +458,7 @@ describe('POST /api/shop/checkout — POD BRAND : design résolu côté serveur,
     const siteNoMockup = { ...SITE_POD_BRAND, pod_designs: [{ url: 'x', mockups: [] }] };
     const chains = setupTables({
       sites: { data: siteNoMockup, error: null },
-      catalog_products: { data: { price: 20, currency: 'usd', supplier_id: 'printful' }, error: null },
+      catalog_products: { data: [{ id: 'cp-1', supplier_product_id: 'sp-1', price: 20, currency: 'usd', supplier_id: 'printful' }], error: null },
       site_catalog_selections: { data: null, error: null },
       shop_orders: { data: { id: 'order-1' }, error: null },
       shop_order_items: { data: [{ id: 'item-1' }], error: null },
@@ -424,6 +466,7 @@ describe('POST /api/shop/checkout — POD BRAND : design résolu côté serveur,
 
     const res = await POST(req({
       slug: 'boutique',
+      countryCode: 'US',
       items: [{ id: 'catalog-cp-1::111', quantity: 1, name: 'Produit', customDesignUrl: 'https://evil.example/anything.png' }],
     }));
 
@@ -440,15 +483,15 @@ describe('POST /api/shop/checkout — F-CUSTOM-02/03 : un design client n\'attei
   // customDesignUrl/customDesigns tels quels. Politique desormais explicite
   // et fail-closed : liste d'autorisation (pod_brand, pod_custom), pas de
   // liste de refus.
-  const SITE_RESELLER = { ...SITE_MODE2, dropship_type: 'reseller' };
-  const SITE_NULL_TYPE = { ...SITE_MODE2, dropship_type: null };
+  const SITE_RESELLER = { ...SITE_MODE3, dropship_type: 'reseller' };
+  const SITE_NULL_TYPE = { ...SITE_MODE3, dropship_type: null };
   const SITE_UNDEFINED_TYPE = (() => {
-    const s: any = { ...SITE_MODE2 };
+    const s: any = { ...SITE_MODE3 };
     delete s.dropship_type;
     return s;
   })();
-  const SITE_UNEXPECTED_TYPE = { ...SITE_MODE2, dropship_type: 'legacy_mode_x' };
-  const SITE_POD_CUSTOM = { ...SITE_MODE2, dropship_type: 'pod_custom' };
+  const SITE_UNEXPECTED_TYPE = { ...SITE_MODE3, dropship_type: 'legacy_mode_x' };
+  const SITE_POD_CUSTOM = { ...SITE_MODE3, dropship_type: 'pod_custom' };
 
   // N1 (audit Mode 3 global) -- le checkout revalide desormais aussi que
   // catalog_products.supplier_id correspond au dropship_type du site ; ces
@@ -459,7 +502,10 @@ describe('POST /api/shop/checkout — F-CUSTOM-02/03 : un design client n\'attei
   function setupWithSite(site: unknown, supplierId: string = 'cj') {
     return setupTables({
       sites: { data: site, error: null },
-      catalog_products: { data: { price: 20, currency: 'usd', supplier_id: supplierId }, error: null },
+      catalog_products: { data: [{ id: 'cp-1', supplier_product_id: 'sp-1', price: 20, currency: 'usd', supplier_id: supplierId }], error: null },
+      // Mode 3 exige un devis confirme : pour un item CJ il vient du cache
+      // (resolveShipping reserve ce repli a CJ). Completion de fixture.
+      shipping_cache: { data: [{ supplier_product_id: 'sp-1', shipping_cost: 5, days_min: 10, days_max: 20, tiers: null }], error: null },
       site_catalog_selections: { data: null, error: null },
       shop_orders: { data: { id: 'order-1' }, error: null },
       shop_order_items: { data: [{ id: 'item-1' }], error: null },
@@ -475,6 +521,7 @@ describe('POST /api/shop/checkout — F-CUSTOM-02/03 : un design client n\'attei
     const chains = setupWithSite(site, 'cj');
     const res = await POST(req({
       slug: 'boutique',
+      countryCode: 'US',
       items: [{ id: 'catalog-cp-1::111', quantity: 1, name: 'Produit', customDesignUrl: 'https://evil.example/anything.png' }],
     }));
     expect(res.status).toBe(200);
@@ -487,6 +534,7 @@ describe('POST /api/shop/checkout — F-CUSTOM-02/03 : un design client n\'attei
     setupWithSite(SITE_POD_CUSTOM, 'printful');
     const res = await POST(req({
       slug: 'boutique',
+      countryCode: 'US',
       items: [{ id: 'catalog-cp-1::111', quantity: 1, name: 'Produit', customDesignUrl: 'https://buyer.example/my-design.png' }],
     }));
     expect(res.status).toBe(409);
@@ -494,7 +542,7 @@ describe('POST /api/shop/checkout — F-CUSTOM-02/03 : un design client n\'attei
 });
 
 describe('POST /api/shop/checkout — LOT J (F-CUSTOM-01/04) : design_uploads, tenant-bound + single-use', () => {
-  const SITE_POD_CUSTOM = { ...SITE_MODE2, dropship_type: 'pod_custom' };
+  const SITE_POD_CUSTOM = { ...SITE_MODE3, dropship_type: 'pod_custom' };
   const DESIGN_URL = 'https://storage.test/custom-designs/real-upload.png';
 
   /**
@@ -529,7 +577,7 @@ describe('POST /api/shop/checkout — LOT J (F-CUSTOM-01/04) : design_uploads, t
   function setupWithDesign(state: { found: boolean; consumedAt: string | null; claimSucceeds: boolean }) {
     const generic = setupTables({
       sites: { data: SITE_POD_CUSTOM, error: null },
-      catalog_products: { data: { price: 20, currency: 'usd', supplier_id: 'printful' }, error: null },
+      catalog_products: { data: [{ id: 'cp-1', supplier_product_id: 'sp-1', price: 20, currency: 'usd', supplier_id: 'printful' }], error: null },
       site_catalog_selections: { data: null, error: null },
       shop_orders: { data: { id: 'order-1' }, error: null },
       shop_order_items: { data: [{ id: 'item-1' }], error: null },
@@ -553,6 +601,7 @@ describe('POST /api/shop/checkout — LOT J (F-CUSTOM-01/04) : design_uploads, t
     setupWithDesign({ found: false, consumedAt: null, claimSucceeds: false });
     const res = await POST(req({
       slug: 'boutique',
+      countryCode: 'US',
       items: [{ id: 'catalog-cp-1::111', quantity: 1, name: 'Produit', customDesignUrl: DESIGN_URL }],
     }));
     expect(res.status).toBe(409);
@@ -567,6 +616,7 @@ describe('POST /api/shop/checkout — LOT J (F-CUSTOM-01/04) : design_uploads, t
     setupWithDesign({ found: true, consumedAt: '2026-01-01T00:00:00Z', claimSucceeds: false });
     const res = await POST(req({
       slug: 'boutique',
+      countryCode: 'US',
       items: [{ id: 'catalog-cp-1::111', quantity: 1, name: 'Produit', customDesignUrl: DESIGN_URL }],
     }));
     expect(res.status).toBe(409);
@@ -581,6 +631,7 @@ describe('POST /api/shop/checkout — LOT J (F-CUSTOM-01/04) : design_uploads, t
     const { designChain } = setupWithDesign({ found: true, consumedAt: null, claimSucceeds: true });
     const res = await POST(req({
       slug: 'boutique',
+      countryCode: 'US',
       items: [{ id: 'catalog-cp-1::111', quantity: 1, name: 'Produit', customDesignUrl: DESIGN_URL }],
     }));
     expect(res.status).toBe(200);
@@ -594,6 +645,7 @@ describe('POST /api/shop/checkout — LOT J (F-CUSTOM-01/04) : design_uploads, t
 
     const res = await POST(req({
       slug: 'boutique',
+      countryCode: 'US',
       items: [{
         id: 'catalog-cp-1::111',
         quantity: 1,
@@ -626,6 +678,7 @@ describe('POST /api/shop/checkout — LOT J (F-CUSTOM-01/04) : design_uploads, t
     setupWithDesign({ found: true, consumedAt: null, claimSucceeds: false });
     const res = await POST(req({
       slug: 'boutique',
+      countryCode: 'US',
       items: [{ id: 'catalog-cp-1::111', quantity: 1, name: 'Produit', customDesignUrl: DESIGN_URL }],
     }));
     const json = await res.json();
@@ -742,19 +795,25 @@ describe('POST /api/shop/checkout — F3 : devise jamais issue du client', () =>
       shop_orders: { data: { id: 'order-1' }, error: null },
       shop_order_items: { data: [{ id: 'item-1' }], error: null },
     });
-    await POST(req({ slug: 'boutique', items: [{ id: 'p1', quantity: 1, name: 'T-Shirt', currency: 'jpy' }] }));
+    await POST(req({ slug: 'boutique', countryCode: 'US', items: [{ id: 'p1', quantity: 1, name: 'T-Shirt', currency: 'jpy' }] }));
     const itemsArg = createCheckoutMock.mock.calls[0][2];
     expect(itemsArg[0].currency).toBe('usd');
   });
 
   it('panier multi-devises entre deux lignes server-résolues (catalog usd + shop eur) -> 409, jamais envoyé à Stripe', async () => {
     setupTables({
-      sites: { data: SITE_MODE2, error: null },
-      catalog_products: { data: { price: 10, currency: 'usd', supplier_id: 'cj' }, error: null },
+      // D2 (phase 4) : un panier melant une ligne CATALOGUE et une ligne
+      // marchande n'existe que sur un site Mode 3 -- une boutique Mode 2 ne
+      // vend aucun produit du catalogue fournisseur. Fixture requalifie ;
+      // l'assertion (deux devises server-resolues -> 409) est INCHANGEE.
+      sites: { data: SITE_MODE3, error: null },
+      catalog_products: { data: [{ id: 'abc', supplier_product_id: 'sp-abc', price: 10, currency: 'usd', supplier_id: 'cj' }], error: null },
+      shipping_cache: { data: [{ supplier_product_id: 'sp-abc', shipping_cost: 5, days_min: 10, days_max: 20, tiers: null }], error: null },
       shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'eur', published: true }], error: null },
     });
     const res = await POST(req({
       slug: 'boutique',
+      countryCode: 'US',
       items: [
         { id: 'catalog-abc', quantity: 1, name: 'Mug', currency: 'usd' },
         { id: 'p1', quantity: 1, name: 'T-Shirt', currency: 'usd' },
@@ -772,14 +831,17 @@ describe('POST /api/shop/checkout — N1 : le produit acheté doit appartenir à
   function setup(site: unknown, supplierId: string) {
     return setupTables({
       sites: { data: site, error: null },
-      catalog_products: { data: { price: 20, currency: 'usd', supplier_id: supplierId }, error: null },
+      catalog_products: { data: [{ id: 'cp-1', supplier_product_id: 'sp-1', price: 20, currency: 'usd', supplier_id: supplierId }], error: null },
+      // Mode 3 exige un devis confirme : pour un item CJ il vient du cache
+      // (resolveShipping reserve ce repli a CJ). Completion de fixture.
+      shipping_cache: { data: [{ supplier_product_id: 'sp-1', shipping_cost: 5, days_min: 10, days_max: 20, tiers: null }], error: null },
       site_catalog_selections: { data: null, error: null },
     });
   }
 
   it("site reseller + produit Printful (jamais sélectionné par le marchand) -> 409, logAnomaly, jamais envoyé à Stripe", async () => {
-    setup({ ...SITE_MODE2, dropship_type: 'reseller' }, 'printful');
-    const res = await POST(req({ slug: 'boutique', items: [{ id: 'catalog-cp-1::111', quantity: 1, name: 'Mug' }] }));
+    setup({ ...SITE_MODE3, dropship_type: 'reseller' }, 'printful');
+    const res = await POST(req({ slug: 'boutique', countryCode: 'US', items: [{ id: 'catalog-cp-1::111', quantity: 1, name: 'Mug' }] }));
     const json = await res.json();
     expect(res.status).toBe(409);
     expect(json.error).toBe('Produit indisponible');
@@ -788,20 +850,21 @@ describe('POST /api/shop/checkout — N1 : le produit acheté doit appartenir à
   });
 
   it("site pod_brand + produit CJ (jamais destiné à ce sous-mode) -> 409", async () => {
-    setup({ ...SITE_MODE2, dropship_type: 'pod_brand' }, 'cj');
-    const res = await POST(req({ slug: 'boutique', items: [{ id: 'catalog-cp-1::111', quantity: 1, name: 'Mug' }] }));
+    setup({ ...SITE_MODE3, dropship_type: 'pod_brand' }, 'cj');
+    const res = await POST(req({ slug: 'boutique', countryCode: 'US', items: [{ id: 'catalog-cp-1::111', quantity: 1, name: 'Mug' }] }));
     expect(res.status).toBe(409);
   });
 
   it("site reseller + produit CJ (cas légitime) -> passe la garde, atteint le reste du flux", async () => {
     setupTables({
-      sites: { data: { ...SITE_MODE2, dropship_type: 'reseller' }, error: null },
-      catalog_products: { data: { price: 20, currency: 'usd', supplier_id: 'cj' }, error: null },
+      sites: { data: { ...SITE_MODE3, dropship_type: 'reseller' }, error: null },
+      catalog_products: { data: [{ id: 'cp-1', supplier_product_id: 'sp-1', price: 20, currency: 'usd', supplier_id: 'cj' }], error: null },
+      shipping_cache: { data: [{ supplier_product_id: 'sp-1', shipping_cost: 5, days_min: 10, days_max: 20, tiers: null }], error: null },
       site_catalog_selections: { data: null, error: null },
       shop_orders: { data: { id: 'order-1' }, error: null },
       shop_order_items: { data: [{ id: 'item-1' }], error: null },
     });
-    const res = await POST(req({ slug: 'boutique', items: [{ id: 'catalog-cp-1::111', quantity: 1, name: 'Mug' }] }));
+    const res = await POST(req({ slug: 'boutique', countryCode: 'US', items: [{ id: 'catalog-cp-1::111', quantity: 1, name: 'Mug' }] }));
     expect(res.status).toBe(200);
   });
 });
@@ -1139,5 +1202,74 @@ describe('PHASE 2 — fulfillment_domain écrit à la création de la commande',
     expect(logAnomalyMock).not.toHaveBeenCalledWith(
       expect.objectContaining({ type: 'site_mode_unrecognised' })
     );
+  });
+});
+
+// ============================================================
+// PHASE 4 — D2 : une boutique Mode 2 ne vend AUCUN produit du catalogue
+// fournisseur. Plan de reference : docs/PLAN-SEPARATION-MODE2-MODE3.md
+//
+// Avant cette phase, l'admission produit ne consultait QUE le sous-type
+// (`suppliersForDropshipType`), jamais le mode : une boutique Mode 2 sans
+// sous-type se voyait donc appliquer le repli historique et acceptait les
+// produits CJ. Le test de reference de ce fichier le verrouillait meme --
+// avec un fixture `SITE_MODE2 + dropship_type: 'reseller'`, c'est-a-dire un
+// site semantiquement impossible.
+//
+// Ce que D2 ferme : sans cette garde, le domaine dependrait du CONTENU DU
+// PANIER et non du site, et une commande marchande pourrait etre encaissee
+// alors qu'aucun moteur ne saurait l'executer.
+// ============================================================
+describe('PHASE 4 — D2 : Mode 2 n’admet aucun produit du catalogue fournisseur', () => {
+  function setupCatalogue(site: unknown, supplier: string) {
+    return setupTables({
+      sites: { data: site, error: null },
+      catalog_products: { data: [{ id: 'cp-1', supplier_product_id: 'sp-1', price: 20, currency: 'usd', supplier_id: supplier }], error: null },
+      site_catalog_selections: { data: null, error: null },
+      shipping_cache: { data: [{ supplier_product_id: 'sp-1', shipping_cost: 5, days_min: 10, days_max: 20, tiers: null }], error: null },
+      shop_orders: { data: { id: 'order-1' }, error: null },
+      shop_order_items: { data: [{ id: 'item-1' }], error: null },
+    });
+  }
+  const ITEM = { id: 'catalog-cp-1::111', quantity: 1, name: 'Mug' };
+
+  it.each([['cj'], ['printful'], ['gelato']])(
+    'Mode 2 + produit catalogue %s -> 409, jamais envoyé à Stripe',
+    async (supplier) => {
+      setupCatalogue(SITE_MODE2, supplier);
+      const res = await POST(req({ slug: 'boutique', countryCode: 'US', items: [ITEM] }));
+      expect(res.status).toBe(409);
+      expect(createCheckoutMock).not.toHaveBeenCalled();
+      expect(logAnomalyMock).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'catalog_supplier_not_eligible' })
+      );
+    }
+  );
+
+  it('Mode 2 portant un sous-type INCOHÉRENT -> refuse quand même : le sous-type ne peut pas ouvrir le catalogue', async () => {
+    // Fixture volontairement impossible. Avant D2, ce cas ACCEPTAIT le
+    // produit -- c'est exactement la confusion mode/sous-type corrigee.
+    setupCatalogue({ ...SITE_MODE2, dropship_type: 'reseller' }, 'cj');
+    const res = await POST(req({ slug: 'boutique', countryCode: 'US', items: [ITEM] }));
+    expect(res.status).toBe(409);
+    expect(createCheckoutMock).not.toHaveBeenCalled();
+  });
+
+  it('Mode 3 + produit catalogue éligible -> ACCEPTÉ : la garde ne touche pas le domaine fournisseur', async () => {
+    setupCatalogue({ ...SITE_MODE3, dropship_type: 'reseller' }, 'cj');
+    const res = await POST(req({ slug: 'boutique', countryCode: 'US', items: [ITEM] }));
+    expect(res.status).toBe(200);
+  });
+
+  it('Mode 2 vend normalement SES PROPRES produits — la garde ne ferme que le catalogue fournisseur', async () => {
+    setupTables({
+      sites: { data: SITE_MODE2, error: null },
+      shop_products: { data: [{ id: 'p1', price: 30, currency: 'usd', published: true, cj_vid: null }], error: null },
+      shop_orders: { data: { id: 'order-1' }, error: null },
+      shop_order_items: { data: [{ id: 'item-1' }], error: null },
+    });
+    const res = await POST(req({ slug: 'boutique', items: [{ id: 'p1', quantity: 1, name: 'T-Shirt', currency: 'usd' }] }));
+    expect(res.status).toBe(200);
+    expect(createCheckoutMock).toHaveBeenCalled();
   });
 });

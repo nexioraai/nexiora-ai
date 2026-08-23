@@ -9,10 +9,13 @@ import { buildSupplierGroups, resolveShipping } from '@/lib/shop/quote/resolveSh
 import { buildQuoteHash, buildCheckoutIdempotencyKey } from '@/lib/shop/quote/checkoutSignature';
 import { sitePricing, NEXIORA_COMMISSION_PERCENT, resolveDisplayPrice, roundMoney } from '@/lib/pricing';
 import { logAnomaly } from '@/lib/anomaly';
-import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
-// PHASE 2 (docs/PLAN-SEPARATION-MODE2-MODE3.md) : point de decision unique
-// de la frontiere. Ne connait ni sous-type, ni fournisseur.
+// PHASES 2 et 4 (docs/PLAN-SEPARATION-MODE2-MODE3.md) : point de decision
+// unique de la frontiere, puis politique d'admission par domaine. La route
+// selectionne la politique -- elle n'en implemente aucune.
 import { resolveFulfillmentDomain, isRecognisedSiteMode } from '@/lib/order-domain/resolve';
+import type { CheckoutPolicy } from '@/lib/order-domain/checkoutPolicy';
+import { MODE2_CHECKOUT_POLICY } from '@/lib/mode2/checkoutPolicy';
+import { MODE3_CHECKOUT_POLICY } from '@/lib/mode3/checkoutPolicy';
 
 /** Décode un id panier catalog : "catalog-{uuid}::{variantId}" -> { realId: uuid, variantId }.
  *  variantId est optionnel (produits sans variantes). */
@@ -50,6 +53,49 @@ export async function POST(req: Request) {
     if (siteError || !site) return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
     if (!site.payment_account_id) return NextResponse.json({ error: 'Paiements non configurés pour ce site' }, { status: 400 });
 
+    // ---- PHASE 2 + 4 : conversion unique mode -> domaine, puis politique ----
+    // Plan de reference : docs/PLAN-SEPARATION-MODE2-MODE3.md
+    //
+    // C'est le SEUL endroit du produit ou le mode d'un site est converti en
+    // domaine d'execution. La conversion, etablie en phase 2 et validee au
+    // checkpoint 909a746, n'est ni supprimee ni dupliquee : elle est REMONTEE
+    // ici, car la politique qu'elle selectionne est necessaire des la
+    // premiere decision de la route.
+    //
+    // A partir de cette ligne, la route ne pose plus AUCUN branchement metier
+    // sur `site.mode` : elle interroge une politique. Les regles vivent chez
+    // leur domaine -- une evolution Mode 3 se fait dans mode3/, invisible
+    // depuis le chemin Mode 2, et reciproquement.
+    //
+    // La valeur est figee au moment de la vente, comme le sont deja
+    // payment_account_id, supplier_cost, nexiora_commission et
+    // merchant_profit : une commande doit rester traitee selon le modele en
+    // vigueur quand elle a ete passee, quoi qu'il advienne du site ensuite.
+    const fulfillmentDomain = resolveFulfillmentDomain(site.mode);
+    const policy: CheckoutPolicy =
+      fulfillmentDomain === 'supplier' ? MODE3_CHECKOUT_POLICY : MODE2_CHECKOUT_POLICY;
+
+    // Un mode hors {1,2,3} ne peut pas se produire aujourd'hui
+    // (resolveFinalMode ne rend que ces trois valeurs). Si cela arrivait, le
+    // repli est 'merchant' -- donc AUCUN appel fournisseur, jamais d'argent
+    // engage a l'aveugle. Mais un repli muet serait pire que le probleme :
+    // un site fournisseur dont le mode aurait ete corrompu cesserait d'etre
+    // livre en silence. D'ou cette trace. `details.domain` suit la
+    // convention M-2 : MODE_2 / MODE_3 / SHARED / UNKNOWN.
+    if (!isRecognisedSiteMode(site.mode)) {
+      await logAnomaly({
+        type: 'site_mode_unrecognised',
+        severity: 'warning',
+        siteId: site.id,
+        slug,
+        details: {
+          domain: 'UNKNOWN',
+          siteMode: (site.mode as unknown) ?? null,
+          repliSur: fulfillmentDomain,
+        },
+      });
+    }
+
     const stock = await checkStock(items.map((i) => ({ id: i.id, quantity: i.quantity })));
     if (!stock.ok) return NextResponse.json({ error: stock.reason }, { status: 409 });
 
@@ -78,7 +124,7 @@ export async function POST(req: Request) {
           const { realId, variantId } = parseCatalogId(i.id);
           return { realId, variantId, quantity: i.quantity };
         });
-      const catStock = await checkCatalogStock(catalogStockLines, countryCode || 'US', site.mode === 3);
+      const catStock = await checkCatalogStock(catalogStockLines, countryCode || 'US', policy.strictCatalogStock);
       if (!catStock.ok) return NextResponse.json({ error: catStock.reason }, { status: 409 });
     }
 
@@ -95,7 +141,7 @@ export async function POST(req: Request) {
     let shippingResolved = false;
 
     // Mode 3 : Nexiora avance les frais au fournisseur. Pas de livraison calculable = pas de vente.
-    if (site.mode === 3 && (!countryCode || !(STRIPE_SHIPPING_COUNTRIES as readonly string[]).includes(countryCode))) {
+    if (policy.requiresDeliverableCountry && (!countryCode || !(STRIPE_SHIPPING_COUNTRIES as readonly string[]).includes(countryCode))) {
       await logAnomaly({ type: 'shipping_country_unsupported', siteId: site.id, slug, details: { countryCode: countryCode || null } });
       return NextResponse.json({ error: 'Livraison indisponible pour cette destination' }, { status: 409 });
     }
@@ -137,7 +183,7 @@ export async function POST(req: Request) {
 
     // Mode 3 : aucun cout de livraison confirme par le fournisseur = refus.
     // Nexiora n'absorbe jamais un cout inconnu.
-    if (site.mode === 3 && !shippingResolved) {
+    if (policy.requiresResolvedShipping && !shippingResolved) {
       await logAnomaly({ type: 'shipping_not_resolved', siteId: site.id, slug, details: { countryCode: countryCode || null, itemCount: items.length } });
       return NextResponse.json({ error: 'Livraison indisponible pour cette destination' }, { status: 409 });
     }
@@ -179,8 +225,13 @@ export async function POST(req: Request) {
         // suppliers.ts, deja la source unique pour la curation/recherche,
         // jamais appliquee ici au moment de l'achat reel). Meme regle,
         // meme fonction, applique desormais au point le plus critique.
-        const eligibleSuppliers = suppliersForDropshipType(site.dropship_type as any);
-        if (!cp?.supplier_id || !eligibleSuppliers.includes(cp.supplier_id)) {
+        // PHASE 4 / D2 -- la question passe par la politique du domaine. Le
+        // domaine marchand refuse TOUT produit de catalogue fournisseur : sans
+        // cela, le domaine dependrait du contenu du panier plutot que du site,
+        // et un encaissement serait possible sans execution possible.
+        // Le domaine fournisseur applique sa regle interne INCHANGEE
+        // (cloisonnement strict par sous-type, suppliersForDropshipType).
+        if (!policy.admitsCatalogSupplier(cp?.supplier_id, site.dropship_type)) {
           await logAnomaly({
             type: 'catalog_supplier_not_eligible',
             siteId: site.id,
@@ -353,7 +404,7 @@ export async function POST(req: Request) {
           await logAnomaly({ type: 'shop_price_missing', siteId: site.id, slug, details: { itemId: item.id } });
           return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
         }
-        if (site.mode === 3 && sp.cj_vid) {
+        if (policy.countsMappedProductCost && sp.cj_vid) {
           await logAnomaly({ type: 'shop_product_dropship_cost_unknown', siteId: site.id, slug, details: { itemId: item.id } });
           return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
         }
@@ -500,16 +551,12 @@ export async function POST(req: Request) {
     // rendre `merchant_profit` exact : amount - 0 - 0 = amount.
     //
     // Mode 3 strictement inchange -- meme formule, meme arrondi.
-    const nexioraCommission = site.mode === 3
-      ? roundMoney(totalAmount * (NEXIORA_COMMISSION_PERCENT / 100))
-      : 0;
-    const applicationFeeAmount = site.mode === 3
-      ? roundMoney(supplierCost + shippingAmount + nexioraCommission)
-      : 0;
+    const nexioraCommission = policy.commission(totalAmount);
+    const applicationFeeAmount = policy.applicationFee(supplierCost, shippingAmount, nexioraCommission);
 
     // ---- Garde-fou applicable a TOUS les modes (DEBT-029b) ----
     // Audit final phase 2 : tous les garde-fous financiers etaient enfermes
-    // dans le bloc `if (site.mode === 3)` ci-dessous. Une remise de 100 % en
+    // dans le bloc des garde-fous fournisseur ci-dessous. Une remise de 100 % en
     // mode 1/2 avec livraison gratuite produit un montant total de 0, que
     // Stripe refuse -- l'acheteur recevait une erreur opaque au lieu d'un
     // refus explicite. Le mode 3 etait deja couvert (la garde
@@ -532,7 +579,7 @@ export async function POST(req: Request) {
     // ---- Garde-fous financiers (mode 3) ----
     // Nexiora avance l'argent au fournisseur : aucune commande ne passe si les
     // montants sont incoherents. Mieux vaut une vente perdue qu'une perte seche.
-    if (site.mode === 3) {
+    if (policy.enforcesSupplierFinancialGuards) {
       // Garde-fous INCHANGES dans leur logique -- mais evalues sur le
       // montant REELLEMENT encaisse (apres remise). C'est ce qui rend une
       // remise economiquement intenable automatiquement refusee, sans avoir
@@ -685,47 +732,6 @@ export async function POST(req: Request) {
     // catalogue theorique -- sinon tout le reporting (admin/stats,
     // finances) et les remboursements seraient fausses par la remise.
     const amount = discountedTotal;
-
-    // ---- PHASE 2 : capture du domaine d'execution sur la commande ----
-    // Plan de reference : docs/PLAN-SEPARATION-MODE2-MODE3.md
-    //
-    // C'est le SEUL endroit du produit ou le mode d'un site est converti en
-    // domaine d'execution. En aval, plus personne n'a le droit de reposer la
-    // question : le fulfillment lira cette colonne, jamais `sites.mode`.
-    // L'aiguillage post-paiement devient ainsi un LOOKUP, jamais une
-    // DECISION -- un aiguillage qui ne decide rien ne peut pas devenir un
-    // point de fusion entre les deux domaines.
-    //
-    // Ce point precis est le bon : `site.mode` est deja lu ici (ligne 43) et
-    // deja utilise plus haut pour la livraison, le cout fournisseur et la
-    // commission. Aucune lecture supplementaire n'est introduite.
-    //
-    // La valeur est figee au moment de la vente, comme le sont deja
-    // payment_account_id, supplier_cost, nexiora_commission et
-    // merchant_profit : une commande doit rester traitee selon le modele en
-    // vigueur quand elle a ete passee, quoi qu'il advienne du site ensuite.
-    const fulfillmentDomain = resolveFulfillmentDomain(site.mode);
-
-    // Un mode hors {1,2,3} ne peut pas se produire aujourd'hui
-    // (resolveFinalMode ne rend que ces trois valeurs). Si cela arrivait, le
-    // repli est 'merchant' -- donc AUCUN appel fournisseur, jamais d'argent
-    // engage a l'aveugle. Mais un repli muet serait pire que le probleme :
-    // un site fournisseur dont le mode aurait ete corrompu cesserait d'etre
-    // livre en silence. D'ou cette trace. `details.domain` suit la
-    // convention M-2 : MODE_2 / MODE_3 / SHARED / UNKNOWN.
-    if (!isRecognisedSiteMode(site.mode)) {
-      await logAnomaly({
-        type: 'site_mode_unrecognised',
-        severity: 'warning',
-        siteId: site.id,
-        slug,
-        details: {
-          domain: 'UNKNOWN',
-          siteMode: (site.mode as unknown) ?? null,
-          repliSur: fulfillmentDomain,
-        },
-      });
-    }
 
     const { data: order, error: orderError } = await supabaseAdmin
       .from('shop_orders')

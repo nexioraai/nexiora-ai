@@ -166,6 +166,74 @@ const MODE_3_MUST_NOT_DEPEND_ON_MODE_2: ForbiddenImportRule[] = [
   },
 ]
 
+/** Le point de vente ne DÉCIDE plus, il CONVERTIT.
+ *
+ *  La phase 4 a retiré de `checkout/route.ts` les sept branchements métier qui
+ *  y lisaient `site.mode` (stock strict, pays livrable, devis exigé, coût
+ *  compté, commission, frais d'application, garde-fous financiers). Cet acquis
+ *  n'était prouvé que par un `grep` lancé à la main : rien n'empêchait un
+ *  huitième branchement d'être écrit demain, et un branchement qui REPRODUIT
+ *  le comportement actuel ne fait échouer aucun test de caractérisation — par
+ *  construction. Ces règles sont le cliquet manquant.
+ *
+ *  RESTE AUTORISÉ, et doit le rester :
+ *    - la conversion unique `resolveFulfillmentDomain(site.mode)` (phase 2) ;
+ *    - la garde de reconnaissance `isRecognisedSiteMode(site.mode)` ;
+ *    - la télémétrie qui transporte la valeur sans en tirer de conclusion
+ *      (`siteMode:`, `mode: site.mode` dans un `details`).
+ *  Ces trois formes PASSENT la valeur ; aucune n'en DÉRIVE une règle.
+ *
+ *  Les deux dernières règles ferment les voies d'ACQUISITION. Sans elles,
+ *  `const m = site.mode` puis `if (m === 3)` traverserait le garde sans bruit :
+ *  c'est exactement l'évasion que le contrôle de mutation de la phase 0 avait
+ *  identifiée comme le trou d'un motif purement textuel. Interdire l'extraction
+ *  ferme la dérivation en amont, plutôt que de courir après ses formes. */
+const CHECKOUT_MUST_NOT_DECIDE_ON_MODE: ForbiddenImportRule[] = [
+  {
+    pattern: /\bsite\.mode\s*(===|!==|==|!=|>=|<=|>|<)|(===|!==|==|!=|>=|<=|>|<)\s*site\.mode\b/,
+    reason:
+      "Phase 4 — comparer `site.mode` à une valeur, c'est réintroduire une règle de domaine dans le point de vente. La règle appartient à mode2/checkoutPolicy.ts ou mode3/checkoutPolicy.ts ; la route interroge la politique, elle ne la connaît pas.",
+  },
+  {
+    pattern: /\bswitch\s*\(\s*site\.mode\b/,
+    reason:
+      "Phase 4 — aiguiller sur `site.mode` est un branchement métier, quelle que soit sa syntaxe. La seule conversion autorisée est resolveFulfillmentDomain().",
+  },
+  {
+    pattern: /\.(includes|indexOf|has)\s*\(\s*site\.mode\b/,
+    reason:
+      "Phase 4 — tester l'appartenance de `site.mode` à un ensemble de modes est un branchement métier déguisé en test d'appartenance.",
+  },
+  {
+    pattern: /\bsite\.mode\s*\?(?!\?)|\bif\s*\(\s*!?\s*site\.mode\b/,
+    reason:
+      "Phase 4 — brancher sur la véracité de `site.mode` (ternaire ou `if` direct) est une décision de domaine. `??` reste permis : il transporte une valeur, il n'en dérive rien.",
+  },
+  {
+    pattern:
+      /\b(const|let|var)\s+[A-Za-z_$][\w$]*\s*(:[^=]+)?=\s*site\.mode\b|\{[^}]*\bmode\b[^}]*\}\s*=\s*site\b|\bsite\s*\[\s*['"`]mode['"`]\s*\]/,
+    reason:
+      "Phase 4 — extraire le mode dans une variable (affectation, destructuration ou accès par crochets) rend invisible le branchement qui suivra. Passer `site.mode` directement à resolveFulfillmentDomain() est la seule sortie prévue.",
+  },
+  {
+    pattern: /\b(const|let|var)\s+[A-Za-z_$][\w$]*\s*=\s*site\s*[;,)]/,
+    reason:
+      "Phase 4 — aliaser le site entier contourne toutes les règles ci-dessus en une ligne (`const s = site` puis `s.mode === 3`). La route n'a aucun besoin d'un alias du site.",
+  },
+]
+
+/** Les lignes de commentaire sont exclues du scan de ce domaine.
+ *
+ *  DÉROGATION ASSUMÉE au comportement des autres domaines, qui scannent les
+ *  commentaires (limite connue du moteur, documentée plus haut). Ici elle est
+ *  nécessaire ET sûre : la route doit pouvoir EXPLIQUER en prose la règle
+ *  qu'elle n'applique plus — c'est même la meilleure protection contre une
+ *  réintroduction par méconnaissance — et un branchement mis en commentaire
+ *  n'est pas un branchement. Aucun code exécutable ne peut se cacher derrière
+ *  ce filtre : il ne saute que les lignes DÉBUTANT par un marqueur. Une ligne
+ *  de code suivie d'un commentaire reste scannée intégralement. */
+const IGNORE_COMMENT_LINES = /^(\/\/|\*|\/\*)/
+
 export const DOMAIN_REGISTRY: DomainDefinition[] = [
   {
     id: 'mode-1-theme-rendering-editorial',
@@ -233,6 +301,34 @@ export const DOMAIN_REGISTRY: DomainDefinition[] = [
     contractTestsPath: 'src/lib/architecture/__tests__/mode2Mode3Boundaries.test.ts',
   },
   {
+    id: 'mode-2-merchant-domain',
+    description:
+      "Domaine marchand (phase 4, regle A1) — une boutique autonome detient son stock, prepare et expedie elle-meme. Ce domaine ne doit dependre d'AUCUN fournisseur ni du domaine fournisseur : c'est ce qui garantit qu'une evolution Mode 3 ne peut pas atteindre le chemin Mode 2. Il ne lit pas non plus le sous-type, qui est une notion interne au Mode 3 et n'a aucun sens ici.",
+    ownedFiles: ['src/lib/mode2/checkoutPolicy.ts'],
+    forbiddenPatterns: [
+      {
+        pattern: /from ['"]@\/lib\/(cj|suppliers|dropship|mode3)/,
+        reason:
+          "A1 — mode2/ ne doit jamais importer un fournisseur, le registre fournisseur, la table des sous-types, ni le domaine Mode 3.",
+      },
+      {
+        pattern: /\bdropship_type\b/,
+        reason:
+          "A1 — le sous-type est interne au domaine fournisseur. Le domaine marchand n'a pas de fournisseur, donc pas de sous-type.",
+      },
+    ],
+    contractTestsPath: 'src/lib/order-domain/__tests__/checkoutPolicy.test.ts',
+  },
+  {
+    id: 'checkout-domain-selection',
+    description:
+      "Point de vente (phase 4) — le SEUL endroit du produit ou le domaine d'une commande est decide, et il le decide une fois, a partir du seul mode du site. En contrepartie il ne doit contenir AUCUNE regle de domaine : il convertit le mode en domaine, choisit la politique correspondante, puis interroge cette politique. Avant la phase 4, sept branchements metier lisaient directement `site.mode` ici — un fichier que les deux modes traversent. Cette entree empeche le huitieme.",
+    ownedFiles: ['src/app/api/shop/checkout/route.ts'],
+    forbiddenPatterns: CHECKOUT_MUST_NOT_DECIDE_ON_MODE,
+    ignoreLinePattern: IGNORE_COMMENT_LINES,
+    contractTestsPath: 'src/lib/architecture/__tests__/mode2Mode3Boundaries.test.ts',
+  },
+  {
     id: 'order-dispatch',
     description:
       "Aiguillage post-paiement (phase 3, regle A5) — le SEUL fichier partage autorise a referencer les points d'entree des domaines. En contrepartie il ne doit contenir AUCUNE decision metier : il lit le domaine porte par la commande et delegue. Un aiguillage qui ne decide rien ne peut pas redevenir un lieu de fusion entre Mode 2 et Mode 3 — c'est la propriete centrale de cette phase. Avant elle, ce fichier appelait les deux moteurs fournisseur INCONDITIONNELLEMENT, et une commande Mode 2 atteignait reellement CJ et Printful.",
@@ -269,7 +365,7 @@ export const DOMAIN_REGISTRY: DomainDefinition[] = [
     id: 'order-domain-frontier',
     description:
       'Point de décision unique de la frontière (phase 1) — répond à « qui exécute cette vente ? » à partir du seul mode du site. C’est le SEUL module autorisé à connaître le mode pour en déduire un domaine ; en contrepartie il ne doit connaître ni sous-type, ni fournisseur, ni aucun des deux domaines. Une garde antérieure qui consultait `dropship_type` a modifié le comportement de pod_brand et pod_custom : cette entrée rend cette erreur détectable au moment où elle est écrite.',
-    ownedFiles: ['src/lib/order-domain/resolve.ts'],
+    ownedFiles: ['src/lib/order-domain/resolve.ts', 'src/lib/order-domain/checkoutPolicy.ts'],
     forbiddenPatterns: [
       {
         pattern: /\bdropship_type\b/,
@@ -297,6 +393,7 @@ export const DOMAIN_REGISTRY: DomainDefinition[] = [
       'src/lib/cj/shipping-tiers.ts',
       'src/lib/cj/statusMap.ts',
       'src/lib/dropship/suppliers.ts',
+      'src/lib/mode3/checkoutPolicy.ts',
       'src/lib/fulfillment/idempotency-key.ts',
       'src/lib/fulfillment/observability.ts',
       'src/lib/fulfillment/provider-change.ts',
@@ -328,8 +425,47 @@ export const DOMAIN_REGISTRY: DomainDefinition[] = [
  *  ne serait couvert par AUCUNE règle — un trou silencieux. Le test
  *  correspondant échoue tant que le nouveau fichier n’est pas déclaré. */
 export const MODE_3_OWNED_DIRECTORIES = [
+  'src/lib/mode3',
   'src/lib/cj',
   'src/lib/suppliers',
   'src/lib/dropship',
   'src/lib/fulfillment',
 ] as const
+
+/** Répertoires entièrement possédés par `mode-2-merchant-domain`. Même rôle et
+ *  même mécanisme que MODE_3_OWNED_DIRECTORIES ci-dessus — la protection est
+ *  volontairement SYMÉTRIQUE, pas nouvelle.
+ *
+ *  Elle manquait : la phase 4 a créé le domaine marchand avec un unique fichier
+ *  déclaré, et `ownedFiles` étant une liste explicite, un second fichier —
+ *  `src/lib/mode2/pricing.ts`, par exemple — n'aurait été couvert par AUCUNE
+ *  règle. A1 aurait été vraie par coïncidence de contenu, pas tenue par un
+ *  garde. Le test d'exhaustivité échoue tant qu'un fichier du répertoire n'est
+ *  pas déclaré ci-dessus dans `ownedFiles`.
+ *
+ *  Le domaine marchand est jeune et ne compte qu'un fichier : c'est précisément
+ *  le moment où le cliquet coûte le moins cher à poser. */
+export const MODE_2_OWNED_DIRECTORIES = ['src/lib/mode2'] as const
+
+/** Répertoire du point de décision unique de la frontière. Même mécanisme que
+ *  les deux constantes ci-dessus.
+ *
+ *  Ce domaine interdit `dropship_type` et toute dépendance de domaine à
+ *  l'endroit précis où « qui exécute cette vente ? » est tranché. Une liste
+ *  explicite non gardée y était le trou le plus coûteux du registre : un
+ *  fichier ajouté ici échapperait aux deux règles qui empêchent de rejouer
+ *  l'erreur mesurée sur 13bec0e — une garde qui consultait le sous-type et
+ *  modifiait le comportement de pod_brand et pod_custom. */
+export const ORDER_DOMAIN_OWNED_DIRECTORIES = ['src/lib/order-domain'] as const
+
+/** Répertoire du point de vente.
+ *
+ *  Le cliquet posé sur `route.ts` interdit tout branchement métier sur
+ *  `site.mode`. Sans exhaustivité, il se contournait en une ligne : extraire
+ *  un `checkout/policyHelpers.ts` — le refactor le plus naturel qui soit sur
+ *  une route de neuf cents lignes — et y écrire la décision. Le fichier voisin
+ *  n'étant déclaré nulle part, aucune règle ne l'aurait vu.
+ *
+ *  Ce répertoire ne contient que la route : tout `.ts` qui y apparaît est donc
+ *  un helper du point de vente, et doit être soumis aux mêmes règles. */
+export const CHECKOUT_OWNED_DIRECTORIES = ['src/app/api/shop/checkout'] as const

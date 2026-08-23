@@ -216,7 +216,12 @@ POD ne contamine rien (6 tables dédiées) — **le motif cible existe déjà da
 **Objectif** : créer le domaine Mode 2 (code neuf) et scinder F2.
 **Modifié** : `src/lib/mode2/*` (neuf) · `checkout/route.ts` (F2) · politiques de domaine.
 **Inchangé** : mécanisme Stripe, écriture de commande, machine à états.
-**Preuve** : **0 occurrence de `site.mode` dans la route** ; caractérisation checkout inchangée (37+53 tests).
+**Preuve** *(critère clarifié avant le démarrage de la phase — voir journal)* :
+**`checkout/route.ts` ne doit contenir AUCUN branchement métier basé directement sur
+`site.mode`.** Une seule conversion `site.mode → fulfillment_domain` reste autorisée, au
+point établi en phase 2. Vérifiable : `grep "site.mode === "` → **0** ;
+`grep "site.mode"` → uniquement les lignes de la conversion.
+Plus : **caractérisation checkout inchangée** (37 + 59 tests).
 
 ### PHASE 5 — Protection des responsabilités SHARED
 **Objectif** : scinder F3, F4, F5 ; verrouiller R1-R4.
@@ -457,7 +462,7 @@ déplacées · banc 12 cas avant/après · comptage de tests.
 | 1 — Fondation | ✅ **VALIDÉE** | `8665dc8` → *(checkpoint phase 1)* | `order-domain/resolve.ts` (neuf) · `order-domain/__tests__/resolve.test.ts` (neuf) · `domainRegistry.ts` (+1 domaine) · `vitest.config.ts` (+1 ligne d'inclusion) | **1129 → 1159** (+30) · 111 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | résolveur total, fail-closed, 2 mutations sur 2 attrapées | **Phase 2** |
 | 2 — `fulfillment_domain` | ✅ **VALIDÉE** — 4 étapes exécutées et vérifiées en production | `d63e885` → *(checkpoint phase 2)* | 3 fichiers SQL (`step1_add_column`, `step2_backfill`, `step3_not_null_and_immutability`) · `checkout/route.ts` (+capture) · `checkout/__tests__/route.test.ts` (+8 tests) | **1159 → 1167** (+8) · 111 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | mutation sur l'écriture → 4 tests en échec ✓ · **immutabilité prouvée en base** ✓ | **Phase 3** |
 | 3 — Fulfillment | ✅ **VALIDÉE** | `909a746` → *(checkpoint phase 3)* | `cj/fulfill.ts` · `suppliers/pod-fulfill.ts` · `shop/handlePaidCheckout.ts` · `domainRegistry.ts` (A5+A9) · 4 fichiers de tests · 1 fixture | **1167 → 1183** (+16) · 111 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **5 mutations / 5 attrapées** · **7 cas Mode 3 identiques à la production** | **Phase 4** |
-| 4 — Mode 2 | ⏳ EN ATTENTE | — | — | — | — | — |
+| 4 — Mode 2 | ✅ **VALIDÉE** | *(checkpoint phase 4)* | `order-domain/checkoutPolicy.ts` · `mode2/checkoutPolicy.ts` · `mode3/checkoutPolicy.ts` · `order-domain/__tests__/checkoutPolicy.test.ts` (neufs) · `checkout/route.ts` · `checkout/__tests__/route.test.ts` · `domainRegistry.ts` (**A1** + 2 cliquets) · `mode2Mode3Boundaries.test.ts` · `fixtures/mode2Mode3Violating.ts` | **1183 → 1279** (+96) · 112 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **16 mutations / 16 attrapées** · **0 branchement métier sur `site.mode`** · 6/6 domaines en contrôle positif **et** négatif · 4/4 exhaustivités gardées | **Phase 5** |
 | 5 — SHARED | ⏳ EN ATTENTE | — | — | — | — | — |
 | 6 — Tests de frontière | ⏳ EN ATTENTE | — | — | — | — | — |
 | 7 — Contrats SHARED | ⏳ EN ATTENTE | — | — | — | — | — |
@@ -728,7 +733,169 @@ données brutes du banc confirment les deux points ligne à ligne.
 
 **M-1 reste hors phase 3** et ne doit pas y être rattachée rétroactivement.
 
+---
+
+### PHASE 4 — clarification du critère de sortie *(avant démarrage)*
+
+Le plan se contredisait : le critère de sortie de la phase 4 exigeait **« 0 occurrence de
+`site.mode` dans la route »**, alors que l'architecture (§2, chaîne de vérité) et la matrice
+des droits de lecture autorisent explicitement **une** lecture au checkout — celle qui
+convertit le mode en domaine, construite en phases 1-2 et validée au checkpoint `909a746`.
+
+Appliquer le critère à la lettre aurait imposé de **détruire le point de décision unique**.
+Critère corrigé ci-dessus. **Clarification, pas changement d'architecture ni d'ordre.**
+
+Classification des 11 occurrences de `site.mode` dans la route :
+**7 branchements métier** (81 · 98 · 140 · 356 · 503 · 506 · 535) → à déplacer vers les
+politiques de domaine · **3 lignes de conversion** (707 · 716 · 724) → **doivent rester** ·
+**1 champ de télémétrie** (524) → voir ci-dessous.
+
+**Huitième point, hors des 7** : l'admission produit (ligne 182) décide via
+`suppliersForDropshipType(site.dropship_type)` **sans jamais lire `mode`**. Or **D2 = NON**.
+Cette garde relève donc de la phase 4, bien que le plan la range dans F2 sans la compter
+parmi les 7.
+
+**Q2 — `details.mode` de `zero_amount_checkout` (ligne 524) : INCHANGÉ, décision actée.**
+Inventaire des consommateurs : aucun. `negative_merchant_profit` — que j'avais désigné à
+tort — **ne porte pas ce champ**. Le champ appartient à un garde-fou **multi-mode**
+(DEBT-029b) où `mode` est réellement discriminant, et conserve la **valeur brute** : un mode
+corrompu y serait visible, là où `domain` afficherait `merchant` et masquerait la
+corruption. Ce n'est pas un branchement — il ne décide rien.
+
+**Trois catégories d'usage de `site.mode`, distinction maintenue pour toute la phase 4** :
+décision métier → **doit disparaître** · conversion unique vers le domaine → **autorisée** ·
+diagnostic / télémétrie → **autorisée tant qu'elle n'influence aucune décision**.
+
+---
+
+### PHASE 4 — VALIDÉE
+
+**Trois fichiers neufs.** `order-domain/checkoutPolicy.ts` déclare le **contrat**
+d'admission — il ne décide rien, ne connaît ni fournisseur ni sous-type ni valeur de mode.
+`mode2/checkoutPolicy.ts` et `mode3/checkoutPolicy.ts` y répondent, **chacun chez soi**.
+
+**Les 7 branchements métier ont disparu** : `grep "site.mode === "` dans la route → **0**.
+Les occurrences restantes sont la conversion unique (74, 85, 93), la télémétrie validée
+(571) et un commentaire. **La route ne sait plus quelle règle s'applique — seulement quelle
+question poser.**
+
+**Conversion unique préservée et REMONTÉE**, non supprimée ni dupliquée : elle doit précéder
+la première décision, puisqu'elle sélectionne la politique. Toujours un seul point.
+
+**D2 appliquée** : le domaine marchand refuse **tout** produit du catalogue fournisseur,
+quel que soit le fournisseur et quel que soit le sous-type — y compris incohérent.
+
+**A1 activée** — `mode-2-merchant-domain` interdit à `mode2/` d'importer `cj/`,
+`suppliers/`, `dropship/`, `mode3/`, et d'y lire le sous-type. **Cliquet appliqué** aux
+trois fichiers neufs : le contrat rejoint `order-domain-frontier`, la politique fournisseur
+rejoint `mode-3-supplier-domain`, et `src/lib/mode3` entre dans les répertoires soumis au
+test d'exhaustivité.
+
+**Deux obstacles rencontrés, tous deux arbitrés avant modification :**
+
+| Obstacle | Résolution |
+|---|---|
+| Le plan exigeait « 0 occurrence de `site.mode` », l'architecture en autorise une | **STOP** → critère clarifié (Q1) |
+| Option A (mock configurable par test) **techniquement impossible** : `SHIPPING_SUPPLIERS` est un `const` de niveau module dans `resolveShipping.ts`, évalué à l'import, donc avant tout `beforeEach` | **STOP** → **A′** : mock fixe ciblé `printful`, **aucun fichier de production touché**. Rayon d'action nul sur l'existant, prouvé par la boucle : `SHIPPING_SUPPLIERS.get('cj')` → `undefined` → `continue`, le repli `shipping_cache` reste le seul chemin CJ |
+
+**Requalification D2 des fixtures — 4 causes mécaniques identifiées successivement**, aucune
+assertion touchée : sites Mode 2 portant un sous-type Mode 3 → `SITE_MODE3` · absence de
+`countryCode` → complété · `catalog_products` sans `id` ni `supplier_product_id` →
+complétés · fixtures en **objet** au lieu de **tableau** — `buildSupplierGroups` fait
+`for (const cp of catProds)`, un objet n'est pas itérable, l'exception était avalée par le
+`catch` de la route et le Mode 3 rejetait. Enfin, `shipping_cache` ajouté là où le Mode 3
+exige un devis confirmé.
+
+**Le test que D2 visait explicitement** — *« site reseller + produit CJ (cas légitime) »* —
+**conserve son assertion** (`200`) : seul son fixture est passé d'un site Mode 2 incohérent
+à un vrai site Mode 3.
+
 **Registre transversal** *(signalé, hors périmètre)* : `fulfill.ts:443-445` sans filtre
 `supplier_id` · annulation POD absente de `cancel-order` · 4 colonnes CJ sur `shop_orders` ·
 allowlist `pod_brand` incluant Gelato alors qu'aucune voie de vente ne l'expose ·
 échec d'insertion `logAnomaly` avalé.
+
+---
+
+### PHASE 4 — AUDIT DE FERMETURE : les acquis n'étaient pas verrouillés
+
+Trois audits architecturaux successifs, demandés avant validation, ont montré que la
+livraison initiale de la phase était **juste mais non tenue**. Les défauts trouvés étaient
+tous dans le travail de cette phase, et tous de la même famille.
+
+**Ce que les phases 0 à 3 faisaient et que la phase 4 avait omis** : chacune avait verrouillé
+son propre acquis par une règle de registre. La phase 4 ne l'avait pas fait. Cette régularité
+n'était écrite nulle part — elle l'est maintenant : **une phase qui n'installe pas le cliquet
+de sa propre propriété ne l'a pas acquise, elle l'a seulement obtenue.**
+
+**Quatre défauts mesurés, quatre corrigés :**
+
+| Défaut | Pourquoi il comptait |
+|---|---|
+| `checkout/route.ts` n'appartenait à **aucun domaine** | l'acquis central — zéro branchement métier — n'était prouvé que par un `grep` manuel. Un branchement qui **reproduit** le comportement actuel ne fait échouer aucun test de caractérisation, par construction |
+| `mode-2-merchant-domain` déclarait **un seul fichier explicite** | `ownedFiles` n'est jamais un glob. Un `src/lib/mode2/pricing.ts` n'aurait été couvert par aucune règle : A1 était vraie par coïncidence de contenu, pas tenue par un garde |
+| `order-domain-frontier` et `checkout-domain-selection` : même défaut | le second était le plus probable — extraire un `checkout/policyHelpers.ts` est le refactor le plus naturel sur une route de neuf cents lignes, et il aurait accueilli la décision hors de portée du cliquet |
+| A10 incomplet sur **trois domaines** | `mode-2-merchant-domain`, `order-domain-frontier` : règles déclarées, **jamais prouvées non muettes**. `order-dispatch` : sans contrôle négatif |
+
+**Deux cliquets et deux exhaustivités installés** — `checkout-domain-selection` (6 règles :
+comparaison, aiguillage, appartenance, véracité, acquisition, alias du site) et les
+constantes `MODE_2_`, `ORDER_DOMAIN_`, `CHECKOUT_OWNED_DIRECTORIES`, sur le mécanisme
+`*_OWNED_DIRECTORIES` déjà éprouvé pour le Mode 3. **Aucun mécanisme nouveau.**
+
+**Une évasion réputée indétectable a été fermée.** La phase 0 avait mesuré et documenté
+`const m = site.mode` puis `if (m === 3)` comme hors de portée d'une regex. Elle l'était pour
+un motif ancré sur la **lecture**. En interdisant l'**acquisition** — affectation,
+destructuration, accès par crochets, alias de l'objet entier — la dérivation est fermée en
+amont plutôt que poursuivie dans ses formes.
+
+**Une dérogation assumée** : `checkout-domain-selection` est le seul domaine à exclure du
+scan les lignes débutant par un marqueur de commentaire. La route doit pouvoir **expliquer en
+prose** la règle qu'elle n'applique plus, et un branchement mis en commentaire n'est pas un
+branchement. Aucun code exécutable ne peut s'y cacher : une ligne de code suivie d'un
+commentaire reste scannée intégralement.
+
+**16 mutations, 16 conformes.** 5 pour la phase · 5 pour les deux premiers verrous · 6 pour
+la fermeture. Trois méritent d'être retenues : le helper voisin de la route est attrapé
+**non déclaré** par l'exhaustivité *puis* **déclaré** par les règles du cliquet — il n'existe
+plus de position où l'écrire ; `order-domain-frontier` et `order-dispatch` sont désormais
+prouvés contre une **rechute réelle dans le fichier réellement gardé**, non plus seulement
+contre une fixture ; et une contre-épreuve vérifie qu'un helper *propre et déclaré* reste
+vert — l'exhaustivité signifie « déclarez et conformez-vous », jamais « n'ajoutez rien ».
+
+**Résultat mesuré : 6/6 domaines du chantier en contrôle positif ET négatif, 4/4 domaines
+en forme de répertoire gardés par exhaustivité.** Les deux restants ne sont pas des trous :
+`order-dispatch` possède un fichier dans `src/lib/shop/`, répertoire mixte à trois domaines,
+où l'exhaustivité par répertoire serait fausse et non manquante.
+
+**Dettes reportées, signalées pendant la phase 4 et NON rattachées à son périmètre** —
+à arbitrer, aucune n'ayant d'effet sur le comportement livré :
+
+🟡 le mécanisme d'exhaustivité n'a pas lui-même d'exhaustivité : les quatre constantes
+`*_OWNED_DIRECTORIES` sont une liste manuelle, et rien ne détecte l'oubli d'un cinquième
+domaine. La règle décidable qui le fermerait signalerait à tort les répertoires légitimement
+mixtes (`src/lib/shop/`, `src/lib/payments/`) et exigerait donc une nouvelle liste manuelle.
+🟡 A2 (acyclicité `mode3` ↛ `mode2`) a un contrôle positif mais n'a **jamais été mutée** :
+elle détecte la fixture, rien ne prouve encore qu'elle protège.
+🟡 `shared-commerce-core` est le seul domaine sans dénominateur possible — « SHARED » est une
+catégorie sémantique, pas un répertoire. Rien ne signale l'apparition d'un fichier partagé.
+🟡 `checkout/route.ts` conserve les branches `dropship_type === 'pod_brand' / 'pod_custom'`
+(résolution des designs). Décisions de **sous-type**, jamais de domaine : l'invariant tient.
+Mais ce sont des connaissances internes au Mode 3 dans un fichier partagé, et **le plan ne
+prévoit pas leur traitement** — la phase 5 nomme F3/F4/F5, pas ce bloc.
+🟡 le tunnel catalogue n'est pas aligné sur D2 : `catalog/curate` et `catalog/image-search`
+ferment au Mode 2, `catalog/selections` et `catalog/search` ne filtrent que par sous-type, et
+`suppliersForDropshipType(null)` retombe sur `['cj']`. L'amont admettrait ce que le checkout
+refuse. *(Absence de garde constatée ; atteignabilité de bout en bout non mesurée.)*
+🟡 les politiques portent le **prédicat**, pas le **comportement** : la route sait encore en
+quoi consiste chaque règle. Une sixième contrainte de domaine rouvrirait `checkout/route.ts`.
+🟡 le mock Supabase accepte un objet **et** un tableau avec des sémantiques différentes ;
+l'exception est avalée par le `catch` de la route. **Une fixture mal formée et un refus métier
+légitime produisent la même réponse observable** — un test peut donc être vert pour la
+mauvaise raison. C'est la cause du diagnostic en quatre temps décrit plus haut.
+
+🔵 consolidation possible : porter `ownedDirectories?: string[]` sur `DomainDefinition`
+ramènerait les trois blocs d'exhaustivité à un seul et le 🟡 ci-dessus de deux endroits à un.
+Non fait : cela aurait supprimé des assertions existantes.
+🔵 `siteSubtype` figure dans le contrat partagé alors que `mode2` l'ignore entièrement.
+🔵 `src/app/api/shop/checkout/route.ts.backup` — copie pré-phase 4, gitignorée, trompeuse.
+⚪ `policy.domain` n'est lu par aucun code de production : membre de contrat test-only.

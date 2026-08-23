@@ -48,3 +48,37 @@ export const SELECTION_FOURNISSEUR_DANS_AIGUILLAGE = `const s = suppliersForDrop
 
 /** A9 — un moteur relit le mode du site. C'est LA rechute a empecher. */
 export const MOTEUR_RELIT_LE_MODE = `.select('mode, dropship_type')`
+
+// ---- Phase 4 : le point de vente ne decide plus du domaine ----
+// Une ligne par regle de CHECKOUT_MUST_NOT_DECIDE_ON_MODE. Ces six formes
+// sont les rechutes reellement plausibles : un huitieme branchement metier
+// ecrit dans checkout/route.ts reproduirait le comportement actuel et ne
+// ferait echouer AUCUN test de caracterisation. Seul un garde structurel le
+// voit — et un garde sans controle positif n'est pas un garde.
+
+/** Comparaison directe du mode dans le point de vente. */
+export const COMPARAISON_DU_MODE = `if (site.mode === 3) { supplierCost = x }`
+
+/** Comparaison inversee — la forme qu'un motif ancre a gauche laisserait passer. */
+export const COMPARAISON_INVERSEE = `if (3 !== site.mode) { return }`
+
+/** Aiguillage sur le mode. */
+export const AIGUILLAGE_SUR_LE_MODE = `switch (site.mode) { case 3: break }`
+
+/** Appartenance a un ensemble de modes — un branchement deguise. */
+export const APPARTENANCE_DE_MODE = `if ([2, 3].includes(site.mode)) { f() }`
+
+/** Branchement sur la veracite du mode, ternaire ou if direct. */
+export const VERACITE_DU_MODE = `const commission = site.mode ? 0.06 : 0;`
+
+/** Acquisition : extraire le mode rend invisible le branchement qui suit. */
+export const ACQUISITION_DU_MODE = `const m = site.mode;`
+
+/** Acquisition par destructuration. */
+export const ACQUISITION_PAR_DESTRUCTURATION = `const { id, mode } = site;`
+
+/** Acquisition par crochets — contourne tout motif ancre sur `site.mode`. */
+export const ACQUISITION_PAR_CROCHETS = `const m = site['mode'];`
+
+/** Alias du site entier : contourne toutes les regles ci-dessus en une ligne. */
+export const ALIAS_DU_SITE_ENTIER = `const s = site;`
