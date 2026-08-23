@@ -198,16 +198,43 @@ export async function resolveShipping(params: {
       for (const key of TIER_KEYS) {
         let ok = true;
         let cost = 0, min = 0, max = 0;
-        let name: string | null = null;
+        const names: string[] = [];
         for (const g of cjGroup) {
           const t = byId.get(g.supplier_product_id)!.tiers?.find((x) => x.tier === key);
           if (!t) { ok = false; break; }
+          names.push(String(t.name ?? '').trim());
           cost += Number(t.cost) * g.quantity;
           min = Math.max(min, t.days_min || 0);
           max = Math.max(max, t.days_max || 0);
-          if (!name && t.name) name = String(t.name);
         }
-        if (ok) agg[key] = { cost, min, max, name };
+        if (!ok) continue;
+
+        // ---- P0 multi-produits : le palier n'est PAS une identite ----
+        // Ce bloc joignait les produits sur le LABEL (eco/standard/express).
+        // Or deux produits peuvent porter le meme label pour des
+        // TRANSPORTEURS DIFFERENTS : le code additionnait alors, par exemple,
+        // DHL (produit A) et FedEx (produit B), etiquetait le resultat
+        // "Express", et ne memorisait que DHL. L'acheteur se voyait proposer
+        // une option de livraison qui n'existait chez AUCUN fournisseur.
+        //
+        // L'identite de travail est desormais le `logisticName` reel : un
+        // palier n'est retenu, en multi-produits, que si TOUS les produits
+        // partagent le meme transporteur. Un nom vide ne permet d'etablir
+        // aucune communaute : il disqualifie le palier plutot que de laisser
+        // deux inconnues se faire passer pour une egalite.
+        //
+        // LIMITE ASSUMEE -- `logisticName` n'est pas une identite fournisseur
+        // garantie : CJ ne fournit AUCUN identifiant stable de methode (doc
+        // officielle). C'est le seul discriminant disponible, donc une
+        // ATTENUATION, pas une solution definitive. La cible reste un devis
+        // CJ du panier complet, hors perimetre de ce correctif.
+        //
+        // Mono-produit : comportement strictement inchange (la contrainte ne
+        // s'applique qu'a partir de deux lignes).
+        const common = names[0] ?? null;
+        if (cjGroup.length > 1 && (!common || names.some((n) => n !== common))) continue;
+
+        agg[key] = { cost, min, max, name: common || null };
       }
 
       const available = TIER_KEYS.filter((k) => agg[k]);
