@@ -1,22 +1,8 @@
 import { NextResponse } from 'next/server';
+import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabase as supabaseAnon } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getProvider, resolvePaymentProvider } from '@/lib/payments';
-
-async function authSite(req: Request, slug: string): Promise<{ siteId: string } | { error: NextResponse }> {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
-  const { data: { user }, error: userError } = await supabaseAnon.auth.getUser(token);
-  if (userError || !user?.email) return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
-  const { data: site, error: siteError } = await supabaseAdmin
-    .from('sites')
-    .select('id')
-    .eq('slug', slug)
-    .eq('owner_email', user.email)
-    .single();
-  if (siteError || !site) return { error: NextResponse.json({ error: 'Site not found or unauthorized' }, { status: 404 }) };
-  return { siteId: site.id };
-}
 
 /** POST /api/shop/connect → crée le compte connecté + lien d'onboarding. Body: { slug, country? } */
 export async function POST(req: Request) {
@@ -24,8 +10,14 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { slug, country } = body;
     if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
-    const auth = await authSite(req, slug);
-    if ('error' in auth) return auth.error;
+    // M2-02 -- la verification de propriete etait reimplementee ici (copie
+    // verbatim de la meme fonction dans 5 routes, plus 2 controles inline).
+    // Toutes portaient la MEME regle, mais sur `owner_email` SEUL, la ou la
+    // primitive canonique priorise `owner_id` -- identite stable, insensible
+    // a un changement d'adresse. Delegation : une seule regle, un seul
+    // endroit, aucune divergence possible.
+    const auth = await requireSiteOwner(req, slug, 'id');
+    if (!auth.ok) return auth.response;
 
     // P0-3.9.7 — Country-aware (Section 9) : le pays détermine le provider,
     // jamais une assignation universelle à Stripe. `country` reste
@@ -50,7 +42,7 @@ export async function POST(req: Request) {
     await supabaseAdmin
       .from('sites')
       .update({ payment_provider: providerKey, payment_account_id: accountId })
-      .eq('id', auth.siteId);
+      .eq('id', (auth.site as any).id);
 
     return NextResponse.json({ url });
   } catch (e: any) {

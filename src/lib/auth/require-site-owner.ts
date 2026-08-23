@@ -32,10 +32,18 @@ type OwnerCheck =
  * backfill execute et verifie, tous les sites ont owner_id non-null et ce
  * repli ne s'exerce plus jamais en pratique (code inchange requis).
  */
-export async function requireSiteOwner(
+/**
+ * M2-02 -- coeur partage. Extrait pour que la resolution PAR SLUG et la
+ * resolution PAR ID appliquent EXACTEMENT la meme regle de propriete : c'est
+ * la divergence entre implementations qui etait le defaut, pas la regle
+ * elle-meme. `apply` ne choisit que la CLE de recherche ; tout le reste --
+ * verification du jeton, colonnes ajoutees d'office, priorite owner_id,
+ * codes de reponse -- est commun par construction.
+ */
+async function resolveOwnedSite(
   req: Request,
-  slug: string,
-  columns = 'id'
+  columns: string,
+  apply: (q: ReturnType<ReturnType<typeof supabaseAdmin.from>['select']>) => any
 ): Promise<OwnerCheck> {
   const token = req.headers.get('authorization')?.replace('Bearer ', '');
   if (!token) {
@@ -49,11 +57,7 @@ export async function requireSiteOwner(
 
   let select = columns.includes('owner_id') ? columns : columns + ', owner_id';
   if (!select.includes('owner_email')) select += ', owner_email';
-  const { data: site } = await supabaseAdmin
-    .from('sites')
-    .select(select)
-    .eq('slug', slug)
-    .maybeSingle();
+  const { data: site } = await apply(supabaseAdmin.from('sites').select(select)).maybeSingle();
 
   if (!site) {
     return { ok: false, response: NextResponse.json({ error: 'Site introuvable' }, { status: 404 }) };
@@ -68,4 +72,30 @@ export async function requireSiteOwner(
   }
 
   return { ok: true, site, email: user.email };
+}
+
+/** Verifie la propriete d'un site identifie par son SLUG. */
+export async function requireSiteOwner(
+  req: Request,
+  slug: string,
+  columns = 'id'
+): Promise<OwnerCheck> {
+  return resolveOwnedSite(req, columns, (q) => q.eq('slug', slug));
+}
+
+/**
+ * Verifie la propriete d'un site identifie par son ID.
+ *
+ * M2-02 -- necessaire pour `shop/products/[id]`, seule route du perimetre qui
+ * part d'un identifiant de PRODUIT : elle resout `product.site_id`, puis doit
+ * verifier ce site. La faire passer par le slug aurait exige une requete
+ * supplementaire pour traduire l'id en slug, sans rien apporter.
+ * Meme regle, meme code, seule la cle de recherche change.
+ */
+export async function requireSiteOwnerById(
+  req: Request,
+  siteId: string,
+  columns = 'id'
+): Promise<OwnerCheck> {
+  return resolveOwnedSite(req, columns, (q) => q.eq('id', siteId));
 }

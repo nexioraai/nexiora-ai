@@ -12,7 +12,15 @@ vi.mock('@/lib/supabase', () => ({
   supabase: { auth: { getUser: (...args: unknown[]) => getUserMock(...args) } },
 }));
 
-const siteRow = { id: 'site-1' };
+// M2-02 -- fixtures adaptees a la primitive canonique. Deux differences avec
+// l'ancien `authSite`, toutes deux VOULUES :
+//   * elle exige `user.id` (la comparaison porte sur `owner_id`), la ou
+//     `authSite` se contentait de `user.email` ;
+//   * elle interroge `.maybeSingle()` avec UN seul `.eq()` (la propriete est
+//     verifiee en memoire, pas dans la clause SQL).
+// Aucune assertion n'est modifiee : seule la forme des donnees simulees suit
+// le code reel.
+const siteRow = { id: 'site-1', owner_id: 'owner-1', owner_email: 'merchant@example.com' };
 const siteSelectMock = vi.fn();
 const orderSelectMock = vi.fn();
 const orderUpdateMock = vi.fn();
@@ -24,6 +32,7 @@ function makeFrom() {
       b.select = () => b;
       b.eq = () => b;
       b.single = async () => siteSelectMock();
+      b.maybeSingle = async () => siteSelectMock();
       return b;
     }
     if (table === 'shop_orders') {
@@ -65,7 +74,7 @@ function makeReq(body: unknown) {
 
 beforeEach(() => {
   fromMock = makeFrom();
-  getUserMock.mockReset().mockResolvedValue({ data: { user: { email: 'merchant@example.com' } }, error: null });
+  getUserMock.mockReset().mockResolvedValue({ data: { user: { id: 'owner-1', email: 'merchant@example.com' } }, error: null });
   siteSelectMock.mockReset().mockResolvedValue({ data: siteRow, error: null });
   orderSelectMock.mockReset();
   orderUpdateMock.mockReset();

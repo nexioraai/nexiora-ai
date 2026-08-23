@@ -112,3 +112,71 @@ describe('requireSiteOwner', () => {
     if (!result.ok) expect(result.response.status).toBe(403);
   });
 });
+
+// ============================================================
+// M2-02 -- requireSiteOwnerById : meme regle, autre cle de recherche.
+//
+// Ajoute parce que `shop/products/[id]` part d'un identifiant de PRODUIT :
+// elle resout `product.site_id`, puis doit verifier CE site. Le faire passer
+// par le slug aurait exige une requete supplementaire pour traduire l'id.
+//
+// Ces tests verrouillent le point qui comptait vraiment dans M2-02 : les 7
+// implementations precedentes comparaient `owner_email` SEUL. La primitive
+// priorise `owner_id`. Un site dont `owner_id` est renseigne et DIFFERENT de
+// l'utilisateur courant doit etre refuse MEME si l'e-mail correspond --
+// sinon la delegation aurait affaibli la garde au lieu de l'unifier.
+// ============================================================
+
+import { requireSiteOwnerById } from '../require-site-owner';
+
+describe('M2-02 — requireSiteOwnerById', () => {
+  it('sans jeton -> 401, aucune requête site', async () => {
+    siteSelectMock.mockReset();
+    const res = await requireSiteOwnerById(req(), 'site-1');
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.response.status).toBe(401);
+    expect(siteSelectMock).not.toHaveBeenCalled();
+  });
+
+  it('jeton invalide -> 401', async () => {
+    getUserMock.mockResolvedValue({ data: { user: null }, error: new Error('bad') });
+    const res = await requireSiteOwnerById(req('t'), 'site-1');
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.response.status).toBe(401);
+  });
+
+  it('site inexistant -> 404', async () => {
+    getUserMock.mockResolvedValue({ data: { user: { id: 'u1', email: 'a@b.co' } }, error: null });
+    siteSelectMock.mockResolvedValue({ data: null });
+    const res = await requireSiteOwnerById(req('t'), 'inconnu');
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.response.status).toBe(404);
+  });
+
+  it('propriétaire par owner_id -> autorisé', async () => {
+    getUserMock.mockResolvedValue({ data: { user: { id: 'u1', email: 'a@b.co' } }, error: null });
+    siteSelectMock.mockResolvedValue({ data: { id: 's1', owner_id: 'u1', owner_email: 'autre@x.co' } });
+    const res = await requireSiteOwnerById(req('t'), 's1');
+    expect(res.ok).toBe(true);   // owner_id prime, l'e-mail divergent n'y change rien
+  });
+
+  it('PRIORITÉ owner_id — e-mail correspondant mais owner_id DIFFÉRENT -> 403', async () => {
+    // Le point exact que les 7 implémentations `owner_email` seul rataient.
+    getUserMock.mockResolvedValue({ data: { user: { id: 'u-attaquant', email: 'a@b.co' } }, error: null });
+    siteSelectMock.mockResolvedValue({ data: { id: 's1', owner_id: 'u-legitime', owner_email: 'a@b.co' } });
+    const res = await requireSiteOwnerById(req('t'), 's1');
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.response.status).toBe(403);
+  });
+
+  it('repli owner_email UNIQUEMENT quand owner_id est null', async () => {
+    getUserMock.mockResolvedValue({ data: { user: { id: 'u1', email: 'a@b.co' } }, error: null });
+    siteSelectMock.mockResolvedValue({ data: { id: 's1', owner_id: null, owner_email: 'a@b.co' } });
+    expect((await requireSiteOwnerById(req('t'), 's1')).ok).toBe(true);
+
+    siteSelectMock.mockResolvedValue({ data: { id: 's1', owner_id: null, owner_email: 'autre@x.co' } });
+    const res = await requireSiteOwnerById(req('t'), 's1');
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.response.status).toBe(403);
+  });
+});

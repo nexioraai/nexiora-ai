@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { supabase as supabaseAnon } from '@/lib/supabase';
+import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 
 /**
  * GET /api/shop/finances?slug=xxx&period=30
@@ -13,21 +13,12 @@ export async function GET(req: Request) {
 
   if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
 
-  const authHeader = req.headers.get('authorization');
-  const token = authHeader?.replace('Bearer ', '');
-  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const { data: { user } } = await supabaseAnon.auth.getUser(token);
-  if (!user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const { data: site } = await supabaseAdmin
-    .from('sites')
-    .select('id')
-    .eq('slug', slug)
-    .eq('owner_email', user.email)
-    .maybeSingle();
-
-  if (!site) return NextResponse.json({ error: 'Site not found' }, { status: 404 });
+  // M2-02 -- controle de propriete reimplemente ici (`owner_email` seul).
+  // Delegue a la primitive canonique : meme regle que les 6 autres routes,
+  // avec priorite `owner_id`.
+  const auth = await requireSiteOwner(req, slug);
+  if (!auth.ok) return auth.response;
+  const site = auth.site as { id: string };
 
   const since = new Date();
   since.setDate(since.getDate() - period);

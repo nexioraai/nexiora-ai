@@ -17,6 +17,9 @@ function makeSupabaseChain(siteResponse: { data: unknown; error: unknown }) {
   chain.select = vi.fn(() => chain);
   chain.eq = vi.fn(() => chain);
   chain.single = vi.fn(async () => siteResponse);
+  // M2-02 : la primitive canonique interroge maybeSingle() avec UN seul .eq()
+  // -- la propriete est verifiee en memoire, pas dans la clause SQL.
+  chain.maybeSingle = vi.fn(async () => siteResponse);
   chain.update = vi.fn(() => chain);
   return chain;
 }
@@ -49,8 +52,9 @@ beforeEach(() => {
   getUserMock.mockReset();
   fromMock.mockReset();
   createOnboardingMock.mockReset();
-  getUserMock.mockResolvedValue({ data: { user: { email: 'owner@site.test' } }, error: null });
-  fromMock.mockReturnValue(makeSupabaseChain({ data: { id: 'site-1' }, error: null }));
+  // M2-02 : la primitive exige user.id (comparaison sur owner_id).
+  getUserMock.mockResolvedValue({ data: { user: { id: 'owner-1', email: 'owner@site.test' } }, error: null });
+  fromMock.mockReturnValue(makeSupabaseChain({ data: { id: 'site-1', owner_id: 'owner-1', owner_email: 'owner@site.test' }, error: null }));
   createOnboardingMock.mockResolvedValue({ url: 'https://connect.stripe.test/onboard', accountId: 'acct_123' });
 });
 

@@ -1,35 +1,27 @@
 import { NextResponse } from 'next/server';
+import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabase as supabaseAnon } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { isLegalOrderStatusTransition, type OrderStatus } from '@/lib/shop/orderStatusMachine';
-
-async function authSite(req: Request, slug: string): Promise<{ siteId: string } | { error: NextResponse }> {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
-  const { data: { user }, error: userError } = await supabaseAnon.auth.getUser(token);
-  if (userError || !user?.email) return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
-  const { data: site, error: siteError } = await supabaseAdmin
-    .from('sites')
-    .select('id')
-    .eq('slug', slug)
-    .eq('owner_email', user.email)
-    .single();
-  if (siteError || !site) return { error: NextResponse.json({ error: 'Site not found or unauthorized' }, { status: 404 }) };
-  return { siteId: site.id };
-}
 
 /** GET /api/shop/orders?slug=... → commandes du site avec leurs lignes. */
 export async function GET(req: Request) {
   try {
     const slug = new URL(req.url).searchParams.get('slug');
     if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
-    const auth = await authSite(req, slug);
-    if ('error' in auth) return auth.error;
+    // M2-02 -- la verification de propriete etait reimplementee ici (copie
+    // verbatim de la meme fonction dans 5 routes, plus 2 controles inline).
+    // Toutes portaient la MEME regle, mais sur `owner_email` SEUL, la ou la
+    // primitive canonique priorise `owner_id` -- identite stable, insensible
+    // a un changement d'adresse. Delegation : une seule regle, un seul
+    // endroit, aucune divergence possible.
+    const auth = await requireSiteOwner(req, slug, 'id');
+    if (!auth.ok) return auth.response;
 
     const { data, error } = await supabaseAdmin
       .from('shop_orders')
       .select('id, status, total, currency, customer_email, customer_name, shipping_address, tracking_number, payment_provider, created_at, shop_order_items(product_name, quantity, unit_price)')
-      .eq('site_id', auth.siteId)
+      .eq('site_id', (auth.site as any).id)
       .order('created_at', { ascending: false });
     if (error) throw new Error(error.message);
 
@@ -64,15 +56,21 @@ export async function PATCH(req: Request) {
     if (!ALLOWED_TARGET_STATUSES.includes(targetStatus)) {
       return NextResponse.json({ error: 'targetStatus invalide' }, { status: 400 });
     }
-    const auth = await authSite(req, slug);
-    if ('error' in auth) return auth.error;
+    // M2-02 -- la verification de propriete etait reimplementee ici (copie
+    // verbatim de la meme fonction dans 5 routes, plus 2 controles inline).
+    // Toutes portaient la MEME regle, mais sur `owner_email` SEUL, la ou la
+    // primitive canonique priorise `owner_id` -- identite stable, insensible
+    // a un changement d'adresse. Delegation : une seule regle, un seul
+    // endroit, aucune divergence possible.
+    const auth = await requireSiteOwner(req, slug, 'id');
+    if (!auth.ok) return auth.response;
 
     // Vérifie que la commande appartient bien au site
     const { data: order } = await supabaseAdmin
       .from('shop_orders')
       .select('id, status')
       .eq('id', orderId)
-      .eq('site_id', auth.siteId)
+      .eq('site_id', (auth.site as any).id)
       .maybeSingle();
     if (!order) return NextResponse.json({ error: 'Commande introuvable' }, { status: 404 });
 

@@ -1,37 +1,26 @@
 import { NextResponse } from 'next/server';
+import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabase as supabaseAnon } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getAllProducts, createProduct } from '@/lib/shop';
 
 /** Authentifie l'utilisateur et vérifie qu'il possède le site. Retourne le site_id. */
-async function authSite(req: Request, slug: string): Promise<{ siteId: string } | { error: NextResponse }> {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
-
-  const { data: { user }, error: userError } = await supabaseAnon.auth.getUser(token);
-  if (userError || !user?.email) return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
-
-  const { data: site, error: siteError } = await supabaseAdmin
-    .from('sites')
-    .select('id')
-    .eq('slug', slug)
-    .eq('owner_email', user.email)
-    .single();
-  if (siteError || !site) return { error: NextResponse.json({ error: 'Site not found or unauthorized' }, { status: 404 }) };
-
-  return { siteId: site.id };
-}
-
 /** GET /api/shop/products?slug=... → liste tous les produits du site (gestion admin). */
 export async function GET(req: Request) {
   try {
     const slug = new URL(req.url).searchParams.get('slug');
     if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
 
-    const auth = await authSite(req, slug);
-    if ('error' in auth) return auth.error;
+    // M2-02 -- la verification de propriete etait reimplementee ici (copie
+    // verbatim de la meme fonction dans 5 routes, plus 2 controles inline).
+    // Toutes portaient la MEME regle, mais sur `owner_email` SEUL, la ou la
+    // primitive canonique priorise `owner_id` -- identite stable, insensible
+    // a un changement d'adresse. Delegation : une seule regle, un seul
+    // endroit, aucune divergence possible.
+    const auth = await requireSiteOwner(req, slug, 'id');
+    if (!auth.ok) return auth.response;
 
-    const products = await getAllProducts(auth.siteId);
+    const products = await getAllProducts((auth.site as any).id);
     return NextResponse.json({ products });
   } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
@@ -57,15 +46,21 @@ export async function POST(req: Request) {
     if (!body.slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
     if (!body.name) return NextResponse.json({ error: 'Missing name' }, { status: 400 });
 
-    const auth = await authSite(req, body.slug);
-    if ('error' in auth) return auth.error;
+    // M2-02 -- la verification de propriete etait reimplementee ici (copie
+    // verbatim de la meme fonction dans 5 routes, plus 2 controles inline).
+    // Toutes portaient la MEME regle, mais sur `owner_email` SEUL, la ou la
+    // primitive canonique priorise `owner_id` -- identite stable, insensible
+    // a un changement d'adresse. Delegation : une seule regle, un seul
+    // endroit, aucune divergence possible.
+    const auth = await requireSiteOwner(req, body.slug, 'id');
+    if (!auth.ok) return auth.response;
 
     const productData: Record<string, unknown> = {};
     for (const field of ALLOWED_PRODUCT_FIELDS) {
       if (field in body) productData[field] = body[field];
     }
 
-    const product = await createProduct({ site_id: auth.siteId, ...productData } as Parameters<typeof createProduct>[0]);
+    const product = await createProduct({ site_id: (auth.site as any).id, ...productData } as Parameters<typeof createProduct>[0]);
     return NextResponse.json({ product });
   } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });

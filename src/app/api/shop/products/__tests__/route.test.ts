@@ -18,17 +18,26 @@ vi.mock('@/lib/supabase', () => ({
 }));
 
 const siteLookupMock = vi.fn();
+// M2-02 -- fixtures adaptees a la primitive canonique. Deux differences avec
+// l'ancien `authSite`, toutes deux VOULUES :
+//   * elle exige `user.id` (la comparaison porte sur `owner_id`), la ou
+//     `authSite` se contentait de `user.email` ;
+//   * elle interroge `.maybeSingle()` avec UN seul `.eq()` (la propriete est
+//     verifiee en memoire, pas dans la clause SQL).
+// Aucune assertion n'est modifiee : seule la forme des donnees simulees suit
+// le code reel.
 vi.mock('@/lib/supabase-admin', () => ({
   supabaseAdmin: {
-    from: () => ({
-      select: () => ({
-        eq: () => ({
-          eq: () => ({
-            single: () => siteLookupMock(),
-          }),
-        }),
-      }),
-    }),
+    from: () => {
+      // Chainable : la primitive fait select().eq().maybeSingle(),
+      // l'ancien code faisait select().eq().eq().single().
+      const c: any = {};
+      c.select = () => c;
+      c.eq = () => c;
+      c.single = () => siteLookupMock();
+      c.maybeSingle = () => siteLookupMock();
+      return c;
+    },
   },
 }));
 
@@ -54,7 +63,7 @@ function req(body: unknown, token = 'owner-token') {
 
 beforeEach(() => {
   getUserMock.mockReset().mockResolvedValue({ data: { user: { id: 'owner-id', email: 'owner@test.com' } }, error: null });
-  siteLookupMock.mockReset().mockResolvedValue({ data: { id: 'my-site-id' }, error: null });
+  siteLookupMock.mockReset().mockResolvedValue({ data: { id: 'my-site-id', owner_id: 'owner-id', owner_email: 'owner@test.com' }, error: null });
   createProductMock.mockReset().mockResolvedValue({ id: 'p1' });
   updateProductMock.mockReset().mockResolvedValue({ id: 'p1' });
   getProductMock.mockReset().mockResolvedValue({ id: 'p1', site_id: 'my-site-id' });
