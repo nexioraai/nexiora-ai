@@ -10,6 +10,9 @@ import { buildQuoteHash, buildCheckoutIdempotencyKey } from '@/lib/shop/quote/ch
 import { sitePricing, NEXIORA_COMMISSION_PERCENT, resolveDisplayPrice, roundMoney } from '@/lib/pricing';
 import { logAnomaly } from '@/lib/anomaly';
 import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
+// PHASE 2 (docs/PLAN-SEPARATION-MODE2-MODE3.md) : point de decision unique
+// de la frontiere. Ne connait ni sous-type, ni fournisseur.
+import { resolveFulfillmentDomain, isRecognisedSiteMode } from '@/lib/order-domain/resolve';
 
 /** Décode un id panier catalog : "catalog-{uuid}::{variantId}" -> { realId: uuid, variantId }.
  *  variantId est optionnel (produits sans variantes). */
@@ -682,11 +685,55 @@ export async function POST(req: Request) {
     // catalogue theorique -- sinon tout le reporting (admin/stats,
     // finances) et les remboursements seraient fausses par la remise.
     const amount = discountedTotal;
+
+    // ---- PHASE 2 : capture du domaine d'execution sur la commande ----
+    // Plan de reference : docs/PLAN-SEPARATION-MODE2-MODE3.md
+    //
+    // C'est le SEUL endroit du produit ou le mode d'un site est converti en
+    // domaine d'execution. En aval, plus personne n'a le droit de reposer la
+    // question : le fulfillment lira cette colonne, jamais `sites.mode`.
+    // L'aiguillage post-paiement devient ainsi un LOOKUP, jamais une
+    // DECISION -- un aiguillage qui ne decide rien ne peut pas devenir un
+    // point de fusion entre les deux domaines.
+    //
+    // Ce point precis est le bon : `site.mode` est deja lu ici (ligne 43) et
+    // deja utilise plus haut pour la livraison, le cout fournisseur et la
+    // commission. Aucune lecture supplementaire n'est introduite.
+    //
+    // La valeur est figee au moment de la vente, comme le sont deja
+    // payment_account_id, supplier_cost, nexiora_commission et
+    // merchant_profit : une commande doit rester traitee selon le modele en
+    // vigueur quand elle a ete passee, quoi qu'il advienne du site ensuite.
+    const fulfillmentDomain = resolveFulfillmentDomain(site.mode);
+
+    // Un mode hors {1,2,3} ne peut pas se produire aujourd'hui
+    // (resolveFinalMode ne rend que ces trois valeurs). Si cela arrivait, le
+    // repli est 'merchant' -- donc AUCUN appel fournisseur, jamais d'argent
+    // engage a l'aveugle. Mais un repli muet serait pire que le probleme :
+    // un site fournisseur dont le mode aurait ete corrompu cesserait d'etre
+    // livre en silence. D'ou cette trace. `details.domain` suit la
+    // convention M-2 : MODE_2 / MODE_3 / SHARED / UNKNOWN.
+    if (!isRecognisedSiteMode(site.mode)) {
+      await logAnomaly({
+        type: 'site_mode_unrecognised',
+        severity: 'warning',
+        siteId: site.id,
+        slug,
+        details: {
+          domain: 'UNKNOWN',
+          siteMode: (site.mode as unknown) ?? null,
+          repliSur: fulfillmentDomain,
+        },
+      });
+    }
+
     const { data: order, error: orderError } = await supabaseAdmin
       .from('shop_orders')
       .insert({
         site_id: site.id,
         status: 'pending',
+        // Voir le bloc PHASE 2 ci-dessus : decide une fois, jamais recalcule.
+        fulfillment_domain: fulfillmentDomain,
         total: amount,
         currency: items[0].currency,
         payment_provider: site.payment_provider || 'stripe',

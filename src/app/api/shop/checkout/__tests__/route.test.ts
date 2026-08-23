@@ -1017,3 +1017,127 @@ describe('POST /api/shop/checkout — DEBT-029b : garde montant nul, applicable 
     expect(logAnomalyMock).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'zero_amount_checkout' }));
   });
 });
+
+// ============================================================
+// PHASE 2 — capture du domaine d'execution sur la commande.
+// Plan de reference : docs/PLAN-SEPARATION-MODE2-MODE3.md
+//
+// Le checkout est le SEUL endroit du produit ou le mode d'un site est
+// converti en domaine d'execution. Ces tests verrouillent trois proprietes :
+//
+//   1. la valeur ecrite correspond bien au mode du site ;
+//   2. elle ne depend QUE du mode -- jamais du sous-type, jamais du
+//      fournisseur des lignes du panier ;
+//   3. un mode inattendu se replie sur 'merchant' (donc aucun appel
+//      fournisseur) SANS rester silencieux.
+//
+// La propriete 2 est celle qui a manque a une garde anterieure (13bec0e) :
+// en consultant le sous-type, elle avait modifie deux des trois parcours
+// Mode 3. Un test qui ne verifierait que la propriete 1 laisserait cette
+// erreur reapparaitre.
+// ============================================================
+
+function payloadCommande(chains: ReturnType<typeof setupTables>) {
+  const insert = chains.get('shop_orders')?.insert as Mock | undefined;
+  expect(insert, 'aucun INSERT sur shop_orders : le flux n’a pas atteint la création de commande').toBeDefined();
+  return insert!.mock.calls[0][0] as Record<string, unknown>;
+}
+
+/** Checkout Mode 2 nominal : un produit du marchand, aucune ligne fournisseur. */
+function setupMode2(site: unknown = SITE_MODE2) {
+  return setupTables({
+    sites: { data: site, error: null },
+    shop_products: { data: [{ id: 'p1', price: 30, currency: 'usd', published: true, cj_vid: null }], error: null },
+    shop_orders: { data: { id: 'order-1' }, error: null },
+    shop_order_items: { data: [{ id: 'item-1' }], error: null },
+  });
+}
+const ITEM_MARCHAND = { id: 'p1', quantity: 1, name: 'T-Shirt', currency: 'usd' };
+
+/** Checkout Mode 3 nominal : item catalogue, devis servi par le cache.
+ *  Le fournisseur de l'item DOIT correspondre au sous-type du site : la garde
+ *  d'eligibilite fournisseur (N1) refuse sinon en 409, et c'est le
+ *  comportement Mode 3 attendu -- un fixture incoherent testerait autre chose
+ *  que ce qu'il pretend. */
+function setupMode3(site: unknown = SITE_MODE3, supplier = 'cj') {
+  return setupTables({
+    sites: { data: site, error: null },
+    catalog_products: { data: [{ id: 'cp-1', price: 10, currency: 'usd', supplier_id: supplier, supplier_product_id: 'vid-1' }], error: null },
+    site_catalog_selections: { data: null, error: null },
+    shipping_cache: { data: [{ supplier_product_id: 'vid-1', shipping_cost: 5, days_min: 10, days_max: 20, tiers: null }], error: null },
+    shop_orders: { data: { id: 'order-1' }, error: null },
+    shop_order_items: { data: [{ id: 'item-1' }], error: null },
+  });
+}
+const ITEM_CATALOGUE = { id: 'catalog-cp-1::vid-1', quantity: 1, name: 'T-Shirt', currency: 'usd' };
+
+describe('PHASE 2 — fulfillment_domain écrit à la création de la commande', () => {
+  it('Mode 2 -> la commande porte fulfillment_domain = "merchant"', async () => {
+    const chains = setupMode2();
+    const res = await POST(req({ slug: 'boutique', items: [ITEM_MARCHAND] }));
+    expect(res.status).toBe(200);
+    expect(payloadCommande(chains).fulfillment_domain).toBe('merchant');
+  });
+
+  it('Mode 3 -> la commande porte fulfillment_domain = "supplier"', async () => {
+    const chains = setupMode3();
+    const res = await POST(req({ slug: 'boutique', items: [ITEM_CATALOGUE], countryCode: 'US' }));
+    expect(res.status).toBe(200);
+    expect(payloadCommande(chains).fulfillment_domain).toBe('supplier');
+  });
+
+  // ---- Le domaine ne dépend QUE du mode ----
+  // Seuls les sous-types servis par CJ sont exerces ICI : le repli
+  // `shipping_cache` de resolveShipping est propre a CJ (resolveShipping.ts,
+  // `groups['cj']`), donc un item POD ne resout aucun devis et le Mode 3
+  // refuse en 409 -- comportement Mode 3 existant et correct, hors perimetre
+  // de cette phase. L'independance du domaine vis-a-vis du sous-type POD est
+  // prouvee la ou elle est decidable : le resolveur ne recoit jamais le
+  // sous-type (tests de order-domain/resolve.ts) et la regle de registre
+  // `order-domain-frontier` lui interdit structurellement de le lire.
+  it.each([
+    ['reseller', 'cj'],
+    [null, 'cj'],
+  ])('Mode 3 + dropship_type=%s -> toujours "supplier" : le sous-type n’influence PAS le domaine', async (dt, supplier) => {
+    const chains = setupMode3({ ...SITE_MODE3, dropship_type: dt }, supplier);
+    const res = await POST(req({ slug: 'boutique', items: [ITEM_CATALOGUE], countryCode: 'US' }));
+    expect(res.status).toBe(200);
+    expect(payloadCommande(chains).fulfillment_domain).toBe('supplier');
+  });
+
+  it('Mode 2 portant un dropship_type incohérent -> reste "merchant" : le sous-type ne peut pas faire basculer de domaine', async () => {
+    const chains = setupMode2({ ...SITE_MODE2, dropship_type: 'reseller' });
+    const res = await POST(req({ slug: 'boutique', items: [ITEM_MARCHAND] }));
+    expect(res.status).toBe(200);
+    expect(payloadCommande(chains).fulfillment_domain).toBe('merchant');
+    expect(logAnomalyMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'site_mode_unrecognised' })
+    );
+  });
+
+  // ---- Fail-closed, mais jamais muet ----
+  it.each([
+    ['mode inconnu', 7],
+    ['mode absent', null],
+  ])('%s -> repli sur "merchant" (aucun fournisseur) ET anomalie tracée', async (_libelle, mode) => {
+    const chains = setupMode2({ ...SITE_MODE2, mode });
+    const res = await POST(req({ slug: 'boutique', items: [ITEM_MARCHAND] }));
+    expect(res.status).toBe(200);
+    expect(payloadCommande(chains).fulfillment_domain).toBe('merchant');
+    expect(logAnomalyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'site_mode_unrecognised',
+        // Convention M-2 : le domaine est explicite dans l'anomalie.
+        details: expect.objectContaining({ domain: 'UNKNOWN', repliSur: 'merchant' }),
+      })
+    );
+  });
+
+  it('un mode nominal n’émet AUCUNE anomalie (le canari ne crie pas pour rien)', async () => {
+    setupMode2();
+    await POST(req({ slug: 'boutique', items: [ITEM_MARCHAND] }));
+    expect(logAnomalyMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'site_mode_unrecognised' })
+    );
+  });
+});

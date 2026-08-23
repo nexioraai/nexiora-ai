@@ -1,0 +1,71 @@
+-- =============================================================
+-- PHASE 2, ÉTAPE 3 DU PLAN — backfill de `fulfillment_domain`
+-- Plan de référence : docs/PLAN-SEPARATION-MODE2-MODE3.md
+--
+-- ⚠️ DÉJÀ EXÉCUTÉ EN PRODUCTION. Versionné ici pour la traçabilité et pour
+-- qu'un environnement recréé suive exactement la même séquence.
+-- Résultat constaté : 26 lignes mises à jour, toutes en 'supplier',
+-- aucune ligne restée NULL.
+--
+-- POURQUOI CE BACKFILL A ÉTÉ AUTORISÉ — et pourquoi il l'a été TARD.
+--
+-- La valeur n'est PAS devinée : elle est DÉRIVÉE du mode du site, par
+-- jointure. Cette dérivation n'est légitime que si le mode d'un site n'a
+-- jamais changé depuis la vente. Ce point a été bloquant, puis levé par
+-- deux preuves indépendantes :
+--
+--   1. PREUVE CODE — aucun chemin applicatif n'a JAMAIS pu écrire
+--      `sites.mode` autrement qu'à la création :
+--        * un seul INSERT sur `sites` dans tout le dépôt (chat/route.ts) ;
+--        * `sites/[slug]` PATCH filtre par FIELD_MAP, allowlist explicite
+--          de 19 champs où `mode` n'a figuré à AUCUN commit de l'histoire ;
+--        * `updateOwnedSite` supprime `mode` du payload (denylist) ;
+--        * `shop/shipping` n'écrit que shipping_flat, `agent/apply` que
+--          cj_margin_percent ;
+--        * sur toute l'histoire git : aucune ligne n'a jamais fait
+--          update/upsert de `mode`, aucune migration ne le touche.
+--
+--   2. CONFIRMATION D'EXPLOITATION — l'opérateur a confirmé n'avoir jamais
+--      modifié manuellement le mode d'un site (SQL direct, script,
+--      devtools). C'est le seul vecteur que le code ne pouvait pas exclure.
+--
+-- MESURE PRÉALABLE (exécutée avant toute écriture, §12 du plan) :
+--   26 commandes au total
+--    6 avec preuve INTRINSÈQUE de domaine fournisseur (cj_order_id,
+--      soumission POD, ou ligne catalog-%) — indépendante du site
+--   20 dérivées du mode du site, dont 18 antérieures aux gardes Mode 3
+--    0 AMBIGUË (aucun site introuvable)
+--    0 avec preuve intrinsèque CONTREDISANT le mode 3
+--
+-- CE QUI A ÉTÉ REFUSÉ : toute règle du type « en cas de doute → X ».
+-- Le backfill n'a été lancé qu'une fois l'incertitude levée, pas contournée.
+--
+-- PROPRIÉTÉ IMPORTANTE : écrire 'supplier' sur ces commandes PRÉSERVE le
+-- comportement existant. Sans colonne ni garde, toute commande était déjà
+-- éligible au fulfillment fournisseur. 'supplier' reconduit exactement cette
+-- autorisation ; c'est 'merchant' qui en aurait retiré une. Sur les 26, une
+-- seule commande était réellement reprise par le cron (status='paid' +
+-- cj_pay_status pending/failed + attempts<3) — les 25 autres sont inertes.
+--
+-- SÛRETÉ : `where fulfillment_domain is null` rend le script idempotent —
+-- un rejeu ne touche aucune ligne déjà renseignée, donc ne peut pas écraser
+-- une valeur écrite depuis. La jointure exclut d'office toute commande dont
+-- le site serait introuvable : elle resterait NULL plutôt que de recevoir
+-- une valeur inventée (mesuré : aucune).
+-- =============================================================
+
+update shop_orders o
+set fulfillment_domain = case when s.mode = 3 then 'supplier' else 'merchant' end
+from sites s
+where s.id = o.site_id
+  and o.fulfillment_domain is null;
+
+-- -------------------------------------------------------------
+-- VÉRIFICATION (lecture seule, à exécuter séparément) :
+--
+--   select coalesce(fulfillment_domain, 'RESTE NULL') as domaine, count(*)
+--   from shop_orders group by 1 order by 1;
+--
+-- Attendu au moment du backfill : supplier | 26, aucune ligne 'RESTE NULL'.
+-- Constaté : conforme.
+-- -------------------------------------------------------------

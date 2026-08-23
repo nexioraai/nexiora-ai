@@ -455,7 +455,7 @@ déplacées · banc 12 cas avant/après · comptage de tests.
 |---|---|---|---|---|---|---|
 | 0 — Préparation | ✅ **VALIDÉE** | `13bec0e` (non committé) | `domainRegistry.ts` (+161, **0 suppression**) · `__tests__/mode2Mode3Boundaries.test.ts` (neuf) · `__tests__/fixtures/mode2Mode3Violating.ts` (neuf) | **1112 → 1129** (+17) · 110 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | 2 domaines déclarés · 7 règles · 5 mutations sur 6 attrapées | **Phase 1** |
 | 1 — Fondation | ✅ **VALIDÉE** | `8665dc8` → *(checkpoint phase 1)* | `order-domain/resolve.ts` (neuf) · `order-domain/__tests__/resolve.test.ts` (neuf) · `domainRegistry.ts` (+1 domaine) · `vitest.config.ts` (+1 ligne d'inclusion) | **1129 → 1159** (+30) · 111 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | résolveur total, fail-closed, 2 mutations sur 2 attrapées | **Phase 2** |
-| 2 — `fulfillment_domain` | ⏳ EN ATTENTE — **bloquée par §12** | — | — | — | — | — |
+| 2 — `fulfillment_domain` | ✅ **VALIDÉE** — 4 étapes exécutées et vérifiées en production | `d63e885` → *(checkpoint phase 2)* | 3 fichiers SQL (`step1_add_column`, `step2_backfill`, `step3_not_null_and_immutability`) · `checkout/route.ts` (+capture) · `checkout/__tests__/route.test.ts` (+8 tests) | **1159 → 1167** (+8) · 111 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | mutation sur l'écriture → 4 tests en échec ✓ · **immutabilité prouvée en base** ✓ | **Phase 3** |
 | 3 — Fulfillment | ⏳ EN ATTENTE | — | — | — | — | — |
 | 4 — Mode 2 | ⏳ EN ATTENTE | — | — | — | — | — |
 | 5 — SHARED | ⏳ EN ATTENTE | — | — | — | — | — |
@@ -561,6 +561,107 @@ de fournisseur. **2 mutations sur 2 attrapées.**
 **Enseignement conservé** : une règle structurelle s'applique aux lignes brutes,
 commentaires compris. Documenter une interdiction en la nommant la déclenche. Le nom exact
 appartient au registre ; le module dit « le sous-type », pas le champ.
+
+---
+
+### PHASE 2 — EN COURS (étapes 1-2 faites · étape 3 BLOQUÉE)
+
+**Étape 1 — ✅ EXÉCUTÉE ET VÉRIFIÉE EN PRODUCTION.**
+`supabase/sql/shop_orders_fulfillment_domain_step1_add_column.sql` : colonne **nullable**
++ contrainte `CHECK` tolérant le NULL.
+Vérification en base par l'utilisateur : `fulfillment_domain | text | YES` — **1 ligne**.
+Les 26 commandes existantes restent à `NULL`, aucune n'a été touchée.
+*(Omission de ma part corrigée en cours de route : j'avais écrit le fichier sans jamais
+coller son contenu à exécuter — une première vérification avait donc renvoyé 0 ligne.)*
+*Refinement assumé* : le plan prévoyait le `CHECK` en étape 4. L'ajouter dès maintenant ne
+coûte rien, tolère le NULL requis pendant la fenêtre, et rend une valeur invalide
+impossible dès le premier jour. L'étape 4 n'aura qu'à ajouter `SET NOT NULL`.
+
+> ⚠️ **ORDRE D'APPLICATION IMPÉRATIF** : le SQL doit être exécuté **avant** tout déploiement
+> du code de l'étape 2. Sinon chaque `INSERT` de commande échoue — donc chaque checkout.
+> L'échec serait immédiat et bruyant, jamais silencieux, mais total. **Rien n'est poussé :
+> aucun risque en l'état.**
+
+**Étape 2 — capture au checkout.** `checkout/route.ts` convertit `site.mode` en domaine via
+le résolveur de la phase 1, puis l'écrit dans l'`INSERT`. **Aucune lecture supplémentaire**
+n'est introduite : `site.mode` était déjà lu ligne 43 et déjà utilisé pour la livraison, le
+coût fournisseur et la commission.
+
+**Fail-closed observable** : un mode hors `{1,2,3}` se replie sur `merchant` — donc aucun
+appel fournisseur — **et émet `site_mode_unrecognised`** (`severity: 'warning'`,
+`details.domain: 'UNKNOWN'`, convention **M-2**). Un repli muet aurait été pire que le
+problème : un site fournisseur au mode corrompu cesserait d'être livré en silence.
+
+**8 tests ajoutés**, dont la propriété centrale : *le domaine ne dépend QUE du mode*.
+Un test Mode 2 portant un `dropship_type` incohérent reste `merchant` — c'est exactement
+l'erreur de `13bec0e` que ce test rend impossible à réintroduire.
+
+**Limite de couverture, assumée et documentée** : les sous-types POD ne sont pas exercés au
+niveau du checkout. Le repli `shipping_cache` de `resolveShipping` est **propre à CJ**
+(`groups['cj']`, [:448](src/lib/shop/quote/resolveShipping.ts#L448)) ; un item POD ne résout
+aucun devis et le Mode 3 refuse en 409 — **comportement Mode 3 existant, correct, hors
+périmètre**. L'indépendance du domaine vis-à-vis du sous-type POD est prouvée là où elle est
+décidable : le résolveur ne reçoit jamais le sous-type, et la règle `order-domain-frontier`
+lui interdit structurellement de le lire.
+
+**Un fixture incohérent corrigé en cours de route** : mon premier test envoyait un produit
+CJ à une boutique `pod_brand`. Le checkout a répondu **409** — la garde d'éligibilité
+fournisseur (N1) fonctionnant exactement comme prévu. Le fixture était faux, pas le code.
+
+**Étape 3 — ✅ BACKFILL EXÉCUTÉ, après levée d'un blocage assumé.**
+
+Mesure §12 : 26 commandes — **6** à preuve intrinsèque, **20** dérivées d'un site Mode 3,
+**0** hors Mode 3, **0** ambiguë. Détail des 20 : 9 terminales, 11 non terminales,
+**1 seule réellement éligible au cron CJ**, **0** preuve intrinsèque contredisant Mode 3,
+**18 antérieures aux gardes Mode 3**.
+
+**Mon propre critère d'arrêt s'est déclenché** (« 18 antérieures > 0 → STOP »). Je l'ai
+honoré, puis levé — **non par assouplissement, mais parce que deux preuves l'ont rendu
+caduc** :
+
+1. **Preuve code** — aucun chemin applicatif n'a **jamais** pu écrire `sites.mode` hors de
+   la création : un seul `INSERT` sur `sites` dans tout le dépôt ; `sites/[slug]` PATCH
+   filtre par `FIELD_MAP`, **allowlist explicite de 19 champs où `mode` n'a figuré à aucun
+   commit** ; `updateOwnedSite` supprime `mode` du payload ; `shop/shipping` n'écrit que
+   `shipping_flat`, `agent/apply` que `cj_margin_percent` ; sur toute l'histoire git,
+   **aucune ligne n'a jamais fait `update`/`upsert` de `mode`**, aucune migration ne le
+   touche.
+2. **Confirmation d'exploitation** — l'opérateur a confirmé n'avoir jamais modifié un mode
+   manuellement. C'était le seul vecteur que le code ne pouvait pas exclure.
+
+**Résultat** : 26 lignes en `'supplier'`, aucune restée `NULL`. Valeur **dérivée** par
+jointure, jamais devinée. Aucune règle « en cas de doute → X » n'a été créée.
+
+*Propriété qui a cadré la décision* : écrire `'supplier'` **préserve exactement le
+comportement existant** — sans colonne ni garde, ces commandes étaient déjà toutes
+éligibles au fulfillment fournisseur. C'est `'merchant'` qui aurait retiré une autorisation.
+
+**Étape 4 — ✅ `NOT NULL` + IMMUTABILITÉ, PROUVÉE EN BASE.**
+
+Vérifications préalables avant de toucher au schéma : **1 seul `INSERT`** sur `shop_orders`
+dans tout le dépôt (et il écrit déjà la colonne) ; les **23 `UPDATE`** portent tous des
+payloads explicites ; le seul payload dynamique (`orders` PATCH) est construit côté serveur
+avec exactement deux clés (`status`, `tracking_number`) ; **aucun spread `{...order}` nulle
+part** ; aucun `INSERT` côté RPC. Le trigger ne pouvait donc casser aucun chemin existant.
+
+**Preuve comportementale, exécutée en production dans l'éditeur SQL Supabase — donc sous un
+rôle privilégié, propriétaire de la table :**
+
+```
+UPDATE shop_orders SET fulfillment_domain = 'merchant' WHERE fulfillment_domain = 'supplier';
+→ ERROR P0001: FULFILLMENT_DOMAIN_IMMUTABLE: supplier -> merchant
+             (order_id=80f06737-e406-4c75-b17e-090e80d9c4fd)
+```
+
+*(exécuté dans `begin; … rollback;` — aucune donnée modifiée)*
+
+Et le round-trip reste autorisé (`set fulfillment_domain = fulfillment_domain` → `UPDATE 1`,
+aucune erreur) : le trigger ne produit pas de faux positif sur un futur code qui inclurait
+la colonne sans vouloir la changer.
+
+> **L'invariant I3/I4 du plan n'est plus une intention : il est vérifié en base, contre un
+> rôle privilégié.** Limite nommée, identique à celle déjà acceptée pour `status` : un
+> superuser peut désactiver un trigger — PostgreSQL n'offre pas mieux.
 
 **Registre transversal** *(signalé, hors périmètre)* : `fulfill.ts:443-445` sans filtre
 `supplier_id` · annulation POD absente de `cancel-order` · 4 colonnes CJ sur `shop_orders` ·
