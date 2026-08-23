@@ -5,6 +5,9 @@ import { reconcileWithCj, type ReconciliationOutcome } from './reconcile';
 // Meme parseur de delai que le cache (cron shipping-cache) : les deux cotes de
 // la comparaison de delai proviennent ainsi du meme champ CJ et du meme code.
 import { parseAging } from './shipping-tiers';
+// M2-07 : source UNIQUE de l'eligibilite fournisseur, deja partagee par la
+// curation et la recherche catalogue. Jamais reimplementer cette regle.
+import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
 import { logAnomaly } from '@/lib/anomaly';
 
 // Exportes : le cron cj-fulfillment-reconciliation utilise les memes valeurs
@@ -277,6 +280,67 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
   // surtout ne jamais risquer d'ecraser cet etat via les gardes plus bas
   // (adresse/shipping), qui historiquement n'avaient aucune clause de statut.
   if (!['pending', 'failed', 'processing'].includes(order.cj_pay_status)) {
+    return [];
+  }
+
+  // ---- M2-07 : le fulfillment CJ ne concerne QUE les sites eligibles ----
+  //
+  // `handlePaidCheckout:152` appelle cette fonction SANS garde de mode. Pour
+  // une commande Mode 2, tous les produits sont des `shop_products` dont
+  // `cj_vid` est nul : `resolutionErrors` se remplissait de
+  // `shop_product_missing_cj_vid` (transient: false), `cjProducts` restait
+  // vide, et la branche `cjProducts.length === 0` traitait cela comme un
+  // MAPPING CASSE -- ecrivant `cj_pay_status = 'failed'` sur une commande
+  // parfaitement legitime, emettant une anomalie `blocked`, et donc un e-mail
+  // (`cj_product_resolution_failed` est dans ALWAYS_EMAIL_TYPES). Sans
+  // incrementer `cj_pay_attempts`, la commande restait de surcroit eligible au
+  // cron a perpetuite : rejeu toutes les 2 h, e-mail a chaque fois.
+  //
+  // Le defaut n'etait PAS dans la selection des produits -- elle est juste. Il
+  // etait dans l'INTERPRETATION d'un resultat vide : normal pour un site qui
+  // ne vend pas de CJ, anormal pour un reseller.
+  //
+  // Mesure en base avant correction : 0 commande hors Mode 3, 0 anomalie de ce
+  // type jamais emise, aucune contrainte CHECK sur `cj_pay_status`. Defaut
+  // PROUVE mais LATENT -- il se serait declenche a la premiere vente Mode 2.
+  //
+  // ELIGIBILITE : `suppliersForDropshipType`, source unique deja partagee par
+  // la curation et la recherche catalogue -- JAMAIS `dropship_type ===
+  // 'reseller'` en dur. La difference n'est pas cosmetique : cette fonction
+  // retombe deliberement sur CJ quand le sous-type est nul ("comportement
+  // historique"), la ou une comparaison en dur bloquerait le fulfillment de
+  // tout site Mode 3 non type.
+  //
+  // FAIL-CLOSED, mais dans les DEUX sens : une lecture en echec ou un site
+  // introuvable n'ecrivent RIEN. Une erreur de lecture ne prouve pas qu'un
+  // site est ineligible -- ecrire un etat terminal sur cette base couperait
+  // definitivement un fulfillment legitime. La commande reste `pending` et le
+  // cron la reprendra, exactement comme pour toute erreur transitoire.
+  const { data: orderSite, error: siteErr } = await supabaseAdmin
+    .from('sites')
+    .select('mode, dropship_type')
+    .eq('id', order.site_id)
+    .maybeSingle();
+  if (siteErr || !orderSite) {
+    console.error('CJ fulfill: site illisible pour', order.id, siteErr);
+    return [];
+  }
+  const cjEligible =
+    (orderSite as any).mode === 3 &&
+    suppliersForDropshipType((orderSite as any).dropship_type).includes('cj');
+  if (!cjEligible) {
+    // Etat terminal explicite plutot que `pending` laisse en place : sans lui,
+    // chaque commande non-CJ resterait dans le perimetre du cron pour
+    // toujours. Aucune valeur existante ne signifie "sans objet", et aucune
+    // contrainte CHECK n'existe (verifie en base). Tous les consommateurs de
+    // `cj_pay_status` filtrent par correspondance POSITIVE (cron :41/:54,
+    // admin/stats :35) : une valeur nouvelle y est inerte, et la garde de
+    // statut ci-dessus la fait court-circuiter des la premiere re-entree.
+    await supabaseAdmin
+      .from('shop_orders')
+      .update({ cj_pay_status: 'not_applicable' })
+      .eq('id', order.id)
+      .in('cj_pay_status', ['pending', 'failed', 'processing']);
     return [];
   }
 
