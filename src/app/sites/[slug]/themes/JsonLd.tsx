@@ -1,5 +1,6 @@
 // src/app/sites/[slug]/themes/JsonLd.tsx
 import type { Site } from './shared'
+import JsonLdScript from './JsonLdScript'
 
 function resolveSchemaType(rawType?: string): {
   schemaType: string
@@ -135,18 +136,11 @@ export default function JsonLd({ site, url }: { site: Site; url: string }) {
         }
       : null
 
+  // M1-01 : la serialisation appartient a JsonLdScript, jamais a l'appelant.
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-      />
-      {faqData && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqData) }}
-        />
-      )}
+      <JsonLdScript data={data} />
+      {faqData && <JsonLdScript data={faqData} />}
     </>
   )
 }

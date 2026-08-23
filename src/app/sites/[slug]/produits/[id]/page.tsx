@@ -6,6 +6,7 @@ import ProductPageView from './ProductPageView'
 import CartShell from '../../themes/CartShell'
 import { getCartLabels } from '../../themes/cartLabels'
 import { resolveSiteBaseUrl } from '../../themes/shared'
+import JsonLdScript from '../../themes/JsonLdScript'
 
 export const revalidate = 60
 
@@ -82,10 +83,8 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      {/* M1-01 : serialisation echappee, point d'entree unique. */}
+      <JsonLdScript data={jsonLd} />
       <CartShell
         primary={product.primary}
         labels={labels}
