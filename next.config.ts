@@ -2,6 +2,26 @@ import type { NextConfig } from 'next';
 
 const isDev = process.env.NODE_ENV === 'development';
 
+// ===== M1-04 : hote Supabase du projet, jamais un joker =====
+// `connect-src`/`img-src` portaient `https://*.supabase.co`. Ce joker autorise
+// TOUT projet Supabase -- y compris un projet gratuit cree par un attaquant --
+// et constituait donc le canal d'exfiltration laisse ouvert par une CSP par
+// ailleurs stricte (form-action 'self', object-src 'none').
+//
+// La valeur n'est pas devinee : elle vient de l'environnement de build, avec
+// pour repli l'hote deja declare en dur plus bas dans CE MEME FICHIER
+// (images.remotePatterns). Le repli existe pour qu'un build sans variable
+// n'emette JAMAIS `undefined` dans la CSP -- ce qui couperait Supabase en
+// production. L'application exige de toute facon cette variable
+// (`src/lib/supabase.ts:3`, assertion non-null).
+const SUPABASE_HOST = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL as string).host;
+  } catch {
+    return 'lefumezaxfsttigpmzhr.supabase.co';
+  }
+})();
+
 // ===== Content Security Policy =====
 // Limite quelles sources de scripts/styles/images/connexions sont autorisées
 const csp = [
@@ -14,13 +34,13 @@ const csp = [
   // Styles : self + inline (Tailwind utilise des styles inline)
   "style-src 'self' 'unsafe-inline'",
   // Images : self, data URIs (icons SVG inline), blob (preview uploads), Pexels, Supabase Storage
-  "img-src 'self' data: blob: https://images.pexels.com https://*.supabase.co https://cf.cjdropshipping.com https://oss-cf.cjdropshipping.com https://cc-west-usa.oss-us-west-1.aliyuncs.com https://files.cdn.printful.com https://static.cdn.printful.com",
+  `img-src 'self' data: blob: https://images.pexels.com https://${SUPABASE_HOST} https://cf.cjdropshipping.com https://oss-cf.cjdropshipping.com https://cc-west-usa.oss-us-west-1.aliyuncs.com https://files.cdn.printful.com https://static.cdn.printful.com`,
   // Fonts : self, data URIs
   "font-src 'self' data:",
   "worker-src 'self' blob:",
   "child-src 'self' blob:",
   // Connexions fetch/XHR : self, Supabase (HTTP + websocket realtime). En dev, autoriser localhost pour HMR
-  `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://js.stripe.com https://tiles.openfreemap.org${isDev ? ' ws://localhost:* http://localhost:*' : ''}`,
+  `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST} https://api.stripe.com https://js.stripe.com https://tiles.openfreemap.org${isDev ? ' ws://localhost:* http://localhost:*' : ''}`,
   // Embedding : seulement notre propre origine (autorise futurs previews iframe internes)
   "frame-ancestors 'self'",
   // Empêche <base> de pointer ailleurs
