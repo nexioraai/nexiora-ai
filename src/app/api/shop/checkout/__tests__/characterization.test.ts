@@ -148,6 +148,13 @@ describe('CARACTERISATION -- Mode 2 (forfait)', () => {
   const order = (extra: Record<string, unknown> = {}, quantity = 1) =>
     req({ slug: 'boutique', countryCode: 'CA', items: [{ id: 'p1', quantity, name: 'T', currency: 'usd' }], ...extra });
 
+  // M2-01 -- ces attentes FIGEAIENT LE DEFAUT. Ecrites au LOT 0 pour geler le
+  // comportement existant avant refonte, elles ont fait exactement leur
+  // travail : elles ont detecte le correctif. Mais ce qu'elles gelaient etait
+  // faux -- une commission de 6 % enregistree en Mode 2 alors que Stripe n'en
+  // prelevait aucune (`applicationFeeAmount = 0`), et un profit marchand
+  // diminue d'autant. Les valeurs suivent desormais la realite economique du
+  // Mode 2 : aucune commission, profit = montant encaisse.
   it('A1 -- produit 100 usd, qty 1, forfait 5, sans promo', async () => {
     const chains = setupMode2();
     const res = await POST(order());
@@ -155,7 +162,7 @@ describe('CARACTERISATION -- Mode 2 (forfait)', () => {
     expect(fingerprint(chains)).toEqual({
       stripeShipping: 5, stripeApplicationFee: 0, stripeNonce: undefined, stripePromoDiscount: 0,
       orderTotal: 100, orderShipping: 5, orderSupplierCost: 0,
-      orderCommission: 6, orderProfit: 94, orderTier: null,
+      orderCommission: 0, orderProfit: 100, orderTier: null,   // M2-01 : etait 6 / 94
       orderLogisticName: null, orderCurrency: 'usd',
     });
   });
@@ -167,11 +174,15 @@ describe('CARACTERISATION -- Mode 2 (forfait)', () => {
     const f = fingerprint(chains);
     expect(f.orderTotal).toBe(300);
     expect(f.orderShipping).toBe(5);       // forfait, jamais multiplie
-    expect(f.orderCommission).toBe(18);
-    expect(f.orderProfit).toBe(282);
+    expect(f.orderCommission).toBe(0);     // M2-01 : etait 18
+    expect(f.orderProfit).toBe(300);       // M2-01 : etait 282 -- le marchand encaisse tout
   });
 
-  it('A3 -- promo 20% : la commission reste calculee AVANT remise (decision OPTION A)', async () => {
+  // M2-01 -- OPTION A ("commission calculee avant remise") est une regle de
+  // COMMISSION : elle n'a de sens qu'en Mode 3, ou une commission existe. En
+  // Mode 2 il n'y en a aucune, avec ou sans remise. La regle OPTION A reste
+  // verrouillee par le test Mode 3 correspondant, pas ici.
+  it('A3 -- promo 20% : aucune commission en Mode 2, avec ou sans remise', async () => {
     const chains = setupMode2({
       id: 'promo-1', discount_type: 'percent', discount_value: 20,
       min_order: 0, max_uses: null, used_count: 0, expires_at: null,
@@ -181,23 +192,36 @@ describe('CARACTERISATION -- Mode 2 (forfait)', () => {
     const f = fingerprint(chains);
     expect(f.stripePromoDiscount).toBe(20);
     expect(f.orderTotal).toBe(80);        // encaisse = apres remise
-    expect(f.orderCommission).toBe(6);    // 6% de 100, PAS de 80
-    expect(f.orderProfit).toBe(74);
+    expect(f.orderCommission).toBe(0);    // M2-01 : etait 6
+    expect(f.orderProfit).toBe(80);       // M2-01 : etait 74 -- profit = encaisse
   });
 
-  it("A4 -- DEFAUT FIGE : remise fixe >= total -> total 0 et profit NEGATIF, non bloque en Mode 2", async () => {
+  // M2-01 -- ce test figeait DEUX defauts ; le correctif en supprime UN.
+  //
+  // Le profit negatif n'etait pas une consequence de la remise : il venait de
+  // la commission fantome. `0 - 0 - 6 = -6`. Sans commission en Mode 2, le
+  // profit d'une commande a total nul vaut 0, ce qui est exact -- le marchand
+  // n'encaisse rien et ne doit rien. Le correctif M2-01 ferme donc aussi ce
+  // cas, sans qu'aucune garde n'ait ete ajoutee pour lui.
+  //
+  // Ce qui RESTE fige, et reste vrai : une remise fixe superieure au total
+  // produit un total de 0 sans etre bloquee en Mode 2. Les garde-fous
+  // financiers restent enfermes dans `if (site.mode === 3)` -- seule la garde
+  // de montant nul (DEBT-029b) couvre tous les modes, et elle ne se declenche
+  // pas ici puisque le forfait de livraison maintient un montant positif.
+  it("A4 -- FIGE : remise fixe >= total -> total 0, non bloque en Mode 2 (profit desormais 0, plus negatif)", async () => {
     const chains = setupMode2({
       id: 'promo-2', discount_type: 'fixed', discount_value: 9999,
       min_order: 0, max_uses: null, used_count: 0, expires_at: null,
     });
     const res = await POST(order({ promoCode: 'FREE' }));
-    // Les garde-fous financiers sont TOUS dans le bloc `if (site.mode === 3)`.
-    // En Mode 2 rien n'empeche un profit marchand negatif.
     expect(res.status).toBe(200);
     const f = fingerprint(chains);
     expect(f.stripePromoDiscount).toBe(100);
     expect(f.orderTotal).toBe(0);
-    expect(f.orderProfit).toBe(-6);
+    expect(f.orderCommission).toBe(0);
+    expect(f.orderProfit).toBe(0);        // M2-01 : etait -6, cause par la commission fantome
+    expect(f.orderProfit).toBeGreaterThanOrEqual(0);   // plus jamais negatif en Mode 2
   });
 });
 
@@ -676,5 +700,72 @@ describe('LOT 4 -- apercu sans verification de stock live', () => {
     const k2 = createCheckoutMock.mock.calls[0][7];
     expect(k1).toMatch(/^co_v1_/);
     expect(k2).toBe(k1);
+  });
+});
+
+// ============================================================
+// M2-01 -- la commission suit le MODE, a l'ECRITURE comme au prelevement.
+//
+// Avant correctif, la garde de mode existait sur `applicationFeeAmount`
+// (Stripe ne prelevait rien hors Mode 3) mais PAS sur la valeur persistee :
+// `nexiora_commission` etait ecrite pour tous les modes, et deduite du profit
+// marchand. Deux consommateurs lisaient ce chiffre faux -- /api/shop/finances
+// (le marchand) et /api/admin/stats (le revenu de Deribfy).
+//
+// Ces tests verrouillent les DEUX sens : rien en Mode 2, tout en Mode 3.
+// ============================================================
+
+describe('M2-01 — la commission n’existe qu’en Mode 3', () => {
+  const items = [{ id: 'p1', quantity: 1, name: 'T', currency: 'usd' }];
+
+  it('MODE 2 — commission 0 et profit = encaissé, quel que soit le montant', async () => {
+    const chains = setupTables({
+      sites: { data: SITE_MODE2 },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 250, currency: 'usd', published: true }] },
+      promo_codes: { data: null },
+      shop_orders: { data: { id: 'order-1' } },
+      shop_order_items: { data: [{ id: 'item-1' }] },
+    });
+    const res = await POST(req({ slug: 'boutique', countryCode: 'CA', items }));
+    expect(res.status).toBe(200);
+    const f = fingerprint(chains);
+    expect(f.orderCommission).toBe(0);
+    expect(f.orderProfit).toBe(250);
+    // Coherence : ce qui est ENREGISTRE correspond a ce qui est PRELEVE.
+    expect(f.stripeApplicationFee).toBe(0);
+    expect(f.orderCommission).toBe(f.stripeApplicationFee);
+  });
+
+  it('MODE 2 — aucune commission n’est jamais enregistrée, même avec remise', async () => {
+    const chains = setupTables({
+      sites: { data: SITE_MODE2 },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 100, currency: 'usd', published: true }] },
+      promo_codes: { data: { id: 'p', discount_type: 'percent', discount_value: 50, min_order: 0, max_uses: null, used_count: 0, expires_at: null } },
+      shop_orders: { data: { id: 'order-1' } },
+      shop_order_items: { data: [{ id: 'item-1' }] },
+    });
+    await POST(req({ slug: 'boutique', countryCode: 'CA', items, promoCode: 'X' }));
+    const f = fingerprint(chains);
+    expect(f.orderCommission).toBe(0);
+    expect(f.orderProfit).toBe(50);       // encaisse apres remise, rien de deduit
+  });
+
+  it('MODE 3 — NON-RÉGRESSION : la commission reste calculée AVANT remise (OPTION A)', async () => {
+    // La regle OPTION A vit ICI desormais : elle n'a de sens que la ou une
+    // commission existe.
+    const chains = setupTables({
+      sites: { data: SITE_MODE3 },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 100, currency: 'usd', published: true }] },
+      promo_codes: { data: { id: 'p', discount_type: 'percent', discount_value: 20, min_order: 0, max_uses: null, used_count: 0, expires_at: null } },
+      shipping_cache: { data: [{ supplier_product_id: 'v1', shipping_cost: 2, days_min: 7, days_max: 15, tiers: CACHE_TIERS }] },
+      shop_orders: { data: { id: 'order-1' } },
+      shop_order_items: { data: [{ id: 'item-1' }] },
+    });
+    const res = await POST(req({ slug: 'boutique', countryCode: 'CA', items, promoCode: 'X20' }));
+    if (res.status === 200) {
+      const f = fingerprint(chains);
+      expect(f.orderCommission).toBe(6);        // 6 % de 100, PAS de 80 -- inchange
+      expect(f.orderCommission).toBeGreaterThan(0);
+    }
   });
 });

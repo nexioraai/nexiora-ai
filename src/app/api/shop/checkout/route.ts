@@ -476,7 +476,30 @@ export async function POST(req: Request) {
     // LOT 1 : arrondie au centime -- c'est un montant reellement preleve par
     // Stripe (via application_fee_amount) et enregistre en base, pas une
     // grandeur intermediaire. Voir roundMoney() pour la cause racine.
-    const nexioraCommission = roundMoney(totalAmount * (NEXIORA_COMMISSION_PERCENT / 100));
+    //
+    // M2-01 -- LA COMMISSION N'EXISTE QU'EN MODE 3.
+    //
+    // Elle etait calculee pour TOUS les modes, alors que `applicationFeeAmount`
+    // ci-dessous vaut deja 0 hors Mode 3 : Stripe ne prelevait donc rien, mais
+    // le montant etait tout de meme PERSISTE (`nexiora_commission`) et deduit
+    // du profit marchand. La garde de mode existait sur le PRELEVEMENT, jamais
+    // sur l'ENREGISTREMENT.
+    //
+    // Deux consequences opposees, toutes deux fausses :
+    //   * /api/shop/finances montrait au marchand Mode 2 une commission de 6 %
+    //     que Deribfy n'a jamais prise, et un profit inferieur d'autant ;
+    //   * /api/admin/stats agregeait ces memes montants dans le chiffre
+    //     d'affaires de Deribfy, qui s'en trouvait sur-evalue.
+    //
+    // La definition du Mode 2 est explicite (chat/route.ts:507) : "There is NO
+    // platform commission". `supplier_cost` valait deja 0 (cost = 0 pour un
+    // produit marchand, ligne ~339), donc corriger la commission suffit a
+    // rendre `merchant_profit` exact : amount - 0 - 0 = amount.
+    //
+    // Mode 3 strictement inchange -- meme formule, meme arrondi.
+    const nexioraCommission = site.mode === 3
+      ? roundMoney(totalAmount * (NEXIORA_COMMISSION_PERCENT / 100))
+      : 0;
     const applicationFeeAmount = site.mode === 3
       ? roundMoney(supplierCost + shippingAmount + nexioraCommission)
       : 0;
