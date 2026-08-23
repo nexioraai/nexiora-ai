@@ -605,13 +605,22 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
     return [];
   }
 
-  type FreightOption = { name: string; price: number; daysMax: number | null };
+  type FreightOption = { name: string; price: number; daysMax: number | null; total: number | null; clearance: number };
   const options: FreightOption[] = (freight as any[])
-    .map((o) => ({
-      name: String(o?.logisticName ?? '').trim(),
-      price: Number(o?.logisticPrice ?? o?.price ?? o?.freightAmount),
-      daysMax: parseAging(o?.logisticAging).max,
-    }))
+    .map((o) => {
+      const price = Number(o?.logisticPrice ?? o?.price ?? o?.freightAmount);
+      const total = Number(o?.totalPostageFee);
+      const clearance = Number(o?.clearanceOperationFee);
+      return {
+        name: String(o?.logisticName ?? '').trim(),
+        price,
+        daysMax: parseAging(o?.logisticAging).max,
+        // Retenu UNIQUEMENT s'il est exploitable et superieur : un total
+        // inferieur au prix de base serait incoherent, on ne l'interprete pas.
+        total: Number.isFinite(total) && Number.isFinite(price) && total > price ? total : null,
+        clearance: Number.isFinite(clearance) && clearance > 0 ? clearance : 0,
+      };
+    })
     .filter((o) => o.name.length > 0 && Number.isFinite(o.price) && o.price >= 0);
 
   // `charged <= 0` : le garde-fou prix reste inactif sur une livraison
@@ -686,6 +695,109 @@ export async function fulfillCjOrder(orderId: string): Promise<string[]> {
         charged,
         promisedMaxDays,
         candidates: candidates.length,
+      },
+    });
+  }
+
+  // ---- `totalPostageFee` : ECART OBSERVE, INTERPRETATION NON PROUVEE ----
+  //
+  // MESURE (2026-08-23, 820 options, 4 pays, bruts dans measures/raw/) :
+  //   CA / GB / BR : totalPostageFee == logisticPrice sur 566 options.
+  //   FR           : 214 options sur 254 ont totalPostageFee > logisticPrice,
+  //                  d'un montant CONSTANT par methode (+2,30 ou +3,50).
+  //   Sur ces memes options, `taxesFee` ET `clearanceOperationFee` valent 0,
+  //   et TOUS les autres champs de la reponse CJ sont nuls : aucun champ
+  //   documente n'explique l'ecart.
+  //   `totalPostageFee` est present sur 820/820 et n'est JAMAIS inferieur a
+  //   `logisticPrice`.
+  //
+  // CE QUI N'EST PAS PROUVE : que `totalPostageFee` soit le montant
+  // REELLEMENT FACTURE par CJ. La documentation officielle le decrit
+  // seulement comme "total postage" en USD, ne dit nulle part quel champ est
+  // debite, et son exemple de reponse ne contient meme pas ce champ. Deduire
+  // du nom serait exactement l'hypothese fournisseur que ce projet s'interdit.
+  //
+  // POURQUOI ON NE CHANGE PAS LA BASE DE FACTURATION SUR CETTE SEULE BASE :
+  // l'asymetrie est decisive. Si l'on facturait `totalPostageFee` alors que CJ
+  // ne le debite pas, on SURFACTURERAIT l'acheteur de 2,30 a 3,50 sur FR --
+  // precisement la faute que le devis panier vient de corriger, et jamais
+  // rattrapable. A l'inverse, si CJ debite bien ce montant, la perte pour
+  // Nexiora est bornee (2,25 max mesure), et payType 3 place un humain devant
+  // CHAQUE paiement fournisseur : elle est visible, pas silencieuse.
+  //
+  // On journalise donc l'ecart plutot que de l'interpreter. Ces anomalies
+  // fourniront la preuve manquante : il suffira de comparer un debit CJ reel
+  // sur une commande FR aux deux montants traces ici pour trancher, et
+  // changer alors la base de facturation en connaissance de cause.
+  const feeDetails = {
+    orderId: order.id,
+    logisticPrice: picked.price,
+    totalPostageFee: picked.total,
+    clearanceOperationFee: picked.clearance,
+    charged,
+    logisticName: picked.name,
+    country: endCountryCode,
+  };
+  if (picked.total !== null && picked.total > charged && charged > 0) {
+    await logAnomaly({
+      type: 'cj_shipping_total_exceeds_charged',
+      severity: 'warning',
+      siteId: order.site_id,
+      details: { ...feeDetails, gap: Math.round((picked.total - charged) * 100) / 100 },
+    });
+  } else if (picked.clearance > 0) {
+    // `clearanceOperationFee` est un frais NOMME et DOCUMENTE par CJ ("customs
+    // clearance fee"), et le code ne le lisait NULLE PART. Mesure du
+    // 2026-08-23 : non nul sur 46 options (DE, ES, IT -- valeurs 0,70 / 0,80 /
+    // 2,40), dont 41 que la marge x1,20 couvrait, donc INVISIBLES.
+    //
+    // Une exposition couverte aujourd'hui par la marge reste une exposition :
+    // elle cesse de l'etre des que le frais augmente ou que la marge est
+    // revue. La tracer maintenant evite de la decouvrir plus tard sur une
+    // facture.
+    //
+    // `info` : logAnomaly sort avant tout envoi d'e-mail (anomaly.ts). Trace
+    // en base, zero alerte -- c'est de l'observabilite, pas un incident. Le
+    // cas ou de l'argent est reellement en jeu reste couvert par le
+    // `warning` ci-dessus.
+    await logAnomaly({
+      type: 'cj_shipping_named_fee_ignored',
+      severity: 'info',
+      siteId: order.site_id,
+      details: feeDetails,
+    });
+  }
+
+  // ---- Cout fournisseur absorbe : rendre visible, jamais bloquer ----
+  // `charged <= 0` desarme le garde-fou prix (comportement historique). Ce
+  // chemin est ATTEIGNABLE, demonstration complete :
+  //   1. `suppliersForDropshipType(null)` retombe sur ['cj'] (dropship/
+  //      suppliers.ts) : une boutique dont le sous-type n'est pas renseigne
+  //      peut donc selectionner des produits CJ au catalogue ;
+  //   2. le refus "aucun cout de livraison confirme" de checkout ne s'applique
+  //      QU'AU MODE 3 (`site.mode === 3 && !shippingResolved`) ;
+  //   3. en mode 2, un `shipping_flat` a 0 et un devis non resolu (cache
+  //      froid, CJ indisponible) laissent `shipping_amount = 0` ;
+  //   4. `handlePaidCheckout` appelle `fulfillCjOrder` SANS garde de mode.
+  // Nexiora avancait alors un cout fournisseur non borne, sans blocage et
+  // SANS AUCUNE TRACE.
+  //
+  // POURQUOI NE PAS BLOQUER : une livraison offerte VOLONTAIREMENT par le
+  // marchand produit exactement le meme etat (`shipping_amount = 0`), et les
+  // deux cas sont indistinguables depuis shop_orders. Bloquer casserait une
+  // offre commerciale legitime pour corriger un defaut d'observabilite. On
+  // rend donc le montant absorbe VISIBLE, et la decision reste humaine.
+  if (charged <= 0 && picked.price > 0) {
+    await logAnomaly({
+      type: 'cj_shipping_cost_absorbed',
+      severity: 'warning',
+      siteId: order.site_id,
+      details: {
+        orderId: order.id,
+        absorbed: picked.price,
+        charged,
+        logisticName: picked.name,
+        country: endCountryCode,
       },
     });
   }

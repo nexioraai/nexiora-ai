@@ -1,6 +1,6 @@
 {
   "pid": "E25CF87B-E24D-4C6B-9889-5E36BDA9D972",
-  "requestedAt": "2026-08-23T07:39:38.053Z",
+  "requestedAt": "2026-08-23T07:55:02.899Z",
   "httpStatus": 200,
   "variantCount": 24,
   "resolvedVid": "069E6264-5B17-4888-A4CD-94B79E52997E",
@@ -634,10 +634,10 @@
         "inventories": null
       }
     ],
-    "requestId": "054a08854da24162840bbccbfc567f2a",
+    "requestId": "04f7b546b1f749d4b9ae9a5c8b644e3c",
     "pointsInfo": {
       "total": 50422,
-      "usedToday": 1800,
+      "usedToday": 2270,
       "remaining": 50422
     },
     "success": true

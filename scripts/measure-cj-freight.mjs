@@ -78,6 +78,12 @@ function usage(reason) {
 
 Mode hors ligne, aucun appel reseau :
   node scripts/measure-cj-freight.mjs --summarize [--out=measures/raw]
+
+Releve du solde CJ (lecture seule, /shopping/pay/getBalance) :
+  node scripts/measure-cj-freight.mjs --balance --label=avant [--out=measures/balance]
+
+Detail d'une commande CJ (lecture seule, /shopping/order/getOrderDetail) :
+  node scripts/measure-cj-freight.mjs --order-detail --order=<shop_orders.id>
 `);
   process.exit(2);
 }
@@ -290,8 +296,110 @@ function summarize() {
   console.log('\n---\nChaque chiffre ci-dessus provient d\'un fichier de ' + outDir + '. Aucune valeur n\'est reconstituee.');
 }
 
+// ============================================================
+// MODE SOLDE -- releve du solde du compte CJ, LECTURE SEULE.
+//
+// Sert a etablir par la mesure ce que `freightCalculate` ne peut pas prouver :
+// QUEL montant CJ debite reellement. Le devis expose `logisticPrice`,
+// `clearanceOperationFee` et `totalPostageFee` sans jamais dire lequel est
+// facture, et la documentation officielle ne le precise pas davantage.
+//
+// `payType: 3` rend la mesure possible sans aucun risque : la commande est
+// creee chez CJ mais JAMAIS payee automatiquement. Un releve avant le paiement
+// manuel, un releve apres, et le delta EST le montant debite.
+//
+// N'appelle que /shopping/pay/getBalance. N'ecrit rien, ne paie rien.
+// ============================================================
+async function balance() {
+  const env = readEnvLocal();
+  const email = process.env.CJ_EMAIL || env.CJ_EMAIL;
+  const apiKey = process.env.CJ_API_KEY || env.CJ_API_KEY;
+  if (!email || !apiKey) usage('CJ_EMAIL / CJ_API_KEY introuvables.');
+
+  const auth = await post('/authentication/getAccessToken', { apiKey });
+  const token = auth.json?.data?.accessToken;
+  if (!token) {
+    console.error('[measure-cj-freight] Authentification CJ echouee :', auth.json?.message || auth.httpStatus);
+    process.exit(1);
+  }
+  await sleep(SLOT_MS);
+  const { httpStatus, json } = await get('/shopping/pay/getBalance', { 'CJ-Access-Token': token });
+
+  const label = one('label', 'releve');
+  mkdirSync(outDir, { recursive: true });
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const file = join(outDir, `BALANCE_${label}_${stamp}.json`);
+  writeFileSync(file, JSON.stringify({ label, readAt: new Date().toISOString(), httpStatus, response: json }, null, 2));
+
+  console.log('[measure-cj-freight] solde CJ (%s) :', label);
+  console.log(JSON.stringify(json?.data ?? json, null, 2));
+  console.log('\nBrut conserve : %s', file);
+}
+
+// ============================================================
+// MODE DETAIL DE COMMANDE -- LECTURE SEULE.
+//
+// `cjGetOrderDetail` retourne la reponse CJ COMPLETE (client.ts : `return
+// { outcome: 'found', data }`), et `reconcile.ts` n'en lit que `orderStatus`
+// et `orderId`. Le reste n'a jamais ete inspecte.
+//
+// Objectif : etablir QUELS champs financiers CJ expose sur une commande --
+// montant de commande, de transport, de postage, frais, deduction. C'est le
+// prealable a toute comparaison devis / debit reel.
+//
+// N'appelle que /shopping/order/getOrderDetail. Ne cree rien, ne paie rien.
+// Le parametre attendu est le NUMERO DE COMMANDE Deribfy (shop_orders.id) :
+// c'est ce que reconcile.ts transmet, et CJ resout dessus.
+// ============================================================
+async function orderDetail() {
+  const orderId = one('order');
+  if (!orderId) usage('--order=<shop_orders.id> requis pour --order-detail.');
+  const env = readEnvLocal();
+  const email = process.env.CJ_EMAIL || env.CJ_EMAIL;
+  const apiKey = process.env.CJ_API_KEY || env.CJ_API_KEY;
+  if (!email || !apiKey) usage('CJ_EMAIL / CJ_API_KEY introuvables.');
+
+  const auth = await post('/authentication/getAccessToken', { apiKey });
+  const token = auth.json?.data?.accessToken;
+  if (!token) {
+    console.error('[measure-cj-freight] Authentification CJ echouee :', auth.json?.message || auth.httpStatus);
+    process.exit(1);
+  }
+  await sleep(SLOT_MS);
+  const { httpStatus, json } = await get(
+    `/shopping/order/getOrderDetail?orderId=${encodeURIComponent(orderId)}`,
+    { 'CJ-Access-Token': token }
+  );
+
+  mkdirSync(outDir, { recursive: true });
+  const file = join(outDir, `ORDERDETAIL_${orderId}.json`);
+  writeFileSync(file, JSON.stringify({ orderId, readAt: new Date().toISOString(), httpStatus, response: json }, null, 2));
+
+  const d = json?.data;
+  if (!d) {
+    console.log('[measure-cj-freight] aucune donnee (HTTP %s) : %s', httpStatus, json?.message || '');
+  } else {
+    const money = /amount|price|fee|postage|cost|pay|total|discount|deduct/i;
+    console.log('CHAMPS A CONNOTATION FINANCIERE :');
+    for (const [k, v] of Object.entries(d)) {
+      if (money.test(k)) console.log(`  ${k.padEnd(28)} ${JSON.stringify(v)}`);
+    }
+    console.log('\nTOUS LES CHAMPS NON NULS :');
+    for (const [k, v] of Object.entries(d)) {
+      if (v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0)) {
+        console.log(`  ${k.padEnd(28)} ${JSON.stringify(v).slice(0, 120)}`);
+      }
+    }
+  }
+  console.log('\nBrut conserve : %s', file);
+}
+
 // ---------- entree ----------
-if (flag('summarize')) {
+if (flag('order-detail')) {
+  await orderDetail();
+} else if (flag('balance')) {
+  await balance();
+} else if (flag('summarize')) {
   summarize();
 } else {
   if (vids.length === 0 && pids.length === 0) usage('ni --vid ni --pid fourni. Des identifiants CJ reels sont indispensables.');
