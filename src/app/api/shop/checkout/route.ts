@@ -5,27 +5,11 @@ import { checkStock } from '@/lib/shop';
 import { checkCatalogStock } from '@/lib/catalog-stock';
 import type { CartItem } from '@/lib/payments/types';
 import { STRIPE_SHIPPING_COUNTRIES } from '@/lib/payments/countries';
-import { suppliersWithCapability } from '@/lib/suppliers/registry';
-import type { ShippingRequest } from '@/lib/suppliers/supplier-adapter';
-import { sitePricing, NEXIORA_COMMISSION_PERCENT, resolveDisplayPrice } from '@/lib/pricing';
+import { buildSupplierGroups, resolveShipping } from '@/lib/shop/quote/resolveShipping';
+import { buildQuoteHash, buildCheckoutIdempotencyKey } from '@/lib/shop/quote/checkoutSignature';
+import { sitePricing, NEXIORA_COMMISSION_PERCENT, resolveDisplayPrice, roundMoney } from '@/lib/pricing';
 import { logAnomaly } from '@/lib/anomaly';
-import type { ShippingTier } from '@/lib/cj/shipping-tiers';
 import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
-
-/** Ligne shipping_cache telle que selectionnee pour le fallback CJ. */
-type ShippingCacheRow = {
-  supplier_product_id: string;
-  shipping_cost: number;
-  days_min: number | null;
-  days_max: number | null;
-  tiers: ShippingTier[] | null;
-};
-
-// Derive : fournisseurs implementant reellement calculateShipping. Voir
-// registry.ts — source unique des adapters/credentials.
-const SHIPPING_SUPPLIERS = new Map(
-  suppliersWithCapability('calculateShipping').map((s) => [s.id, s])
-);
 
 /** Décode un id panier catalog : "catalog-{uuid}::{variantId}" -> { realId: uuid, variantId }.
  *  variantId est optionnel (produits sans variantes). */
@@ -39,7 +23,7 @@ function parseCatalogId(cartId: string): { realId: string; variantId?: string } 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { slug, items, countryCode, shipmentTier, checkoutNonce, promoCode } = body as { slug?: string; items?: CartItem[]; countryCode?: string; shipmentTier?: string; checkoutNonce?: string; promoCode?: string };
+    const { slug, items, countryCode, shipmentTier, checkoutNonce, promoCode, quoteHash: clientQuoteHash, preview: previewOnly } = body as { slug?: string; items?: CartItem[]; countryCode?: string; shipmentTier?: string; checkoutNonce?: string; promoCode?: string; quoteHash?: string; preview?: boolean };
     if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
     if (!items || items.length === 0) return NextResponse.json({ error: 'Panier vide' }, { status: 400 });
 
@@ -66,15 +50,34 @@ export async function POST(req: Request) {
     const stock = await checkStock(items.map((i) => ({ id: i.id, quantity: i.quantity })));
     if (!stock.ok) return NextResponse.json({ error: stock.reason }, { status: 409 });
 
-    // Verification stock catalog (live aupres du fournisseur) : le client n'achete jamais du vide.
-    const catalogStockLines = items
-      .filter((i) => i.id?.startsWith('catalog-'))
-      .map((i) => {
-        const { realId, variantId } = parseCatalogId(i.id);
-        return { realId, variantId, quantity: i.quantity };
-      });
-    const catStock = await checkCatalogStock(catalogStockLines, countryCode || 'US', site.mode === 3);
-    if (!catStock.ok) return NextResponse.json({ error: catStock.reason }, { status: 409 });
+    // Verification stock catalog (live aupres du fournisseur) : le client
+    // n'achete jamais du vide.
+    //
+    // IGNOREE EN MODE APERCU, deliberement. Le stock n'est PAS une entree de
+    // quoteHash : l'ignorer ici preserve donc l'identite du devis a l'octet
+    // pres. Et il n'apporte aucune garantie supplementaire -- la seule
+    // verification qui fait foi est celle du checkout REEL, ci-dessous
+    // inchangee, puisque le stock peut de toute facon changer entre les deux
+    // passes.
+    //
+    // Ce qu'elle coute reellement : un `cjGetInventory` PAR LIGNE, qui
+    // traverse acquireCjSlot() -- la file globale partagee avec la creation
+    // des commandes fournisseur (fulfill.ts). L'executer aussi en apercu
+    // doublait la contention du parcours d'achat avec le fulfillment, en
+    // contradiction directe avec le modele dropshipping semi-automatise.
+    // NB : l'identifiant exact de la fonction de creation CJ n'est pas cite
+    // ici -- une garde structurelle (cj/__tests__/singleCreationPath) verifie
+    // qu'il n'apparait que dans client.ts et fulfill.ts.
+    if (!previewOnly) {
+      const catalogStockLines = items
+        .filter((i) => i.id?.startsWith('catalog-'))
+        .map((i) => {
+          const { realId, variantId } = parseCatalogId(i.id);
+          return { realId, variantId, quantity: i.quantity };
+        });
+      const catStock = await checkCatalogStock(catalogStockLines, countryCode || 'US', site.mode === 3);
+      if (!catStock.ok) return NextResponse.json({ error: catStock.reason }, { status: 409 });
+    }
 
     const origin = new URL(req.url).origin;
     const successUrl = `${origin}/sites/${slug}?paid=1`;
@@ -95,131 +98,33 @@ export async function POST(req: Request) {
     }
 
     // CJ limite a 1 req/s : on laisse retomber le quota apres la verif de stock.
-    await new Promise((r) => setTimeout(r, 1100));
+    // Sans cette verification (mode apercu), il n'y a aucun quota a laisser
+    // retomber : la temporisation n'aurait plus d'objet.
+    if (!previewOnly) await new Promise((r) => setTimeout(r, 1100));
 
     if (countryCode && (STRIPE_SHIPPING_COUNTRIES as readonly string[]).includes(countryCode)) {
       try {
-        // Separer shop vs catalog
-        const shopItems = items.filter((i) => !i.id?.startsWith('catalog-'));
-        const catalogItems = items.filter((i) => i.id?.startsWith('catalog-'));
+        // LOT 2 -- le calcul du devis vit desormais dans resolveShipping(),
+        // partage a l'identique avec shop/shipping/calculate (l'affichage du
+        // panier). Auparavant chaque route portait sa propre copie, dans un
+        // ORDRE DE SOURCES different -- cause racine des divergences C3/C4.
+        // Ordre canonique : cache d'abord, live en dernier recours. Aucun
+        // appel fournisseur supplementaire n'est introduit ici.
+        const groups = await buildSupplierGroups(items.map((i) => ({ id: i.id, quantity: i.quantity })));
+        const quote = await resolveShipping({
+          groups,
+          countryCode,
+          flat,
+          requestedTier: shipmentTier,
+          // Comportement historique conserve : cette route ne recoit pas de
+          // state_code dans son body, Printful est donc appele sans.
+          stateCode: '',
+        });
 
-        // Shop products => CJ direct
-        const supplierGroups: Record<string, ShippingRequest[]> = {};
-        if (shopItems.length > 0) {
-          const { data: prods } = await supabaseAdmin
-            .from('shop_products')
-            .select('id, cj_vid')
-            .in('id', shopItems.map((i) => i.id));
-          for (const p of (prods || [])) {
-            if (!p.cj_vid) continue;
-            const item = shopItems.find((i) => i.id === p.id);
-            if (!item) continue;
-            if (!supplierGroups['cj']) supplierGroups['cj'] = [];
-            supplierGroups['cj'].push({ supplier_product_id: p.cj_vid, quantity: item.quantity });
-          }
-        }
-
-        // Catalog products => grouper par supplier_id
-        if (catalogItems.length > 0) {
-          const realIds = catalogItems.map((i) => parseCatalogId(i.id).realId);
-          const { data: catProds } = await supabaseAdmin
-            .from('catalog_products')
-            .select('id, supplier_id, supplier_product_id')
-            .in('id', realIds);
-          for (const cp of (catProds || [])) {
-            if (!cp.supplier_product_id || !cp.supplier_id) continue;
-            const item = catalogItems.find((i) => parseCatalogId(i.id).realId === cp.id);
-            if (!item) continue;
-            // CJ tarifie la livraison au PRODUIT (pas a la variante) :
-            // calculateShipping attend supplier_product_id, checkStock attend le vid.
-            if (!supplierGroups[cp.supplier_id]) supplierGroups[cp.supplier_id] = [];
-            supplierGroups[cp.supplier_id].push({
-              supplier_product_id: cp.supplier_product_id,
-              quantity: item.quantity,
-            });
-          }
-        }
-
-        // Lecture du cache CJ (shipping_cache) AVANT tout appel live.
-        // Le cache stocke le PRIX BRUT ; la marge de securite +20% est appliquee ici.
-        // Un groupe entierement couvert par le cache n'appelle jamais CJ.
-        const SHIPPING_MARGIN = 1.20;
-        const cjGroup = supplierGroups['cj'];
-        let cjCacheCost = 0;
-        let cjCacheMaxDays = 0;
-        let cjFromCache = false;
-        if (cjGroup && cjGroup.length > 0) {
-          const cjIds = cjGroup.map((g) => g.supplier_product_id);
-          const { data: cacheRowsRaw } = await supabaseAdmin
-            .from('shipping_cache')
-            .select('supplier_product_id, shipping_cost, days_min, days_max, tiers')
-            .eq('supplier_id', 'cj')
-            .eq('country_code', countryCode)
-            .in('supplier_product_id', cjIds);
-          const cacheRows = cacheRowsRaw as ShippingCacheRow[] | null;
-          const cacheMap = new Map((cacheRows || []).map((r) => [r.supplier_product_id, r]));
-          // Le cache n'est utilise que s'il couvre TOUS les produits CJ du panier.
-          const allCovered = cjIds.every((id) => cacheMap.has(id));
-          if (allCovered) {
-            // Verifier que le tier choisi est disponible sur TOUS les produits.
-            const tierAvailable = shipmentTier && cjGroup.every((g) => {
-              const row = cacheMap.get(g.supplier_product_id);
-              return Array.isArray(row?.tiers) && row.tiers.some((t) => t.tier === shipmentTier);
-            });
-            for (const g of cjGroup) {
-              const row = cacheMap.get(g.supplier_product_id)!;
-              if (tierAvailable) {
-                // Cout du tier choisi par l'acheteur (eco/standard/express).
-                const t = row.tiers!.find((x) => x.tier === shipmentTier)!;
-                cjCacheCost += Number(t.cost) * g.quantity;
-                if (t.name && !chosenLogisticName) chosenLogisticName = String(t.name);
-                const d = Number(t.days_max) || 0;
-                if (d > cjCacheMaxDays) cjCacheMaxDays = d;
-              } else {
-                // Fallback : borne basse (comportement historique).
-                cjCacheCost += Number(row.shipping_cost) * g.quantity;
-                const d = Number(row.days_max) || 0;
-                if (d > cjCacheMaxDays) cjCacheMaxDays = d;
-              }
-            }
-            // Marge de securite appliquee sur le cout du cache.
-            cjCacheCost = cjCacheCost * SHIPPING_MARGIN;
-            supplierGroups['cj'] = []; // groupe CJ traite : la boucle live le saute
-            cjFromCache = true;
-          }
-        }
-
-        // Appeler calculateShipping pour chaque groupe (fallback live si pas en cache)
-        let totalShipping = 0;
-        let maxDays = 0;
-        for (const [supplierId, groupItems] of Object.entries(supplierGroups)) {
-          if (!groupItems || groupItems.length === 0) continue;
-          const supplier = SHIPPING_SUPPLIERS.get(supplierId);
-          if (!supplier?.adapter.calculateShipping) continue;
-          // Printful : state_code non fourni par cette route (pas de champ dedie
-          // dans le body) — toujours '', comportement historique inchange.
-          const supplierCreds = supplierId === 'printful'
-            ? { ...supplier.credentials, state_code: '' }
-            : supplier.credentials;
-          try {
-            const result = await supplier.adapter.calculateShipping(groupItems, countryCode, supplierCreds);
-            totalShipping += result.total_cost;
-            if (result.estimated_days_max > maxDays) maxDays = result.estimated_days_max;
-          } catch (err: unknown) {
-            const stack = err instanceof Error ? err.stack : undefined;
-            console.error('[checkout/shipping]', supplierId, 'failed:', err instanceof Error ? err.message : String(err), stack);
-          }
-        }
-
-        // Ajouter le resultat du cache CJ (s'il y en a un)
-        if (cjFromCache) {
-          totalShipping += cjCacheCost;
-          if (cjCacheMaxDays > maxDays) maxDays = cjCacheMaxDays;
-        }
-
-        if (totalShipping > 0) {
-          shippingAmount = Math.round(totalShipping * 100) / 100;
-          estimatedDelivery = maxDays > 0 ? String(maxDays) + ' days' : null;
+        if (quote.source !== 'flat' && quote.amount > 0) {
+          shippingAmount = quote.amount;
+          chosenLogisticName = quote.logisticName;
+          estimatedDelivery = quote.estimatedMaxDays ? String(quote.estimatedMaxDays) + ' days' : null;
           shippingResolved = true;
         }
       } catch {
@@ -456,6 +361,13 @@ export async function POST(req: Request) {
       totalAmount += serverPrice * item.quantity;
     }
 
+    // LOT 1 -- arrondi au centime APRES accumulation, jamais a chaque addition :
+    // arrondir chaque terme ferait diverger le total de la somme des lignes
+    // envoyees a Stripe (qui arrondit chaque unit_amount separement, puis
+    // multiplie par la quantite). Un seul arrondi, sur le resultat.
+    supplierCost = roundMoney(supplierCost);
+    totalAmount = roundMoney(totalAmount);
+
     // Stripe n'accepte qu'une seule devise par Checkout Session : plutot que
     // de laisser Stripe echouer avec une erreur opaque, on rejette ici,
     // proprement, si les devises desormais server-authoritative (ci-dessus)
@@ -561,8 +473,13 @@ export async function POST(req: Request) {
     const discountedTotal = Math.round((totalAmount - promoDiscount) * 100) / 100;
 
     // OPTION A : commission calculee sur le prix AVANT remise.
-    const nexioraCommission = totalAmount * (NEXIORA_COMMISSION_PERCENT / 100);
-    const applicationFeeAmount = site.mode === 3 ? (supplierCost + shippingAmount + nexioraCommission) : 0;
+    // LOT 1 : arrondie au centime -- c'est un montant reellement preleve par
+    // Stripe (via application_fee_amount) et enregistre en base, pas une
+    // grandeur intermediaire. Voir roundMoney() pour la cause racine.
+    const nexioraCommission = roundMoney(totalAmount * (NEXIORA_COMMISSION_PERCENT / 100));
+    const applicationFeeAmount = site.mode === 3
+      ? roundMoney(supplierCost + shippingAmount + nexioraCommission)
+      : 0;
 
     // ---- Garde-fou applicable a TOUS les modes (DEBT-029b) ----
     // Audit final phase 2 : tous les garde-fous financiers etaient enfermes
@@ -616,16 +533,113 @@ export async function POST(req: Request) {
       }
     }
 
-    // Audit Mode 3/POD BRAND, perfectionnement -- nonce d'idempotence
-    // optionnel fourni par le client (persiste cote navigateur, partage
-    // entre onglets). Jamais fait confiance tel quel : borne en longueur,
-    // sinon ignore silencieusement (comportement historique, aucune
-    // idempotence Stripe) plutot que de risquer un rejet Stripe sur une
-    // valeur malformee.
-    const safeCheckoutNonce =
+    // ---- Cle d'idempotence Stripe (LOT 3) ----
+    // Elle etait auparavant calculee cote NAVIGATEUR a partir du panier, ce
+    // qui produisait deux defauts distincts :
+    //   - COLLISION ENTRE ACHETEURS : la chaine ne contenait aucun composant
+    //     propre a l'acheteur ; deux acheteurs au panier identique
+    //     obtenaient la MEME cle, donc la MEME session Stripe.
+    //   - PARAMETRES SERVEUR ABSENTS : prix, livraison, remise et
+    //     application_fee sont recalcules ICI ; s'ils changeaient entre deux
+    //     tentatives, la cle restait identique alors que la requete Stripe
+    //     changeait -> idempotency_error.
+    // La signature est desormais construite SERVEUR, a partir de l'etat
+    // commercial reellement envoye a Stripe, combine a l'identite de
+    // l'acheteur (le nonce du navigateur n'a plus aucune autorite
+    // financiere : il ne sert qu'a distinguer deux acheteurs).
+    const buyerNonce =
       typeof checkoutNonce === 'string' && checkoutNonce.length > 0 && checkoutNonce.length <= 200
         ? checkoutNonce
-        : undefined;
+        : '';
+    // LOT 4 -- DEUX identites distinctes, jamais confondues :
+    //   quoteHash      = f(etat commercial serveur), independant de
+    //                    l'acheteur. Deux acheteurs voyant le meme prix
+    //                    obtiennent le meme hash.
+    //   idempotencyKey = f(buyerNonce, origin, quoteHash). Seule valeur
+    //                    transmise a Stripe. `quoteHash` seul serait
+    //                    identique entre acheteurs -- exactement le P0
+    //                    corrige au LOT 3.
+    const quoteHash = buildQuoteHash({
+      siteId: site.id,
+      currency: resolvedCurrency ?? '',
+      shippingAmount,
+      shipmentTier: shipmentTier ?? null,
+      promoId: appliedPromoId,
+      discountAmount: promoDiscount,
+      applicationFee: applicationFeeAmount,
+      lines: items.map((i) => ({
+        cartId: i.id,
+        quantity: i.quantity,
+        unitPrice: i.priceNumber ?? 0,
+        designUrls:
+          Array.isArray(i.customDesigns) && i.customDesigns.length > 0
+            ? i.customDesigns
+                .map((d: { url?: string }) => d?.url)
+                .filter((u): u is string => typeof u === 'string' && u.length > 0)
+            : i.customDesignUrl
+              ? [i.customDesignUrl]
+              : [],
+      })),
+    });
+
+    // ---- Contrat "affiche = facture" (LOT 4, flux bout en bout) ----
+    // Le devis renvoye au panier et celui facture ici sont produits par LE
+    // MEME chemin de code : le mode apercu ci-dessous s'arrete juste avant
+    // la creation de la session Stripe et de la commande. Cette identite est
+    // donc STRUCTURELLE, pas maintenue a la main -- une route d'affichage
+    // separee qui recalculerait le devis de son cote pourrait diverger, ce
+    // qui est exactement le defaut C3 corrige au LOT 2.
+    //
+    // Rien de ce qui suit ne fait confiance au hash recu : le serveur
+    // recalcule integralement son propre devis, puis compare.
+    if (previewOnly) {
+      return NextResponse.json({
+        preview: true,
+        quoteHash,
+        currency: resolvedCurrency ?? null,
+        total: discountedTotal,
+        shipping: shippingAmount,
+        discount: promoDiscount,
+        shipmentTier: shipmentTier ?? null,
+      });
+    }
+
+    // Un hash FOURNI qui ne correspond pas au devis recalcule interrompt le
+    // checkout AVANT toute session Stripe et AVANT tout INSERT de commande :
+    // aucun paiement ne peut donc etre engage sur un devis perime.
+    //
+    // Un hash ABSENT n'est pas traite comme "valide" : c'est l'absence de
+    // toute pretention du client sur le prix. Le refuser casserait tout
+    // appelant qui n'en envoie pas (dont la version deployee du panier)
+    // sans rien protéger de plus -- le prix reste, dans tous les cas,
+    // integralement recalcule cote serveur. Un hash MALFORME, lui, est une
+    // pretention fausse : il est traite comme une divergence.
+    if (typeof clientQuoteHash === 'string' && clientQuoteHash.length > 0 && clientQuoteHash !== quoteHash) {
+      await logAnomaly({
+        type: 'quote_changed_before_payment',
+        severity: 'info',
+        siteId: site.id,
+        slug,
+        details: { received: clientQuoteHash.slice(0, 64), computed: quoteHash },
+      });
+      return NextResponse.json(
+        {
+          error: 'Les prix de votre panier ont ete mis a jour. Verifiez le nouveau total avant de payer.',
+          code: 'quote_changed',
+          quoteHash,
+          currency: resolvedCurrency ?? null,
+          total: discountedTotal,
+          shipping: shippingAmount,
+          discount: promoDiscount,
+          shipmentTier: shipmentTier ?? null,
+        },
+        { status: 409 }
+      );
+    }
+
+    const checkoutSignature = buyerNonce
+      ? buildCheckoutIdempotencyKey({ buyerNonce, origin, quoteHash })
+      : undefined;
 
     const provider = getProvider(site.payment_provider);
     const { url, orderId } = await provider.createCheckout(
@@ -636,7 +650,7 @@ export async function POST(req: Request) {
       cancelUrl,
       shippingAmount,
       applicationFeeAmount,
-      safeCheckoutNonce,
+      checkoutSignature,
       promoDiscount
     );
 
@@ -665,7 +679,7 @@ export async function POST(req: Request) {
         country_code: countryCode || null,
         supplier_cost: supplierCost,
         nexiora_commission: nexioraCommission,
-        merchant_profit: amount - supplierCost - nexioraCommission,
+        merchant_profit: roundMoney(amount - supplierCost - nexioraCommission),
         // P-4 : la consommation reelle du code (increment de used_count) a
         // lieu au PAIEMENT confirme (handlePaidCheckout), pas ici -- une
         // session abandonnee ne doit jamais consommer une utilisation. On se
@@ -682,7 +696,7 @@ export async function POST(req: Request) {
     // conflit sur la contrainte UNIQUE de shop_orders.payment_ref. Ce n'est
     // PAS un echec : la commande existe deja, on renvoie la MEME URL de
     // paiement plutot qu'une erreur ou une seconde commande. Sans nonce
-    // (safeCheckoutNonce absent), orderId est toujours une session Stripe
+    // (checkoutSignature absent), orderId est toujours une session Stripe
     // fraiche : ce conflit ne peut alors jamais se produire (comportement
     // historique inchange). NB : ce garde-fou ne devient effectif qu'une
     // fois la contrainte UNIQUE (shop_orders.payment_ref) ajoutee en base --

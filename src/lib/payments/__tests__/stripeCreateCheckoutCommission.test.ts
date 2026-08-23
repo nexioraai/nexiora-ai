@@ -59,8 +59,16 @@ describe('stripeProvider.createCheckout — commission (Mode 2 vs Mode 3), même
     expect(params.phone_number_collection).toEqual({ enabled: true });
   });
 
-  it('repli sans Stripe Tax (automatic_tax échoue) préserve exactement le même transfer_data/application_fee_amount', async () => {
-    sessionsCreateMock.mockRejectedValueOnce(new Error('Stripe Tax not enabled'));
+  // LOT 3 -- l'erreur simulee doit avoir la FORME d'une vraie erreur Stripe.
+  // Auparavant ce test utilisait `new Error('Stripe Tax not enabled')`, une
+  // erreur generique : il figeait donc le comportement dangereux du `catch`
+  // nu, qui repliait sur une session SANS TAXE quelle que soit l'erreur.
+  const taxUnavailable = Object.assign(new Error('You cannot use automatic_tax[enabled]=true'), {
+    type: 'StripeInvalidRequestError', code: 'parameter_invalid', param: 'automatic_tax[enabled]',
+  });
+
+  it('repli sans Stripe Tax (automatic_tax indisponible) préserve exactement le même transfer_data/application_fee_amount', async () => {
+    sessionsCreateMock.mockRejectedValueOnce(taxUnavailable);
     sessionsCreateMock.mockResolvedValueOnce({ id: 'sess_2', url: 'https://pay.example/sess_2' });
     await stripeProvider.createCheckout('acct_1', 'boutique', [ITEM], 'https://s', 'https://c', 0, 5);
     expect(sessionsCreateMock).toHaveBeenCalledTimes(2);
@@ -68,4 +76,23 @@ describe('stripeProvider.createCheckout — commission (Mode 2 vs Mode 3), même
     const retryAttempt = sessionsCreateMock.mock.calls[1][0];
     expect(retryAttempt.payment_intent_data).toEqual(firstAttempt.payment_intent_data);
   });
+
+  // ---- LOT 3 : le repli est desormais STRICTEMENT reserve a Stripe Tax ----
+  const nonTaxErrors: Array<[string, unknown]> = [
+    ['idempotency_error (meme cle, autres parametres)', Object.assign(new Error('Keys for idempotent requests...'), { type: 'StripeIdempotencyError', code: 'idempotency_key_in_use' })],
+    ['erreur reseau', Object.assign(new Error('network'), { type: 'StripeConnectionError' })],
+    ['rate limit', Object.assign(new Error('too many requests'), { type: 'StripeRateLimitError' })],
+    ['parametre invalide sans rapport', Object.assign(new Error('Invalid coupon'), { type: 'StripeInvalidRequestError', param: 'discounts[0][coupon]' })],
+    ['erreur generique non Stripe', new Error('boom')],
+  ];
+
+  it.each(nonTaxErrors)('%s -> RELANCEE, jamais de session sans taxe', async (_n, err) => {
+    sessionsCreateMock.mockRejectedValueOnce(err);
+    await expect(
+      stripeProvider.createCheckout('acct_1', 'boutique', [ITEM], 'https://s', 'https://c', 0, 5)
+    ).rejects.toBeDefined();
+    // Une seule tentative : la branche sans taxe n'est jamais atteinte.
+    expect(sessionsCreateMock).toHaveBeenCalledTimes(1);
+  });
+
 });

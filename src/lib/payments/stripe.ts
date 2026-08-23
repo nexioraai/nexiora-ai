@@ -3,6 +3,34 @@ import { STRIPE_SHIPPING_COUNTRIES } from './countries';
 import { getStripe } from '@/lib/stripe';
 import type { PaymentProvider } from './types';
 
+/**
+ * Le repli "sans taxe" n'est autorise que pour UNE cause : Stripe Tax n'est
+ * pas activable sur ce compte connecte.
+ *
+ * Sont explicitement EXCLUS -- et donc relances :
+ *   StripeIdempotencyError  meme cle rejouee avec d'autres parametres. C'est
+ *                           le cas qui, avec l'ancien `catch` nu, faisait
+ *                           encaisser un paiement SANS TAXE.
+ *   StripeConnectionError / StripeAPIError / StripeRateLimitError  incidents
+ *                           transitoires : reessayer sans taxe serait
+ *                           encaisser au mauvais montant.
+ *   StripeCardError, montant invalide, coupon invalide, etc.
+ *
+ * LIMITE ASSUMEE : la signature exacte renvoyee par Stripe lorsqu'un compte
+ * n'a pas active Stripe Tax n'a pas pu etre confirmee depuis ce depot. La
+ * correspondance ci-dessous est donc volontairement ETROITE (type + mention
+ * explicite d'automatic_tax) et chaque repli est journalise avec le `code` et
+ * le `param` reels, pour la figer des la premiere observation reelle.
+ * Une correspondance trop large ramenerait exactement le defaut corrige ici.
+ */
+function isAutomaticTaxUnavailable(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const e = err as { type?: string; code?: string; param?: string; message?: string };
+  if (e.type !== 'StripeInvalidRequestError') return false;
+  const haystack = `${e.param ?? ''} ${e.code ?? ''} ${e.message ?? ''}`.toLowerCase();
+  return haystack.includes('automatic_tax') || haystack.includes('stripe tax');
+}
+
 export const stripeProvider: PaymentProvider = {
   async createOnboarding(siteSlug, returnUrl) {
     const stripe = getStripe();
@@ -121,6 +149,17 @@ export const stripeProvider: PaymentProvider = {
 
     // Tente avec calcul automatique des taxes (Stripe Tax côté compte connecté).
     // Si Stripe Tax n'est pas activé sur ce compte, on retombe sans taxe.
+    //
+    // LOT 3 -- ce `catch` etait NU : il attrapait TOUTE erreur Stripe et
+    // retombait sur la branche sans taxe. Consequence la plus grave :
+    // une `idempotency_error` (meme cle rejouee avec des parametres
+    // differents) faisait creer une session SANS `automatic_tax`, donc un
+    // paiement encaisse SANS TAXE, silencieusement. Une erreur reseau ou un
+    // rate-limit produisaient le meme effet.
+    //
+    // Le repli n'est desormais autorise que si l'erreur designe
+    // explicitement automatic_tax. Tout le reste remonte : un checkout en
+    // erreur est infiniment preferable a une taxe non collectee.
     try {
       const session = await stripe.checkout.sessions.create(
         {
@@ -131,7 +170,13 @@ export const stripeProvider: PaymentProvider = {
         taxKey,
       );
       return { url: session.url ?? '', orderId: session.id };
-    } catch {
+    } catch (err: unknown) {
+      if (!isAutomaticTaxUnavailable(err)) throw err;
+      // Journalise la signature exacte de l'erreur : la correspondance
+      // ci-dessous est volontairement etroite et devra etre resserree sur le
+      // code Stripe reel des sa premiere observation en production.
+      const e = err as { type?: string; code?: string; param?: string; message?: string };
+      console.error('[stripe] repli sans taxe', { type: e.type, code: e.code, param: e.param, message: e.message });
       const session = await stripe.checkout.sessions.create(baseParams, noTaxKey);
       return { url: session.url ?? '', orderId: session.id };
     }

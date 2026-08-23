@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useCart } from './CartContext';
 import { X, ShoppingBag, Plus, Minus, Trash2 } from 'lucide-react';
 import type { CartLabels } from './cartLabels';
-import { checkoutNonceFor } from '@/lib/shop/checkoutNonce';
+import { getBuyerNonce } from '@/lib/shop/buyerNonce';
 
 type Labels = CartLabels;
 
@@ -348,23 +348,47 @@ export default function CartDrawer({
         // echouer un checkout sur un code a moitie saisi.
         promoCode: promoValid ? promoCode.trim().toUpperCase() : undefined,
       };
+      // ---- Contrat "affiche = facture" (LOT 4) ----
+      // 1) APERCU : le serveur produit le devis qui fera foi, par le MEME
+      //    chemin de code que la facturation -- il s'arrete juste avant la
+      //    creation de la session Stripe. Aucune commande n'est creee ici.
+      const preview = await fetch('/api/shop/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, preview: true }),
+      });
+      const quote = await preview.json();
+      if (!preview.ok) throw new Error(quote.error || 'Erreur');
+
+      // 2) CHECKOUT REEL, porteur du hash du devis apercu. Si le devis a
+      //    change entre les deux appels, le serveur refuse en 409 AVANT de
+      //    creer la moindre session Stripe.
       const res = await fetch('/api/shop/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...payload,
-          // Audit final (phase 2) -- `stripe.ts` derive ses trois cles
-          // d'idempotence Stripe de ce champ, et `checkout/route.ts`
-          // l'accepte depuis le lot "perfectionnement", mais ce composant --
-          // seul appelant reel de la route -- ne l'envoyait JAMAIS : la
-          // protection contre le double-clic et les deux onglets etait
-          // inerte en production (toutes les cles valaient `undefined`).
-          // Derivee du panier lui-meme, pas d'un alea persiste : voir
-          // src/lib/shop/checkoutNonce.ts pour le raisonnement.
-          checkoutNonce: checkoutNonceFor(payload),
+          // LOT 3 -- identifiant d'ACHETEUR, aleatoire et persiste, PAS une
+          // empreinte du panier (voir buyerNonce.ts). Sans autorite
+          // financiere : la cle reelle est construite cote serveur.
+          checkoutNonce: getBuyerNonce(),
+          quoteHash: quote.quoteHash,
         }),
       });
       const data = await res.json();
+
+      // Devis perime : on met l'affichage a jour avec les montants faisant
+      // foi et on rend la main a l'acheteur. AUCUNE nouvelle tentative
+      // automatique -- un rejeu immediat pourrait boucler et, surtout,
+      // facturerait un montant que l'acheteur n'a pas encore vu.
+      if (res.status === 409 && data.code === 'quote_changed') {
+        if (typeof data.shipping === 'number') setShipping(data.shipping);
+        if (typeof data.discount === 'number') setPromoDiscount(data.discount);
+        setError(data.error || 'Les prix ont ete mis a jour.');
+        setBusy(false);
+        return;
+      }
+
       if (!res.ok) throw new Error(data.error || 'Erreur');
       window.location.href = data.url;
     } catch (e: any) {

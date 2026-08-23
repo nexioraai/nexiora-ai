@@ -38,11 +38,38 @@ export const MIN_SELL_PRICE = 4.99;
 /** En dessous de ce seuil, la marge est viable mais fragile : alerte sans blocage. */
 export const LOW_MARGIN_PERCENT = 30;
 
+/**
+ * Arrondi monetaire au centime -- convention UNIQUE du depot, deja appliquee
+ * implicitement ici (merchantProfit, calcSellPrice) et dans
+ * shop/shipping/calculate. Nommee ici plutot que re-ecrite a chaque site de
+ * calcul, pour que "montant monetaire" et "arrondi au centime" soient une
+ * seule et meme decision.
+ *
+ * LOT 1 -- cause racine : checkout/route.ts calculait `nexiora_commission`,
+ * `supplier_cost` et `merchant_profit` SANS cet arrondi, puis les ecrivait
+ * tels quels dans shop_orders. Deux consequences distinctes, souvent
+ * confondues :
+ *   1. DERIVE IEEE754 -- `30 * (6/100)` vaut 1.7999999999999998, pas 1.8.
+ *      La valeur derivee etait persistee et contaminait toute agregation
+ *      comptable en aval (admin/stats, finances).
+ *   2. VALEUR SOUS-LE-CENTIME -- `59.97 * 0.06` vaut 3.5982, qui n'est PAS
+ *      un nombre entier de centimes. Stripe, lui, ne peut facturer qu'en
+ *      centimes entiers (`Math.round(fee * 100)`) : la base enregistrait
+ *      donc un montant que le systeme de paiement ne pouvait pas prelever.
+ * Arrondir a la source aligne la base sur ce qui est REELLEMENT charge.
+ *
+ * Ne remplace PAS l'arrondi de la frontiere Stripe (`Math.round(x * 100)`,
+ * centimes entiers) : les deux sont complementaires, pas redondants.
+ */
+export function roundMoney(amount: number): number {
+  return Math.round(amount * 100) / 100;
+}
+
 /** Profit marchand pour un cout fournisseur et une marge donnes (hors shipping). */
 export function merchantProfit(costPrice: number, marginPercent: number, roundMode: string): number {
   const sell = calcSellPrice(costPrice, marginPercent, roundMode);
   const commission = sell * (NEXIORA_COMMISSION_PERCENT / 100);
-  return Math.round((sell - costPrice - commission) * 100) / 100;
+  return roundMoney(sell - costPrice - commission);
 }
 export const DEFAULT_ROUND_MODE = 'off';
 
@@ -56,7 +83,7 @@ export function apply99(price: number, mode: string): number {
 }
 
 export function calcSellPrice(costPrice: number, marginPercent: number, roundMode: string): number {
-  const marked = Math.round(costPrice * (1 + marginPercent / 100) * 100) / 100;
+  const marked = roundMoney(costPrice * (1 + marginPercent / 100));
   const rounded = apply99(marked, roundMode);
   return Math.max(rounded, MIN_SELL_PRICE);
 }
