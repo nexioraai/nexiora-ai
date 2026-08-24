@@ -74,7 +74,18 @@ const ORDER_PAID = { ...ORDER_PENDING, status: 'paid' };
 const ORDER_CANCELED = { ...ORDER_PENDING, status: 'canceled' };
 const ORDER_REFUNDED = { ...ORDER_PENDING, status: 'refunded' };
 const ORDER_SHIPPED = { ...ORDER_PENDING, status: 'shipped' };
-const ORDER_CJ = { ...ORDER_PAID, cj_order_id: 'cj-order-1' };
+// PHASE 6 / A6 -- fixture COMPLETE, assertions inchangees. Une commande
+// portant un `cj_order_id` EST une commande fournisseur : `fulfillment_domain`
+// est NOT NULL + CHECK IN ('merchant','supplier') en base depuis la phase 2,
+// une commande sans domaine n'existe donc pas. L'omettre ici decrivait un etat
+// impossible, et masquait le fait que la route branchait sur l'identifiant
+// plutot que sur le domaine.
+const ORDER_CJ = { ...ORDER_PAID, cj_order_id: 'cj-order-1', fulfillment_domain: 'supplier' };
+
+// PHASE 6 / A6 -- deux commandes IDENTIQUES a une seule chose pres : le
+// domaine d'execution. C'est ce qui rend l'assertion discriminante.
+const ORDER_SUPPLIER_AVEC_CJ = { ...ORDER_CJ, fulfillment_domain: 'supplier' };
+const ORDER_MERCHANT_AVEC_CJ = { ...ORDER_CJ, fulfillment_domain: 'merchant' };
 
 beforeEach(() => {
   fromMock.mockReset();
@@ -225,5 +236,89 @@ describe('POST /api/shop/cancel-order — F10 : conflit / course avec le webhook
     const res = await POST(req({ orderId: 'order-1', token: 'tok-1' }));
     expect(res.status).toBe(409);
     expect(refundPaymentMock).not.toHaveBeenCalled();
+  });
+});
+
+
+// ============================================================
+// A6 -- CONTRAT COMPORTEMENTAL : une commande `merchant` n'atteint AUCUN
+// adaptateur fournisseur.
+// ============================================================
+// Ce que la suite ci-dessus prouvait deja : « pas d'identifiant fournisseur
+// -> pas d'appel ». Ce n'est PAS la proposition A6. La garde de cette route
+// est `if (order.cj_order_id)` -- l'identifiant, jamais le domaine.
+//
+// Depuis la phase 3, aucune commande marchande ne peut acquerir un
+// `cj_order_id` : les deux moteurs refusent avant d'en creer un. Mais c'est
+// une garantie DE LA DONNEE, pas du code. A6 exige que la frontiere tienne
+// meme si la donnee ment -- c'est tout l'objet d'un contrat de frontiere.
+//
+// Le couple de tests est indissociable : le cas `supplier` prouve que le
+// harnais atteint reellement l'adaptateur, donc qu'un echec du cas
+// `merchant` ne peut pas venir d'un fixture ou d'un mock inerte.
+
+describe('A6 -- frontiere de domaine a l\'annulation', () => {
+  it('CONTROLE -- domaine supplier + cj_order_id : l\'adaptateur EST atteint', async () => {
+    setupOrderReads({ data: ORDER_SUPPLIER_AVEC_CJ, error: null });
+    cancelShopOrderAtomicMock.mockResolvedValue({ ok: true, restocked: false, paymentIntentId: null });
+
+    await POST(req({ orderId: 'order-1', token: 'tok-1' }));
+
+    expect(
+      cjCancelOrderMock,
+      "sans cet appel, le test A6 ci-dessous serait vert pour la mauvaise raison"
+    ).toHaveBeenCalledWith(expect.any(String), expect.any(String), 'cj-order-1');
+  });
+
+  // FAIL-CLOSED -- meme pattern que cj/fulfill et suppliers/pod-fulfill, qui
+  // caracterisent tous deux leur garde sur les TROIS memes valeurs. Sans ces
+  // lignes, une garde ecrite `=== 'merchant'` passerait : elle protegerait le
+  // cas nomme et laisserait filer un domaine absent ou inattendu -- exactement
+  // l'asymetrie qui avait cree le trou d'origine (brancher sur une valeur
+  // connue plutot que sur l'appartenance au domaine autorise).
+  //
+  // `cj_order_id` est present dans les quatre cas : c'est le domaine, et lui
+  // seul, qui doit decider.
+  it.each([
+    ['merchant', 'merchant'],
+    ['absent (colonne nulle)', null],
+    ['absent (cle non renseignee)', undefined],
+    ['valeur inattendue', 'autre'],
+  ])('domaine %s + cj_order_id -> AUCUN appel adaptateur, refus trace', async (_libelle, domaine) => {
+    setupOrderReads({ data: { ...ORDER_CJ, fulfillment_domain: domaine }, error: null });
+    cancelShopOrderAtomicMock.mockResolvedValue({ ok: true, restocked: false, paymentIntentId: null });
+
+    await POST(req({ orderId: 'order-1', token: 'tok-1' }));
+
+    expect(
+      cjCancelOrderMock,
+      "seul le domaine `supplier` autorise un appel fournisseur : tout le reste, connu ou non, doit etre ferme"
+    ).not.toHaveBeenCalled();
+    expect(
+      logAnomalyMock,
+      "un etat contradictoire (identifiant fournisseur sans domaine fournisseur) ne doit jamais etre absorbe en silence"
+    ).toHaveBeenCalledWith(expect.objectContaining({ type: 'cancel_supplier_domain_refuse' }));
+  });
+
+  it('l\'annulation LOCALE se poursuit malgre le refus fournisseur -- le marchand n\'est jamais bloque', async () => {
+    setupOrderReads({ data: { ...ORDER_CJ, fulfillment_domain: 'merchant' }, error: null });
+    cancelShopOrderAtomicMock.mockResolvedValue({ ok: true, restocked: false, paymentIntentId: null });
+
+    const res = await POST(req({ orderId: 'order-1', token: 'tok-1' }));
+
+    expect(res.status).toBe(200);
+    expect(cancelShopOrderAtomicMock).toHaveBeenCalledWith('order-1');
+  });
+
+  it('A6 -- domaine merchant + cj_order_id : AUCUN adaptateur fournisseur atteint', async () => {
+    setupOrderReads({ data: ORDER_MERCHANT_AVEC_CJ, error: null });
+    cancelShopOrderAtomicMock.mockResolvedValue({ ok: true, restocked: false, paymentIntentId: null });
+
+    await POST(req({ orderId: 'order-1', token: 'tok-1' }));
+
+    expect(
+      cjCancelOrderMock,
+      "une commande executee par le marchand ne doit atteindre aucun fournisseur, quel que soit le contenu de ses colonnes fournisseur : la frontiere est le DOMAINE, jamais un identifiant"
+    ).not.toHaveBeenCalled();
   });
 });

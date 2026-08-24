@@ -464,7 +464,7 @@ déplacées · banc 12 cas avant/après · comptage de tests.
 | 3 — Fulfillment | ✅ **VALIDÉE** | `909a746` → *(checkpoint phase 3)* | `cj/fulfill.ts` · `suppliers/pod-fulfill.ts` · `shop/handlePaidCheckout.ts` · `domainRegistry.ts` (A5+A9) · 4 fichiers de tests · 1 fixture | **1167 → 1183** (+16) · 111 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **5 mutations / 5 attrapées** · **7 cas Mode 3 identiques à la production** | **Phase 4** |
 | 4 — Mode 2 | ✅ **VALIDÉE** | *(checkpoint phase 4)* | `order-domain/checkoutPolicy.ts` · `mode2/checkoutPolicy.ts` · `mode3/checkoutPolicy.ts` · `order-domain/__tests__/checkoutPolicy.test.ts` (neufs) · `checkout/route.ts` · `checkout/__tests__/route.test.ts` · `domainRegistry.ts` (**A1** + 2 cliquets) · `mode2Mode3Boundaries.test.ts` · `fixtures/mode2Mode3Violating.ts` | **1183 → 1279** (+96) · 112 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **16 mutations / 16 attrapées** · **0 branchement métier sur `site.mode`** · 6/6 domaines en contrôle positif **et** négatif · 4/4 exhaustivités gardées | **Phase 5** |
 | 5 — SHARED | ✅ **VALIDÉE** | `f9c899b` → *(checkpoint phase 5)* | `mode3/supplierShipping.ts` · `mode3/cancelSupplierOrder.ts` · `checkout/__tests__/ordering.characterization.test.ts` (neufs) · `catalog-stock.ts` → `mode3/catalogStock.ts` (renommé) · `shop/quote/resolveShipping.ts` · `checkout/route.ts` · `cancel-order/route.ts` · `domainRegistry.ts` (**R2 identifiants** + `order-cancellation`) · 5 fichiers de tests · 1 fixture | **1279 → 1302** (+23) · 113 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **33 mutations / 33 attrapées** · **F3, F4, F5 scindés** · R1-R4 verrouillées · `shipping/calculate` **bit-à-bit inchangé** | **Phase 6** |
-| 6 — Tests de frontière | ⏳ EN ATTENTE | — | — | — | — | — |
+| 6 — Tests de frontière | ✅ **VALIDÉE** | *(checkpoint phase 6)* | `cancel-order/route.ts` (garde de domaine) · `checkout/__tests__/a6SupplierAdapters.test.ts` · `shop/__tests__/a7MixedOrder.test.ts` · `__tests__/a7ReferenceBench.test.ts` (neufs) · `cancel-order/__tests__/route.test.ts` | **1302 → 1326** (+24) · 116 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **A6 complet aux 3 surfaces, au niveau ADAPTATEUR** · **A7 : 7 cas sur 7** · **banc de référence exécutable** · 13 mutations nouvelles, toutes attrapées | **Phase 7** |
 | 7 — Contrats SHARED | ⏳ EN ATTENTE | — | — | — | — | — |
 | 8 — Validation Mode 2 | ⏳ EN ATTENTE | — | — | — | — | — |
 | 9 — Non-régression Mode 3 | ⏳ EN ATTENTE | — | — | — | — | — |
@@ -957,3 +957,56 @@ garde tardive privée de preuve · ambiguïté SHARED → `mode3/` non tranchée
 · exhaustivité du mécanisme d'exhaustivité · **A2 jamais mutée** · résidu
 `dropship_type` de résolution des designs *(toujours absent du plan)* · tunnel catalogue
 non aligné sur D2 · politiques portant le prédicat · mock Supabase ambigu.
+
+
+---
+
+### PHASE 6 — VALIDÉE
+
+**A6 et A7 sont les premiers contrats purement COMPORTEMENTAUX du chantier.** A1-A5,
+A9 et A10 se prouvent par un motif ; ceux-ci ne se prouvent que par l'exécution du code
+réel avec la frontière fournisseur observée. La phase a commencé par une **mesure** de ce
+que la suite prouvait déjà — et cette mesure a été le travail le plus utile.
+
+**Ce que la mesure a trouvé, et qu'aucun compteur de tests n'aurait montré :**
+
+| Constat | Conséquence |
+|---|---|
+| A6 était **déjà prouvé au niveau adaptateur** sur le fulfillment (CJ et POD, 3 valeurs de domaine chacun) | rien à ajouter |
+| `cancel-order` : **0 occurrence** de `fulfillment_domain` dans ses tests | **faux vert** — la suite prouvait « pas d'identifiant fournisseur → pas d'appel », jamais la proposition A6 |
+| les **trois** fichiers de test du checkout mockent `mode3/catalogStock` | aucun adaptateur n'y était observable : preuve au niveau MODULE, pas frontière |
+| A7 cas 5 affirmé **en commentaire** dans `cj/fulfill.test.ts` | la conjonction n'était assertée nulle part |
+| le « banc de référence » n'existait **pas** dans le dépôt | une référence absente ne protège rien |
+
+**Une faille réelle trouvée, une seule.** `cancel-order` branchait sur `cj_order_id` — un
+IDENTIFIANT, pas un domaine. Une commande marchande portant cette colonne atteignait
+réellement le fournisseur. Corrigée par une garde **fail-closed** (`=== 'supplier'`), sur
+le modèle exact de la phase 3, l'annulation locale se poursuivant dans tous les cas.
+**Seul changement de production de toute la phase.**
+
+**Le fail-closed a lui-même dû être prouvé** : une garde écrite `=== 'merchant'` passait
+les 16 tests. Quatre valeurs de domaine sont désormais couvertes — la même asymétrie que
+celle qui avait créé le trou d'origine.
+
+**Le banc de référence.** Les suites détaillées assertent des PROPRIÉTÉS ; le banc fige un
+OBSERVABLE COMPLET par comportement, comparé à une **constante gelée** écrite dans le
+dépôt. Il attrape ce qu'une propriété ne dit pas : une valeur qui glisse, un fournisseur
+qui s'ajoute, une quantité qui change. **Constante et non instantané** : un instantané se
+régénère avec `-u`, sans qu'un relecteur le voie. Le banc est **additif** — il ne remplace
+aucun test détaillé et n'en affaiblit aucun.
+
+**Déterminisme du banc** : aucune donnée externe, aucun secret réel, aucune API
+fournisseur, aucun état mutable. Cas 1-4 et 7 exécutent des fonctions pures ; cas 5 et 6
+exécutent le vrai moteur sous le vrai aiguillage, frontière mockée au niveau du client.
+
+**Trois causes mécaniques rencontrées en montant le harnais du moteur**, chacune
+diagnostiquée en traçant la séquence de tables et les anomalies réelles : identifiants
+plateforme absents · lus au niveau MODULE, donc amorçage à hisser · devis fournisseur
+exigé avant toute création. Aucune ne masque un comportement.
+
+**13 mutations nouvelles, toutes attrapées** — garde de domaine supprimée et affaiblie ·
+D2 précoce, tardive et en aperçu · politique marchande ouverte · stock décrémenté sur la
+mauvaise ligne · ligne marchande envoyée au fournisseur · mauvaise quantité · repli de
+sous-type basculé · cloisonnement POD rompu · commission et frais dérivés.
+
+**Dettes reportées, inchangées** : celles inscrites aux phases 4 et 5, aucune traitée ici.

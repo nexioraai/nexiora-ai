@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
 
     const { data: order } = await supabaseAdmin
       .from('shop_orders')
-      .select('id, site_id, status, cj_order_id, cancel_token, payment_provider')
+      .select('id, site_id, status, cj_order_id, cancel_token, payment_provider, fulfillment_domain')
       .eq('id', orderId)
       .maybeSingle();
 
@@ -87,18 +87,51 @@ export async function POST(req: NextRequest) {
     // presence d'une commande fournisseur -- jamais le mode, jamais le
     // sous-type. Refus fournisseur = 409 AVANT toute transition d'etat et
     // avant toute restauration de stock : ordre inchange.
+    // PHASE 6 / A6 -- GARDE DE DOMAINE, modele de la phase 3.
+    //
+    // Le declencheur etait `cj_order_id` : un IDENTIFIANT, pas un domaine. Une
+    // commande marchande portant cette colonne renseignee atteignait donc
+    // reellement le fournisseur. Depuis la phase 3 aucune commande marchande
+    // ne peut acquerir cet identifiant -- mais c'est une garantie DE LA
+    // DONNEE, pas du code, et une frontiere ne doit pas dependre de la
+    // coherence de ce qu'elle recoit.
+    //
+    // FAIL-CLOSED, comme cj/fulfill et suppliers/pod-fulfill : la condition
+    // est `=== 'supplier'`, jamais `!== 'merchant'`. Un domaine absent ou
+    // inattendu n'atteint aucun fournisseur.
+    //
+    // L'annulation LOCALE se poursuit dans tous les cas : le marchand doit
+    // pouvoir annuler sa commande, etre rembourse et voir son stock restaure.
+    // Seul l'appel fournisseur est ferme.
     if (order.cj_order_id) {
-      const supplier = await cancelSupplierOrder({
-        supplierOrderId: order.cj_order_id,
-        orderId: order.id,
-        siteId: order.site_id,
-      });
-      if (!supplier.ok) {
-        return NextResponse.json({
-          ok: false,
-          reason: 'supplier_refused',
-          message: "Votre commande est deja en cours de preparation chez le fournisseur et ne peut plus etre annulee.",
-        }, { status: 409 });
+      if ((order as { fulfillment_domain?: string }).fulfillment_domain !== 'supplier') {
+        // Etat contradictoire : une commande non fournisseur porte pourtant un
+        // identifiant de commande fournisseur. Impossible en base aujourd'hui
+        // (colonne NOT NULL, CHECK, trigger d'immutabilite) -- donc s'il
+        // survient, il doit etre VU, jamais absorbe en silence.
+        await logAnomaly({
+          type: 'cancel_supplier_domain_refuse',
+          severity: 'warning',
+          siteId: order.site_id,
+          details: {
+            orderId: order.id,
+            cjOrderId: order.cj_order_id,
+            domain: (order as { fulfillment_domain?: string }).fulfillment_domain ?? null,
+          },
+        });
+      } else {
+        const supplier = await cancelSupplierOrder({
+          supplierOrderId: order.cj_order_id,
+          orderId: order.id,
+          siteId: order.site_id,
+        });
+        if (!supplier.ok) {
+          return NextResponse.json({
+            ok: false,
+            reason: 'supplier_refused',
+            message: "Votre commande est deja en cours de preparation chez le fournisseur et ne peut plus etre annulee.",
+          }, { status: 409 });
+        }
       }
     }
 
