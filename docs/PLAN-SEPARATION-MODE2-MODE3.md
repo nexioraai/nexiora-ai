@@ -467,7 +467,7 @@ déplacées · banc 12 cas avant/après · comptage de tests.
 | 6 — Tests de frontière | ✅ **VALIDÉE** | *(checkpoint phase 6)* | `cancel-order/route.ts` (garde de domaine) · `checkout/__tests__/a6SupplierAdapters.test.ts` · `shop/__tests__/a7MixedOrder.test.ts` · `__tests__/a7ReferenceBench.test.ts` (neufs) · `cancel-order/__tests__/route.test.ts` | **1302 → 1326** (+24) · 116 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **A6 complet aux 3 surfaces, au niveau ADAPTATEUR** · **A7 : 7 cas sur 7** · **banc de référence exécutable** · 13 mutations nouvelles, toutes attrapées | **Phase 7** |
 | 7 — Contrats SHARED | ✅ **VALIDÉE** | *(checkpoint phase 7)* | `__tests__/sharedChannelContracts.test.ts` (neuf) — **aucun fichier de production modifié** | **1326 → 1341** (+15) · 117 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **5 canaux du §4 exercés aux deux formes** · **4 mutations / 4 attrapées** · dernier vecteur **classe C → B** | **Phase 8** |
 | 8 — Validation Mode 2 | ✅ **VALIDÉE** | *(checkpoint phase 8)* | `shop/__tests__/mode2EndToEnd.test.ts` (neuf) — **aucun fichier de production modifié** | **1341 → 1347** (+6) · 118 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **9 maillons, 9 portes fournisseur surveillées au niveau ADAPTATEUR** · contrôle positif · **2 mutations attrapées, 3 absorbées par la défense en profondeur (mesuré)** | **Phase 9** |
-| 9 — Non-régression Mode 3 | ⏳ EN ATTENTE | — | — | — | — | — |
+| 9 — Non-régression Mode 3 | ✅ **VALIDÉE** | *(checkpoint phase 9)* | **aucun fichier modifié** — phase de validation pure | **1347** · 118 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **15 fichiers Mode 3 protégés byte-identiques à `origin/main`** · **0 assertion Mode 3 supprimée** · 366 tests Mode 3 verts · 7 comportements identiques | **— (fin du plan)** |
 
 **Décisions verrouillées** : **D1 = 0-9** · **D2 = NON** (Mode 2 ne vend aucun produit du
 catalogue fournisseur) · **D3 = B** (garde générique de domaine, aucun nom de fournisseur) ·
@@ -1093,3 +1093,50 @@ c'est de la redondance voulue, installée en phases 3 et 4.
 (M54) · le devis traitant tout produit marchand comme fournisseur (M55).
 **1 mutation écartée** : M57 était malformée (un `else` orphelin après suppression du
 `if`), le fichier ne compilait plus. Elle n'a jamais tourné et **n'est pas comptée**.
+
+
+---
+
+### PHASE 9 — VALIDÉE — *fin du plan*
+
+**Aucun fichier modifié.** Aucune divergence trouvée, donc aucune correction inventée.
+
+**La preuve la plus forte n'est pas un banc, c'est une empreinte.** Quinze fichiers du
+domaine fournisseur sont **byte-identiques** à `origin/main` (0aed2c4) — `suppliers.ts`,
+`registry.ts`, `reconcile.ts`, les quatre adaptateurs, `supplier-adapter.ts`, `client.ts`,
+`auth.ts`, `shipping-tiers.ts`, `statusMap.ts`, `rateLimiter.ts`, les deux crons de
+réconciliation. Un fichier inchangé ne peut pas s'être comporté différemment : c'est plus
+fort que n'importe quel rejeu.
+
+**Trois fichiers Mode 3 ont changé, et le diff dit exactement quoi.**
+
+| Fichier | Diff de production, hors commentaires |
+|---|---|
+| `cj/fulfill.ts` | **une** colonne ajoutée au `select` + une garde `!== 'supplier'` |
+| `suppliers/pod-fulfill.ts` | **une** colonne ajoutée au `select` + la même garde + son anomalie |
+| `mode3/catalogStock.ts` | **renommage pur** de `catalog-stock.ts` — 0 ligne modifiée, vérifié par `diff` |
+
+Pour une commande fournisseur, `fulfillment_domain === 'supplier'` : la garde ne se
+déclenche pas et la colonne ajoutée n'est pas lue. **Le chemin Mode 3 est littéralement le
+même code.** C'est la preuve formelle annoncée au §10, désormais vérifiée sur le diff réel.
+
+`resolveShipping` est le seul déplacement de logique — son cœur fournisseur est parti dans
+`mode3/supplierShipping`. La préservation y est prouvée empiriquement : les suites de devis
+passent avec leurs assertions d'origine, aucune retirée.
+
+**Le critère décisif, mesuré : ZÉRO assertion Mode 3 supprimée depuis `origin/main`.**
+`fulfill.test.ts` **+18**, `pod-fulfill.test.ts` **+8**, `reconcile.test.ts`,
+`resolveShipping.test.ts`, `quoteInvariants.test.ts` — **0 suppression** dans les cinq.
+**366 tests Mode 3 verts sur 25 fichiers.** Chaque assertion qui caractérisait le Mode 3 en
+production est toujours là, inchangée, et passe toujours.
+
+**Les 5 cas Mode 2 ont changé — c'est la correction, et elle est documentée.** Cinq
+assertions de `characterization.test.ts` ont été **modifiées, jamais supprimées** :
+`orderCommission` 18 → 0, 6 → 0 ; `orderProfit` 282 → 300, 74 → 80, **−6 → 0**. Chacune
+porte en commentaire sa valeur d'origine, et une assertion neuve interdit désormais tout
+profit marchand négatif. Le cas Mode 3 correspondant reste explicitement à 6. Ce
+changement date de `1333e49` (M2-01), **antérieur au chantier**.
+
+---
+
+## CHANTIER TERMINÉ — phases 0 à 9 validées.
