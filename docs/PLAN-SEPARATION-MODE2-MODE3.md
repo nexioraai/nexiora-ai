@@ -463,7 +463,7 @@ déplacées · banc 12 cas avant/après · comptage de tests.
 | 2 — `fulfillment_domain` | ✅ **VALIDÉE** — 4 étapes exécutées et vérifiées en production | `d63e885` → *(checkpoint phase 2)* | 3 fichiers SQL (`step1_add_column`, `step2_backfill`, `step3_not_null_and_immutability`) · `checkout/route.ts` (+capture) · `checkout/__tests__/route.test.ts` (+8 tests) | **1159 → 1167** (+8) · 111 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | mutation sur l'écriture → 4 tests en échec ✓ · **immutabilité prouvée en base** ✓ | **Phase 3** |
 | 3 — Fulfillment | ✅ **VALIDÉE** | `909a746` → *(checkpoint phase 3)* | `cj/fulfill.ts` · `suppliers/pod-fulfill.ts` · `shop/handlePaidCheckout.ts` · `domainRegistry.ts` (A5+A9) · 4 fichiers de tests · 1 fixture | **1167 → 1183** (+16) · 111 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **5 mutations / 5 attrapées** · **7 cas Mode 3 identiques à la production** | **Phase 4** |
 | 4 — Mode 2 | ✅ **VALIDÉE** | *(checkpoint phase 4)* | `order-domain/checkoutPolicy.ts` · `mode2/checkoutPolicy.ts` · `mode3/checkoutPolicy.ts` · `order-domain/__tests__/checkoutPolicy.test.ts` (neufs) · `checkout/route.ts` · `checkout/__tests__/route.test.ts` · `domainRegistry.ts` (**A1** + 2 cliquets) · `mode2Mode3Boundaries.test.ts` · `fixtures/mode2Mode3Violating.ts` | **1183 → 1279** (+96) · 112 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **16 mutations / 16 attrapées** · **0 branchement métier sur `site.mode`** · 6/6 domaines en contrôle positif **et** négatif · 4/4 exhaustivités gardées | **Phase 5** |
-| 5 — SHARED | ⏳ EN ATTENTE | — | — | — | — | — |
+| 5 — SHARED | ✅ **VALIDÉE** | `f9c899b` → *(checkpoint phase 5)* | `mode3/supplierShipping.ts` · `mode3/cancelSupplierOrder.ts` · `checkout/__tests__/ordering.characterization.test.ts` (neufs) · `catalog-stock.ts` → `mode3/catalogStock.ts` (renommé) · `shop/quote/resolveShipping.ts` · `checkout/route.ts` · `cancel-order/route.ts` · `domainRegistry.ts` (**R2 identifiants** + `order-cancellation`) · 5 fichiers de tests · 1 fixture | **1279 → 1302** (+23) · 113 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **33 mutations / 33 attrapées** · **F3, F4, F5 scindés** · R1-R4 verrouillées · `shipping/calculate` **bit-à-bit inchangé** | **Phase 6** |
 | 6 — Tests de frontière | ⏳ EN ATTENTE | — | — | — | — | — |
 | 7 — Contrats SHARED | ⏳ EN ATTENTE | — | — | — | — | — |
 | 8 — Validation Mode 2 | ⏳ EN ATTENTE | — | — | — | — | — |
@@ -899,3 +899,61 @@ Non fait : cela aurait supprimé des assertions existantes.
 🔵 `siteSubtype` figure dans le contrat partagé alors que `mode2` l'ignore entièrement.
 🔵 `src/app/api/shop/checkout/route.ts.backup` — copie pré-phase 4, gitignorée, trompeuse.
 ⚪ `policy.domain` n'est lu par aucun code de production : membre de contrat test-only.
+
+
+---
+
+### PHASE 5 — VALIDÉE
+
+**Les trois derniers vecteurs de fusion sont fermés.** F4 d'abord, seul non bloqué ;
+F3 et F5 ensuite, traités **ensemble** après mesure de leur cause racine commune.
+
+**F4 — l'annulation acheteur.** Un acheteur annule de la même façon quel que soit le
+domaine : cette route est traversée par les deux. Elle importait pourtant `cj/client`
+**et** portait les identifiants CJ. Elle s'adresse désormais au point d'entrée
+`mode3/cancelSupplierOrder`. Le déclencheur reste la présence d'une commande
+fournisseur — jamais le mode, jamais le sous-type. **Aucune logique POD ajoutée** : son
+absence reste une dette inscrite, et la combler aurait été un changement de
+comportement, pas une séparation.
+
+**F3 + F5 — une seule cause racine, mesurée.** L'admission D2 s'exécutait **après** la
+vérification de stock catalogue *et* après le devis de livraison. Un panier qu'aucun
+moteur ne pouvait exécuter consommait donc deux appels fournisseur avant d'être refusé
+— **y compris en aperçu**, qui sautait le stock mais calculait bien un devis. C'était le
+dernier chemin fournisseur qu'un panier Mode 2 pouvait atteindre. D2 précède désormais
+tout appel fournisseur.
+
+**La garde de la passe de prix est CONSERVÉE**, en défense en profondeur. Sa
+suppression laissait pourtant la suite entièrement verte : la garde précoce l'ombrageait.
+Un **test de divergence des deux lectures** rétablit sa preuve — c'est exactement le
+scénario contre lequel une défense en profondeur existe.
+
+**Scission structurelle.** `resolveShipping.ts` perd ses quatre arêtes fournisseur et
+ses identifiants CJ, et **entre dans `shared-commerce-core`**. La coupe passe *à
+l'intérieur* de `resolveCjBasket` : le tronc commun décide **quand** appeler et **quoi**
+mémoriser (cache, budget anti-abus, purge, marge, libellés acheteur) ; le domaine
+fournisseur sait **comment** parler au fournisseur et lire sa réponse. Déplacer
+`resolveCjBasket` en entier aurait fait entrer dans le Mode 3 un contrôle anti-abus
+protégeant une route **publique** — responsabilité classée SHARED au §4.
+`catalog-stock` devient `mode3/catalogStock`, domaine fournisseur en entier.
+
+**R2 fermée structurellement, pas seulement à l'exécution.** Une règle nouvelle interdit
+aussi les **identifiants** fournisseur dans le tronc commun. Mesuré deux fois sur ce
+chantier : une arête se reconstitue par la **configuration** avant de se reconstituer par
+un import, et aucun motif ancré sur `from '...'` ne la voit.
+
+**`shipping/calculate/route.ts` : strictement inchangé, bit-à-bit.** Les deux appelants
+traversent toujours le même orchestrateur, au même chemin d'import — « affiché =
+facturé » reste garanti **par construction**, sans second point de conversion de domaine.
+
+**Cinq STOP posés, tous arbitrés avant modification** : dénombrement `cj_vid` non
+concluant *(dénominateur vide — `shop_products` réellement vide, contrôle d'orphelins à
+0)* · harnais incapable de distinguer un réordonnancement · couplage F3/STOP 3 ·
+garde tardive privée de preuve · ambiguïté SHARED → `mode3/` non tranchée par le plan.
+
+**Dettes reportées, signalées et NON traitées** : règle R2-identifiants absente de
+`checkout/route.ts` et `handlePaidCheckout` · `catalog-stock.test.ts` reste sous
+`src/lib/__tests__` *(inclusions `vitest.config.ts` explicites — le piège de la phase 1)*
+· exhaustivité du mécanisme d'exhaustivité · **A2 jamais mutée** · résidu
+`dropship_type` de résolution des designs *(toujours absent du plan)* · tunnel catalogue
+non aligné sur D2 · politiques portant le prédicat · mock Supabase ambigu.
