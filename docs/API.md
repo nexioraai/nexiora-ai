@@ -44,8 +44,9 @@ ci-dessous par domaine. Légende authentification :
 
 | Méthode | Chemin | Objectif | Auth |
 |---|---|---|---|
-| GET, POST | `/api/shop/products` | Liste / création des produits boutique du marchand. | Propriétaire |
-| PATCH, DELETE | `/api/shop/products/[id]` | Modification / suppression d'un produit. | Propriétaire |
+| GET, POST | `/api/shop/products` | Liste / création des produits boutique du marchand. Champs admis : `name, description, price, currency, images, stock, published, position, for_sale`. `for_sale` omis ⇒ `true` (DEFAULT PostgreSQL, jamais reposé côté applicatif). | Propriétaire |
+| PATCH, DELETE | `/api/shop/products/[id]` | Modification / suppression d'un produit. Même allowlist de 9 champs que le POST. `published` porte la **visibilité** (vitrine, fiche produit, sitemap) ; `for_sale` porte l'**achetabilité** — le checkout exige `published = true AND for_sale = true`, si bien qu'un produit `published = true, for_sale = false` reste **visible mais non payable**. `track_inventory` et `stock_counted_at` restent exclus (étape 6) : ils passent par `/inventory`. | Propriétaire |
+| POST, DELETE | `/api/shop/products/[id]/inventory` | Politique d'inventaire d'un produit. `POST {units}` déclare un **comptage** et active le suivi de stock (passe obligatoirement par la RPC `enable_stock_tracking`, jamais par une écriture directe de `track_inventory`) ; `DELETE` cesse le suivi (`track_inventory = false` seul, `stock_counted_at` jamais effacé). Volontairement séparée du PATCH générique : `track_inventory` et `stock_counted_at` sont exclus des allowlists de `/api/shop/products`. Codes : 400 `units` non entier/négatif, 403 site Mode 1, 404 produit inexistant ou hors propriété, 409 refus de la barrière de comptage. | Propriétaire |
 | GET, PATCH | `/api/shop/orders` | Liste des commandes du site ; mise à jour (ex. tracking). | Propriétaire |
 | GET, PATCH | `/api/shop/shipping` | Lecture/écriture de la configuration de livraison du site. | Propriétaire |
 | GET | `/api/shop/finances` | Résumé financier (`?slug=&period=`) pour le tableau de bord marchand. | Propriétaire |

@@ -157,7 +157,7 @@ const SITE_MODE2 = {
   id: 'site-1', slug: 'boutique', payment_provider: 'stripe', payment_account_id: 'acct_1',
   shipping_flat: 5, mode: 2, cj_margin_percent: null, cj_round_mode: null, name: 'Ma Boutique',
 };
-const PRODUIT_MARCHAND = { id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true, stock: 10, name: 'T-Shirt' };
+const PRODUIT_MARCHAND = { id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true, for_sale: true, stock: 10, name: 'T-Shirt' };
 const COMMANDE_MODE2 = {
   id: 'order-1', site_id: 'site-1', status: 'pending', payment_ref: 'cs_test_1',
   fulfillment_domain: 'merchant', cj_order_id: null, cancel_token: 'tok-1',

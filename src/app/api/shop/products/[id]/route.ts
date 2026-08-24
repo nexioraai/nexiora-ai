@@ -1,23 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getProduct, updateProduct, deleteProduct } from '@/lib/shop';
-import { requireSiteOwnerById } from '@/lib/auth/require-site-owner';
+import { updateProduct, deleteProduct } from '@/lib/shop';
+import { requireProductOwner } from '@/lib/auth/require-product-owner';
 
-/**
- * M2-02 -- ce controle etait reimplemente ici (`owner_email` seul), comme dans
- * 5 autres routes. Il reste specifique sur UN point, qui justifie son
- * existence : cette route part d'un identifiant de PRODUIT, pas d'un slug.
- * Elle resout donc `product.site_id`, puis delegue la regle de propriete a la
- * primitive canonique -- qui priorise `owner_id`, identite stable.
- */
-async function authProduct(req: Request, productId: string): Promise<{ ok: true } | { error: NextResponse }> {
-  const product = await getProduct(productId);
-  if (!product) return { error: NextResponse.json({ error: 'Product not found' }, { status: 404 }) };
-
-  const auth = await requireSiteOwnerById(req, product.site_id);
-  if (!auth.ok) return { error: auth.response };
-
-  return { ok: true };
-}
+// ETAPE 7 du chantier catalogue canonique -- `authProduct()` vivait ICI, prive
+// au module. La politique d'inventaire ajoute une seconde route partant d'un
+// identifiant de produit ; la fonction a donc ete extraite telle quelle vers
+// `@/lib/auth/require-product-owner` pour que les deux routes appliquent
+// EXACTEMENT la meme regle. Aucun changement de comportement : memes controles,
+// meme ordre, memes codes de reponse.
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -27,13 +17,22 @@ type Ctx = { params: Promise<{ id: string }> };
 // cj_vid/cost_price -- une liste noire de 3 champs sur une table qui en a
 // bien plus est fragile par construction (tout NOUVEAU champ sensible
 // ajoute plus tard resterait expose par defaut). Allowlist explicite.
-const ALLOWED_PRODUCT_FIELDS = ['name', 'description', 'price', 'currency', 'images', 'stock', 'published', 'position'] as const;
+// ETAPE 8, VOLET A -- `for_sale` est ADMIS ici, contrairement a
+// `track_inventory` et `stock_counted_at` que l'etape 6 en a exclus. La
+// difference n'est pas de degre, elle est de nature : rouvrir le suivi de
+// stock est une AFFIRMATION sur un compteur peut-etre perime, qui exige une
+// preuve (un horodatage de comptage qui avance) et donc un acte dedie.
+// Declarer un produit vendable ou non n'affirme rien sur un etat anterieur :
+// la valeur ne se perime jamais, il n'existe aucune condition sous laquelle
+// elle deviendrait fausse d'elle-meme. Un PATCH generique est donc la forme
+// exacte du besoin, et lui inventer une route dediee serait de la ceremonie.
+const ALLOWED_PRODUCT_FIELDS = ['name', 'description', 'price', 'currency', 'images', 'stock', 'published', 'position', 'for_sale'] as const;
 
 /** PATCH /api/shop/products/[id] → met à jour un produit. */
 export async function PATCH(req: Request, { params }: Ctx) {
   try {
     const { id } = await params;
-    const auth = await authProduct(req, id);
+    const auth = await requireProductOwner(req, id);
     if ('error' in auth) return auth.error;
 
     const body = await req.json();
@@ -53,7 +52,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
 export async function DELETE(req: Request, { params }: Ctx) {
   try {
     const { id } = await params;
-    const auth = await authProduct(req, id);
+    const auth = await requireProductOwner(req, id);
     if ('error' in auth) return auth.error;
 
     await deleteProduct(id);

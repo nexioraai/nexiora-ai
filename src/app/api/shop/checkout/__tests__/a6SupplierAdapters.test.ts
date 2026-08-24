@@ -115,7 +115,7 @@ const PRODUIT_CATALOGUE = {
   supplier_product_id: 'vid-1', in_stock: true, name: 'Mug',
 };
 /** Produit du marchand : il détient son stock, aucun identifiant fournisseur. */
-const PRODUIT_MARCHAND = { id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true };
+const PRODUIT_MARCHAND = { id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true, for_sale: true };
 
 beforeEach(() => {
   fromMock.mockReset();

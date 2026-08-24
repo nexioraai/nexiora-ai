@@ -61,7 +61,7 @@ function makeRequest(fields: { file?: { name: string; type: string; size: number
 
 beforeEach(() => {
   fromMock = makeFrom();
-  siteSelectMock.mockReset().mockResolvedValue({ data: { id: 'site-1' }, error: null });
+  siteSelectMock.mockReset().mockResolvedValue({ data: { id: 'site-1', mode: 2 }, error: null });
   storageUploadMock.mockReset().mockResolvedValue({ data: {}, error: null });
   getPublicUrlMock.mockReset().mockReturnValue({ data: { publicUrl: 'https://storage.test/custom-designs/abc.png' } });
   designInsertMock.mockReset().mockResolvedValue({ data: null, error: null });

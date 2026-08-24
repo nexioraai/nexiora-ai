@@ -88,7 +88,7 @@ function handlers(opts: { tiers?: unknown; cached?: boolean; flat?: boolean } = 
       data: [{ id: 'cat-1', supplier_id: 'cj', supplier_product_id: 'VID1', price: 10, currency: 'usd' }],
     },
     shop_products: {
-      data: opts.flat ? [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true }] : [],
+      data: opts.flat ? [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true, for_sale: true }] : [],
     },
     site_catalog_selections: { data: { sell_price: 30 } },
     shipping_cache: {

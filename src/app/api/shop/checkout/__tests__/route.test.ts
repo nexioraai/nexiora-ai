@@ -275,7 +275,7 @@ describe('POST /api/shop/checkout — succès (chemin critique métier)', () => 
   it('Mode 2 : checkout créé, applicationFeeAmount = 0 (le marchand garde son stock/livraison)', async () => {
     setupTables({
       sites: { data: SITE_MODE2, error: null },
-      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true }], error: null },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true, for_sale: true }], error: null },
       shop_orders: { data: { id: 'order-1' }, error: null },
       shop_order_items: { data: [{ id: 'item-1' }], error: null },
     });
@@ -354,7 +354,7 @@ describe('POST /api/shop/checkout — LOT L : bug actif cost_price corrigé (sho
   it('Mode 2, produit shop_products SANS cj_vid -> checkout réussi (le coût fournisseur ne concerne jamais un item non dropshippé)', async () => {
     setupTables({
       sites: { data: SITE_MODE2, error: null },
-      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true }], error: null },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true, for_sale: true }], error: null },
       shop_orders: { data: { id: 'order-1' }, error: null },
       shop_order_items: { data: [{ id: 'item-1' }], error: null },
     });
@@ -375,7 +375,7 @@ describe('POST /api/shop/checkout — LOT L : bug actif cost_price corrigé (sho
       catalog_products: { data: [{ id: 'cp-1', price: 10, currency: 'usd', supplier_id: 'cj', supplier_product_id: 'vid-1' }], error: null },
       site_catalog_selections: { data: null, error: null },
       shipping_cache: { data: [{ supplier_product_id: 'vid-1', shipping_cost: 5, days_min: 10, days_max: 20, tiers: null }], error: null },
-      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true }], error: null },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true, for_sale: true }], error: null },
       shop_orders: { data: { id: 'order-1' }, error: null },
       shop_order_items: { data: [{ id: 'item-1' }, { id: 'item-2' }], error: null },
     });
@@ -397,7 +397,7 @@ describe('POST /api/shop/checkout — LOT L : bug actif cost_price corrigé (sho
   it("Mode 3, produit shop_products AVEC cj_vid réellement rempli -> 409 (défense en profondeur : coût fournisseur inconnu, aucune trace de ce cas dans l'app aujourd'hui mais bloqué si jamais atteint)", async () => {
     setupTables({
       sites: { data: SITE_MODE3, error: null },
-      shop_products: { data: [{ id: 'p1', cj_vid: 'vid-1', price: 30, currency: 'usd', published: true }], error: null },
+      shop_products: { data: [{ id: 'p1', cj_vid: 'vid-1', price: 30, currency: 'usd', published: true, for_sale: true }], error: null },
       // Nécessaire pour que la résolution de livraison réussisse et que le
       // flux atteigne réellement la boucle de prix (où vit la garde testée)
       // -- sans cache, la commande serait rejetée plus tôt (shipping_not_resolved),
@@ -414,6 +414,91 @@ describe('POST /api/shop/checkout — LOT L : bug actif cost_price corrigé (sho
 // modelisait un site Mode 2 portant un sous-type Mode 3 -- site
 // semantiquement impossible ; SITE_MODE2 servait de base commode et le
 // mode etait incident. AUCUNE assertion modifiee.
+// ============================================================
+// ÉTAPE 8, VOLET A — LA VISIBILITÉ ET L'ACHETABILITÉ SONT DEUX FAITS.
+//
+// Jusqu'ici `published` décidait des deux : un marchand ne pouvait ni exposer
+// un produit sans le vendre (catalogue, vitrine, rupture assumée), ni le
+// retirer de la vente sans le faire disparaître de sa vitrine, de sa fiche
+// produit ET du sitemap. Un booléen ne porte pas trois états.
+//
+// Ces tests verrouillent la seule chose qui compte ici : l'achat exige LES
+// DEUX, et la conjonction n'ouvre RIEN — elle est strictement plus
+// restrictive que la règle antérieure.
+// ============================================================
+describe("POST /api/shop/checkout — ÉTAPE 8, VOLET A : `published` ET `for_sale`", () => {
+  function panier(produit: Record<string, unknown>) {
+    setupTables({
+      sites: { data: SITE_MODE2, error: null },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', ...produit }], error: null },
+      shop_orders: { data: { id: 'order-1' }, error: null },
+      shop_order_items: { data: [{ id: 'item-1' }], error: null },
+    });
+    return POST(req({ slug: 'boutique', items: [{ id: 'p1', quantity: 1, name: 'T-Shirt', currency: 'usd' }] }));
+  }
+
+  it('published=true, for_sale=true -> ACHAT ACCEPTÉ (le seul cas qui vend)', async () => {
+    const res = await panier({ published: true, for_sale: true });
+    expect(res.status).toBe(200);
+    expect(logAnomalyMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'shop_product_not_purchasable' })
+    );
+  });
+
+  it('published=true, for_sale=false -> 409 : présenté, mais pas payable', async () => {
+    const res = await panier({ published: true, for_sale: false });
+    expect(res.status).toBe(409);
+    expect(logAnomalyMock).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'shop_product_not_purchasable' })
+    );
+    // C'est LA capacité que ce volet ajoute. Avant lui, ce refus n'était
+    // atteignable qu'en dépubliant — donc en effaçant le produit de la
+    // vitrine, de sa fiche et du sitemap.
+  });
+
+  it('published=false, for_sale=true -> 409 : dépublier retire toujours de la vente', async () => {
+    const res = await panier({ published: false, for_sale: true });
+    expect(res.status).toBe(409);
+    // NON-RÉGRESSION CRITIQUE. Si `for_sale` avait REMPLACÉ `published` au
+    // lieu de s'y ajouter, ce cas serait devenu ACHETABLE : un client ayant
+    // déjà l'article au panier au moment où le marchand le dépublie aurait
+    // pu payer. Ce refus existait avant le volet A ; il doit lui survivre.
+  });
+
+  it('published=false, for_sale=false -> 409', async () => {
+    expect((await panier({ published: false, for_sale: false })).status).toBe(409);
+  });
+
+  it('FAIL-CLOSED : `for_sale` absent de la lecture -> 409, jamais un achat', async () => {
+    // `for_sale` est NOT NULL en base : son absence ici ne peut venir que
+    // d'une projection modifiée ou d'un chemin d'écriture inconnu. Un produit
+    // dont on ne sait pas s'il est vendable ne se vend pas. C'est le même
+    // choix que `track_inventory !== false` à l'étape 5, appliqué au sens
+    // strict : ici l'inconnu REFUSE, parce qu'il s'agit d'encaisser.
+    expect((await panier({ published: true })).status).toBe(409);
+  });
+
+  it('FAIL-CLOSED : `published` absent de la lecture -> 409 (garde antérieure intacte)', async () => {
+    expect((await panier({ for_sale: true })).status).toBe(409);
+  });
+
+  it('`for_sale` est réellement projeté par la requête produit', async () => {
+    // Une garde portant sur un champ non demandé au SELECT serait inerte :
+    // `sp.for_sale` vaudrait `undefined` pour TOUS les produits, et la
+    // boutique entière cesserait de vendre. Ce test rend l'oubli visible.
+    const chains = setupTables({
+      sites: { data: SITE_MODE2, error: null },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true, for_sale: true }], error: null },
+      shop_orders: { data: { id: 'order-1' }, error: null },
+      shop_order_items: { data: [{ id: 'item-1' }], error: null },
+    });
+    await POST(req({ slug: 'boutique', items: [{ id: 'p1', quantity: 1, name: 'T-Shirt', currency: 'usd' }] }));
+    const chain = chains.get('shop_products') as unknown as { select: Mock };
+    const selects: string[] = chain.select.mock.calls.map((c: unknown[]) => String(c[0]));
+    expect(selects.some((sel: string) => sel.includes('for_sale'))).toBe(true);
+  });
+});
+
 describe('POST /api/shop/checkout — POD BRAND : design résolu côté serveur, jamais celui du client', () => {
   // Audit Mode 3/POD BRAND, perfectionnement -- cause racine double : (1)
   // securite -- customDesignUrl/customDesigns venaient du panier client
@@ -711,7 +796,7 @@ describe('POST /api/shop/checkout — gestion d\'erreur commande (audit checkout
   it('insertion shop_orders echoue (erreur generique) -> 500, PAS d\'URL renvoyee, anomalie journalisee', async () => {
     setupTables({
       sites: { data: SITE_MODE2, error: null },
-      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true }], error: null },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true, for_sale: true }], error: null },
       shop_orders: { data: null, error: { message: 'connection reset' } },
     });
 
@@ -728,7 +813,7 @@ describe('POST /api/shop/checkout — gestion d\'erreur commande (audit checkout
   it('insertion shop_orders rejetee car site archive (trigger DB) -> 409, message explicite, PAS d\'URL renvoyee', async () => {
     setupTables({
       sites: { data: SITE_MODE2, error: null },
-      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true }], error: null },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true, for_sale: true }], error: null },
       shop_orders: { data: null, error: { message: 'SITE_ARCHIVED: cannot create shop_orders for an archived site (site_id=site-1)' } },
     });
 
@@ -745,7 +830,7 @@ describe('POST /api/shop/checkout — gestion d\'erreur commande (audit checkout
   it('commande creee mais insertion shop_order_items echoue -> 200, URL quand meme renvoyee (paiement deja engageable), anomalie journalisee', async () => {
     setupTables({
       sites: { data: SITE_MODE2, error: null },
-      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true }], error: null },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true, for_sale: true }], error: null },
       shop_orders: { data: { id: 'order-1' }, error: null },
       shop_order_items: { data: null, error: { message: 'constraint violation' } },
     });
@@ -765,7 +850,7 @@ describe('POST /api/shop/checkout — F1/F2 : isolation tenant + produit publié
   it('la requête de prix filtre bien par site_id ET id (protection cross-boutique)', async () => {
     const chains = setupTables({
       sites: { data: SITE_MODE2, error: null },
-      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true }], error: null },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true, for_sale: true }], error: null },
       shop_orders: { data: { id: 'order-1' }, error: null },
       shop_order_items: { data: [{ id: 'item-1' }], error: null },
     });
@@ -806,7 +891,7 @@ describe('POST /api/shop/checkout — F3 : devise jamais issue du client', () =>
   it('devise falsifiée dans le body (jpy) -> ignorée, la devise du produit serveur (usd) fait foi', async () => {
     setupTables({
       sites: { data: SITE_MODE2, error: null },
-      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true }], error: null },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'usd', published: true, for_sale: true }], error: null },
       shop_orders: { data: { id: 'order-1' }, error: null },
       shop_order_items: { data: [{ id: 'item-1' }], error: null },
     });
@@ -824,7 +909,7 @@ describe('POST /api/shop/checkout — F3 : devise jamais issue du client', () =>
       sites: { data: SITE_MODE3, error: null },
       catalog_products: { data: [{ id: 'abc', supplier_product_id: 'sp-abc', price: 10, currency: 'usd', supplier_id: 'cj' }], error: null },
       shipping_cache: { data: [{ supplier_product_id: 'sp-abc', shipping_cost: 5, days_min: 10, days_max: 20, tiers: null }], error: null },
-      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'eur', published: true }], error: null },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 30, currency: 'eur', published: true, for_sale: true }], error: null },
     });
     const res = await POST(req({
       slug: 'boutique',
@@ -916,7 +1001,7 @@ describe('POST /api/shop/checkout — PASSE DE CLOTURE : codes promo (P-1 a P-6)
   function setupPromo(promoRow: unknown) {
     return setupTables({
       sites: { data: SITE_MODE2, error: null },
-      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 100, currency: 'usd', published: true }], error: null },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 100, currency: 'usd', published: true, for_sale: true }], error: null },
       promo_codes: { data: promoRow, error: null },
       shop_orders: { data: { id: 'order-1' }, error: null },
       shop_order_items: { data: [{ id: 'item-1' }], error: null },
@@ -1069,7 +1154,7 @@ describe('POST /api/shop/checkout — DEBT-029b : garde montant nul, applicable 
   function setupWithShipping(shippingFlat: number) {
     return setupTables({
       sites: { data: { ...SITE_MODE2, shipping_flat: shippingFlat }, error: null },
-      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 100, currency: 'usd', published: true }], error: null },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 100, currency: 'usd', published: true, for_sale: true }], error: null },
       promo_codes: { data: PROMO_100, error: null },
       shop_orders: { data: { id: 'order-1' }, error: null },
       shop_order_items: { data: [{ id: 'item-1' }], error: null },
@@ -1125,7 +1210,7 @@ function payloadCommande(chains: ReturnType<typeof setupTables>) {
 function setupMode2(site: unknown = SITE_MODE2) {
   return setupTables({
     sites: { data: site, error: null },
-    shop_products: { data: [{ id: 'p1', price: 30, currency: 'usd', published: true, cj_vid: null }], error: null },
+    shop_products: { data: [{ id: 'p1', price: 30, currency: 'usd', published: true, for_sale: true, cj_vid: null }], error: null },
     shop_orders: { data: { id: 'order-1' }, error: null },
     shop_order_items: { data: [{ id: 'item-1' }], error: null },
   });
@@ -1193,22 +1278,38 @@ describe('PHASE 2 — fulfillment_domain écrit à la création de la commande',
     );
   });
 
-  // ---- Fail-closed, mais jamais muet ----
+  // ---- M1-5 : REQUALIFIÉ — ce cas mêlait deux frontières ----
+  //
+  // Ce test affirmait qu'un mode inconnu produisait une commande `merchant`
+  // avec un statut 200. Il mesurait en réalité DEUX choses à la fois :
+  //
+  //   · le ROUTAGE  — `resolveFulfillmentDomain(7) === 'merchant'` ;
+  //   · l'ADMISSION — la vente était autorisée à exister.
+  //
+  // Le routage n'a PAS changé et reste vrai : il est prouvé à sa place
+  // légitime, `order-domain/__tests__/resolve.test.ts`, qui couvre déjà
+  // `null`, `undefined`, `4`, `'3'` et d'autres valeurs inattendues. Aucune
+  // couverture de routage n'est perdue ici — elle est seulement rendue à la
+  // couche qui la possède.
+  //
+  // L'admission, elle, change : un mode que le produit ne reconnaît pas ne
+  // peut plus produire de vente. Un repli interne de routage ne doit jamais
+  // valoir autorisation de créer une commande — c'est précisément ce que
+  // cette requalification acte.
   it.each([
     ['mode inconnu', 7],
     ['mode absent', null],
-  ])('%s -> repli sur "merchant" (aucun fournisseur) ET anomalie tracée', async (_libelle, mode) => {
-    const chains = setupMode2({ ...SITE_MODE2, mode });
+  ])('%s -> ADMISSION REFUSÉE (403), aucune commande créée', async (_libelle, mode) => {
+    setupMode2({ ...SITE_MODE2, mode });
     const res = await POST(req({ slug: 'boutique', items: [ITEM_MARCHAND] }));
-    expect(res.status).toBe(200);
-    expect(payloadCommande(chains).fulfillment_domain).toBe('merchant');
-    expect(logAnomalyMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'site_mode_unrecognised',
-        // Convention M-2 : le domaine est explicite dans l'anomalie.
-        details: expect.objectContaining({ domain: 'UNKNOWN', repliSur: 'merchant' }),
-      })
-    );
+    expect(
+      res.status,
+      "un mode non reconnu ne commerce pas : le repli `merchant` du routage ne l'autorise pas à vendre"
+    ).toBe(403);
+    // `payloadCommande` exige un INSERT : il modelise le cas nominal. Ici
+    // l'absence d'artefact se prouve par l'absence de session de paiement,
+    // qui precede l'ecriture de la commande dans le flux reel.
+    expect(createCheckoutMock, 'aucune session de paiement').not.toHaveBeenCalled();
   });
 
   it('un mode nominal n’émet AUCUNE anomalie (le canari ne crie pas pour rien)', async () => {
@@ -1279,7 +1380,7 @@ describe('PHASE 4 — D2 : Mode 2 n’admet aucun produit du catalogue fournisse
   it('Mode 2 vend normalement SES PROPRES produits — la garde ne ferme que le catalogue fournisseur', async () => {
     setupTables({
       sites: { data: SITE_MODE2, error: null },
-      shop_products: { data: [{ id: 'p1', price: 30, currency: 'usd', published: true, cj_vid: null }], error: null },
+      shop_products: { data: [{ id: 'p1', price: 30, currency: 'usd', published: true, for_sale: true, cj_vid: null }], error: null },
       shop_orders: { data: { id: 'order-1' }, error: null },
       shop_order_items: { data: [{ id: 'item-1' }], error: null },
     });

@@ -176,29 +176,35 @@ const allTools: Anthropic.Tool[] = [
     },
   },
   {
+    // ETAPE 8, VOLET B -- `product_name` remplace `index`. Le contexte envoye
+    // au modele ne contient AUCUN produit (`products` est absent des 16 champs
+    // de CURRENT SITE STATE) : un index demande ici ne pouvait etre que devine,
+    // et une devinette dans les bornes etait acceptee sans controle d'identite.
+    // Le nom, lui, vient de la phrase meme du marchand.
     name: 'propose_product_remove',
-    description: 'Propose to remove a product by zero-based index.',
+    description: 'Propose to remove a product from the shop, identified by its exact name. Use the name the merchant used. If several products share that name, the change is refused and you must ask the merchant which one they mean.',
     input_schema: {
       type: 'object',
       properties: {
-        index: { type: 'integer' },
+        product_name: { type: 'string', description: 'The product name exactly as it appears in the shop. Do not paraphrase, translate or shorten it.' },
         reason: { type: 'string' },
       },
-      required: ['index', 'reason'],
+      required: ['product_name', 'reason'],
     },
   },
   {
+    // ETAPE 8, VOLET B -- meme correction que propose_product_remove.
     name: 'propose_product_update',
-    description: 'Propose to modify a product field.',
+    description: 'Propose to modify one field of a product, identified by its exact name. Use the name the merchant used. If several products share that name, the change is refused and you must ask which one they mean.',
     input_schema: {
       type: 'object',
       properties: {
-        index: { type: 'integer' },
+        product_name: { type: 'string', description: 'The product name exactly as it appears in the shop. Do not paraphrase, translate or shorten it.' },
         field: { type: 'string', enum: ['name', 'price', 'description'] },
         value: { type: 'string' },
         reason: { type: 'string' },
       },
-      required: ['index', 'field', 'value', 'reason'],
+      required: ['product_name', 'field', 'value', 'reason'],
     },
   },
   {
@@ -297,6 +303,71 @@ const allTools: Anthropic.Tool[] = [
       required: ['margin_percent', 'reason'],
     },
   },
+  {
+    // ETAPE 7 du chantier catalogue canonique. `product_name` et NON un
+    // identifiant : le contexte envoye au modele ne contient aucun produit
+    // (il est bati depuis `sites` seule), donc tout `product_id` demande ici
+    // serait necessairement invente. Le nom, lui, vient de la phrase meme du
+    // marchand. La resolution nom -> produit se fait cote serveur, dans
+    // `/apply`, sur la liste reellement possedee.
+    name: 'count_product_stock',
+    description: 'Count the stock of ONE product and start tracking its inventory. Use when the merchant states a real counted quantity: "I have 12 mugs left", "count 30 units of the black hoodie", "start tracking stock for X". Identify the product by the exact name the merchant used. NEVER invent a quantity, and NEVER call this to guess or estimate a stock: it records a physical count the merchant has actually made. If you are unsure which product is meant, ask the merchant before calling this.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        product_name: { type: 'string', description: 'The product name exactly as the merchant said it. Do not paraphrase, translate or shorten it.' },
+        units: { type: 'integer', description: 'Number of units the merchant counted. Integer, 0 or more.' },
+        reason: { type: 'string' },
+      },
+      required: ['product_name', 'units', 'reason'],
+    },
+  },
+  {
+    // ETAPE 8, VOLET D. Meme ciblage que count_product_stock : `product_name`
+    // et jamais un identifiant. Le contexte envoye au modele ne contient
+    // aucun produit, donc tout `product_id` demande ici serait invente.
+    // Le nom vient du plan verrouille. Il cotoie `catalog_set_margin` en
+    // Mode 3, ou les prix du catalogue fournisseur se calculent par la marge
+    // du site et non par produit : c'est la DESCRIPTION qui leve l'ambiguite,
+    // le nom seul ne le fait pas.
+    name: 'set_price',
+    description: 'Change the selling price of ONE product the merchant manages themselves. Use when the merchant says "the mug is now 25", "raise the price of X to 30", "drop the black hoodie to 19.99". Identify the product by the exact name the merchant used. This only reaches products the merchant created in their dashboard — NOT supplier catalog products, whose prices are driven by the site-wide margin (catalog_set_margin). If you are unsure which product is meant, ask before calling.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        product_name: { type: 'string', description: 'The product name exactly as the merchant said it. Do not paraphrase, translate or shorten it.' },
+        price: { type: 'number', description: 'New price, in the product currency. 0 or more. Never invent a price the merchant did not state.' },
+        reason: { type: 'string' },
+      },
+      required: ['product_name', 'price', 'reason'],
+    },
+  },
+  {
+    name: 'set_currency',
+    description: 'Change the currency of ONE product the merchant manages themselves. Use when the merchant says "sell the mug in euros", "switch X to USD". Three-letter code (EUR, USD, CAD...). Warning: a cart mixing several currencies is refused at checkout, so tell the merchant that all products of a shop should share one currency.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        product_name: { type: 'string', description: 'The product name exactly as the merchant said it.' },
+        currency: { type: 'string', description: 'Three-letter ISO currency code, e.g. EUR, USD, CAD.' },
+        reason: { type: 'string' },
+      },
+      required: ['product_name', 'currency', 'reason'],
+    },
+  },
+  {
+    name: 'set_for_sale',
+    description: 'Turn selling ON or OFF for ONE product, WITHOUT hiding it. Use when the merchant says "stop selling X but keep showing it", "X is out of stock, remove the buy button", "put X back on sale". A product with selling turned off stays fully visible on the storefront, on its product page and in the sitemap — customers simply cannot pay for it. To make a product DISAPPEAR instead, that is the separate visibility setting in the dashboard, not this tool.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        product_name: { type: 'string', description: 'The product name exactly as the merchant said it.' },
+        for_sale: { type: 'boolean', description: 'true = customers can buy it, false = shown but not payable.' },
+        reason: { type: 'string' },
+      },
+      required: ['product_name', 'for_sale', 'reason'],
+    },
+  },
 ];
 
 function getToolsForSite(mode: number, dropshipType: string | null): Anthropic.Tool[] {
@@ -305,17 +376,43 @@ function getToolsForSite(mode: number, dropshipType: string | null): Anthropic.T
   const manualProducts = ['propose_product_add', 'propose_product_remove', 'propose_product_update'];
   const catalog = ['catalog_curate', 'catalog_enhance', 'catalog_approve_all', 'catalog_set_margin'];
   const promo = ['create_promo_code', 'deactivate_promo_code'];
+  // ETAPE 7 -- meme frontiere que l'admission au commerce (`canTransact` :
+  // modes 2 et 3, jamais 1). Un stock n'existe que pour un site qui vend ; la
+  // route d'inventaire le refuserait de toute facon en 403, et laisser le
+  // modele proposer un outil voue au refus serait une promesse fausse.
+  const inventory = ['count_product_stock'];
+  // ETAPE 8, VOLET D -- meme frontiere que `inventory`, et pour la meme
+  // raison : ces outils n'atteignent que `shop_products`, la table dont
+  // ProductManager est l'interface, elle-meme montee pour les modes 2 ET 3
+  // (edit/[slug]/page.tsx). Les catalogues fournisseurs du Mode 3 vivent
+  // ailleurs (`site_catalog_selections`, mockups pod_brand) et portent des
+  // identifiants prefixes `catalog-` que `GET /api/shop/products` ne renvoie
+  // jamais : ils sont donc hors d'atteinte par construction, et une demande
+  // les visant obtient un 404 explicite -- jamais une ecriture sur un autre
+  // produit.
+  const productFields = ['set_price', 'set_currency', 'set_for_sale'];
 
   const allowed = [...universal];
 
   if (mode === 1) {
     allowed.push(...content, ...manualProducts);
   }
+  // ETAPE 0 du chantier catalogue canonique -- le Mode 2 perd les outils
+  // `manualProducts`. Ils ecrivent dans `sites.products` (jsonb), or la
+  // vitrine d'une boutique Mode 2 lit `shop_products` : le chargeur public
+  // (themes/shared.tsx) ECRASE le jsonb des qu'une ligne `shop_products`
+  // publiee existe. Un produit ajoute ici etait donc soit invisible (ecrase),
+  // soit affiche mais NON ACHETABLE -- le checkout resout par
+  // `shop_products.id`, que ces objets jsonb ne possedent pas (0/32 mesures
+  // en production). Les produits Mode 2 se gerent dans le tableau de bord
+  // (ProductManager -> shop_products), seule source vendable.
+  // Le Mode 1 les conserve : sa `sites.products` n'a pas de contrepartie
+  // commerciale, et son traitement appartient a une etape ulterieure.
   if (mode === 2) {
-    allowed.push(...content, ...manualProducts, ...promo);
+    allowed.push(...content, ...promo, ...inventory, ...productFields);
   }
   if (mode === 3) {
-    allowed.push(...promo);
+    allowed.push(...promo, ...inventory, ...productFields);
     if (dropshipType === 'reseller' || dropshipType === 'pod_custom') {
       allowed.push(...catalog);
     }
@@ -423,7 +520,7 @@ This is a local business site (restaurant, salon, clinic, etc.). The owner manag
 \${site.mode === 2 ? \`
 MODE: LOCAL BOUTIQUE (mode 2)
 This is an online boutique where the owner sells their OWN inventory.
-- They can add/edit/remove their products manually with prices
+- Their products live in the dashboard (Products section: name, price, stock, visibility). You CANNOT add, edit or remove products yourself — guide the merchant to the dashboard instead, and never claim you have done it
 - They can create promo codes for their customers
 - Help them write product descriptions, manage their catalog, and market their shop
 - NO dropshipping — the owner physically holds inventory

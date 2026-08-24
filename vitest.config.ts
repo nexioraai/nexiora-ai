@@ -93,6 +93,10 @@ export default defineConfig({
       'src/app/api/domains/**/*.test.ts',
       'src/app/api/catalog/**/*.test.ts',
       'src/lib/architecture/**/*.test.ts',
+      // M1-1 — frontiere d'admission Mode 1 / Mode 2. Sans cette ligne le test
+      // passe en isolation mais n'est JAMAIS collecte par `vitest run` : le
+      // piege deja rencontre en phase 1 du chantier Mode 2 / Mode 3.
+      'src/lib/commerce-admission/**/*.test.ts',
       'src/lib/systemHealth/**/*.test.ts',
       'src/app/api/webhooks/**/*.test.ts',
       'src/app/api/shop/**/*.test.ts',
@@ -119,6 +123,18 @@ export default defineConfig({
       // -- exactement le piege documente ci-dessus. Verifie par le delta de
       // comptage de tests apres ajout.
       'src/lib/order-domain/**/*.test.ts',
+      // ETAPE 7 du chantier catalogue canonique -- DEUX prefixes ajoutes, tous
+      // deux absents jusqu'ici :
+      //   * src/lib/agent-tools/ porte la resolution nom -> produit (N7) ;
+      //   * src/app/api/agent/ n'avait AUCUNE couverture, alors que
+      //     `agent/[slug]/apply` est la seule route par laquelle un outil IA
+      //     ecrit reellement (22 outils).
+      // Sans ces lignes, leurs tests passent en isolation mais ne sont JAMAIS
+      // collectes par `vitest run` -- donc jamais en CI, silencieusement.
+      // C'est le piege deja documente six fois plus haut dans ce fichier ;
+      // verifie ici par le delta de comptage de tests apres ajout.
+      'src/lib/agent-tools/**/*.test.ts',
+      'src/app/api/agent/**/*.test.ts',
     ],
     environment: 'node',
   },

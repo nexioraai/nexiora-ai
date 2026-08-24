@@ -12,6 +12,7 @@ import { logAnomaly } from '@/lib/anomaly';
 // PHASES 2 et 4 (docs/PLAN-SEPARATION-MODE2-MODE3.md) : point de decision
 // unique de la frontiere, puis politique d'admission par domaine. La route
 // selectionne la politique -- elle n'en implemente aucune.
+import { canTransact } from '@/lib/commerce-admission/canTransact';
 import { resolveFulfillmentDomain, isRecognisedSiteMode } from '@/lib/order-domain/resolve';
 import type { CheckoutPolicy } from '@/lib/order-domain/checkoutPolicy';
 import { MODE2_CHECKOUT_POLICY } from '@/lib/mode2/checkoutPolicy';
@@ -51,6 +52,23 @@ export async function POST(req: Request) {
       .is('archived_at', null)
       .single();
     if (siteError || !site) return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
+
+    // ---- M1-5 : ADMISSION AU COMMERCE, avant toute autre consideration ----
+    // Placee DELIBEREMENT avant le controle `payment_account_id` : une vitrine
+    // dont le compte de paiement serait connecte doit etre refusee quand meme.
+    // L'absence d'un compte est une donnee incidente, jamais une frontiere.
+    // Aucune commande, aucune ligne, aucune session Stripe n'existe encore a
+    // ce point : le refus ne laisse aucun artefact derriere lui.
+    //
+    // Distincte de la conversion mode -> domaine qui suit : celle-ci demande
+    // QUI executera la vente, celle-la demandait si la vente a le droit
+    // d'exister.
+    if (!canTransact(site.mode)) {
+      return NextResponse.json(
+        { error: 'Ce site est une vitrine : il ne peut pas exercer d’activité commerciale.' },
+        { status: 403 }
+      );
+    }
     if (!site.payment_account_id) return NextResponse.json({ error: 'Paiements non configurés pour ce site' }, { status: 400 });
 
     // ---- PHASE 2 + 4 : conversion unique mode -> domaine, puis politique ----
@@ -418,9 +436,12 @@ export async function POST(req: Request) {
         // acheter un item Mode 3 a cout fournisseur inconnu) est conserve,
         // mais desormais base sur un signal reel (cj_vid), pas sur une
         // colonne qui n'a jamais existe.
+        // ETAPE 8, VOLET A -- `for_sale` ajoute a la lecture. La VISIBILITE
+        // (`published`) et l'ACHETABILITE (`for_sale`) sont desormais deux
+        // faits distincts, et l'achat exige LES DEUX.
         const { data: sp, error: spError } = await supabaseAdmin
           .from('shop_products')
-          .select('price, currency, published, cj_vid')
+          .select('price, currency, published, for_sale, cj_vid')
           .eq('id', item.id)
           .eq('site_id', site.id)
           .maybeSingle();
@@ -428,7 +449,21 @@ export async function POST(req: Request) {
           await logAnomaly({ type: 'shop_product_query_failed', siteId: site.id, slug, details: { itemId: item.id, error: spError.message } });
           return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
         }
-        if (!sp || sp.published !== true) {
+        // CONJONCTION, et non substitution. Remplacer `published` par
+        // `for_sale` OUVRIRAIT une capacite que personne n'a demandee : un
+        // produit `published = false, for_sale = true` deviendrait achetable
+        // -- cas reel, un client ayant deja l'article au panier au moment ou
+        // le marchand le depublie. Aujourd'hui cet achat est refuse ; il doit
+        // le rester. La conjonction est STRICTEMENT plus restrictive que la
+        // regle anterieure : elle n'ouvre rien, elle n'ajoute que la faculte
+        // de refuser.
+        //
+        // `!== true` sur les DEUX, et non `=== false`. Si l'une des colonnes
+        // venait a manquer de la lecture -- projection modifiee, colonne
+        // renommee, ligne heritee d'un chemin d'ecriture inconnu -- son
+        // absence doit rendre ce controle PLUS STRICT, jamais plus permissif.
+        // Un produit dont on ne sait pas s'il est vendable ne se vend pas.
+        if (!sp || sp.published !== true || sp.for_sale !== true) {
           await logAnomaly({ type: 'shop_product_not_purchasable', siteId: site.id, slug, details: { itemId: item.id } });
           return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
         }

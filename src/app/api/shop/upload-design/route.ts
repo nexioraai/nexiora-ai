@@ -1,3 +1,4 @@
+import { canTransact } from '@/lib/commerce-admission/canTransact';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { randomUUID } from 'crypto';
@@ -34,6 +35,16 @@ export async function POST(req: Request) {
       .is('archived_at', null)
       .maybeSingle();
     if (!site) return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
+
+    // M1-5 — un design televerse n'existe que pour etre imprime sur un produit
+    // vendu : c'est un artefact du parcours commercial, pas un media de
+    // vitrine. Garde posee avant tout stockage et toute ecriture.
+    if (!canTransact((site as { mode?: unknown }).mode)) {
+      return NextResponse.json(
+        { error: 'Ce site est une vitrine : il ne peut pas exercer d’activité commerciale.' },
+        { status: 403 }
+      );
+    }
 
     const maxSize = 10 * 1024 * 1024; // 10 MB
     if (file.size > maxSize) return NextResponse.json({ error: 'File too large (max 10MB)' }, { status: 400 });

@@ -352,6 +352,39 @@ export const DOMAIN_REGISTRY: DomainDefinition[] = [
     contractTestsPath: 'src/lib/architecture/__tests__/mode2Mode3Boundaries.test.ts',
   },
   {
+    id: 'mode-1-showcase-domain',
+    description:
+      "Admission au commerce (M1-2) — le Mode 1 est une VITRINE : il presente un business, il ne le fait pas commercer. Ce domaine porte la frontiere d'ADMISSION (« ce site a-t-il le droit de produire un artefact commercial ? »), qui se pose EN AMONT de tout artefact. Elle ne doit jamais etre confondue avec la frontiere de ROUTAGE (order-domain/, « qui execute cette vente ? »), qui se pose EN AVAL sur une vente deja admise. Confondre les deux serait rejouer le defaut que neuf phases ont servi a defaire.",
+    ownedFiles: ['src/lib/commerce-admission/canTransact.ts'],
+    forbiddenPatterns: [
+      {
+        pattern: /\bfulfillment_domain\b/,
+        reason:
+          "M1-2 — l'admission ne connait pas le domaine d'execution. `fulfillment_domain` repond a « qui execute ? » ; ce module repond a « a-t-on le droit de vendre ? ». Les melanger reintroduirait la confusion entre admission et routage.",
+      },
+      {
+        pattern: /from ['\"]@\/lib\/(cj|suppliers|dropship|mode2|mode3|order-domain)/,
+        reason:
+          "M1-2 — le point d'admission ne depend d'aucun domaine ni d'aucun fournisseur : c'est ce qui le rend verifiable d'un seul regard, et ce qui garantit qu'il reste utilisable avant toute decision d'execution.",
+      },
+      {
+        pattern: /\bdropship_type\b/,
+        reason:
+          "M1-2 — le sous-type est interne au Mode 3. L'admission ne descend jamais a ce niveau : elle ne distingue que commercant / non commercant.",
+      },
+      {
+        pattern: /!==\s*1\b/,
+        reason:
+          "M1-2 — `!== 1` ferait du commerce le comportement PAR DEFAUT : un mode 4 ajoute demain serait commercant sans decision, et aucun test ne le verrait. L'allowlist positive inverse la charge de la preuve. C'est la propriete centrale du contrat M1-1.",
+      },
+    ],
+    // Le module doit pouvoir EXPLIQUER en prose pourquoi `!== 1` est proscrit —
+    // c'est meme la meilleure protection contre une reintroduction par
+    // meconnaissance. Meme derogation, meme raison qu'a `checkout-domain-selection`.
+    ignoreLinePattern: IGNORE_COMMENT_LINES,
+    contractTestsPath: 'src/lib/commerce-admission/__tests__/canTransact.test.ts',
+  },
+  {
     id: 'order-cancellation',
     description:
       "Annulation acheteur (phase 5, vecteur F4) — un acheteur annule sa commande de la meme facon, qu'elle soit executee par le marchand ou par un fournisseur : cette route est traversee par les DEUX domaines. Elle importait pourtant `cj/client` et portait les identifiants CJ en tete de fichier. Elle ne s'adresse desormais qu'au point d'entree du domaine fournisseur. Le declencheur reste la presence d'une commande fournisseur, jamais le mode ni le sous-type.",
@@ -542,3 +575,12 @@ export const CHECKOUT_OWNED_DIRECTORIES = ['src/app/api/shop/checkout'] as const
  *  l'oubli d'une sixième. Dette 🟡 déjà documentée, volontairement non
  *  traitée ici — la corriger dépasserait le périmètre F4. */
 export const CANCEL_ORDER_OWNED_DIRECTORIES = ['src/app/api/shop/cancel-order'] as const
+
+/** Repertoire du point d'admission commerciale. Meme mecanisme que les cinq
+ *  constantes ci-dessus.
+ *
+ *  Le Mode 1 etait jusqu'ici defini par SOUSTRACTION — « ce qui n'est pas une
+ *  boutique ». Un mode qui n'existe que negativement ne peut pas etre garde
+ *  positivement : c'est la cause structurelle de l'absence de frontiere
+ *  mesuree en M1-0. Cette entree lui donne une existence architecturale. */
+export const MODE_1_OWNED_DIRECTORIES = ['src/lib/commerce-admission'] as const

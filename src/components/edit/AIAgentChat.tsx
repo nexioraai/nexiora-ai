@@ -488,12 +488,21 @@ function ToolProposalCard({
             )}
           </>
         );
+      // ETAPE 8, VOLET B -- le NOM, plus jamais un numero. La carte affichait
+      // « Remove product #2 » : le marchand approuvait un geste destructeur
+      // sans pouvoir verifier sur quoi il portait. L'approbation ne compensait
+      // donc pas le ciblage aveugle, elle relayait le meme jeton opaque.
       case 'propose_product_remove':
-        return <>Remove product #{input.index}</>;
+        return (
+          <>
+            Remove product: <strong className="text-[#FA5D1E]">{input.product_name}</strong>
+          </>
+        );
       case 'propose_product_update':
         return (
           <>
-            Update product #{input.index} <strong className="text-[#FA5D1E]">{input.field}</strong>:{' '}
+            Update <strong className="text-[#FA5D1E]">{input.product_name}</strong> —{' '}
+            <strong className="text-[#FA5D1E]">{input.field}</strong>:{' '}
             <span className="text-white">"{input.value}"</span>
           </>
         );

@@ -2,6 +2,7 @@
 
 import { supabase } from '@/lib/supabase'
 import { calcSellPrice, sitePricing, resolveDisplayPrice } from '@/lib/pricing'
+import { canTransact } from '@/lib/commerce-admission/canTransact'
 
 import {
 Wrench,
@@ -142,6 +143,71 @@ export function resolveSiteBaseUrl(
   return `${WOORRI_SITE_URL}/sites/${site.slug}`
 }
 
+// ============================================================
+// ETAPE 8, VOLET C -- LE REPLI JSONB, ET OU IL DISPARAIT.
+//
+// LE DEFAUT CORRIGE. `data.products` arrive charge du jsonb `sites.products`
+// (expose par PUBLIC_COLS), puis n'etait REMPLACE par `shop_products` que si
+// celle-ci rendait au moins une ligne publiee. Le jsonb survivait donc des
+// que la boutique n'avait aucun produit publie -- et il survivait en
+// affichant des objets SANS `id`, que le checkout refuse (409) et auxquels
+// `shop-product-guard` interdit deja le panier. Une boutique montrait donc
+// un catalogue fantome, visible et non achetable.
+//
+// POURQUOI SEULEMENT LES MODES 2 ET 3. Pour eux, `shop_products` est la
+// source canonique et le jsonb n'est qu'un repli : il n'a plus lieu d'etre.
+// Pour le Mode 1, le jsonb N'EST PAS un repli -- c'est sa SEULE source. Une
+// vitrine ne peut posseder aucun `shop_products` : trois gardes
+// independantes l'interdisent (canTransact sur POST, requireProductOwner sur
+// PATCH/DELETE, ProductManager monte pour les seuls modes 2 et 3). Le vider
+// ici reviendrait a supprimer un catalogue legitime, et contredirait
+// `enforceModeProducts()`, qui a deja tranche a la generation que ces
+// produits sont valides en Mode 1 et invalides en 2/3.
+//
+// `canTransact` PLUTOT QU'UN `mode === 2 || mode === 3` ECRIT ICI. La
+// frontiere d'admission au commerce est nommee a UN seul endroit ; la
+// recopier en creerait une seconde, qui divergerait au premier mode ajoute.
+// ============================================================
+
+/** Projection publique d'une ligne `shop_products`. Aucun champ interne. */
+function mapShopProducts(rows: any[]): any[] {
+return rows.map((p: any) => ({
+id: p.id,
+name: p.name,
+description: p.description ?? '',
+price: p.price != null ? `${Number(p.price).toFixed(2)} ${p.currency}` : '',
+priceNumber: p.price != null ? Number(p.price) : undefined,
+currency: p.currency,
+image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : undefined,
+cjVid: p.cj_vid || null,
+}))
+}
+
+/**
+ * Pose le catalogue vendable sur `data.products`.
+ *
+ * Ecrit a UN seul endroit, appele par `fetchSite` ET `fetchSitePreview` : ces
+ * deux fonctions portaient jusqu'ici le meme bloc, duplique mot pour mot. La
+ * vitrine publique et l'apercu proprietaire doivent montrer le meme
+ * catalogue ; deux copies auraient fini par diverger.
+ */
+function applyShopProducts(data: any, shopProducts: any[] | null | undefined) {
+if (canTransact(data?.mode)) {
+// Modes commercants : `shop_products` fait foi, MEME VIDE. Aucun repli --
+// une boutique sans produit publie n'a pas de catalogue, elle n'herite pas
+// de celui d'avant.
+data.products = mapShopProducts(shopProducts ?? [])
+return
+}
+// Mode 1 (et tout mode non commercant) : comportement RIGOUREUSEMENT
+// inchange, y compris cette branche qu'aucun chemin applicatif ne peut
+// atteindre -- une vitrine n'a pas de `shop_products`. La conserver telle
+// quelle est ce qui garantit qu'aucun comportement du Mode 1 n'a bouge.
+if (shopProducts && shopProducts.length > 0) {
+data.products = mapShopProducts(shopProducts)
+}
+}
+
 export async function fetchSite(
 slug: string,
 allowUnpublished = false
@@ -175,18 +241,7 @@ const { data: shopProducts } = await supabase
 .eq('published', true)
 .order('position', { ascending: true })
 
-if (shopProducts && shopProducts.length > 0) {
-;(data as any).products = shopProducts.map((p: any) => ({
-id: p.id,
-name: p.name,
-description: p.description ?? '',
-price: p.price != null ? `${Number(p.price).toFixed(2)} ${p.currency}` : '',
-priceNumber: p.price != null ? Number(p.price) : undefined,
-currency: p.currency,
-image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : undefined,
-cjVid: p.cj_vid || null,
-}))
-}
+applyShopProducts(data as any, shopProducts)
 
 await loadCatalogSelections(data as any)
 
@@ -304,18 +359,7 @@ const { data: shopProducts } = await supabase
 .eq('site_id', (data as any).id)
 .eq('published', true)
 .order('position', { ascending: true })
-if (shopProducts && shopProducts.length > 0) {
-;(data as any).products = shopProducts.map((p: any) => ({
-id: p.id,
-name: p.name,
-description: p.description ?? '',
-price: p.price != null ? `${Number(p.price).toFixed(2)} ${p.currency}` : '',
-priceNumber: p.price != null ? Number(p.price) : undefined,
-currency: p.currency,
-image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : undefined,
-cjVid: p.cj_vid || null,
-}))
-}
+applyShopProducts(data as any, shopProducts)
 await loadCatalogSelections(data as any)
 
 return data as unknown as Site

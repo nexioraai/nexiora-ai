@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { canTransact } from '@/lib/commerce-admission/canTransact';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabase as supabaseAnon } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabase-admin';
@@ -37,7 +38,14 @@ export async function PATCH(req: Request) {
     // primitive canonique priorise `owner_id` -- identite stable, insensible
     // a un changement d'adresse. Delegation : une seule regle, un seul
     // endroit, aucune divergence possible.
-    const auth = await requireSiteOwner(req, slug, 'id');
+    // M1-4 — le forfait de port est un parametre de vente.
+    const auth = await requireSiteOwner(req, slug, 'id, mode');
+    if (auth.ok && !canTransact((auth.site as { mode?: unknown }).mode)) {
+      return NextResponse.json(
+        { error: 'Ce site est une vitrine : il ne peut pas exercer d’activité commerciale.' },
+        { status: 403 }
+      );
+    }
     if (!auth.ok) return auth.response;
     await supabaseAdmin.from('sites').update({ shipping_flat: value }).eq('id', (auth.site as any).id);
     return NextResponse.json({ shippingFlat: value });

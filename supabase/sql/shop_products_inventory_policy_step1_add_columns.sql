@@ -1,0 +1,190 @@
+-- =============================================================
+-- CHANTIER CATALOGUE CANONIQUE — ÉTAPE 1 / 8
+-- Introduction ADDITIVE de la politique d'inventaire sur shop_products.
+--
+-- À exécuter manuellement dans l'éditeur SQL Supabase : ce dépôt n'a aucun
+-- outillage de migration automatisé — même convention que
+-- shop_stock_functions.sql, shop_order_status_machine.sql,
+-- commerce_admission_orders_require_transacting_site.sql (M1-7).
+-- Ce fichier documente l'état RÉELLEMENT déployé ; aucun pipeline ne le rejoue.
+--
+-- ============================================================
+-- CE QUE CETTE ÉTAPE FAIT, ET CE QU'ELLE NE FAIT PAS
+--
+-- ELLE AJOUTE DEUX COLONNES. RIEN D'AUTRE.
+--
+-- Aucun trigger (étape 2), aucune fonction (étape 3), aucune modification de
+-- decrement_shop_stock_batch (étape 4) ni de checkStock (étape 5). Aucun
+-- lecteur applicatif n'est branché sur ces colonnes à l'issue de cette étape.
+--
+-- CONSÉQUENCE VOULUE : après application, le comportement observable du
+-- produit est RIGOUREUSEMENT IDENTIQUE à ce qu'il était avant. Cette étape
+-- est vérifiable seule et annulable seule (voir ROLLBACK plus bas).
+--
+-- ============================================================
+-- ÉTAT RÉEL MESURÉ AVANT ÉCRITURE (production, 2026-08-24)
+--
+--   * shop_products : 0 ligne
+--   * Triggers non internes                    : AUCUN
+--   * Contraintes                              : 2 seulement
+--       - shop_products_pkey        PRIMARY KEY (id)
+--       - shop_products_site_id_fkey FOREIGN KEY (site_id)
+--                                    REFERENCES sites(id) ON DELETE CASCADE
+--     => aucun CHECK, aucun UNIQUE, aucune contrainte métier préexistante
+--        sur stock, published, price ou currency.
+--   * Index                                    : 2
+--       - shop_products_pkey
+--       - idx_shop_products_site
+--   * Colonnes existantes pertinentes :
+--       stock     integer NOT NULL DEFAULT 0
+--       price     numeric NOT NULL DEFAULT 0
+--       currency  text    NOT NULL DEFAULT 'CAD'
+--       published boolean NOT NULL DEFAULT true
+--
+-- Chacun de ces points a été mesuré, aucun n'est supposé. C'est ce qui permet
+-- d'affirmer qu'aucun mécanisme existant ne peut interférer avec cet ajout.
+--
+-- ============================================================
+-- POURQUOI `track_inventory boolean NOT NULL DEFAULT true`
+--
+-- `true` N'EST PAS UN CHOIX DE POLITIQUE — C'EST LA PRÉSERVATION DU PASSÉ.
+-- Aujourd'hui, tout produit possède un compteur `stock` qui est vérifié
+-- (checkStock) et décrémenté (decrement_shop_stock_batch). C'est exactement
+-- ce que `track_inventory = true` signifiera. Toute autre valeur par défaut
+-- changerait rétroactivement le comportement de produits existants — ce que
+-- cette étape s'interdit.
+--
+-- LE BACKFILL EST IMPLICITE, ET C'EST VOULU. PostgreSQL affecte la valeur par
+-- défaut à toutes les lignes existantes lors d'un ADD COLUMN ... NOT NULL
+-- DEFAULT. Un `UPDATE ... SET track_inventory = true` séparé serait donc
+-- redondant : NOT NULL rend par construction impossible qu'une ligne reste
+-- sans valeur. Écrire un backfill explicite laisserait croire qu'un cas non
+-- couvert existe ; il n'en existe aucun.
+--   (Sans objet en pratique ici : 0 ligne mesurée. La règle est écrite pour
+--    la correction du script, pas pour les données actuelles.)
+--
+-- `NOT NULL` EST LA MOITIÉ DE LA SÛRETÉ. Une politique d'inventaire nulle
+-- serait un troisième état non décidé, et toute condition écrite dessus
+-- vaudrait NULL — donc ni vrai ni faux, donc silencieusement permissive selon
+-- la formulation. Le chantier M1-7 a rencontré exactement ce piège sur
+-- `sites.mode` (nullable) : `mode NOT IN (2,3)` y valait NULL et ne levait
+-- jamais. On ne le rejoue pas.
+--
+-- ============================================================
+-- POURQUOI `stock_counted_at timestamptz NULL`, ET POURQUOI ON NE LA REMPLIT PAS
+--
+-- Cette colonne portera l'ACTE D'AFFIRMATION du marchand : « j'ai compté, il
+-- y a N unités ». Elle n'est ni une date de modification, ni une date de
+-- synchronisation — c'est une déclaration humaine.
+--
+-- ELLE RESTE VIDE À CETTE ÉTAPE, DÉLIBÉRÉMENT. Y écrire `now()` pour les
+-- lignes existantes reviendrait à affirmer, à la place du marchand, qu'un
+-- comptage a eu lieu. Ce serait précisément l'invention de donnée commerciale
+-- que toute cette architecture existe pour interdire. `NULL` est la seule
+-- valeur honnête : « aucun comptage n'a jamais été affirmé ».
+--
+-- NULLABLE POUR LA MÊME RAISON. Une contrainte NOT NULL forcerait une valeur
+-- inventée sur chaque ligne. La sémantique de `NULL` sera traitée par la
+-- barrière de l'étape 2 (branche `old.stock_counted_at IS NULL`).
+--
+-- ============================================================
+-- IMPACT TYPESCRIPT : AUCUN, ET C'EST MESURÉ
+--
+-- `ShopProduct` (11 champs) et `ShopProductInput` (9 champs) sont DÉJÀ des
+-- sous-ensembles stricts des colonnes réelles — ils omettent par exemple
+-- `cj_vid` et `unpublished_by`. Les lectures `.select('*')` renvoient
+-- davantage de colonnes que le type n'en déclare, et ce depuis toujours.
+-- Ajouter deux colonnes ne casse donc rien et n'exige aucune modification
+-- de type.
+--
+-- ET `ShopProductInput` NE DOIT PAS RECEVOIR `track_inventory` — ni
+-- maintenant, ni plus tard. C'est le patch générique de `updateProduct()`,
+-- par lequel la réactivation du suivi ne doit JAMAIS passer. Ce verrouillage
+-- appartient à l'étape 6 ; il est rappelé ici pour qu'aucune étape
+-- intermédiaire ne l'introduise par commodité.
+--
+-- ============================================================
+-- IDEMPOTENT : `add column if not exists` + `comment on` (remplaçant).
+-- Rejouable sans effet de bord.
+--
+-- ROLLBACK DE CETTE ÉTAPE (à n'exécuter que si l'étape 1 est abandonnée, et
+-- uniquement tant qu'aucun lecteur des étapes 2+ n'existe) :
+--   alter table shop_products drop column if exists stock_counted_at;
+--   alter table shop_products drop column if exists track_inventory;
+-- Aucune donnée préexistante n'est perdue : ces colonnes n'existaient pas.
+-- =============================================================
+
+-- 1/2 — la politique d'inventaire.
+alter table shop_products
+  add column if not exists track_inventory boolean not null default true;
+
+comment on column shop_products.track_inventory is
+  'POLITIQUE d''inventaire : ce produit possède-t-il un compteur d''unités ? true = `stock` est un compteur réel, vérifié avant paiement et décrémenté au paiement. false = vente sans compteur (sur commande, service, illimité) : `stock` devient inerte et n''est ni lu, ni comparé, ni décrémenté. Ne signifie JAMAIS « aucun contrôle » — les autres conditions de vendabilité (prix, devise, publication, mode du site) restent entières. Défaut `true` : préserve le comportement historique de tout produit existant. La transition false -> true exige une affirmation de comptage (voir stock_counted_at) et passe par une fonction métier dédiée, jamais par un patch générique.';
+
+-- 2/2 — l'affirmation de comptage.
+alter table shop_products
+  add column if not exists stock_counted_at timestamptz;
+
+comment on column shop_products.stock_counted_at is
+  'Date du dernier comptage AFFIRMÉ par le marchand. Ce n''est ni une date de modification, ni une date de synchronisation : c''est une déclaration humaine sur la réalité physique du stock. NULL = aucun comptage n''a jamais été affirmé. Sert de preuve observable lors de la réactivation du suivi (false -> true) : une valeur de `stock` périmée ne peut pas faire avancer un horodatage, ce qui permet à la base d''exiger une affirmation sans avoir à deviner l''intention de l''appelant. Écrite avec clock_timestamp() (et non now(), figé sur la transaction — mesuré le 2026-08-24).';
+
+
+-- =============================================================
+-- VÉRIFICATIONS APRÈS APPLICATION (lecture seule, à exécuter séparément)
+-- =============================================================
+--
+-- A. Les deux colonnes existent avec le type, la nullabilité et le défaut
+--    attendus.
+--
+--   select column_name, data_type, is_nullable, column_default
+--   from information_schema.columns
+--   where table_schema = 'public' and table_name = 'shop_products'
+--     and column_name in ('track_inventory', 'stock_counted_at')
+--   order by column_name;
+--
+--   -- attendu, exactement 2 lignes :
+--   --   stock_counted_at | timestamp with time zone | YES | (null)
+--   --   track_inventory  | boolean                  | NO  | true
+--   -- Un `is_nullable = YES` sur track_inventory = STOP (le piège NULL).
+--   -- Un `column_default` autre que `true` = STOP (comportement modifié).
+--
+-- B. Le backfill implicite a bien eu lieu, et aucune ligne n'a changé de
+--    comportement commercial.
+--
+--   select count(*)                                          as produits,
+--          count(*) filter (where track_inventory is true)    as suivis,
+--          count(*) filter (where track_inventory is not true) as non_suivis,
+--          count(*) filter (where stock_counted_at is not null) as comptages_affirmes
+--   from shop_products;
+--
+--   -- attendu : suivis = produits, non_suivis = 0, comptages_affirmes = 0
+--   -- (mesure du 2026-08-24 : produits = 0, donc 0 | 0 | 0 | 0)
+--   -- `comptages_affirmes > 0` = STOP : un comptage aurait été inventé.
+--
+-- C. AUCUN trigger n'a été créé (l'étape 2 ne doit pas avoir commencé).
+--
+--   select tgname from pg_trigger t
+--   join pg_class c on c.oid = t.tgrelid
+--   where c.relname = 'shop_products' and not t.tgisinternal;
+--   -- attendu : 0 ligne
+--
+-- D. AUCUNE fonction de l'étape 3 n'existe.
+--
+--   select p.proname from pg_proc p
+--   join pg_namespace n on n.oid = p.pronamespace
+--   where n.nspname = 'public' and p.proname = 'enable_stock_tracking';
+--   -- attendu : 0 ligne
+--
+-- E. TÉMOINS HORS PÉRIMÈTRE — doivent être identiques avant et après.
+--
+--   select
+--     (select count(*) from pg_constraint
+--       where conrelid = 'public.shop_products'::regclass)              as contraintes,
+--     (select count(*) from pg_indexes
+--       where schemaname='public' and tablename='shop_products')        as index,
+--     (select count(*) from shop_orders)                                as commandes,
+--     (select count(*) from shop_order_items where stock_decremented)   as lignes_decrementees;
+--   -- attendu : contraintes = 2, index = 2, commandes = 26,
+--   --           lignes_decrementees = inchangé (référence à relever AVANT)
+--   -- Toute variation de `contraintes` ou `index` = effet de bord inattendu.
+-- =============================================================

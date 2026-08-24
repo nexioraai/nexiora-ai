@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { canTransact } from '@/lib/commerce-admission/canTransact';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabase as supabaseAnon } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabase-admin';
@@ -37,7 +38,16 @@ export async function GET(req: Request) {
 // route de sync ne les ecrit jamais) -- seule cette route les exposait,
 // sans le vouloir. Allowlist explicite desormais, miroir du patron deja
 // utilise par catalog/selections PATCH (`const allowed = [...]`).
-const ALLOWED_PRODUCT_FIELDS = ['name', 'description', 'price', 'currency', 'images', 'stock', 'published', 'position'] as const;
+// ETAPE 8, VOLET A -- `for_sale` est ADMIS ici, contrairement a
+// `track_inventory` et `stock_counted_at` que l'etape 6 en a exclus. La
+// difference n'est pas de degre, elle est de nature : rouvrir le suivi de
+// stock est une AFFIRMATION sur un compteur peut-etre perime, qui exige une
+// preuve (un horodatage de comptage qui avance) et donc un acte dedie.
+// Declarer un produit vendable ou non n'affirme rien sur un etat anterieur :
+// la valeur ne se perime jamais, il n'existe aucune condition sous laquelle
+// elle deviendrait fausse d'elle-meme. Un PATCH generique est donc la forme
+// exacte du besoin, et lui inventer une route dediee serait de la ceremonie.
+const ALLOWED_PRODUCT_FIELDS = ['name', 'description', 'price', 'currency', 'images', 'stock', 'published', 'position', 'for_sale'] as const;
 
 /** POST /api/shop/products → crée un produit. Body: { slug, name, price, ... } */
 export async function POST(req: Request) {
@@ -52,12 +62,22 @@ export async function POST(req: Request) {
     // primitive canonique priorise `owner_id` -- identite stable, insensible
     // a un changement d'adresse. Delegation : une seule regle, un seul
     // endroit, aucune divergence possible.
-    const auth = await requireSiteOwner(req, body.slug, 'id');
+    // M1-4 — ADMISSION. La propriete dit QUI ; le mode dit SI. Les deux sont
+    // requis, aucun ne remplace l'autre : un proprietaire legitime de vitrine
+    // n'a pas plus le droit de creer un produit vendable qu'un inconnu.
+    const auth = await requireSiteOwner(req, body.slug, 'id, mode');
     if (!auth.ok) return auth.response;
 
     const productData: Record<string, unknown> = {};
     for (const field of ALLOWED_PRODUCT_FIELDS) {
       if (field in body) productData[field] = body[field];
+    }
+
+    if (!canTransact((auth.site as { mode?: unknown }).mode)) {
+      return NextResponse.json(
+        { error: 'Ce site est une vitrine : il ne peut pas exercer d’activité commerciale.' },
+        { status: 403 }
+      );
     }
 
     const product = await createProduct({ site_id: (auth.site as any).id, ...productData } as Parameters<typeof createProduct>[0]);

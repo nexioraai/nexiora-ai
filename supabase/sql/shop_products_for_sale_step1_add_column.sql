@@ -1,0 +1,176 @@
+-- =============================================================
+-- CHANTIER CATALOGUE CANONIQUE — ÉTAPE 8, VOLET A
+-- Introduction ADDITIVE de `for_sale` sur shop_products.
+--
+-- À exécuter manuellement dans l'éditeur SQL Supabase : ce dépôt n'a aucun
+-- outillage de migration automatisé — même convention que
+-- shop_products_inventory_policy_step1_add_columns.sql,
+-- shop_stock_functions.sql, commerce_admission_orders_require_transacting_site.sql.
+-- Ce fichier documente l'état RÉELLEMENT déployé ; aucun pipeline ne le rejoue.
+--
+-- ============================================================
+-- LE DÉFAUT QUE CETTE COLONNE CORRIGE
+--
+-- `published` porte aujourd'hui DEUX métiers indissociables, et c'est mesuré :
+--
+--   VISIBILITÉ    themes/shared.tsx:175   (vitrine publique)
+--                 themes/shared.tsx:305   (aperçu propriétaire)
+--                 produits/[id]/fetchProduct.ts:72
+--                 app/sitemap.ts:78       (indexation SEO)
+--   ACHETABILITÉ  api/shop/checkout/route.ts:449
+--                 `if (!sp || sp.published !== true)` -> 409
+--
+-- Conséquence : un marchand ne peut ni exposer un produit sans le vendre
+-- (catalogue, vitrine, rupture assumée), ni le retirer de la vente sans le
+-- faire disparaître de la vitrine, de sa fiche produit ET du sitemap.
+--
+-- UN BOOLÉEN NE PEUT PAS PORTER TROIS ÉTATS. Il en faut trois :
+--   visible + achetable   | visible + NON achetable   | ni l'un ni l'autre
+-- Réinterpréter `published` est donc arithmétiquement impossible, et aucune
+-- notion existante n'est réutilisable : `unpublished_by` désigne un ACTEUR
+-- (colonne réelle mais morte : 0 lecture, 0 écriture en TypeScript),
+-- `in_stock` appartient à catalog_products et exprime une disponibilité
+-- FOURNISSEUR, jamais une intention marchande.
+--
+-- ============================================================
+-- CE QUE CE VOLET FAIT, ET CE QU'IL NE FAIT PAS
+--
+-- IL AJOUTE UNE COLONNE. RIEN D'AUTRE.
+--
+-- AUCUN TRIGGER, ET C'EST DÉMONTRÉ, PAS SUPPOSÉ.
+-- La barrière de l'étape 2 existe parce que `stock` DEVIENT FAUX AVEC LE
+-- TEMPS : pendant une période non suivie il n'est plus décrémenté, et rouvrir
+-- le suivi sur ce compteur périmé produit de la SURVENTE. C'est un état qui
+-- se dégrade sans que personne agisse.
+-- `for_sale` n'a aucun équivalent. C'est une déclaration d'intention sans
+-- péremption : elle ne devient jamais fausse toute seule. Il n'existe aucune
+-- condition X telle que « for_sale doit être false quand X » — donc rien
+-- qu'un trigger ou un CHECK puisse exprimer. Écrire une garde ici serait
+-- inventer une règle que le produit n'a pas.
+--
+-- AUCUN CHANGEMENT DE PRIVILÈGES, ET C'EST DÉJÀ COUVERT.
+-- lot_g_final_field_level_authorization.sql:43 exécute
+--   REVOKE UPDATE, INSERT, DELETE ON TABLE shop_products FROM anon, authenticated;
+-- SANS AUCUN REGRANT. Une colonne nouvelle hérite donc de cette protection
+-- par construction : anon et authenticated ne peuvent pas l'écrire, et
+-- service_role reste le seul chemin — lui-même filtré en amont par les
+-- allowlists positives des routes et par requireProductOwner.
+--
+-- ============================================================
+-- ÉTAT RÉEL MESURÉ AVANT ÉCRITURE
+--
+--   * shop_products : 0 ligne (mesure du 2026-08-24, étape 1 §B).
+--     Le backfill implicite ne touche donc AUCUNE donnée existante.
+--   * Colonnes connues (introspection PostgREST réelle, transcrite dans
+--     api/shop/checkout/route.ts:414-419, LOT L) :
+--       cj_vid, created_at, currency, description, id, images, name,
+--       position, price, published, site_id, stock, unpublished_by
+--     + track_inventory, stock_counted_at (étape 1) = 15 colonnes.
+--     `for_sale` n'y figure pas.
+--   * Contraintes : PK + FK site_id CASCADE. Aucun CHECK, aucun UNIQUE.
+--   * Triggers non internes : 1 seul —
+--       trg_enforce_stock_tracking_requires_count (BEFORE UPDATE OF track_inventory)
+--     Sa portée est `track_inventory` SEUL : ajouter `for_sale` ne peut pas
+--     le déclencher, et le déclencher ne peut pas toucher `for_sale`.
+--
+-- RÉSERVE HONNÊTE : aucun `create table shop_products` n'existe dans ce
+-- dépôt — la table PRÉCÈDE tout SQL versionné ici. Le dépôt n'est donc pas
+-- la source de vérité du schéma, et l'absence de `for_sale` ci-dessus repose
+-- sur une introspection transcrite, pas sur une mesure de cette passe. La
+-- vérification A ci-dessous la refait pour de bon.
+--
+-- ============================================================
+-- POURQUOI `NOT NULL DEFAULT true`
+--
+-- NOT NULL : un troisième état (NULL) obligerait CHAQUE lecteur — checkout,
+-- vitrine, fiche produit, shipping-estimate — à choisir un repli, donc à
+-- décider seul d'une règle métier. C'est exactement le piège que M1-7
+-- neutralise par son coalesce, et que l'étape 1 a refusé pour
+-- track_inventory (« un is_nullable = YES = STOP »).
+--
+-- DEFAULT true : c'est la SEULE valeur qui ne change rien. Aujourd'hui
+-- `published => achetable`. Poser `false` rendrait tout produit publié
+-- instantanément invendable, sans aucun signal côté marchand : le seul retour
+-- existant est logAnomaly('shop_product_not_purchasable'), un journal serveur
+-- qu'aucune interface n'expose. Et comme createProduct() fait un `.insert()`
+-- brut des seuls champs fournis, tout appelant omettant `for_sale`
+-- produirait un produit publié mais invendable — silencieusement.
+-- Même raisonnement, même conclusion qu'à l'étape 1 pour track_inventory.
+--
+-- LE DÉFAUT VIT ICI, ET NULLE PART AILLEURS. Le TypeScript ne doit jamais le
+-- redéclarer : deux sources de vérité pour une même règle divergent toujours.
+-- `ShopProductInput.for_sale` reste OPTIONNEL, et `createProduct` continue de
+-- n'envoyer que les champs réellement fournis.
+--
+-- ============================================================
+-- IDEMPOTENT : `add column if not exists` + `comment on` (remplaçant).
+-- Rejouable sans effet de bord.
+--
+-- ROLLBACK (à n'exécuter que si le volet A est abandonné, et uniquement tant
+-- qu'aucun lecteur n'est déployé — la garde du checkout notamment) :
+--   alter table shop_products drop column if exists for_sale;
+-- Aucune donnée préexistante n'est perdue : cette colonne n'existait pas.
+-- =============================================================
+
+alter table shop_products
+  add column if not exists for_sale boolean not null default true;
+
+comment on column shop_products.for_sale is
+  'ACHETABILITÉ : ce produit peut-il être payé ? Distincte de `published`, qui ne porte plus que la VISIBILITÉ (vitrine, fiche produit, sitemap). true = achetable ; false = présenté mais non vendable (catalogue de démonstration, rupture assumée, produit sur devis). Le checkout exige `published = true AND for_sale = true` : la conjonction est strictement plus restrictive que la règle antérieure (`published` seul), elle n''ouvre donc aucune capacité nouvelle — elle n''ajoute que la faculté de refuser. Un produit `published = false, for_sale = true` reste sans effet observable : il est déjà invisible partout. Défaut `true` : préserve le comportement de tout produit existant et de tout appelant qui omet le champ. Aucune barrière en base — contrairement à track_inventory, cette valeur ne se périme jamais : il n''existe aucune condition sous laquelle elle deviendrait fausse d''elle-même.';
+
+
+-- =============================================================
+-- VÉRIFICATIONS APRÈS APPLICATION (lecture seule, à exécuter séparément)
+-- =============================================================
+--
+-- A. La colonne existe avec le type, la nullabilité et le défaut attendus.
+--
+--   select column_name, data_type, is_nullable, column_default
+--   from information_schema.columns
+--   where table_schema = 'public' and table_name = 'shop_products'
+--     and column_name = 'for_sale';
+--
+--   -- attendu, exactement 1 ligne :
+--   --   for_sale | boolean | NO | true
+--   -- Un is_nullable = YES = STOP (le piège NULL).
+--   -- Un column_default autre que `true` = STOP (comportement modifié).
+--
+-- B. Le backfill implicite n'a dévendu aucun produit.
+--
+--   select count(*)                                   as produits,
+--          count(*) filter (where for_sale is true)    as vendables,
+--          count(*) filter (where for_sale is not true) as non_vendables
+--   from shop_products;
+--
+--   -- attendu : vendables = produits, non_vendables = 0.
+--   -- Un seul non_vendable = STOP : un produit aurait cessé de se vendre
+--   -- du seul fait de cette migration.
+--
+-- C. Aucune garde n'a été ajoutée par mégarde sur shop_products.
+--
+--   select tgname, pg_get_triggerdef(t.oid) as definition
+--   from pg_trigger t
+--   where t.tgrelid = 'shop_products'::regclass and not t.tgisinternal
+--   order by tgname;
+--
+--   -- attendu : 1 seule ligne — trg_enforce_stock_tracking_requires_count
+--   -- (étape 2), de portée `track_inventory` UNIQUEMENT.
+--
+--   select conname, contype from pg_constraint
+--   where conrelid = 'shop_products'::regclass order by conname;
+--
+--   -- attendu : 2 lignes — shop_products_pkey (p),
+--   --                      shop_products_site_id_fkey (f).
+--   -- Tout `c` (CHECK) apparu ici = STOP : ce volet n'en ajoute aucun.
+--
+-- D. Les privilèges n'ont pas bougé.
+--
+--   select grantee, privilege_type
+--   from information_schema.role_table_grants
+--   where table_name = 'shop_products'
+--     and grantee in ('anon', 'authenticated')
+--     and privilege_type in ('INSERT', 'UPDATE', 'DELETE')
+--   order by grantee, privilege_type;
+--
+--   -- attendu : AUCUNE ligne (lot_g_final_field_level_authorization.sql).
+-- =============================================================

@@ -54,7 +54,7 @@ beforeEach(() => {
   createOnboardingMock.mockReset();
   // M2-02 : la primitive exige user.id (comparaison sur owner_id).
   getUserMock.mockResolvedValue({ data: { user: { id: 'owner-1', email: 'owner@site.test' } }, error: null });
-  fromMock.mockReturnValue(makeSupabaseChain({ data: { id: 'site-1', owner_id: 'owner-1', owner_email: 'owner@site.test' }, error: null }));
+  fromMock.mockReturnValue(makeSupabaseChain({ data: { id: 'site-1', mode: 2, owner_id: 'owner-1', owner_email: 'owner@site.test' }, error: null }));
   createOnboardingMock.mockResolvedValue({ url: 'https://connect.stripe.test/onboard', accountId: 'acct_123' });
 });
 

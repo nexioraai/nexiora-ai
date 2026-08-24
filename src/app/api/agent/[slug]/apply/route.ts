@@ -2,6 +2,18 @@ import { NextResponse } from 'next/server';
 import { MIN_MARGIN_PERCENT } from '@/lib/pricing';
 import { supabase as supabaseAnon } from '@/lib/supabase';
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
+import { resolveProductByName, resolutionMessage } from '@/lib/agent-tools/productResolution';
+
+/**
+ * Ce que `/apply` lit reellement d'un produit de `shop_products` : son
+ * identifiant, pour cibler la route metier, et son nom, pour la resolution.
+ * `res.json()` rend `any` ; sans ce type l'inference generique retomberait sur
+ * le minimum structurel et perdrait `id`.
+ */
+type ResolvableShopProduct = { id: string; name?: string | null };
+
+/** Un produit du catalogue Mode 1 (`sites.products`, jsonb). Aucun identifiant. */
+type JsonbProduct = { name?: string | null; price?: string; description?: string };
 
 // Whitelist of tool names that can actually mutate data.
 // If a tool name isn't here, we refuse — defense in depth against any model misbehavior.
@@ -28,6 +40,16 @@ const ALLOWED_TOOLS = new Set([
   'catalog_set_margin',
   'create_promo_code',
   'deactivate_promo_code',
+  // ETAPE 7 du chantier catalogue canonique. Seul outil IA de la politique
+  // d'inventaire : il DECLARE un comptage, il ne modifie aucun autre champ.
+  'count_product_stock',
+  // ETAPE 8, VOLET D. Trois champs produit, un outil chacun -- et non un
+  // `set_product_field(field, value)` generique : un outil parametre par un
+  // nom de champ deplacerait l'allowlist depuis le code vers le modele, et
+  // rien ne distinguerait plus une demande legitime d'une demande inventee.
+  'set_price',
+  'set_currency',
+  'set_for_sale',
 ]);
 
 const ALLOWED_FIELDS = new Set([
@@ -226,25 +248,71 @@ export async function POST(
         ];
         break;
       }
+      // ===== ETAPE 8, VOLET B -- CATALOGUE MODE 1, CIBLAGE PAR NOM =====
+      //
+      // LE DEFAUT CORRIGE. Ces deux outils adressaient par INDEX de tableau,
+      // alors que `products` est ABSENT de CURRENT SITE STATE (16 champs, 0
+      // occurrence). Le modele n'avait donc aucun moyen de connaitre un index
+      // valide : toute valeur qu'il produisait etait DEVINEE. Et une devinette
+      // dans les bornes etait ACCEPTEE -- la seule validation portait sur
+      // l'intervalle, jamais sur l'identite de la cible. Un `index: 2`
+      // hallucine supprimait le troisieme produit, sans erreur.
+      //
+      // Le garde-fou humain ne compensait rien : la carte d'approbation
+      // affichait « Remove product #2 », sans nom. Le marchand approuvait un
+      // jeton opaque qu'il ne pouvait pas verifier.
+      //
+      // MEME REGLE QUE PARTOUT AILLEURS. `resolveProductByName` est le helper
+      // partage des etapes 7 et 8D, elargi au minimum structurel qu'il lit
+      // (`{ name }`) : egalite stricte apres trim + minuscules, aucune
+      // sous-chaine, aucun accent replie, et REFUS sur ambiguite. Ecrire une
+      // seconde resolution ici aurait duplique la regle.
+      //
+      // LE CATALOGUE M1 RESTE `sites.products`. Aucune migration vers
+      // `shop_products` : trois gardes independantes l'interdisent a une
+      // vitrine (canTransact sur POST, requireProductOwner sur PATCH/DELETE,
+      // ProductManager monte pour les seuls modes 2 et 3).
       case 'propose_product_remove': {
-        const { index } = tool_input;
-        const current = Array.isArray(site.products) ? site.products : [];
-        if (typeof index !== 'number' || index < 0 || index >= current.length) {
-          return NextResponse.json({ error: 'Invalid product index' }, { status: 400 });
+        const { product_name } = tool_input;
+        const current: JsonbProduct[] = Array.isArray(site.products) ? site.products : [];
+        const resolved = resolveProductByName(current, product_name);
+        if (!resolved.ok) {
+          // AUCUNE ECRITURE. 404 = introuvable, 409 = ambigu.
+          return NextResponse.json(
+            { error: resolutionMessage(resolved) },
+            { status: resolved.reason === 'not_found' ? 404 : 409 }
+          );
         }
-        updates.products = current.filter((_: any, i: number) => i !== index);
+        const position = current.indexOf(resolved.product);
+        if (position < 0) {
+          // Inatteignable par construction -- `resolved.product` vient d'un
+          // `filter` sur ce meme tableau, donc la reference y est. Le controle
+          // existe parce que l'alternative serait pire que bruyante : un -1
+          // ferait de `filter((_, i) => i !== -1)` une suppression qui ne
+          // supprime rien, en repondant « fait ».
+          return NextResponse.json({ error: 'Resolution incoherente' }, { status: 500 });
+        }
+        updates.products = current.filter((_: unknown, i: number) => i !== position);
         break;
       }
       case 'propose_product_update': {
-        const { index, field, value } = tool_input;
-        const current = Array.isArray(site.products) ? site.products : [];
-        if (typeof index !== 'number' || index < 0 || index >= current.length) {
-          return NextResponse.json({ error: 'Invalid product index' }, { status: 400 });
-        }
+        const { product_name, field, value } = tool_input;
         if (!ALLOWED_PRODUCT_FIELDS.has(field) || typeof value !== 'string') {
           return NextResponse.json({ error: 'Invalid product field/value' }, { status: 400 });
         }
-        updates.products = current.map((p: any, i: number) => (i === index ? { ...p, [field]: value } : p));
+        const current: JsonbProduct[] = Array.isArray(site.products) ? site.products : [];
+        const resolved = resolveProductByName(current, product_name);
+        if (!resolved.ok) {
+          return NextResponse.json(
+            { error: resolutionMessage(resolved) },
+            { status: resolved.reason === 'not_found' ? 404 : 409 }
+          );
+        }
+        const position = current.indexOf(resolved.product);
+        if (position < 0) {
+          return NextResponse.json({ error: 'Resolution incoherente' }, { status: 500 });
+        }
+        updates.products = current.map((p: JsonbProduct, i: number) => (i === position ? { ...p, [field]: value } : p));
         break;
       }
       case 'propose_gallery_remove': {
@@ -336,6 +404,174 @@ export async function POST(
         .ilike('code', code.trim());
       if (deactErr) return NextResponse.json({ error: deactErr.message }, { status: 500 });
       return NextResponse.json({ success: true, message: `Code "${code}" désactivé` });
+    }
+
+    // ===== ETAPE 7 -- politique d'inventaire (patron A : re-appel HTTP) =====
+    //
+    // POURQUOI CE DETOUR PAR LA ROUTE METIER PLUTOT QU'UN `supabase.update()`
+    // INLINE ICI. `/apply` verifie la propriete du SITE via `owner_email`
+    // seul ; la route d'inventaire, elle, passe par `requireProductOwner`
+    // (propriete par `owner_id` prioritaire + admission `canTransact`). Ecrire
+    // directement ici contournerait donc l'admission Mode 1 et la barriere de
+    // comptage, et ferait de l'agent une seconde autorite sur l'inventaire.
+    // Meme patron que `catalog_curate` : le jeton du marchand est relaye, la
+    // route metier reste le seul point de decision.
+    if (tool_name === 'count_product_stock') {
+      const { product_name, units } = tool_input;
+
+      if (!Number.isInteger(units) || units < 0) {
+        return NextResponse.json(
+          { error: 'units doit etre un entier superieur ou egal a 0' },
+          { status: 400 }
+        );
+      }
+
+      // Lecture par la route GET EXISTANTE, gardee par `requireSiteOwner` : la
+      // liste rendue ne peut donc contenir que des produits de CE site, et le
+      // modele n'a aucun moyen d'en atteindre un autre -- meme en fournissant
+      // le nom exact d'un produit appartenant a quelqu'un d'autre.
+      const listRes = await fetch(
+        new URL(`/api/shop/products?slug=${encodeURIComponent(slug)}`, req.url).toString(),
+        { headers: { 'Authorization': 'Bearer ' + token } }
+      );
+      const listData = await listRes.json().catch(() => ({}));
+      if (!listRes.ok) {
+        return NextResponse.json({ error: listData.error || 'Lecture des produits impossible' }, { status: listRes.status });
+      }
+
+      const resolved = resolveProductByName<ResolvableShopProduct>(listData.products ?? [], product_name);
+      if (!resolved.ok) {
+        // AUCUNE ECRITURE. Le message part au modele comme resultat d'outil ;
+        // il redemande le nom exact au marchand. 404 = introuvable,
+        // 409 = ambigu (refus metier), conformement aux codes deja en usage.
+        return NextResponse.json(
+          { error: resolutionMessage(resolved) },
+          { status: resolved.reason === 'not_found' ? 404 : 409 }
+        );
+      }
+
+      const invRes = await fetch(
+        new URL(`/api/shop/products/${resolved.product.id}/inventory`, req.url).toString(),
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ units }),
+        }
+      );
+      const invData = await invRes.json().catch(() => ({}));
+      if (!invRes.ok) {
+        // Le code et le message de la route metier sont relayes tels quels :
+        // les reinterpreter ici recreerait la seconde autorite qu'on evite.
+        return NextResponse.json({ error: invData.error || 'Comptage refuse' }, { status: invRes.status });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `Stock de "${resolved.product.name}" compte a ${units} unite(s). Le suivi de stock est actif pour ce produit.`,
+      });
+    }
+
+    // ===== ETAPE 8, VOLET D -- champs produit par nom (patron A) =====
+    //
+    // MEME MECANIQUE QUE L'ETAPE 7, ET AUCUNE ROUTE NOUVELLE. `price`,
+    // `currency` et `for_sale` sont deja dans l'allowlist de
+    // `PATCH /api/shop/products/[id]` : la route metier existe, elle est
+    // gardee par requireProductOwner (propriete par owner_id prioritaire +
+    // admission canTransact), et lui ajouter une soeur dediee ne ferait que
+    // dupliquer une garde.
+    //
+    // POURQUOI UN SEUL BLOC POUR TROIS OUTILS. La difference entre eux tient
+    // en une ligne : le champ ecrit et sa validation. Tout le reste -- lire
+    // la liste possedee, resoudre le nom, refuser toute ambiguite, relayer le
+    // code de la route metier -- est identique. Le tripler inviterait la
+    // divergence, exactement ce que requireProductOwner a servi a defaire.
+    if (tool_name === 'set_price' || tool_name === 'set_currency' || tool_name === 'set_for_sale') {
+      const { product_name } = tool_input;
+      const patch: Record<string, unknown> = {};
+      let libelle = '';
+
+      if (tool_name === 'set_price') {
+        const { price } = tool_input;
+        // FAIL-CLOSED : ni coercition, ni `Number(...)` complaisant. `'25'`,
+        // `null`, `NaN`, `Infinity` et les negatifs sont refuses. `0` reste
+        // legal -- un produit gratuit existe (ProductManager accepte deja 0).
+        if (typeof price !== 'number' || !Number.isFinite(price) || price < 0) {
+          return NextResponse.json({ error: 'price doit etre un nombre superieur ou egal a 0' }, { status: 400 });
+        }
+        patch.price = price;
+        libelle = `prix fixe a ${price}`;
+      }
+
+      if (tool_name === 'set_currency') {
+        const { currency } = tool_input;
+        // Forme ISO 4217 uniquement -- PAS une liste blanche de devises : ce
+        // depot n'en a aucune, et en inventer une ici deciderait a la place
+        // du produit quelles monnaies existent.
+        if (typeof currency !== 'string' || !/^[A-Za-z]{3}$/.test(currency.trim())) {
+          return NextResponse.json({ error: 'currency doit etre un code a 3 lettres (EUR, USD, CAD...)' }, { status: 400 });
+        }
+        // MAJUSCULES, comme ProductManager. Ce n'est pas cosmetique : le
+        // checkout compare les devises du panier en egalite STRICTE de chaine
+        // (`i.currency !== resolvedCurrency` -> 409 « Panier incoherent »).
+        // Ecrire 'cad' a cote d'un 'CAD' pose par l'interface rendrait le
+        // panier invendable sans qu'aucun champ paraisse faux.
+        patch.currency = currency.trim().toUpperCase();
+        libelle = `devise fixee a ${patch.currency}`;
+      }
+
+      if (tool_name === 'set_for_sale') {
+        const { for_sale } = tool_input;
+        if (typeof for_sale !== 'boolean') {
+          return NextResponse.json({ error: 'for_sale doit etre un booleen' }, { status: 400 });
+        }
+        patch.for_sale = for_sale;
+        libelle = for_sale
+          ? 'remis en vente (il reste visible, et redevient payable)'
+          : 'retire de la vente (il reste VISIBLE sur la vitrine, mais n\'est plus payable)';
+      }
+
+      // Lecture par la route GET EXISTANTE, gardee par `requireSiteOwner` :
+      // la liste rendue ne contient que des produits de CE site, et elle ne
+      // contient QUE `shop_products` -- les produits de catalogue fournisseur
+      // (ids prefixes `catalog-`) n'y figurent pas et sont donc hors
+      // d'atteinte de ces outils, par construction.
+      const listRes = await fetch(
+        new URL(`/api/shop/products?slug=${encodeURIComponent(slug)}`, req.url).toString(),
+        { headers: { 'Authorization': 'Bearer ' + token } }
+      );
+      const listData = await listRes.json().catch(() => ({}));
+      if (!listRes.ok) {
+        return NextResponse.json({ error: listData.error || 'Lecture des produits impossible' }, { status: listRes.status });
+      }
+
+      const resolved = resolveProductByName<ResolvableShopProduct>(listData.products ?? [], product_name);
+      if (!resolved.ok) {
+        // AUCUNE ECRITURE. 404 = introuvable, 409 = ambigu.
+        return NextResponse.json(
+          { error: resolutionMessage(resolved) },
+          { status: resolved.reason === 'not_found' ? 404 : 409 }
+        );
+      }
+
+      const patchRes = await fetch(
+        new URL(`/api/shop/products/${resolved.product.id}`, req.url).toString(),
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify(patch),
+        }
+      );
+      const patchData = await patchRes.json().catch(() => ({}));
+      if (!patchRes.ok) {
+        // Code et message relayes tels quels : les reinterpreter ici
+        // recreerait la seconde autorite qu'on evite.
+        return NextResponse.json({ error: patchData.error || 'Modification refusee' }, { status: patchRes.status });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `"${resolved.product.name}" : ${libelle}.`,
+      });
     }
 
     if (tool_name === 'create_promo_code') {

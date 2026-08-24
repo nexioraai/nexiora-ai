@@ -33,6 +33,7 @@ import {
   ORDER_DOMAIN_OWNED_DIRECTORIES,
   CHECKOUT_OWNED_DIRECTORIES,
   CANCEL_ORDER_OWNED_DIRECTORIES,
+  MODE_1_OWNED_DIRECTORIES,
   type DomainDefinition,
 } from '../domainRegistry'
 import { checkDomainBoundaries } from '../checkDomainBoundaries'
@@ -65,6 +66,7 @@ describe('Phase 0 — les domaines Mode 2 / Mode 3 sont enregistrés', () => {
     'mode-2-merchant-domain',
     'checkout-domain-selection',
     'order-cancellation',
+    'mode-1-showcase-domain',
   ])(
     'le domaine "%s" existe et déclare au moins une règle',
     (id) => {
@@ -201,6 +203,27 @@ describe('Phase 0 — contrôle positif : chaque motif interdit détecte sa viol
     expect(muettes, `règle(s) ne détectant RIEN :\n  ${muettes.join('\n  ')}`).toEqual([])
   })
 
+  // M1-2 — la frontiere d'ADMISSION. Ses regles gardent l'endroit ou l'on
+  // decide si un site a le droit de commercer ; une regle muette y serait la
+  // plus couteuse du registre, puisque rien en aval ne rattrape une admission
+  // accordee a tort.
+  it.each(
+    domaine('mode-1-showcase-domain').forbiddenPatterns.map((r) => [r.pattern.toString(), r.pattern] as const)
+  )('mode-1-showcase-domain (M1-2) : la règle %s détecte au moins une ligne', (_label, pattern) => {
+    const violations = violationsSur('mode-1-showcase-domain', FIXTURE_VIOLANTE)
+    expect(
+      violations.some((v) => v.pattern === pattern.toString()),
+      `la règle ${pattern} ne détecte RIEN dans la fixture violante : la frontière d'admission serait verte à tort`
+    ).toBe(true)
+  })
+
+  it('mode-1-showcase-domain : aucune règle ne reste muette', () => {
+    const regles = domaine('mode-1-showcase-domain').forbiddenPatterns
+    const detectes = new Set(violationsSur('mode-1-showcase-domain', FIXTURE_VIOLANTE).map((v) => v.pattern))
+    const muettes = regles.filter((r) => !detectes.has(r.pattern.toString())).map((r) => r.pattern.toString())
+    expect(muettes, `règle(s) ne détectant RIEN :\n  ${muettes.join('\n  ')}`).toEqual([])
+  })
+
   it('CONTRÔLE NÉGATIF — un fichier propre ne déclenche aucune règle', () => {
     expect(violationsSur('shared-commerce-core', FIXTURE_PROPRE)).toEqual([])
     expect(violationsSur('mode-3-supplier-domain', FIXTURE_PROPRE)).toEqual([])
@@ -209,6 +232,7 @@ describe('Phase 0 — contrôle positif : chaque motif interdit détecte sa viol
     expect(violationsSur('order-domain-frontier', FIXTURE_PROPRE)).toEqual([])
     expect(violationsSur('order-dispatch', FIXTURE_PROPRE)).toEqual([])
     expect(violationsSur('order-cancellation', FIXTURE_PROPRE)).toEqual([])
+    expect(violationsSur('mode-1-showcase-domain', FIXTURE_PROPRE)).toEqual([])
   })
 
   it('les violations rapportent fichier, ligne et raison exploitables en CI', () => {
@@ -304,6 +328,7 @@ describe.each([
   ['order-domain-frontier', ORDER_DOMAIN_OWNED_DIRECTORIES] as const,
   ['checkout-domain-selection', CHECKOUT_OWNED_DIRECTORIES] as const,
   ['order-cancellation', CANCEL_ORDER_OWNED_DIRECTORIES] as const,
+  ['mode-1-showcase-domain', MODE_1_OWNED_DIRECTORIES] as const,
 ])('Phase 4 — exhaustivité du domaine « %s »', (domainId, repertoires) => {
   it('tout fichier des répertoires possédés est déclaré dans ownedFiles', () => {
     const surDisque = repertoires.flatMap((d) => fichiersDe(d)).sort()
@@ -361,5 +386,45 @@ describe('Phase 4 — la conversion mode → domaine reste unique dans le point 
     // aurait cessé d'appliquer les règles de domaine.
     const interrogations = lignesDeCode.filter((l) => /\bpolicy\./.test(l))
     expect(interrogations.length).toBeGreaterThanOrEqual(7)
+  })
+})
+
+
+// ============================================================
+// M1-2 — LES DEUX FRONTIÈRES RESTENT DISTINCTES
+// ============================================================
+// Le registre porte désormais une frontière d'ADMISSION (« ce site a-t-il le
+// droit de commercer ? ») et une frontière de ROUTAGE (« qui exécute cette
+// vente ? »). Les confondre serait rejouer le défaut que le chantier
+// précédent a mis neuf phases à défaire. Ce bloc rend la confusion visible.
+describe('M1-2 — admission et routage ne se mélangent pas', () => {
+  const ADMISSION = 'mode-1-showcase-domain'
+  const ROUTAGE = 'order-domain-frontier'
+
+  it('les deux domaines existent et sont distincts', () => {
+    expect(domaine(ADMISSION).id).not.toBe(domaine(ROUTAGE).id)
+  })
+
+  it('le domaine d’admission ne possède aucun fichier du domaine de routage', () => {
+    const communs = domaine(ADMISSION).ownedFiles.filter((f) => domaine(ROUTAGE).ownedFiles.includes(f))
+    expect(communs, 'un fichier ne peut pas porter les deux frontières à la fois').toEqual([])
+  })
+
+  it('le domaine d’admission INTERDIT explicitement de parler de `fulfillment_domain`', () => {
+    const parleDeRoutage = domaine(ADMISSION).forbiddenPatterns.some((r) =>
+      r.pattern.toString().includes('fulfillment_domain')
+    )
+    expect(
+      parleDeRoutage,
+      "sans cette règle, rien n'empêcherait le point d'admission de rejouer une décision de routage"
+    ).toBe(true)
+  })
+
+  it('le domaine d’admission n’introduit AUCUNE valeur de fulfillment_domain', () => {
+    // `merchant` et `supplier` sont les deux seules valeurs, et elles
+    // appartiennent au routage. L'admission ne doit pas en créer une troisième.
+    const d = domaine(ADMISSION)
+    expect(JSON.stringify(d.ownedFiles)).not.toMatch(/merchant|supplier/)
+    expect(d.capabilities ?? []).toEqual([])
   })
 })
