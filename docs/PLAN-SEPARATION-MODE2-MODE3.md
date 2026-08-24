@@ -466,7 +466,7 @@ déplacées · banc 12 cas avant/après · comptage de tests.
 | 5 — SHARED | ✅ **VALIDÉE** | `f9c899b` → *(checkpoint phase 5)* | `mode3/supplierShipping.ts` · `mode3/cancelSupplierOrder.ts` · `checkout/__tests__/ordering.characterization.test.ts` (neufs) · `catalog-stock.ts` → `mode3/catalogStock.ts` (renommé) · `shop/quote/resolveShipping.ts` · `checkout/route.ts` · `cancel-order/route.ts` · `domainRegistry.ts` (**R2 identifiants** + `order-cancellation`) · 5 fichiers de tests · 1 fixture | **1279 → 1302** (+23) · 113 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **33 mutations / 33 attrapées** · **F3, F4, F5 scindés** · R1-R4 verrouillées · `shipping/calculate` **bit-à-bit inchangé** | **Phase 6** |
 | 6 — Tests de frontière | ✅ **VALIDÉE** | *(checkpoint phase 6)* | `cancel-order/route.ts` (garde de domaine) · `checkout/__tests__/a6SupplierAdapters.test.ts` · `shop/__tests__/a7MixedOrder.test.ts` · `__tests__/a7ReferenceBench.test.ts` (neufs) · `cancel-order/__tests__/route.test.ts` | **1302 → 1326** (+24) · 116 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **A6 complet aux 3 surfaces, au niveau ADAPTATEUR** · **A7 : 7 cas sur 7** · **banc de référence exécutable** · 13 mutations nouvelles, toutes attrapées | **Phase 7** |
 | 7 — Contrats SHARED | ✅ **VALIDÉE** | *(checkpoint phase 7)* | `__tests__/sharedChannelContracts.test.ts` (neuf) — **aucun fichier de production modifié** | **1326 → 1341** (+15) · 117 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **5 canaux du §4 exercés aux deux formes** · **4 mutations / 4 attrapées** · dernier vecteur **classe C → B** | **Phase 8** |
-| 8 — Validation Mode 2 | ⏳ EN ATTENTE | — | — | — | — | — |
+| 8 — Validation Mode 2 | ✅ **VALIDÉE** | *(checkpoint phase 8)* | `shop/__tests__/mode2EndToEnd.test.ts` (neuf) — **aucun fichier de production modifié** | **1341 → 1347** (+6) · 118 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **9 maillons, 9 portes fournisseur surveillées au niveau ADAPTATEUR** · contrôle positif · **2 mutations attrapées, 3 absorbées par la défense en profondeur (mesuré)** | **Phase 9** |
 | 9 — Non-régression Mode 3 | ⏳ EN ATTENTE | — | — | — | — | — |
 
 **Décisions verrouillées** : **D1 = 0-9** · **D2 = NON** (Mode 2 ne vend aucun produit du
@@ -1054,3 +1054,42 @@ d'alerte ignorée · `??` devenant `||` · empreinte de panier rendue dépendant
 **Écart mesuré au §4, signalé sans le corriger** : le plan déclare `checkoutSignature`
 neutre ; le fichier contient bien une occurrence de `catalog-`, mais **dans un commentaire
 de documentation** — la neutralité tient. Le §4 reste exact.
+
+
+---
+
+### PHASE 8 — VALIDÉE
+
+**Aucun fichier de production modifié.** Le parcours Mode 2 était déjà correct de bout en
+bout ; ce qui manquait était la preuve qu'il l'est sur la **chaîne entière**.
+
+**Deux maillons n'avaient jamais été instrumentés** par aucune phase : le **webhook
+Stripe** et la **livraison marchande**. A6 couvrait la vente, le fulfillment et
+l'annulation — chacun isolément.
+
+**Neuf portes fournisseur, surveillées au niveau le plus bas** : `adapter.checkStock` ·
+`adapter.calculateShipping` · `cjCalculateFreight` · `cjGetVariants` · `cjCreateOrder` ·
+`cjCancelOrder` · `createOrder` Printful, Gelato et Printify. Un seul assistant les
+vérifie toutes à chaque maillon, et le **contrôle positif rejoue le MÊME webhook avec une
+commande fournisseur** pour exiger que les portes s'ouvrent réellement — sans quoi les
+assertions seraient vertes faute d'avoir rien traversé.
+
+**Une faiblesse de harnais trouvée par mutation, corrigée dans le harnais.** Le fixture de
+checkout n'envoyait aucun `countryCode` : la route saute alors entièrement la branche de
+devis (`route.ts:196`), et le maillon « devis » n'était **jamais exercé**. La mutation M55
+restait verte tant que ce champ manquait. Corrigé dans le fixture, jamais dans
+l'assertion.
+
+**Découverte architecturale : le post-paiement est protégé par TROIS couches
+indépendantes**, mesurées par mutation.
+Retirer l'aiguillage seul (M52) ne change rien — le moteur garde sa propre garde de
+domaine. Retirer la garde du moteur seule (M53) ne change rien non plus — l'aiguillage ne
+l'appelle pas. Retirer **les deux** (M56) ne suffit toujours pas : un produit marchand ne
+porte **aucun `cj_vid`**, le moteur n'a donc rien à envoyer. Le parcours reste vert dans
+les trois cas parce que le **comportement reste correct** — ce n'est pas un faux vert,
+c'est de la redondance voulue, installée en phases 3 et 4.
+
+**2 mutations attrapées** — l'annulation prévenant le fournisseur inconditionnellement
+(M54) · le devis traitant tout produit marchand comme fournisseur (M55).
+**1 mutation écartée** : M57 était malformée (un `else` orphelin après suppression du
+`if`), le fichier ne compilait plus. Elle n'a jamais tourné et **n'est pas comptée**.
