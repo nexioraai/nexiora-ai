@@ -24,7 +24,7 @@ const checkStockMock = vi.fn();
 vi.mock('@/lib/shop', () => ({ checkStock: (...a: unknown[]) => checkStockMock(...a) }));
 
 const checkCatalogStockMock = vi.fn();
-vi.mock('@/lib/catalog-stock', () => ({
+vi.mock('@/lib/mode3/catalogStock', () => ({
   checkCatalogStock: (...a: unknown[]) => checkCatalogStockMock(...a),
 }));
 

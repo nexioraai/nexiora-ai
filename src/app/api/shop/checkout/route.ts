@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getProvider } from '@/lib/payments';
 import { checkStock } from '@/lib/shop';
-import { checkCatalogStock } from '@/lib/catalog-stock';
+import { checkCatalogStock } from '@/lib/mode3/catalogStock';
 import type { CartItem } from '@/lib/payments/types';
 import { STRIPE_SHIPPING_COUNTRIES } from '@/lib/payments/countries';
 import { buildSupplierGroups, resolveShipping } from '@/lib/shop/quote/resolveShipping';
@@ -117,6 +117,48 @@ export async function POST(req: Request) {
     // NB : l'identifiant exact de la fonction de creation CJ n'est pas cite
     // ici -- une garde structurelle (cj/__tests__/singleCreationPath) verifie
     // qu'il n'apparait que dans client.ts et fulfill.ts.
+    // ---- PHASE 5 / F3 + F5 : l'admission precede tout appel fournisseur ----
+    //
+    // Cause racine commune aux deux vecteurs : l'admission D2 vivait dans la
+    // passe de prix, tres en aval. Un panier qu'AUCUN moteur ne pourra jamais
+    // executer consommait donc deux appels fournisseur avant d'etre refuse :
+    // la verification de stock catalogue (F5) puis le devis de livraison (F3).
+    // Pour une boutique marchande, ces deux appels sont engages au nom d'une
+    // vente que D2 refusera cent lignes plus bas.
+    //
+    // La garde s'applique AUSSI en apercu. L'apercu saute la verification de
+    // stock mais calculait bien un devis : c'etait le dernier chemin
+    // fournisseur qu'un panier Mode 2 pouvait encore atteindre.
+    //
+    // MEME REGLE, MEME POLITIQUE, MEME ANOMALIE que la garde de la passe de
+    // prix -- celle-ci n'est pas supprimee : elle statue sur la lecture qui
+    // sert reellement au calcul du prix, et reste la defense en profondeur.
+    // Deux lectures, une seule regle : elles ne peuvent que converger.
+    const catalogRealIds = items
+      .filter((i) => i.id?.startsWith('catalog-'))
+      .map((i) => parseCatalogId(i.id).realId)
+      .filter(Boolean);
+
+    if (catalogRealIds.length > 0) {
+      const { data: admissibles } = await supabaseAdmin
+        .from('catalog_products')
+        .select('id, supplier_id')
+        .in('id', catalogRealIds);
+
+      for (const realId of catalogRealIds) {
+        const cp = (admissibles || []).find((p) => p.id === realId);
+        if (!policy.admitsCatalogSupplier(cp?.supplier_id, site.dropship_type)) {
+          await logAnomaly({
+            type: 'catalog_supplier_not_eligible',
+            siteId: site.id,
+            slug,
+            details: { itemId: realId, supplierId: cp?.supplier_id ?? null, dropshipType: site.dropship_type ?? null },
+          });
+          return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
+        }
+      }
+    }
+
     if (!previewOnly) {
       const catalogStockLines = items
         .filter((i) => i.id?.startsWith('catalog-'))

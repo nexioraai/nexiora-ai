@@ -32,6 +32,7 @@ import {
   MODE_2_OWNED_DIRECTORIES,
   ORDER_DOMAIN_OWNED_DIRECTORIES,
   CHECKOUT_OWNED_DIRECTORIES,
+  CANCEL_ORDER_OWNED_DIRECTORIES,
   type DomainDefinition,
 } from '../domainRegistry'
 import { checkDomainBoundaries } from '../checkDomainBoundaries'
@@ -63,6 +64,7 @@ describe('Phase 0 — les domaines Mode 2 / Mode 3 sont enregistrés', () => {
     'order-dispatch',
     'mode-2-merchant-domain',
     'checkout-domain-selection',
+    'order-cancellation',
   ])(
     'le domaine "%s" existe et déclare au moins une règle',
     (id) => {
@@ -179,6 +181,26 @@ describe('Phase 0 — contrôle positif : chaque motif interdit détecte sa viol
   // serait verte au contrôle positif et rendrait le domaine inutilisable.
   // Le contrôle négatif est ce qui distingue « détecte la violation » de
   // « détecte n'importe quoi ». Il couvre désormais les SIX domaines.
+  // F4 — la route d'annulation portait DEUX formes d'arête : un import de
+  // `cj/client` et les identifiants CJ en constantes de tête de fichier. La
+  // seconde ne serait vue par aucune règle ancrée sur les imports.
+  it.each(
+    domaine('order-cancellation').forbiddenPatterns.map((r) => [r.pattern.toString(), r.pattern] as const)
+  )('order-cancellation (F4) : la règle %s détecte au moins une ligne', (_label, pattern) => {
+    const violations = violationsSur('order-cancellation', FIXTURE_VIOLANTE)
+    expect(
+      violations.some((v) => v.pattern === pattern.toString()),
+      `la règle ${pattern} ne détecte RIEN dans la fixture violante`
+    ).toBe(true)
+  })
+
+  it('order-cancellation : aucune règle ne reste muette', () => {
+    const regles = domaine('order-cancellation').forbiddenPatterns
+    const detectes = new Set(violationsSur('order-cancellation', FIXTURE_VIOLANTE).map((v) => v.pattern))
+    const muettes = regles.filter((r) => !detectes.has(r.pattern.toString())).map((r) => r.pattern.toString())
+    expect(muettes, `règle(s) ne détectant RIEN :\n  ${muettes.join('\n  ')}`).toEqual([])
+  })
+
   it('CONTRÔLE NÉGATIF — un fichier propre ne déclenche aucune règle', () => {
     expect(violationsSur('shared-commerce-core', FIXTURE_PROPRE)).toEqual([])
     expect(violationsSur('mode-3-supplier-domain', FIXTURE_PROPRE)).toEqual([])
@@ -186,6 +208,7 @@ describe('Phase 0 — contrôle positif : chaque motif interdit détecte sa viol
     expect(violationsSur('checkout-domain-selection', FIXTURE_PROPRE)).toEqual([])
     expect(violationsSur('order-domain-frontier', FIXTURE_PROPRE)).toEqual([])
     expect(violationsSur('order-dispatch', FIXTURE_PROPRE)).toEqual([])
+    expect(violationsSur('order-cancellation', FIXTURE_PROPRE)).toEqual([])
   })
 
   it('les violations rapportent fichier, ligne et raison exploitables en CI', () => {
@@ -280,6 +303,7 @@ describe('Phase 4 — exhaustivité du domaine marchand (A1)', () => {
 describe.each([
   ['order-domain-frontier', ORDER_DOMAIN_OWNED_DIRECTORIES] as const,
   ['checkout-domain-selection', CHECKOUT_OWNED_DIRECTORIES] as const,
+  ['order-cancellation', CANCEL_ORDER_OWNED_DIRECTORIES] as const,
 ])('Phase 4 — exhaustivité du domaine « %s »', (domainId, repertoires) => {
   it('tout fichier des répertoires possédés est déclaré dans ownedFiles', () => {
     const surDisque = repertoires.flatMap((d) => fichiersDe(d)).sort()

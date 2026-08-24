@@ -78,9 +78,15 @@ const IGNORE_SHOP_SECTION_IMPORT = /^import .*ShopSection/
 // qui respectent DÉJÀ la règle sur le SHA de départ (13bec0e). Chaque phase
 // du plan ajoute à ces listes le fichier qu'elle vient d'assainir — le
 // registre devient ainsi le cliquet du chantier : un fichier admis ne peut
-// plus régresser. Les fichiers encore fusionnés (F1 handlePaidCheckout,
-// F3 resolveShipping, F5 catalog-stock) sont volontairement ABSENTS et
-// rejoindront le domaine à leur phase respective (3, 5, 5).
+// plus régresser.
+//
+// ÉTAT DES CINQ VECTEURS DE FUSION, à jour :
+//   F1 `handlePaidCheckout` — phase 3, devenu l'aiguillage (`order-dispatch`) ;
+//   F2 `checkout/route.ts`  — phase 4 (`checkout-domain-selection`) ;
+//   F3 `resolveShipping`    — phase 5, scindé : son cœur fournisseur est parti
+//      dans `mode3/supplierShipping`, et il est ENTRÉ dans SHARED ;
+//   F4 `cancel-order`       — phase 5 (`order-cancellation`) ;
+//   F5 `catalog-stock`      — phase 5, devenu `mode3/catalogStock` en entier.
 //
 // LIMITE CONNUE du moteur (checkDomainBoundaries) : la détection est une
 // regex ligne à ligne, commentaires inclus. Écrire « dropship_type » dans
@@ -135,6 +141,18 @@ const SHARED_MUST_STAY_NEUTRAL: ForbiddenImportRule[] = [
     pattern: /from ['"]@\/lib\/(cj|suppliers|dropship)\//,
     reason:
       'R2 — un composant SHARED ne doit dépendre d’aucun fournisseur : cette arête est le vecteur par lequel une commande Mode 2 atteignait CJ et Printful.',
+  },
+  // La règle précédente ne suffit pas — mesuré deux fois sur ce chantier :
+  // `cancel-order` portait les identifiants CJ SANS aucun import, et
+  // `resolveShipping` faisait de même (l. 242-243 avant scission). Une arête
+  // de dépendance se reconstitue par la CONFIGURATION avant de se
+  // reconstituer par un import, et aucun motif ancré sur `from '...'` ne la
+  // voit. Stripe reste permis : c'est le mécanisme de paiement, une
+  // responsabilité SHARED assumée (§4 du plan).
+  {
+    pattern: /process\.env\.(CJ|PRINTFUL|GELATO|PRINTIFY)_/,
+    reason:
+      'R2 — les identifiants d’un fournisseur appartiennent au domaine fournisseur. Les porter dans le tronc commun y ramène la dépendance sans passer par un import.',
   },
   {
     pattern: /\b(site|order):\s*(Site|ShopOrder|Order)\b/,
@@ -283,13 +301,18 @@ export const DOMAIN_REGISTRY: DomainDefinition[] = [
   {
     id: 'shared-commerce-core',
     description:
-      'Tronc commun du commerce — responsabilités réellement partagées par Mode 2 et Mode 3 (stock, machine à états, prix, anomalies, mécanisme de paiement, e-mail acheteur, empreintes de panier, propriété du site). Ne doit brancher sur aucun mode, ne dépendre d’aucun fournisseur, et ne recevoir ni site ni commande complète. Fichiers encore fusionnés volontairement absents : handlePaidCheckout (phase 3), resolveShipping et catalog-stock (phase 5).',
+      'Tronc commun du commerce — responsabilités réellement partagées par Mode 2 et Mode 3 (stock, machine à états, prix, anomalies, mécanisme de paiement, e-mail acheteur, empreintes de panier, propriété du site). Ne doit brancher sur aucun mode, ne dépendre d’aucun fournisseur, et ne recevoir ni site ni commande complète. `resolveShipping` y est entré en phase 5 après scission de son cœur fournisseur ; `catalog-stock` est devenu `mode3/catalogStock` (domaine fournisseur en entier). `handlePaidCheckout` reste hors de ce domaine : il est l\'aiguillage, couvert par `order-dispatch`.',
     ownedFiles: [
       'src/lib/shop.ts',
       'src/lib/shop/orderStatusMachine.ts',
       'src/lib/shop/buyerNonce.ts',
       'src/lib/shop/quote/basketHash.ts',
       'src/lib/shop/quote/checkoutSignature.ts',
+      // PHASE 5 / F3 -- admis apres scission : ses quatre aretes fournisseur
+      // (registre, adaptateur, paliers CJ, client CJ) et les identifiants CJ
+      // sont partis dans mode3/supplierShipping. Il ne garde que le cache de
+      // devis, son budget, la purge, la marge, les libelles et l'agregation.
+      'src/lib/shop/quote/resolveShipping.ts',
       'src/lib/pricing.ts',
       'src/lib/anomaly.ts',
       'src/lib/payments/stripe.ts',
@@ -327,6 +350,43 @@ export const DOMAIN_REGISTRY: DomainDefinition[] = [
     forbiddenPatterns: CHECKOUT_MUST_NOT_DECIDE_ON_MODE,
     ignoreLinePattern: IGNORE_COMMENT_LINES,
     contractTestsPath: 'src/lib/architecture/__tests__/mode2Mode3Boundaries.test.ts',
+  },
+  {
+    id: 'order-cancellation',
+    description:
+      "Annulation acheteur (phase 5, vecteur F4) — un acheteur annule sa commande de la meme facon, qu'elle soit executee par le marchand ou par un fournisseur : cette route est traversee par les DEUX domaines. Elle importait pourtant `cj/client` et portait les identifiants CJ en tete de fichier. Elle ne s'adresse desormais qu'au point d'entree du domaine fournisseur. Le declencheur reste la presence d'une commande fournisseur, jamais le mode ni le sous-type.",
+    ownedFiles: ['src/app/api/shop/cancel-order/route.ts'],
+    forbiddenPatterns: [
+      // Ancre sur le REPERTOIRE : contrairement a l'aiguillage post-paiement,
+      // cette route n'a aucun besoin legitime d'un module fournisseur, quel
+      // qu'il soit. `@/lib/mode3/...` reste autorise : c'est precisement le
+      // point d'entree de domaine que la phase 5 lui donne.
+      {
+        pattern: /from ['"]@\/lib\/(cj|suppliers|dropship)\//,
+        reason:
+          "R2 / F4 — l'annulation ne parle qu'au point d'entree du domaine fournisseur, jamais a un fournisseur, un adaptateur ou le registre fournisseur.",
+      },
+      // La regle precedente ne suffit pas : les identifiants CJ vivaient ici
+      // SANS import, en constantes de tete de fichier. Une arete peut se
+      // reconstituer par la configuration avant de se reconstituer par un
+      // import.
+      {
+        pattern: /process\.env\.(CJ|PRINTFUL|GELATO|PRINTIFY)_/,
+        reason:
+          "R2 / F4 — les identifiants d'un fournisseur appartiennent au domaine fournisseur. Les porter ici, c'est y ramener la dependance sans passer par un import.",
+      },
+      {
+        pattern: /\.\s*mode\b/,
+        reason:
+          "R1 — l'annulation ne lit jamais le mode d'un site : elle agit sur une commande deja creee, dont le domaine a ete decide a la creation.",
+      },
+      {
+        pattern: /\bdropship_type\b/,
+        reason:
+          "R1 — le sous-type est interne au domaine fournisseur. L'annulation n'a pas a le connaitre.",
+      },
+    ],
+    contractTestsPath: 'src/app/api/shop/cancel-order/__tests__/route.test.ts',
   },
   {
     id: 'order-dispatch',
@@ -393,7 +453,10 @@ export const DOMAIN_REGISTRY: DomainDefinition[] = [
       'src/lib/cj/shipping-tiers.ts',
       'src/lib/cj/statusMap.ts',
       'src/lib/dropship/suppliers.ts',
+      'src/lib/mode3/cancelSupplierOrder.ts',
+      'src/lib/mode3/catalogStock.ts',
       'src/lib/mode3/checkoutPolicy.ts',
+      'src/lib/mode3/supplierShipping.ts',
       'src/lib/fulfillment/idempotency-key.ts',
       'src/lib/fulfillment/observability.ts',
       'src/lib/fulfillment/provider-change.ts',
@@ -469,3 +532,13 @@ export const ORDER_DOMAIN_OWNED_DIRECTORIES = ['src/lib/order-domain'] as const
  *  Ce répertoire ne contient que la route : tout `.ts` qui y apparaît est donc
  *  un helper du point de vente, et doit être soumis aux mêmes règles. */
 export const CHECKOUT_OWNED_DIRECTORIES = ['src/app/api/shop/checkout'] as const
+
+/** Répertoire de la route d'annulation. Même mécanisme que les quatre
+ *  constantes ci-dessus.
+ *
+ *  NOTE ARCHITECTURALE — c'est la CINQUIÈME liste manuelle de ce type. Le
+ *  constat inscrit au plan lors de la phase 4 se confirme : le mécanisme
+ *  d'exhaustivité n'a pas lui-même d'exhaustivité, et rien ne détecterait
+ *  l'oubli d'une sixième. Dette 🟡 déjà documentée, volontairement non
+ *  traitée ici — la corriger dépasserait le périmètre F4. */
+export const CANCEL_ORDER_OWNED_DIRECTORIES = ['src/app/api/shop/cancel-order'] as const

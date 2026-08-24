@@ -16,7 +16,7 @@ vi.mock('@/lib/shop', () => ({
 }));
 
 const checkCatalogStockMock = vi.fn();
-vi.mock('@/lib/catalog-stock', () => ({
+vi.mock('@/lib/mode3/catalogStock', () => ({
   checkCatalogStock: (...a: unknown[]) => checkCatalogStockMock(...a),
 }));
 
@@ -213,11 +213,26 @@ describe('POST /api/shop/checkout — Mode 3 : livraison', () => {
 
 describe('POST /api/shop/checkout — prix serveur (jamais celui du client)', () => {
   it('produit catalogue sans cout connu -> 409 + logAnomaly(catalog_cost_missing)', async () => {
+    // PHASE 5 / F3+F5 -- fixture REQUALIFIE, assertions inchangees.
+    // Deux causes mecaniques, aucune liee au comportement teste :
+    //   1. le site etait Mode 2 : depuis que D2 precede les appels
+    //      fournisseur, un panier catalogue y est refuse AVANT la passe de
+    //      prix. `catalog_cost_missing` n'est plus joignable qu'en Mode 3 --
+    //      le scenario, pas l'assertion, avait cesse d'exister ;
+    //   2. `catalog_products` etait un OBJET la ou la garde d'admission
+    //      interroge la table via .in() (donc un TABLEAU). Meme piege qu'en
+    //      phase 4 : l'exception etait avalee par le catch global et rendait
+    //      un 500 indistinguable d'un refus metier.
+    // `shipping_cache` est ajoute parce que le Mode 3 exige un devis resolu
+    // avant d'atteindre la passe de prix. Le cout catalogue reste 0 : c'est
+    // exactement ce que ce test verifie.
     setupTables({
-      sites: { data: SITE_MODE2, error: null },
-      catalog_products: { data: { price: 0 }, error: null },
+      sites: { data: SITE_MODE3, error: null },
+      catalog_products: { data: [{ id: 'abc', price: 0, currency: 'usd', supplier_id: 'cj', supplier_product_id: 'vid-1' }], error: null },
+      site_catalog_selections: { data: null, error: null },
+      shipping_cache: { data: [{ supplier_product_id: 'vid-1', shipping_cost: 5, days_min: 10, days_max: 20, tiers: null }], error: null },
     });
-    const res = await POST(req({ slug: 'boutique', items: [{ id: 'catalog-abc', quantity: 1 }] }));
+    const res = await POST(req({ slug: 'boutique', items: [{ id: 'catalog-abc', quantity: 1 }], countryCode: 'US' }));
     expect(res.status).toBe(409);
     expect(logAnomalyMock).toHaveBeenCalledWith(expect.objectContaining({ type: 'catalog_cost_missing' }));
   });

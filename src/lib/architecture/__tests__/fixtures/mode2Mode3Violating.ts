@@ -82,3 +82,10 @@ export const ACQUISITION_PAR_CROCHETS = `const m = site['mode'];`
 
 /** Alias du site entier : contourne toutes les regles ci-dessus en une ligne. */
 export const ALIAS_DU_SITE_ENTIER = `const s = site;`
+
+// ---- Phase 5 / F4 : l'annulation ne parle plus a un fournisseur ----
+
+/** R2 — les identifiants d'un fournisseur portes hors de son domaine. C'est la
+ *  forme exacte trouvee dans cancel-order : une arete de dependance
+ *  reconstituee par la CONFIGURATION, sans aucun import a detecter. */
+export const IDENTIFIANTS_FOURNISSEUR = `const CJ_EMAIL = process.env.CJ_EMAIL || ''`

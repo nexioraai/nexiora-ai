@@ -48,7 +48,7 @@ vi.mock('@/lib/supabase-admin', () => ({
   supabaseAdmin: { from: (...args: unknown[]) => fromMock(...(args as [string])) },
 }));
 
-import { checkCatalogStock } from '../catalog-stock';
+import { checkCatalogStock } from '../mode3/catalogStock';
 
 function mockProduct(overrides: Partial<{ id: string; supplier_id: string; supplier_product_id: string; in_stock: boolean; name: string }>) {
   fromMock.mockReturnValue(

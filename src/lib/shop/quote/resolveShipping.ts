@@ -1,10 +1,23 @@
 import 'server-only';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { roundMoney } from '@/lib/pricing';
-import { suppliersWithCapability } from '@/lib/suppliers/registry';
-import type { ShippingRequest } from '@/lib/suppliers/supplier-adapter';
-import { pickThreeTiers, type ShippingTier } from '@/lib/cj/shipping-tiers';
-import { cjCalculateFreight } from '@/lib/cj/client';
+// PHASE 5 / F3 -- ce module ne parle plus a un fournisseur. Il s'adresse au
+// point d'entree du domaine Mode 3, qui detient les identifiants, le registre
+// et la lecture d'une reponse fournisseur. Le cache, son budget, la purge, la
+// marge et les libelles restent ici : ce sont des responsabilites communes.
+import {
+  fetchSupplierBasketOptions,
+  readSupplierTiers,
+  quoteSupplierGroup,
+  type SupplierTier,
+  type SupplierShippingLine,
+} from '@/lib/mode3/supplierShipping';
+
+// Formes structurelles, declarees ici pour ne dependre d'aucun type
+// fournisseur. Identiques a celles du domaine : toute divergence serait
+// rejetee par tsc au point de delegation.
+type ShippingRequest = SupplierShippingLine;
+type ShippingTier = SupplierTier;
 import { buildBasketHash } from './basketHash';
 
 // ============================================================
@@ -210,7 +223,7 @@ async function resolveCjBasket(
 
   const row = cached as { options: unknown; updated_at: string } | null;
   if (row && Date.now() - new Date(row.updated_at).getTime() < BASKET_TTL_MS) {
-    const tiers = pickThreeTiers(row.options);
+    const tiers = readSupplierTiers(row.options);
     if (tiers && tiers.length > 0) return tiersToQuotes(tiers);
     // Entree en cache inexploitable : on ne la rejoue pas indefiniment, on
     // laisse l'appel live ci-dessous la remplacer.
@@ -236,25 +249,14 @@ async function resolveCjBasket(
     return null;
   }
 
-  let options: CjOption[] | null = null;
-  try {
-    const live = cjCalculateFreight(
-      process.env.CJ_EMAIL || '',
-      process.env.CJ_API_KEY || '',
-      countryCode,
-      lines.map((l) => ({ vid: l.supplier_product_id, quantity: l.quantity }))
-    );
-    // La course borne l'attente de l'acheteur ; la promesse perdante est
-    // neutralisee pour ne jamais produire de rejet non gere.
-    const timeout = new Promise<null>((r) => setTimeout(() => r(null), BASKET_MAX_WAIT_MS));
-    const res = await Promise.race([live.catch(() => null), timeout]);
-    options = Array.isArray(res) ? (res as CjOption[]) : null;
-  } catch {
-    options = null;
-  }
+  // La borne d'attente reste une decision du tronc commun ; l'appel et les
+  // identifiants appartiennent au domaine fournisseur.
+  const options = (await fetchSupplierBasketOptions(lines, countryCode, BASKET_MAX_WAIT_MS)) as
+    | CjOption[]
+    | null;
   if (!options || options.length === 0) return null;
 
-  const tiers = pickThreeTiers(options);
+  const tiers = readSupplierTiers(options);
   if (!tiers || tiers.length === 0) return null;
 
   // Le devis brut est conserve tel quel : la derivation en paliers reste faite
@@ -307,11 +309,6 @@ async function resolveCjBasket(
 
   return tiersToQuotes(tiers);
 }
-
-/** Derive : fournisseurs implementant reellement calculateShipping. */
-const SHIPPING_SUPPLIERS = new Map(
-  suppliersWithCapability('calculateShipping').map((s) => [s.id, s])
-);
 
 const TIER_KEYS = ['eco', 'standard', 'express'] as const;
 export type TierKey = (typeof TIER_KEYS)[number];
@@ -584,20 +581,12 @@ export async function resolveShipping(params: {
 
   for (const [supplierId, groupItems] of entries) {
     if (supplierId === 'cj' && cjResolved) continue;
-    const supplier = SHIPPING_SUPPLIERS.get(supplierId);
-    if (!supplier?.adapter.calculateShipping) continue;
-    const creds = supplierId === 'printful'
-      ? { ...supplier.credentials, state_code: stateCode || '' }
-      : supplier.credentials;
-    try {
-      const r = await supplier.adapter.calculateShipping(groupItems, countryCode, creds);
-      liveTotal += r.total_cost;
-      liveMin = liveMin === null ? r.estimated_days_min : Math.min(liveMin, r.estimated_days_min);
-      liveMax = liveMax === null ? r.estimated_days_max : Math.max(liveMax, r.estimated_days_max);
-      liveCount += 1;
-    } catch (err: unknown) {
-      console.error('[resolveShipping]', supplierId, 'failed:', err instanceof Error ? err.message : String(err));
-    }
+    const r = await quoteSupplierGroup(supplierId, groupItems, countryCode, stateCode);
+    if (!r) continue;
+    liveTotal += r.totalCost;
+    liveMin = liveMin === null ? r.daysMin : Math.min(liveMin, r.daysMin);
+    liveMax = liveMax === null ? r.daysMax : Math.max(liveMax, r.daysMax);
+    liveCount += 1;
   }
 
   // ---- 3. Agregation ----

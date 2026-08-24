@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { cjCancelOrder } from '@/lib/cj/client';
+import { cancelSupplierOrder } from '@/lib/mode3/cancelSupplierOrder';
 import { getProvider } from '@/lib/payments';
 import { cancelShopOrderAtomic } from '@/lib/shop';
 import { logAnomaly } from '@/lib/anomaly';
-
-const CJ_EMAIL = process.env.CJ_EMAIL || '';
-const CJ_API_KEY = process.env.CJ_API_KEY || '';
 
 /**
  * Annulation par l'acheteur, 100% automatique (identite Nexiora).
@@ -82,18 +79,21 @@ export async function POST(req: NextRequest) {
       }, { status: 409 });
     }
 
-    // 1. Demander l'annulation a CJ (source de verite, Mode 3 uniquement)
+    // 1. Demander l'annulation au fournisseur qui execute la commande.
+    // PHASE 5 / F4 -- cette route ne parle plus a un fournisseur : elle
+    // s'adresse au point d'entree du domaine (mode3/cancelSupplierOrder). Elle
+    // portait auparavant l'import `cj/client` ET les identifiants CJ, alors
+    // qu'elle est traversee par les deux domaines. Le declencheur reste la
+    // presence d'une commande fournisseur -- jamais le mode, jamais le
+    // sous-type. Refus fournisseur = 409 AVANT toute transition d'etat et
+    // avant toute restauration de stock : ordre inchange.
     if (order.cj_order_id) {
-      try {
-        await cjCancelOrder(CJ_EMAIL, CJ_API_KEY, order.cj_order_id);
-      } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        await logAnomaly({
-          type: 'cancel_refused_by_supplier',
-          severity: 'warning',
-          siteId: order.site_id,
-          details: { orderId: order.id, cjOrderId: order.cj_order_id, reason: msg },
-        });
+      const supplier = await cancelSupplierOrder({
+        supplierOrderId: order.cj_order_id,
+        orderId: order.id,
+        siteId: order.site_id,
+      });
+      if (!supplier.ok) {
         return NextResponse.json({
           ok: false,
           reason: 'supplier_refused',
