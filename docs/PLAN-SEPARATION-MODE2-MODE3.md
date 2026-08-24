@@ -465,7 +465,7 @@ déplacées · banc 12 cas avant/après · comptage de tests.
 | 4 — Mode 2 | ✅ **VALIDÉE** | *(checkpoint phase 4)* | `order-domain/checkoutPolicy.ts` · `mode2/checkoutPolicy.ts` · `mode3/checkoutPolicy.ts` · `order-domain/__tests__/checkoutPolicy.test.ts` (neufs) · `checkout/route.ts` · `checkout/__tests__/route.test.ts` · `domainRegistry.ts` (**A1** + 2 cliquets) · `mode2Mode3Boundaries.test.ts` · `fixtures/mode2Mode3Violating.ts` | **1183 → 1279** (+96) · 112 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **16 mutations / 16 attrapées** · **0 branchement métier sur `site.mode`** · 6/6 domaines en contrôle positif **et** négatif · 4/4 exhaustivités gardées | **Phase 5** |
 | 5 — SHARED | ✅ **VALIDÉE** | `f9c899b` → *(checkpoint phase 5)* | `mode3/supplierShipping.ts` · `mode3/cancelSupplierOrder.ts` · `checkout/__tests__/ordering.characterization.test.ts` (neufs) · `catalog-stock.ts` → `mode3/catalogStock.ts` (renommé) · `shop/quote/resolveShipping.ts` · `checkout/route.ts` · `cancel-order/route.ts` · `domainRegistry.ts` (**R2 identifiants** + `order-cancellation`) · 5 fichiers de tests · 1 fixture | **1279 → 1302** (+23) · 113 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **33 mutations / 33 attrapées** · **F3, F4, F5 scindés** · R1-R4 verrouillées · `shipping/calculate` **bit-à-bit inchangé** | **Phase 6** |
 | 6 — Tests de frontière | ✅ **VALIDÉE** | *(checkpoint phase 6)* | `cancel-order/route.ts` (garde de domaine) · `checkout/__tests__/a6SupplierAdapters.test.ts` · `shop/__tests__/a7MixedOrder.test.ts` · `__tests__/a7ReferenceBench.test.ts` (neufs) · `cancel-order/__tests__/route.test.ts` | **1302 → 1326** (+24) · 116 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **A6 complet aux 3 surfaces, au niveau ADAPTATEUR** · **A7 : 7 cas sur 7** · **banc de référence exécutable** · 13 mutations nouvelles, toutes attrapées | **Phase 7** |
-| 7 — Contrats SHARED | ⏳ EN ATTENTE | — | — | — | — | — |
+| 7 — Contrats SHARED | ✅ **VALIDÉE** | *(checkpoint phase 7)* | `__tests__/sharedChannelContracts.test.ts` (neuf) — **aucun fichier de production modifié** | **1326 → 1341** (+15) · 117 fichiers · `tsc` 0 · `next build` 0 · `diff --check` clean | **5 canaux du §4 exercés aux deux formes** · **4 mutations / 4 attrapées** · dernier vecteur **classe C → B** | **Phase 8** |
 | 8 — Validation Mode 2 | ⏳ EN ATTENTE | — | — | — | — | — |
 | 9 — Non-régression Mode 3 | ⏳ EN ATTENTE | — | — | — | — | — |
 
@@ -1010,3 +1010,47 @@ mauvaise ligne · ligne marchande envoyée au fournisseur · mauvaise quantité 
 sous-type basculé · cloisonnement POD rompu · commission et frais dérivés.
 
 **Dettes reportées, inchangées** : celles inscrites aux phases 4 et 5, aucune traitée ici.
+
+
+---
+
+### PHASE 7 — VALIDÉE
+
+**Aucun fichier de production modifié.** La phase n'a rien corrigé : elle a prouvé.
+C'était son objet — faire passer le dernier vecteur de **classe C à B** en exerçant
+chaque canal corrélé sous **les deux formes de données**.
+
+**La mesure préalable a évité de tester ce qui l'était déjà** — et c'est ce qui distingue
+une couverture d'un remplissage :
+
+| Canal §4 | État mesuré AVANT | Action |
+|---|---|---|
+| 1 · `decrementStock` ← `catalog-` | **déjà prouvé aux deux formes** (`shop.test.ts`) | rien |
+| 1 · `checkStock` ← `catalog-` | **non prouvé** — aucun test ne lui donnait de ligne `catalog-` | 4 contrats |
+| 2 · `logAnomaly` ← `type` | **non prouvé** — aucun test dédié | 3 contrats |
+| 3 · `createCheckout` ← `applicationFeeAmount` | **déjà prouvé à TROIS formes** (omis · 0 · > 0) | rien |
+| 4 · `sitePricing` ← `cj_margin_percent` | **non prouvé** — **zéro fichier de test** | 4 contrats |
+| 5 · neutralité | affirmée au plan, **jamais exercée** | 4 contrats |
+
+**Ce que les contrats établissent, et qui n'allait pas de soi.** `checkStock` et
+`decrementStock` **branchent réellement** sur le préfixe `catalog-` : c'est correct — un
+produit de catalogue n'a pas de stock local — mais c'est une décision prise sur un signal
+corrélé au mode, et elle n'était exercée que dans un sens. De même pour `logAnomaly` :
+une allowlist fait contourner l'anti-spam aux types `cj_*`. Le contrat retenu sépare les
+deux responsabilités — **la persistance est identique pour les deux formes** (c'est elle
+qui alimente la surveillance), **seule l'alerte diffère**.
+
+**`sitePricing` n'avait aucun test.** Le contrat fige notamment que `??` n'est pas `||` :
+une marge de **0 est une marge**, pas une absence.
+
+**Une cause mécanique rencontrée**, diagnostiquée et non contournée : la chaîne du
+harnais n'exposait pas `.neq()`, utilisé par `logAnomaly` — l'exception était avalée par
+son `try/catch` et l'alerte restait muette. Corrigé dans le harnais, jamais dans
+l'assertion.
+
+**4 mutations, 4 attrapées** — `checkStock` cessant d'ignorer le catalogue · allowlist
+d'alerte ignorée · `??` devenant `||` · empreinte de panier rendue dépendante de l'ordre.
+
+**Écart mesuré au §4, signalé sans le corriger** : le plan déclare `checkoutSignature`
+neutre ; le fichier contient bien une occurrence de `catalog-`, mais **dans un commentaire
+de documentation** — la neutralité tient. Le §4 reste exact.
