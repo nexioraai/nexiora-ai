@@ -4,7 +4,7 @@ Standard exigé : **ELITE 2026 / A+** — aucun problème déclaré résolu sans
 réelle (test exécuté, mutation tuée, mesure en base). Distinction stricte :
 **code terminé ≠ test effectué ≠ preuve validée**.
 
-Dernière mise à jour : 2026-08-25 — audit livré, **résolution en cours**.
+Dernière mise à jour : 2026-08-25 — **résolution terminée, 7 critères sur 8 satisfaits**. Voir §8.
 
 | | |
 |---|---|
@@ -108,7 +108,29 @@ aiguillage du fulfillment sur `fulfillment_domain`, jamais `sites.mode`.
 - [ ] Toute RPC atteinte par un chemin Mode 2 a un script versionné *(M2-09)*
 - [ ] Aucun défaut 🔴/🟠 non traité
 
-**STATUT : NON FERMÉ** — résolution en cours.
+**STATUT : NON FERMÉ — un seul blocage, et il est hors de cet environnement.**
+
+Sept critères sur huit sont satisfaits et démontrés. Le huitième — « toute RPC
+atteinte par un chemin Mode 2 a un script versionné » — reste ouvert du seul
+fait de **M2-09** : la définition de `consume_promo_code` vit uniquement en
+base, et la réécrire de mémoire remplacerait en production une fonction
+illisible d'ici. `supabase/sql/consume_promo_code_versioning.sql` est préparé
+(extraction + durcissement, sans aucune redéfinition) mais **non exécuté** :
+ni `DATABASE_URL`, ni CLI Supabase, ni `psql`, ni token Management.
+
+**Aucun défaut 🔴 ni 🟠 ne subsiste.** Restent : M2-09 🟡 (partiel, ci-dessus),
+M2-06 🟡 pour son seul vecteur PostgREST direct (borne applicative fermée et
+testée ; fermer le reste exigerait une contrainte `CHECK`, donc du DDL), et
+M2-10 ⚪ (dette architecturale, aiguillage correct, hors critères).
+
+### Action exacte pour fermer Mode 2
+
+1. Exécuter l'étape 1 de `supabase/sql/consume_promo_code_versioning.sql` et
+   renvoyer la sortie de `pg_get_functiondef`.
+2. Versionner cette définition dans un `supabase/sql/consume_promo_code.sql`
+   propre, avec son patron `REVOKE`/`GRANT`.
+3. Retirer l'exception de l'allowlist de `rpcVersioning.test.ts` — le cliquet
+   redeviendra vert par lui-même.
 
 ## 9. ORDRE DE TRAITEMENT
 
