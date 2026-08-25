@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
-import { hasSupplierCatalog } from '@/lib/dropship/catalogAdmission';
+import { usesCatalogSelections } from '@/lib/dropship/catalogAdmission';
 
 export const maxDuration = 10;
 
@@ -17,11 +17,24 @@ export const maxDuration = 10;
  * Body: { slug, id, sell_price?, merchant_approved?, custom_name?, custom_description? }
  * Met à jour une sélection.
  */
+// LOT 2 -- LES QUATRE VERBES INTERROGENT LE MECANISME, PLUS SEULEMENT LE MODE.
+//
+// Cette route EST le mecanisme `site_catalog_selections` : elle le lit, l'ecrit,
+// le modifie et le supprime. `pod_brand` y etait admis -- son POST creait meme
+// une selection `merchant_approved: true` du premier coup, donc publiable au
+// sitemap et achetable, tout en restant invisible sur sa propre vitrine, qui
+// refuse de charger les selections d'un pod_brand. C'etait la chaine complete
+// de DEBT-049, et elle se ferme ici.
+//
+// Le POST conserve EN PLUS son controle d'eligibilite fournisseur
+// (`suppliersForDropshipType`) : les deux questions restent distinctes --
+// « ce site utilise-t-il le mecanisme ? » et « ce produit vient-il du bon
+// fournisseur ? ».
 export async function GET(req: NextRequest) {
   const slug = req.nextUrl.searchParams.get('slug');
   if (!slug) return NextResponse.json({ error: 'slug requis' }, { status: 400 });
 
-  const auth = await requireSiteOwner(req, slug, 'id, mode');
+  const auth = await requireSiteOwner(req, slug, 'id, mode, dropship_type');
   if (!auth.ok) return auth.response;
   const site = auth.site;
 
@@ -45,7 +58,7 @@ export async function GET(req: NextRequest) {
   // La primitive tranche AVANT le sous-mode : « ce site a-t-il un catalogue »
   // precede « lequel ». Meme contrat de reponse que `curate` et `enhance`.
   // ============================================================
-  if (!hasSupplierCatalog(auth.site.mode)) {
+  if (!usesCatalogSelections(auth.site.mode, (auth.site as { dropship_type?: unknown }).dropship_type)) {
     return NextResponse.json({ error: 'Site non-dropshipping' }, { status: 400 });
   }
 
@@ -90,12 +103,12 @@ export async function PATCH(req: NextRequest) {
     const { slug, id, ...updates } = await req.json();
     if (!slug || !id) return NextResponse.json({ error: 'slug et id requis' }, { status: 400 });
 
-    const auth = await requireSiteOwner(req, slug, 'id, mode');
+    const auth = await requireSiteOwner(req, slug, 'id, mode, dropship_type');
     if (!auth.ok) return auth.response;
 
     // CHANTIER 6 -- meme garde, meme primitive, meme contrat de reponse. La
     // question du mode precede toujours celle du sous-mode.
-    if (!hasSupplierCatalog(auth.site.mode)) {
+    if (!usesCatalogSelections(auth.site.mode, (auth.site as { dropship_type?: unknown }).dropship_type)) {
       return NextResponse.json({ error: 'Site non-dropshipping' }, { status: 400 });
     }
 
@@ -129,12 +142,12 @@ export async function DELETE(req: NextRequest) {
   const id = req.nextUrl.searchParams.get('id');
   if (!slug || !id) return NextResponse.json({ error: 'slug et id requis' }, { status: 400 });
 
-  const auth = await requireSiteOwner(req, slug, 'id, mode');
+  const auth = await requireSiteOwner(req, slug, 'id, mode, dropship_type');
   if (!auth.ok) return auth.response;
 
   // CHANTIER 6 -- meme garde, meme primitive, meme contrat de reponse. La
   // question du mode precede toujours celle du sous-mode.
-  if (!hasSupplierCatalog(auth.site.mode)) {
+  if (!usesCatalogSelections(auth.site.mode, (auth.site as { dropship_type?: unknown }).dropship_type)) {
     return NextResponse.json({ error: 'Site non-dropshipping' }, { status: 400 });
   }
 
@@ -167,7 +180,7 @@ export async function POST(req: NextRequest) {
 
     // CHANTIER 6 -- meme garde, meme primitive, meme contrat de reponse. La
     // question du mode precede toujours celle du sous-mode.
-    if (!hasSupplierCatalog(auth.site.mode)) {
+    if (!usesCatalogSelections(auth.site.mode, (auth.site as { dropship_type?: unknown }).dropship_type)) {
       return NextResponse.json({ error: 'Site non-dropshipping' }, { status: 400 });
     }
 

@@ -70,7 +70,12 @@ function req(body: unknown = { slug: 'yia' }) {
 beforeEach(() => {
   ecritures = [];
   selections = [SELECTION];
-  siteRow = { id: 'site-1', owner_id: USER.id, owner_email: USER.email, type: 'audio', lang: 'fr', mode: 3 };
+  // LOT 2 -- `dropship_type` AJOUTE A LA FIXTURE, et c'est un constat : cette
+  // fixture Mode 3 n'en portait aucun, si bien que les cas « la route
+  // travaille » ne decrivaient aucun site reel. L'admission descendant du
+  // mode au mecanisme de selection, ils decrivent desormais un vrai site
+  // reseller. Les cas qui visent un sous-type precis l'ecrivent.
+  siteRow = { id: 'site-1', owner_id: USER.id, owner_email: USER.email, type: 'audio', lang: 'fr', mode: 3, dropship_type: 'reseller' };
   getUserMock.mockReset().mockResolvedValue({ data: { user: { ...USER } }, error: null });
   messagesCreateMock.mockReset().mockResolvedValue({
     // La route attend du JSON `[{index,title,description}]` ; toute autre

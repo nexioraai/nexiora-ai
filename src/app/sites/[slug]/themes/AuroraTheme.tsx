@@ -61,13 +61,27 @@ export default function AuroraTheme({ site }: { site: Site }) {
   // sous-type ABSENT. Regle unique et positive, partagee avec la page
   // publique et l'apercu.
   //
-  // PERIMETRE, EXPLICITE : cette ligne porte AUSSI DEBT-048 -- les deux
-  // autres surfaces gardent `site.mode === 3`, celle-ci non, si bien qu'un
-  // site NON-Mode-3 qui aurait un sous-type et une boutique monterait la
-  // barre. Cette moitie-la N'EST PAS corrigee ici : elle appartient au
-  // LOT 2. `showsVisitorCatalogSearch` ne connait deliberement pas le mode,
-  // pour que la dette reste entiere et observable.
-  const showCatalogSearch = isShop && showsVisitorCatalogSearch(site.dropship_type)
+  // LOT 2 / DEBT-048 -- LA GARDE DE MODE MANQUANTE EST POSEE.
+  //
+  // Ce theme etait le seul des trois montages a ne pas la porter :
+  // `sites/[slug]/page.tsx` et `preview/[slug]/page.tsx` ecrivent tous deux
+  // `site.mode === 3 && showsVisitorCatalogSearch(...)`. Ici, `isShop`
+  // (`getModeCapabilities`) admet aussi le Mode 2 des qu'il a un produit --
+  // si bien qu'un site NON-Mode-3 portant un sous-type aurait monte la barre
+  // de recherche catalogue. La meme expression, aux trois endroits.
+  //
+  // ATTEIGNABILITE MESUREE avant correction : aucun site `mode != 3` ne porte
+  // de sous-type en production, le LOT 1 rend ce couple improducible a la
+  // creation, et `mode` comme `dropship_type` sont exclus du GRANT UPDATE de
+  // `authenticated` (verifie dans lot_g_final_field_level_authorization.sql).
+  // La protection ne reposait donc plus que sur DEUX invariants d'AUTRES
+  // couches -- exactement la classe de defaut que l'audit Mode 2 a nommee.
+  // Elle repose desormais sur sa propre garde.
+  //
+  // `showsVisitorCatalogSearch` reste volontairement AVEUGLE AU MODE : c'est
+  // une regle de sous-type, et la garde de mode appartient a l'appelant. Y
+  // fusionner le mode ferait decider deux frontieres a une seule autorite.
+  const showCatalogSearch = isShop && site.mode === 3 && showsVisitorCatalogSearch(site.dropship_type)
 
   return (
     <div

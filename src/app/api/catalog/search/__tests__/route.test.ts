@@ -144,3 +144,44 @@ describe('GET /api/catalog/search — validation d\'entrée', () => {
     expect(res.status).toBe(404);
   });
 });
+
+// ============================================================
+// LOT 2 -- LE CABLAGE DE L'ADMISSION, ENFIN COUVERT.
+//
+// LA MUTATION QUI SURVIVAIT. Retirer purement et simplement la garde
+// d'admission de cette route ne cassait AUCUN test : la primitive etait
+// testee comme FONCTION (`catalogAdmission.test.ts`), jamais comme CABLAGE.
+// Une garde non cablee est une garde absente.
+//
+// `pod_brand` est le cas qui compte : il A un catalogue fournisseur
+// (`hasSupplierCatalog(3)` est vrai, ses produits SONT des Printful), mais il
+// n'utilise PAS `site_catalog_selections`. Une garde de mode seule le laissait
+// donc passer.
+// ============================================================
+
+describe("GET /api/catalog/search — LOT 2 : l'admission au mecanisme de selection", () => {
+  const VIDE = { products: [], total: 0, page: 1, page_size: 24, has_more: false };
+
+  it.each([
+    ['Mode 1 vitrine', { ...SITE, mode: 1, dropship_type: null }],
+    ['Mode 2 boutique', { ...SITE, mode: 2, dropship_type: null }],
+    ['Mode 3 pod_brand', { ...SITE, dropship_type: 'pod_brand' }],
+    ['Mode 3 sans sous-type', { ...SITE, dropship_type: null }],
+    ['Mode 3 sous-type inconnu', { ...SITE, dropship_type: 'legacy_mode_x' }],
+  ])('%s -> reponse VIDE, et catalog_products n\'est jamais interrogee', async (_l, site) => {
+    setupTables({ sites: { data: site, error: null } });
+    const res = await GET(req({ slug: 'x', q: 'bracelet' }));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual(VIDE);
+    // Le contrat de reponse est identique au succes : un 403 apprendrait a un
+    // rodeur que le slug existe.
+    expect(fromMock).not.toHaveBeenCalledWith('catalog_products');
+  });
+
+  it.each(['reseller', 'pod_custom'])('Mode 3 %s -> la recherche fonctionne (chemin legitime)', async (t) => {
+    setupTables({ sites: { data: { ...SITE, dropship_type: t }, error: null } });
+    const json = await (await GET(req({ slug: 'x', q: 'bracelet' }))).json();
+    expect(json.products).toHaveLength(1);
+    expect(fromMock).toHaveBeenCalledWith('catalog_products');
+  });
+});

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { hasSupplierCatalog } from '@/lib/dropship/catalogAdmission';
+import { usesCatalogSelections } from '@/lib/dropship/catalogAdmission';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import Anthropic from '@anthropic-ai/sdk';
 import { sitePricing } from '@/lib/pricing';
@@ -40,7 +40,10 @@ export async function POST(req: Request) {
     // le depot avec une reponse differente a chaque endroit. La garde reste
     // AVANT tout appel externe facture, et le contrat de reponse est
     // rigoureusement inchange.
-    if (!hasSupplierCatalog(site.mode)) {
+    // LOT 2 -- meme descente du mode vers le mecanisme que `catalog/search`,
+    // dont cette route est la variante par image. Contrat de reponse
+    // inchange, et la garde reste AVANT tout appel Claude facture.
+    if (!usesCatalogSelections(site.mode, (site as { dropship_type?: unknown }).dropship_type)) {
       return NextResponse.json({ products: [], keywords: '', total: 0 });
     }
 

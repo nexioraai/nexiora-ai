@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { sitePricing, resolveDisplayPrice } from '@/lib/pricing'
+import { usesCatalogSelections } from '@/lib/dropship/catalogAdmission'
 
 export type ProductPage = {
   id: string
@@ -41,7 +42,38 @@ export async function fetchProduct(slug: string, rawId: string): Promise<Product
   if (!site) return null
 
   if (rawId.startsWith('catalog-')) {
-    const catalogProductId = rawId.slice('catalog-'.length)
+    // ============================================================
+    // LOT 2 -- DEUX DEFAUTS SUR LA MEME BRANCHE, TRAITES ENSEMBLE.
+    //
+    // 1. AUCUNE ADMISSION. Cette branche selectionnait `dropship_type` et ne
+    //    le lisait JAMAIS. Sa seule porte etait la DONNEE -- l'existence
+    //    d'une selection approuvee -- jamais une REGLE. Un `pod_brand`, admis
+    //    a tort par `POST /catalog/selections` avant ce lot, obtenait donc
+    //    une fiche produit publique pour un produit que sa propre vitrine
+    //    refuse d'afficher.
+    //
+    //    SURFACE VISITEUR : la garde correcte n'est PAS une garde de
+    //    propriete -- cette page doit rester publique -- mais l'admission au
+    //    mecanisme qui produit ces fiches. Meme regle que les cinq routes
+    //    catalogue, meme autorite.
+    //
+    //    CONSEQUENCE POUR `pod_brand`, ASSUMEE ET CONSIGNEE : ses produits
+    //    (issus de `pod_designs`) n'ont pas de fiche produit. C'etait deja le
+    //    cas AVANT ce lot -- mais par accident de parsing (voir 2), pas par
+    //    decision. Ce refus devient une regle explicite. SAVOIR SI UN
+    //    `pod_brand` DOIT AVOIR DES FICHES PRODUIT EST UNE DECISION DE
+    //    SOUS-MODE : elle appartient au LOT 3, pas ici.
+    //
+    // 2. UN PARSING DIVERGENT. Cinq couches decodent l'id panier de la meme
+    //    facon -- `checkout`, `resolveShipping`, `pod-fulfill`, `cj/fulfill`
+    //    et `ProductModal` font toutes `replace(/^catalog-/,'').split('::')`.
+    //    Celle-ci faisait un `slice()` brut : un id porteur d'une variante
+    //    (`catalog-<uuid>::<variantId>`) produisait `<uuid>::<variantId>`,
+    //    valeur qui n'est pas un uuid et ne correspond a aucune ligne. La
+    //    variante est un detail d'ACHAT ; la fiche produit decrit le produit.
+    // ============================================================
+    if (!usesCatalogSelections((site as any).mode, (site as any).dropship_type)) return null
+    const catalogProductId = rawId.replace(/^catalog-/, '').split('::')[0]
     const { data: sel } = await supabase
       .from('site_catalog_selections')
       .select('sell_price, custom_name, custom_description, catalog_product_id, catalog_products(name, description, price, currency, images, in_stock)')

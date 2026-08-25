@@ -16,11 +16,18 @@ let productResult: { data: any; error: any };
 // la colonne » : un select ampute rendrait la lecture aveugle en silence.
 const selectsAppeles: string[] = [];
 
-function chain(resolveValue: { data: any; error: any }) {
+// LOT 2 -- LES FILTRES SONT DESORMAIS CAPTURES. Sans cela, l'isolation
+// inter-locataires (`site_id`) et la condition de publication
+// (`merchant_approved`) n'etaient VERIFIABLES par aucune assertion : les
+// retirer du code ne cassait rien (mutations B3 et B4, survivantes). Ajout
+// pur -- aucune assertion anterieure ne change de sens.
+const filtres: [string, string, unknown][] = [];
+
+function chain(resolveValue: { data: any; error: any }, table = '') {
   const b: any = {};
   const self = () => b;
   b.select = (cols?: string) => { if (typeof cols === 'string') selectsAppeles.push(cols); return b; };
-  b.eq = self;
+  b.eq = (col: string, val: unknown) => { filtres.push([table, col, val]); return b; };
   b.maybeSingle = async () => resolveValue;
   return b;
 }
@@ -29,10 +36,10 @@ vi.mock('@/lib/supabase', () => ({
   supabase: {
     from: (table: string) => {
       fromCalls.push(table);
-      if (table === 'sites_public') return chain(siteResult);
-      if (table === 'site_catalog_selections') return chain(selectionResult);
-      if (table === 'shop_products') return chain(productResult);
-      if (table === 'sites') return chain(siteResult); // ne doit jamais être appelé
+      if (table === 'sites_public') return chain(siteResult, table);
+      if (table === 'site_catalog_selections') return chain(selectionResult, table);
+      if (table === 'shop_products') return chain(productResult, table);
+      if (table === 'sites') return chain(siteResult, table); // ne doit jamais être appelé
       throw new Error('unexpected table: ' + table);
     },
   },
@@ -41,6 +48,7 @@ vi.mock('@/lib/supabase', () => ({
 beforeEach(() => {
   fromCalls.length = 0;
   selectsAppeles.length = 0;
+  filtres.length = 0;
   siteResult = {
     data: {
       id: 'site-1', name: 'My Shop', slug: 'my-shop', mode: 3, custom_domain: null,
@@ -156,5 +164,94 @@ describe('DETTE 6c — la fiche produit expose l’achetabilité', () => {
     };
     const { fetchProduct } = await import('../fetchProduct');
     expect((await fetchProduct('my-shop', 'catalog-abc'))!.forSale).toBe(true);
+  });
+});
+
+// ============================================================
+// LOT 2 -- L'ADMISSION, L'ISOLATION ET LE PARSING DE LA FICHE PRODUIT.
+//
+// TROIS DEFAUTS SUR LA MEME BRANCHE, ET AUCUN N'ETAIT COUVERT :
+//   * aucune admission -- la seule porte etait la DONNEE, jamais une REGLE ;
+//   * `.eq('site_id', ...)` -- l'isolation inter-locataires d'une surface
+//     PUBLIQUE -- retirable sans casser un seul test (mutation B4) ;
+//   * `.eq('merchant_approved', true)` -- idem (mutation B3) ;
+//   * un `slice()` brut la ou cinq autres couches font `split('::')`.
+// ============================================================
+
+import { fetchProduct as fp } from '../fetchProduct';
+
+const SEL_OK = {
+  data: {
+    sell_price: null, custom_name: null, custom_description: null,
+    catalog_product_id: 'cp-1',
+    catalog_products: { name: 'Bracelet', description: '', price: 10, currency: 'usd', images: [], in_stock: true },
+  },
+  error: null,
+};
+
+describe('LOT 2 — fetchProduct : admission au mecanisme de selection', () => {
+  it.each([
+    ['Mode 1 vitrine', { mode: 1, dropship_type: null }],
+    ['Mode 2 boutique', { mode: 2, dropship_type: null }],
+    ['Mode 3 pod_brand', { mode: 3, dropship_type: 'pod_brand' }],
+    ['Mode 3 sans sous-type', { mode: 3, dropship_type: null }],
+    ['Mode 3 sous-type inconnu', { mode: 3, dropship_type: 'legacy_x' }],
+  ])('%s -> null, et `site_catalog_selections` n\'est JAMAIS interrogee', async (_l, over) => {
+    siteResult = { data: { ...siteResult.data, ...over }, error: null };
+    selectionResult = SEL_OK; // la donnee existe : seule la REGLE doit refuser
+    expect(await fp('my-shop', 'catalog-cp-1')).toBeNull();
+    expect(fromCalls).not.toContain('site_catalog_selections');
+  });
+
+  it.each(['reseller', 'pod_custom'])('Mode 3 %s -> la fiche est servie (chemin visiteur legitime)', async (t) => {
+    siteResult = { data: { ...siteResult.data, dropship_type: t }, error: null };
+    selectionResult = SEL_OK;
+    const p = await fp('my-shop', 'catalog-cp-1');
+    expect(p?.name).toBe('Bracelet');
+  });
+
+  it('aucune garde de PROPRIETE n\'est introduite : la fiche reste une surface publique', async () => {
+    // Elle ne lit que `sites_public` (published + non archivé) et n'exige
+    // aucun jeton. Une garde propriétaire ici casserait la vitrine.
+    selectionResult = SEL_OK;
+    expect(await fp('my-shop', 'catalog-cp-1')).not.toBeNull();
+    expect(fromCalls).toContain('sites_public');
+    expect(fromCalls).not.toContain('sites');
+  });
+});
+
+describe('LOT 2 — INVARIANT G : l\'isolation inter-locataires est enfin assertee', () => {
+  it('la selection est filtree par `site_id` — mutation B4', async () => {
+    selectionResult = SEL_OK;
+    await fp('my-shop', 'catalog-cp-1');
+    expect(filtres).toContainEqual(['site_catalog_selections', 'site_id', 'site-1']);
+  });
+
+  it('INVARIANT H : `merchant_approved` reste la condition de publication — mutation B3', async () => {
+    selectionResult = SEL_OK;
+    await fp('my-shop', 'catalog-cp-1');
+    expect(filtres).toContainEqual(['site_catalog_selections', 'merchant_approved', true]);
+  });
+
+  it('le produit marchand est lui aussi borne au site et a `published`', async () => {
+    productResult = { data: { id: 'p1', name: 'X', description: '', price: 5, currency: 'usd', images: [], stock: 1, published: true, for_sale: true }, error: null };
+    await fp('my-shop', 'p1');
+    expect(filtres).toContainEqual(['shop_products', 'site_id', 'site-1']);
+    expect(filtres).toContainEqual(['shop_products', 'published', true]);
+  });
+});
+
+describe('LOT 2 / INVARIANT I — le parsing rejoint les cinq autres couches', () => {
+  it('un id porteur d\'une variante interroge le PRODUIT, pas `uuid::variant`', async () => {
+    selectionResult = SEL_OK;
+    await fp('my-shop', 'catalog-cp-1::vid-42');
+    expect(filtres).toContainEqual(['site_catalog_selections', 'catalog_product_id', 'cp-1']);
+    expect(filtres.some(([, c, v]) => c === 'catalog_product_id' && String(v).includes('::'))).toBe(false);
+  });
+
+  it('un id sans variante est inchange — aucune regression', async () => {
+    selectionResult = SEL_OK;
+    await fp('my-shop', 'catalog-cp-1');
+    expect(filtres).toContainEqual(['site_catalog_selections', 'catalog_product_id', 'cp-1']);
   });
 });

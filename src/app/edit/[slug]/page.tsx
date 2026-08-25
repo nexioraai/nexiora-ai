@@ -667,7 +667,20 @@ export default function EditPage() {
         {(site?.mode === 2 || site?.mode === 3) && <div className="mt-8"><ProductManager slug={slug} /></div>}
 
         {(site?.mode === 2 || site?.mode === 3) && <PaymentConnect slug={slug} mode={site?.mode} />}
-        {site?.mode === 3 && site?.dropship_type === 'reseller' && <CatalogSelections slug={slug} marginPercent={site.cj_margin_percent ?? DEFAULT_MARGIN_PERCENT} roundMode={site.cj_round_mode || undefined} />}
+        {/* LOT 2 / L2-E -- `pod_custom` RETROUVE SON INTERFACE DE SELECTION.
+            Cette surface etait reservee a `reseller`, alors que `pod_custom`
+            possede les memes outils catalogue (`CATALOG_SUBTYPES`), la meme
+            guidance (« approve suggestions ») et le meme mecanisme
+            `site_catalog_selections`. Sa capacite fonctionnait -- mais par
+            son agent SEULEMENT : le marchand n'avait aucun ecran pour voir,
+            approuver ou retirer ses selections. Capacite accordee, interface
+            absente.
+            LISTE ECRITE ICI, ET NON `usesCatalogSelections` : ce fichier est
+            un composant CLIENT, l'autorite est `server-only`. Meme forme que
+            les quatre autres conditions de sous-type de ce fichier, et meme
+            allowlist positive -- `pod_brand`, `null` et toute valeur inconnue
+            restent exclus. */}
+        {site?.mode === 3 && (site?.dropship_type === 'reseller' || site?.dropship_type === 'pod_custom') && <CatalogSelections slug={slug} marginPercent={site.cj_margin_percent ?? DEFAULT_MARGIN_PERCENT} roundMode={site.cj_round_mode || undefined} />}
 
         {(site?.mode === 2 || site?.mode === 3) && <OrderManager slug={slug} />}
 

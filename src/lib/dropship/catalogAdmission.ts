@@ -58,3 +58,66 @@ const CATALOG_SITE_MODES = new Set<unknown>([3]);
 export function hasSupplierCatalog(siteMode: unknown): boolean {
   return CATALOG_SITE_MODES.has(siteMode);
 }
+
+// ============================================================
+// LOT 2 -- LE MECANISME DE SELECTION, DISTINCT DU CATALOGUE LUI-MEME.
+//
+// CE QUE LE LOT 2 A DU FALSIFIER D'ABORD. Une premiere analyse concluait que
+// `pod_brand` n'avait « pas de catalogue » et qu'il fallait donc lui retirer
+// ses fournisseurs. C'ETAIT FAUX, et le depot l'a demontre : ses produits
+// SONT des produits catalogue Printful. `mockupsToProducts` (themes/shared)
+// emet `catalog-${catalog_product_id}::${variant_id}`, `pod-fulfill`
+// n'execute QUE des lignes `catalog-*`, et aucun site Mode 3 en production ne
+// possede le moindre `shop_products`. Vider ses fournisseurs aurait refuse
+// 100 % des ventes `pod_brand` au checkout. Six tests, dont le banc protege
+// A7, l'ont tue.
+//
+// LA VRAIE LIGNE N'EST PAS LE FOURNISSEUR, C'EST LA SOURCE DE LA SELECTION :
+//
+//   reseller, pod_custom -> les produits viennent de `site_catalog_selections`
+//                           (curation, approbation, recherche visiteur)
+//   pod_brand            -> les produits viennent de `sites.pod_designs[].mockups`
+//                           (mockups generes sur le design du marchand)
+//
+// Les DEUX aboutissent a des produits `catalog_products` et a des ids
+// `catalog-*`. Confondre « produit catalogue » et « selection catalogue »
+// est l'erreur qui a produit toute la divergence du LOT 2.
+//
+// POURQUOI ICI ET PAS DANS UN MODULE NEUF. C'est la MEME question que
+// `hasSupplierCatalog` -- « ce site a-t-il un catalogue a curer ? » -- posee
+// une granularite plus bas. Trois couches y repondaient deja correctement et
+// SEPAREMENT (`CATALOG_SUBTYPES` pour les outils, `shared.tsx` pour la
+// vitrine, `showsVisitorCatalogSearch` pour la barre de recherche) ; ce qui
+// manquait n'etait pas une autorite de plus, c'etait l'admission d'API. Elle
+// appartient a ce module, qui la porte deja pour le mode.
+//
+// CE QU'ELLE NE DECIDE PAS. Ni quels fournisseurs -- c'est
+// `suppliersForDropshipType`, qui reste INCHANGE et qui confine legitimement
+// `pod_brand` a Printful/Gelato (un `catalog_product_id` CJ force dans
+// `pod_designs`, colonne ecrivable par le marchand, y est refuse). Ni ce que
+// l'agent a le droit de faire -- c'est `CATALOG_SUBTYPES`.
+//
+// IMBRIQUEE, JAMAIS INDEPENDANTE : le sous-type n'est consulte qu'une fois le
+// mode admis. `dropship_type` ne decide jamais seul.
+// ============================================================
+
+/**
+ * Les sous-types dont les produits proviennent de `site_catalog_selections`.
+ *
+ * `pod_brand` en est absent : ses produits proviennent de ses mockups. Ce
+ * n'est pas une restriction qu'on lui impose, c'est une description de son
+ * pipeline -- et la raison pour laquelle les outils de curation ne lui ont
+ * jamais ete accordes.
+ */
+const CATALOG_SELECTION_SUBTYPES = new Set<unknown>(['reseller', 'pod_custom']);
+
+/**
+ * Ce site utilise-t-il le mecanisme `site_catalog_selections` ?
+ *
+ * FAIL-CLOSED sur les deux axes : un mode non admis, un sous-type absent,
+ * `null`, `''`, une valeur inconnue -- aucun n'ouvre le mecanisme. Deux
+ * allowlists positives, aucune negation.
+ */
+export function usesCatalogSelections(siteMode: unknown, dropshipType: unknown): boolean {
+  return hasSupplierCatalog(siteMode) && CATALOG_SELECTION_SUBTYPES.has(dropshipType);
+}

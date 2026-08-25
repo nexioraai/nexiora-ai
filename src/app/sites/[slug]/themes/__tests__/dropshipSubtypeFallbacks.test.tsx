@@ -111,20 +111,18 @@ describe('LOT 1 / L1-02 -- AUCUN repli silencieux ne subsiste dans les couches a
 });
 
 // ------------------------------------------------------------
-describe('LOT 1 -- FRONTIERE DE PERIMETRE : DEBT-048 reste OUVERTE', () => {
-  // Ce test n'est pas une garantie de qualite : c'est un CONSTAT verrouille.
-  // `AuroraTheme` porte deux problemes sur la meme ligne -- son repli
-  // (L1-02, corrige) et son absence de garde de mode (DEBT-048, LOT 2). Si
-  // une correction LOT 1 fermait DEBT-048 par effet de bord, la dette
-  // disparaitrait sans avoir ete examinee. Ce test echouera le jour ou le
-  // LOT 2 la traitera -- et ce jour-la, il devra etre reecrit sciemment.
-  it('page.tsx et preview gardent `mode === 3` ; AuroraTheme ne l\'a toujours pas', () => {
-    for (const f of ['src/app/sites/[slug]/page.tsx', 'src/app/preview/[slug]/page.tsx']) {
-      expect(sansCommentaires(lire(f))).toContain('site.mode === 3 && showsVisitorCatalogSearch');
+describe('LOT 2 / DEBT-048 -- LES TROIS MONTAGES PORTENT LA MEME GARDE', () => {
+  // CE TEST A CHANGE DE CAMP, ET C'ETAIT SA FONCTION. Au LOT 1 il verrouillait
+  // un CONSTAT -- « AuroraTheme n'a toujours pas sa garde de mode » -- pour
+  // qu'une correction de repli ne ferme pas DEBT-048 par effet de bord, sans
+  // examen. Le LOT 2 l'a examinee et corrigee : le constat est reecrit
+  // sciemment, en garantie.
+  it('les trois surfaces exigent `mode === 3` avant de consulter le sous-type', () => {
+    for (const f of [...MONTAGES]) {
+      expect(sansCommentaires(lire(f)), f).toMatch(
+        /site\.mode === 3 && showsVisitorCatalogSearch\(site\.dropship_type\)/
+      );
     }
-    const aurora = sansCommentaires(lire('src/app/sites/[slug]/themes/AuroraTheme.tsx'));
-    expect(aurora).toContain('isShop && showsVisitorCatalogSearch(site.dropship_type)');
-    expect(aurora).not.toContain('site.mode === 3');
   });
 
   it('la regle de rendu ne connait deliberement pas le mode', () => {

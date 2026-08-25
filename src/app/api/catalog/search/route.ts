@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { hasSupplierCatalog } from '@/lib/dropship/catalogAdmission';
+import { usesCatalogSelections } from '@/lib/dropship/catalogAdmission';
 import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
 import { calcSellPrice, sitePricing, resolveDisplayPrice } from '@/lib/pricing';
 
@@ -55,7 +55,20 @@ export async function GET(req: NextRequest) {
   // Un 403 aurait appris a un rodeur que le slug existe ; ce silence
   // n'apprend rien de plus qu'une boutique sans resultat.
   // ============================================================
-  if (!hasSupplierCatalog((site as { mode?: unknown }).mode)) {
+  // LOT 2 -- LA GARDE DESCEND DU MODE AU MECANISME.
+  //
+  // Elle ne regardait que le mode, donc `pod_brand` obtenait ici la recherche
+  // visiteur du catalogue Printful -- alors que ses produits viennent de ses
+  // mockups, que sa vitrine ne monte aucune barre de recherche
+  // (`showsVisitorCatalogSearch`) et que son agent n'a aucun outil de
+  // curation (`CATALOG_SUBTYPES`). Trois couches disaient deja non ; cette
+  // route repondait oui. AUCUN APPELANT LEGITIME N'EST TOUCHE : la barre
+  // n'est jamais montee pour lui.
+  //
+  // FORME DE REPONSE RIGOUREUSEMENT INCHANGEE (voir ci-dessus) : meme objet
+  // que le succes, simplement vide. Un 403 apprendrait a un rodeur que le
+  // slug existe.
+  if (!usesCatalogSelections((site as { mode?: unknown }).mode, (site as { dropship_type?: unknown }).dropship_type)) {
     return NextResponse.json({
       products: [],
       total: 0,

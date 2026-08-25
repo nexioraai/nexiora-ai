@@ -91,3 +91,45 @@ describe('POST /api/catalog/image-search — limite de débit anti-abus (action 
     expect(logAiUsageMock).toHaveBeenCalledWith(expect.objectContaining({ siteId: 'site-1', usageType: 'image' }));
   });
 });
+
+// ============================================================
+// LOT 2 -- LE CABLAGE DE L'ADMISSION, ENFIN COUVERT.
+//
+// LA MUTATION QUI SURVIVAIT. Retirer purement et simplement la garde
+// d'admission de cette route ne cassait AUCUN test : la primitive etait
+// testee comme FONCTION (`catalogAdmission.test.ts`), jamais comme CABLAGE.
+// Une garde non cablee est une garde absente.
+//
+// `pod_brand` est le cas qui compte : il A un catalogue fournisseur
+// (`hasSupplierCatalog(3)` est vrai, ses produits SONT des Printful), mais il
+// n'utilise PAS `site_catalog_selections`. Une garde de mode seule le laissait
+// donc passer.
+// ============================================================
+
+describe("POST /api/catalog/image-search — LOT 2 : meme admission que la recherche texte", () => {
+  it.each([
+    ['Mode 1', { ...SITE, mode: 1, dropship_type: null }],
+    ['Mode 2', { ...SITE, mode: 2, dropship_type: null }],
+    ['Mode 3 pod_brand', { ...SITE, dropship_type: 'pod_brand' }],
+    ['Mode 3 sans sous-type', { ...SITE, dropship_type: null }],
+  ])('%s -> reponse vide, et AUCUN appel Claude facture', async (_l, site) => {
+    fromMock.mockImplementation((t: string) => {
+      if (t === 'sites') return tableChain({ data: site, error: null });
+      return tableChain({ data: [], error: null, count: 0 });
+    });
+    const res = await POST(req({ slug: 'x', image: IMAGE }));
+    expect(await res.json()).toEqual({ products: [], keywords: '', total: 0 });
+    // La garde reste AVANT l'appel facture : c'est sa raison d'etre.
+    expect(messagesCreateMock).not.toHaveBeenCalled();
+    expect(logAiUsageMock).not.toHaveBeenCalled();
+  });
+
+  it('Mode 3 reseller -> l\'analyse procede (chemin legitime, non casse)', async () => {
+    fromMock.mockImplementation((t: string) => {
+      if (t === 'sites') return tableChain({ data: SITE, error: null });
+      return tableChain({ data: [], error: null, count: 0 });
+    });
+    await POST(req({ slug: 'x', image: IMAGE }));
+    expect(messagesCreateMock).toHaveBeenCalled();
+  });
+});

@@ -76,16 +76,31 @@ describe("POST /api/catalog/selections — N1/N2 : le produit ajouté doit appar
     expect(res.status).toBe(409);
   });
 
-  it("site pod_brand + produit CJ -> 409", async () => {
-    setup({ dropship_type: 'pod_brand' }, { supplier_id: 'cj' });
+  // LOT 2 -- CES DEUX CAS CHANGENT DE CODE, ET C'EST VOULU. Ils prouvaient
+  // le cloisonnement FOURNISSEUR sur des sous-types qui, depuis le LOT 2,
+  // n'atteignent plus ce controle : `pod_brand` n'utilise pas le mecanisme de
+  // selection, et un sous-type absent non plus. Le refus est desormais posé
+  // PLUS TOT (400) et il est plus fort. La preuve du cloisonnement
+  // fournisseur, elle, est conservee ci-dessous sur un sous-type qui atteint
+  // reellement ce controle -- sans quoi la correction du LOT 2 aurait efface
+  // une garantie en la deplacant.
+  it("site pod_custom + produit CJ -> 409 : le cloisonnement fournisseur reste prouve", async () => {
+    setup({ dropship_type: 'pod_custom' }, { supplier_id: 'cj' });
     const res = await POST(req({ slug: 'my-shop', catalogProductId: 'cp-1' }));
     expect(res.status).toBe(409);
   });
 
-  it("site null dropship_type + produit Printful (fallback reseller/CJ) -> 409", async () => {
+  it("site pod_brand -> 400 AVANT tout controle fournisseur : il n'utilise pas le mecanisme de selection", async () => {
+    setup({ dropship_type: 'pod_brand' }, { supplier_id: 'printful' });
+    const res = await POST(req({ slug: 'my-shop', catalogProductId: 'cp-1' }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe('Site non-dropshipping');
+  });
+
+  it("site sans sous-type -> 400 : ni mecanisme, ni fournisseur devine", async () => {
     setup({ dropship_type: null }, { supplier_id: 'printful' });
     const res = await POST(req({ slug: 'my-shop', catalogProductId: 'cp-1' }));
-    expect(res.status).toBe(409);
+    expect(res.status).toBe(400);
   });
 
   it("site reseller + produit CJ (cas légitime) -> 200, ajouté", async () => {
@@ -217,13 +232,18 @@ describe('CHANTIER 6 — avec admission, les quatre verbes fonctionnent', () => 
 });
 
 describe('CHANTIER 6 — INVARIANTS', () => {
-  it('les six routes catalogue interrogent toutes la MÊME primitive', async () => {
+  it('les cinq routes catalogue interrogent toutes la MÊME primitive', async () => {
+    // LOT 2 — LA PRIMITIVE COMMUNE DESCEND D'UN CRAN. Ce que ce cliquet
+    // protège — « une seule règle pour cinq routes, jamais cinq
+    // interprétations » — est inchangé ; c'est la règle qui est plus fine.
+    // `usesCatalogSelections` appelle `hasSupplierCatalog` : l'admission de
+    // mode reste la même autorité, complétée par le mécanisme de sélection.
     const { readFileSync } = await import('fs');
     const { join } = await import('path');
     const base = join(__dirname, '../../');
     for (const r of ['curate', 'search', 'image-search', 'enhance', 'selections']) {
       const src = readFileSync(join(base, r, 'route.ts'), 'utf-8');
-      expect(src, r).toContain('hasSupplierCatalog');
+      expect(src, r).toContain('usesCatalogSelections');
     }
   });
 

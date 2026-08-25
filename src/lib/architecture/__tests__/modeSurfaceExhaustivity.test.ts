@@ -122,7 +122,8 @@ const LECTEURS_TRANSITIFS: Record<string, string> = {
   'src/app/api/shop/promo/active/route.ts': 'fermeture Mode 1 volet 2 — idem : canTransact() décide qu’une vitrine ne sert aucun code promo, la route transmet.',
   'src/app/api/shop/promo/validate/route.ts': 'fermeture Mode 1 volet 2 — idem : canTransact() décide, la route transmet ; la garde précède l’écriture dans checkout_anomalies.',
   'src/app/api/agent/[slug]/apply/route.ts': 'fermeture Mode 1 volet 1 — lit `mode` et `dropship_type` pour les passer à toolNamesForSite() ; aucune comparaison de mode, la décision reste dans toolCapabilities.',
-  'src/app/sites/[slug]/produits/[id]/fetchProduct.ts': 'recopie `mode` dans l’objet de page ; aucune branche.',
+  'src/app/sites/[slug]/produits/[id]/fetchProduct.ts': 'LOT 2 — lit aussi `mode`/`dropship_type` pour interroger usesCatalogSelections() ; aucune comparaison, la décision reste dans catalogAdmission.',
+  'src/app/sitemap.ts': 'LOT 2 — lit `mode`/`dropship_type` pour les passer à usesCatalogSelections() ; aucune branche, la décision reste dans catalogAdmission.',
   'src/app/sites/[slug]/produits/[id]/page.tsx': 'passe `mode` en prop à CartShell ; aucune branche.',
   'src/app/sites/[slug]/themes/CartShell.tsx': 'passe `mode` à getModeCapabilities() et à CartDrawer ; la décision est ailleurs (étape A).',
   'src/app/sites/[slug]/themes/CartDrawer.tsx': 'consomme les capacités de getModeCapabilities() ; ne compare plus aucun mode (étape C).',
@@ -154,7 +155,16 @@ const LECTEURS_TRANSITIFS: Record<string, string> = {
 // (donc invisibles à ce cliquet, cf. DEBT-032) la posent désormais
 // explicitement — elles deviennent des lecteurs déclarés. Le compte MONTE ici
 // parce que le nombre de décisions implicites BAISSE.
-const PLAFOND_ALLOWLIST = 18
+// LOT 2 — RELEVEMENT DELIBERE : 18 -> 19.
+//
+// Une seule entree : `src/app/sitemap.ts`. Sa branche catalogue n'avait
+// AUCUNE garde -- elle publiait aux moteurs toute selection approuvee, y
+// compris celles d'un `pod_brand`, dont la vitrine refuse pourtant de les
+// afficher et dont la fiche produit est desormais refusee. Elle lit donc
+// maintenant `mode`/`dropship_type` pour les PASSER a `usesCatalogSelections`.
+// Meme patron que les huit entrees existantes -- l'autorite decide, le
+// fichier transmet -- et le niveau 2 le verifie independamment.
+const PLAFOND_ALLOWLIST = 19
 
 const TOUS = fichiersSource(SRC)
 const rel = (p: string) => relative(RACINE, p).split(sep).join('/')
@@ -364,7 +374,17 @@ describe('ÉTAPE 4 — R4 est réellement appliquée', () => {
     for (const f of ['src/app/api/catalog/curate/route.ts', 'src/app/api/catalog/image-search/route.ts']) {
       const code = sansCommentaires(f)
       expect(R4.test(code), f).toBe(false)
-      expect(code, `${f} passe désormais par la primitive`).toContain('hasSupplierCatalog(site.mode)')
+      // LOT 2 — LE NOM DE LA PRIMITIVE CHANGE, L'INVARIANT NON.
+      //
+      // Ce que ce cliquet protège est « la route DÉLÈGUE au lieu de comparer
+      // le mode en dur » — R4 juste au-dessus le vérifie, et il reste vrai.
+      // Ces deux routes appellent désormais `usesCatalogSelections`, qui
+      // appelle `hasSupplierCatalog` : la même autorité de mode, interrogée
+      // une granularité plus bas pour couvrir aussi le sous-type. La
+      // délégation n'est pas affaiblie, elle est resserrée.
+      expect(code, `${f} passe désormais par la primitive`).toMatch(
+        /\b(hasSupplierCatalog|usesCatalogSelections)\(site\.mode/
+      )
     }
   })
 })

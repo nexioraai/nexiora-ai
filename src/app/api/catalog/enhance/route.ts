@@ -3,7 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { logAiUsage } from '@/lib/ai-usage';
-import { hasSupplierCatalog } from '@/lib/dropship/catalogAdmission';
+import { usesCatalogSelections } from '@/lib/dropship/catalogAdmission';
 
 export const maxDuration = 45;
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
     // Sans ce controle, n'importe qui declenche des appels Claude payants
     // sur la boutique d'un autre.
-    const auth = await requireSiteOwner(req, slug, 'id, type, lang, mode');
+    const auth = await requireSiteOwner(req, slug, 'id, type, lang, mode, dropship_type');
     if (!auth.ok) return auth.response;
     const site = auth.site;
 
@@ -46,7 +46,9 @@ export async function POST(req: NextRequest) {
     // paire, un marchand ne doit pas recevoir deux refus differents pour la
     // meme cause.
     // ============================================================
-    if (!hasSupplierCatalog(site.mode)) {
+    // LOT 2 -- cette route MET A JOUR `site_catalog_selections` : meme
+    // admission que `curate`, dont elle est la suite immediate.
+    if (!usesCatalogSelections(site.mode, (site as { dropship_type?: unknown }).dropship_type)) {
       return NextResponse.json({ error: 'Site non-dropshipping' }, { status: 400 });
     }
 

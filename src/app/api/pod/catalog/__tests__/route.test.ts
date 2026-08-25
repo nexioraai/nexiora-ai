@@ -57,9 +57,45 @@ describe('GET /api/pod/catalog — LOT K : authentification obligatoire (expose 
   });
 
   it('propriétaire vérifié -> 200, le catalogue est bien interrogé', async () => {
-    requireSiteOwnerMock.mockResolvedValue({ ok: true, site: { id: 'site-1' } });
+    // LOT 2 -- `dropship_type` AJOUTE a la fixture, meme constat qu'ailleurs :
+    // elle decrivait un site sans sous-type, forme qui n'existe pas pour
+    // l'unique appelant reel de cette route (le bloc « Mes Designs POD » de
+    // l'editeur, rendu sous `pod_brand`). L'assertion de ce cas -- « le
+    // catalogue est bien interroge » -- est inchangee.
+    requireSiteOwnerMock.mockResolvedValue({ ok: true, site: { id: 'site-1', dropship_type: 'pod_brand' } });
     const res = await GET(req('?slug=boutique'));
     expect(res.status).toBe(200);
-    expect(requireSiteOwnerMock).toHaveBeenCalledWith(expect.anything(), 'boutique');
+    expect(requireSiteOwnerMock).toHaveBeenCalledWith(expect.anything(), 'boutique', expect.stringContaining('dropship_type'));
+  });
+});
+
+// ============================================================
+// LOT 2 -- LE CATALOGUE DE SUPPORTS EST RESERVE A `pod_brand`.
+//
+// La propriete seule ne suffisait pas : tout proprietaire de site pouvait
+// lister le catalogue Printful complet. Meme garde que `generate-mockups`,
+// l'autre moitie du meme mecanisme -- et son unique appelant reel est le
+// bloc « Mes Designs POD » de l'editeur, rendu sous `pod_brand`.
+// ============================================================
+async function appelAvecSite(site: Record<string, unknown>) {
+  requireSiteOwnerMock.mockResolvedValue({ ok: true, site });
+  return GET(req('?slug=ma-marque'));
+}
+
+describe('GET /api/pod/catalog — LOT 2 : reserve au mecanisme des supports POD', () => {
+  it.each([
+    ['Mode 3 reseller', 'reseller'],
+    ['Mode 3 pod_custom', 'pod_custom'],
+    ['sans sous-type', null],
+    ['sous-type inconnu', 'legacy_x'],
+  ])('proprietaire legitime mais %s -> 403, aucun catalogue fournisseur expose', async (_l, dt) => {
+    const res = await appelAvecSite({ id: 'site-1', dropship_type: dt });
+    expect(res.status).toBe(403);
+    expect(await res.json()).toEqual({ error: 'Cette action est réservée aux boutiques POD Brand.' });
+  });
+
+  it('INVARIANT B — un pod_brand conserve son catalogue de supports', async () => {
+    const res = await appelAvecSite({ id: 'site-1', dropship_type: 'pod_brand' });
+    expect(res.status).toBe(200);
   });
 });
