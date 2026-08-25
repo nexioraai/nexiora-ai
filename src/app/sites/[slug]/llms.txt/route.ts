@@ -1,6 +1,7 @@
 // src/app/sites/[slug]/llms.txt/route.ts
 import { fetchSite, resolveSiteBaseUrl, WOORRI_SITE_URL } from '../themes/shared'
 import { logAnomaly } from '@/lib/anomaly'
+import { getLlmsTxtLabels } from '@/lib/i18n/llmsTxtLabels'
 
 export async function GET(
   req: Request,
@@ -31,6 +32,20 @@ export async function GET(
   }
 
   const url = resolveSiteBaseUrl(site, req.headers.get('host'))
+
+  // CHANTIER 8 -- LES INTITULES SUIVENT LA LANGUE DU SITE.
+  //
+  // Les onze titres de structure de ce fichier etaient ecrits EN DUR EN
+  // FRANCAIS. Mesure sur yiaglobalcommodities.com (`lang = 'en'`, contenu
+  // integralement anglais) : le fichier servi aux crawlers LLM encadrait du
+  // texte anglais de titres francais. Ce fichier existe pour etre lu par des
+  // machines qui en tirent une comprehension du commerce -- lui faire
+  // annoncer une langue que le contenu ne parle pas est une erreur de fond.
+  //
+  // AUCUN CONTENU DU MARCHAND N'EST TRADUIT : seuls les intitules que ce
+  // fichier fabrique lui-meme changent. Le nom des sections reste celui que
+  // le site affiche (regle du chantier 1, inchangee).
+  const t = getLlmsTxtLabels(site.lang)
   const lines: string[] = []
 
   lines.push('# ' + site.name)
@@ -43,7 +58,7 @@ export async function GET(
   }
 
   if (site.about) {
-    lines.push('## À propos')
+    lines.push('## ' + t.about)
     lines.push(site.about)
     lines.push('')
   }
@@ -62,7 +77,7 @@ export async function GET(
     for (const sec of site.sections) {
       const items = Array.isArray(sec?.items) ? sec.items : []
       if (items.length === 0) continue
-      const titre = typeof sec?.name === 'string' && sec.name.trim() !== '' ? sec.name.trim() : 'Services'
+      const titre = typeof sec?.name === 'string' && sec.name.trim() !== '' ? sec.name.trim() : t.sectionFallback
       lines.push('## ' + titre)
       for (const it of items) {
         const label = it?.title ?? it?.name
@@ -73,7 +88,7 @@ export async function GET(
   }
 
   if (Array.isArray(site.products) && site.products.length > 0) {
-    lines.push('## Produits')
+    lines.push('## ' + t.products)
     for (const p of site.products) {
       if (p?.name) lines.push('- ' + p.name)
     }
@@ -82,19 +97,19 @@ export async function GET(
 
   // Mission / Vision
   if (site.mission) {
-    lines.push('## Notre mission')
+    lines.push('## ' + t.mission)
     lines.push(site.mission)
     lines.push('')
   }
   if (site.vision) {
-    lines.push('## Notre vision')
+    lines.push('## ' + t.vision)
     lines.push(site.vision)
     lines.push('')
   }
 
   // Pourquoi nous
   if (Array.isArray(site.whyus) && site.whyus.length > 0) {
-    lines.push('## Pourquoi nous choisir')
+    lines.push('## ' + t.whyUs)
     for (const w of site.whyus) {
       if (w?.title) {
         lines.push('### ' + w.title)
@@ -106,7 +121,7 @@ export async function GET(
 
   // Questions fréquentes
   if (Array.isArray(site.faq) && site.faq.length > 0) {
-    lines.push('## Questions fréquentes')
+    lines.push('## ' + t.faq)
     for (const f of site.faq) {
       if (f?.question) {
         lines.push('### ' + f.question)
@@ -118,7 +133,7 @@ export async function GET(
 
   // Zone desservie
   if (site.area_served) {
-    lines.push('## Zone desservie')
+    lines.push('## ' + t.areaServed)
     lines.push(site.area_served)
     lines.push('')
   }
@@ -127,21 +142,21 @@ export async function GET(
   const email = site.contact?.email
   const address = site.contact?.address
   if (phone || email || address) {
-    lines.push('## Contact')
-    if (phone) lines.push('- Téléphone : ' + phone)
-    if (email) lines.push('- Email : ' + email)
-    if (address) lines.push('- Adresse : ' + address)
+    lines.push('## ' + t.contact)
+    if (phone) lines.push('- ' + t.phone + ' : ' + phone)
+    if (email) lines.push('- ' + t.email + ' : ' + email)
+    if (address) lines.push('- ' + t.address + ' : ' + address)
     lines.push('')
   }
 
-  lines.push('## Site web')
+  lines.push('## ' + t.website)
   lines.push(url)
   lines.push('')
   lines.push('---')
   if (site.created_at) {
-    lines.push('Dernière mise à jour : ' + new Date(site.created_at).toISOString().split('T')[0])
+    lines.push(t.lastUpdated + ' : ' + new Date(site.created_at).toISOString().split('T')[0])
   }
-  lines.push('Site généré et hébergé par Deribfy — ' + WOORRI_SITE_URL)
+  lines.push(t.generatedBy + ' — ' + WOORRI_SITE_URL)
   lines.push('')
 
   return new Response(lines.join('\n'), {

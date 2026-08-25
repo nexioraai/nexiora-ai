@@ -141,6 +141,11 @@ export default defineConfig({
       // et l'allowlist de `price_range`. Prefixe absent : sans cette ligne,
       // leurs tests passent en isolation mais ne sont JAMAIS collectes.
       'src/lib/site-profile/**/*.test.ts',
+      // CHANTIER 8 -- src/app/api/internal/ n'avait AUCUNE couverture et
+      // son prefixe etait absent : le sitemap par site (seul fichier qui
+      // y vit) n'etait teste nulle part. Sans cette ligne, son test passe
+      // en isolation mais n'est JAMAIS collecte par `vitest run`.
+      'src/app/api/internal/**/*.test.ts',
       'src/lib/agent-tools/**/*.test.ts',
       'src/app/api/agent/**/*.test.ts',
       // CHANTIER 4 -- variante `.tsx` AJOUTEE. Le prefixe ci-dessus ne

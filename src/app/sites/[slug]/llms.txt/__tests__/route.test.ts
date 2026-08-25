@@ -113,17 +113,144 @@ describe('CHANTIER 1 — la colonne legacy n’est plus publiée', () => {
 });
 
 describe('CHANTIER 1 — non-régression du reste du fichier', () => {
+  // CHANTIER 8 — CE TEST GARDE SON INTENTION, IL CHANGE D'ANCRE.
+  //
+  // Il vérifiait que le bloc à-propos est publié, et s'ancrait pour cela sur
+  // « ## À propos » — un intitulé écrit en dur en français que le chantier 8
+  // supprime. La fixture n'a pas de `lang` : le fichier retombe désormais sur
+  // l'anglais, comme `getDict` le fait déjà pour la page elle-même. On ancre
+  // donc sur le CONTENU publié, qui est ce que le test veut réellement
+  // constater, et l'intitulé est vérifié pour ce qu'il est — une traduction —
+  // dans les tests dédiés du chantier 8.
   it('le nom, le slogan et l’à-propos restent publiés', async () => {
     const t = await corps();
     expect(t).toContain('# YIA Global Commodities');
     expect(t).toContain('Premium Chadian Commodities');
-    expect(t).toContain('## À propos');
+    expect(t).toContain('Bridges Chad producers with North American manufacturers.');
+    expect(t).toMatch(/^## (À propos|About)$/m);
   });
 
   it('INVARIANT MODE 1 — aucun vocabulaire commercial n’apparaît', async () => {
     const t = await corps();
     for (const interdit of ['panier', 'Ajouter au panier', 'checkout', '/produits/']) {
       expect(t, interdit).not.toContain(interdit);
+    }
+  });
+});
+
+// ============================================================
+// CHANTIER 8 (MODE 1) — LE FICHIER PARLE LA LANGUE DU SITE.
+//
+// Onze intitulés étaient écrits EN DUR EN FRANÇAIS. Mesuré sur
+// yiaglobalcommodities.com (`lang = 'en'`, contenu intégralement anglais) :
+// le fichier servi aux crawlers LLM encadrait du texte anglais de titres
+// français — « ## À propos », « ## Questions fréquentes », « - Téléphone : ».
+// Ce fichier existe pour être lu par des machines qui en tirent une
+// compréhension du commerce.
+//
+// Ces tests exercent la ROUTE, sur le texte réellement servi.
+// ============================================================
+
+/** Ce que le fichier doit porter, langue par langue, sur le site de YIA. */
+const ATTENDUS: Record<string, string[]> = {
+  en: ['## About', '## Frequently asked questions', '## Why choose us', '- Phone : ', '## Area served', 'Last updated : '],
+  fr: ['## À propos', '## Questions fréquentes', '## Pourquoi nous choisir', '- Téléphone : ', '## Zone desservie', 'Dernière mise à jour : '],
+  es: ['## Acerca de', '## Preguntas frecuentes', '## Por qué elegirnos', '- Teléfono : ', '## Zona de servicio', 'Última actualización : '],
+  ar: ['## نبذة عنا', '## الأسئلة الشائعة', '## لماذا تختارنا', '- الهاتف : ', '## منطقة الخدمة', 'آخر تحديث : '],
+};
+
+describe('CHANTIER 8 — les intitulés suivent site.lang', () => {
+  for (const [lang, attendus] of Object.entries(ATTENDUS)) {
+    it(`« ${lang} » : le fichier porte ses propres intitulés`, async () => {
+      // `created_at` fourni : sans lui la ligne « dernière mise à jour »
+      // n'est pas émise du tout, et l'assertion porterait sur rien.
+      siteRow = { ...siteRow, lang, created_at: '2026-01-15T00:00:00.000Z', faq: [{ question: 'MOQ?', answer: '500 kg.' }], whyus: [{ title: 'T', text: 'X' }], area_served: 'Chad', contact: { phone: '+1' } };
+      const t = await corps();
+      for (const a of attendus) expect(t, `${lang} : « ${a} » absent`).toContain(a);
+    });
+  }
+
+  it('🔴 LE CAS YIA : un site anglais ne reçoit AUCUN intitulé français', async () => {
+    siteRow = { ...siteRow, lang: 'en', created_at: '2026-01-15T00:00:00.000Z', mission: 'M', vision: 'V', products: [{ name: 'P' }], faq: [{ question: 'MOQ?', answer: '500 kg.' }], whyus: [{ title: 'T', text: 'X' }], area_served: 'Chad', contact: { phone: '+1', email: 'a@b.c', address: 'X' } };
+    const t = await corps();
+    for (const francais of ['## À propos', '## Questions fréquentes', '## Pourquoi nous choisir',
+                            '## Zone desservie', '## Notre mission', '## Produits', '## Site web',
+                            '- Téléphone', '- Adresse', 'Dernière mise à jour']) {
+      expect(t, `intitulé français survivant : « ${francais} »`).not.toContain(francais);
+    }
+  });
+
+  it('🔴 les quatre langues produisent quatre fichiers DISTINCTS', async () => {
+    const vus = new Set<string>();
+    for (const lang of ['en', 'fr', 'es', 'ar']) {
+      siteRow = { ...siteRow, lang };
+      vus.add(await corps());
+    }
+    expect(vus.size, 'le fichier ne dépend pas de la langue').toBe(4);
+  });
+
+  it('une langue inconnue, vide ou absente retombe sur l’anglais', async () => {
+    for (const lang of ['de', 'zz', '', null, undefined]) {
+      siteRow = { ...siteRow, lang };
+      const t = await corps();
+      expect(t, String(lang)).toContain('## About');
+      expect(t, String(lang)).not.toContain('## À propos');
+    }
+  });
+
+  it('une variante régionale est normalisée comme sur la page', async () => {
+    siteRow = { ...siteRow, lang: 'fr-FR' };
+    expect(await corps()).toContain('## À propos');
+  });
+});
+
+describe('CHANTIER 8 — AUCUN contenu du marchand n’est traduit', () => {
+  it('le nom des sections reste celui que le site affiche — règle du chantier 1 intacte', async () => {
+    siteRow = { ...siteRow, lang: 'ar', sections: [{ name: 'Our Products', items: [{ title: 'Sesame Seeds Grade A' }] }] };
+    const t = await corps();
+    expect(t, 'le nom de section a été traduit').toContain('## Our Products');
+    expect(t).toContain('- Sesame Seeds Grade A');
+  });
+
+  it('le texte du marchand traverse intact, quelle que soit la langue', async () => {
+    for (const lang of ['en', 'fr', 'es', 'ar']) {
+      siteRow = {
+        ...siteRow, lang,
+        about: 'Bridges Chad producers with North American manufacturers.',
+        faq: [{ question: 'What are the minimum order quantities?', answer: 'Sesame from 500 kg.' }],
+      };
+      const t = await corps();
+      expect(t, lang).toContain('Bridges Chad producers with North American manufacturers.');
+      expect(t, lang).toContain('What are the minimum order quantities?');
+      expect(t, lang).toContain('Sesame from 500 kg.');
+    }
+  });
+
+  it('une section SANS nom retombe sur un libellé traduit, jamais sur « undefined »', async () => {
+    for (const [lang, attendu] of [['en', '## Services'], ['es', '## Servicios'], ['ar', '## الخدمات']] as const) {
+      siteRow = { ...siteRow, lang, sections: [{ items: [{ title: 'Une offre' }] }] };
+      const t = await corps();
+      expect(t, lang).toContain(attendu);
+      expect(t, lang).not.toContain('undefined');
+    }
+  });
+});
+
+describe('CHANTIER 8 — INVARIANTS MODE 1', () => {
+  it('🔴 aucun vocabulaire commercial n’apparaît, dans AUCUNE des quatre langues', async () => {
+    for (const lang of ['en', 'fr', 'es', 'ar']) {
+      siteRow = { ...siteRow, lang, mode: 1, products: [] };
+      const t = await corps();
+      for (const interdit of ['panier', 'Ajouter au panier', 'checkout', '/produits/', 'Add to cart', 'Carrito', 'سلة']) {
+        expect(t, `${lang} / ${interdit}`).not.toContain(interdit);
+      }
+    }
+  });
+
+  it('la mention de plateforme est traduite mais nomme toujours Deribfy', async () => {
+    for (const lang of ['en', 'fr', 'es', 'ar']) {
+      siteRow = { ...siteRow, lang };
+      expect(await corps(), lang).toContain('Deribfy');
     }
   });
 });

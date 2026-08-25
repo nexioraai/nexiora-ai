@@ -75,6 +75,35 @@ const DICT: Record<string, CartLabels> = {
   },
 };
 
-export function getCartLabels(lang?: string): CartLabels {
-  return DICT[lang ?? 'fr'] ?? DICT.en;
+/** Expose pour le cliquet : ce dictionnaire ne doit couvrir que le contrat. */
+export const CART_LABEL_CODES: readonly string[] = Object.keys(DICT);
+
+// ============================================================
+// CHANTIER 8 (MODE 1) -- LE PANIER SUIT ENFIN LA MEME REGLE QUE LA PAGE.
+//
+// L'ASYMETRIE MESUREE. Deux fonctions decidaient de la langue d'une meme
+// page, et elles ne disaient pas la meme chose :
+//
+//   getDict(lang)        (i18n.ts:480)  (lang || 'en').slice(0, 2).toLowerCase()
+//   getCartLabels(lang)  (ici, avant)   DICT[lang ?? 'fr']
+//
+// Deux divergences, toutes deux atteignables :
+//   * AUCUNE NORMALISATION. Une valeur historique `'fr-FR'` ou `'FR'` --
+//     formes que la porte d'ecriture du chantier 3 refuse mais que la base
+//     peut porter -- donnait une page en FRANCAIS (getDict normalise) et un
+//     panier en ANGLAIS (repli). Sur la meme page, au meme instant.
+//   * REPLI DIFFERENT. `lang` absent donnait une page en ANGLAIS et un
+//     panier en FRANCAIS.
+//
+// `getDict` est l'autorite de ce que la page rend ; le panier s'y aligne,
+// mot pour mot. Il ne s'agit pas d'harmoniser par gout : deux reponses
+// differentes a la meme question sur la meme page sont un defaut.
+//
+// CE QUE CELA CHANGE, DIT SANS DETOUR : un site dont `lang` est NULL voyait
+// un panier francais, il verra un panier anglais -- comme le reste de sa
+// page depuis toujours.
+// ============================================================
+export function getCartLabels(lang?: unknown): CartLabels {
+  const code = (typeof lang === 'string' ? lang : 'en').slice(0, 2).toLowerCase();
+  return DICT[code] || DICT.en;
 }
