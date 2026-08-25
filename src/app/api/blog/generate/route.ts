@@ -33,7 +33,18 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 /** Une minute, comme la limite deja en place sur `catalog/image-search`. */
 const FENETRE_MS = 60_000;
-/** Un administrateur ne redige pas dix articles par minute ; une boucle, si. */
+/**
+ * Un administrateur ne redige pas dix articles par minute ; une boucle, si.
+ *
+ * CE QUE CETTE LIMITE NE FAIT PAS, ET IL FAUT LE DIRE : elle n'est PAS
+ * atomique. Deux requetes simultanees peuvent lire le meme compteur avant que
+ * l'une ou l'autre n'ait trace sa depense, et passer toutes les deux. Elle
+ * borne une boucle, pas une rafale parallele. Rendre le comptage atomique
+ * exigerait une reservation en base (meme patron que la consommation de
+ * `design_uploads`) -- ce n'est pas necessaire ici : la route est desormais
+ * reservee aux administrateurs de la plateforme, ou le risque est l'erreur
+ * de script, pas l'attaque distribuee.
+ */
 const PLAFOND_PAR_MINUTE = 3;
 /** Un sujet d'article, pas un prompt. Borne la surface d'injection. */
 const TOPIC_MAX = 200;
@@ -55,12 +66,28 @@ export async function POST(req: NextRequest) {
     // n'appartient a aucun site : les lignes portent `site_id = null`, et le
     // comptage se fait sur ce meme critere. Aucune table nouvelle.
     const depuis = new Date(Date.now() - FENETRE_MS).toISOString();
-    const { count: recents } = await supabaseAdmin
+    const { count: recents, error: erreurCompteur } = await supabaseAdmin
       .from("ai_usage_log")
       .select("id", { count: "exact", head: true })
       .is("site_id", null)
       .eq("usage_type", "blog")
       .gte("created_at", depuis);
+    // AUDIT AGRESSIF DU LOT 6 -- FAILLE TROUVEE DANS LE PREMIER TOUR, ET
+    // DEMONTREE PAR EXECUTION : l'`error` de cette requete n'etait pas lu.
+    // supabase-js rend alors `count: null`, et `(null ?? 0) >= 3` vaut FAUX --
+    // la requete poursuivait donc, et l'appel Claude FACTURE avait lieu. Une
+    // panne de base transformait silencieusement la limite en « illimitee ».
+    //
+    // C'est exactement la forme que ce chantier proscrit : une garde presente
+    // mais qui ne s'applique pas. Sur une protection de DEPENSE, l'incertitude
+    // doit couter un refus, jamais une facture. 503 : c'est une indisponibilite
+    // du serveur, pas une faute de l'appelant.
+    if (erreurCompteur) {
+      return NextResponse.json(
+        { error: "Service momentanement indisponible." },
+        { status: 503 }
+      );
+    }
     if ((recents ?? 0) >= PLAFOND_PAR_MINUTE) {
       return NextResponse.json(
         { error: "Trop de requetes, reessayez dans une minute." },
