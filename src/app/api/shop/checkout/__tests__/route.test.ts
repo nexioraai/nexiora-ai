@@ -1611,3 +1611,149 @@ describe('PHASE 4 — D2 : Mode 2 n’admet aucun produit du catalogue fournisse
     expect(createCheckoutMock).toHaveBeenCalled();
   });
 });
+
+// ============================================================
+// LOT 5 / P5-02 + P5-04 -- LES GARDES DU DESIGN, MESUREES SUR UNE TABLE
+// QUI HONORE REELLEMENT SES FILTRES.
+//
+// Le harnais precedent faisait `chain.eq = vi.fn(() => chain)` : il
+// enregistrait l'appel mais n'en tenait AUCUN compte. Retirer
+// `.eq('site_id', …)` ou `.is('consumed_at', null)` etait donc invisible --
+// mutations V2, V4 et V5, toutes survivantes. Un mock qui ignore les filtres
+// ne peut pas detecter la disparition d'un filtre.
+//
+// Cette table modelisee applique reellement les filtres recus, comme
+// PostgREST : c'est ce qui rend les gardes observables.
+// ============================================================
+type LigneDesign = { id: string; site_id: string; public_url: string; consumed_at: string | null };
+
+function tableDesignUploads(lignes: LigneDesign[], options: { consommeeParUnConcurrent?: boolean } = {}) {
+  return () => {
+    const chain: any = {};
+    const filtres: [string, unknown][] = [];
+    let modeUpdate = false;
+    let charge: Record<string, unknown> | null = null;
+    const correspond = (l: LigneDesign) =>
+      filtres.every(([col, val]) => (l as unknown as Record<string, unknown>)[col] === val);
+    chain.eq = (col: string, val: unknown) => { filtres.push([col, val]); return chain; };
+    chain.is = (col: string, val: unknown) => { filtres.push([col, val]); return chain; };
+    chain.update = (p: Record<string, unknown>) => { modeUpdate = true; charge = p; return chain; };
+    chain.select = () => {
+      if (!modeUpdate) return chain;
+      const touchees = lignes.filter(correspond);
+      // UPDATE ... RETURNING : les lignes reellement modifiees, et elles le sont.
+      touchees.forEach((l) => Object.assign(l, charge));
+      return { then: (resolve: (v: unknown) => void) => resolve({ data: touchees.map((l) => ({ id: l.id })), error: null }) };
+    };
+    chain.maybeSingle = async () => {
+      const trouve = lignes.find(correspond) ?? null;
+      const reponse = { data: trouve ? { consumed_at: trouve.consumed_at } : null, error: null };
+      // COURSE MODELISEE : une commande concurrente consomme la ligne JUSTE
+      // APRES la validation. C'est le seul etat ou l'atomicite de la
+      // reclamation (`.is('consumed_at', null)`) devient observable -- sans
+      // lui, la ligne serait consommee DEUX fois.
+      if (options.consommeeParUnConcurrent && trouve && !trouve.consumed_at) {
+        trouve.consumed_at = '2026-01-01T00:00:00Z';
+      }
+      return reponse;
+    };
+    return chain;
+  };
+}
+
+describe('LOT 5 — le design d\'un site, non consomme, et rien d\'autre', () => {
+  const SITE = { ...SITE_MODE3, dropship_type: 'pod_custom', id: 'site-A' };
+  const URL_A = 'https://storage.test/custom-designs/a.png';
+  const URL_B = 'https://storage.test/custom-designs/b.png';
+
+  function setup(lignes: LigneDesign[], options: { consommeeParUnConcurrent?: boolean } = {}) {
+    const generic = setupTables({
+      sites: { data: SITE, error: null },
+      catalog_products: { data: [{ id: 'cp-1', supplier_product_id: 'sp-1', price: 20, currency: 'usd', supplier_id: 'printful' }], error: null },
+      site_catalog_selections: { data: null, error: null },
+      shipping_cache: { data: [{ supplier_product_id: 'sp-1', shipping_cost: 5, days_min: 10, days_max: 20, tiers: null }], error: null },
+      shop_orders: { data: { id: 'order-1' }, error: null },
+      shop_order_items: { data: [{ id: 'item-1' }], error: null },
+      order_item_designs: { data: [{ id: 'd-1' }], error: null },
+    });
+    // Meme patron de delegation que `setupWithDesign` ci-dessus : on capture
+    // le dispatch generique et on n'intercepte que `design_uploads`.
+    const genericImpl = fromMock.getMockImplementation()!;
+    const fabrique = tableDesignUploads(lignes, options);
+    fromMock.mockImplementation((t: string) => (t === 'design_uploads' ? fabrique() : genericImpl(t)));
+    return generic;
+  }
+
+  const achat = (designUrl?: string) =>
+    POST(req({
+      slug: 'boutique', countryCode: 'US',
+      items: [{ id: 'catalog-cp-1', quantity: 1, name: 'T', ...(designUrl ? { customDesignUrl: designUrl } : {}) }],
+    }));
+
+  it('P5-02 — AUCUN design -> 409, aucune commande : un support pod_custom n\'est pas vendable nu', async () => {
+    const chains = setup([{ id: 'du-1', site_id: 'site-A', public_url: URL_A, consumed_at: null }]);
+    const res = await achat();
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toBe('Un design est requis pour ce produit.');
+    expect(chains.get('shop_orders')).toBeUndefined();
+    expect(logAnomalyMock).toHaveBeenCalledWith(expect.objectContaining({ type: 'custom_design_missing' }));
+  });
+
+  it('design VALIDE du meme site -> la vente aboutit et le design est consomme', async () => {
+    const lignes: LigneDesign[] = [{ id: 'du-1', site_id: 'site-A', public_url: URL_A, consumed_at: null }];
+    setup(lignes);
+    const res = await achat(URL_A);
+    expect(res.status).toBe(200);
+    expect(lignes[0].consumed_at).not.toBeNull();
+  });
+
+  it('V2 — design appartenant a un AUTRE site -> 409, jamais accepte', async () => {
+    const lignes: LigneDesign[] = [{ id: 'du-2', site_id: 'site-B', public_url: URL_B, consumed_at: null }];
+    setup(lignes);
+    const res = await achat(URL_B);
+    expect(res.status).toBe(409);
+    expect(logAnomalyMock).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'custom_design_invalid_or_reused' })
+    );
+    // Et surtout : la ligne de l'autre site n'a PAS ete consommee.
+    expect(lignes[0].consumed_at).toBeNull();
+  });
+
+  it('V3 — design DEJA consomme -> 409, usage unique', async () => {
+    setup([{ id: 'du-1', site_id: 'site-A', public_url: URL_A, consumed_at: '2026-01-01T00:00:00Z' }]);
+    expect((await achat(URL_A)).status).toBe(409);
+  });
+
+  it('URL forgee, jamais televersee -> 409', async () => {
+    setup([{ id: 'du-1', site_id: 'site-A', public_url: URL_A, consumed_at: null }]);
+    expect((await achat('https://evil.example/vole.png')).status).toBe(409);
+  });
+
+  it('V4 — COURSE : la ligne est consommee entre validation et reclamation -> design OMIS, jamais consomme deux fois', async () => {
+    // La reclamation est un CAS atomique : `UPDATE … WHERE consumed_at IS NULL`.
+    // Sans lui, la meme ligne serait reclamee par DEUX commandes.
+    const lignes: LigneDesign[] = [{ id: 'du-1', site_id: 'site-A', public_url: URL_A, consumed_at: null }];
+    const chains = setup(lignes, { consommeeParUnConcurrent: true });
+    const res = await achat(URL_A);
+    expect(res.status).toBe(200);
+    // Le design du concurrent n'est PAS vole : aucune ligne order_item_designs.
+    expect(chains.get('order_item_designs')).toBeUndefined();
+    expect(logAnomalyMock).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'custom_design_consume_race_lost' })
+    );
+    // Et l'horodatage du concurrent n'a pas ete ecrase.
+    expect(lignes[0].consumed_at).toBe('2026-01-01T00:00:00Z');
+  });
+
+  it('V4/V5 — la consommation ne touche QUE la ligne du bon site, et seulement si libre', async () => {
+    const lignes: LigneDesign[] = [
+      { id: 'du-A', site_id: 'site-A', public_url: URL_A, consumed_at: null },
+      { id: 'du-B', site_id: 'site-B', public_url: URL_A, consumed_at: null }, // meme URL, autre site
+    ];
+    setup(lignes);
+    expect((await achat(URL_A)).status).toBe(200);
+    expect(lignes[0].consumed_at).not.toBeNull();
+    // La ligne homonyme d'un AUTRE site reste intacte.
+    expect(lignes[1].consumed_at).toBeNull();
+  });
+});

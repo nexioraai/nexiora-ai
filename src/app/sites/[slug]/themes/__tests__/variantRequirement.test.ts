@@ -138,6 +138,20 @@ describe('LOT 4 / R4-02 — les TROIS surfaces consomment la meme regle', () => 
   ])('%s transmet le VRAI signal, jamais une constante', (f, expression) => {
     expect(lire(f)).toContain(`requiresVariant: ${expression}`);
   });
+
+  // LOT 5 -- MEME LIMITE, MEME HONNETETE. `ProductModal` est rendu par
+  // `createPortal` et rend `null` tant que sa cible de portail n'existe pas :
+  // `renderToStaticMarkup` ne peut donc pas l'observer, et ce depot n'a ni
+  // jsdom ni testing-library. La fiche produit, elle, EST observable et son
+  // comportement est teste au rendu reel (`ProductPageView.test.tsx`).
+  // Ce cliquet couvre la seule surface non rendable.
+  it('ProductModal transmet le VRAI signal de design, jamais une constante', () => {
+    expect(lire('src/app/sites/[slug]/themes/ProductModal.tsx')).toContain('designRequis: isPodCustom');
+  });
+
+  it('la fiche produit transmet le VRAI signal de design', () => {
+    expect(lire('src/app/sites/[slug]/produits/[id]/ProductPageView.tsx')).toContain('designRequis: product.requiresDesign');
+  });
 });
 
 describe('LOT 4 / R4-02 — le signal remonte bien de la BASE jusqu\'aux surfaces', () => {
@@ -152,5 +166,44 @@ describe('LOT 4 / R4-02 — le signal remonte bien de la BASE jusqu\'aux surface
     const src = lire(f);
     expect(src).toContain('supplier_parent_id');
     expect(src).toMatch(/requires?_?[Vv]ariant:\s*!/);
+  });
+});
+
+// ============================================================
+// LOT 5 / P5-02 -- UN SUPPORT `pod_custom` N'EST PAS ACHETABLE NU.
+//
+// Decision produit actee : le design est OBLIGATOIRE. Ni l'UI ni le serveur
+// ne l'interdisaient -- ils ne l'exigeaient pas -- et `pod-fulfill` envoyait
+// alors `files: []` : le fournisseur fabriquait un BLANC, aux frais de la
+// plateforme qui avance le cout.
+// ============================================================
+describe('LOT 5 / P5-02 — le design obligatoire', () => {
+  const POD_CUSTOM = { requiresVariant: false, designRequis: true };
+
+  it('design REQUIS et AUCUN fourni -> achat impossible', () => {
+    expect(achatPossible({ ...POD_CUSTOM, variantesConnues: 0, varianteChoisie: null, chargementEnCours: false, designsFournis: 0 })).toBe(false);
+  });
+
+  it('design REQUIS et champ absent -> achat impossible (fail-closed)', () => {
+    expect(achatPossible({ ...POD_CUSTOM, variantesConnues: 0, varianteChoisie: null, chargementEnCours: false })).toBe(false);
+  });
+
+  it('design REQUIS et un design fourni -> achat possible', () => {
+    expect(achatPossible({ ...POD_CUSTOM, variantesConnues: 0, varianteChoisie: null, chargementEnCours: false, designsFournis: 1 })).toBe(true);
+  });
+
+  it('le design ne dispense JAMAIS du choix de variante quand elle est exigee', () => {
+    expect(achatPossible({ requiresVariant: true, designRequis: true, designsFournis: 2, variantesConnues: 4, varianteChoisie: null, chargementEnCours: false })).toBe(false);
+    expect(achatPossible({ requiresVariant: true, designRequis: true, designsFournis: 2, variantesConnues: 4, varianteChoisie: 'v1', chargementEnCours: false })).toBe(true);
+  });
+
+  it('NON-REGRESSION — un sous-mode sans design requis est inchange', () => {
+    for (const dr of [false, undefined]) {
+      expect(achatPossible({ requiresVariant: false, designRequis: dr, designsFournis: 0, variantesConnues: 0, varianteChoisie: null, chargementEnCours: false })).toBe(true);
+    }
+  });
+
+  it('le chargement prime toujours : aucune fenetre de clic', () => {
+    expect(achatPossible({ ...POD_CUSTOM, variantesConnues: 0, varianteChoisie: null, chargementEnCours: true, designsFournis: 3 })).toBe(false);
   });
 });

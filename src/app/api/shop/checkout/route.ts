@@ -460,6 +460,32 @@ export async function POST(req: Request) {
           const urls = Array.isArray(item.customDesigns) && item.customDesigns.length > 0
             ? item.customDesigns.map((d: any) => d?.url).filter((u: unknown): u is string => typeof u === 'string' && u.length > 0)
             : (typeof item.customDesignUrl === 'string' && item.customDesignUrl ? [item.customDesignUrl] : []);
+          // ============================================================
+          // LOT 5 / P5-02 -- UN SUPPORT `pod_custom` N'EST PAS VENDABLE NU.
+          //
+          // Cette branche ne validait que les URL PRESENTES : un panier sans
+          // design traversait la boucle vide, la commande etait creee, et
+          // `pod-fulfill` envoyait `files: []` -- le fournisseur fabriquait un
+          // BLANC, aux frais de la plateforme qui avance le cout. Ni l'UI ni
+          // le serveur ne l'interdisaient ; ils ne l'exigeaient simplement
+          // pas. La guidance du sous-mode dit pourtant « uploads their own
+          // image BEFORE adding to cart ».
+          //
+          // DECISION PRODUIT ACTEE : le design est OBLIGATOIRE. La garde est
+          // posee ICI, cote serveur, donc incontournable -- un panier forge,
+          // un appel direct a cette route ou une UI contournee y echouent
+          // tous. Le miroir client (`achatPossible`) ne fait qu'eviter
+          // d'offrir un bouton que ce refus sanctionnerait.
+          // ============================================================
+          if (urls.length === 0) {
+            await logAnomaly({
+              type: 'custom_design_missing',
+              siteId: site.id,
+              slug,
+              details: { itemId: item.id },
+            });
+            return NextResponse.json({ error: 'Un design est requis pour ce produit.' }, { status: 409 });
+          }
           for (const designUrl of urls) {
             const { data: design } = await supabaseAdmin
               .from('design_uploads')

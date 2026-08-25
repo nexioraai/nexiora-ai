@@ -28,9 +28,27 @@ export async function POST(req: Request) {
     if (!file) return NextResponse.json({ error: 'No file' }, { status: 400 });
     if (typeof slug !== 'string' || !slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
 
+    // ============================================================
+    // LOT 5 / P5-01 -- CETTE ROUTE REFUSAIT TOUT LE MONDE.
+    //
+    // La projection ne demandait que `id`, et la garde juste en dessous lit
+    // `site.mode`. PostgREST ne renvoie QUE les colonnes demandees : `mode`
+    // valait donc toujours `undefined`, et `canTransact` -- allowlist
+    // POSITIVE, correcte -- rendait `false`. Resultat : 403 « Ce site est une
+    // vitrine » pour un site Mode 3 parfaitement legitime, donc TOUTE la
+    // chaine de design de `pod_custom` etait morte. Corrobore par la
+    // production : `design_uploads` compte 0 ligne dans toute la base.
+    //
+    // LE TEST NE POUVAIT PAS LE VOIR : son harnais faisait `b.select = () => b`,
+    // ignorait la liste de colonnes et rendait `{ id, mode: 2 }`. Un mock plus
+    // permissif que le vrai systeme -- il est corrige avec ce lot.
+    //
+    // `canTransact` n'est PAS modifiee : l'autorite etait juste, c'est son
+    // appelant qui ne lui donnait pas la donnee.
+    // ============================================================
     const { data: site } = await supabaseAdmin
       .from('sites')
-      .select('id')
+      .select('id, mode')
       .eq('slug', slug)
       .is('archived_at', null)
       .maybeSingle();

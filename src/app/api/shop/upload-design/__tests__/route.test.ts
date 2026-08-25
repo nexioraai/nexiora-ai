@@ -8,6 +8,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // checkout/route.ts).
 
 const siteSelectMock = vi.fn();
+/** LOT 5 -- la projection reellement demandee, et les filtres reellement poses. */
+let colonnesDemandees = '';
+const filtres: [string, unknown][] = [];
 const storageUploadMock = vi.fn();
 const getPublicUrlMock = vi.fn();
 const designInsertMock = vi.fn();
@@ -15,11 +18,32 @@ const designInsertMock = vi.fn();
 function makeFrom() {
   return vi.fn((table: string) => {
     if (table === 'sites') {
+      // ============================================================
+      // LOT 5 / P5-01 -- CE HARNAIS MENTAIT, ET IL A MASQUE UNE PANNE TOTALE.
+      //
+      // `b.select = () => b` ignorait la liste de colonnes et le fixture
+      // rendait `{ id, mode: 2 }`. La route, elle, ne demandait que `id` :
+      // en production `site.mode` valait `undefined` et la route refusait
+      // TOUT LE MONDE en 403. Un mock plus permissif que PostgREST rend
+      // indetectable exactement la classe de defaut qu'il devrait attraper.
+      //
+      // La projection est desormais HONOREE : seules les colonnes reellement
+      // demandees sont rendues, comme PostgREST. Les filtres sont captures
+      // pour que leur retrait soit observable.
+      // ============================================================
       const b: any = {};
-      b.select = () => b;
-      b.eq = () => b;
-      b.is = () => b;
-      b.maybeSingle = async () => siteSelectMock();
+      b.select = (cols?: string) => { colonnesDemandees = typeof cols === 'string' ? cols : ''; return b; };
+      b.eq = (col: string, val: unknown) => { filtres.push([col, val]); return b; };
+      b.is = (col: string, val: unknown) => { filtres.push([col, val]); return b; };
+      b.maybeSingle = async () => {
+        const { data, error } = await siteSelectMock();
+        if (!data) return { data, error };
+        const projete: Record<string, unknown> = {};
+        for (const c of colonnesDemandees.split(',').map((x) => x.trim()).filter(Boolean)) {
+          if (c in data) projete[c] = data[c];
+        }
+        return { data: projete, error };
+      };
       return b;
     }
     if (table === 'design_uploads') {
@@ -60,6 +84,8 @@ function makeRequest(fields: { file?: { name: string; type: string; size: number
 }
 
 beforeEach(() => {
+  colonnesDemandees = '';
+  filtres.length = 0;
   fromMock = makeFrom();
   siteSelectMock.mockReset().mockResolvedValue({ data: { id: 'site-1', mode: 2 }, error: null });
   storageUploadMock.mockReset().mockResolvedValue({ data: {}, error: null });
@@ -120,5 +146,49 @@ describe('POST /api/shop/upload-design — cas nominal', () => {
     designInsertMock.mockResolvedValue({ data: null, error: { message: 'insert failed' } });
     const res = await POST(makeRequest({ file: { name: 'a.png', type: 'image/png', size: 100 }, slug: 'my-shop' }));
     expect(res.status).toBe(500);
+  });
+});
+
+// ============================================================
+// LOT 5 / P5-01 -- LA GARDE COMMERCIALE, MESUREE SUR LA PROJECTION REELLE.
+//
+// La route refusait TOUT LE MONDE en 403 parce qu'elle gardait sur une
+// colonne qu'elle ne demandait pas. Ces tests ne peuvent exister que sur un
+// harnais qui honore la projection : c'est la seule difference entre « la
+// garde marche » et « la garde refuse tout ».
+// ============================================================
+const reqAvecFichier = (slug = 'ma-boutique') =>
+  makeRequest({ file: { name: 'd.png', type: 'image/png', size: 10 }, slug });
+
+describe('POST /api/shop/upload-design — LOT 5 : la garde lit une colonne REELLEMENT demandee', () => {
+  it('la projection contient `mode` -- sans quoi la garde est aveugle', async () => {
+    siteSelectMock.mockResolvedValue({ data: { id: 'site-1', mode: 3 }, error: null });
+    await POST(reqAvecFichier());
+    expect(colonnesDemandees).toContain('mode');
+  });
+
+  it.each([2, 3])('site Mode %s (commercant) -> upload accepte, ligne design_uploads creee', async (mode) => {
+    siteSelectMock.mockResolvedValue({ data: { id: 'site-1', mode }, error: null });
+    storageUploadMock.mockResolvedValue({ error: null });
+    designInsertMock.mockResolvedValue({ error: null });
+    const res = await POST(reqAvecFichier());
+    expect(res.status).toBe(200);
+    expect(storageUploadMock).toHaveBeenCalled();
+    expect(designInsertMock).toHaveBeenCalledWith(expect.objectContaining({ site_id: 'site-1' }));
+  });
+
+  it('site Mode 1 (vitrine) -> 403, aucun stockage, aucune ligne', async () => {
+    siteSelectMock.mockResolvedValue({ data: { id: 'site-1', mode: 1 }, error: null });
+    const res = await POST(reqAvecFichier());
+    expect(res.status).toBe(403);
+    expect(storageUploadMock).not.toHaveBeenCalled();
+    expect(designInsertMock).not.toHaveBeenCalled();
+  });
+
+  it('le site est resolu par SON slug -- jamais un site arbitraire', async () => {
+    siteSelectMock.mockResolvedValue({ data: { id: 'site-1', mode: 3 }, error: null });
+    await POST(reqAvecFichier('ma-boutique'));
+    expect(filtres).toContainEqual(['slug', 'ma-boutique']);
+    expect(filtres).toContainEqual(['archived_at', null]);
   });
 });

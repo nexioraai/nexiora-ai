@@ -311,3 +311,48 @@ describe('LOT 4 — fetchProduct expose de quoi choisir une variante', () => {
     expect(p?.supplierId).toBeNull();
   });
 });
+
+describe('LOT 5 / P5-03 — la fiche produit sait si un design est exige', () => {
+  // La fiche n'avait AUCUN televerseur (`grep DesignCanvas` -> 0), alors que
+  // `usesCatalogSelections(3, 'pod_custom')` est vrai : elle est servie ET
+  // publiee au sitemap. Tout achat depuis la fiche partait donc sans design.
+  const SEL = {
+    data: {
+      sell_price: null, custom_name: null, custom_description: null, catalog_product_id: 'cp-1',
+      catalog_products: { name: 'Mug', description: '', price: 10, currency: 'usd', images: [], in_stock: true, supplier_id: 'printful', supplier_product_id: 'sp-1', supplier_parent_id: 'parent-1' },
+    },
+    error: null,
+  };
+
+  it('site pod_custom -> requiresDesign = true', async () => {
+    siteResult = { data: { ...siteResult.data, dropship_type: 'pod_custom' }, error: null };
+    selectionResult = SEL;
+    expect((await fp('my-shop', 'catalog-cp-1'))?.requiresDesign).toBe(true);
+  });
+
+  it('site reseller -> la fiche est servie, sans exigence de design', async () => {
+    siteResult = { data: { ...siteResult.data, dropship_type: 'reseller' }, error: null };
+    selectionResult = SEL;
+    const p = await fp('my-shop', 'catalog-cp-1');
+    expect(p).not.toBeNull();
+    expect(p?.requiresDesign).toBe(false);
+  });
+
+  it.each(['pod_brand', null])(
+    'site %s -> AUCUNE fiche produit : la regle du LOT 2 refuse avant tout le reste',
+    async (t) => {
+      // Correction d'une assertion FAUSSE de ma premiere redaction : j'attendais
+      // `requiresDesign === false`, alors que `usesCatalogSelections` refuse
+      // ces sous-types et que `fetchProduct` rend `null`. Le comportement reel
+      // est plus fort que ce que je testais.
+      siteResult = { data: { ...siteResult.data, dropship_type: t }, error: null };
+      selectionResult = SEL;
+      expect(await fp('my-shop', 'catalog-cp-1')).toBeNull();
+    }
+  );
+
+  it('produit du marchand -> requiresDesign = false', async () => {
+    productResult = { data: { id: 'p1', name: 'X', description: '', price: 5, currency: 'usd', images: [], stock: 1, published: true, for_sale: true }, error: null };
+    expect((await fp('my-shop', 'p1'))?.requiresDesign).toBe(false);
+  });
+});

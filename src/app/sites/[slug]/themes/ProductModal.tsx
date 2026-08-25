@@ -96,7 +96,15 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
   }, [p.supplier_id, p.supplier_product_id]);
 
   const variants = cachedVariants.length > 0 ? cachedVariants : liveVariants;
-  const achetable = achatPossible({ requiresVariant: p.requires_variant, variantesConnues: variants.length, varianteChoisie: selectedVariant, chargementEnCours: loadingVariants });
+  // LOT 5 / P5-02 -- un support `pod_custom` n'est pas achetable sans design.
+  const achetable = achatPossible({
+    requiresVariant: p.requires_variant,
+    variantesConnues: variants.length,
+    varianteChoisie: selectedVariant,
+    chargementEnCours: loadingVariants,
+    designRequis: isPodCustom,
+    designsFournis: customDesigns.length,
+  });
 
   const prevImg = () => setImgIndex(i => (i > 0 ? i - 1 : imgs.length - 1));
   const nextImg = () => setImgIndex(i => (i < imgs.length - 1 ? i + 1 : 0));

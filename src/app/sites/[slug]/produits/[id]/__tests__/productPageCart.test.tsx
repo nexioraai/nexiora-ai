@@ -55,6 +55,8 @@ function produit(over: Partial<ProductPage> = {}): ProductPage {
     // produit du marchand n'a pas de variante fournisseur, donc le rendu de
     // ces cas est rigoureusement celui d'avant.
     supplierId: null, supplierProductId: null, requiresVariant: false,
+    // LOT 5 -- champ AJOUTE : seul `pod_custom` exige un design du visiteur.
+    requiresDesign: false,
     ...over,
   };
 }

@@ -36,6 +36,13 @@ export type ProductPage = {
   supplierProductId: string | null
   /** `true` si la ligne catalogue est un PRODUIT (variante obligatoire). */
   requiresVariant: boolean
+  /**
+   * LOT 5 / P5-02 -- `true` sur un site `pod_custom` : le visiteur doit
+   * televerser SON design avant tout achat. La fiche produit ne l'offrait pas
+   * du tout -- seule la modale de la vitrine portait le televerseur -- si bien
+   * qu'un achat depuis la fiche partait TOUJOURS en fabrication sans design.
+   */
+  requiresDesign: boolean
 }
 
 export async function fetchProduct(slug: string, rawId: string): Promise<ProductPage | null> {
@@ -123,6 +130,7 @@ export async function fetchProduct(slug: string, rawId: string): Promise<Product
       supplierId: cp.supplier_id ?? null,
       supplierProductId: cp.supplier_product_id ?? null,
       requiresVariant: !cp.supplier_parent_id,
+      requiresDesign: (site as any).dropship_type === 'pod_custom',
     }
   }
 
@@ -139,6 +147,8 @@ export async function fetchProduct(slug: string, rawId: string): Promise<Product
     supplierId: null,
     supplierProductId: null,
     requiresVariant: false,
+    // Produit du marchand : jamais de design visiteur.
+    requiresDesign: false,
     id: (p as any).id,
     name: (p as any).name,
     description: (p as any).description || '',

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { ProductPage } from './fetchProduct'
 import AddToCartButton from '../../themes/AddToCartButton'
 import { achatPossible, choixDeVarianteRequis } from '../../themes/variantRequirement'
+import DesignCanvas from '../../themes/DesignCanvas'
 import { THEME_TOKENS, ThemeKey } from '../../themes/CatalogSearch'
 
 const CART_LABELS: Record<string, string> = {
@@ -67,11 +68,20 @@ export default function ProductPageView({ product }: { product: ProductPage }) {
   // la contre-verification l'a trouve. La regle vient de la donnee, pas de la
   // reponse reseau.
   const variantsRequises = choixDeVarianteRequis(product.requiresVariant, variantes.length)
+  // LOT 5 / P5-02 -- LA FICHE RECOIT LE MEME PARCOURS QUE LA MODALE.
+  //
+  // Elle n'avait AUCUN televerseur : `grep DesignCanvas` y rendait 0. Or
+  // `usesCatalogSelections(3, 'pod_custom')` est vrai, donc la fiche est
+  // servie ET publiee au sitemap. Tout achat depuis la fiche partait donc en
+  // fabrication SANS design -- un blanc, aux frais de la plateforme.
+  const [designs, setDesigns] = useState<{ url: string }[]>([])
   const achetable = achatPossible({
     requiresVariant: product.requiresVariant,
     variantesConnues: variantes.length,
     varianteChoisie,
     chargementEnCours: chargementVariantes,
+    designRequis: product.requiresDesign,
+    designsFournis: designs.length,
   })
   const imgs = product.images.length > 0 ? product.images : []
   const tokens = THEME_TOKENS[(product.theme as ThemeKey)] || THEME_TOKENS.editorial
@@ -197,10 +207,25 @@ export default function ProductPageView({ product }: { product: ProductPage }) {
               </div>
             )}
 
+            {product.requiresDesign && (
+              <div style={{ marginTop: 24 }}>
+                <DesignCanvas
+                  productImage={imgs[0]}
+                  variantId={varianteChoisie || product.supplierProductId || undefined}
+                  onDesignChange={(d) => setDesigns(d as { url: string }[])}
+                  primary={product.primary}
+                  lang={product.lang}
+                  slug={product.siteSlug}
+                />
+              </div>
+            )}
+
             <div style={{ marginTop: 28 }}>
               {product.forSale ? (
                 <AddToCartButton
                   id={product.id + (varianteChoisie ? '::' + varianteChoisie : '')}
+                  customDesigns={designs.length > 0 ? designs : undefined}
+                  customDesignUrl={designs[0]?.url}
                   name={product.name + (varianteChoisie ? ' \u2014 ' + (variantes.find((v) => v.variant_id === varianteChoisie)?.name || '') : '')}
                   priceNumber={product.priceNumber}
                   currency={product.currency}

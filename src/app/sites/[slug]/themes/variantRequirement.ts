@@ -32,6 +32,12 @@
 // l'importer. Il ne decide rien de nouveau : il evite d'offrir un bouton que
 // le serveur refusera.
 //
+// LOT 5 -- CE MODULE PORTE AUSSI « UN DESIGN EST-IL EXIGE ? ». Meme raison
+// qu'au LOT 4 : la question se pose a l'identique sur les trois surfaces
+// d'achat, et trois copies d'une regle finissent toujours par diverger. La
+// regle NORMATIVE reste cote serveur (checkout puis `pod-fulfill`) ; ce
+// module evite d'offrir un bouton que le serveur refusera.
+//
 // LA SOURCE DU SIGNAL EST LA DONNEE, PAS UNE HEURISTIQUE.
 // `requiresVariant` derive de `catalog_products.supplier_parent_id` : une
 // ligne SANS parent designe un PRODUIT (mesure : CJ, 25 006 lignes, 100 %),
@@ -71,8 +77,27 @@ export function achatPossible(params: {
   variantesConnues: number;
   varianteChoisie: string | null;
   chargementEnCours: boolean;
+  /**
+   * LOT 5 / P5-02 -- ce produit exige-t-il un design du visiteur ?
+   * `true` uniquement pour `pod_custom` : c'est la definition meme du
+   * sous-mode -- le visiteur cree SON produit. `undefined` partout ailleurs,
+   * donc comportement rigoureusement inchange.
+   */
+  designRequis?: boolean;
+  /** Nombre de designs valides deja televerses par le visiteur. */
+  designsFournis?: number;
 }): boolean {
   if (params.chargementEnCours) return false;
+  // LOT 5 / P5-02 -- DECISION PRODUIT : un support POD `pod_custom` n'est PAS
+  // achetable nu. Ni la modale, ni la fiche produit, ni le checkout ne
+  // l'autorisaient explicitement -- ils ne l'interdisaient simplement pas, et
+  // `pod-fulfill` envoyait alors `files: []` : le fournisseur fabriquait un
+  // BLANC, aux frais de la plateforme qui avance le cout. La guidance du
+  // sous-mode dit pourtant « uploads their own image BEFORE adding to cart ».
+  // La regle devient explicite, et elle est ecrite ICI, une seule fois.
+  if (params.designRequis === true && !(params.designsFournis && params.designsFournis > 0)) {
+    return false;
+  }
   if (!choixDeVarianteRequis(params.requiresVariant, params.variantesConnues)) return true;
   return !!params.varianteChoisie;
 }

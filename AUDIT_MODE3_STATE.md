@@ -288,7 +288,7 @@ fail-closed. **Les deux autorités de sous-mode sont solidement verrouillées.**
 | **2** | Frontières internes (DEBT-048, DEBT-049) | ✅ **RÉSOLU** — 19/19 mutations tuées, 3178 tests |
 | **3** | **POD_BRAND** (+ DEBT-055/058/059, puis DEBT-062/063) | ✅ **RÉSOLU** — 23 mutations tuées, 3220 tests |
 | **4** | RESELLER | ✅ **RÉSOLU** — 21 mutations tuées, 3264 tests · 1 décision produit ouverte (DEBT-066) |
-| 5 | POD_CUSTOM | à faire |
+| **5** | POD_CUSTOM | ✅ **RÉSOLU** — 15/15 mutations tuées, 3296 tests |
 | 6 | Transversal final (+ **DEBT-054**, rattachée depuis le LOT 1) | à faire |
 
 ### Rattachement des deux découvertes du LOT 1 — sans réouverture
@@ -728,3 +728,51 @@ dépôt n'a ni jsdom ni testing-library.
 
 73 sélections, empreinte `a42f80d2ce5a0c9a` **inchangée**, `updated_at` de
 juillet sur les 8 sites Mode 3.
+
+
+---
+
+# LOT 5 — `pod_custom` — RÉSOLU (2026-08-25)
+
+## Trois défauts, deux critiques
+
+**DEBT-068 🔴 — `/api/shop/upload-design` refusait tout le monde.** Projection
+`.select('id')`, garde sur `site.mode` : `undefined` → `canTransact` faux →
+**403 systématique**. Toute la chaîne de design de `pod_custom` était morte.
+Production : `design_uploads` = **0 ligne**. Le test était une **façade** — son
+harnais ignorait la liste de colonnes.
+
+**DEBT-069 🔴 — un support `pod_custom` était achetable nu.** Aucune couche
+n'exigeait de design ; `pod-fulfill` envoyait `files: []` et le fournisseur
+fabriquait un **blanc**, payé par la plateforme. La fiche produit n'avait même
+aucun téléverseur, alors qu'elle est publiée au sitemap.
+
+**DEBT-070 🟡 — les gardes du design n'étaient tenues par rien.** Le harnais
+enregistrait les filtres sans les appliquer.
+
+## Autorités
+
+**Aucune nouvelle.** `canTransact` **non modifiée** (elle était juste).
+`achatPossible` (LOT 4) **étendue**, jamais dupliquée. `design_uploads` reste
+la source de vérité. La règle normative est **serveur** ; le module client en
+est le miroir, comme `modeCapabilities` l'est de `CheckoutPolicy`.
+
+## Mutations — 15 lancées, 15 tuées
+
+W1–W3 (upload) · W4–W9 (checkout) · W10–W11 (fulfillment) · W12–W15 (règle et
+propagation). **W8 et W12–W15 ont d'abord survécu** : W8 tuée en modélisant la
+**course** ; W12/W14/W15 par des tests comportementaux ; **W13 par un cliquet
+dont la limite est nommée** — `ProductModal` passe par `createPortal` et rend
+`null` sans cible de portail, donc non observable au rendu statique.
+
+## Deux erreurs de ma part, corrigées
+
+Une délégation de mock incorrecte (`(generic as any).get?.(t)`) produisant des
+500 ; et une assertion **fausse** attendant `requiresDesign === false` pour
+`pod_brand`, alors que la règle du LOT 2 refuse la fiche **entièrement** — le
+comportement réel est plus fort que ce que je testais.
+
+## Production — aucune écriture
+
+`design_uploads` 0 · `order_item_designs` 0 · 73 sélections, empreinte
+`a42f80d2ce5a0c9a` **inchangée** · `updated_at` de juillet/août sur les 8 sites.

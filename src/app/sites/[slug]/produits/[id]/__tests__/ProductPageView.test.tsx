@@ -33,6 +33,8 @@ function page(over: Partial<ProductPage> = {}): ProductPage {
     // produit du marchand n'a pas de variante fournisseur, donc le rendu de
     // ces cas est rigoureusement celui d'avant.
     supplierId: null, supplierProductId: null, requiresVariant: false,
+    // LOT 5 -- champ AJOUTE : seul `pod_custom` exige un design du visiteur.
+    requiresDesign: false,
     ...over,
   };
 }
@@ -154,5 +156,37 @@ describe('LOT 4 / R4-01 — l\'identifiant de panier porte la variante choisie',
     // cf. `fetchProduct`), donc la concatenation produit exactement un `::`.
     // C'est la faute inverse -- deux suffixes -- qui avait produit L3-01.
     expect(source).not.toMatch(/varianteChoisie[^\n]*::[^\n]*::/);
+  });
+});
+
+// ============================================================
+// LOT 5 / P5-02 + P5-03 -- LA FICHE PRODUIT `pod_custom`, AU RENDU REEL.
+//
+// Elle n'avait aucun televerseur : tout achat depuis la fiche partait sans
+// design. Ici on mesure le MARKUP, pas une prop -- et c'est possible parce
+// que, sans variante exigee, l'etat initial n'est pas « en chargement » :
+// l'exigence de design decide seule.
+// ============================================================
+describe('LOT 5 — un support pod_custom n\'est pas achetable nu depuis la fiche', () => {
+  const POD_CUSTOM = { mode: 3, requiresDesign: true, requiresVariant: false, supplierId: 'printful', supplierProductId: 'sp-1' };
+
+  it('design exige et aucun televerse -> bouton INACTIF', () => {
+    expect(render(page(POD_CUSTOM))).toContain('disabled');
+  });
+
+  it('le televerseur de design EST rendu sur la fiche', () => {
+    const html = render(page(POD_CUSTOM));
+    expect(html.toLowerCase()).toMatch(/design|upload|televers/);
+  });
+
+  it('NON-REGRESSION — un site sans exigence de design garde son bouton actif', () => {
+    const html = render(page({ mode: 3, requiresDesign: false, requiresVariant: false, supplierId: 'printful', supplierProductId: 'sp-1' }));
+    expect(html).not.toContain('disabled=""');
+  });
+
+  it('NON-REGRESSION — un produit du marchand est inchange', () => {
+    const html = render(page({ mode: 2, requiresDesign: false, requiresVariant: false }));
+    expect(html).toContain('Ajouter au panier');
+    expect(html).not.toContain('disabled=""');
   });
 });
