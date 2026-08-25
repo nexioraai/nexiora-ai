@@ -103,6 +103,19 @@ d'un rapport antérieur. Détail complet et preuves dans `KNOWN_ISSUES.md`.
 | M1-05 | DEBT-035 | ✅ **FERMÉ** | `price_range` émis en JSON-LD mais absent de `llms.txt` — les deux champs du chantier 5 sont désormais publiés ensemble, en 4 langues |
 | M1-06 | DEBT-032 | ✅ **FERMÉ** | Aucun lien n'existait entre `toolCapabilities` et `canTransact` — inscrire le Mode 1 dans `PROMO_MODES` n'aurait fait rougir aucun test. Cause structurelle de M1-01. Corrigé au volet 3 |
 | M1-07 | DEBT-036 | ⚪ | Colonnes commerciales éditables en PostgREST par un Mode 1 — classe C, non exploitable |
+| — | DEBT-037 | 🟡 | *Découvert en traitant DEBT-033.* Deux définitions de « l'adresse du site » : `JsonLd` résout `contact?.address ?? site.address`, les 4 thèmes et `llms.txt` n'utilisent que `contact`. Atteignabilité **non prouvée** sans accès base |
+
+### Statut définitif — chaque problème dans exactement une catégorie
+
+| Niveau | Problèmes | Action |
+|---|---|---|
+| 🟢 **PARFAIT** | Les 10 invariants Mode 1 du §8 · DEBT-030 · DEBT-031 · DEBT-032 · DEBT-033 · DEBT-035 | Rien à faire — vérifiés, corrigés, verrouillés par cliquet et mutation |
+| 🔴 **IMMÉDIAT** | *(aucun)* | — |
+| 🟠 **AVANT POURSUITE** | **DEBT-034** | Le code est livré et sûr dans les deux états du schéma ; il reste **une action humaine hors de cet environnement** : exécuter `supabase/sql/sites_updated_at.sql`, constater A/B/C/D, ajouter `,updated_at` à `PUBLIC_COLS`. **Le défaut persiste d'ici là.** |
+| 🟡 **SURVEILLER** | **DEBT-037** · l'incertitude §10.1 (privilèges PostgREST sur `promo_codes`) | Les deux demandent une **mesure en base** avant toute décision. Corriger DEBT-037 à l'aveugle changerait ce que des sites réels publient aujourd'hui |
+| ⚪ **DETTE** | **DEBT-036** · DEBT-002 · DEBT-003 · DEBT-007 · DEBT-026 | Ne pas traiter pendant la fermeture de Mode 1 |
+
+**Aucun problème n'est sans statut.**
 
 ### Méthode de preuve
 

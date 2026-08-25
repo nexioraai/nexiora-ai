@@ -35,7 +35,7 @@ const ecritures: Array<{ table: string; op: 'insert' | 'update'; payload: unknow
 vi.mock('@/lib/supabase-admin', () => ({
   supabaseAdmin: {
     from: (table: string) => {
-      const c: any = {};
+      const c: Record<string, unknown> = {};
       c.select = () => c; c.eq = () => c; c.ilike = () => c;
       c.insert = (row: unknown) => { ecritures.push({ table, op: 'insert', payload: row }); return { error: null }; };
       c.update = (patch: unknown) => { ecritures.push({ table, op: 'update', payload: patch }); return c; };
@@ -55,11 +55,13 @@ function req(tool_name: string, tool_input: unknown) {
     body: JSON.stringify({ tool_name, tool_input }),
   });
 }
-const ctx = { params: Promise.resolve({ slug: 'ma-vitrine' }) };
+// Le second parametre attendu par le handler de route, sous sa forme reelle.
+type CtxRoute = { params: Promise<{ slug: string }> };
+const ctx: CtxRoute = { params: Promise.resolve({ slug: 'ma-vitrine' }) };
 
 async function appeler(outil: string, input: unknown) {
   const { POST } = await import('../route');
-  const res = await POST(req(outil, input), ctx as any);
+  const res = await POST(req(outil, input), ctx);
   return { statut: res.status, corps: await res.json() };
 }
 
