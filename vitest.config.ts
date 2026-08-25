@@ -133,6 +133,10 @@ export default defineConfig({
       // collectes par `vitest run` -- donc jamais en CI, silencieusement.
       // C'est le piege deja documente six fois plus haut dans ce fichier ;
       // verifie ici par le delta de comptage de tests apres ajout.
+      // CHANTIER 3 (MODE 1) -- src/lib/i18n/ porte le contrat des langues
+      // reellement servies. Prefixe absent : sans cette ligne son test
+      // passe en isolation mais n'est JAMAIS collecte par `vitest run`.
+      'src/lib/i18n/**/*.test.ts',
       'src/lib/agent-tools/**/*.test.ts',
       'src/app/api/agent/**/*.test.ts',
       // DETTE 6a, EXTENSION -- DEUX prefixes ajoutes, tous deux absents

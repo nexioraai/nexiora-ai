@@ -12,6 +12,7 @@ import { toolNamesForSite } from '@/lib/agent-tools/toolCapabilities';
 // branches n'etaient jamais evaluees et l'agent recevait les cinq a la fois.
 // Extraite et rendue vivante. Voir modeGuidance.ts pour la mesure complete.
 import { guidanceForSite } from '@/lib/agent-tools/modeGuidance';
+import { SUPPORTED_LANGUAGE_CODES } from '@/lib/i18n/supportedLanguages';
 
 const allTools: Anthropic.Tool[] = [
   {
@@ -22,10 +23,22 @@ const allTools: Anthropic.Tool[] = [
       properties: {
         field: {
           type: 'string',
-          enum: ['name', 'slogan', 'about', 'hero_title', 'hero_subtitle', 'cta', 'type'],
+          enum: ['name', 'slogan', 'about', 'hero_title', 'hero_subtitle', 'cta', 'type', 'lang'],
           description: 'Field to update',
         },
-        value: { type: 'string', description: 'New value for the field' },
+        // CHANTIER 3 -- `lang` rejoint cette liste, et c'est le SEUL champ
+        // qu'elle porte dont les valeurs soient bornees. Le schema d'outil ne
+        // sait pas exprimer un enum par champ ; la borne reelle est donc
+        // posee a l'APPLICATION (`apply/route.ts`, `isSupportedLanguage`),
+        // qui refuse en 400 -- la description ci-dessous guide le modele,
+        // elle ne le contraint pas, et n'est pas la garantie.
+        value: {
+          type: 'string',
+          description:
+            "New value for the field. For `lang`, the ONLY accepted values are the languages this platform can actually serve: " +
+            SUPPORTED_LANGUAGE_CODES.join(', ') +
+            ". Anything else is rejected. Changing `lang` switches the site's interface labels, navigation and metadata -- it does NOT translate the merchant's own text, which must be rewritten separately.",
+        },
         reason: { type: 'string', description: 'Brief explanation of why this change is proposed' },
       },
       required: ['field', 'value', 'reason'],

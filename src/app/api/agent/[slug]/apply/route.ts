@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isSupportedLanguage, SUPPORTED_LANGUAGE_CODES } from '@/lib/i18n/supportedLanguages';
 import { MIN_MARGIN_PERCENT } from '@/lib/pricing';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
@@ -59,6 +60,9 @@ const ALLOWED_TOOLS = new Set([
 ]);
 
 const ALLOWED_FIELDS = new Set([
+  // CHANTIER 3 -- `lang` ajoute. Il est borne par `isSupportedLanguage` dans
+  // le `case` correspondant, JAMAIS par cette seule appartenance.
+  'lang',
   'name',
   'slogan',
   'about',
@@ -136,6 +140,19 @@ export async function POST(
         const { field, value } = tool_input;
         if (!ALLOWED_FIELDS.has(field) || typeof value !== 'string') {
           return NextResponse.json({ error: 'Invalid field or value' }, { status: 400 });
+        }
+        // CHANTIER 3 -- LA BORNE REELLE DE `lang`, ET LE SEUL ENDROIT OU ELLE
+        // TIENNE. Les six autres champs de `ALLOWED_FIELDS` acceptent du
+        // texte libre : `lang` est le premier a n'accepter qu'un enum. Sans
+        // ce test, `ALLOWED_FIELDS.has('lang')` suffisait a ecrire
+        // `lang: 'english'` ou `lang: 'de'` -- valeurs qu'aucun dictionnaire
+        // ne sert, et qui rendraient le site en anglais de repli sans que
+        // rien ne le signale. Le refus precede toute ecriture.
+        if (field === 'lang' && !isSupportedLanguage(value)) {
+          return NextResponse.json(
+            { error: `Unsupported language "${value}". Supported: ${SUPPORTED_LANGUAGE_CODES.join(', ')}` },
+            { status: 400 }
+          );
         }
         updates[field] = value;
         break;

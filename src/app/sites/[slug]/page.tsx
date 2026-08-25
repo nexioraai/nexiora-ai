@@ -12,6 +12,7 @@ import VifTheme from './themes/VifTheme'
 import AuroraTheme from './themes/AuroraTheme'
 import CartShell from './themes/CartShell'
 import { getCartLabels } from './themes/cartLabels'
+import { ogLocaleFor } from '@/lib/i18n/supportedLanguages'
 import ScrollRevealInit from './themes/ScrollRevealInit'
 import CatalogSearch, { type ThemeKey } from './themes/CatalogSearch'
 import PromoBanner from './themes/PromoBanner'
@@ -64,7 +65,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: site.name,
       images,
       type: 'website',
-      locale: 'fr_FR',
+      // CHANTIER 3 -- `locale` valait `'fr_FR'` EN DUR. Mesure sur
+      // yiaglobalcommodities.com : contenu anglais, `og:locale fr_FR`
+      // servi a Facebook et LinkedIn. Ce n'etait pas propre a ce site --
+      // TOUS les sites annoncaient le francais, y compris ceux generes en
+      // arabe. La locale suit desormais la meme regle que `getDict()`,
+      // seule autorite de ce que la page rend reellement.
+      locale: ogLocaleFor(site.lang),
     },
     twitter: {
       card: images ? 'summary_large_image' : 'summary',
