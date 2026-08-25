@@ -285,8 +285,38 @@ fail-closed. **Les deux autorités de sous-mode sont solidement verrouillées.**
 |---|---|---|
 | **0** | Collecte de `src/lib/mode3/**` | ✅ **TERMINÉ** — manque latent fermé, prouvé par sonde |
 | **1** | Socle transversal (DEBT-050, DEBT-051, autorités de sous-mode) | ✅ **RÉSOLU** — 14/14 mutations tuées, 3088 tests |
-| 2 | Frontières internes (DEBT-048, DEBT-049) | à faire |
-| 3 | POD_BRAND · 4 RESELLER · 5 POD_CUSTOM · 6 transversal final | à faire |
+| 2 | Frontières internes (DEBT-048, DEBT-049) | à faire — périmètre **inchangé** |
+| 3 | **POD_BRAND** (+ **DEBT-055**, rattachée depuis le LOT 1) | à faire |
+| 4 | RESELLER | à faire |
+| 5 | POD_CUSTOM | à faire |
+| 6 | Transversal final (+ **DEBT-054**, rattachée depuis le LOT 1) | à faire |
+
+### Rattachement des deux découvertes du LOT 1 — sans réouverture
+
+**DEBT-055 → lot `pod_brand`.** Elle vit dans un fichier transversal
+(`api/chat/route.ts:835`, chemin de création) mais la question qu'elle pose —
+*qui a le droit de curer ?* — est propre à un sous-mode : la route déclenche
+l'auto-curation pour `pod_brand`, alors que `CATALOG_SUBTYPES` lui refuse les
+outils de curation et que sa guidance dit « do NOT suggest catalog_curate ».
+C'est le cas prévu par la règle « un problème cru transversal se révèle
+spécifique à un sous-mode » : signalé avant tout déplacement de périmètre.
+
+**Le LOT 1 ne l'a ni créée ni aggravée**, mesuré sur le diff `f0740f9..244267d` :
+la garde est passée de `finalMode === 3 && dropshipType` à
+`finalMode === 3 && persistedDropshipType` — pour un `pod_brand`, les deux
+expressions sont vraies. Le comportement `pod_brand` est **strictement
+inchangé** par le LOT 1 (fournisseurs POD inchangés ; `showsVisitorCatalogSearch('pod_brand')`
+rend `false`, exactement comme la négation qu'elle remplace).
+
+**DEBT-054 → lot transversal final.** Elle ne porte sur aucun sous-mode : elle
+porte sur le **dénominateur d'un cliquet**. Elle doit être *connue* pendant les
+lots 2 à 5 — toute garantie du type « cette surface est déclarée donc visible »
+y est plus faible qu'annoncée — mais elle ne doit pas y être traitée, sous
+peine de mêler une correction d'architecture à un lot de sous-mode.
+
+**Aucun lot fermé n'est rouvert.** Ces deux dettes préexistaient au LOT 1 ;
+elles ont été *découvertes*, pas introduites. Mode 1, Mode 2, LOT 0 et LOT 1
+restent fermés.
 
 ## Ordre d'audit — VALIDÉ
 
