@@ -84,9 +84,17 @@ describe('MODE3_CHECKOUT_POLICY — le domaine fournisseur, règles DÉPLACÉES 
     ['pod_custom', 'printful', true],
     ['pod_custom', 'gelato', true],
     ['pod_custom', 'cj', false],
-    // Sous-type absent : repli historique sur CJ, comportement conservé.
-    [null, 'cj', true],
+    // LOT 1 / L1-03 — CHANGEMENT DÉLIBÉRÉ. Ces deux lignes protégeaient le
+    // « repli historique sur CJ » : un site Mode 3 sans sous-type admettait
+    // les produits CJ. Ce n'était pas une règle métier mais le `default:`
+    // d'un `switch`, et il a réellement servi — 3 sites de production, 12
+    // commandes, 2 `cj_order_id`. Un sous-type absent n'admet plus AUCUN
+    // fournisseur : l'absence de donnée ne vaut pas `reseller`.
+    [null, 'cj', false],
     [null, 'printful', false],
+    [undefined, 'cj', false],
+    ['', 'cj', false],
+    ['legacy_mode_x', 'cj', false],
   ])('sous-type=%s + fournisseur=%s -> %s', (sousType, fournisseur, attendu) => {
     expect(MODE3_CHECKOUT_POLICY.admitsCatalogSupplier(fournisseur, sousType)).toBe(attendu)
   })

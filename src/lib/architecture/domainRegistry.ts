@@ -673,6 +673,12 @@ export const DOMAIN_REGISTRY: DomainDefinition[] = [
       'src/lib/cj/statusMap.ts',
       'src/lib/dropship/catalogAdmission.ts',
       'src/lib/dropship/suppliers.ts',
+      // LOT 1 / L1-01 -- entree AJOUTEE. `src/lib/dropship` est un
+      // repertoire entierement possede (MODE_3_OWNED_DIRECTORIES) : un
+      // fichier qui y apparait sans etre declare ici n'est couvert par
+      // AUCUNE regle. Le cliquet d'exhaustivite l'exige, et c'est le
+      // mecanisme qui fonctionne : une surface nouvelle se declare.
+      'src/lib/dropship/subtypeAdmission.ts',
       'src/lib/mode3/cancelSupplierOrder.ts',
       'src/lib/mode3/catalogStock.ts',
       'src/lib/mode3/checkoutPolicy.ts',

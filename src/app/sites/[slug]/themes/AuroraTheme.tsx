@@ -25,6 +25,7 @@ import { getCartLabels } from './cartLabels'
 import { socialUrl } from '@/lib/social'
 import StorefrontDense from './StorefrontDense'
 import CatalogSearch from './CatalogSearch'
+import { showsVisitorCatalogSearch } from './catalogSearchVisibility'
 import { getModeCapabilities } from './modeCapabilities'
 
 export default function AuroraTheme({ site }: { site: Site }) {
@@ -56,7 +57,17 @@ export default function AuroraTheme({ site }: { site: Site }) {
 
   const deliveryTag = L('Livraison suivie', 'Tracked delivery', 'Envío con seguimiento', 'شحن متتبع', 'Entrega rastreada', 'Verfolgte Lieferung', 'Spedizione tracciata')
 
-  const showCatalogSearch = isShop && site.dropship_type !== 'pod_brand'
+  // LOT 1 / L1-02 -- la NEGATION `!== 'pod_brand'` laissait passer un
+  // sous-type ABSENT. Regle unique et positive, partagee avec la page
+  // publique et l'apercu.
+  //
+  // PERIMETRE, EXPLICITE : cette ligne porte AUSSI DEBT-048 -- les deux
+  // autres surfaces gardent `site.mode === 3`, celle-ci non, si bien qu'un
+  // site NON-Mode-3 qui aurait un sous-type et une boutique monterait la
+  // barre. Cette moitie-la N'EST PAS corrigee ici : elle appartient au
+  // LOT 2. `showsVisitorCatalogSearch` ne connait deliberement pas le mode,
+  // pour que la dette reste entiere et observable.
+  const showCatalogSearch = isShop && showsVisitorCatalogSearch(site.dropship_type)
 
   return (
     <div
@@ -127,7 +138,7 @@ export default function AuroraTheme({ site }: { site: Site }) {
             heroImage={site.hero_image}
             slogan={site.slogan}
             searchSlot={showCatalogSearch ? (
-              <CatalogSearch slug={site.slug} primary={primary} lang={site.lang} dropshipType={site.dropship_type || 'reseller'} />
+              <CatalogSearch slug={site.slug} primary={primary} lang={site.lang} dropshipType={site.dropship_type} />
             ) : undefined}
             labels={{
               all: L('Tout', 'All', 'Todo', 'الكل', 'Tudo', 'Alle', 'Tutti'),

@@ -132,7 +132,12 @@ function req(body: unknown) {
 }
 
 const SITE_MODE2 = { id: 'site-1', payment_provider: 'stripe', payment_account_id: 'acct_1', shipping_flat: 5, mode: 2, cj_margin_percent: null, cj_round_mode: null };
-const SITE_MODE3 = { ...SITE_MODE2, mode: 3 };
+// LOT 1 / L1-03 -- `dropship_type` AJOUTE, et c'est un constat : cette
+// fixture Mode 3 n'en portait aucun, si bien que TOUS les tests catalogue
+// ci-dessous transitaient par le repli `default -> ['cj']`. Le banc
+// reproduisait l'etat des 3 sites de production defectueux. Les tests qui
+// visent l'absence de sous-type l'ecrivent explicitement.
+const SITE_MODE3 = { ...SITE_MODE2, mode: 3, dropship_type: 'reseller' };
 
 beforeEach(() => {
   fromMock.mockReset();
@@ -612,13 +617,8 @@ describe('POST /api/shop/checkout — F-CUSTOM-02/03 : un design client n\'attei
     });
   }
 
-  it.each([
-    ['reseller', SITE_RESELLER],
-    ['null', SITE_NULL_TYPE],
-    ['undefined', SITE_UNDEFINED_TYPE],
-    ['valeur inattendue', SITE_UNEXPECTED_TYPE],
-  ])('dropship_type=%s -> customDesignUrl injecté est supprimé, aucun order_item_designs créé', async (_label, site) => {
-    const chains = setupWithSite(site, 'cj');
+  it('dropship_type=reseller -> customDesignUrl injecté est supprimé, aucun order_item_designs créé', async () => {
+    const chains = setupWithSite(SITE_RESELLER, 'cj');
     const res = await POST(req({
       slug: 'boutique',
       countryCode: 'US',
@@ -626,6 +626,34 @@ describe('POST /api/shop/checkout — F-CUSTOM-02/03 : un design client n\'attei
     }));
     expect(res.status).toBe(200);
     // designRows reste vide -> order_item_designs jamais interrogee.
+    expect(chains.get('order_item_designs')).toBeUndefined();
+  });
+
+  // ============================================================
+  // LOT 1 / L1-03 -- LA GARANTIE TIENT ENCORE, PAR UN MECANISME PLUS TOT.
+  //
+  // Ces trois cas attendaient 200 + design efface : la vente aboutissait
+  // (repli `default -> ['cj']`) et seule la liste d'autorisation du design
+  // les protegeait. Le sous-type absent n'admettant plus aucun fournisseur,
+  // la vente est refusee AVANT d'atteindre la porte du design.
+  //
+  // ON NE SE CONTENTE PAS DU 409 : la propriete d'origine -- « un design
+  // client n'atteint jamais un site non pod_custom/pod_brand » -- reste
+  // assertee telle quelle. Elle est desormais garantie deux fois plutot
+  // qu'une, et le test le dit.
+  // ============================================================
+  it.each([
+    ['null', SITE_NULL_TYPE],
+    ['undefined', SITE_UNDEFINED_TYPE],
+    ['valeur inattendue', SITE_UNEXPECTED_TYPE],
+  ])('dropship_type=%s -> la vente est refusée en amont (409) et aucun order_item_designs n’est créé', async (_label, site) => {
+    const chains = setupWithSite(site, 'cj');
+    const res = await POST(req({
+      slug: 'boutique',
+      countryCode: 'US',
+      items: [{ id: 'catalog-cp-1::111', quantity: 1, name: 'Produit', customDesignUrl: 'https://evil.example/anything.png' }],
+    }));
+    expect(res.status).toBe(409);
     expect(chains.get('order_item_designs')).toBeUndefined();
   });
 
@@ -1260,13 +1288,41 @@ describe('PHASE 2 — fulfillment_domain écrit à la création de la commande',
   // `order-domain-frontier` lui interdit structurellement de le lire.
   it.each([
     ['reseller', 'cj'],
-    [null, 'cj'],
   ])('Mode 3 + dropship_type=%s -> toujours "supplier" : le sous-type n’influence PAS le domaine', async (dt, supplier) => {
     const chains = setupMode3({ ...SITE_MODE3, dropship_type: dt }, supplier);
     const res = await POST(req({ slug: 'boutique', items: [ITEM_CATALOGUE], countryCode: 'US' }));
     expect(res.status).toBe(200);
     expect(payloadCommande(chains).fulfillment_domain).toBe('supplier');
   });
+
+  // ============================================================
+  // LOT 1 / L1-03 + L1-05 -- LE COUPLE (Mode 3, dropship_type ABSENT).
+  //
+  // CETTE LIGNE ETAIT DANS L'`it.each` CI-DESSUS, ET ELLE ATTENDAIT 200 :
+  // un site Mode 3 sans sous-type vendait du CJ. Elle prouvait au passage
+  // que le sous-type n'influence pas le DOMAINE -- ce qui reste vrai et
+  // reste prouve, ici meme et dans `order-domain/__tests__/resolve.test.ts`,
+  // dont le resolveur ne recoit structurellement jamais le sous-type.
+  //
+  // CE QUI CHANGE EST L'ADMISSION, PAS LA FRONTIERE : la vente est refusee
+  // en amont, donc aucune commande n'est creee -- et il n'y a plus de
+  // domaine a porter. Le refus est le comportement voulu : sans sous-type,
+  // aucun fournisseur n'est admis.
+  // ============================================================
+  it.each([null, undefined, '', 'legacy_mode_x'])(
+    'Mode 3 + dropship_type=%s + item catalogue -> 409, AUCUNE commande creee : un sous-type absent n’admet aucun fournisseur',
+    async (dt) => {
+      const chains = setupMode3({ ...SITE_MODE3, dropship_type: dt }, 'cj');
+      const res = await POST(req({ slug: 'boutique', items: [ITEM_CATALOGUE], countryCode: 'US' }));
+      expect(res.status).toBe(409);
+      expect((await res.json()).error).toBe('Produit indisponible');
+      expect(chains.get('shop_orders')).toBeUndefined();
+      expect(createCheckoutMock).not.toHaveBeenCalled();
+      expect(logAnomalyMock).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'catalog_supplier_not_eligible' })
+      );
+    }
+  );
 
   it('Mode 2 portant un dropship_type incohérent -> reste "merchant" : le sous-type ne peut pas faire basculer de domaine', async () => {
     const chains = setupMode2({ ...SITE_MODE2, dropship_type: 'reseller' });

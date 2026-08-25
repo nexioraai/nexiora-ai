@@ -4,7 +4,7 @@ Standard exigé : **ELITE 2026 / A+** — aucun lot déclaré validé sans preuv
 (résultat SQL littéral, test exécuté, tsc/vitest réels). Distinction stricte :
 **code terminé ≠ test effectué ≠ preuve validée**.
 
-Dernière mise à jour : 2026-08-25 — **PHASE 0 de cartographie livrée** (voir en fin de fichier).
+Dernière mise à jour : 2026-08-25 — **LOT 1 (socle transversal) RÉSOLU** (voir en fin de fichier).
 
 > ⚠️ **Le plan 9/9 lots ci-dessous date du 2026-08-22 et PRÉCÈDE les audits Mode 1
 > et Mode 2.** Il n'a donc pas appliqué les classes de défaut que ceux-ci ont
@@ -243,7 +243,11 @@ sous-type.**
 | `reseller` | oui | `cj` | RESELLER | monté | oui |
 | `pod_brand` | **non** | `printful,gelato` | POD_BRAND | non | **non** |
 | `pod_custom` | oui | `printful,gelato` | POD_CUSTOM | monté | oui |
-| `null` / inconnu / `''` | **non** | **`cj`** (repli) | **AUCUNE** | **monté** | **non** |
+| `null` / inconnu / `''` | non | **`[]`** *(LOT 1)* | AUCUNE | **non monté** *(LOT 1)* | non |
+
+**Après le LOT 1, la ligne « sans sous-type » est cohérente de bout en bout :
+elle ne peut plus être créée, et là où elle subsiste (3 sites historiques) elle
+ne déclenche plus rien.**
 
 ## Défauts identifiés — aucun corrigé
 
@@ -280,7 +284,7 @@ fail-closed. **Les deux autorités de sous-mode sont solidement verrouillées.**
 | Lot | Objet | Statut |
 |---|---|---|
 | **0** | Collecte de `src/lib/mode3/**` | ✅ **TERMINÉ** — manque latent fermé, prouvé par sonde |
-| 1 | Socle transversal (DEBT-050, DEBT-051, autorités de sous-mode) | à faire |
+| **1** | Socle transversal (DEBT-050, DEBT-051, autorités de sous-mode) | ✅ **RÉSOLU** — 14/14 mutations tuées, 3088 tests |
 | 2 | Frontières internes (DEBT-048, DEBT-049) | à faire |
 | 3 | POD_BRAND · 4 RESELLER · 5 POD_CUSTOM · 6 transversal final | à faire |
 
@@ -288,3 +292,76 @@ fail-closed. **Les deux autorités de sous-mode sont solidement verrouillées.**
 
 Voir le rapport de phase : l'ordre `reseller → pod_brand → pod_custom` est
 **écarté** au profit d'un **socle transversal d'abord**.
+
+
+---
+
+# LOT 1 — SOCLE TRANSVERSAL — RÉSOLU (2026-08-25)
+
+## Ce que le diagnostic avait changé au modèle
+
+Il n'y avait pas **deux** autorités de sous-type mais **trois** — la troisième,
+`isValidDropshipType`, vivant dans `api/chat/route.ts`, décidait de ce qui est
+**persistable**. Et le défaut n'était dans **aucune** des trois : elles sont
+solides (6/6 mutations en phase 0, 5/6 sur les appelants). Il était dans le
+**chemin d'écriture** et dans les **replis des couches appelantes**.
+
+Aucune des trois n'a été refondue. Une **quatrième question**, que personne ne
+posait, a reçu son autorité : *ce COUPLE (mode, sous-type) est-il écrivable ?*
+
+## Les cinq problèmes
+
+| ID | Niveau | Statut | Preuve |
+|---|---|---|---|
+| L1-01 | 🟠 | ✅ résolu | `subtypeAdmission.ts` + refus 400 au point d'écriture + `need_dropship_type` à l'onboarding — M1–M6 tuées |
+| L1-02 | 🟠 | ✅ résolu | 4 replis supprimés, allowlist positive unique — M8–M13 tuées, dont **M11 = l'ancienne survivante C5** |
+| L1-03 | 🟡 | ✅ résolu | `default → []`, banc A7 réécrit délibérément — M7, M14 tuées |
+| L1-04 | 🟡 | ✅ résolu | `NULL` est fail-closed dans **toutes** les couches mesurées (voir matrice) |
+| L1-05 | ⚪ | ✅ résolu | 115 tests neufs sur le couple (mode 3, absent), 4 fichiers **prouvés collectés** (181 → 185) |
+
+## Matrice après correction — plus aucune divergence sur `NULL`
+
+| Couche | avant | après |
+|---|---|---|
+| écriture (`chat/route.ts`) | **fail-open** — `null` accepté | **refus 400** |
+| `onboarding` | **fail-open** — `null` produit | **réclame le sous-type** |
+| `suppliersForDropshipType` | **fail-open** — `['cj']` | **`[]`** |
+| `CatalogSearch` (défaut param.) | **fail-open** — `'reseller'` | **aucun défaut** |
+| montage vitrine ×3 | **fail-open** — négation | **allowlist positive** |
+| `CATALOG_SUBTYPES`, `modeGuidance`, `shared.tsx`, éditeur, mockups, `pod-fulfill`, checkout/design | fail-closed | inchangé |
+
+## Frontières — non rouvertes, et c'est mesuré
+
+- **Mode 1 / Mode 2** : `resolvePersistedSubtype` rend toujours `{ok, null}` pour
+  eux ; leur création est testée intacte (`onboarding`, modes 1 et 2).
+- **Mode 2 ↔ Mode 3** : toutes les corrections vont dans le sens **restrictif**.
+  `suppliersForDropshipType` n'est atteignable que sous `hasSupplierCatalog`
+  (`{3}`) ; lui faire rendre `[]` ne peut rien ouvrir vers le Mode 2.
+- **DEBT-048 tenue ouverte volontairement** : `showsVisitorCatalogSearch` ne
+  connaît **pas** le mode, précisément pour qu'`AuroraTheme` conserve sa garde
+  manquante. Un test la verrouille comme **constat** et échouera le jour où le
+  LOT 2 la traitera.
+
+## Production — lecture seule, après correction
+
+Les 3 sites sans sous-type sont **inchangés** : `updated_at` de juillet
+(`techflow-electronics` 07-05, `athletehub` 07-16, `tiny-threads-global` 07-16).
+Aucune écriture n'a été faite. **Leur attribution d'un sous-type reste une
+décision produit ouverte.**
+
+⚠️ **Conséquence assumée sur `techflow-electronics` (publié)** : sa barre de
+recherche n'est plus montée et le checkout d'un produit catalogue est refusé.
+Le site avait déjà 0 sélection et 0 produit ; il vendait, via la recherche, du
+CJ qu'aucune décision produit n'avait choisi.
+
+## Découvertes nouvelles — consignées, non corrigées
+
+`DEBT-054` 🟠 le cliquet d'exhaustivité est aveugle au camelCase (`finalMode`) —
+transversal · `DEBT-055` 🟠 l'auto-curation se déclenche aussi pour `pod_brand` —
+**appartient au sous-mode `pod_brand`** · `DEBT-056` ⚪ branche client
+`choose_mode` morte.
+
+Deux constats intégrés aux corrections : `api/onboarding/**` n'était **pas
+collecté** par vitest (préfixe ajouté, même piège qu'au LOT 0), et les fixtures
+Mode 3 du checkout **ne portaient aucun sous-type** — le banc de test
+reproduisait exactement l'état des 3 sites défectueux.

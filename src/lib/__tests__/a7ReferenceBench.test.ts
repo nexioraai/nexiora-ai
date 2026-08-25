@@ -87,9 +87,18 @@ const BANC_A7 = Object.freeze({
     admetPrintful: false,
     admetGelato: false,
   },
-  '2 · sous-type NULL -> CJ (repli historique)': {
-    fournisseursAutorises: ['cj'],
-    admetCj: true,
+  // LOT 1 / L1-03 -- VALEUR DE REFERENCE CHANGEE DELIBEREMENT.
+  //
+  // L'ancienne reference protegeait « sous-type NULL -> CJ (repli
+  // historique) ». Elle protegeait donc, fidelement, un DEFAUT : un
+  // `default:` de `switch` decidait du fournisseur d'un site dont le
+  // marchand n'avait jamais designe le sous-type -- et 12 commandes reelles,
+  // dont 2 transmises a CJ, ont emprunte ce chemin. Le banc faisait
+  // exactement son travail : il a rendu ce changement visible et impossible
+  // a faire par inadvertance.
+  '2 · sous-type NULL -> AUCUN fournisseur (fail-closed)': {
+    fournisseursAutorises: [],
+    admetCj: false,
     admetPrintful: false,
     admetGelato: false,
   },
@@ -200,8 +209,14 @@ describe('BANC DE RÉFÉRENCE A7 — les 7 comportements Mode 3 protégés (§10
     expect(routagePour('reseller')).toEqual(BANC_A7['1 · reseller -> CJ']);
   });
 
-  it('2 · sous-type NULL -> CJ (repli historique)', () => {
-    expect(routagePour(null)).toEqual(BANC_A7['2 · sous-type NULL -> CJ (repli historique)']);
+  it('2 · sous-type NULL -> AUCUN fournisseur (fail-closed)', () => {
+    expect(routagePour(null)).toEqual(BANC_A7['2 · sous-type NULL -> AUCUN fournisseur (fail-closed)']);
+  });
+
+  it("2bis · un sous-type INCONNU se comporte comme l'absence, jamais comme reseller", () => {
+    for (const inconnu of ['', 'RESELLER', 'pod-brand', 'legacy_x']) {
+      expect(routagePour(inconnu)).toEqual(BANC_A7['2 · sous-type NULL -> AUCUN fournisseur (fail-closed)']);
+    }
   });
 
   it('3 · pod_brand -> POD', () => {

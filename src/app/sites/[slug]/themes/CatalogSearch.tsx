@@ -26,7 +26,8 @@ interface Props {
   primary: string;
   lang?: string;
   theme?: ThemeKey;
-  dropshipType?: string;
+  /** `sites.dropship_type` TEL QUEL -- jamais un repli fabrique par l'appelant. */
+  dropshipType?: string | null;
 }
 
 const LABELS: Record<string, Record<string, string>> = {
@@ -60,7 +61,23 @@ export const THEME_TOKENS: Record<ThemeKey, {
   },
 };
 
-export default function CatalogSearch({ slug, primary, lang = 'en', theme = 'editorial', dropshipType = 'reseller' }: Props) {
+// ============================================================
+// LOT 1 / L1-02 -- LE DEFAUT DE PARAMETRE `dropshipType = 'reseller'` EST
+// RETIRE, ET C'ETAIT LE PLUS DANGEREUX DES QUATRE REPLIS.
+//
+// CE QU'IL FAISAIT. Il donnait un sous-type a un composant qui n'en avait
+// pas recu, et ce sous-type pilote `isPodCustom` (ligne ~309), donc le
+// TELEVERSEUR DE DESIGN de `ProductModal` -- une capacite visiteur. Un
+// defaut de parametre decidait d'une fonctionnalite.
+//
+// ET RIEN NE LE TENAIT : la mutation `dropshipType = 'pod_custom'` a survecu
+// aux 2973 tests de la suite. Le seul repli des quatre qu'aucun test ne
+// voyait etait aussi celui qui ouvrait une capacite.
+//
+// SANS DEFAUT, `undefined` et `null` donnent `isPodCustom === false` :
+// fail-closed par comparaison stricte, sans qu'aucune ligne ait a le prevoir.
+// ============================================================
+export default function CatalogSearch({ slug, primary, lang = 'en', theme = 'editorial', dropshipType }: Props) {
   const t = LABELS[lang] || LABELS.en;
   const tokens = THEME_TOKENS[theme] || THEME_TOKENS.editorial;
   const [query, setQuery] = useState('');

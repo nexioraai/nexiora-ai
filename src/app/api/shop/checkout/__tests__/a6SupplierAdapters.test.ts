@@ -104,11 +104,20 @@ function req(body: unknown) {
   });
 }
 
+// LOT 1 / L1-03 -- `dropship_type` AJOUTE A LA FIXTURE, ET C'EST UN CONSTAT.
+// Cette fixture Mode 3 n'a JAMAIS porte de sous-type : tous les tests
+// fournisseur ci-dessous passaient par le repli `default -> ['cj']` de
+// `suppliersForDropshipType`. Le banc de test reproduisait donc exactement
+// l'etat des 3 sites de production defectueux, sans que rien ne le signale.
+// Un site reseller EST ce que ces tests decrivent -- la fixture le dit
+// desormais. Les tests qui veulent reellement l'absence de sous-type
+// l'ecrivent explicitement (`{ ...SITE_MODE3, dropship_type: null }`).
 const SITE_MODE3 = {
   id: 'site-1', payment_provider: 'stripe', payment_account_id: 'acct_1',
   shipping_flat: 5, mode: 3, cj_margin_percent: null, cj_round_mode: null,
+  dropship_type: 'reseller',
 };
-const SITE_MODE2 = { ...SITE_MODE3, mode: 2 };
+const SITE_MODE2 = { ...SITE_MODE3, mode: 2, dropship_type: null };
 
 const PRODUIT_CATALOGUE = {
   id: 'cp-1', price: 10, currency: 'usd', supplier_id: 'cj',

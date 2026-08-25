@@ -103,6 +103,11 @@ export default defineConfig({
       'src/app/api/stripe/**/*.test.ts',
       'src/app/api/cron/**/*.test.ts',
       'src/app/api/chat/**/*.test.ts',
+      // LOT 1 / L1-01 -- prefixe AJOUTE. `src/app/api/onboarding/` n'etait
+      // pas collecte : la route qui produit le mode et le sous-type d'un
+      // site n'avait aucune couverture, et un test ecrit la n'aurait ete
+      // execute par personne. Meme piege qu'au LOT 0, meme correction.
+      'src/app/api/onboarding/**/*.test.ts',
       'src/app/api/account/**/*.test.ts',
       'src/app/sites/**/*.test.ts',
       'src/app/sites/**/*.test.tsx',
