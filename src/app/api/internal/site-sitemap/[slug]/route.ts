@@ -23,6 +23,7 @@
 // ancres sur la meme page, pas des URLs distinctes) — seuls les produits
 // ont leur propre route.
 import { fetchSite, resolveSiteBaseUrl } from '@/app/sites/[slug]/themes/shared'
+import { resolveSiteFreshness } from '@/app/sites/[slug]/themes/siteFreshness'
 import { logAnomaly } from '@/lib/anomaly'
 
 function escapeXml(value: string): string {
@@ -65,7 +66,10 @@ export async function GET(
   // Le Host original est preserve par NextResponse.rewrite() dans
   // proxy.ts, meme si le chemin interne a change.
   const base = resolveSiteBaseUrl(site, req.headers.get('host'))
-  const lastmod = site.created_at ? new Date(site.created_at).toISOString() : new Date().toISOString()
+  // DEBT-034 -- `<lastmod>` suivait `created_at`, ce qui contredisait
+  // frontalement le `changefreq: daily` annonce juste en dessous.
+  const fraicheur = resolveSiteFreshness(site)
+  const lastmod = fraicheur ? new Date(fraicheur).toISOString() : new Date().toISOString()
 
   const urls: { loc: string; lastmod: string; changefreq: string; priority: string }[] = [
     { loc: base, lastmod, changefreq: 'daily', priority: '1.0' },

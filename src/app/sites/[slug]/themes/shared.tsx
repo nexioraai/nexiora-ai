@@ -65,6 +65,15 @@ faq?: { question: string; answer: string }[]
   hidden_sections?: string[]
   section_label?: string
   created_at?: string
+  /**
+   * DEBT-034 -- derniere modification REELLE du contenu, posee par le
+   * declencheur `trg_sites_touch_updated_at` (supabase/sql/sites_updated_at.sql).
+   *
+   * OPTIONNELLE, et elle doit le rester : tant que la migration n'est pas
+   * executee, la colonne n'existe pas et `resolveSiteFreshness` se replie sur
+   * `created_at` -- exactement le comportement d'avant.
+   */
+  updated_at?: string
   pod_designs?: any[]
   product_families?: Record<string, string>
   cj_margin_percent?: number

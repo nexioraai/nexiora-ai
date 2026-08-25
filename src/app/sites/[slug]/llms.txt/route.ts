@@ -1,5 +1,6 @@
 // src/app/sites/[slug]/llms.txt/route.ts
 import { fetchSite, resolveSiteBaseUrl, WOORRI_SITE_URL } from '../themes/shared'
+import { resolveSiteFreshness } from '../themes/siteFreshness'
 import { logAnomaly } from '@/lib/anomaly'
 import { getLlmsTxtLabels } from '@/lib/i18n/llmsTxtLabels'
 
@@ -153,8 +154,10 @@ export async function GET(
   lines.push(url)
   lines.push('')
   lines.push('---')
-  if (site.created_at) {
-    lines.push(t.lastUpdated + ' : ' + new Date(site.created_at).toISOString().split('T')[0])
+  // DEBT-034 -- la derniere MODIFICATION, plus la creation.
+  const fraicheur = resolveSiteFreshness(site)
+  if (fraicheur) {
+    lines.push(t.lastUpdated + ' : ' + new Date(fraicheur).toISOString().split('T')[0])
   }
   lines.push(t.generatedBy + ' — ' + WOORRI_SITE_URL)
   lines.push('')

@@ -81,9 +81,12 @@ Le chantier de fermeture Mode 1 est **terminé, 3 volets sur 3** :
 2. ~~`PromoBanner` sous `canTransact` + garde de mode dans les deux routes promo~~ — **FAIT**, DEBT-031 fermé (`39173f0`).
 3. ~~Lien entre les capacités d'outils et l'admission au commerce~~ — **FAIT**, DEBT-032 fermé (`bee8bfd`).
 
-~~**DEBT-033**~~ — **FAIT** (contexte de l'agent). Reste **DEBT-034**
-(fraîcheur SEO/GEO, migration de schéma), puis statuer explicitement sur
-DEBT-035, DEBT-036 et DEBT-037 (découvert en traitant DEBT-033).
+~~**DEBT-033**~~ — **FAIT**. ~~**DEBT-034**~~ — **code livré, migration
+préparée mais NON EXÉCUTÉE** : la seule action restante est humaine et hors de
+cet environnement — exécuter `supabase/sql/sites_updated_at.sql`, constater
+les vérifications A/B/C/D, puis ajouter `,updated_at` à `PUBLIC_COLS`.
+
+Reste ensuite à statuer explicitement sur DEBT-035, DEBT-036 et DEBT-037.
 
 ## 7. DÉCOUVERTES — AUDIT GÉNÉRAL PROFOND DU 2026-08-25
 
@@ -96,7 +99,7 @@ d'un rapport antérieur. Détail complet et preuves dans `KNOWN_ISSUES.md`.
 | M1-01 | DEBT-030 | ✅ **FERMÉ** | `/apply` n'appliquait **aucune** frontière de mode — 4 outils commerciaux acceptés sur une vitrine. Corrigé au volet 1 |
 | M1-02 | DEBT-031 | ✅ **FERMÉ** | `PromoBanner` monté sans condition de mode (**à deux endroits**, découverte du volet 2) + routes promo publiques sans garde. Corrigé au volet 2 |
 | M1-03 | DEBT-033 | ✅ **FERMÉ** | Contexte agent lisait `site.phone` / `site.contact_email`, **colonnes inexistantes**. Corrigé, et la CLASSE fermée par un invariant Proxy contre le schéma réel |
-| M1-04 | DEBT-034 | 🟠 | `sites.updated_at` n'existe pas → fraîcheur SEO/GEO gelée sur trois surfaces |
+| M1-04 | DEBT-034 | 🟠 **PARTIEL** | `sites.updated_at` n'existe pas → fraîcheur SEO/GEO gelée sur trois surfaces. **Code livré et sûr dans les deux états du schéma ; migration préparée, NON exécutée** — le défaut persiste tant que le SQL n'est pas passé |
 | M1-05 | DEBT-035 | 🟡 | `price_range` en JSON-LD, absent de `llms.txt` |
 | M1-06 | DEBT-032 | ✅ **FERMÉ** | Aucun lien n'existait entre `toolCapabilities` et `canTransact` — inscrire le Mode 1 dans `PROMO_MODES` n'aurait fait rougir aucun test. Cause structurelle de M1-01. Corrigé au volet 3 |
 | M1-07 | DEBT-036 | ⚪ | Colonnes commerciales éditables en PostgREST par un Mode 1 — classe C, non exploitable |
