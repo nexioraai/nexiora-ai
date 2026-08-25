@@ -1,15 +1,33 @@
 // src/app/sites/[slug]/llms.txt/route.ts
 import { fetchSite, resolveSiteBaseUrl, WOORRI_SITE_URL } from '../themes/shared'
+import { logAnomaly } from '@/lib/anomaly'
 
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params
-  const site = await fetchSite(slug)
+
+// DETTE 3 -- `logAnomaly` est appele ICI, jamais dans `shared.tsx`.
+// Ce dernier est bi-environnement (quatre composants 'use client'
+// l'importent) et `anomaly.ts -> supabase-admin.ts -> server-only` fait
+// echouer le build s'il y entre -- mesure, pas suppose. Le signal remonte
+// donc par un tableau `diagnostics`, et seuls les appelants SERVEUR
+// journalisent.
+  const diagnostics: string[] = []
+  const site = await fetchSite(slug, false, diagnostics)
 
   if (!site) {
     return new Response('Not found', { status: 404 })
+  }
+  if (diagnostics.length > 0) {
+    await logAnomaly({
+      type: 'storefront_query_failed',
+      severity: 'warning',
+      siteId: (site as { id?: string }).id ?? null,
+      slug,
+      details: { surface: 'llms.txt', failures: diagnostics },
+    })
   }
 
   const url = resolveSiteBaseUrl(site, req.headers.get('host'))

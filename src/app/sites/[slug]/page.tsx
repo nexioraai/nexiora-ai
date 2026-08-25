@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { fetchSite, resolveSiteBaseUrl } from './themes/shared'
+import { logAnomaly } from '@/lib/anomaly'
 import JsonLd from './themes/JsonLd'
 import HtmlLang from './themes/HtmlLang'
 import EditorialTheme from './themes/EditorialTheme'
@@ -77,8 +78,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function SitePage({ params, searchParams }: Props) {
   const { slug } = await params
   const sp = await searchParams
-  const site = await fetchSite(slug, sp.paid === '1')
+
+// DETTE 3 -- `logAnomaly` est appele ICI, jamais dans `shared.tsx`.
+// Ce dernier est bi-environnement (quatre composants 'use client'
+// l'importent) et `anomaly.ts -> supabase-admin.ts -> server-only` fait
+// echouer le build s'il y entre -- mesure, pas suppose. Le signal remonte
+// donc par un tableau `diagnostics`, et seuls les appelants SERVEUR
+// journalisent.
+  const diagnostics: string[] = []
+  const site = await fetchSite(slug, sp.paid === '1', diagnostics)
+  // `notFound()` reste conditionne au SEUL site introuvable. Une panne de
+  // catalogue n'a jamais produit de 404 et ne doit pas commencer.
   if (!site) notFound()
+  if (diagnostics.length > 0) {
+    await logAnomaly({
+      type: 'storefront_query_failed',
+      severity: 'warning',
+      siteId: (site as { id?: string }).id ?? null,
+      slug,
+      details: { surface: 'storefront', failures: diagnostics },
+    })
+  }
 
   const host = (await headers()).get('host')
   const url = resolveSiteBaseUrl(site, host)

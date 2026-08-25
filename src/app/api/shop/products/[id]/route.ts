@@ -26,7 +26,34 @@ type Ctx = { params: Promise<{ id: string }> };
 // la valeur ne se perime jamais, il n'existe aucune condition sous laquelle
 // elle deviendrait fausse d'elle-meme. Un PATCH generique est donc la forme
 // exacte du besoin, et lui inventer une route dediee serait de la ceremonie.
-const ALLOWED_PRODUCT_FIELDS = ['name', 'description', 'price', 'currency', 'images', 'stock', 'published', 'position', 'for_sale'] as const;
+// DETTE 2 -- `stock` RETIRE de cette liste, et d'elle SEULE. Le POST le
+// conserve : creer un produit avec un stock initial n'ecrase rien, la ligne
+// n'existe pas encore. Le mettre a jour, si.
+//
+// CE QUI ETAIT OUVERT. Un `PATCH { stock: N }` ecrasait absolument le
+// compteur. Le trigger de l'etape 2 est `before update OF track_inventory` :
+// un UPDATE dont le SET ne mentionne pas cette colonne ne le reveille jamais.
+// La colonne `stock` n'a donc jamais eu de garde propre -- les etapes 1 a 7
+// ont protege la POLITIQUE (`track_inventory`) et l'AFFIRMATION
+// (`stock_counted_at`), pas la VALEUR. Consequence mesuree : apres un comptage
+// a 50, un PATCH a 0 laissait `stock_counted_at` affirmer un comptage dont la
+// valeur n'existait plus. Le marqueur d'affirmation devenait un mensonge, sans
+// erreur ni journal.
+//
+// CE QUI REVOQUE UNE DECISION ANTERIEURE. L'etape 6 avait explicitement statue
+// que « `stock` reste librement modifiable -- c'est la VALEUR ; seule la
+// POLITIQUE et l'AFFIRMATION sont reservees au chemin metier ». Cette regle
+// est revoquee : la valeur ne change desormais que par COMPTAGE
+// (`enable_stock_tracking`, qui pose l'horodatage) ou par VENTE
+// (`decrement_shop_stock_batch` / `cancel_shop_order`, atomiques).
+//
+// SEMANTIQUE INCHANGEE : un champ absent de cette liste est IGNORE, jamais
+// rejete par un 400. Un client qui enverrait encore `stock` ne recevra pas
+// d'erreur -- sa valeur sera simplement omise du patch.
+//
+// Audit Mode 3 global (CRIT-2) -- voir shop/products/route.ts pour le
+// raisonnement complet sur l'allowlist elle-meme (cj_vid/cost_price).
+const ALLOWED_PRODUCT_FIELDS = ['name', 'description', 'price', 'currency', 'images', 'published', 'position', 'for_sale'] as const;
 
 /** PATCH /api/shop/products/[id] → met à jour un produit. */
 export async function PATCH(req: Request, { params }: Ctx) {

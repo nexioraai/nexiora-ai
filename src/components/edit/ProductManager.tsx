@@ -2,6 +2,11 @@
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/lib/translations';
+// DETTE 6c — l'etat initial du formulaire, la lecture d'un produit existant
+// et la charge envoyee vivent desormais dans un module PUR, verifiable sans
+// jsdom (ce depot n'en a pas). Ce composant ne garde que le rendu et les
+// appels reseau. Voir productDraft.ts pour le raisonnement complet.
+import { EMPTY_DRAFT, draftFromProduct, payloadFromDraft, type ProductDraft } from './productDraft';
 
 // Couleur accent admin Nexiora — changer ici se répercute partout dans ce composant.
 const ACCENT = '#FA5D1E';
@@ -22,53 +27,11 @@ type Product = {
   position: number;
 };
 
-// ÉTAPE 7 du chantier catalogue canonique — `stock` N'EST PLUS DANS LE DRAFT.
-//
-// Il y était, et c'était le défaut : le formulaire chargeait `stock` à
-// l'ouverture puis le renvoyait dans CHAQUE sauvegarde. Un marchand qui
-// comptait 50 unités, puis corrigeait le prix depuis un formulaire ouvert
-// AVANT le comptage, réécrivait silencieusement l'ancien stock — le comptage
-// était perdu sans qu'aucune erreur n'apparaisse.
-//
-// Le retirer du draft rend cette perte STRUCTURELLEMENT impossible : la
-// sauvegarde générale n'a plus de valeur de stock à envoyer. Le stock initial
-// se saisit à la CRÉATION (état `createStock` ci-dessous, envoyé au seul
-// POST) ; ensuite il ne bouge plus que par un comptage explicite ou par une
-// vente. C'est exactement la politique posée par les étapes 1 à 6 : le stock
-// est un fait observé, pas un champ de formulaire.
-type Draft = {
-  name: string;
-  description: string;
-  price: string;
-  currency: string;
-  images: string[];
-  published: boolean;
-  /**
-   * ÉTAPE 8, VOLET A — DANS le draft, contrairement à `stock`.
-   *
-   * `stock` en a été retiré parce qu'un comptage est un FAIT observé qu'une
-   * sauvegarde générale ne doit jamais pouvoir écraser. `for_sale` est une
-   * INTENTION : le marchand la déclare au même moment et par le même geste
-   * que la visibilité. Les deux cases vivent donc côte à côte, et rien ne
-   * se perd si l'une écrase l'autre — elles décrivent l'instant présent.
-   */
-  for_sale: boolean;
-};
-
-// `for_sale: true` reproduit le DEFAULT de la colonne, il ne le REMPLACE pas :
-// c'est l'état initial d'un formulaire, pas une règle de création. Le backend
-// n'en pose aucune — `createProduct` n'envoie que les champs fournis, et
-// PostgreSQL applique son défaut pour tout appelant qui omet le champ.
-const EMPTY_DRAFT: Draft = {
-  name: '', description: '', price: '', currency: 'CAD',
-  images: [], published: true, for_sale: true,
-};
-
 export default function ProductManager({ slug }: { slug: string }) {
   const { t } = useTranslation();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
+  const [draft, setDraft] = useState<ProductDraft>(EMPTY_DRAFT);
   const [editingId, setEditingId] = useState<string | null>(null);
   const formRef = useRef<HTMLDivElement | null>(null);
   const [busy, setBusy] = useState(false);
@@ -142,17 +105,7 @@ export default function ProductManager({ slug }: { slug: string }) {
 
   function startEdit(p: Product) {
     setEditingId(p.id);
-    setDraft({
-      name: p.name,
-      description: p.description ?? '',
-      price: String(p.price),
-      currency: p.currency,
-      images: p.images ?? [],
-      published: p.published,
-      // `!== false` et non `=== true` : si le champ manquait de la lecture,
-      // l'ouverture du formulaire ne doit pas dévendre le produit en silence.
-      for_sale: p.for_sale !== false,
-    });
+    setDraft(draftFromProduct(p));
     // Le comptage ne se pré-remplit PAS avec le stock actuel : un champ
     // pré-rempli invite à re-valider une valeur qu'on n'a pas comptée, ce qui
     // est précisément l'affirmation sans preuve que la barrière de l'étape 2
@@ -166,18 +119,7 @@ export default function ProductManager({ slug }: { slug: string }) {
     if (!draft.name.trim()) { setMsg('Le nom est requis'); return; }
     setBusy(true);
     setMsg('');
-    // ÉTAPE 7 — `stock` est ABSENT de ce payload commun, délibérément. La
-    // sauvegarde générale d'un produit ne doit jamais pouvoir écraser un
-    // comptage : elle ne transporte plus aucune valeur de stock.
-    const payload = {
-      name: draft.name.trim(),
-      description: draft.description.trim() || null,
-      price: parseFloat(draft.price) || 0,
-      currency: draft.currency,
-      images: draft.images,
-      published: draft.published,
-      for_sale: draft.for_sale,
-    };
+    const payload = payloadFromDraft(draft);
     try {
       let res: Response;
       if (editingId) {

@@ -9,7 +9,7 @@ import AddToCartButton from './AddToCartButton'
 import ShippingEstimate from './ShippingEstimate'
 import TiltCard from './TiltCard'
 import { getCartLabels } from './cartLabels'
-import { type Site, normalizeProduct, mockupsToProducts } from './shared'
+import { type Site, normalizeProduct, mockupsToProducts, canAddToCart } from './shared'
 import { getDict } from './i18n'
 import { INK, GOLD, CREAM_DEEP } from './VifTheme'
 
@@ -41,7 +41,7 @@ export default function VifShopSection({ site }: { site: Site }) {
               <div className="p-6">
                 <h3 className="text-lg mb-1" style={{ fontFamily: 'var(--font-fraunces), serif' }}>{p.name}</h3>
                 {p.price && <div className="text-sm font-semibold mb-4" style={{ color: GOLD }}>{p.price}</div>}
-                {p.id && p.priceNumber != null ? (
+                {canAddToCart(p) ? (
                   <AddToCartButton
                     id={p.id}
                     name={p.name}

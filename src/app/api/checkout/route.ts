@@ -1,36 +1,48 @@
 import { NextResponse } from 'next/server';
-import { supabase as supabaseAnon } from '@/lib/supabase';
+import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 import { getStripe } from '@/lib/stripe';
 
 export async function POST(req: Request) {
   try {
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { data: { user }, error: userError } = await supabaseAnon.auth.getUser(token);
-    if (userError || !user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { slug } = await req.json();
     if (!slug) {
       return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
     }
 
-    // Récupérer le site de l'utilisateur (sécurité : slug ET owner_email)
-    const { data: site, error: siteError } = await supabase
-      .from('sites')
-      .select('slug, owner_email, stripe_customer_id')
-      .eq('slug', slug)
-      .eq('owner_email', user.email)
-      .single();
+    // ============================================================
+    // DETTE 6a, EXTENSION -- `owner_id` EST L'IDENTITE, PAS `owner_email`.
+    //
+    // Cette route resolvait le site par `.eq('slug', slug).eq('owner_email',
+    // user.email)`, seule garde de propriete avant la creation d'un CLIENT
+    // STRIPE REEL et d'une session d'abonnement.
+    //
+    // CE QUE CELA OUVRAIT. `sites.owner_email` est ecrite UNE SEULE FOIS, a
+    // la creation du site (api/chat/route.ts), et AUCUN update ne la touche
+    // jamais -- verifie par balayage. Un proprietaire qui change d'adresse
+    // laisse donc la colonne figee sur l'ancienne. Quiconque obtient ensuite
+    // cette adresse chez le fournisseur d'identite devenait proprietaire aux
+    // yeux de cette route : il pouvait souscrire un abonnement sur le site
+    // d'autrui, pendant que le proprietaire legitime en perdait l'acces.
+    //
+    // AUCUN MECANISME NOUVEAU. `requireSiteOwner` est la primitive canonique
+    // deja employee par 18 routes : `owner_id` prioritaire, repli sur
+    // `owner_email` UNIQUEMENT quand `owner_id` est encore null cote base
+    // (site anterieur au backfill) -- jamais quand il est renseigne mais
+    // different. Ecrire la regle ici en aurait cree une seconde copie.
+    //
+    // ORDRE : la propriete est tranchee AVANT tout appel Stripe.
+    // ============================================================
+    const auth = await requireSiteOwner(req, slug, 'id, slug, stripe_customer_id');
+    if (!auth.ok) return auth.response;
+    const site = auth.site as { id: string; slug: string; stripe_customer_id: string | null };
 
-    if (siteError || !site) {
-      return NextResponse.json({ error: 'Site not found or unauthorized' }, { status: 404 });
+    // L'adresse sert de DONNEE Stripe (email du client, metadata), jamais de
+    // cle d'identite. La route exigeait deja une adresse presente : ce
+    // controle preserve ce contrat, il ne decide d'aucune propriete.
+    const ownerEmail = auth.email;
+    if (!ownerEmail) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Récupérer ou créer le client Stripe. Cle d'idempotence Stripe (audit
@@ -52,17 +64,36 @@ export async function POST(req: Request) {
     if (!customerId) {
       const customer = await getStripe().customers.create(
         {
-          email: user.email,
-          metadata: { slug: site.slug, owner_email: user.email },
+          email: ownerEmail,
+          metadata: { slug: site.slug, owner_email: ownerEmail },
         },
         { idempotencyKey: `nexiora_site_publish_customer_${site.slug}` }
       );
       customerId = customer.id;
-      await supabase
+      // DETTE 6a, EXTENSION -- CETTE ECRITURE N'EST PAS UNE GARDE.
+      // La propriete est deja tranchee ci-dessus ; sans elle on ne serait pas
+      // ici. La clause `owner_email` n'y etait qu'une redondance -- mais une
+      // redondance DANGEREUSE : son resultat n'etait jamais verifie, si bien
+      // qu'un non-appariement aurait perdu `stripe_customer_id` EN SILENCE,
+      // et le webhook n'aurait plus jamais pu rattacher le paiement au site
+      // (l'incident decrit plus haut dans ce fichier).
+      //
+      // ANCRAGE SUR `id`, ET SURTOUT PAS SUR `owner_id`. La primitive
+      // autorise encore un repli sur `owner_email` quand `owner_id` est null ;
+      // filtrer sur `owner_id` casserait ce cas, PostgREST traduisant
+      // `.eq(col, null)` en `col=eq.null`, qui n'apparie aucune ligne NULL.
+      // La ligne dont la propriete vient d'etre etablie est designee par son
+      // identifiant, sans reinterpreter la regle.
+      const { error: updateError } = await supabase
         .from('sites')
         .update({ stripe_customer_id: customerId })
-        .eq('slug', slug)
-        .eq('owner_email', user.email);
+        .eq('id', site.id);
+      if (updateError) {
+        // Journalise, sans changer le flux : le client Stripe existe deja et
+        // la cle d'idempotence rend un rejeu sur. Ce qui manquait, c'etait la
+        // VISIBILITE de l'echec.
+        console.error('Checkout: stripe_customer_id non enregistre', updateError);
+      }
     }
 
     // Origine pour les URLs de retour (local vs prod automatiquement)
@@ -74,7 +105,7 @@ export async function POST(req: Request) {
       line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
       success_url: `${origin}/welcome?slug=${site.slug}`,
       cancel_url: `${origin}/dashboard?checkout=canceled`,
-      metadata: { slug: site.slug, owner_email: user.email },
+      metadata: { slug: site.slug, owner_email: ownerEmail },
     });
 
     return NextResponse.json({ url: session.url });

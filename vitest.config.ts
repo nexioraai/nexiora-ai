@@ -135,6 +135,19 @@ export default defineConfig({
       // verifie ici par le delta de comptage de tests apres ajout.
       'src/lib/agent-tools/**/*.test.ts',
       'src/app/api/agent/**/*.test.ts',
+      // DETTE 6a, EXTENSION -- DEUX prefixes ajoutes, tous deux absents
+      // jusqu'ici, alors que ces deux routes portaient chacune une garde de
+      // propriete defaillante et AUCUN test :
+      //   * src/app/api/sites/  -- le PATCH de `sites/[slug]` ecrit 19
+      //     colonnes de contenu en service_role ;
+      //   * src/app/api/marketing/ -- `generate` lit le site entier et le
+      //     transmet a trois fournisseurs externes.
+      // Sans ces lignes, leurs tests passent en isolation mais ne sont JAMAIS
+      // collectes par `vitest run` -- donc jamais en CI, silencieusement.
+      // C'est le piege deja documente huit fois plus haut dans ce fichier ;
+      // verifie ici par le delta de comptage de tests apres ajout.
+      'src/app/api/sites/**/*.test.ts',
+      'src/app/api/marketing/**/*.test.ts',
     ],
     environment: 'node',
   },

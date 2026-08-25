@@ -25,11 +25,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const fromCalls: string[] = [];
 const orderCalls: Array<[string, unknown]> = [];
+// DETTE 6c — les colonnes REELLEMENT demandees. Sans cette capture, on ne
+// pourrait pas distinguer « la projection expose forSale » de « la requete
+// ramene la colonne » : un select amputé rendrait la projection aveugle sans
+// qu'aucune assertion ne bouge.
+const selectsAppeles: string[] = [];
 
 function makeQueryBuilder(resolveValue: { data: any; error: any }) {
   const b: any = {};
   const self = () => b;
-  b.select = self;
+  b.select = (cols?: string) => { if (typeof cols === 'string') selectsAppeles.push(cols); return b; };
   b.eq = self;
   b.order = (col: string, opts: unknown) => {
     orderCalls.push([col, opts]);
@@ -68,6 +73,10 @@ function ligne(over: Record<string, unknown> = {}) {
   return {
     id: 'p-1', name: 'Mug', description: 'Céramique',
     price: 12, currency: 'CAD', images: ['https://x.test/mug.png'], cj_vid: null,
+    // DETTE 6c — la colonne fait partie de la projection reelle depuis cette
+    // dette : la fixture doit la porter, sinon elle decrit une requete qui
+    // n'existe plus.
+    for_sale: true,
     ...over,
   };
 }
@@ -85,6 +94,7 @@ function site(over: Record<string, unknown> = {}) {
 beforeEach(() => {
   fromCalls.length = 0;
   orderCalls.length = 0;
+  selectsAppeles.length = 0;
   siteResult = { data: site(), error: null };
   shopProductsResult = { data: [], error: null };
   catalogSelectionsResult = { data: [], error: null };
@@ -209,7 +219,10 @@ for (const [nom, appel] of FONCTIONS) {
   });
 
   describe(`${nom} — CAS 6 : forme exacte du mapping`, () => {
-    it('les 8 champs projetés, aux formats exacts', async () => {
+    // DETTE 6c — NEUF champs, et non plus huit. Le `toEqual` est exhaustif :
+    // c'est lui qui garantit qu'aucun autre champ interne n'a été promu au
+    // passage. Ce bloc est exécuté pour fetchSite ET fetchSitePreview.
+    it('les 9 champs projetés, aux formats exacts', async () => {
       shopProductsResult = { data: [ligne()], error: null };
       const mod = await import('../shared');
       const s = await appel(mod);
@@ -222,6 +235,7 @@ for (const [nom, appel] of FONCTIONS) {
         currency: 'CAD',
         image: 'https://x.test/mug.png',  // images[0], pas le tableau
         cjVid: null,
+        forSale: true,               // DETTE 6c — l'achetabilité, seul champ ajouté
       });
     });
 
@@ -248,16 +262,58 @@ for (const [nom, appel] of FONCTIONS) {
       expect(s.products[0].cjVid).toBe('VID-9');
     });
 
-    it('`stock`, `published`, `track_inventory` et `for_sale` ne sont PAS exposés au public', async () => {
+    // ============================================================
+    // DETTE 6c — CLIQUET RETOURNÉ, CONSCIEMMENT.
+    //
+    // Il interdisait `for_sale` au public. C'était le verrou exact du défaut :
+    // la vitrine ne pouvait pas savoir qu'un produit n'était plus vendable, et
+    // affichait donc « Ajouter au panier » sur un article que le checkout
+    // refuse ensuite (409). Le cliquet ne disparaît pas — il change de cible :
+    // `for_sale` DOIT désormais être exposé, et les trois autres champs
+    // DOIVENT rester interdits. Il rougit dans les deux sens.
+    // ============================================================
+    it('`stock`, `published` et `track_inventory` ne sont TOUJOURS PAS exposés au public', async () => {
       shopProductsResult = {
         data: [ligne({ stock: 42, published: true, track_inventory: true, for_sale: false })],
         error: null,
       };
       const mod = await import('../shared');
       const s = await appel(mod);
-      for (const interdit of ['stock', 'published', 'track_inventory', 'for_sale']) {
+      for (const interdit of ['stock', 'published', 'track_inventory']) {
         expect(s.products[0], interdit).not.toHaveProperty(interdit);
       }
+      // La colonne brute ne fuit pas non plus sous son nom SQL.
+      expect(s.products[0]).not.toHaveProperty('for_sale');
+    });
+
+    it('DETTE 6c — `forSale` EST exposé, et reflète la valeur réelle', async () => {
+      shopProductsResult = { data: [ligne({ for_sale: false })], error: null };
+      const mod = await import('../shared');
+      const s = await appel(mod);
+      expect(s.products[0]).toHaveProperty('forSale');
+      expect(s.products[0].forSale).toBe(false);
+    });
+
+    it('DETTE 6c — un produit vendable est exposé `forSale: true`', async () => {
+      shopProductsResult = { data: [ligne({ for_sale: true })], error: null };
+      const mod = await import('../shared');
+      const s = await appel(mod);
+      expect(s.products[0].forSale).toBe(true);
+    });
+
+    it('DETTE 6c — champ ABSENT de la ligne -> `forSale: true` (le checkout reste la vraie barrière)', async () => {
+      const l = ligne({});
+      delete (l as Record<string, unknown>).for_sale;
+      shopProductsResult = { data: [l], error: null };
+      const mod = await import('../shared');
+      const s = await appel(mod);
+      expect(s.products[0].forSale).toBe(true);
+    });
+
+    it('DETTE 6c — la requête DEMANDE bien `for_sale` : sans lui, la projection serait aveugle', async () => {
+      const mod = await import('../shared');
+      await appel(mod);
+      expect(selectsAppeles.some((c) => c.includes('for_sale'))).toBe(true);
     });
   });
 
@@ -411,5 +467,264 @@ describe('LE REPLI EXISTE À DEUX ENDROITS, ET ILS SONT IDENTIQUES', () => {
       .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
     expect(code).toContain('canTransact(data?.mode)');
     expect(code).not.toMatch(/mode === 2 \|\| .*mode === 3/);
+  });
+});
+
+// ============================================================
+// DETTE 3 — LE SIGNAL DE PANNE, SANS TOUCHER AU RENDU.
+//
+// Une panne PostgREST était jusqu'ici INDISTINGUABLE d'un résultat vide :
+// `error` n'était pas destructuré, `data` valait `null`, la vitrine affichait
+// un catalogue vide et personne ne le savait.
+//
+// Ce que ces tests verrouillent, et rien d'autre : le SIGNAL apparaît, et le
+// RENDU ne bouge pas d'un iota. Les cas 1 à 9 ci-dessus restent inchangés mot
+// pour mot — c'est la preuve que l'observabilité n'a rien débordé.
+// ============================================================
+describe('DETTE 3 — `diagnostics` : signal de panne', () => {
+  const PANNE = { message: 'column shop_products.foo does not exist', code: '42703' };
+
+  describe('erreur `shop_products` dans fetchSite', () => {
+    for (const [label, mode, attendu] of [
+      ['MODE 1 — le jsonb reste conservé', 1, ['Café Latte', 'Croissant']],
+      ['MODE 2 — le catalogue reste vide', 2, []],
+      ['MODE 3 — le catalogue reste vide', 3, []],
+    ] as Array<[string, number, string[]]>) {
+      it(`${label}, ET le diagnostic est présent`, async () => {
+        siteResult = { data: site({ mode, dropship_type: mode === 3 ? 'pod_brand' : null }), error: null };
+        shopProductsResult = { data: null, error: PANNE };
+        const diagnostics: string[] = [];
+        const { fetchSite } = await import('../shared');
+        const s = await fetchSite('ma-boutique', false, diagnostics);
+
+        // LE RENDU N'A PAS CHANGÉ.
+        expect(noms(s)).toEqual(attendu);
+        // LE SIGNAL EXISTE.
+        expect(diagnostics).toHaveLength(1);
+        expect(diagnostics[0]).toContain('fetchSite/shop_products');
+        expect(diagnostics[0]).toContain('column shop_products.foo does not exist');
+      });
+    }
+
+    it('AUCUN 404 supplémentaire : une panne ne rend jamais `null`', async () => {
+      shopProductsResult = { data: null, error: PANNE };
+      const diagnostics: string[] = [];
+      const { fetchSite } = await import('../shared');
+      const s = await fetchSite('ma-boutique', false, diagnostics);
+      // `null` continue de ne signifier QUE « site introuvable ». Les
+      // appelants font `if (!site) notFound()` / `404` : transformer une
+      // panne de catalogue en 404 supprimerait un site publié.
+      expect(s).not.toBeNull();
+      expect(s!.name).toBe('Ma Boutique');
+    });
+  });
+
+  describe('erreur `site_catalog_selections` en Mode 3', () => {
+    it('les shop_products déjà posés RESTENT, aucun catalog-* inventé, ET le diagnostic est présent', async () => {
+      siteResult = { data: site({ mode: 3, dropship_type: 'reseller' }), error: null };
+      shopProductsResult = { data: [ligne()], error: null };
+      catalogSelectionsResult = { data: null, error: { message: 'relation does not exist', code: '42P01' } };
+      const diagnostics: string[] = [];
+      const { fetchSite } = await import('../shared');
+      const s = await fetchSite('ma-boutique', false, diagnostics);
+
+      expect(noms(s)).toEqual(['Mug']);
+      expect(diagnostics).toHaveLength(1);
+      expect(diagnostics[0]).toContain('loadCatalogSelections/site_catalog_selections');
+    });
+
+    it('les DEUX requêtes en panne -> DEUX diagnostics, rendu vide, pas de null', async () => {
+      siteResult = { data: site({ mode: 3, dropship_type: 'reseller' }), error: null };
+      shopProductsResult = { data: null, error: PANNE };
+      catalogSelectionsResult = { data: null, error: { message: 'relation does not exist', code: '42P01' } };
+      const diagnostics: string[] = [];
+      const { fetchSite } = await import('../shared');
+      const s = await fetchSite('ma-boutique', false, diagnostics);
+      expect(s).not.toBeNull();
+      expect(s!.products).toEqual([]);
+      expect(diagnostics).toHaveLength(2);
+    });
+
+    it('Mode 3 pod_brand : la requête catalogue n\'est pas faite, donc jamais de diagnostic', async () => {
+      siteResult = { data: site({ mode: 3, dropship_type: 'pod_brand' }), error: null };
+      shopProductsResult = { data: [ligne()], error: null };
+      catalogSelectionsResult = { data: null, error: { message: 'ne doit pas etre lue' } };
+      const diagnostics: string[] = [];
+      const { fetchSite } = await import('../shared');
+      await fetchSite('ma-boutique', false, diagnostics);
+      expect(fromCalls).not.toContain('site_catalog_selections');
+      expect(diagnostics).toEqual([]);
+    });
+  });
+
+  describe('AUCUN faux positif — un résultat vide légitime ne signale RIEN', () => {
+    it('succès avec des lignes -> diagnostics vide', async () => {
+      shopProductsResult = { data: [ligne()], error: null };
+      const diagnostics: string[] = [];
+      const { fetchSite } = await import('../shared');
+      await fetchSite('ma-boutique', false, diagnostics);
+      expect(diagnostics).toEqual([]);
+    });
+
+    it('`data: []` (boutique sans produit publié) -> diagnostics vide', async () => {
+      // Sans cette distinction, CHAQUE boutique sans produit publié
+      // remplirait le journal d'anomalies à chaque visite.
+      shopProductsResult = { data: [], error: null };
+      const diagnostics: string[] = [];
+      const { fetchSite } = await import('../shared');
+      await fetchSite('ma-boutique', false, diagnostics);
+      expect(diagnostics).toEqual([]);
+    });
+
+    it('`data: null` SANS erreur -> diagnostics vide', async () => {
+      shopProductsResult = { data: null, error: null };
+      const diagnostics: string[] = [];
+      const { fetchSite } = await import('../shared');
+      await fetchSite('ma-boutique', false, diagnostics);
+      expect(diagnostics).toEqual([]);
+    });
+
+    it('Mode 3, catalogue vide sans erreur -> diagnostics vide', async () => {
+      siteResult = { data: site({ mode: 3, dropship_type: 'reseller' }), error: null };
+      shopProductsResult = { data: [ligne()], error: null };
+      catalogSelectionsResult = { data: [], error: null };
+      const diagnostics: string[] = [];
+      const { fetchSite } = await import('../shared');
+      await fetchSite('ma-boutique', false, diagnostics);
+      expect(diagnostics).toEqual([]);
+    });
+  });
+
+  describe('`diagnostics` est OPTIONNEL — le contrat reste rétrocompatible', () => {
+    it('appeler fetchSite sans le tableau ne change rien au rendu', async () => {
+      shopProductsResult = { data: null, error: PANNE };
+      const { fetchSite } = await import('../shared');
+      const s = await fetchSite('ma-boutique');
+      expect(s).not.toBeNull();
+      expect(s!.products).toEqual([]);
+    });
+
+    it('le repli `console.error` prend alors le relais — le signal n\'est jamais perdu', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      shopProductsResult = { data: null, error: PANNE };
+      const { fetchSite } = await import('../shared');
+      await fetchSite('ma-boutique');
+      expect(spy).toHaveBeenCalledWith(expect.stringContaining('fetchSite/shop_products'));
+      spy.mockRestore();
+    });
+  });
+
+  describe('fetchSitePreview — comportement INCHANGÉ, signal en console', () => {
+    it('sa signature n\'a pas de `diagnostics` : son unique appelant est un composant client', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      shopProductsResult = { data: null, error: PANNE };
+      const { fetchSitePreview } = await import('../shared');
+      const s = await fetchSitePreview('ma-boutique', 'owner@test.com');
+      // Rendu identique à avant la dette 3.
+      expect(s).not.toBeNull();
+      expect(s!.products).toEqual([]);
+      // Signal atteint la console du propriétaire, seul utilisateur de la page.
+      expect(spy).toHaveBeenCalledWith(expect.stringContaining('fetchSitePreview/shop_products'));
+      spy.mockRestore();
+    });
+
+    it('Mode 1 en preview : le jsonb reste conservé', async () => {
+      siteResult = { data: site({ mode: 1 }), error: null };
+      shopProductsResult = { data: null, error: PANNE };
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const { fetchSitePreview } = await import('../shared');
+      const s = await fetchSitePreview('ma-boutique', 'owner@test.com');
+      expect(noms(s)).toEqual(['Café Latte', 'Croissant']);
+      spy.mockRestore();
+    });
+
+    it('succès en preview -> aucun console.error', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      shopProductsResult = { data: [ligne()], error: null };
+      const { fetchSitePreview } = await import('../shared');
+      await fetchSitePreview('ma-boutique', 'owner@test.com');
+      expect(spy).not.toHaveBeenCalled();
+      spy.mockRestore();
+    });
+  });
+});
+
+// ============================================================
+// DETTE 3 — LA FRONTIÈRE SERVEUR, VÉRIFIÉE TEXTUELLEMENT.
+//
+// `logAnomaly` dépend de `supabase-admin` donc de `server-only`. Son entrée
+// dans le graphe de `shared.tsx` fait ÉCHOUER le build — mesuré deux fois,
+// import statique et import dynamique. Ce cliquet empêche que quelqu'un le
+// réintroduise en croyant bien faire.
+// ============================================================
+describe('DETTE 3 — `shared.tsx` ne franchit JAMAIS la frontière serveur', () => {
+  const lire = async (rel: string) => {
+    const { readFileSync } = await import('fs');
+    const { join } = await import('path');
+    return readFileSync(join(__dirname, rel), 'utf-8');
+  };
+
+  it('aucun import de `anomaly`, `supabase-admin` ou `server-only`', async () => {
+    // Sur le CODE, pas sur le fichier brut : les commentaires expliquent
+    // précisément POURQUOI ces modules sont interdits ici, et les nomment
+    // donc. Sanctionner la prose punirait la documentation, pas le défaut.
+    const code = (await lire('../shared.tsx'))
+      .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    expect(code).not.toMatch(/from '@\/lib\/anomaly'/);
+    expect(code).not.toMatch(/import\(['"]@\/lib\/anomaly['"]\)/);
+    expect(code).not.toMatch(/supabase-admin/);
+    expect(code).not.toMatch(/server-only/);
+  });
+
+  it('les trois requêtes destructurent bien `error`', async () => {
+    const SRC = await lire('../shared.tsx');
+    expect([...SRC.matchAll(/error: shopProductsError/g)]).toHaveLength(2);
+    expect([...SRC.matchAll(/error: catSelsError/g)]).toHaveLength(1);
+  });
+
+  it('le signal ne part QUE sur un vrai objet `error`', async () => {
+    const code = (await lire('../shared.tsx'))
+      .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    // Jamais `if (!data)` : un résultat vide légitime ne doit rien signaler.
+    expect([...code.matchAll(/if \(shopProductsError\)/g)]).toHaveLength(2);
+    expect([...code.matchAll(/if \(catSelsError\)/g)]).toHaveLength(1);
+    // Le signal n'est JAMAIS déclenché par l'absence de données : ni `!data`,
+    // ni `.length === 0`. Un résultat vide légitime doit rester muet.
+    expect(code).not.toMatch(/if \(!shopProducts\)[\s\S]{0,120}signalQueryFailure/);
+    expect(code).not.toMatch(/if \(!catSels\)[\s\S]{0,120}signalQueryFailure/);
+    // Trois appels, trois seulement : un par requête instrumentée.
+    expect([...code.matchAll(/signalQueryFailure\(/g)]).toHaveLength(4); // 3 appels + 1 déclaration
+  });
+
+  it('les appelants SERVEUR consommateurs de `products` journalisent', async () => {
+    for (const rel of [
+      '../../page.tsx',
+      '../../llms.txt/route.ts',
+      '../../../../api/internal/site-sitemap/[slug]/route.ts',
+    ]) {
+      const SRC = await lire(rel);
+      expect(SRC, rel).toMatch(/from '@\/lib\/anomaly'/);
+      expect(SRC, rel).toMatch(/const diagnostics: string\[\] = \[\]/);
+      expect(SRC, rel).toMatch(/type: 'storefront_query_failed'/);
+      expect(SRC, rel).toMatch(/severity: 'warning'/);
+    }
+  });
+
+  it("aucun appelant ne transforme une panne en 404", async () => {
+    // `notFound()` et les 404 restent conditionnés au SEUL `!site`. Une panne
+    // de catalogue n'a jamais fait disparaître un site publié, et ne doit pas
+    // commencer.
+    const page = await lire('../../page.tsx');
+    const pageCode = page.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    expect(pageCode).toMatch(/if \(!site\) notFound\(\)/);
+    // UN SEUL appel, et il ne dépend que de `!site`.
+    expect([...pageCode.matchAll(/notFound\(\)/g)]).toHaveLength(1);
+    expect(pageCode).not.toMatch(/diagnostics\.length[\s\S]{0,60}notFound/);
+
+    for (const rel of ['../../llms.txt/route.ts', '../../../../api/internal/site-sitemap/[slug]/route.ts']) {
+      const SRC = await lire(rel);
+      expect(SRC, rel).toMatch(/if \(!site\) \{\s*\n\s*return new Response\('Not found', \{ status: 404 \}\)/);
+      expect(SRC, rel).not.toMatch(/diagnostics\.length[\s\S]{0,60}404/);
+    }
   });
 });

@@ -359,30 +359,71 @@ describe('IDEMPOTENCE ET REJEU — un double clic ne doit rien casser', () => {
 });
 
 // ------------------------------------------------------------
-// CARACTÉRISATION — id non-UUID.
+// DETTE 6d — CE BLOC A CHANGÉ DE CAMP, ET C'ÉTAIT SA FONCTION.
 //
-// Mesuré, PAS décidé : `getProduct()` transmet l'id à PostgreSQL, qui refuse
-// `not-a-uuid` (« invalid input syntax for type uuid »). L'erreur remonte, est
-// capturée par le try/catch, et donne 500. Ce comportement est EXACTEMENT
-// celui de PATCH et DELETE de `/api/shop/products/[id]` (même try/catch, même
-// getProduct) depuis toujours. Cette route l'hérite sans le modifier : lui
-// inventer un 400 ici créerait une divergence entre deux routes qui partagent
-// la même garde, pour un cas qu'aucune UI ne peut produire.
-// Consigné plutôt que corrigé — hors périmètre de l'étape 7.
+// Écrit à l'étape 7, il figeait un comportement HÉRITÉ : `getProduct()`
+// transmettait l'id à PostgreSQL, qui refusait `not-a-uuid`, l'erreur
+// remontait au try/catch et donnait 500 — avec, dans le corps, le message
+// Postgres brut. C'était consigné, pas approuvé :
+//
+//     « Consigné plutôt que corrigé — hors périmètre de l'étape 7. »
+//
+// La dette 6d le corrige. `requireProductOwner` vérifie désormais la FORME de
+// l'identifiant AVANT toute requête : un segment qui n'est pas un uuid ne
+// désigne aucun produit, donc 404, avec le même message contrôlé qu'un uuid
+// bien formé mais inexistant. Ces deux tests sont passés au rouge à la
+// correction (mesuré : « expected 404 to be 500 » ×2) puis retournés — c'est
+// exactement ce qu'on attend d'un test de caractérisation.
 // ------------------------------------------------------------
-describe('CARACTÉRISATION — id non-UUID (comportement hérité, non modifié)', () => {
-  it('POST avec un id non-UUID -> 500, comme PATCH/DELETE du produit', async () => {
-    getProductMock.mockRejectedValue(new Error('getProduct: invalid input syntax for type uuid: "not-a-uuid"'));
+describe('DETTE 6d — id non-UUID : 404 contrôlé, jamais 500', () => {
+  it('POST avec un id non-UUID -> 404, message contrôlé, aucune écriture', async () => {
     const { POST } = await import('../route');
     const res = await POST(postReq({ units: 5 }), ctx('not-a-uuid'));
-    expect(res.status).toBe(500);
+    const json = await res.json();
+
+    expect(res.status).toBe(404);
+    expect(json.error).toBe('Product not found');
     expect(enableStockTrackingMock).not.toHaveBeenCalled();
   });
 
-  it('DELETE avec un id non-UUID -> 500, aucune écriture', async () => {
-    getProductMock.mockRejectedValue(new Error('getProduct: invalid input syntax for type uuid: "not-a-uuid"'));
+  it('DELETE avec un id non-UUID -> 404, aucune écriture', async () => {
     const { DELETE } = await import('../route');
-    expect((await DELETE(deleteReq(), ctx('not-a-uuid'))).status).toBe(500);
+    const res = await DELETE(deleteReq(), ctx('not-a-uuid'));
+
+    expect(res.status).toBe(404);
+    expect((await res.json()).error).toBe('Product not found');
     expect(disableStockTrackingMock).not.toHaveBeenCalled();
+  });
+
+  it('la base n’est même plus interrogée : la forme est refusée avant getProduct', async () => {
+    getProductMock.mockClear();
+    const { POST } = await import('../route');
+    await POST(postReq({ units: 5 }), ctx('not-a-uuid'));
+    expect(getProductMock).not.toHaveBeenCalled();
+  });
+
+  it('AUCUN message Postgres ne peut sortir — ni type, ni moteur, ni fonction interne', async () => {
+    const { POST } = await import('../route');
+    for (const mauvais of ['not-a-uuid', '../../etc/passwd', "1' or '1'='1", '11111111-1111-4111-8111-11111111111', '']) {
+      const res = await POST(postReq({ units: 5 }), ctx(mauvais));
+      const brut = JSON.stringify(await res.json());
+      expect(res.status, mauvais).toBe(404);
+      expect(brut, mauvais).not.toMatch(/invalid input syntax|uuid|getProduct|postgres/i);
+    }
+  });
+
+  it('un uuid bien formé mais inconnu -> MÊME réponse : rien ne distingue les deux cas', async () => {
+    getProductMock.mockResolvedValue(null);
+    const { POST } = await import('../route');
+    const inconnu = await POST(postReq({ units: 5 }), ctx('22222222-2222-4222-8222-222222222222'));
+    const malforme = await POST(postReq({ units: 5 }), ctx('not-a-uuid'));
+
+    expect(inconnu.status).toBe(malforme.status);
+    expect(await inconnu.json()).toEqual(await malforme.json());
+  });
+
+  it('un uuid VALIDE continue de fonctionner exactement comme avant', async () => {
+    const { POST } = await import('../route');
+    expect((await POST(postReq({ units: 7 }), ctx())).status).toBe(200);
   });
 });

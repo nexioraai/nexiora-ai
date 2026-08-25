@@ -62,7 +62,12 @@ function chain() {
 
 const req = (body: unknown, method = 'POST') =>
   new Request('https://woorri.test/api', { method, body: JSON.stringify(body) });
-const ctx = { params: Promise.resolve({ id: 'p1' }) };
+// DETTE 6d — `requireProductOwner` verifie desormais la FORME de
+// l'identifiant avant toute requete : un segment d'URL qui n'est pas un
+// uuid ne designe aucun produit. `'p1'` decrivait une URL qu'aucun produit
+// reel ne peut porter. Fixture seule -- aucune assertion ne change de sens.
+const PRODUCT_ID = '11111111-1111-4111-8111-111111111111';
+const ctx = { params: Promise.resolve({ id: PRODUCT_ID }) };
 
 beforeEach(() => {
   fromMock.mockReset().mockImplementation(chain);

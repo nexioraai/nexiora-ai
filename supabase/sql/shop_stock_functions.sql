@@ -1,3 +1,37 @@
+-- =============================================================
+-- ⚠️  AVERTISSEMENT D'OBSOLESCENCE PARTIELLE — LIRE AVANT DE REJOUER
+-- =============================================================
+--
+-- CE FICHIER EST À MOITIÉ PÉRIMÉ. Il définit deux fonctions, et une seule
+-- des deux fait encore autorité.
+--
+--   PÉRIMÉE   `decrement_shop_stock_batch`   (section marquée plus bas)
+--             REMPLACÉE par la version canonique :
+--             supabase/sql/shop_products_inventory_policy_step4_decrement_respects_tracking.sql
+--             NE PAS REJOUER cette section.
+--
+--   CONSERVÉE `cancel_shop_order`
+--             Ce fichier en est la SEULE définition versionnée du dépôt, et
+--             c'est celle qui est DÉPLOYÉE. Ne pas la supprimer, ne pas la
+--             déplacer.
+--
+-- CE QUI ARRIVE SI LA SECTION PÉRIMÉE EST REJOUÉE. Elle réinstalle un
+-- `decrement_shop_stock_batch` qui IGNORE `track_inventory` (0 occurrence
+-- dans cette version). Une commande mêlant un produit suivi et un produit
+-- non suivi échouerait alors EN BLOC, déclenchant un remboursement Stripe
+-- automatique. La régression serait SILENCIEUSE : les cliquets du dépôt
+-- lisent des fichiers, jamais la base — aucun test ne la verrait.
+--
+-- POURQUOI CET AVERTISSEMENT EXISTE DU CÔTÉ DE CE FICHIER. La relation
+-- entre les deux versions était déjà documentée — mais en tête du fichier
+-- de l'étape 4, c'est-à-dire du côté que l'on ne lit pas quand on ouvre
+-- celui-ci pour l'exécuter. Le danger n'était pas l'ignorance, c'était la
+-- place de l'avertissement.
+--
+-- AUCUNE INSTRUCTION SQL DE CE FICHIER N'A ÉTÉ MODIFIÉE par cet ajout :
+-- seuls des commentaires ont été insérés.
+-- =============================================================
+
 -- F7 (audit stock Mode 2) — fonction PostgreSQL pour la decrementation
 -- atomique du stock a la confirmation de paiement. A executer manuellement
 -- dans l'editeur SQL Supabase (meme convention que fulfillment_functions.sql,
@@ -148,6 +182,25 @@ alter table shop_order_items add column if not exists stock_decremented boolean 
 -- de l'audit F7 (course shop_orders.status webhook vs annulation) et les
 -- Tests J/K (course shop_products.stock).
 -- ============================================================
+-- =============================================================
+-- ⚠️  SECTION PÉRIMÉE — NE PAS REJOUER
+--
+-- La définition de `decrement_shop_stock_batch` qui suit est celle d'AVANT
+-- l'étape 4 du chantier catalogue canonique. Elle ne connaît pas
+-- `track_inventory` : son UPDATE décrémente toute ligne dont le stock suffit,
+-- sans jamais demander si ce produit possède un compteur.
+--
+-- VERSION CANONIQUE, DÉPLOYÉE ET PROUVÉE (banc 12/12 en production) :
+--   supabase/sql/shop_products_inventory_policy_step4_decrement_respects_tracking.sql
+--
+-- Elle est conservée ici telle quelle, sans être corrigée, parce que ce
+-- fichier documente l'état HISTORIQUE : le réécrire créerait une quatrième
+-- copie de la même fonction et aggraverait précisément le défaut que cet
+-- avertissement signale.
+--
+-- Les REVOKE/GRANT qui suivent cette fonction, eux, restent valides —
+-- l'étape 4 les rejoue à l'identique.
+-- =============================================================
 create or replace function decrement_shop_stock_batch(
   p_lines jsonb,
   p_order_id uuid default null

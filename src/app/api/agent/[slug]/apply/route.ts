@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { MIN_MARGIN_PERCENT } from '@/lib/pricing';
-import { supabase as supabaseAnon } from '@/lib/supabase';
+import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 import { resolveProductByName, resolutionMessage } from '@/lib/agent-tools/productResolution';
+import { resolveGalleryImage, galleryResolutionMessage } from '@/lib/agent-tools/galleryResolution';
 
 /**
  * Ce que `/apply` lit reellement d'un produit de `shop_products` : son
@@ -80,27 +81,37 @@ export async function POST(
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { data: { user }, error: userError } = await supabaseAnon.auth.getUser(token);
-    if (userError || !user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const { slug } = await params;
 
-    // CRITICAL: re-verify ownership at apply time (defense in depth)
-    const { data: site, error: siteError } = await supabase
-      .from('sites')
-      .select('*')
-      .eq('slug', slug)
-      .eq('owner_email', user.email)
-      .maybeSingle();
-
-    if (siteError || !site) {
-      return NextResponse.json(
-        { error: 'Site not found or you are not the owner' },
-        { status: 404 }
-      );
-    }
+    // ============================================================
+    // DETTE 6a -- `owner_id` EST L'IDENTITE CANONIQUE, PAS `owner_email`.
+    //
+    // LE DEFAUT CORRIGE, ET CE N'ETAIT PAS UNE SIMPLE INCOHERENCE.
+    // Cette garde filtrait sur `.eq('owner_email', user.email)`. Or
+    // `sites.owner_email` est ecrite UNE SEULE FOIS, a la creation du site, et
+    // n'est JAMAIS mise a jour ensuite -- recherche exhaustive : aucun
+    // `update` sur cette colonne dans tout le depot.
+    //
+    // Consequence mesurable : si B change son adresse, `sites.owner_email`
+    // garde l'ancienne. Qu'un tiers s'inscrive ensuite avec cette adresse
+    // liberee, et son `user.email` apparie la ligne de B -- il LISAIT et
+    // MODIFIAIT le site de B. Ce n'est pas une faille d'implementation, c'est
+    // l'usage d'un identifiant INSTABLE comme cle d'identite.
+    //
+    // `requireSiteOwner` (primitive canonique M2-02, deja utilisee par 18
+    // autres appels) compare `owner_id` en priorite -- identite stable,
+    // insensible a tout changement d'adresse -- et ne se replie sur
+    // `owner_email` que si `owner_id` est encore null. Mesure du 2026-08-21 :
+    // 0 site sur 14 dans ce cas, le repli ne s'exerce plus en pratique.
+    //
+    // Le miroir etait vrai aussi : un proprietaire ayant change d'adresse
+    // perdait l'acces a SON site par ces deux routes, alors que les six
+    // autres continuaient de le reconnaitre.
+    // ============================================================
+    const auth = await requireSiteOwner(req, slug, '*');
+    if (!auth.ok) return auth.response;
+    const site = auth.site as any;
 
     const body = await req.json();
     const tool_name: string = body.tool_name;
@@ -315,13 +326,33 @@ export async function POST(
         updates.products = current.map((p: JsonbProduct, i: number) => (i === position ? { ...p, [field]: value } : p));
         break;
       }
+      // ===== DETTE 4 (volet gallery) -- CIBLAGE PAR URL =====
+      //
+      // Meme correction que le volet B pour les produits Mode 1, meme raison :
+      // `gallery` est ABSENT de CURRENT SITE STATE, donc tout index fourni par
+      // le modele etait devine, et une devinette dans les bornes etait
+      // ACCEPTEE -- la seule validation portait sur l'intervalle, jamais sur
+      // l'identite de la cible. La carte d'approbation affichait « Remove
+      // gallery image #2 », un numero nu : le marchand ne pouvait pas verifier
+      // ce qu'il approuvait, la ou l'editeur lui montre l'image elle-meme.
+      //
+      // DEUX FORMES D'ELEMENT sont adressables, `string` et `{ url }` -- la
+      // seconde parce que le schema Zod l'autorise, que `Navbar.tsx` la
+      // reconnait deja, et que `gallerySchema.test.ts` documente un incident
+      // reel ou le modele en a produit. Toute autre forme est NON ADRESSABLE :
+      // on ne devine pas une URL dans un objet de convention inconnue.
       case 'propose_gallery_remove': {
-        const { index } = tool_input;
+        const { image_url } = tool_input;
         const current = Array.isArray(site.gallery) ? site.gallery : [];
-        if (typeof index !== 'number' || index < 0 || index >= current.length) {
-          return NextResponse.json({ error: 'Invalid gallery index' }, { status: 400 });
+        const resolved = resolveGalleryImage(current, image_url);
+        if (!resolved.ok) {
+          // AUCUNE ECRITURE. 404 = introuvable, 409 = ambigu.
+          return NextResponse.json(
+            { error: galleryResolutionMessage(resolved) },
+            { status: resolved.reason === 'not_found' ? 404 : 409 }
+          );
         }
-        updates.gallery = current.filter((_: any, i: number) => i !== index);
+        updates.gallery = current.filter((_: unknown, i: number) => i !== resolved.index);
         break;
       }
       case 'propose_gallery_clear': {
@@ -624,12 +655,20 @@ export async function POST(
       return NextResponse.json({ error: 'No updates produced' }, { status: 400 });
     }
 
-    // Apply with double safety: slug AND owner_email
+    // DETTE 6a -- l'ecriture cible l'ID de la ligne DEJA VERIFIEE, plus
+    // `owner_email`. Le « double safety » d'origine reposait sur la meme cle
+    // instable que la lecture : il rejouait le defaut au lieu de le couvrir.
+    //
+    // POURQUOI `id` ET NON `.eq('owner_id', ...)`. `requireSiteOwner` autorise
+    // encore un repli sur `owner_email` quand `owner_id` est null. Filtrer sur
+    // `owner_id` ici casserait ce cas : PostgREST traduit `.eq(col, null)` en
+    // `col=eq.null`, qui n'apparie AUCUNE ligne NULL. Ancrer sur l'`id` de la
+    // ligne dont la propriete vient d'etre etablie porte la meme garantie sans
+    // ce piege.
     const { data: updated, error: updateError } = await supabase
       .from('sites')
       .update(updates)
-      .eq('slug', slug)
-      .eq('owner_email', user.email)
+      .eq('id', site.id)
       .select()
       .single();
 

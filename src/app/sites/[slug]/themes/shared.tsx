@@ -81,6 +81,14 @@ priceNumber?: number
 currency?: string
 image?: string
 cjVid?: string | null
+/**
+ * DETTE 6c — ACHETABILITE. `false` = presente mais non payable.
+ * OPTIONNEL a dessein : le catalogue jsonb du Mode 1 et les maquettes POD
+ * n'ont pas cette notion. `undefined` ne veut donc pas dire « non vendable »,
+ * il veut dire « la question ne se pose pas ici » -- d'ou le `!== false`
+ * partout ou ce champ est lu.
+ */
+forSale?: boolean
 variants?: { variant_id: string; label: string; price: number; currency: string }[]
 shippingDaysMin?: number | null
 shippingDaysMax?: number | null
@@ -144,6 +152,58 @@ export function resolveSiteBaseUrl(
 }
 
 // ============================================================
+// DETTE 3 -- UNE PANNE POSTGREST NE DOIT PLUS ETRE MUETTE.
+//
+// LE DEFAUT CORRIGE. Trois requetes de ce fichier faisaient
+// `const { data } = await supabase...` sans jamais destructurer `error`. Une
+// panne PostgREST rendait donc `data = null`, INDISTINGUABLE d'un resultat
+// legitimement vide : la vitrine affichait un catalogue vide, sans erreur,
+// sans journal, sans que personne le sache. C'est le motif exact du bug LOT L
+// de checkout (`cost_price`), corrige la-bas pour la meme raison.
+//
+// POURQUOI `logAnomaly` N'EST PAS APPELE ICI. Ce fichier est
+// BI-ENVIRONNEMENT, deliberement : il utilise le client anon (isomorphe) et
+// QUATRE composants 'use client' l'importent (NoirTheme, VifTheme,
+// FamilyFilter, StorefrontDense), plus la page preview. Or
+// `anomaly.ts -> supabase-admin.ts -> import 'server-only'`. MESURE, pas
+// suppose : l'ajout de cet import fait echouer `next build` -- Turbopack suit
+// le graphe statiquement, et un `await import()` dynamique ne deplace pas la
+// frontiere (verifie, meme echec).
+//
+// LE SIGNAL REMONTE DONC AUX APPELANTS. Un tableau `diagnostics` optionnel,
+// passe par l'appelant, recueille les pannes ; les appelants SERVEUR appellent
+// `logAnomaly` eux-memes. Le contrat `Promise<Site | null>` reste INCHANGE :
+// `null` continue de ne signifier que « site introuvable », jamais « panne ».
+// Aucune panne ne produit donc de 404 supplementaire.
+// ============================================================
+
+/**
+ * Signale une panne de requete SANS jamais changer le rendu.
+ *
+ * `diagnostics` fourni  -> l'appelant est cote serveur, il journalisera.
+ * `diagnostics` absent  -> repli `console.error`, isomorphe. C'est le cas du
+ *   chemin preview (appele depuis le navigateur, aucune frontiere serveur sur
+ *   ce parcours) et de tout appelant serveur qui n'aurait pas passe le
+ *   tableau. Le signal n'est jamais entierement perdu.
+ *
+ * N'est appele QUE sur un vrai objet `error`. Un resultat vide legitime
+ * (`data: []` ou `data: null` sans erreur) ne signale RIEN -- sans quoi chaque
+ * boutique sans produit publie remplirait le journal.
+ */
+function signalQueryFailure(
+source: string,
+message: string,
+diagnostics?: string[]
+) {
+const ligne = `${source}: ${message}`
+if (diagnostics) {
+diagnostics.push(ligne)
+return
+}
+console.error('[storefront] ' + ligne)
+}
+
+// ============================================================
 // ETAPE 8, VOLET C -- LE REPLI JSONB, ET OU IL DISPARAIT.
 //
 // LE DEFAUT CORRIGE. `data.products` arrive charge du jsonb `sites.products`
@@ -169,6 +229,30 @@ export function resolveSiteBaseUrl(
 // recopier en creerait une seconde, qui divergerait au premier mode ajoute.
 // ============================================================
 
+// ============================================================
+// DETTE 6c — `forSale` EST LE SEUL CHAMP INTERNE PROMU AU PUBLIC.
+//
+// LE DEFAUT CORRIGE. `for_sale` n'etait honore que par deux surfaces : le
+// checkout (409) et, depuis la dette 6b, l'estimation de livraison (403). La
+// vitrine, elle, l'ignorait totalement -- elle ne le lisait meme pas. Un
+// produit retire de la vente restait donc affiche AVEC son bouton
+// « Ajouter au panier » : le visiteur remplissait son panier, saisissait ses
+// coordonnees, et n'apprenait le refus qu'au paiement. Le marchand avait bien
+// retire son produit ; personne ne le lui disait avant l'echec.
+//
+// POURQUOI LUI, ET LUI SEUL. `stock`, `published` et `track_inventory`
+// restent interdits de vitrine et le cliquet de caracterisation continue de
+// l'exiger. Ils decrivent l'INTERIEUR de la boutique. `for_sale` decrit ce que
+// le visiteur a le droit de faire : c'est une information qui lui est
+// destinee, au meme titre que le prix.
+//
+// `!== false` ET NON `=== true`. Ici l'absence du champ signifie « catalogue
+// jsonb du Mode 1 », ou la notion n'existe pas : etre strict y supprimerait
+// des boutons legitimes. La rigueur inverse vit au checkout, qui exige
+// `for_sale !== true` pour refuser -- une barriere d'AFFICHAGE peut se
+// tromper vers le visible, une barriere de PAIEMENT jamais vers l'encaissement.
+// ============================================================
+
 /** Projection publique d'une ligne `shop_products`. Aucun champ interne. */
 function mapShopProducts(rows: any[]): any[] {
 return rows.map((p: any) => ({
@@ -180,6 +264,7 @@ priceNumber: p.price != null ? Number(p.price) : undefined,
 currency: p.currency,
 image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : undefined,
 cjVid: p.cj_vid || null,
+forSale: p.for_sale !== false,
 }))
 }
 
@@ -210,7 +295,8 @@ data.products = mapShopProducts(shopProducts)
 
 export async function fetchSite(
 slug: string,
-allowUnpublished = false
+allowUnpublished = false,
+diagnostics?: string[]
 ): Promise<Site | null> {
 // Audit Mode 3/POD BRAND, LOT 1 : sites_public (vue, colonnes = PUBLIC_COLS,
 // WHERE published=true AND archived_at IS NULL déjà appliqué par la vue
@@ -234,16 +320,23 @@ console.error(error)
 return null
 }
 
-const { data: shopProducts } = await supabase
+const { data: shopProducts, error: shopProductsError } = await supabase
 .from('shop_products')
-.select('id,name,description,price,currency,images,cj_vid')
+.select('id,name,description,price,currency,images,cj_vid,for_sale')
 .eq('site_id', (data as any).id)
 .eq('published', true)
 .order('position', { ascending: true })
 
+if (shopProductsError) {
+signalQueryFailure('fetchSite/shop_products', shopProductsError.message, diagnostics)
+}
+
+// Le rendu ne change pas d'un iota : `shopProducts` vaut `null` sur panne, et
+// `applyShopProducts` traite ce cas depuis le volet C (Mode 1 garde son jsonb,
+// modes 2/3 obtiennent un catalogue vide). Seul le SIGNAL est nouveau.
 applyShopProducts(data as any, shopProducts)
 
-await loadCatalogSelections(data as any)
+await loadCatalogSelections(data as any, diagnostics)
 
 return data as Site
 }
@@ -252,14 +345,21 @@ return data as Site
 
 
 
-async function loadCatalogSelections(data: any) {
+async function loadCatalogSelections(data: any, diagnostics?: string[]) {
 if (data.mode === 3 && (data.dropship_type === 'reseller' || data.dropship_type === 'pod_custom')) {
-const { data: catSels } = await supabase
+const { data: catSels, error: catSelsError } = await supabase
 .from('site_catalog_selections')
 .select('id, sell_price, custom_name, custom_description, catalog_product_id, catalog_products(name, description, price, currency, images, supplier_id, supplier_product_id, shipping_days_min, shipping_days_max, in_stock, category)')
 .eq('site_id', data.id)
 .eq('merchant_approved', true)
 .order('sort_order', { ascending: true })
+if (catSelsError) {
+// Le catalogue fournisseur est un AJOUT : sur panne, les `shop_products`
+// deja poses restent intacts et aucun `catalog-*` n'est invente. Seule
+// l'absence de signal etait le defaut -- une boutique Mode 3 paraissait
+// simplement vide.
+signalQueryFailure('loadCatalogSelections/site_catalog_selections', catSelsError.message, diagnostics)
+}
 if (catSels && catSels.length > 0) {
 const { margin, roundMode } = sitePricing(data);
 const catalogProducts = catSels
@@ -353,12 +453,21 @@ const { data, error } = await supabase
 if (error || !data) {
 return null
 }
-const { data: shopProducts } = await supabase
+const { data: shopProducts, error: shopProductsError } = await supabase
 .from('shop_products')
-.select('id,name,description,price,currency,images,cj_vid')
+.select('id,name,description,price,currency,images,cj_vid,for_sale')
 .eq('site_id', (data as any).id)
 .eq('published', true)
 .order('position', { ascending: true })
+if (shopProductsError) {
+// AUCUN `diagnostics` ici, et c'est deliberé : l'unique appelant de cette
+// fonction est `preview/[slug]/page.tsx`, un composant 'use client' qui
+// l'execute DANS LE NAVIGATEUR. Aucune frontiere serveur n'existe sur ce
+// parcours -- ni Server Action (0 dans le depot), ni Server Component
+// parent, ni route API appelee par le preview. Le repli `console.error`
+// atteint la console du proprietaire, seul utilisateur de cette page.
+signalQueryFailure('fetchSitePreview/shop_products', shopProductsError.message)
+}
 applyShopProducts(data as any, shopProducts)
 await loadCatalogSelections(data as any)
 
@@ -438,6 +547,40 @@ raw?.rating ?? 5
 }
 }
 
+// ============================================================
+// DETTE 6c — LE SEUL ENDROIT QUI DECIDE SI UN PRODUIT PEUT ETRE MIS AU PANIER.
+//
+// POURQUOI UNE FONCTION ET NON UNE CONDITION RECOPIEE. Cette garde existait
+// deja, sous forme de `p.id && p.priceNumber != null`, ecrite CINQ FOIS. Elle
+// avait deja diverge une fois : DEBT-001 a corrige Noir et Vif, qui l'avaient
+// omise alors qu'Editorial la portait. Lui ajouter un troisieme terme dans
+// cinq fichiers, c'etait rejouer cette divergence a coup sur. Un seul point
+// de decision, cinq appels.
+//
+// LES TROIS TERMES, ET CE QU'ILS PROTEGENT :
+//   `id`         -- DEBT-001 : un produit sans id casse la deduplication du panier ;
+//   `priceNumber`-- un produit sans prix numerique n'est pas chiffrable ;
+//   `forSale`    -- DETTE 6c : le marchand a retire ce produit de la vente.
+//
+// `!== false`, ET NON `=== true`. Le champ est absent du catalogue jsonb du
+// Mode 1 et des maquettes POD, ou l'achetabilite n'existe pas comme notion :
+// exiger `true` y supprimerait des boutons legitimes. La rigueur inverse vit
+// au checkout (`for_sale !== true` -> 409) et a l'estimation de livraison
+// (dette 6b) : une garde d'AFFICHAGE peut se tromper vers le visible, une
+// garde de PAIEMENT jamais vers l'encaissement. Ce sont deux barrieres, pas
+// une seule dupliquee -- celle-ci evite une impasse, celle-la refuse l'argent.
+// ============================================================
+// PREDICAT DE TYPE, et non `boolean`. La condition recopiee dans les cinq
+// themes NARROWISSAIT `id` et `priceNumber` : les remplacer par un booleen
+// aurait force cinq `!` ou cinq casts sur les proprietes passees a
+// AddToCartButton. Le predicat rend la garde et le typage indissociables --
+// on ne peut pas passer un produit non garde a l'appelant.
+export function canAddToCart(
+p: Product | null | undefined
+): p is Product & { id: string; priceNumber: number } {
+return !!p?.id && p?.priceNumber != null && p?.forSale !== false
+}
+
 export function normalizeProduct(
 raw: any
 ): Product {
@@ -461,6 +604,12 @@ raw?.image ??
 raw?.image_url ??
 undefined,
 cjVid: raw?.cjVid || null,
+// DETTE 6c — `normalizeProduct` RECONSTRUIT l'objet : tout champ non recopie
+// ici est PERDU. Sans cette ligne, l'achetabilite projetee par
+// `mapShopProducts` disparaissait avant d'atteindre les themes Editorial,
+// Noir, Vif et Aurora -- la correction n'aurait servi a rien sur 4 vitrines
+// sur 5. Mesure, pas supposition : les quatre appellent bien `.map(normalizeProduct)`.
+forSale: raw?.forSale,
 shippingDaysMin: raw?.shippingDaysMin || null,
 shippingDaysMax: raw?.shippingDaysMax || null,
 supplierId: raw?.supplierId || null,

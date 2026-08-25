@@ -9,6 +9,15 @@ export type ProductPage = {
   currency: string
   images: string[]
   inStock: boolean
+  /**
+   * DETTE 6c — ACHETABILITE, distincte de `inStock` et de `published`.
+   *   `published` decide si cette page EXISTE (filtre de la requete) ;
+   *   `inStock`   decide s'il en reste ;
+   *   `forSale`   decide si le marchand accepte de le vendre.
+   * Les produits de catalogue fournisseur n'ont pas cette notion : ils valent
+   * `true`, comme avant cette dette.
+   */
+  forSale: boolean
   siteName: string
   siteSlug: string
   siteCustomDomain: string | null
@@ -53,6 +62,9 @@ export async function fetchProduct(slug: string, rawId: string): Promise<Product
       currency: cp.currency || 'CAD',
       images: Array.isArray(cp.images) ? cp.images : [],
       inStock: cp.in_stock !== false,
+      // Catalogue fournisseur : `for_sale` n'existe pas sur `catalog_products`.
+      // Comportement rigoureusement inchange par la dette 6c.
+      forSale: true,
       siteName: (site as any).name,
       siteSlug: (site as any).slug,
       siteCustomDomain: (site as any).custom_domain ?? null,
@@ -66,7 +78,7 @@ export async function fetchProduct(slug: string, rawId: string): Promise<Product
 
   const { data: p } = await supabase
     .from('shop_products')
-    .select('id, site_id, name, description, price, currency, images, stock, published')
+    .select('id, site_id, name, description, price, currency, images, stock, published, for_sale')
     .eq('id', rawId)
     .eq('site_id', (site as any).id)
     .eq('published', true)
@@ -80,6 +92,11 @@ export async function fetchProduct(slug: string, rawId: string): Promise<Product
     currency: (p as any).currency || 'CAD',
     images: Array.isArray((p as any).images) ? (p as any).images : [],
     inStock: ((p as any).stock ?? 0) > 0,
+    // `!== false` : meme raisonnement que la vitrine (shared.tsx). La barriere
+    // stricte est au checkout, pas ici -- cette page ne fait qu'afficher.
+    // `published` reste filtre par la requete : un produit non publie n'a
+    // toujours pas de page, quelle que soit son achetabilite.
+    forSale: (p as any).for_sale !== false,
     siteName: (site as any).name,
     siteSlug: (site as any).slug,
     siteCustomDomain: (site as any).custom_domain ?? null,

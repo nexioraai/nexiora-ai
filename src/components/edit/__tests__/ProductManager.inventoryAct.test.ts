@@ -30,6 +30,15 @@ import { join } from 'path';
 
 const SRC = readFileSync(join(__dirname, '../ProductManager.tsx'), 'utf-8');
 
+// DETTE 6c — le brouillon d'edition a ete EXTRAIT dans un module pur
+// (`productDraft.ts`) pour devenir verifiable par comportement et non plus
+// seulement par presence de code. Ces cliquets SUIVENT le code : ils ne
+// s'affaiblissent pas, ils changent de fichier. L'invariant de l'etape 7 --
+// aucune valeur de stock ne transite par la sauvegarde generale -- est
+// desormais constate la ou la decision vit reellement.
+const DRAFT_SRC = readFileSync(join(__dirname, '../productDraft.ts'), 'utf-8');
+const DRAFT_CODE = DRAFT_SRC.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
 /**
  * Source privée de commentaires. Les commentaires de ce composant EXPLIQUENT
  * la politique d'inventaire et citent donc `stock_counted_at` ; une assertion
@@ -50,9 +59,13 @@ describe('LE COMPTAGE NE PEUT PAS ÊTRE ÉCRASÉ — preuve structurelle', () =>
     // Sur CODE et non SRC : le commentaire du volet A explique précisément
     // pourquoi `stock` n'est pas ici (et pourquoi `for_sale`, lui, y est) --
     // sanctionner cette prose punirait la documentation, pas le défaut.
-    const draft = CODE.match(/type Draft = \{[\s\S]*?\};/)![0];
+    const draft = DRAFT_CODE.match(/type ProductDraft = \{[\s\S]*?\};/)![0];
     expect(draft).not.toMatch(/\bstock\b/);
     expect(draft, 'for_sale est une INTENTION, pas un fait observé : il a sa place dans le draft').toMatch(/for_sale: boolean;/);
+    // Le composant ne redefinit pas son propre brouillon a cote : une seconde
+    // definition rouvrirait exactement la divergence que l'extraction ferme.
+    expect(CODE).not.toMatch(/type Draft = \{/);
+    expect(CODE).toMatch(/from '\.\/productDraft'/);
   });
 
   it("`startEdit` ne charge PLUS `stock` dans le draft", () => {
@@ -62,9 +75,13 @@ describe('LE COMPTAGE NE PEUT PAS ÊTRE ÉCRASÉ — preuve structurelle', () =>
   });
 
   it("le payload commun de `handleSubmit` ne contient AUCUN champ stock", () => {
+    // La charge est construite par `payloadFromDraft`, module pur : c'est
+    // desormais LA qu'il faut constater l'absence de stock. Le composant, lui,
+    // ne doit rien recomposer a la main.
     const fn = corps('handleSubmit');
-    const payload = fn.match(/const payload = \{[\s\S]*?\};/)![0];
-    expect(payload).not.toMatch(/\bstock\b/);
+    expect(fn).toMatch(/const payload = payloadFromDraft\(draft\);/);
+    const construit = DRAFT_CODE.match(/export function payloadFromDraft\([\s\S]*?\n\}/)![0];
+    expect(construit).not.toMatch(/\bstock\b/);
   });
 
   it("la branche PATCH (édition) n'envoie jamais de stock", () => {

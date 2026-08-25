@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase as supabaseAnon } from '@/lib/supabase';
+import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getStripe } from '@/lib/stripe';
 import { checkDomain, getRegistrationRequirements, NEXIORA_DOMAIN_MARGIN_USD } from '@/lib/domains/porkbun';
@@ -11,11 +11,6 @@ import { checkDomain, getRegistrationRequirements, NEXIORA_DOMAIN_MARGIN_USD } f
  * Nexiora n'engage pas de depense.
  */
 export async function POST(req: NextRequest) {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) return NextResponse.json({ error: 'Non authentifie' }, { status: 401 });
-  const { data: { user }, error: authErr } = await supabaseAnon.auth.getUser(token);
-  if (authErr || !user?.email) return NextResponse.json({ error: 'Non authentifie' }, { status: 401 });
-
   const { slug, domain } = await req.json().catch(() => ({}));
   const clean = String(domain || '').trim().toLowerCase();
   if (!slug || !/^[a-z0-9-]+\.[a-z]{2,}$/i.test(clean)) {
@@ -23,14 +18,27 @@ export async function POST(req: NextRequest) {
   }
 
   // 1. Le site appartient bien au demandeur
-  const { data: site } = await supabaseAdmin
-    .from('sites')
-    .select('id, owner_email, name')
-    .eq('slug', slug)
-    .maybeSingle();
-  if (!site || site.owner_email !== user.email) {
-    return NextResponse.json({ error: 'Site introuvable' }, { status: 403 });
-  }
+    // ============================================================
+    // DETTE 6a, EXTENSION -- `owner_email` N'EST PLUS L'IDENTITE.
+    //
+    // La garde s'ecrivait `site.owner_email !== user.email` : une comparaison
+    // en JavaScript plutot qu'un `.eq()`, mais exactement la meme cle, et donc
+    // exactement le meme defaut. `sites.owner_email` est ecrite UNE SEULE
+    // FOIS, a la creation du site, et aucun update ne la touche jamais -- un
+    // proprietaire qui change d'adresse laisse la colonne figee sur
+    // l'ancienne, et quiconque obtient ensuite cette adresse devenait
+    // proprietaire aux yeux de cette route.
+    //
+    // AUCUN MECANISME NOUVEAU : `requireSiteOwner`, primitive canonique --
+    // `owner_id` prioritaire, repli sur `owner_email` UNIQUEMENT quand
+    // `owner_id` est encore null cote base. Les codes deviennent ceux de la
+    // primitive : 401 non authentifie, 404 site inexistant, 403 non
+    // proprietaire (la route confondait les deux derniers dans un seul 403).
+    // ============================================================
+  const auth = await requireSiteOwner(req, slug, 'id, name');
+  if (!auth.ok) return auth.response;
+  const site = auth.site as { id: string; name: string };
+  const userEmail = auth.email ?? '';
 
   // 2. Domaine pas deja reserve dans Nexiora
   const { data: existing } = await supabaseAdmin
@@ -109,9 +117,12 @@ export async function POST(req: NextRequest) {
     //    en promo la premiere annee (.store a 2,57$ puis 43,77$) ferait
     //    perdre de l'argent des la deuxieme annee autrement.
     const stripe = getStripe();
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    // DETTE 6a -- l'adresse reste une DONNEE Stripe (client factured), jamais
+    // une cle d'identite. Elle vient du JETON via la primitive, pas de la
+    // colonne `sites.owner_email`, qui peut etre perimee.
+    const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
     const customer = customers.data[0] || await stripe.customers.create({
-      email: user.email,
+      email: userEmail,
       metadata: { nexiora_site_id: site.id },
     });
 

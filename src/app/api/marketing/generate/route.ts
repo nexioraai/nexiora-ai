@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { supabase as supabaseAnon } from '@/lib/supabase';
+import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { logAiUsage } from '@/lib/ai-usage';
 
@@ -217,20 +217,6 @@ function parseJson(raw: string): any {
 
 export async function POST(req: Request) {
   try {
-    // ============ SÉCURITÉ : validation du Bearer token ============
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized: missing Bearer token' }, { status: 401 });
-    }
-
-    const { data: authData, error: authError } = await supabaseAnon.auth.getUser(token);
-    if (authError || !authData.user || !authData.user.email) {
-      return NextResponse.json({ error: 'Unauthorized: invalid token' }, { status: 401 });
-    }
-    const owner_email = authData.user.email;
-    // ===============================================================
-
     const body = await req.json();
     const slug: string | undefined = body.slug;
     const format: string | undefined = body.format;
@@ -245,26 +231,49 @@ export async function POST(req: Request) {
       );
     }
 
-    // ============ GATING : le site doit appartenir à l'utilisateur ET être publié ============
-    const { data: site, error: siteError } = await supabaseAdmin
-      .from('sites')
-      .select('*')
-      .eq('slug', slug)
-      .eq('owner_email', owner_email)
-      .eq('published', true)
-      .maybeSingle();
+    // ============================================================
+    // DETTE 6a, EXTENSION -- DEUX QUESTIONS QUI N'EN FAISAIENT QU'UNE.
+    //
+    // La requete d'origine melait TROIS clauses dans un seul `maybeSingle` :
+    // le slug, `owner_email` (l'autorisation) et `published` (le gating
+    // commercial). Un seul `null` en sortie, un seul message pour trois
+    // causes -- et surtout `owner_email` en guise d'identite.
+    //
+    // POURQUOI C'ETAIT EXPLOITABLE. `sites.owner_email` est ecrite UNE SEULE
+    // FOIS, a la creation du site, et aucun update ne la touche jamais. Un
+    // proprietaire qui change d'adresse laisse la colonne figee : quiconque
+    // obtient ensuite cette adresse pouvait lire le site ENTIER d'autrui --
+    // et cette route le passe a trois fournisseurs externes (Anthropic,
+    // OpenAI, Pexels) puis ecrit dans deux tables.
+    //
+    // LES DEUX QUESTIONS SONT DESORMAIS SEPAREES, ET DANS CET ORDRE :
+    //   1. « ce site est-il le sien ? »  -> primitive canonique, 401/404/403 ;
+    //   2. « est-il publie ? »           -> regle METIER, message metier.
+    // Le message « Publiez un site... » reste donc reserve au cas ou le
+    // proprietaire est correctement identifie mais n'a pas publie -- il ne
+    // peut plus masquer un refus de propriete, ni l'inverse.
+    //
+    // `select('*')` EST CONSERVE TEL QUEL, hors perimetre de cette passe : la
+    // suite de la route lit une quinzaine de colonnes du site pour construire
+    // ses prompts. La primitive ajoute d'office `owner_id` et `owner_email`.
+    // ============================================================
+    const auth = await requireSiteOwner(req, slug, '*');
+    if (!auth.ok) return auth.response;
+    const site = auth.site as any;
 
-    if (siteError) {
-      console.error('SITE FETCH ERROR:', siteError);
-      return NextResponse.json({ error: siteError.message }, { status: 500 });
-    }
-    if (!site) {
+    // GATING METIER, distinct de l'autorisation.
+    if (site.published !== true) {
       return NextResponse.json(
         { error: 'Publiez un site pour débloquer le marketing.' },
         { status: 403 }
       );
     }
-    // =========================================================================================
+
+    // DONNEE TRANSPORTEE, JAMAIS UNE GARDE. `owner_email` alimente encore
+    // `marketing_briefs` et `marketing_assets` (colonnes historiques de ces
+    // deux tables) : cette passe ne migre pas ces donnees, elle retire
+    // l'adresse du role d'IDENTITE. Elle vient du JETON, pas de la colonne.
+    const owner_email = auth.email ?? '';
 
     // ============ ÉTAPE 1 : BRIEF (lecture du cache, sinon génération) ============
     let brief: any = null;

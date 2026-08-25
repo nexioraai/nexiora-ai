@@ -230,3 +230,77 @@ describe("ÉTAPE 8, VOLET B — la carte d'approbation montre le NOM", () => {
     expect(CARD).toMatch(/b\.type === 'tool_use' && toolStates\[b\.id\]\?\.status === 'pending'/);
   });
 });
+
+// ============================================================
+// DETTE 4 (volet gallery) — CLIQUETS.
+// Rendent visible au premier `vitest run` tout retour au ciblage par
+// position, toute duplication de la règle de résolution, ou tout débordement
+// hors du Mode 1/2.
+// ============================================================
+describe('DETTE 4 — `propose_gallery_remove` cible par URL', () => {
+  it('prend `image_url` et PLUS `index`', () => {
+    const bloc = CHAT.match(/name: 'propose_gallery_remove',[\s\S]*?required: \[[^\]]*\],/)![0];
+    expect(bloc).toMatch(/image_url:\s*\{\s*type:\s*'string'/);
+    expect(bloc).not.toMatch(/\bindex\b/);
+    expect(bloc).toMatch(/required: \['image_url', 'reason'\]/);
+  });
+
+  it('`propose_gallery_clear` reste INCHANGÉ : aucun ciblage', () => {
+    const bloc = CHAT.match(/name: 'propose_gallery_clear',[\s\S]*?required: \[[^\]]*\],/)![0];
+    expect(bloc).toMatch(/required: \['reason'\]/);
+    expect(bloc).not.toMatch(/image_url|\bindex\b/);
+  });
+
+  it('la branche /apply résout par URL et refuse toute ambiguïté', () => {
+    const branche = APPLY.match(/case 'propose_gallery_remove': \{[\s\S]*?\n      \}/)![0];
+    expect(branche).toContain('resolveGalleryImage(current, image_url)');
+    expect(branche).toContain('galleryResolutionMessage(resolved)');
+    expect(branche).toMatch(/status: resolved\.reason === 'not_found' \? 404 : 409/);
+    // La position est RECALCULÉE, jamais fournie par l'appelant.
+    expect(branche).toContain('resolved.index');
+    expect(branche).not.toMatch(/tool_input\.index|const \{ index \}/);
+  });
+
+  it('`propose_gallery_clear` n\'a pas été transformé en suppression par URL', () => {
+    const branche = APPLY.match(/case 'propose_gallery_clear': \{[\s\S]*?\n      \}/)![0];
+    expect(branche).toContain('updates.gallery = []');
+    expect(branche).not.toContain('resolveGalleryImage');
+  });
+
+  it("la résolution d'URL n'est PAS celle des noms de produit", () => {
+    // `resolveProductByName` passe en minuscules — correct pour un nom tapé
+    // par un humain, DANGEREUX pour une URL : `/A.jpg` y trouverait `/a.jpg`
+    // et supprimerait une image non désignée.
+    const branche = APPLY.match(/case 'propose_gallery_remove': \{[\s\S]*?\n      \}/)![0];
+    expect(branche).not.toContain('resolveProductByName');
+    const RESOLVER = readFileSync(join(__dirname, '../../../../../../lib/agent-tools/galleryResolution.ts'), 'utf-8');
+    expect(RESOLVER).not.toMatch(/toLocaleLowerCase|toLowerCase/);
+  });
+
+  it('ces outils restent réservés aux Modes 1 et 2', () => {
+    const m1 = CHAT.match(/if \(mode === 1\) \{[\s\S]*?\n  \}/)![0];
+    const m2 = CHAT.match(/if \(mode === 2\) \{[\s\S]*?\n  \}/)![0];
+    const m3 = CHAT.match(/if \(mode === 3\) \{[\s\S]*?\n  \}/)![0];
+    expect(m1).toContain('...content');
+    expect(m2).toContain('...content');
+    expect(m3).not.toContain('...content');
+    expect(CHAT).toMatch(/'propose_gallery_remove', 'propose_gallery_clear'\]/);
+  });
+
+  it('la carte d\'approbation montre l\'URL, plus aucun `#index`', () => {
+    const bloc = CARD.match(/case 'propose_gallery_remove':[\s\S]*?case 'propose_gallery_clear':/)![0];
+    expect(bloc).toContain('input.image_url');
+    expect(bloc).not.toContain('input.index');
+    expect(bloc).not.toContain('#{input');
+  });
+
+  it('`testimonials` n\'a PAS été touché — il reste adressé par index', () => {
+    // Volet suivant du plan. Le confondre avec `gallery` ici serait sortir du
+    // périmètre : sa clé n'est pas unique, et l'arbitrage retenu est
+    // l'injection dans CURRENT SITE STATE, pas la résolution par valeur.
+    for (const outil of ['propose_testimonial_remove', 'propose_testimonial_update']) {
+      const bloc = CHAT.match(new RegExp(`name: '${outil}',[\\s\\S]*?required: \\[[^\\]]*\\],`))![0];
+      expect(bloc, outil).toMatch(/index:\s*\{\s*type:\s*'integer'/);
+    }
+  });
+});

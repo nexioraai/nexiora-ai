@@ -21,6 +21,7 @@
 import { readFileSync } from 'node:fs'
 import { buildHealthReport, type VitestJsonReport } from '../src/lib/systemHealth/buildHealthReport.ts'
 import { postHealthReport } from '../src/lib/systemHealth/postHealthReport.ts'
+import { fetchDbInvariants } from '../src/lib/systemHealth/dbInvariants.ts'
 
 async function main() {
   const raw = readFileSync('vitest-results.json', 'utf8')
@@ -44,6 +45,33 @@ async function main() {
   if (!url || !key) {
     console.error('SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY manquant(s) — rapport non envoyé (non bloquant).')
     return
+  }
+
+  // ============================================================
+  // DETTE 5 — VÉRIFICATION DE LA BASE RÉELLEMENT DÉPLOYÉE.
+  //
+  // SUR `main` UNIQUEMENT, et la raison n'est pas la prudence : la CI ne
+  // dispose que d'UNE base cible, celle de production. Un run sur une branche
+  // de feature vérifierait donc la base de production tout en publiant son
+  // verdict sous le nom de cette branche — un rapport exact attribué au
+  // mauvais objet. La route Admin ne lit d'ailleurs que `branch = 'main'`.
+  //
+  // Le verdict S'AJOUTE aux `raw_failures` issus de Vitest, il ne les
+  // remplace jamais : deux problèmes de nature différente doivent rester
+  // visibles ensemble.
+  //
+  // Une base CONFORME n'écrit rien — le contrat de `raw_failures` est
+  // « une entrée = un problème ».
+  // ============================================================
+  if (report.branch === 'main') {
+    const verdict = await fetchDbInvariants({ url, key })
+    report.raw_failures = [...report.raw_failures, ...verdict.entries]
+    console.log(
+      `Invariants base : ${verdict.state}` +
+        (verdict.entries.length ? ` — ${verdict.entries.length} entree(s) signalee(s)` : '')
+    )
+  } else {
+    console.log(`Invariants base : non verifies (branche « ${report.branch} », une seule base cible).`)
   }
 
   const result = await postHealthReport(report, { url, key })

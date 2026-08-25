@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { supabase as supabaseAnon } from '@/lib/supabase';
+import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -208,15 +208,19 @@ const allTools: Anthropic.Tool[] = [
     },
   },
   {
+    // DETTE 4 (gallery) -- `image_url` remplace `index`. Le contexte envoye au
+    // modele ne contient AUCUNE galerie (`gallery` est absent des 16 champs de
+    // CURRENT SITE STATE) : un index demande ici ne pouvait etre que devine, et
+    // une devinette dans les bornes supprimait la mauvaise image sans erreur.
     name: 'propose_gallery_remove',
-    description: 'Propose to remove an image from the gallery by zero-based index.',
+    description: 'Propose to remove ONE image from the gallery, identified by its exact URL. Use the URL the merchant gave you, character for character — URLs are case-sensitive. If the same URL appears several times in the gallery, the change is refused and you must ask the merchant which one they mean. To remove EVERY image instead, that is propose_gallery_clear.',
     input_schema: {
       type: 'object',
       properties: {
-        index: { type: 'integer' },
+        image_url: { type: 'string', description: 'The exact image URL, as it appears in the gallery. Do not shorten, re-encode or change its case.' },
         reason: { type: 'string' },
       },
-      required: ['index', 'reason'],
+      required: ['image_url', 'reason'],
     },
   },
   {
@@ -427,32 +431,37 @@ export async function POST(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const { data: { user }, error: userError } = await supabaseAnon.auth.getUser(token);
-    if (userError || !user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { slug } = await params;
 
-    // CRITICAL: verify the site belongs to this user before exposing its content
-    const { data: site, error: siteError } = await supabase
-      .from('sites')
-      .select('*')
-      .eq('slug', slug)
-      .eq('owner_email', user.email)
-      .maybeSingle();
-
-    if (siteError || !site) {
-      return NextResponse.json(
-        { error: 'Site not found or you are not the owner' },
-        { status: 404 }
-      );
-    }
+    // ============================================================
+    // DETTE 6a -- `owner_id` EST L'IDENTITE CANONIQUE, PAS `owner_email`.
+    //
+    // LE DEFAUT CORRIGE, ET CE N'ETAIT PAS UNE SIMPLE INCOHERENCE.
+    // Cette garde filtrait sur `.eq('owner_email', user.email)`. Or
+    // `sites.owner_email` est ecrite UNE SEULE FOIS, a la creation du site, et
+    // n'est JAMAIS mise a jour ensuite -- recherche exhaustive : aucun
+    // `update` sur cette colonne dans tout le depot.
+    //
+    // Consequence mesurable : si B change son adresse, `sites.owner_email`
+    // garde l'ancienne. Qu'un tiers s'inscrive ensuite avec cette adresse
+    // liberee, et son `user.email` apparie la ligne de B -- il LISAIT et
+    // MODIFIAIT le site de B. Ce n'est pas une faille d'implementation, c'est
+    // l'usage d'un identifiant INSTABLE comme cle d'identite.
+    //
+    // `requireSiteOwner` (primitive canonique M2-02, deja utilisee par 18
+    // autres appels) compare `owner_id` en priorite -- identite stable,
+    // insensible a tout changement d'adresse -- et ne se replie sur
+    // `owner_email` que si `owner_id` est encore null. Mesure du 2026-08-21 :
+    // 0 site sur 14 dans ce cas, le repli ne s'exerce plus en pratique.
+    //
+    // Le miroir etait vrai aussi : un proprietaire ayant change d'adresse
+    // perdait l'acces a SON site par ces deux routes, alors que les six
+    // autres continuaient de le reconnaitre.
+    // ============================================================
+    const auth = await requireSiteOwner(req, slug, '*');
+    if (!auth.ok) return auth.response;
+    const site = auth.site as any;
+    const ownerEmail = auth.email ?? '';
 
     const body = await req.json();
     const message: string = body.message || '';
@@ -462,7 +471,7 @@ export async function POST(
       return NextResponse.json({ error: 'Empty message' }, { status: 400 });
     }
 
-    const systemPrompt = `You are the personal AI assistant for the website "${site.name}" (slug: "${slug}"), owned by ${user.email}.
+    const systemPrompt = `You are the personal AI assistant for the website "${site.name}" (slug: "${slug}"), owned by ${ownerEmail}.
 
 ABSOLUTE RULES (security boundaries — never violate):
 1. You can ONLY modify THIS specific site. Never propose changes to other sites or to Deribfy itself.
@@ -499,6 +508,21 @@ ${JSON.stringify(
     mode: site.mode,
     dropship_type: site.dropship_type,
     services: site.services,
+    // DETTE 4 (volet testimonials) -- INJECTE ICI, et rien d'autre n'a bouge.
+    //
+    // `propose_testimonial_remove` et `_update` adressent par INDEX de
+    // tableau. Ce n'etait pas le defaut : `services` fait exactement pareil et
+    // FONCTIONNE, parce qu'il figure dans ce contexte. Le defaut etait que
+    // `testimonials` en etait absent -- le modele ne pouvait donc que DEVINER
+    // un index, et `/apply` n'opposait qu'un controle d'intervalle : une
+    // devinette dans les bornes supprimait le mauvais temoignage, sans erreur.
+    //
+    // EXPOSE BRUT, comme `services`. Aucune normalisation : `normalizeTestimonial`
+    // tolere `company`, `text` et `message`, et `Navbar` lit aussi `author` --
+    // des formes historiques reelles. Les masquer derriere une projection
+    // uniforme montrerait au modele une galerie de temoignages qui n'existe
+    // pas telle quelle en base.
+    testimonials: site.testimonials,
     social_links: site.social_links,
     contact: { phone: site.phone, email: site.contact_email, address: site.address },
     cj_margin_percent: site.cj_margin_percent,

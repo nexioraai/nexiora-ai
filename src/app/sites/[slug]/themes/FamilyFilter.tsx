@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react'
 import Image from 'next/image'
 import { ArrowRight, Truck } from 'lucide-react'
 import type { Product } from './shared'
+// DETTE 6c — garde d'ajout au panier : point de decision unique (shared.tsx).
+import { canAddToCart } from './shared'
 import ClickableProductCard from './ClickableProductCard'
 import AddToCartButton from './AddToCartButton'
 import ShippingEstimate from './ShippingEstimate'
@@ -202,7 +204,7 @@ export default function FamilyFilter({
                   ) : (
                     <span className="text-sm text-neutral-400">{labels.onQuote}</span>
                   )}
-                  {p.id && p.priceNumber != null ? (
+                  {canAddToCart(p) ? (
                     <AddToCartButton
                       id={p.id}
                       name={p.name}

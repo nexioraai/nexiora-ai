@@ -13,6 +13,15 @@ const CART_LABELS: Record<string, string> = {
   es: 'Añadir al carrito',
 }
 
+// DETTE 6c — meme forme que CART_LABELS ci-dessus : ce fichier porte deja ses
+// libelles en local, en inventer un autre mecanisme ici serait gratuit.
+const NOT_FOR_SALE_LABELS: Record<string, string> = {
+  fr: 'Ce produit n’est pas en vente',
+  en: 'This product is not for sale',
+  ar: 'هذا المنتج غير معروض للبيع',
+  es: 'Este producto no está a la venta',
+}
+
 export default function ProductPageView({ product }: { product: ProductPage }) {
   const [imgIndex, setImgIndex] = useState(0)
   const imgs = product.images.length > 0 ? product.images : []
@@ -22,6 +31,7 @@ export default function ProductPageView({ product }: { product: ProductPage }) {
       ? product.priceNumber.toFixed(2) + ' ' + product.currency
       : ''
   const addLabel = CART_LABELS[product.lang] || CART_LABELS.en
+  const notForSaleLabel = NOT_FOR_SALE_LABELS[product.lang] || NOT_FOR_SALE_LABELS.en
 
   return (
     <div style={{ background: tokens.modalBg, color: tokens.modalText, minHeight: '100vh' }}>
@@ -87,17 +97,29 @@ export default function ProductPageView({ product }: { product: ProductPage }) {
             {product.description && (
               <p style={{ marginTop: 24, lineHeight: 1.6, whiteSpace: 'pre-wrap', opacity: 0.9 }}>{product.description}</p>
             )}
+            {/* DETTE 6c — la fiche produit applique la MEME regle que la
+                vitrine : un produit retire de la vente reste entierement
+                consultable (titre, images, prix, description), il n'a
+                simplement plus de chemin d'achat. Le bouton n'est pas
+                seulement desactive, il n'est pas rendu : un bouton grise
+                invite a reessayer, et le checkout refuserait de toute
+                facon (409). `inStock` garde son comportement propre --
+                epuise et non-vendable sont deux etats differents. */}
             <div style={{ marginTop: 28 }}>
-              <AddToCartButton
-                id={product.id}
-                name={product.name}
-                priceNumber={product.priceNumber}
-                currency={product.currency}
-                image={imgs[0]}
-                primary={product.primary}
-                label={addLabel}
-                disabled={!product.inStock}
-              />
+              {product.forSale ? (
+                <AddToCartButton
+                  id={product.id}
+                  name={product.name}
+                  priceNumber={product.priceNumber}
+                  currency={product.currency}
+                  image={imgs[0]}
+                  primary={product.primary}
+                  label={addLabel}
+                  disabled={!product.inStock}
+                />
+              ) : (
+                <div style={{ fontSize: 14, opacity: 0.7 }}>{notForSaleLabel}</div>
+              )}
             </div>
           </div>
         </div>

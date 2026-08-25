@@ -506,8 +506,16 @@ function ToolProposalCard({
             <span className="text-white">"{input.value}"</span>
           </>
         );
+      // DETTE 4 (gallery) -- l'URL, plus jamais un numero. La carte affichait
+      // « Remove gallery image #2 » : le marchand approuvait une suppression
+      // sans pouvoir verifier sur quoi elle portait.
       case 'propose_gallery_remove':
-        return <>Remove gallery image #{input.index}</>;
+        return (
+          <>
+            Remove gallery image:{' '}
+            <span className="text-white break-all text-xs">{input.image_url}</span>
+          </>
+        );
       case 'propose_gallery_clear':
         return <>Clear the entire gallery (remove all images)</>;
       case 'catalog_set_margin':

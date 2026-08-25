@@ -59,12 +59,36 @@ export async function POST(req: NextRequest) {
     // les produits issus du catalogue portent `supplierProductId` et jamais
     // `cjVid` (shared.tsx, loadCatalogSelections), et `ShippingEstimate` n'est
     // rendu que lorsque `p.cjVid` existe.
+    //
+    // ---- DETTE 6b : `published` NE SUFFIT PLUS ----
+    // L'etape 8, volet A a separe deux notions que ce garde confondait
+    // encore : `published` porte la VISIBILITE (vitrine, fiche produit,
+    // sitemap), `for_sale` porte l'ACHETABILITE. Le checkout exige la
+    // CONJONCTION (checkout/route.ts:466) ; cette route s'etait arretee au
+    // premier terme. Un produit `published = true, for_sale = false` --
+    // etat legal, declare tel par le banc 8A et pose sciemment par le
+    // marchand -- obtenait donc un devis de livraison complet. Trois
+    // consequences, dont deux depassent l'affichage :
+    //   1. le visiteur lisait un delai de livraison sous un article que le
+    //      checkout refuse ensuite (409, shop_product_not_purchasable) ;
+    //   2. `cjCalculateFreight` passe par `acquireCjSlot()` -- file GLOBALE
+    //      partagee avec la CREATION DES COMMANDES fournisseur (cf. la note
+    //      M1-06 ci-dessus) : un produit invendable retardait le
+    //      fulfillment de commandes reellement payees ;
+    //   3. les points API CJ etaient depenses pour une vente impossible.
+    //
+    // AUCUN NOUVEAU MECANISME. Le refus reste FUSIONNE dans le 403
+    // existant : meme code, meme message, meme place -- avant le compteur
+    // et avant toute acquisition de slot CJ. Un produit non achetable
+    // n'est pas une anomalie mais un etat commercial normal : il n'est
+    // deliberement PAS journalise.
     const { data: owned } = await supabase
       .from('shop_products')
       .select('id')
       .eq('site_id', siteId)
       .eq('cj_vid', firstVidRaw)
       .eq('published', true)
+      .eq('for_sale', true)
       .maybeSingle()
     if (!owned) {
       return NextResponse.json({ error: 'Product not available for this site' }, { status: 403 })

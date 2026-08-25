@@ -123,19 +123,42 @@ describe("AUCUNE écriture directe de la politique d'inventaire en TypeScript", 
 });
 
 describe("ÉTAPE 6 — les allowlists génériques restent fermées", () => {
-  // ÉTAPE 8, VOLET A — 9 champs. `for_sale` a été ADMIS consciemment : il ne
-  // déclare rien sur un état antérieur, donc n'exige ni preuve ni acte dédié.
+  // ÉTAPE 8, VOLET A — `for_sale` ADMIS consciemment : il ne déclare rien sur
+  // un état antérieur, donc n'exige ni preuve ni acte dédié.
   // `track_inventory` et `stock_counted_at` restent exclus : eux affirment.
-  const ATTENDUE = "['name', 'description', 'price', 'currency', 'images', 'stock', 'published', 'position', 'for_sale']";
+  //
+  // DETTE 2 — LES DEUX ALLOWLISTS NE SONT PLUS IDENTIQUES, ET C'EST VOULU.
+  // Le POST crée une ligne qui n'existe pas : y poser un `stock` initial
+  // n'écrase rien. Le PATCH met à jour une ligne existante : y poser un
+  // `stock` écrase le compteur SANS réveiller le trigger de l'étape 2, dont
+  // la portée est `track_inventory` seul. Une seule des deux est dangereuse.
+  const POST_ATTENDUE = "['name', 'description', 'price', 'currency', 'images', 'stock', 'published', 'position', 'for_sale']";
+  const PATCH_ATTENDUE = "['name', 'description', 'price', 'currency', 'images', 'published', 'position', 'for_sale']";
 
-  it('POST /api/shop/products : allowlist inchangée, mot pour mot', () => {
+  it('POST /api/shop/products : 9 champs, `stock` COMPRIS', () => {
     const s = readFileSync(join(SRC, 'app/api/shop/products/route.ts'), 'utf-8');
-    expect(s).toContain(`const ALLOWED_PRODUCT_FIELDS = ${ATTENDUE} as const;`);
+    expect(s).toContain(`const ALLOWED_PRODUCT_FIELDS = ${POST_ATTENDUE} as const;`);
   });
 
-  it('PATCH /api/shop/products/[id] : allowlist inchangée, mot pour mot', () => {
+  it('PATCH /api/shop/products/[id] : 8 champs, `stock` RETIRÉ (dette 2)', () => {
     const s = readFileSync(join(SRC, 'app/api/shop/products/[id]/route.ts'), 'utf-8');
-    expect(s).toContain(`const ALLOWED_PRODUCT_FIELDS = ${ATTENDUE} as const;`);
+    expect(s).toContain(`const ALLOWED_PRODUCT_FIELDS = ${PATCH_ATTENDUE} as const;`);
+  });
+
+  it('les DEUX listes ne diffèrent que par `stock` — aucun autre écart', () => {
+    // Ce qui rendrait la divergence dangereuse, ce serait qu'elle s'élargisse
+    // sans que personne le décide. Ce contrôle borne l'écart à un champ.
+    const champs = (p: string) =>
+      readFileSync(join(SRC, p), 'utf-8')
+        .match(/const ALLOWED_PRODUCT_FIELDS = \[([^\]]*)\]/)![1]
+        .split(',').map((c) => c.trim().replace(/'/g, '')).filter(Boolean);
+
+    const post = champs('app/api/shop/products/route.ts');
+    const patch = champs('app/api/shop/products/[id]/route.ts');
+    expect(post).toHaveLength(9);
+    expect(patch).toHaveLength(8);
+    expect(post.filter((c) => !patch.includes(c))).toEqual(['stock']);
+    expect(patch.filter((c) => !post.includes(c))).toEqual([]);
   });
 
   it("`track_inventory` et `stock_counted_at` n'y figurent toujours pas", () => {
@@ -153,11 +176,28 @@ describe("ÉTAPE 6 — les allowlists génériques restent fermées", () => {
     }
   });
 
-  it("`stock` n'a PAS été retiré par mégarde en même temps (P2 reste ouvert)", () => {
-    for (const p of ['app/api/shop/products/route.ts', 'app/api/shop/products/[id]/route.ts']) {
-      const bloc = readFileSync(join(SRC, p), 'utf-8').match(/const ALLOWED_PRODUCT_FIELDS = \[[^\]]*\]/)![0];
-      expect(bloc, p).toContain("'stock'");
-    }
+  it("DETTE 2 — `stock` présent au POST, ABSENT du PATCH", () => {
+    // Cliquet RETOURNÉ. Il exigeait `stock` dans les DEUX listes tant que la
+    // dette 2 restait ouverte ; il tient désormais la règle qui la ferme.
+    const bloc = (p: string) =>
+      readFileSync(join(SRC, p), 'utf-8').match(/const ALLOWED_PRODUCT_FIELDS = \[[^\]]*\]/)![0];
+    expect(bloc('app/api/shop/products/route.ts')).toContain("'stock'");
+    expect(bloc('app/api/shop/products/[id]/route.ts')).not.toContain("'stock'");
+  });
+
+  it("le stock ne se modifie plus que par COMPTAGE ou par VENTE", () => {
+    // Les trois seuls écrivains restants, tous en base et tous gardés :
+    //   enable_stock_tracking      (étape 3) — pose stock_counted_at
+    //   decrement_shop_stock_batch (étape 4) — atomique, respecte track_inventory
+    //   cancel_shop_order                    — piloté par stock_decremented
+    // Aucune route HTTP ne peut plus poser une valeur absolue sur une ligne
+    // existante.
+    const chargesEcrites = (file: string) =>
+      [...code(file).matchAll(/\.(update|insert)\(\s*(\{[\s\S]*?\})/g)].map((m) => m[2]);
+    const coupables = SOURCES
+      .filter((f) => chargesEcrites(f).some((c) => /\bstock\s*:/.test(c) && !/stock_counted_at|track_inventory/.test(c)))
+      .map(relatif);
+    expect(coupables, 'aucun écrivain direct de `stock` en TypeScript').toEqual([]);
   });
 
   it("`for_sale` n'existe QUE sur les chemins du volet A — nulle part ailleurs", () => {
@@ -179,6 +219,21 @@ describe("ÉTAPE 6 — les allowlists génériques restent fermées", () => {
       // seule autorité. C'est précisément ce que ce cliquet sert à constater.
       'src/app/api/agent/[slug]/chat/route.ts',           // déclaration de l'outil
       'src/app/api/agent/[slug]/apply/route.ts',          // relais vers PATCH
+      // DETTE 6b — une entrée ajoutée CONSCIEMMENT, sur demande de ce cliquet
+      // lui-même : la correction 6b l'a fait rougir, ce qui est exactement son
+      // office. La route d'estimation de livraison est une surface COMMERCIALE
+      // publique ; elle n'écrit ni n'interprète `for_sale`, elle refuse de
+      // servir un produit qui ne l'a pas. Le contrat de ce refus est verrouillé
+      // par le cliquet dédié, juste en dessous.
+      'src/app/api/shipping-estimate/route.ts',           // garde de devis
+      // DETTE 6c — trois entrées ajoutées CONSCIEMMENT. L'achetabilité devait
+      // atteindre les surfaces publiques : jusqu'ici `for_sale = false` n'était
+      // honoré qu'au paiement, si bien qu'un produit retiré de la vente gardait
+      // son bouton « Ajouter au panier » et n'était refusé qu'au checkout (409).
+      // Aucune de ces trois-là ne REFUSE : elles lisent et transmettent.
+      'src/components/edit/productDraft.ts',              // brouillon marchand
+      'src/app/sites/[slug]/themes/shared.tsx',           // projection publique
+      'src/app/sites/[slug]/produits/[id]/fetchProduct.ts', // fiche produit
     ];
     const hors = SOURCES.filter((f) => /for_sale/.test(code(f))).map(relatif)
       .filter((f) => !AUTORISES.includes(f));
@@ -195,6 +250,33 @@ describe("ÉTAPE 6 — les allowlists génériques restent fermées", () => {
       expect(s, f).not.toMatch(/\.eq\('for_sale'/);
       expect(s, f).not.toMatch(/from\('shop_products'\)/);
     }
+  });
+
+  it("DETTE 6b — le devis de livraison exige `published` ET `for_sale`", () => {
+    // Deux routes commerciales PUBLIQUES lisent `shop_products` : le checkout
+    // et cette estimation. Elles portaient deux définitions différentes du
+    // produit servable — `published` seul ici, la conjonction là-bas. Un
+    // produit visible mais non achetable obtenait donc un délai de livraison,
+    // et consommait un slot de la file CJ PARTAGÉE avec la création des
+    // commandes fournisseur. Ce cliquet interdit la divergence de revenir.
+    const s = code(join(SRC, 'app/api/shipping-estimate/route.ts'));
+    expect(s).toContain(".eq('published', true)");
+    expect(s).toContain(".eq('for_sale', true)");
+    // Le refus reste FUSIONNÉ dans le 403 existant : aucun code, aucun
+    // message, aucune journalisation propres à l'invendable.
+    expect(s.match(/status: 403/g) ?? []).toHaveLength(1);
+    expect(s).not.toMatch(/for_sale[\s\S]{0,200}logAnomaly/);
+  });
+
+  it("DETTE 6b — la garde précède le compteur et tout appel fournisseur", () => {
+    const s = code(join(SRC, 'app/api/shipping-estimate/route.ts'));
+    const garde = s.indexOf(".eq('for_sale', true)");
+    expect(garde).toBeGreaterThan(-1);
+    // Un garde posé après ces trois-là ne protégerait plus rien : la file CJ
+    // serait déjà engagée, et le refus aurait déjà consommé la borne.
+    expect(garde).toBeLessThan(s.indexOf('logAnomaly('));
+    expect(garde).toBeLessThan(s.indexOf('cjCalculateFreight('));
+    expect(garde).toBeLessThan(s.indexOf("from('shipping_cache')"));
   });
 
   it("la garde d'achat exige `published` ET `for_sale`, jamais l'un OU l'autre", () => {
@@ -331,13 +413,26 @@ describe("ÉTAPE 8, VOLET A — `for_sale = false` reste VISIBLE", () => {
     ['app/sitemap.ts', 'indexation SEO'],
   ];
 
+  // DETTE 6c — CLIQUET AFFÛTÉ, PAS AFFAIBLI. Il interdisait toute MENTION de
+  // `for_sale` sur ces surfaces ; c'était une approximation commode tant que
+  // la vitrine ignorait le champ. Elle le lit désormais — pour décider du
+  // BOUTON D'ACHAT, jamais de l'affichage. L'invariant réel, et le seul qui
+  // ait toujours compté, est qu'aucune de ces surfaces ne FILTRE dessus :
+  // retirer un produit de la vente ne doit pas le faire disparaître, sinon il
+  // aurait suffi de le dépublier. C'est cela qui est constaté maintenant.
   for (const [f, role] of SURFACES) {
-    it(`${role} ne filtre PAS sur for_sale`, () => {
+    it(`${role} ne FILTRE PAS sur for_sale`, () => {
       const s = code(join(SRC, f));
       expect(s, `${f} : la visibilité ne doit jamais dépendre de l'achetabilité`)
-        .not.toMatch(/for_sale/);
+        .not.toMatch(/\.eq\(\s*['"]for_sale['"]/);
+      expect(s, `${f} : aucune ligne ne doit être écartée sur l'achetabilité`)
+        .not.toMatch(/filter\([^)]*for_sale/);
     });
   }
+
+  it('`sitemap.ts` ne connaît toujours PAS `for_sale` : l’indexation ne dépend que de la visibilité', () => {
+    expect(code(join(SRC, 'app/sitemap.ts'))).not.toMatch(/for_sale/);
+  });
 
   it("ces surfaces filtrent toujours sur `published` (la visibilité, elle, n'a pas bougé)", () => {
     for (const [f] of SURFACES) {
@@ -357,6 +452,59 @@ describe("ÉTAPE 8, VOLET A — `for_sale = false` reste VISIBLE", () => {
   });
 });
 
+describe('DETTE 6c — un seul point de décision pour le bouton d’achat', () => {
+  const THEMES = [
+    'app/sites/[slug]/themes/StorefrontDense.tsx',
+    'app/sites/[slug]/themes/FamilyFilter.tsx',
+    'app/sites/[slug]/themes/EditorialShopSection.tsx',
+    'app/sites/[slug]/themes/VifShopSection.tsx',
+    'app/sites/[slug]/themes/NoirShopSection.tsx',
+  ];
+
+  it('les CINQ thèmes passent par `canAddToCart`, aucun ne recopie la condition', () => {
+    // DEBT-001 avait déjà corrigé Noir et Vif, qui avaient omis une garde
+    // qu'Editorial portait. Recopier un troisième terme dans cinq fichiers
+    // aurait rejoué cette divergence à coup sûr.
+    for (const f of THEMES) {
+      const s = code(join(SRC, f));
+      expect(s, f).toMatch(/canAddToCart\(p\)/);
+      expect(s, `${f} : la condition ne doit plus être écrite en dur`)
+        .not.toMatch(/p\.id && p\.priceNumber != null/);
+    }
+  });
+
+  it('`canAddToCart` porte bien les TROIS termes, et lit l’achetabilité en `!== false`', () => {
+    const fn = code(join(SRC, 'app/sites/[slug]/themes/shared.tsx'))
+      .match(/export function canAddToCart\([\s\S]*?\n\}/)![0];
+    expect(fn).toMatch(/p\?\.id/);
+    expect(fn).toMatch(/priceNumber/);
+    expect(fn).toMatch(/forSale !== false/);
+    expect(fn).not.toMatch(/forSale === true/);
+  });
+
+  it('`normalizeProduct` TRANSPORTE `forSale` — sans quoi 4 thèmes sur 5 seraient aveugles', () => {
+    // Cette fonction reconstruit l'objet : tout champ non recopié est perdu.
+    // Editorial, Noir, Vif et Aurora passent tous par elle.
+    const fn = code(join(SRC, 'app/sites/[slug]/themes/shared.tsx'))
+      .match(/export function normalizeProduct\([\s\S]*?\n\}/)![0];
+    expect(fn).toMatch(/forSale: raw\?\.forSale/);
+  });
+
+  it('la fiche produit applique la même règle', () => {
+    const s = code(join(SRC, 'app/sites/[slug]/produits/[id]/ProductPageView.tsx'));
+    expect(s).toMatch(/product\.forSale \?/);
+  });
+
+  it('la projection publique expose `forSale`, et jamais les champs internes', () => {
+    const fn = code(join(SRC, 'app/sites/[slug]/themes/shared.tsx'))
+      .match(/function mapShopProducts\([\s\S]*?\n\}/)![0];
+    expect(fn).toMatch(/forSale: p\.for_sale !== false/);
+    for (const interdit of ['stock', 'published', 'track_inventory', 'stock_counted_at']) {
+      expect(fn, interdit).not.toMatch(new RegExp(`\\b${interdit}\\b`));
+    }
+  });
+});
+
 describe("ÉTAPE 8, VOLET A — l'interface distingue visibilité et achetabilité", () => {
   const PM = code(join(SRC, 'components/edit/ProductManager.tsx'));
 
@@ -368,17 +516,32 @@ describe("ÉTAPE 8, VOLET A — l'interface distingue visibilité et achetabilit
     expect(PM).not.toMatch(/published:\s*draft\.for_sale/);
   });
 
+  // DETTE 6c — ces deux décisions ont été EXTRAITES dans `productDraft.ts`
+  // pour devenir vérifiables par comportement (voir productSaleAct.test.ts).
+  // Les cliquets suivent le code : même exigence, nouveau fichier.
+  const DRAFT = code(join(SRC, 'components/edit/productDraft.ts'));
+
   it('le payload de sauvegarde porte les deux champs', () => {
-    const fn = PM.match(/const payload = \{[\s\S]*?\};/)![0];
-    expect(fn).toContain('published: draft.published');
-    expect(fn).toContain('for_sale: draft.for_sale');
+    const fn = DRAFT.match(/export function payloadFromDraft\([\s\S]*?\n\}/)![0];
+    expect(fn).toContain('published: d.published');
+    expect(fn).toContain('for_sale: d.for_sale');
     // ÉTAPE 7 — et toujours pas de stock.
     expect(fn).not.toMatch(/\bstock\b/);
+    // Le composant ne recompose rien à côté.
+    expect(PM).toContain('payloadFromDraft(draft)');
   });
 
-  it("`startEdit` lit `for_sale` en `!== false`, jamais en `=== true`", () => {
-    const fn = PM.match(/function startEdit\([\s\S]*?\n  \}/)![0];
+  it("l'ouverture d'un produit lit `for_sale` en `!== false`, jamais en `=== true`", () => {
+    const fn = DRAFT.match(/export function draftFromProduct\([\s\S]*?\n\}/)![0];
     expect(fn).toContain('p.for_sale !== false');
     expect(fn).not.toMatch(/for_sale === true/);
+    expect(PM).toContain('draftFromProduct(p)');
+  });
+
+  it("DETTE 6c — le formulaire de création part de `for_sale: false` : vendre est un ACTE", () => {
+    const empty = DRAFT.match(/export const EMPTY_DRAFT: ProductDraft = \{[\s\S]*?\};/)![0];
+    expect(empty).toMatch(/for_sale:\s*false/);
+    // La visibilité, elle, n'a pas bougé.
+    expect(empty).toMatch(/published:\s*true/);
   });
 });

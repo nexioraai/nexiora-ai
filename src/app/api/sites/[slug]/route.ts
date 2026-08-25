@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase as supabaseAnon } from '@/lib/supabase';
+import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
 // Mapping camelCase (client) -> snake_case (DB)
@@ -30,24 +30,38 @@ export async function PATCH(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
-
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Client anon pour valider le token utilisateur
-
-    // Client service_role pour bypass RLS sur l'update (auth déjà fait au-dessus)
-
-    const { data: { user }, error: userError } = await supabaseAnon.auth.getUser(token);
-
-    if (userError || !user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { slug } = await params;
+
+    // ============================================================
+    // DETTE 6a, EXTENSION -- L'OCCURRENCE LA PLUS GRAVE DU LOT.
+    //
+    // CE QUI EXISTAIT. Le seul controle etait la clause `.eq('owner_email',
+    // user.email)` PORTEE PAR L'UPDATE LUI-MEME. Le commentaire d'origine
+    // parlait de « double securite » ; il n'y avait pas de PREMIERE securite.
+    // Entre la validation du jeton et l'ecriture de 19 colonnes de contenu en
+    // `service_role`, aucune verification de propriete n'existait.
+    //
+    // POURQUOI L'ADRESSE NE PEUT PAS TENIR CE ROLE. `sites.owner_email` est
+    // ecrite UNE SEULE FOIS, a la creation du site, et aucun update ne la
+    // touche jamais -- verifie par balayage. Un proprietaire qui change
+    // d'adresse laisse la colonne figee sur l'ancienne : quiconque obtient
+    // ensuite cette adresse chez le fournisseur d'identite pouvait reecrire le
+    // contenu entier du site, pendant que le proprietaire legitime en perdait
+    // l'acces.
+    //
+    // AUCUN MECANISME NOUVEAU. `requireSiteOwner` est la primitive canonique
+    // (`owner_id` prioritaire, repli sur `owner_email` UNIQUEMENT quand
+    // `owner_id` est encore null cote base). Le dossier voisin l'utilisait
+    // deja : `sites/[slug]/archive/route.ts`.
+    //
+    // ORDRE : la propriete est tranchee AVANT toute ecriture. L'UPDATE ne
+    // porte plus aucune garde -- il vise la ligne dont la propriete vient
+    // d'etre etablie, par son identifiant.
+    // ============================================================
+    const auth = await requireSiteOwner(req, slug, 'id');
+    if (!auth.ok) return auth.response;
+    const site = auth.site as { id: string };
+
     const body = await req.json();
 
     // Convertir camelCase -> snake_case pour Supabase
@@ -62,12 +76,14 @@ export async function PATCH(
       return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
     }
 
-    // Double securite : slug ET owner_email
+    // ANCRAGE SUR `id`, ET SURTOUT PAS SUR `owner_id` : la primitive autorise
+    // encore un repli sur `owner_email` quand `owner_id` est null, et filtrer
+    // sur `owner_id` casserait ce cas -- PostgREST traduit `.eq(col, null)` en
+    // `col=eq.null`, qui n'apparie aucune ligne NULL.
     const { data, error } = await supabase
       .from('sites')
       .update(updates)
-      .eq('slug', slug)
-      .eq('owner_email', user.email)
+      .eq('id', site.id)
       .select()
       .single();
 
