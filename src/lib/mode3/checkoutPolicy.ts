@@ -42,6 +42,10 @@ export const MODE3_CHECKOUT_POLICY: CheckoutPolicy = {
   // Aucun coût de livraison confirmé = aucun engagement à l'aveugle.
   requiresResolvedShipping: true,
 
+
+  // M2-07 / M2-08 -- ce domaine tarife AUPRES du fournisseur : il l'interroge,
+  // et respecte donc son quota.
+  consultsSupplierShipping: true,
   // Un produit du marchand porteur d'un identifiant fournisseur est un vrai
   // dropship : son coût est avancé, donc compté.
   countsMappedProductCost: true,

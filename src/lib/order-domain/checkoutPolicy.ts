@@ -53,6 +53,35 @@ export interface CheckoutPolicy {
   readonly requiresResolvedShipping: boolean
 
   /**
+   * Ce domaine INTERROGE-t-il un fournisseur pour tarifer la livraison ?
+   *
+   * M2-07 / M2-08 -- DISTINCTE DE `requiresResolvedShipping`, et il faut
+   * qu'elle le reste. Celle-la demande si un devis confirme est EXIGE pour
+   * vendre ; celle-ci demande s'il faut seulement ALLER LE CHERCHER. Les deux
+   * coincident aujourd'hui -- faux pour le marchand, vrai pour le fournisseur
+   * -- mais elles ne se reduisent pas l'une a l'autre : `modeCapabilities` dit
+   * deja qu'« un marchand pourrait vouloir des tarifs transporteur ». Un tel
+   * marchand consulterait sans exiger, et reutiliser le champ voisin comme
+   * garde rendrait ce cas inexprimable.
+   *
+   * CE QU'ELLE FERME. Le chemin de paiement Mode 2 executait deux choses qui
+   * ne le concernaient pas : une temporisation de 1,1 s destinee au quota
+   * « 1 req/s » de CJ, et un `buildSupplierGroups` qui interroge
+   * `shop_products` pour y chercher un `cj_vid`. La premiere coutait 1,1 s a
+   * chaque commande d'une boutique locale qui n'appelle jamais CJ ; le second
+   * etait inerte mais faisait entrer une notion fournisseur dans un chemin
+   * marchand.
+   *
+   * AUCUN COMPORTEMENT NE CHANGE POUR LE MODE 2, et c'est mesure : un article
+   * `catalog-` est deja refuse en 409 par `admitsCatalogSupplier` AVANT ce
+   * bloc, et aucun `shop_products` d'un site Mode 2 ne porte de `cj_vid`
+   * (exclu des deux allowlists, aucun GRANT PostgREST, et 0 ligne en
+   * production au 2026-08-25). Le devis retombait donc toujours sur `flat`,
+   * qui est exactement ce que la route conserve en sautant le bloc.
+   */
+  readonly consultsSupplierShipping: boolean
+
+  /**
    * Le coût d'un produit du marchand porteur d'un identifiant fournisseur
    * doit-il être compté comme un coût avancé ?
    */

@@ -209,9 +209,27 @@ export async function POST(req: Request) {
     // CJ limite a 1 req/s : on laisse retomber le quota apres la verif de stock.
     // Sans cette verification (mode apercu), il n'y a aucun quota a laisser
     // retomber : la temporisation n'aurait plus d'objet.
-    if (!previewOnly) await new Promise((r) => setTimeout(r, 1100));
+    //
+    // M2-07 -- ET SANS FOURNISSEUR NON PLUS. Cette attente n'etait conditionnee
+    // qu'a `previewOnly` : une boutique locale, qui n'appelle JAMAIS CJ, payait
+    // donc 1,1 s sur chaque commande pour un quota qui ne la concerne pas. La
+    // politique du domaine dit desormais s'il y a un fournisseur a menager.
+    if (policy.consultsSupplierShipping && !previewOnly) {
+      await new Promise((r) => setTimeout(r, 1100));
+    }
 
-    if (countryCode && (STRIPE_SHIPPING_COUNTRIES as readonly string[]).includes(countryCode)) {
+    // M2-08 -- LE DEVIS FOURNISSEUR N'EST PLUS TENTE HORS DE SON DOMAINE.
+    //
+    // `buildSupplierGroups` interroge `shop_products` a la recherche d'un
+    // `cj_vid` : une notion fournisseur, sur un chemin marchand. Le resultat
+    // etait inerte -- et c'est MESURE, pas suppose : un article `catalog-` est
+    // deja refuse en 409 par `admitsCatalogSupplier` bien avant ce point, et
+    // aucun `shop_products` d'un site Mode 2 ne peut porter de `cj_vid`
+    // (exclu des allowlists POST et PATCH, aucun GRANT PostgREST, 0 ligne en
+    // production). Le devis retombait donc toujours sur `flat`, valeur que
+    // `shippingAmount` porte deja : sauter le bloc laisse le Mode 2
+    // rigoureusement identique, et lui epargne une requete inutile.
+    if (policy.consultsSupplierShipping && countryCode && (STRIPE_SHIPPING_COUNTRIES as readonly string[]).includes(countryCode)) {
       try {
         // LOT 2 -- le calcul du devis vit desormais dans resolveShipping(),
         // partage a l'identique avec shop/shipping/calculate (l'affichage du

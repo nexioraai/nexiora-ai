@@ -39,6 +39,10 @@ export const MODE2_CHECKOUT_POLICY: CheckoutPolicy = {
   // fournisseur à confirmer, donc rien à exiger.
   requiresResolvedShipping: false,
 
+  // M2-07 / M2-08 -- le marchand tarife lui-meme : aucun fournisseur a
+  // interroger, donc ni temporisation de quota ni recherche de groupes.
+  consultsSupplierShipping: false,
+
   // Aucun coût n'est avancé : il n'y a pas de coût fournisseur à compter.
   countsMappedProductCost: false,
 

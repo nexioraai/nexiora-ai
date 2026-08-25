@@ -123,6 +123,12 @@ export default defineConfig({
       // -- exactement le piege documente ci-dessus. Verifie par le delta de
       // comptage de tests apres ajout.
       'src/lib/order-domain/**/*.test.ts',
+      // M2-07/M2-08 -- `src/lib/mode2/` n'etait PAS collecte : un test y aurait
+      // passe en isolation sans jamais entrer dans `vitest run`. C'est le piege
+      // que ce fichier documente deja pour `commerce-admission`. Le domaine
+      // Mode 3 (`src/lib/mode3/`) porte le meme manque, latent : il n'a aucun
+      // test aujourd'hui. Consigne, hors perimetre Mode 2.
+      'src/lib/mode2/**/*.test.ts',
       // ETAPE 7 du chantier catalogue canonique -- DEUX prefixes ajoutes, tous
       // deux absents jusqu'ici :
       //   * src/lib/agent-tools/ porte la resolution nom -> produit (N7) ;
