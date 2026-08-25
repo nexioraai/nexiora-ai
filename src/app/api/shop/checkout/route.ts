@@ -371,11 +371,62 @@ export async function POST(req: Request) {
         // revalide dropship_type separement, pour ne jamais dependre d'un
         // seul point de controle.
         if (site.dropship_type === 'pod_brand') {
+          // LOT 3 / L3-03 -- LA VITRINE VENDAIT CE QUE LE CHECKOUT NE VOYAIT PAS.
+          //
+          // Cette ligne ne lisait que `pod_designs[0].mockups`, alors que
+          // `mockupsToProducts` (themes/shared) parcourt TOUS les designs :
+          // une maquette portee par un design d'index >= 1 s'affichait, se
+          // vendait, et `match` restait `undefined` -- donc
+          // `customDesignUrl = undefined`, donc un produit FABRIQUE SANS
+          // DESIGN, aux frais de la plateforme qui avance le cout fournisseur.
+          //
+          // L'index 0 n'a jamais ete une intention produit : `mockups` et
+          // `selected_products` sont stockes SUR CHAQUE design, et chaque
+          // maquette porte deja son propre `design_url` -- l'identite de
+          // design existe et circule jusqu'au fournisseur. Seules la
+          // generation et cette lecture s'etaient repliees sur `[0]`.
+          //
+          // MEME ORDRE DE PARCOURS QUE LA VITRINE (designs dans l'ordre,
+          // premiere maquette rencontree pour un produit donne) : les deux
+          // couches ne peuvent pas designer deux maquettes differentes.
           const podDesignsArr = Array.isArray(site.pod_designs) ? site.pod_designs : [];
-          const mockups = Array.isArray(podDesignsArr[0]?.mockups) ? podDesignsArr[0].mockups : [];
+          const mockups = podDesignsArr.flatMap((d: any) => (Array.isArray(d?.mockups) ? d.mockups : []));
           const match = mockups.find((m: any) => String(m.catalog_product_id) === realId);
           item.customDesigns = undefined;
-          item.customDesignUrl = match?.design_url || undefined;
+          // LOT 3 / L3-04 -- LE DESIGN DOIT APPARTENIR A CE SITE.
+          //
+          // `sites.pod_designs` figure dans le `GRANT UPDATE` des 41 colonnes :
+          // le marchand ecrit `mockups[].design_url` DIRECTEMENT en PostgREST,
+          // sans passer par `generate-mockups`. Rien ne verifiait ensuite que
+          // cette URL lui appartenait -- et c'est la plateforme qui AVANCE le
+          // cout fournisseur. N'importe quelle image publique, y compris le
+          // design d'une autre boutique (`pod-designs/<autre-slug>/…`),
+          // partait en fabrication.
+          //
+          // `pod_custom` a `design_uploads` : table dediee, `site_id`, usage
+          // unique, RLS. `pod_brand` n'avait rien. Cette garde en pose
+          // l'equivalent minimal SANS schema nouveau : le prefixe de stockage
+          // est deja `pod-designs/<slug>/` aux deux points d'ecriture reels
+          // (televersement editeur, upload des maquettes) -- la regle est donc
+          // LUE du code, pas inventee.
+          //
+          // FAIL-CLOSED : une URL hors prefixe n'attache aucun design plutot
+          // que d'en attacher un etranger. Une table equivalente a
+          // `design_uploads` (liaison forte, usage unique) reste une decision
+          // d'architecture distincte -- elle exige du DDL.
+          const designUrl: string | undefined = match?.design_url || undefined;
+          const prefixeDuSite = `/pod-designs/${slug}/`;
+          if (designUrl && !designUrl.includes(prefixeDuSite)) {
+            await logAnomaly({
+              type: 'pod_brand_design_foreign_url',
+              siteId: site.id,
+              slug,
+              details: { itemId: item.id, catalogProductId: realId },
+            });
+            item.customDesignUrl = undefined;
+          } else {
+            item.customDesignUrl = designUrl;
+          }
         } else if (site.dropship_type === 'pod_custom') {
           // LOT J (F-CUSTOM-01/04) -- cause racine : cette branche laissait
           // jusqu'ici passer customDesignUrl/customDesigns TELS QUELS,

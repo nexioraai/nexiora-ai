@@ -4,7 +4,7 @@ Standard exigé : **ELITE 2026 / A+** — aucun lot déclaré validé sans preuv
 (résultat SQL littéral, test exécuté, tsc/vitest réels). Distinction stricte :
 **code terminé ≠ test effectué ≠ preuve validée**.
 
-Dernière mise à jour : 2026-08-25 — **LOT 2 (frontières internes) RÉSOLU** (voir en fin de fichier).
+Dernière mise à jour : 2026-08-25 — **LOT 3 (`pod_brand`) RÉSOLU** (voir en fin de fichier).
 
 > ⚠️ **Le plan 9/9 lots ci-dessous date du 2026-08-22 et PRÉCÈDE les audits Mode 1
 > et Mode 2.** Il n'a donc pas appliqué les classes de défaut que ceux-ci ont
@@ -286,7 +286,7 @@ fail-closed. **Les deux autorités de sous-mode sont solidement verrouillées.**
 | **0** | Collecte de `src/lib/mode3/**` | ✅ **TERMINÉ** — manque latent fermé, prouvé par sonde |
 | **1** | Socle transversal (DEBT-050, DEBT-051, autorités de sous-mode) | ✅ **RÉSOLU** — 14/14 mutations tuées, 3088 tests |
 | **2** | Frontières internes (DEBT-048, DEBT-049) | ✅ **RÉSOLU** — 19/19 mutations tuées, 3178 tests |
-| 3 | **POD_BRAND** (+ **DEBT-055**, rattachée depuis le LOT 1) | à faire |
+| **3** | **POD_BRAND** (+ DEBT-055, DEBT-058, DEBT-059) | ✅ **RÉSOLU** — 12/12 mutations tuées, 3201 tests |
 | 4 | RESELLER | à faire |
 | 5 | POD_CUSTOM | à faire |
 | 6 | Transversal final (+ **DEBT-054**, rattachée depuis le LOT 1) | à faire |
@@ -476,3 +476,78 @@ DEBT-055 reste **LOT 3**, DEBT-054 reste **LOT 6** : ni l'un ni l'autre n'a ét�
 touché. `chat/route.ts` n'a pas été modifié — l'auto-curation d'un `pod_brand`
 reçoit désormais un 400 non bloquant, exactement comme la contre-vérification
 l'avait prédit.
+
+
+---
+
+# LOT 3 — `pod_brand` — RÉSOLU (2026-08-25)
+
+## La reconstruction a précédé le code, et elle a tout décidé
+
+Trois faits, tous mesurés au code avant la moindre modification :
+
+1. **L'identité d'un design existe déjà : `design_url`.** Elle est capturée à la
+   création de la tâche (`pending_task_keys`), portée par chaque maquette,
+   résolue au checkout et transmise au fournisseur. Aucune autorité à créer.
+2. **L'index 0 est un accident, pas une intention.** `mockups` et
+   `selected_products` sont stockés **sur chaque design**, et la vitrine les
+   parcourt tous. Seuls la génération et le checkout s'y étaient repliés.
+3. **La variante normative est `catalog_products.id`.** `printful-adapter`
+   envoie `Number(order.supplier_product_id)` et **n'utilise jamais**
+   `order.variant_id` ; `gelato-adapter` envoie `productUid`. Seul CJ consomme
+   `variant_id` — d'où l'existence d'un suffixe qui appartient au monde
+   `reseller`.
+
+## Les défauts, et ce qui les ferme
+
+| ID | Sév. | Fermé par | Mutations |
+|---|---|---|---|
+| **L3-01** variante du visiteur ignorée *(DEBT-060)* | 🔴 | id sans suffixe + retrait du sélecteur impossible à honorer | Q1, Q2 |
+| **L3-02/03/07** convention `pod_designs[0]` *(DEBT-061)* | 🟠 | checkout parcourt tous les designs · vitrine déduplique · design actif explicite | Q3, Q9 |
+| **L3-04** design non lié au locataire | 🟠 | `design_url` doit être sous `pod-designs/<slug>/`, sinon aucun design + anomalie | Q12 |
+| **L3-05** prix affiché ≠ prix vendu | 🟡 | `loadPodBrandCatalogPrices` relit prix/devise en base | Q4, Q6 |
+| **L3-06** filtre fournisseur de `pod-fulfill` | 🟡 | harnais rendu fidèle + 3 tests | Q10 |
+| **DEBT-055** | 🟡 | `usesCatalogSelections` (autorité LOT 2) | Q11 |
+| **DEBT-058** | 🟡 | plus de `href` vers un 404, prouvé au rendu | Q7, Q8 |
+
+**12 mutations lancées, 12 tuées. Aucune sur un crash de harnais.** Q8 a
+d'abord survécu : elle a été tuée par un **rendu réel**, jamais masquée.
+
+## Ce qui n'a pas bougé, délibérément
+
+`suppliersForDropshipType` (`pod_brand` garde Printful + Gelato — la thèse
+inverse du LOT 2 était fausse) · `CATALOG_SUBTYPES` · `usesCatalogSelections`
+(consommée, jamais dupliquée) · `shared.tsx:358` · le filtre fournisseur de
+`pod-fulfill`, qui répond à « quels fournisseurs ce **moteur** sait exécuter »
+— d'où `printify`, absent de l'autre liste. Deux questions, deux listes.
+
+## Production — lecture seule, aucune écriture
+
+Simulation de la chaîne corrigée sur les données réelles : les 3 produits
+gardent leur identité, **les prix sont identiques** (le JSON concordait avec la
+base — aucune falsification en production), la variante livrée devient celle du
+catalogue, et le `design_url` réel **respecte** le préfixe du site. `updated_at`
+inchangé (juillet). 0 commande.
+
+**Changement visible assumé** : le sélecteur de taille disparaît de ce site.
+Ce n'est pas une perte de capacité — c'est le retrait d'un choix que la chaîne
+ne pouvait pas honorer.
+
+## Risques résiduels — documentés, non masqués
+
+1. Une maquette pointant un produit **CJ** s'affiche encore : `shared.tsx` est
+   dans le bundle client (`NoirTheme`, `StorefrontDense` portent `'use client'`)
+   et ne peut ni importer `suppliersForDropshipType` (`server-only`) ni en
+   recopier la liste. Elle reste **inachetable** — 409 au checkout, garde testée.
+2. Une table équivalente à `design_uploads` pour `pod_brand` (liaison forte,
+   usage unique) exige du **DDL** : décision d'architecture distincte.
+3. La politique d'**écriture** du bucket `pod-designs` n'est pas versionnée et
+   n'a pas été sondée — la sonder exigerait une écriture en production.
+
+## Hors périmètre — non traité
+
+**DEBT-057** (`/api/catalog/variants` sans admission) reste **LOT 2**, non
+rouvert : `pod_brand` ne l'atteint pas (`mockupsToProducts` ne renseigne ni
+`supplierId` ni `supplierProductId`, donc `MerchantProductModal` ne l'appelle
+jamais pour lui). **DEBT-054** reste **LOT 6**. Aucune découverte n'appartenait
+à `reseller` ni à `pod_custom`.

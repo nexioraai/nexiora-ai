@@ -42,12 +42,17 @@ function makeQueryBuilder(resolveValue: { data: any; error: any }) {
   };
   b.single = async () => resolveValue;
   b.maybeSingle = async () => resolveValue;
+  // LOT 3 — maillon AJOUTE : `loadPodBrandCatalogPrices` termine sur `.in()`,
+  // qui resout directement la requete (aucun `.order()` derriere). Ajout pur :
+  // aucun chemin existant ne l'emprunte.
+  b.in = () => Promise.resolve(resolveValue);
   return b;
 }
 
 let siteResult: { data: any; error: any };
 let shopProductsResult: { data: any; error: any };
 let catalogSelectionsResult: { data: any; error: any };
+let catalogProductsResult: { data: any; error: any };
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
@@ -57,6 +62,8 @@ vi.mock('@/lib/supabase', () => ({
       if (table === 'sites') return makeQueryBuilder(siteResult);          // fetchSitePreview
       if (table === 'shop_products') return makeQueryBuilder(shopProductsResult);
       if (table === 'site_catalog_selections') return makeQueryBuilder(catalogSelectionsResult);
+      // LOT 3 — `loadPodBrandCatalogPrices` relit prix et devise des maquettes.
+      if (table === 'catalog_products') return makeQueryBuilder(catalogProductsResult);
       throw new Error('table inattendue : ' + table);
     },
   },
@@ -98,6 +105,7 @@ beforeEach(() => {
   siteResult = { data: site(), error: null };
   shopProductsResult = { data: [], error: null };
   catalogSelectionsResult = { data: [], error: null };
+  catalogProductsResult = { data: [], error: null };
 });
 
 const noms = (s: any) => (s?.products ?? []).map((p: any) => p.name);
@@ -692,8 +700,13 @@ describe('DETTE 3 — `shared.tsx` ne franchit JAMAIS la frontière serveur', ()
     // ni `.length === 0`. Un résultat vide légitime doit rester muet.
     expect(code).not.toMatch(/if \(!shopProducts\)[\s\S]{0,120}signalQueryFailure/);
     expect(code).not.toMatch(/if \(!catSels\)[\s\S]{0,120}signalQueryFailure/);
-    // Trois appels, trois seulement : un par requête instrumentée.
-    expect([...code.matchAll(/signalQueryFailure\(/g)]).toHaveLength(4); // 3 appels + 1 déclaration
+    // LOT 3 — RELEVEMENT DELIBERE : 4 -> 5. Une requête instrumentée de plus,
+    // `loadPodBrandCatalogPrices`, qui relit prix et devise des maquettes POD
+    // BRAND depuis `catalog_products` (le JSON `pod_designs` est écrit par le
+    // marchand en PostgREST direct). Même patron que les quatre autres : un
+    // seul signal, uniquement sur un vrai objet `error`, jamais sur un
+    // résultat vide. Le cliquet a fait son travail — l'ajout est visible.
+    expect([...code.matchAll(/signalQueryFailure\(/g)]).toHaveLength(5); // 3 appels + 1 déclaration
   });
 
   it('les appelants SERVEUR consommateurs de `products` journalisent', async () => {
@@ -726,5 +739,63 @@ describe('DETTE 3 — `shared.tsx` ne franchit JAMAIS la frontière serveur', ()
       expect(SRC, rel).toMatch(/if \(!site\) \{\s*\n\s*return new Response\('Not found', \{ status: 404 \}\)/);
       expect(SRC, rel).not.toMatch(/diagnostics\.length[\s\S]{0,60}404/);
     }
+  });
+});
+
+// ============================================================
+// LOT 3 / L3-05 + L3-04 -- LE PRIX AFFICHE D'UNE MAQUETTE POD BRAND.
+//
+// `sites.pod_designs` figure dans le `GRANT UPDATE` des 41 colonnes : le
+// marchand l'ecrit DIRECTEMENT en PostgREST, sans route serveur. Le prix
+// affiche sortait donc de ce JSON, tandis que le checkout recalculait depuis
+// `catalog_products` -- un visiteur pouvait voir un prix et en payer un autre.
+// ============================================================
+import { fetchSite as fetchSiteLot3, mockupsToProducts as m2pLot3 } from '../shared';
+
+describe('LOT 3 / L3-05 — le prix des maquettes est relu en base, jamais cru sur parole', () => {
+  const MOCKUP = (over: Record<string, unknown> = {}) => ({
+    catalog_product_id: 'cp-1', product_id: 198, variant_id: 7791,
+    product_name: 'T-Shirt', mockup_url: 'https://x.test/m.png',
+    design_url: 'https://x.test/d.png', price: 1, currency: 'XXX', ...over,
+  });
+  const SITE_PB = (mockups: any[]) => site({
+    mode: 3, dropship_type: 'pod_brand', cj_margin_percent: 0, cj_round_mode: 'off',
+    products: [], pod_designs: [{ url: 'https://x.test/d.png', mockups }],
+  });
+
+  it('un prix et une devise forges dans `pod_designs` sont remplaces par ceux du catalogue', async () => {
+    siteResult = { data: SITE_PB([MOCKUP()]), error: null };
+    catalogProductsResult = { data: [{ id: 'cp-1', price: 34.25, currency: 'USD' }], error: null };
+    const s2 = await fetchSiteLot3('ma-boutique');
+    const [p] = m2pLot3(s2 as never);
+    expect(p.priceNumber).toBe(34.25);
+    expect(p.currency).toBe('USD');
+    expect(p.currency).not.toBe('XXX');
+  });
+
+  it('une maquette dont le produit catalogue N\'EXISTE PAS est retiree de la vitrine', async () => {
+    // Identifiant forge, ou produit retire du catalogue : plus rien a vendre.
+    siteResult = { data: SITE_PB([MOCKUP({ catalog_product_id: 'inexistant' })]), error: null };
+    catalogProductsResult = { data: [], error: null };
+    const s2 = await fetchSiteLot3('ma-boutique');
+    expect(m2pLot3(s2 as never)).toEqual([]);
+  });
+
+  it('sur PANNE de lecture, la vitrine reste en l\'etat plutot que de se vider', async () => {
+    // Meme politique que `loadCatalogSelections` : une panne transitoire ne
+    // doit pas fermer la boutique. Le checkout reste seul maitre du montant.
+    siteResult = { data: SITE_PB([MOCKUP()]), error: null };
+    catalogProductsResult = { data: null, error: { message: 'boom' } };
+    const diagnostics: string[] = [];
+    const s2 = await fetchSiteLot3('ma-boutique', false, diagnostics);
+    expect(m2pLot3(s2 as never)).toHaveLength(1);
+    expect(diagnostics.join(' ')).toContain('loadPodBrandCatalogPrices');
+  });
+
+  it('un site non-pod_brand n\'interroge JAMAIS `catalog_products` par ce chemin', async () => {
+    fromCalls.length = 0;
+    siteResult = { data: site({ mode: 3, dropship_type: 'reseller', pod_designs: [{ url: 'u', mockups: [MOCKUP()] }] }), error: null };
+    await fetchSiteLot3('ma-boutique');
+    expect(fromCalls).not.toContain('catalog_products');
   });
 });

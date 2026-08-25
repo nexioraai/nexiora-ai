@@ -414,7 +414,13 @@ export default function EditPage() {
                   <div key={i} className="flex items-center gap-3 bg-white/[0.03] border border-white/10 rounded-xl p-3">
                     <img src={d.url} alt={d.name} className="w-14 h-14 rounded-lg object-cover border border-white/10" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-slate-200 truncate">{d.name}</p>
+                      <p className="text-sm text-slate-200 truncate">
+                        {d.name}
+                        {/* LOT 3 / L3-02 -- la convention `pod_designs[0]` devient
+                            visible : le marchand sait sur quel design portera la
+                            prochaine generation. */}
+                        {i === 0 && <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wide bg-[#FA5D1E]/15 text-[#FA5D1E] align-middle">Actif</span>}
+                      </p>
                       <p className="text-xs text-slate-500">{new Date(d.created_at).toLocaleDateString('fr-CA')}</p>
                     </div>
                     <button
@@ -445,7 +451,24 @@ export default function EditPage() {
                         if (error) throw error;
                         const { data } = supabase.storage.from('pod-designs').getPublicUrl(path);
                         const newDesign = { url: data.publicUrl, name: file.name, created_at: new Date().toISOString() };
-                        const updated = [...podDesigns, newDesign];
+                        // LOT 3 / L3-02 -- LE NOUVEAU DESIGN DEVIENT LE DESIGN ACTIF.
+                        //
+                        // Il etait ajoute EN FIN de liste (`[...podDesigns, newDesign]`),
+                        // alors que tout le backend travaille sur `pod_designs[0]` :
+                        // `generate-mockups` y lit l'URL du design et les produits
+                        // selectionnes, et y ecrit les maquettes. Le marchand televersait
+                        // donc un second design, selectionnait ses produits, cliquait
+                        // « generer » -- et obtenait les maquettes du PREMIER design,
+                        // sans le moindre signal.
+                        //
+                        // L'index 0 n'est pas un accident qu'on corrige en le supprimant :
+                        // c'est la convention reelle de six points du code. On la rend
+                        // VRAIE cote interface -- le dernier televerse est l'actif -- au
+                        // lieu de la contredire silencieusement. Les designs precedents
+                        // conservent leurs maquettes et restent vendables : chacune porte
+                        // son propre `design_url`, que le checkout retrouve desormais dans
+                        // TOUS les designs (L3-03).
+                        const updated = [newDesign, ...podDesigns];
                         setPodDesigns(updated);
                         updateField('pod_designs', updated);
                         setMessage('Design uploaded!');

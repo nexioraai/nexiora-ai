@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { renderToStaticMarkup } from 'react-dom/server';
 
 vi.mock('@/lib/supabase', () => ({ supabase: {} }));
 
@@ -64,12 +65,74 @@ describe('LOT 2 / INVARIANT B — pod_brand produit bien ses articles vendables'
     expect(p[0].image).toBe('https://img.test/mockup.png');
   });
 
-  it('INVARIANT I — l\'id porte la forme `catalog-<uuid>::<variantId>`, celle que decodent checkout et pod-fulfill', () => {
+  // ============================================================
+  // LOT 3 / L3-01 -- CE TEST A CHANGE DE CAMP, SCIEMMENT.
+  //
+  // Au LOT 2 il verrouillait `catalog-<uuid>::<variantId>` en croyant y voir
+  // la forme attendue par le checkout et le fulfillment. Le LOT 3 a mesure au
+  // point d'arrivee que c'est FAUX pour les fournisseurs POD :
+  // `printful-adapter.createOrder` envoie `Number(order.supplier_product_id)`
+  // et n'utilise jamais `order.variant_id` ; `gelato-adapter` envoie
+  // `productUid: order.supplier_product_id`. Seul CJ consomme `variant_id`.
+  // Chaque ligne `catalog_products` EST deja une variante Printful.
+  //
+  // Le suffixe etait donc redondant -- et nuisible : `MerchantProductModal`,
+  // partage avec reseller/pod_custom, en ajoute un SECOND, et les cinq
+  // decodeurs prennent l'index 1, c'est-a-dire la variante de la maquette et
+  // non celle du visiteur.
+  // ============================================================
+  it('INVARIANT I — l\'id est `catalog-<uuid>`, SANS suffixe de variante', () => {
     const [produit] = mockupsToProducts(site());
-    expect(produit.id).toBe('catalog-cp-uuid-1::vid-42');
-    // Meme decodage que `parseCatalogId` (checkout), `stripVariant`
-    // (pod-fulfill) et `resolveShipping` : la partie avant `::` est l'uuid.
-    expect(String(produit.id).replace(/^catalog-/, '').split('::')[0]).toBe('cp-uuid-1');
+    expect(produit.id).toBe('catalog-cp-uuid-1');
+    expect(String(produit.id)).not.toContain('::');
+  });
+
+  it('L3-01 — la modale partagee ne peut plus produire un id a DEUX variantes', () => {
+    // `MerchantProductModal` construit `p.id + (selectedVariant ? '::' + v : '')`.
+    // Avec un id sans suffixe, le resultat reste bien forme, exactement comme
+    // pour reseller/pod_custom.
+    const [produit] = mockupsToProducts(site());
+    const idPanier = `${produit.id}::7792`;
+    const [uuid, variante, extra] = idPanier.replace(/^catalog-/, '').split('::');
+    expect(uuid).toBe('cp-uuid-1');
+    expect(variante).toBe('7792');
+    expect(extra).toBeUndefined();
+  });
+
+  it('L3-01 — aucune variante n\'est proposee a l\'achat : une maquette = une variante', () => {
+    // `selected_products[].variants` est une liste de CATALOGUE (choix de
+    // generation cote editeur). L'exposer au visiteur offrait un choix que la
+    // chaine ne pouvait pas honorer : l'image, le prix et le
+    // `supplier_product_id` sont ceux de la seule variante rendue.
+    const [produit] = mockupsToProducts(site());
+    expect(produit.variants).toBeUndefined();
+  });
+
+  it('L3-03 — deux designs portant une maquette du MEME produit ne creent pas deux cartes de meme id', () => {
+    const s = site();
+    s.pod_designs = [
+      s.pod_designs[0],
+      { url: 'https://storage.test/designs/b.png', selected_products: {}, mockups: [
+        { ...s.pod_designs[0].mockups[0], design_url: 'https://storage.test/designs/b.png' },
+      ] },
+    ];
+    const produits = mockupsToProducts(s);
+    expect(produits).toHaveLength(1);
+    expect(new Set(produits.map((p) => p.id)).size).toBe(produits.length);
+  });
+
+  it('L3-03 — une maquette portee par un design d\'index >= 1 est bien vendable', () => {
+    const s = site();
+    const design0 = { url: 'https://storage.test/designs/vide.png', selected_products: {}, mockups: [] };
+    s.pod_designs = [design0, s.pod_designs[0]];
+    const produits = mockupsToProducts(s);
+    expect(produits).toHaveLength(1);
+    expect(produits[0].id).toBe('catalog-cp-uuid-1');
+  });
+
+  it('DEBT-058 — une maquette declare n\'avoir PAS de fiche produit', () => {
+    const [produit] = mockupsToProducts(site());
+    expect((produit as { hasProductPage?: boolean }).hasProductPage).toBe(false);
   });
 
   it('le prix suit la marge du marchand, jamais le cout fournisseur brut', () => {
@@ -127,5 +190,52 @@ describe('LOT 2 — PERIMETRE : la regle de chargement des selections n\'est PAS
     expect(selections.slice(0, 1200)).not.toContain('pod_designs');
     const mockups = source.slice(source.indexOf('export function mockupsToProducts'));
     expect(mockups.slice(0, 1500)).not.toContain('site_catalog_selections');
+  });
+});
+
+// ============================================================
+// LOT 3 / DEBT-058 -- LE LIEN DE LA CARTE, MESURE AU RENDU.
+//
+// Le clic est intercepte (`preventDefault`, la modale s'ouvre), mais le
+// `href` restait reel : nouvel onglet, URL collee, robots d'indexation.
+// Pour une maquette POD BRAND il pointait vers une fiche que `fetchProduct`
+// refuse -- un 404 annonce aux moteurs.
+//
+// ON MESURE LE MARKUP, pas la presence d'une prop : c'est l'attribut rendu
+// qui atteint le crawler. `ClickableProductCard` rend son `<a>` des le
+// premier passage (l'etat `open` vaut false, la modale n'est pas montee),
+// donc `renderToStaticMarkup` suffit -- pas besoin de jsdom.
+// ============================================================
+import ClickableProductCard from '../ClickableProductCard';
+
+describe('LOT 3 / DEBT-058 — la carte n\'annonce plus une fiche qui repond 404', () => {
+  const rendre = (product: Record<string, unknown>) =>
+    renderToStaticMarkup(
+      <ClickableProductCard slug="ma-marque" product={product as never} primary="#111" lang="fr">
+        <span>carte</span>
+      </ClickableProductCard>
+    );
+
+  it('une maquette POD BRAND ne porte AUCUN href', () => {
+    const [produit] = mockupsToProducts(site());
+    const html = rendre(produit as never);
+    expect(html).toContain('carte');
+    expect(html).not.toContain('href=');
+    expect(html).not.toContain('/produits/');
+  });
+
+  it('un produit ordinaire garde son href — aucune regression sur les autres surfaces', () => {
+    const html = rendre({ id: 'catalog-abc', name: 'Bracelet', description: '', price: '10' });
+    expect(html).toContain('href="/sites/ma-marque/produits/catalog-abc"');
+  });
+
+  it('`hasProductPage` absent vaut « oui » : le comportement par defaut est inchange', () => {
+    const html = rendre({ id: 'p-1', name: 'Mug', description: '', price: '5' });
+    expect(html).toContain('/produits/p-1');
+  });
+
+  it('`hasProductPage: true` porte bien un href', () => {
+    const html = rendre({ id: 'p-2', name: 'X', description: '', price: '5', hasProductPage: true });
+    expect(html).toContain('/produits/p-2');
   });
 });

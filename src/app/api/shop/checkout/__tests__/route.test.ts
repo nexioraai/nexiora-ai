@@ -520,12 +520,123 @@ describe('POST /api/shop/checkout — POD BRAND : design résolu côté serveur,
     ...SITE_MODE3,
     dropship_type: 'pod_brand',
     pod_designs: [{
-      url: 'https://storage.example/brand-design.png',
+      url: 'https://sb.example/storage/v1/object/public/pod-designs/boutique/brand-design.png',
       mockups: [
-        { catalog_product_id: 'cp-1', variant_id: 111, design_url: 'https://storage.example/brand-design.png', mockup_url: 'https://storage.example/mockup.png' },
+        { catalog_product_id: 'cp-1', variant_id: 111, design_url: 'https://sb.example/storage/v1/object/public/pod-designs/boutique/brand-design.png', mockup_url: 'https://storage.example/mockup.png' },
       ],
     }],
   };
+
+  // ============================================================
+  // LOT 3 / L3-03 -- LA MAQUETTE EST CHERCHEE DANS TOUS LES DESIGNS.
+  //
+  // Cette resolution ne lisait que `pod_designs[0].mockups`, alors que la
+  // vitrine (`mockupsToProducts`) parcourt tous les designs. Une maquette
+  // portee par un design d'index >= 1 s'affichait, se vendait, et repartait
+  // en fabrication AVEC UN DESIGN VIDE -- aux frais de la plateforme, qui
+  // avance le cout fournisseur. Mutation P4, survivante avant ce lot.
+  // ============================================================
+  // LOT 3 / L3-04 -- URL REALISTE : le prefixe de stockage reel est
+  // `pod-designs/<slug>/`, et le checkout exige desormais que le design
+  // appartienne a CE site. Une fixture hors prefixe ne decrirait plus un
+  // design legitime.
+  const DESIGN_B = 'https://sb.example/storage/v1/object/public/pod-designs/boutique/design-b.png';
+  const SITE_DEUX_DESIGNS = {
+    ...SITE_MODE3,
+    dropship_type: 'pod_brand',
+    pod_designs: [
+      { url: 'https://sb.example/storage/v1/object/public/pod-designs/boutique/design-a.png', mockups: [] },
+      {
+        url: DESIGN_B,
+        mockups: [
+          { catalog_product_id: 'cp-1', variant_id: 111, design_url: DESIGN_B, mockup_url: 'https://storage.example/mockup-b.png' },
+        ],
+      },
+    ],
+  };
+
+  it('une maquette portee par le SECOND design part bien en fabrication AVEC son design', async () => {
+    const chains = setupTables({
+      sites: { data: SITE_DEUX_DESIGNS, error: null },
+      catalog_products: { data: [{ id: 'cp-1', supplier_product_id: 'sp-1', price: 20, currency: 'usd', supplier_id: 'printful' }], error: null },
+      site_catalog_selections: { data: null, error: null },
+      shipping_cache: { data: [{ supplier_product_id: 'sp-1', shipping_cost: 5, days_min: 10, days_max: 20, tiers: null }], error: null },
+      shop_orders: { data: { id: 'order-1' }, error: null },
+      shop_order_items: { data: [{ id: 'item-1' }], error: null },
+      order_item_designs: { data: [{ id: 'd-1' }], error: null },
+    });
+    const res = await POST(req({
+      slug: 'boutique',
+      countryCode: 'US',
+      items: [{ id: 'catalog-cp-1', quantity: 1, name: 'T-Shirt' }],
+    }));
+    expect(res.status).toBe(200);
+    const lignes = (chains.get('order_item_designs') as any)?.insert?.mock?.calls?.[0]?.[0];
+    expect(lignes, 'aucune ligne order_item_designs creee').toBeTruthy();
+    expect(JSON.stringify(lignes)).toContain(DESIGN_B);
+  });
+
+  it('le design du BON design est retenu quand deux designs coexistent', async () => {
+    // Design A ne porte aucune maquette de `cp-1` : c'est bien celle de B qui
+    // doit etre retenue, jamais un repli sur l'index 0.
+    const chains = setupTables({
+      sites: { data: SITE_DEUX_DESIGNS, error: null },
+      catalog_products: { data: [{ id: 'cp-1', supplier_product_id: 'sp-1', price: 20, currency: 'usd', supplier_id: 'printful' }], error: null },
+      site_catalog_selections: { data: null, error: null },
+      shipping_cache: { data: [{ supplier_product_id: 'sp-1', shipping_cost: 5, days_min: 10, days_max: 20, tiers: null }], error: null },
+      shop_orders: { data: { id: 'order-1' }, error: null },
+      shop_order_items: { data: [{ id: 'item-1' }], error: null },
+      order_item_designs: { data: [{ id: 'd-1' }], error: null },
+    });
+    await POST(req({ slug: 'boutique', countryCode: 'US', items: [{ id: 'catalog-cp-1', quantity: 1, name: 'T' }] }));
+    const lignes = JSON.stringify((chains.get('order_item_designs') as any)?.insert?.mock?.calls?.[0]?.[0] ?? []);
+    expect(lignes).toContain(DESIGN_B);
+    expect(lignes).not.toContain('design-a.png');
+  });
+
+  // ============================================================
+  // LOT 3 / L3-04 -- UN DESIGN QUI N'APPARTIENT PAS AU SITE.
+  //
+  // `pod_designs` est ecrit par le marchand en PostgREST direct. Il pouvait
+  // donc pointer `design_url` vers n'importe quelle image publique -- dont
+  // celle d'une AUTRE boutique -- et la plateforme, qui avance le cout
+  // fournisseur, la faisait fabriquer. `pod_custom` avait `design_uploads`
+  // (lie au site, usage unique) ; `pod_brand` n'avait rien.
+  // ============================================================
+  const SITE_DESIGN_ETRANGER = {
+    ...SITE_MODE3,
+    dropship_type: 'pod_brand',
+    pod_designs: [{
+      url: 'https://sb.example/storage/v1/object/public/pod-designs/AUTRE-BOUTIQUE/vole.png',
+      mockups: [
+        { catalog_product_id: 'cp-1', variant_id: 111, design_url: 'https://sb.example/storage/v1/object/public/pod-designs/AUTRE-BOUTIQUE/vole.png', mockup_url: 'https://x/m.png' },
+      ],
+    }],
+  };
+
+  it.each([
+    ['le design d\'une AUTRE boutique', SITE_DESIGN_ETRANGER],
+    ['une URL arbitraire hors stockage', {
+      ...SITE_MODE3, dropship_type: 'pod_brand',
+      pod_designs: [{ url: 'https://evil.example/x.png', mockups: [{ catalog_product_id: 'cp-1', variant_id: 111, design_url: 'https://evil.example/x.png', mockup_url: 'https://x/m.png' }] }],
+    }],
+  ])('%s n\'est JAMAIS attache a la commande, et l\'anomalie est tracee', async (_l, site) => {
+    const chains = setupTables({
+      sites: { data: site, error: null },
+      catalog_products: { data: [{ id: 'cp-1', supplier_product_id: 'sp-1', price: 20, currency: 'usd', supplier_id: 'printful' }], error: null },
+      site_catalog_selections: { data: null, error: null },
+      shipping_cache: { data: [{ supplier_product_id: 'sp-1', shipping_cost: 5, days_min: 10, days_max: 20, tiers: null }], error: null },
+      shop_orders: { data: { id: 'order-1' }, error: null },
+      shop_order_items: { data: [{ id: 'item-1' }], error: null },
+    });
+    const res = await POST(req({ slug: 'boutique', countryCode: 'US', items: [{ id: 'catalog-cp-1', quantity: 1, name: 'T' }] }));
+    expect(res.status).toBe(200);
+    // La vente aboutit, mais SANS design : fail-closed, jamais un design etranger.
+    expect(chains.get('order_item_designs')).toBeUndefined();
+    expect(logAnomalyMock).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'pod_brand_design_foreign_url' })
+    );
+  });
 
   it('un customDesignUrl injecté par le client est ignoré : le design réellement envoyé au fournisseur est celui du mockup généré par le marchand', async () => {
     const chains = setupTables({
@@ -553,7 +664,7 @@ describe('POST /api/shop/checkout — POD BRAND : design résolu côté serveur,
     expect(designsChain?.insert).toHaveBeenCalledWith([
       expect.objectContaining({
         order_item_id: 'item-1',
-        design_url: 'https://storage.example/brand-design.png',
+        design_url: 'https://sb.example/storage/v1/object/public/pod-designs/boutique/brand-design.png',
         placement: 'front',
       }),
     ]);

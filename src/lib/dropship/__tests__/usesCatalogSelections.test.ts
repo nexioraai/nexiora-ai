@@ -116,3 +116,42 @@ describe('LOT 2 / L2-E -- le miroir client de l\'editeur reste aligne sur l\'aut
     expect(editeur).toContain('site?.mode === 3 && (');
   });
 });
+
+// ============================================================
+// LOT 3 / DEBT-055 -- L'AUTO-CURATION DE LA CREATION DE SITE.
+//
+// `api/chat/route.ts` declenchait la curation sur sa propre condition
+// (`finalMode === 3 && persistedDropshipType`), plus large que la realite :
+// `pod_brand` y passait, alors que ses produits viennent de `pod_designs` et
+// que `CATALOG_SUBTYPES` lui refuse les outils. Elle interroge desormais
+// l'autorite du LOT 2.
+//
+// LIMITE ASSUMEE DE CETTE PREUVE : appeler `POST /api/chat` exigerait de
+// monter tout le pipeline de generation (Anthropic, Pexels, Supabase, score
+// IA). Ce bloc verifie donc que la route CONSOMME l'autorite et n'a plus de
+// condition propre ; la matrice de comportement des quatre cas est prouvee
+// par les tests d'unite ci-dessus, sur l'autorite elle-meme. La chaine des
+// deux est ce qui garantit le comportement -- aucune des deux ne suffit.
+// ============================================================
+describe('LOT 3 / DEBT-055 -- la creation de site delegue, elle ne decide plus', () => {
+  const RACINE2 = join(__dirname, '../../../..');
+  const route = readFileSync(join(RACINE2, 'src/app/api/chat/route.ts'), 'utf-8')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/^\s*\/\/.*$/gm, ' ');
+
+  it('l\'auto-curation est gardee par `usesCatalogSelections`', () => {
+    expect(route).toContain('usesCatalogSelections(finalMode, persistedDropshipType)');
+  });
+
+  it('la condition maison a disparu', () => {
+    expect(route).not.toMatch(/finalMode === 3 && persistedDropshipType/);
+  });
+
+  it('les quatre cas attendus decoulent de l\'autorite', () => {
+    expect(usesCatalogSelections(3, 'reseller')).toBe(true);
+    expect(usesCatalogSelections(3, 'pod_custom')).toBe(true);
+    expect(usesCatalogSelections(3, 'pod_brand')).toBe(false);
+    expect(usesCatalogSelections(1, null)).toBe(false);
+    expect(usesCatalogSelections(2, null)).toBe(false);
+  });
+});

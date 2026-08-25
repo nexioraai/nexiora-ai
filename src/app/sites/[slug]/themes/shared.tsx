@@ -104,6 +104,14 @@ shippingDaysMax?: number | null
 supplierId?: string | null
 supplierProductId?: string | null
 family?: string
+/**
+ * LOT 3 / DEBT-058 -- ce produit dispose-t-il d'une fiche produit ?
+ * OPTIONNEL : `undefined` vaut « oui », le comportement de toutes les
+ * surfaces existantes. Seules les maquettes POD BRAND le mettent a `false`,
+ * parce que `fetchProduct` sert la fiche depuis `site_catalog_selections`,
+ * mecanisme qu'elles n'utilisent pas.
+ */
+hasProductPage?: boolean
 }
 
 export type Service = {
@@ -346,6 +354,7 @@ signalQueryFailure('fetchSite/shop_products', shopProductsError.message, diagnos
 applyShopProducts(data as any, shopProducts)
 
 await loadCatalogSelections(data as any, diagnostics)
+await loadPodBrandCatalogPrices(data as any, diagnostics)
 
 return data as Site
 }
@@ -353,6 +362,68 @@ return data as Site
 
 
 
+
+// ============================================================
+// LOT 3 / L3-05 + L3-04 -- LE PRIX AFFICHE REDEVIENT CELUI DE LA BASE.
+//
+// `pod_designs` figure dans le `GRANT UPDATE` des 41 colonnes : le marchand
+// l'ecrit DIRECTEMENT en PostgREST, sans passer par aucune route serveur.
+// `mockups[].price` et `mockups[].currency` etaient donc affiches tels quels,
+// alors que le checkout recalcule depuis `catalog_products`. Un visiteur
+// pouvait voir un prix et en payer un autre.
+//
+// CETTE FONCTION REND LE JSON NON NORMATIF SUR CE POINT : prix et devise sont
+// relus en base, et une maquette dont le produit catalogue n'existe pas
+// (identifiant forge, produit retire du catalogue) est ECARTEE de la vitrine
+// plutot que d'y rester avec un prix inventable.
+//
+// CE QU'ELLE NE DECIDE PAS : quels FOURNISSEURS ce sous-type admet. C'est
+// `suppliersForDropshipType`, appliquee au checkout par `admitsCatalogSupplier`
+// (garde testee, LOT 2). Ce fichier est dans le bundle CLIENT -- `NoirTheme`
+// et `StorefrontDense` portent 'use client' et importent `mockupsToProducts`
+// -- il ne peut donc pas importer une autorite `server-only`, et surtout il
+// ne doit pas en recopier la liste. Une maquette pointant un produit CJ
+// s'affiche donc encore, mais reste INACHETABLE : refus en 409 au checkout.
+// Consigne comme risque residuel, pas masque.
+//
+// SUR PANNE DE LECTURE : on laisse la vitrine en l'etat et on signale, comme
+// `loadCatalogSelections` juste en dessous. Vider la boutique sur une panne
+// transitoire serait pire que d'afficher un prix non reverifie -- le checkout
+// reste de toute facon la seule autorite sur le montant debite.
+// ============================================================
+async function loadPodBrandCatalogPrices(data: any, diagnostics?: string[]) {
+if (data.dropship_type !== 'pod_brand') return
+const designs = Array.isArray(data.pod_designs) ? data.pod_designs : []
+if (designs.length === 0) return
+const ids = [
+...new Set(
+designs
+.flatMap((d: any) => (Array.isArray(d?.mockups) ? d.mockups : []))
+.map((m: any) => m?.catalog_product_id)
+.filter(Boolean)
+.map(String)
+),
+]
+if (ids.length === 0) return
+const { data: rows, error } = await supabase
+.from('catalog_products')
+.select('id, price, currency')
+.in('id', ids)
+if (error) {
+signalQueryFailure('loadPodBrandCatalogPrices/catalog_products', error.message, diagnostics)
+return
+}
+const parId = new Map((rows || []).map((r: any) => [String(r.id), r]))
+data.pod_designs = designs.map((d: any) => ({
+...d,
+mockups: (Array.isArray(d?.mockups) ? d.mockups : [])
+.filter((m: any) => parId.has(String(m?.catalog_product_id)))
+.map((m: any) => {
+const r = parId.get(String(m.catalog_product_id))
+return { ...m, price: r.price, currency: r.currency }
+}),
+}))
+}
 
 async function loadCatalogSelections(data: any, diagnostics?: string[]) {
 if (data.mode === 3 && (data.dropship_type === 'reseller' || data.dropship_type === 'pod_custom')) {
@@ -479,6 +550,7 @@ signalQueryFailure('fetchSitePreview/shop_products', shopProductsError.message)
 }
 applyShopProducts(data as any, shopProducts)
 await loadCatalogSelections(data as any)
+await loadPodBrandCatalogPrices(data as any)
 
 return data as unknown as Site
 }
@@ -629,25 +701,80 @@ family: raw?.family || undefined,
 
 
 // ---------- POD mockups → Products ----------
+// ============================================================
+// LOT 3 -- LA MAQUETTE POD BRAND EST UN PRODUIT, ET UN SEUL.
+//
+// ============ L3-01 : L'IDENTIFIANT PORTAIT DEUX VARIANTES ============
+//
+// CETTE FONCTION EMETTAIT `catalog-<uuid>::<variant>`. `MerchantProductModal`
+// -- partage avec `reseller` et `pod_custom` -- ajoute ENCORE `'::' + variante
+// choisie`. Pour eux c'est correct : `loadCatalogSelections` rend un id SANS
+// variante. Pour `pod_brand` seul, l'id devenait
+// `catalog-<uuid>::<v_maquette>::<v_choisie>`, et les cinq decodeurs du depot
+// font `split('::')` puis prennent l'index 1 -- donc TOUJOURS la variante de
+// la maquette. Mesure sur donnees de production : le visiteur choisit
+// « White XL » (7792) et recoit « White L » (7791) ; sur un autre produit il
+// choisit « Black 3XL » a 62,75 $ et recoit « White S » a 56,95 $.
+//
+// LA VARIANTE NORMATIVE EST `catalog_products.id`, PAS UN SUFFIXE. Mesure au
+// point d'arrivee : `printful-adapter.createOrder` envoie
+// `variant_id: Number(order.supplier_product_id)` et n'utilise JAMAIS
+// `order.variant_id` ; `gelato-adapter` envoie `productUid:
+// order.supplier_product_id`. Seul CJ consomme `variant_id` -- d'ou l'existence
+// du suffixe, qui appartient au monde `reseller`. Chaque ligne
+// `catalog_products` EST deja une variante Printful : l'uuid suffit.
+//
+// LE SELECTEUR DE TAILLE EST DONC RETIRE, ET CE N'EST PAS UNE PERTE DE
+// CAPACITE : c'est le retrait d'un choix que la chaine ne pouvait pas
+// honorer. `selected_products[].variants` est une liste de CATALOGUE, servant
+// a l'editeur a choisir quelle variante generer -- elle avait ete cablee
+// telle quelle dans une surface VISITEUR. Une maquette est rendue pour UNE
+// variante : son image, son prix et son `supplier_product_id` sont ceux de
+// cette variante-la. Offrir les autres etait faux sur les trois plans.
+// Proposer de vraies tailles achetables suppose une maquette par variante :
+// c'est une evolution produit, pas une correction.
+//
+// ============ L3-05 : LE PRIX AFFICHE N'EST PLUS CELUI DU JSON ============
+//
+// `m.price` vit dans `sites.pod_designs`, colonne du GRANT UPDATE des 41 :
+// le marchand l'ecrit directement en PostgREST. Le checkout, lui, recalcule
+// depuis `catalog_products`. Un prix affiche pouvait donc differer du prix
+// reellement debite. `loadPodBrandCatalogPrices` (plus bas) reecrit
+// `price`/`currency` depuis la base AVANT ce rendu, et ecarte les maquettes
+// dont le produit catalogue n'existe pas.
+//
+// ============ L3-03 : TOUS LES DESIGNS RESTENT VENDABLES ============
+//
+// Cette boucle parcourt TOUS les designs, et c'est correct : chaque maquette
+// porte son propre `design_url`, que le checkout retrouve et transmet au
+// fournisseur. Le checkout ne lisait que `pod_designs[0]` -- corrige dans la
+// meme passe (api/shop/checkout/route.ts).
+// ============================================================
 export function mockupsToProducts(site: Site): Product[] {
   if (site.dropship_type !== "pod_brand" || !site.pod_designs?.length) return []
   const designs = site.pod_designs
   const products: Product[] = []
-  // Prix unifie : le cout Printful (m.price / v.price) passe par la meme formule
-  // marge que le catalogue reseller. Le marchand fixe son %, le prix se calcule.
+  // Prix unifie : le cout Printful passe par la meme formule marge que le
+  // catalogue reseller. Le marchand fixe son %, le prix se calcule.
   const { margin, roundMode } = sitePricing(site)
+  // Deux designs peuvent porter une maquette du MEME produit catalogue. Leurs
+  // deux cartes auraient alors le meme id de panier, et le checkout ne
+  // pourrait pas savoir lequel vendre. Le premier rencontre gagne -- meme
+  // ordre de parcours que le checkout, donc jamais de desaccord.
+  const vus = new Set<string>()
   for (const design of designs) {
     if (!design.mockups?.length) continue
     for (const m of design.mockups) {
       if (m.design_url && design.url && m.design_url !== design.url) continue
-      const selProducts = design.selected_products || {}
-      const sel = selProducts[String(m.product_id)]
+      if (!m.catalog_product_id) continue
+      const cle = String(m.catalog_product_id)
+      if (vus.has(cle)) continue
+      vus.add(cle)
       const cost = m.price ? Number(m.price) : 0
       const pr = resolveDisplayPrice(cost, undefined, margin, roundMode)
       const cur = m.currency || "CAD"
-      const variants = sel?.variants || []
       products.push({
-        id: `catalog-${m.catalog_product_id}::${m.variant_id}`,
+        id: `catalog-${m.catalog_product_id}`,
         name: m.product_name?.replace(/\s*—\s*.+$/, "") || "Produit",
         description: "",
         price: pr > 0 ? `${pr.toFixed(2)} ${cur}` : "",
@@ -656,12 +783,11 @@ export function mockupsToProducts(site: Site): Product[] {
         image: m.mockup_url,
         shippingDaysMin: m.shipping_days_min || null,
         shippingDaysMax: m.shipping_days_max || null,
-        variants: variants.map((v: any) => ({
-          variant_id: v.variant_id,
-          label: v.label,
-          price: resolveDisplayPrice(v.price ? Number(v.price) : cost, undefined, margin, roundMode),
-          currency: v.currency || cur,
-        })),
+        // DEBT-058 -- ce produit n'a pas de fiche : `fetchProduct` sert la
+        // page depuis `site_catalog_selections`, mecanisme que `pod_brand`
+        // n'utilise pas (LOT 2). La carte ne doit donc pas porter un lien
+        // vers un 404 -- voir ClickableProductCard.
+        hasProductPage: false,
       })
     }
   }

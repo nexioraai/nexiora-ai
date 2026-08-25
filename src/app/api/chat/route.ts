@@ -6,6 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { computeAiScore } from '@/app/lib/aiScore';
 import { logGenerationFailure } from '@/lib/generationFailures';
 import { isKnownDropshipSubtype, resolvePersistedSubtype } from '@/lib/dropship/subtypeAdmission';
+import { usesCatalogSelections } from '@/lib/dropship/catalogAdmission';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -866,9 +867,24 @@ Return ONLY valid JSON, no markdown:
       console.error('score_history insert failed:', e);
     }
 
-    // Auto-curation pour sites reseller (mode 3) — non-bloquant
-    // (finalMode deja resolu plus haut, source unique -- voir resolveFinalMode)
-    if (finalMode === 3 && persistedDropshipType) {
+    // ============================================================
+    // LOT 3 / DEBT-055 -- L'AUTO-CURATION DEMANDE A L'AUTORITE.
+    //
+    // La condition etait `finalMode === 3 && persistedDropshipType` : une
+    // regle ecrite ici, plus large que la realite. Elle declenchait la
+    // curation pour `pod_brand`, a qui `CATALOG_SUBTYPES` refuse les outils
+    // de curation et dont la guidance dit « NO CATALOG CURATION: Products
+    // come from the merchant's uploaded designs ». Ses produits viennent de
+    // `pod_designs`, jamais de `site_catalog_selections`.
+    //
+    // Le LOT 2 avait deja rendu l'effet inoffensif -- `catalog/curate` refuse
+    // desormais en 400, et ces appels sont non bloquants. Restait la FORME :
+    // une route transversale portant sa propre interpretation du sous-type.
+    // Elle interroge maintenant `usesCatalogSelections`, l'autorite deja
+    // etablie au LOT 2 et deja consommee par les sept couches du mecanisme.
+    // Aucune autorite nouvelle, aucun doublon.
+    // ============================================================
+    if (usesCatalogSelections(finalMode, persistedDropshipType)) {
       try {
         const { data: newSite } = await supabaseAdmin
           .from('sites')

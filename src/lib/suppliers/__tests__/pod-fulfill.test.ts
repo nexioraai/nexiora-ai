@@ -18,7 +18,21 @@ function tableChain(response: { data: unknown; error: unknown }) {
   const self = () => chain;
   chain.select = vi.fn(self);
   chain.eq = vi.fn(self);
-  chain.in = vi.fn(self);
+  // LOT 3 / L3-06 -- `.in('supplier_id', ...)` FILTRE REELLEMENT.
+  //
+  // Le harnais renvoyait les lignes quel que soit le filtre : la restriction
+  // `.in('supplier_id', ['printful','printify','gelato'])` de `pod-fulfill`
+  // etait donc invisible aux tests, et la retirer ne cassait rien (mutation
+  // P9). Or c'est la SEULE garde de cette couche : une ligne d'un autre
+  // fournisseur tombe dans `legacyItems` et part chez PRINTIFY. Le harnais
+  // simule desormais ce filtre, ce qui rend la garde observable.
+  chain.in = vi.fn((col: string, vals: unknown[]) => {
+    if (col === 'supplier_id' && Array.isArray(response.data)) {
+      response = { ...response, data: (response.data as any[]).filter((r) => vals.includes(r?.supplier_id)) };
+      chain.then = (resolve: (v: unknown) => void) => resolve(response);
+    }
+    return chain;
+  });
   chain.update = vi.fn(self);
   chain.maybeSingle = vi.fn(async () => response);
   // Rend la chaîne elle-même "thenable" pour les requêtes awaited sans
@@ -594,5 +608,59 @@ describe('PHASE 3 — seul un domaine « supplier » entre dans le fulfillment P
     createOrderPrintfulMock.mockResolvedValue({ success: true, supplier_order_id: 'PF-ORDER-1' });
     await fulfillPodOrder(ORDER_ID);
     expect(createOrderPrintfulMock).toHaveBeenCalled();
+  });
+});
+
+// ============================================================
+// LOT 3 / L3-06 -- LE CLOISONNEMENT FOURNISSEUR DU MOTEUR POD.
+//
+// `pod-fulfill` ne va chercher que des lignes `catalog_products` dont le
+// `supplier_id` est POD. Ce n'est PAS un doublon de `suppliersForDropshipType`
+// (qui repond « quels fournisseurs pour ce SOUS-TYPE ») : c'est la question
+// « quels fournisseurs ce MOTEUR sait executer » -- d'ou `printify`, present
+// ici et absent de l'autre. Deux questions, deux listes, aucune concurrence.
+//
+// SANS CE FILTRE, une ligne CJ tombe dans `legacyItems` et part chez PRINTIFY.
+// Mutation P9, survivante avant ce lot faute d'un harnais qui filtre.
+// ============================================================
+describe('LOT 3 / L3-06 — seuls les fournisseurs POD atteignent ce moteur', () => {
+  it('une ligne catalogue CJ n\'atteint AUCUN adaptateur POD', async () => {
+    setupBaseTables(
+      [{ id: 'it-1', product_id: 'catalog-cp-cj', quantity: 1 }],
+      [{ id: 'cp-cj', supplier_id: 'cj', supplier_product_id: 'vid-1' }],
+      { dropshipType: 'pod_brand' }
+    );
+    const res = await fulfillPodOrder(ORDER_ID);
+    expect(res).toEqual([]);
+    expect(createOrderPrintfulMock).not.toHaveBeenCalled();
+    expect(createOrderGelatoMock).not.toHaveBeenCalled();
+    expect(createOrderPrintifyMock).not.toHaveBeenCalled();
+  });
+
+  it('un fournisseur inconnu n\'atteint AUCUN adaptateur non plus', async () => {
+    setupBaseTables(
+      [{ id: 'it-1', product_id: 'catalog-cp-x', quantity: 1 }],
+      [{ id: 'cp-x', supplier_id: 'fournisseur_inconnu', supplier_product_id: 'x-1' }],
+      { dropshipType: 'pod_brand' }
+    );
+    expect(await fulfillPodOrder(ORDER_ID)).toEqual([]);
+    expect(createOrderPrintifyMock).not.toHaveBeenCalled();
+  });
+
+  it('INVARIANT B — un pod_brand Printful passe bien, lui', async () => {
+    setupBaseTables(
+      [{ id: 'it-1', product_id: 'catalog-cp-pf', quantity: 1 }],
+      [{ id: 'cp-pf', supplier_id: 'printful', supplier_product_id: 'sp-1' }],
+      { dropshipType: 'pod_brand', designs: [{ order_item_id: 'it-1', design_url: 'https://x.test/d.png' }] }
+    );
+    createProviderSubmissionMock.mockResolvedValue({ success: true, submission_id: 'sub-lot3' });
+    createOrderPrintfulMock.mockResolvedValue({ success: true, supplier_order_id: 'pf-1' });
+    await fulfillPodOrder(ORDER_ID);
+    expect(createOrderPrintfulMock).toHaveBeenCalled();
+    const params = createOrderPrintfulMock.mock.calls[0][0];
+    expect(params.design_url).toBe('https://x.test/d.png');
+    // La variante envoyee est celle de la LIGNE CATALOGUE, jamais un suffixe
+    // d'identifiant : c'est ce que consomme reellement printful-adapter.
+    expect(params.supplier_product_id).toBe('sp-1');
   });
 });
