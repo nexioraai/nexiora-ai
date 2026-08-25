@@ -61,12 +61,18 @@ const allTools: Anthropic.Tool[] = [
   },
   {
     name: 'propose_add_service',
-    description: 'Propose to add a new service to the services list.',
+    description:
+      'Propose to add a new offering to a section of the site. Sections are what the visitor actually sees (CURRENT SITE STATE lists them with their items). If the site has exactly one section, `section` may be omitted. If it has several, you MUST name the target section exactly as it appears — there is no default.',
     input_schema: {
       type: 'object',
       properties: {
-        title: { type: 'string' },
+        title: { type: 'string', description: 'Title of the new offering.' },
         description: { type: 'string' },
+        section: {
+          type: 'string',
+          description:
+            'Exact name of the section that receives it. Optional only when the site has a single section.',
+        },
         reason: { type: 'string' },
       },
       required: ['title', 'description', 'reason'],
@@ -74,14 +80,15 @@ const allTools: Anthropic.Tool[] = [
   },
   {
     name: 'propose_remove_service',
-    description: 'Propose to remove a service from the list by its zero-based index.',
+    description:
+      'Propose to remove ONE offering, identified by its exact title. Use the title the merchant gave you, exactly as it appears in CURRENT SITE STATE. If the same title appears in several sections, the change is refused and you must ask which one they mean.',
     input_schema: {
       type: 'object',
       properties: {
-        index: { type: 'integer', description: 'Zero-based index of the service to remove' },
+        title: { type: 'string', description: 'Exact title of the offering to remove.' },
         reason: { type: 'string' },
       },
-      required: ['index', 'reason'],
+      required: ['title', 'reason'],
     },
   },
   {
@@ -115,16 +122,17 @@ const allTools: Anthropic.Tool[] = [
   },
   {
     name: 'propose_service_update',
-    description: 'Propose to modify an existing service by its zero-based index.',
+    description:
+      'Propose to modify ONE existing offering, identified by its exact current title. If the same title appears in several sections, the change is refused and you must ask which one they mean.',
     input_schema: {
       type: 'object',
       properties: {
-        index: { type: 'integer' },
+        title: { type: 'string', description: 'Exact CURRENT title of the offering.' },
         field: { type: 'string', enum: ['title', 'description'] },
         value: { type: 'string' },
         reason: { type: 'string' },
       },
-      required: ['index', 'field', 'value', 'reason'],
+      required: ['title', 'field', 'value', 'reason'],
     },
   },
   {
@@ -476,7 +484,14 @@ ${JSON.stringify(
     cta: site.cta,
     mode: site.mode,
     dropship_type: site.dropship_type,
-    services: site.services,
+    // CHANTIER 1 -- `sections` REMPLACE `services` DANS LE CONTEXTE.
+    //
+    // L'agent voyait `services`, que le generateur ne produit jamais et
+    // qu'aucun theme ne rend. Sur un site reel il lisait donc `[]` alors que
+    // la page affichait six offres : interroge, il aurait repondu « aucun ».
+    // Il voit desormais ce que le visiteur voit -- les sections et leurs
+    // items, avec leurs titres, qui sont aussi la cle d'adressage des outils.
+    sections: site.sections,
     // DETTE 4 (volet testimonials) -- INJECTE ICI, et rien d'autre n'a bouge.
     //
     // `propose_testimonial_remove` et `_update` adressent par INDEX de

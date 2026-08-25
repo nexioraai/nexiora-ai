@@ -48,13 +48,28 @@ export async function GET(
     lines.push('')
   }
 
-  if (Array.isArray(site.services) && site.services.length > 0) {
-    lines.push('## Services')
-    for (const s of site.services) {
-      const label = s?.title ?? s?.name
-      if (label) lines.push('- ' + label)
+  // CHANTIER 1 -- PUBLIER CE QUE LE SITE REND, PAS UNE COLONNE MORTE.
+  //
+  // Ce bloc lisait `site.services`, qu'aucun theme ne rend et que le
+  // generateur ne produit pas. Sur un site reel, il ne se declenchait donc
+  // JAMAIS : les offres visibles par le visiteur etaient absentes du fichier
+  // destine aux crawlers LLM, tandis que ce dernier publiait mission, vision
+  // et FAQ. L'inversion exacte de ce qu'il doit faire.
+  //
+  // Le titre reste celui de la section telle qu'elle s'affiche : le fichier
+  // decrit le site tel qu'il est, il ne lui impose pas un vocabulaire.
+  if (Array.isArray(site.sections) && site.sections.length > 0) {
+    for (const sec of site.sections) {
+      const items = Array.isArray(sec?.items) ? sec.items : []
+      if (items.length === 0) continue
+      const titre = typeof sec?.name === 'string' && sec.name.trim() !== '' ? sec.name.trim() : 'Services'
+      lines.push('## ' + titre)
+      for (const it of items) {
+        const label = it?.title ?? it?.name
+        if (label) lines.push('- ' + label)
+      }
+      lines.push('')
     }
-    lines.push('')
   }
 
   if (Array.isArray(site.products) && site.products.length > 0) {

@@ -437,7 +437,7 @@ function ToolProposalCard({
       case 'propose_remove_service':
         return (
           <>
-            Remove service at index <strong className="text-[#FA5D1E]">{input.index}</strong>
+            Remove offering: <strong className="text-[#FA5D1E]">{input.title}</strong>
           </>
         );
       case 'propose_update_social':
@@ -457,7 +457,7 @@ function ToolProposalCard({
       case 'propose_service_update':
         return (
           <>
-            Update service #{input.index} <strong className="text-[#FA5D1E]">{input.field}</strong>:{' '}
+            Update offering <strong className="text-[#FA5D1E]">{input.title}</strong> — {input.field}:{' '}
             <span className="text-white">"{input.value}"</span>
           </>
         );

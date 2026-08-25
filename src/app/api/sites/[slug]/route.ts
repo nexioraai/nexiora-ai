@@ -11,7 +11,10 @@ const FIELD_MAP: Record<string, string> = {
   heroTitle: 'hero_title',
   heroSubtitle: 'hero_subtitle',
   about: 'about',
-  services: 'services',
+  // CHANTIER 1 -- `services` RETIRE. Colonne legacy : aucun theme ne la rend,
+  // le generateur ne la produit pas, et la mesure de production a confirme 0
+  // site porteur de donnees. Elle n'est PAS supprimee en base -- elle cesse
+  // seulement d'etre ecrite par ce chemin. La source canonique est `sections`.
   testimonials: 'testimonials',
   gallery: 'gallery',
   contact: 'contact',

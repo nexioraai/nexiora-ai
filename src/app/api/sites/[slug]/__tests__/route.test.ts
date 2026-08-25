@@ -175,17 +175,23 @@ describe('DETTE 6a — le contrat du payload est inchangé', () => {
     expect(updates).toEqual([]);
   });
 
-  it('les 19 champs de FIELD_MAP restent acceptés, et eux seuls', async () => {
+  // CHANTIER 1 (MODE 1) — 18 depuis que `services` a quitté l'allowlist.
+  // Colonne legacy : aucun thème ne la rend, le générateur ne la produit pas,
+  // et la mesure de production a confirmé 0 site porteur. La source canonique
+  // du contenu rendu est `sections`. La colonne reste en base, simplement
+  // plus écrite par ce chemin.
+  it('les 18 champs de FIELD_MAP restent acceptés, et eux seuls', async () => {
     sitesRows = [siteRow()];
     const { PATCH } = await import('../route');
     await PATCH(
       req({
         name: 'n', slogan: 's', type: 't', primaryColor: '#111', heroTitle: 'ht',
-        heroSubtitle: 'hs', about: 'a', services: [], testimonials: [], gallery: [],
+        heroSubtitle: 'hs', about: 'a', testimonials: [], gallery: [],
         contact: {}, menu: [], team: [], hours: {}, address: 'ad', pages: [],
         cta: 'c', socialLinks: {}, theme: 'noir',
         // hors allowlist -- doivent être ignorés en silence
         owner_email: 'pirate@example.com', owner_id: 'pirate', published: true,
+        services: [{ title: 'legacy' }],   // CHANTIER 1 — désormais hors allowlist
       }),
       ctx()
     );
@@ -193,10 +199,11 @@ describe('DETTE 6a — le contrat du payload est inchangé', () => {
     const p = updates[0].payload;
     expect(Object.keys(p).sort()).toEqual([
       'about', 'address', 'contact', 'cta', 'gallery', 'hero_subtitle', 'hero_title',
-      'hours', 'menu', 'name', 'pages', 'primary_color', 'services', 'slogan',
+      'hours', 'menu', 'name', 'pages', 'primary_color', 'slogan',
       'social_links', 'team', 'testimonials', 'theme', 'type',
     ]);
-    expect(Object.keys(p)).toHaveLength(19);
+    expect(Object.keys(p)).toHaveLength(18);
+    expect(p, 'la colonne legacy ne doit plus être écrite par cette route').not.toHaveProperty('services');
     expect(p).not.toHaveProperty('owner_email');
     expect(p).not.toHaveProperty('owner_id');
     expect(p).not.toHaveProperty('published');

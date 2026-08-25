@@ -55,7 +55,15 @@ function req(tool_input: unknown = { field: 'name', value: 'Nouveau' }, tool_nam
 const ctx = { params: Promise.resolve({ slug: 'mon-site' }) };
 
 function site(over: Record<string, unknown> = {}) {
-  return { id: 'site-1', slug: 'mon-site', name: 'S', owner_id: 'user-A', owner_email: 'a@test.com', ...over };
+  // CHANTIER 1 — le site porte une section, comme tout Mode 1 réel : c'est
+  // `sections` que les outils d'offre écrivent désormais, et l'ajout exige une
+  // destination déterminée — aucun repli arbitraire n'est prévu.
+  return {
+    id: 'site-1', slug: 'mon-site', name: 'S',
+    owner_id: 'user-A', owner_email: 'a@test.com',
+    sections: [{ name: 'Nos offres', items: [] }],
+    ...over,
+  };
 }
 
 beforeEach(() => {
@@ -204,6 +212,8 @@ describe('DETTE 6a — les 26 outils fonctionnent toujours', () => {
       ['propose_field_update', { field: 'name', value: 'X' }],
       ['propose_color_update', { color: '#112233' }],
       ['propose_theme_change', { theme: 'noir' }],
+      // CHANTIER 1 — l'outil écrit désormais `sections[].items[]`. Une seule
+      // section existe : la destination est donc non ambiguë sans la nommer.
       ['propose_add_service', { title: 'T', description: 'D' }],
       ['propose_gallery_clear', {}],
     ];

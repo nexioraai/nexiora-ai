@@ -59,14 +59,22 @@ describe('DETTE 4 — `testimonials` dans CURRENT SITE STATE', () => {
     expect(champs()).toHaveLength(17)
   })
 
-  it('`services` reste présent — le précédent qui prouve que l\'index suffit', () => {
-    expect(contexte()).toMatch(/^ {4}services: site\.services,$/m)
+  // CHANTIER 1 (MODE 1) — CE CLIQUET A CHANGÉ DE CAMP.
+  //
+  // Il constatait que `services` figurait au contexte, comme précédent d'un
+  // adressage par index. La mesure sur un site réel a montré que ce précédent
+  // était faux : aucun thème ne rend `services`, le générateur ne le produit
+  // pas, et l'agent lisait donc `[]` devant six offres affichées. La source
+  // canonique est `sections` — et l'adressage se fait par titre.
+  it('`sections` a remplacé `services` — l\'agent voit ce que le visiteur voit', () => {
+    expect(contexte()).toMatch(/^ {4}sections: site\.sections,$/m)
+    expect(contexte()).not.toMatch(/^ {4}services: site\.services,$/m)
   })
 
-  it('les 16 champs d\'origine sont tous conservés, dans le même ordre', () => {
+  it('les 17 champs, dans le même ordre — seul `services` a cédé la place à `sections`', () => {
     expect(champs()).toEqual([
       'name', 'slogan', 'type', 'about', 'hero_title', 'hero_subtitle',
-      'primary_color', 'theme', 'cta', 'mode', 'dropship_type', 'services',
+      'primary_color', 'theme', 'cta', 'mode', 'dropship_type', 'sections',
       'testimonials',
       'social_links', 'contact', 'cj_margin_percent', 'lang',
     ])

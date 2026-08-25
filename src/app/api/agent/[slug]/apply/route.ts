@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import { MIN_MARGIN_PERCENT } from '@/lib/pricing';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
+import {
+  resolveSectionItem,
+  resolveTargetSection,
+  sectionItemMessage,
+} from '@/lib/agent-tools/sectionItemResolution';
 import { resolveProductByName, resolutionMessage } from '@/lib/agent-tools/productResolution';
 import { resolveGalleryImage, galleryResolutionMessage } from '@/lib/agent-tools/galleryResolution';
 
@@ -151,22 +156,52 @@ export async function POST(
         updates.theme = theme;
         break;
       }
+      // ===== CHANTIER 1 -- LES TROIS OUTILS ECRIVENT DESORMAIS `sections` =====
+      //
+      // Ils ecrivaient `site.services`, colonne qu'AUCUN theme ne rend et que
+      // le generateur ne produit pas. L'ecriture reussissait, le site ne
+      // changeait jamais. Ils visent la source canonique, et adressent par
+      // TITRE -- l'adressage par index qui subsistait ici etait la troisieme
+      // liste que la dette 4 n'avait pas atteinte.
       case 'propose_add_service': {
-        const { title, description } = tool_input;
-        if (typeof title !== 'string' || typeof description !== 'string') {
+        const { title, description, section } = tool_input;
+        if (typeof title !== 'string' || title.trim() === '' || typeof description !== 'string') {
           return NextResponse.json({ error: 'Invalid title/description' }, { status: 400 });
         }
-        const currentServices = Array.isArray(site.services) ? site.services : [];
-        updates.services = [...currentServices, { title, description }];
+        const sections: any[] = Array.isArray(site.sections) ? site.sections : [];
+        const cible = resolveTargetSection(sections, section);
+        if (!cible.ok) {
+          // AUCUN REPLI. Zero ou plusieurs sections sans nom fourni : on
+          // demande, on ne devine pas.
+          return NextResponse.json(
+            { error: sectionItemMessage(cible) },
+            { status: cible.reason === 'not_found' ? 404 : 409 }
+          );
+        }
+        updates.sections = sections.map((sec: any, i: number) =>
+          i === cible.sectionIndex
+            ? { ...sec, items: [...(Array.isArray(sec.items) ? sec.items : []), { title, description }] }
+            : sec
+        );
         break;
       }
       case 'propose_remove_service': {
-        const { index } = tool_input;
-        const currentServices = Array.isArray(site.services) ? site.services : [];
-        if (typeof index !== 'number' || index < 0 || index >= currentServices.length) {
-          return NextResponse.json({ error: 'Invalid service index' }, { status: 400 });
+        const { title } = tool_input;
+        const sections: any[] = Array.isArray(site.sections) ? site.sections : [];
+        const trouve = resolveSectionItem(sections, title);
+        if (!trouve.ok) {
+          // AUCUNE ECRITURE. 404 = introuvable, 409 = plusieurs offres portent
+          // ce titre -- supprimer « la premiere » serait le defaut d'origine.
+          return NextResponse.json(
+            { error: sectionItemMessage(trouve) },
+            { status: trouve.reason === 'not_found' ? 404 : 409 }
+          );
         }
-        updates.services = currentServices.filter((_: any, i: number) => i !== index);
+        updates.sections = sections.map((sec: any, i: number) =>
+          i === trouve.sectionIndex
+            ? { ...sec, items: (sec.items as any[]).filter((_: any, j: number) => j !== trouve.itemIndex) }
+            : sec
+        );
         break;
       }
       case 'propose_update_social': {
@@ -190,16 +225,28 @@ export async function POST(
         break;
       }
       case 'propose_service_update': {
-        const { index, field, value } = tool_input;
-        const services = Array.isArray(site.services) ? site.services : [];
-        if (typeof index !== 'number' || index < 0 || index >= services.length) {
-          return NextResponse.json({ error: 'Invalid service index' }, { status: 400 });
-        }
+        const { title, field, value } = tool_input;
         if (!ALLOWED_SERVICE_FIELDS.has(field) || typeof value !== 'string') {
           return NextResponse.json({ error: 'Invalid service field/value' }, { status: 400 });
         }
-        const next = services.map((s: any, i: number) => (i === index ? { ...s, [field]: value } : s));
-        updates.services = next;
+        const sections: any[] = Array.isArray(site.sections) ? site.sections : [];
+        const trouve = resolveSectionItem(sections, title);
+        if (!trouve.ok) {
+          return NextResponse.json(
+            { error: sectionItemMessage(trouve) },
+            { status: trouve.reason === 'not_found' ? 404 : 409 }
+          );
+        }
+        updates.sections = sections.map((sec: any, i: number) =>
+          i === trouve.sectionIndex
+            ? {
+                ...sec,
+                items: (sec.items as any[]).map((it: any, j: number) =>
+                  j === trouve.itemIndex ? { ...it, [field]: value } : it
+                ),
+              }
+            : sec
+        );
         break;
       }
       case 'propose_testimonial_add': {
