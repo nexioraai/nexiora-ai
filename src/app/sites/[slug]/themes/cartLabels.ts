@@ -14,6 +14,23 @@ export type CartLabels = {
   promoExpired: string;
   promoDepleted: string;
   promoMinOrder: string;
+  // M2-03 / M2-04 -- SIX LIBELLES QUI MANQUAIENT, SUR DES SURFACES PUBLIQUES.
+  //
+  // Le pied du panier et la banniere promo etaient ecrits EN DUR EN FRANCAIS,
+  // a deux lignes de libelles traduits : `placeholder={labels.promoPlaceholder}`
+  // puis `{promoBusy ? '…' : 'Appliquer'}`. Le chantier 8 avait aligne le
+  // panier sur la page ; il n'avait pas couvert ce pied-la.
+  //
+  // `shipping` et `shippingFree` sont EXCLUSIVEMENT Mode 2 : ils ne sont rendus
+  // que sous `billsFlatShipping`, et `FLAT_SHIPPING_MODES` vaut {2}.
+  shipping: string;
+  shippingFree: string;
+  promoApply: string;
+  promoApplied: string;
+  /** Banniere : « {discount} avec le code {code} ». */
+  promoBannerWithCode: string;
+  /** Banniere : suffixe minimum de commande, « (min. {min}) ». */
+  promoBannerMin: string;
 };
 
 const DICT: Record<string, CartLabels> = {
@@ -30,6 +47,12 @@ const DICT: Record<string, CartLabels> = {
     promoExpired: 'Code expiré',
     promoDepleted: 'Code épuisé',
     promoMinOrder: 'Minimum {min} requis',
+    shipping: 'Livraison',
+    shippingFree: 'Gratuite',
+    promoApply: 'Appliquer',
+    promoApplied: 'Code appliqué',
+    promoBannerWithCode: '{discount} avec le code {code}',
+    promoBannerMin: '(min. {min})',
   },
   en: {
     addToCart: 'Add to cart',
@@ -44,6 +67,12 @@ const DICT: Record<string, CartLabels> = {
     promoExpired: 'Code expired',
     promoDepleted: 'Code used up',
     promoMinOrder: 'Minimum {min} required',
+    shipping: 'Shipping',
+    shippingFree: 'Free',
+    promoApply: 'Apply',
+    promoApplied: 'Code applied',
+    promoBannerWithCode: '{discount} with code {code}',
+    promoBannerMin: '(min. {min})',
   },
   es: {
     addToCart: 'Añadir al carrito',
@@ -58,6 +87,12 @@ const DICT: Record<string, CartLabels> = {
     promoExpired: 'Código caducado',
     promoDepleted: 'Código agotado',
     promoMinOrder: 'Mínimo {min} requerido',
+    shipping: 'Envío',
+    shippingFree: 'Gratis',
+    promoApply: 'Aplicar',
+    promoApplied: 'Código aplicado',
+    promoBannerWithCode: '{discount} con el código {code}',
+    promoBannerMin: '(mín. {min})',
   },
   ar: {
     addToCart: 'أضف إلى السلة',
@@ -72,6 +107,12 @@ const DICT: Record<string, CartLabels> = {
     promoExpired: 'انتهت صلاحية الرمز',
     promoDepleted: 'استُنفد الرمز',
     promoMinOrder: 'الحد الأدنى {min}',
+    shipping: 'الشحن',
+    shippingFree: 'مجاني',
+    promoApply: 'تطبيق',
+    promoApplied: 'تم تطبيق الرمز',
+    promoBannerWithCode: '{discount} برمز {code}',
+    promoBannerMin: '(الحد الأدنى {min})',
   },
 };
 

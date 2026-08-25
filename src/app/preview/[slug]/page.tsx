@@ -15,6 +15,7 @@ import CartShell from '@/app/sites/[slug]/themes/CartShell';
 import CatalogSearch, { type ThemeKey } from '@/app/sites/[slug]/themes/CatalogSearch';
 import PromoBanner from '@/app/sites/[slug]/themes/PromoBanner';
 import { getCartLabels } from '@/app/sites/[slug]/themes/cartLabels';
+import { resolveShopCurrency } from '@/app/sites/[slug]/themes/shopCurrency';
 import ScrollRevealInit from '@/app/sites/[slug]/themes/ScrollRevealInit';
 
 const themes = {
@@ -76,7 +77,7 @@ export default function PreviewPage() {
       <div className="sticky top-0 z-50 bg-[#FA5D1E] text-white text-sm font-medium text-center py-2 px-4">
         Mode aperçu — ce site n'est pas encore publié. Publiez-le depuis votre tableau de bord pour le rendre public.
       </div>
-      <PromoBanner slug={site.slug} primary={primary} mode={site.mode} />
+      <PromoBanner slug={site.slug} primary={primary} mode={site.mode} labels={cartLabels} currency={resolveShopCurrency(site.products)} />
       <CartShell primary={primary} labels={cartLabels} slug={site.slug} mode={site.mode} products={site.products} shippingFlat={site.shipping_flat} variant={key === 'noir' ? 'dark' : 'light'}>
         <Theme site={site} />
         {site.mode === 3 && site.dropship_type !== 'pod_brand' && site.theme !== 'aurora' && <CatalogSearch slug={site.slug} primary={primary} lang={site.lang} theme={key as ThemeKey} dropshipType={site.dropship_type || 'reseller'} />}

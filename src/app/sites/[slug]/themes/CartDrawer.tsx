@@ -480,10 +480,18 @@ export default function CartDrawer({
         {/* Footer */}
         {items.length > 0 && (
           <div className={`border-t ${s.footerBorder} px-6 py-5 space-y-4`}>
+            {/* M2-03 -- ces deux libelles sont EXCLUSIVEMENT Mode 2 :
+                `billsFlatShipping` vient de `FLAT_SHIPPING_MODES`, qui vaut
+                {2}. Ils etaient ecrits en dur en francais a deux lignes de
+                `labels.promoPlaceholder`, traduit. Le chantier 8 avait aligne
+                le panier sur la page, sans couvrir ce pied.
+                NOTE DE PERIMETRE : `Pays de livraison`, quelques lignes plus
+                bas, est sous `requiresShippingQuote` -- donc Mode 3 seul. Il
+                est CONSIGNE, pas corrige ici. */}
             {billsFlatShipping && (
               <div className="flex items-center justify-between text-sm">
-                <span className={s.labelMutedText}>Livraison</span>
-                <span className={s.valueText}>{shippingFlat > 0 ? `${shippingFlat.toFixed(2)} ${currency}` : 'Gratuite'}</span>
+                <span className={s.labelMutedText}>{labels.shipping}</span>
+                <span className={s.valueText}>{shippingFlat > 0 ? `${shippingFlat.toFixed(2)} ${currency}` : labels.shippingFree}</span>
               </div>
             )}
             {requiresShippingQuote && (
@@ -562,12 +570,12 @@ export default function CartDrawer({
                 className="px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-40"
                 style={{ background: `${primary}15`, color: primary, border: `1px solid ${primary}30` }}
               >
-                {promoBusy ? '…' : 'Appliquer'}
+                {promoBusy ? '…' : labels.promoApply}
               </button>
             </div>
             {promoMsg && (
               <p className={`text-xs ${promoValid ? 'text-green-600' : 'text-red-500'}`}>
-                {promoValid ? `✓ Code appliqué : ${promoMsg}` : promoMsg}
+                {promoValid ? `✓ ${labels.promoApplied} : ${promoMsg}` : promoMsg}
               </p>
             )}
             <div className="flex items-center justify-between">

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { canTransact } from '@/lib/commerce-admission/canTransact';
+import type { CartLabels } from './cartLabels';
 
 // ============================================================
 // FERMETURE MODE 1, VOLET 2 -- UNE BANNIERE COMMERCIALE N'APPARAIT QUE SUR
@@ -42,10 +43,18 @@ import { canTransact } from '@/lib/commerce-admission/canTransact';
 // fournir, et obligera le troisieme.
 // ============================================================
 
-export default function PromoBanner({ slug, primary, mode }: {
+export default function PromoBanner({ slug, primary, mode, labels, currency }: {
   slug: string;
   primary: string;
   mode: number | null | undefined;
+  /** M2-03 -- les memes libelles que le panier : une seule autorite de langue. */
+  labels: CartLabels;
+  /**
+   * M2-04 -- la devise REELLE de la boutique, ou `undefined` si elle n'est pas
+   * etablissable. Voir `resolveShopCurrency` : on affiche alors le montant nu
+   * plutot qu'une devise fausse.
+   */
+  currency: string | undefined;
 }) {
   const [promo, setPromo] = useState<any>(null);
   const [dismissed, setDismissed] = useState(false);
@@ -63,19 +72,33 @@ export default function PromoBanner({ slug, primary, mode }: {
 
   if (!admis || !promo || dismissed) return null;
 
+  // M2-04 -- LE `$` ETAIT ECRIT EN DUR, sur les deux montants.
+  // Un pourcentage n'a pas de devise ; un montant fixe en a une, et si elle
+  // n'est pas etablissable on affiche le nombre seul. Jamais un symbole
+  // suppose : « min. 50$ » sur une boutique en euros est FAUX, pas imprecis.
+  const montant = (n: number) => (currency ? `${n} ${currency}` : `${n}`);
   const label = promo.discount_type === 'percent'
     ? `-${promo.discount_value}%`
-    : `-${promo.discount_value}$`;
+    : `-${montant(promo.discount_value)}`;
 
-  const minLabel = promo.min_order > 0 ? ` (min. ${promo.min_order}$)` : '';
+  const minLabel = promo.min_order > 0
+    ? ' ' + labels.promoBannerMin.replace('{min}', montant(promo.min_order))
+    : '';
 
   return (
     <div
       className="w-full py-2.5 px-4 text-center text-sm font-medium relative z-[100]"
       style={{ background: primary, color: '#fff' }}
     >
+      {/* M2-03 -- « avec le code » etait en dur. Le gabarit traduit porte les
+          deux emplacements, l'ordre des mots pouvant differer d'une langue a
+          l'autre : on decoupe autour de `{code}` plutot que de concatener. */}
       <span>
-        🎉 {label} avec le code <strong>{promo.code}</strong>{minLabel}
+        {'🎉 '}
+        {labels.promoBannerWithCode.replace('{discount}', label).split('{code}')[0]}
+        <strong>{promo.code}</strong>
+        {labels.promoBannerWithCode.split('{code}')[1] ?? ''}
+        {minLabel}
       </span>
       <button
         onClick={() => setDismissed(true)}
