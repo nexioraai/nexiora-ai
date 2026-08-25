@@ -4,7 +4,15 @@ Standard exigé : **ELITE 2026 / A+** — aucun lot déclaré validé sans preuv
 (résultat SQL littéral, test exécuté, tsc/vitest réels). Distinction stricte :
 **code terminé ≠ test effectué ≠ preuve validée**.
 
-Dernière mise à jour : 2026-08-22 (phase 2 close).
+Dernière mise à jour : 2026-08-25 — **PHASE 0 de cartographie livrée** (voir en fin de fichier).
+
+> ⚠️ **Le plan 9/9 lots ci-dessous date du 2026-08-22 et PRÉCÈDE les audits Mode 1
+> et Mode 2.** Il n'a donc pas appliqué les classes de défaut que ceux-ci ont
+> révélées : contexte LLM mentant au modèle, composition de rendu non testée,
+> i18n de surface publique, borne non testée, RPC non versionnée, protection
+> reposant uniquement sur une autre couche. **Sa validation reste acquise sur
+> son propre périmètre ; elle ne vaut pas audit selon la méthodologie
+> actuelle.**
 
 ---
 
@@ -200,3 +208,74 @@ avoir fait auditer.
   résoudre le binding fichier par fichier.
 - Tout nouveau répertoire de test doit être ajouté à l'`include` de `vitest.config.ts`,
   sinon il passe en isolation mais n'est **jamais** collecté en CI.
+
+
+---
+---
+
+# PHASE 0 — CARTOGRAPHIE GLOBALE (2026-08-25)
+
+Commit de référence : `45a5861` · branche `fix/xss-jsonld` · working tree propre.
+**Aucune correction faite.** Cette phase précède l'audit détaillé par sous-mode.
+
+## Surface mesurée
+
+**26 fichiers** lisent `dropship_type` · **5 répertoires de domaine** (`mode3/` 4
+fichiers, `cj/` 7, `suppliers/` 6, `dropship/` 2, `fulfillment/` 12) · **11 routes**
+(6 catalogue, 3 POD, 2 webhooks) · **491 tests** sur ces surfaces.
+
+## Autorités de sous-mode — il n'y en a que DEUX
+
+| Autorité | Fichier | Décide |
+|---|---|---|
+| `CATALOG_SUBTYPES` `{reseller, pod_custom}` | `agent-tools/toolCapabilities.ts` | quels sous-types ont les **outils** de catalogue |
+| `suppliersForDropshipType` | `dropship/suppliers.ts` | quels **fournisseurs** un sous-type admet |
+
+Tout le reste (`hasSupplierCatalog`, `CATALOG_SITE_MODES`) décide au niveau du
+**mode**, pas du sous-type. **C'est la faiblesse structurelle du Mode 3 :
+la granularité de l'admission est le mode ; la granularité du besoin est le
+sous-type.**
+
+## Matrice des sous-modes
+
+| sous-type | outils catalogue | fournisseurs | guidance LLM | `CatalogSearch` | vitrine charge les sélections |
+|---|---|---|---|---|---|
+| `reseller` | oui | `cj` | RESELLER | monté | oui |
+| `pod_brand` | **non** | `printful,gelato` | POD_BRAND | non | **non** |
+| `pod_custom` | oui | `printful,gelato` | POD_CUSTOM | monté | oui |
+| `null` / inconnu / `''` | **non** | **`cj`** (repli) | **AUCUNE** | **monté** | **non** |
+
+## Défauts identifiés — aucun corrigé
+
+| ID | Niveau | Titre |
+|---|---|---|
+| **M3-01** | 🟠 | `AuroraTheme` monte `CatalogSearch` sur `isShop`, pas sur `mode === 3` |
+| **M3-02** | 🟠 | Trois couches en désaccord sur « ce site peut-il avoir des sélections catalogue ? » |
+| **M3-03** | 🟡 | `dropship_type = NULL` sur **3 sites Mode 3 sur 8** : reseller pour 2 couches, rien pour 2 autres |
+| **M3-04** | 🟡 | Repli `default → ['cj']` permissif, et un test en dépend |
+| **M3-05** | 🟠 | `src/lib/mode3/**` : **0 test, non collecté** par vitest |
+| **M3-06** | ⚪ | `admin/stats` `|| 'reseller'` — reporting seul |
+
+Détail complet et preuves : `KNOWN_ISSUES.md`, `DEBT-048` → `DEBT-053`.
+
+## Volumétrie production (lecture seule, 2026-08-25)
+
+8 sites Mode 3 : 4 `reseller`… en fait **4 avec sous-type** (2 reseller nommés,
+1 pod_brand, 1 pod_custom, 1 reseller) et **3 à `dropship_type = NULL`** ·
+73 sélections dont **54 non approuvées** · 33 580 `catalog_products` ·
+26 commandes toutes `fulfillment_domain = supplier`, 3 avec `cj_order_id` ·
+0 `design_uploads` · **0 sélection pour un pod_brand** · **0 sélection pour un
+sous-type NULL**.
+
+Les deux défauts 🟠 ont donc **zéro occurrence matérialisée aujourd'hui**.
+
+## Mutations de cartographie — 6/6 tuées
+
+pod_brand ajouté à `CATALOG_SUBTYPES` · `CATALOG_SUBTYPES` vidé · reseller reçoit
+les fournisseurs POD · pod_brand reçoit CJ · repli rendu permissif · repli rendu
+fail-closed. **Les deux autorités de sous-mode sont solidement verrouillées.**
+
+## Ordre d'audit recommandé — CONTESTÉ
+
+Voir le rapport de phase : l'ordre `reseller → pod_brand → pod_custom` est
+**écarté** au profit d'un **socle transversal d'abord**.
