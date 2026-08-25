@@ -62,8 +62,63 @@ export function codeUtile(source: string): string {
     .replace(/"(?:[^"\\\n]|\\.)*"/g, ' "" ')
 }
 
-/** Ce fichier touche-t-il un champ `mode` ? Volontairement large : le tri se fait après. */
-const LECTURE = /\.\s*mode\b|\[\s*['"]mode['"]\s*\]|\{\s*mode\s*\}|\bmode\s*[=!<>]=?/
+/**
+ * Ce fichier touche-t-il un champ `mode` ? Volontairement large : le tri se fait après.
+ *
+ * DEBT-054 — CE DÉTECTEUR NE VOYAIT QUE LA FORME QUE L'ARCHITECTURE INTERDIT.
+ *
+ * Les quatre alternatives d'origine reconnaissaient le mode uniquement sous la
+ * forme d'un accès à un champ nommé LITTÉRALEMENT `mode` (`site.mode`,
+ * `site['mode']`, `{ mode }`) ou d'une comparaison portant sur un identifiant
+ * nommé exactement `mode`. Or `SITE_MODE_ACQUISITION_RULES` INTERDIT ces
+ * formes dans le domaine contraint : la doctrine exige que le mode soit reçu
+ * en PARAMÈTRE (`siteMode`). Les deux mécanismes se contredisaient — plus un
+ * fichier respectait le registre, plus il devenait invisible au cliquet censé
+ * garantir qu'aucun fichier n'échappe.
+ *
+ * MESURE, PAS DÉDUCTION. Trois sondes de sémantique STRICTEMENT identique,
+ * écrites puis supprimées :
+ *   `site.mode === 3`          -> NIVEAU 1 et NIVEAU 2 rouges  (détecté)
+ *   `siteMode === 3`           -> 37/37 verts                  (INVISIBLE)
+ *   `SONDE_MODES.has(siteMode)`-> 37/37 verts                  (INVISIBLE)
+ * Conséquence mesurée : 0 des 6 AUTORITÉS de mode du dépôt était détectée.
+ * `canTransact`, `catalogAdmission`, `subtypeAdmission`, `order-domain/resolve`
+ * n'étaient dans le registre que parce qu'un humain les y avait inscrites ;
+ * `toolCapabilities` et `modeGuidance` n'y étaient pas du tout.
+ *
+ * TROIS COUCHES AJOUTÉES :
+ *   1. l'appartenance sur identifiant NU — `SET.has(siteMode)`, `MAP.get(x)`.
+ *      C'est la couche dominante : elle seule rendait les autorités invisibles.
+ *   2. la casse — `\w*[Mm]ode` couvre `siteMode`, `finalMode`, `chosenMode`.
+ *   3. l'accès de propriété camelCase — `body.chosenMode`.
+ *   4. le `switch` sur identifiant nu — `switch (siteMode)`. TROUVÉE PAR LE
+ *      TEST DE CE BLOC, pas par l'analyse : DECISION connaissait déjà cette
+ *      forme, LECTURE non. Comme `DECIDEURS = LECTEURS.filter(decide)`, un
+ *      fichier dont le seul usage du mode était un `switch` camelCase
+ *      n'atteignait JAMAIS le niveau 2. Seconde voie d'échappement, fermée.
+ *   5. la CONSULTATION D'UNE AUTORITÉ de mode — `canTransact(mode)`,
+ *      `getModeCapabilities(mode)`. TROISIÈME voie, trouvée par un balayage
+ *      indépendant de tout `src/`. Un composant qui reçoit le mode en prop
+ *      (`{ slug, primary, mode, labels }`) et le passe à l'autorité sans
+ *      jamais le comparer ne présentait AUCUNE forme détectable : ni point,
+ *      ni comparaison, ni `{ mode }` isolé. Mesuré : 6 fichiers dans ce cas,
+ *      dont `PromoBanner.tsx` qui n'était classé nulle part.
+ *
+ *      LISTE NOMMÉE, PAS UN MOTIF GÉNÉRIQUE. Seules y figurent les autorités
+ *      qui reçoivent LE MODE DU SITE. `showsVisitorCatalogSearch` en est
+ *      volontairement absente : elle tranche sur `dropship_type`, et
+ *      l'inclure faisait entrer son propre fichier de définition — un faux
+ *      positif mesuré, écarté.
+ *
+ * LARGE ICI, PRÉCIS AU NIVEAU DÉCISION. Élargir la LECTURE fait entrer un
+ * homonyme (`roundMode`), et c'est assumé : le cliquet est fail-closed, le tri
+ * se fait par une raison ÉCRITE dans LECTEURS_TRANSITIFS — section HOMONYMES,
+ * où `session.mode` de Stripe siège déjà. Un déni-liste dans le motif serait
+ * l'inverse : fail-open, et silencieux. Ce qui ne doit JAMAIS admettre
+ * d'homonyme, c'est DECISION — vérifié juste en dessous.
+ */
+const LECTURE =
+  /\.\s*\w*[Mm]ode\b|\[\s*['"]mode['"]\s*\]|\{\s*mode\s*\}|\b\w*[Mm]ode\s*[=!<>]=?|\.(?:includes|indexOf|has|get)\s*\([^)]*\b\w*[Mm]ode\b|\bswitch\s*\([^)]*\b\w*[Mm]ode\b|\b(?:canTransact|getModeCapabilities|hasSupplierCatalog|usesCatalogSelections|toolNamesForSite|guidanceForSite|resolveFulfillmentDomain)\s*\(/
 export function litLeMode(code: string): boolean {
   return LECTURE.test(code)
 }
@@ -80,8 +135,24 @@ export function litLeMode(code: string): boolean {
  * Tous les homonymes du dépôt (`mode === 'signup'`, `mode === 'up'`,
  * `obj.mode === 'payment'`) comparent des chaînes et sont donc écartés.
  */
+/*  DEBT-054 — DEUX ÉCHAPPEMENTS SUPPLÉMENTAIRES, MESURÉS.
+ *
+ *  `.get()` manquait : `GUIDANCE_PAR_MODE.get(siteMode)` sélectionne une
+ *  guidance par le mode — c'est une dérivation de règle, pas un transport.
+ *
+ *  La comparaison à une CONSTANTE NOMMÉE manquait : la contrainte `-?\d`
+ *  exigeait un chiffre littéral, si bien que `siteMode === SUPPLIER_SITE_MODE`
+ *  (order-domain/resolve) et `siteMode === SUPPLIER_GUIDANCE_MODE`
+ *  (modeGuidance) passaient pour de simples lectures. Nommer sa constante —
+ *  ce que le dépôt encourage — rendait la décision invisible.
+ *
+ *  `[A-Z][A-Z0-9_]{2,}` est sûr parce que `codeUtile` a DÉJÀ retiré les
+ *  chaînes : `mode === 'signup'` est devenu `mode ===  ''`, jamais des
+ *  majuscules. Les trois homonymes du dépôt restent donc écartés — le test
+ *  « les HOMONYMES ne sont jamais des décideurs » le vérifie, et le test
+ *  « un homonyme camelCase n'est jamais un décideur » l'étend à `roundMode`. */
 const DECISION =
-  /\bmode\b\s*\)?\s*(?:[=!]==?|[<>]=?)\s*-?\d|\bswitch\s*\([^)]*\bmode\b|\.(?:includes|indexOf|has)\s*\([^)]*\bmode\b/
+  /\b\w*[Mm]ode\b\s*\)?\s*(?:[=!]==?|[<>]=?)\s*(?:-?\d|[A-Z][A-Z0-9_]{2,})|\bswitch\s*\([^)]*\b\w*[Mm]ode\b|\.(?:includes|indexOf|has|get)\s*\([^)]*\b\w*[Mm]ode\b/
 export function decideSurLeMode(code: string): boolean {
   return DECISION.test(code)
 }
@@ -112,7 +183,15 @@ const DECLARES = new Set(DOMAIN_REGISTRY.flatMap((d) => d.ownedFiles))
  */
 const LECTEURS_TRANSITIFS: Record<string, string> = {
   // — le mode est LU puis PASSÉ, jamais comparé —
-  'src/app/api/chat/route.ts': 'écrit `mode` à la création du site ; ne dérive aucune règle de sa valeur.',
+  // DEBT-054 — ENTRÉE RETIRÉE : SA RAISON ÉTAIT FACTUELLEMENT FAUSSE.
+  //
+  // Elle affirmait « ne dérive aucune règle de sa valeur ». Le fichier contient
+  // `knownMode === 2 || knownMode === 3`, `parsedMode === 2 || parsedMode === 3`,
+  // `finalMode === 2 || finalMode === 3` et `finalMode === 3` trois fois. Il
+  // dérive donc des règles, et l'exemption disait l'inverse de ce que le code
+  // fait. Le détecteur ne pouvait pas la contredire : il était aveugle au
+  // camelCase. `src/app/api/chat/route.ts` est désormais DÉCLARÉ dans
+  // `site-mode-decision-surfaces`, où le niveau 2 le tient.
   'src/app/api/shop/connect/route.ts': 'délègue l’admission à canTransact() ; ne lit le mode que pour la lui passer.',
   'src/app/api/shop/products/route.ts': 'idem — canTransact() décide, la route transmet.',
   'src/app/api/shop/shipping/calculate/route.ts': 'idem — canTransact() décide, la route transmet.',
@@ -128,10 +207,14 @@ const LECTEURS_TRANSITIFS: Record<string, string> = {
   'src/app/sites/[slug]/themes/CartShell.tsx': 'passe `mode` à getModeCapabilities() et à CartDrawer ; la décision est ailleurs (étape A).',
   'src/app/sites/[slug]/themes/CartDrawer.tsx': 'consomme les capacités de getModeCapabilities() ; ne compare plus aucun mode (étape C).',
 
+  'src/app/sites/[slug]/themes/PromoBanner.tsx': 'DEBT-054 — reçoit `mode` en prop et le passe à canTransact() ; ne le compare jamais, la décision « ce site sert-il un code promo » reste dans l’autorité.',
+  'src/lib/generationFailures.ts': 'DEBT-054 — journalise `requested_mode` dans la table des échecs ; transport pur, aucune branche ne dépend de sa valeur.',
+
   // — HOMONYMES : le jeton `mode` y désigne autre chose que `sites.mode` —
   'src/app/login/page.tsx': 'homonyme — `mode` y vaut « signup » ou « login », un état de formulaire.',
   'src/lib/pricing.ts': 'homonyme — `mode` y vaut « up » ou « down », un mode d’arrondi.',
   'src/app/api/stripe/webhook/route.ts': 'homonyme — `session.mode` est un champ Stripe (« payment »), pas le mode du site.',
+  'src/components/edit/CatalogSelections.tsx': 'DEBT-054 — homonyme camelCase : `roundMode` y vaut « up » ou « down », un mode d’arrondi de prix ; le composant ne lit jamais `sites.mode`.',
 
   // — le registre lui-même —
   'src/lib/architecture/domainRegistry.ts': 'porte les MOTIFS de détection ; il décrit les frontières, il n’en franchit aucune.',
@@ -164,7 +247,21 @@ const LECTEURS_TRANSITIFS: Record<string, string> = {
 // maintenant `mode`/`dropship_type` pour les PASSER a `usesCatalogSelections`.
 // Meme patron que les huit entrees existantes -- l'autorite decide, le
 // fichier transmet -- et le niveau 2 le verifie independamment.
-const PLAFOND_ALLOWLIST = 19
+// DEBT-054 — RELEVEMENT DELIBERE : 19 -> 21.
+//
+// Bilan NET de +1 pour DEUX ajouts et UN retrait :
+//   + `generationFailures.ts`  — transport pur de `requested_mode` ;
+//   + `CatalogSelections.tsx`  — homonyme `roundMode`, revele par
+//                                l'elargissement de LECTURE au camelCase ;
+//   + `PromoBanner.tsx`        — transport pur vers canTransact(), revele par
+//                                la couche « consultation d'autorite » ;
+//   - `api/chat/route.ts`      — RETIRE, car sa raison etait fausse : il
+//                                decide, il est donc passe au REGISTRE.
+//
+// Le mouvement est le bon : une exemption mensongere quitte l'allowlist pour
+// un domaine contraint, et deux transports honnetes s'y declarent. Le cliquet
+// a fait exactement son travail -- il a rendu l'operation visible en diff.
+const PLAFOND_ALLOWLIST = 21
 
 const TOUS = fichiersSource(SRC)
 const rel = (p: string) => relative(RACINE, p).split(sep).join('/')
@@ -211,6 +308,23 @@ describe('ÉTAPE B — NIVEAU 1 : tout lecteur de `sites.mode` est classé', () 
     ).toBeLessThanOrEqual(PLAFOND_ALLOWLIST)
   })
 
+  it('DEBT-054 — chaque entrée de l’allowlist est RÉELLEMENT un lecteur aujourd’hui', () => {
+    // SANS CE TEST, UN RÉTRÉCISSEMENT DU DÉTECTEUR PASSE INAPERÇU. Mesuré :
+    // retirer la couche « consultation d'autorité » de LECTURE ne faisait
+    // rougir aucun test — `PromoBanner.tsx` cessait simplement d'être un
+    // lecteur, et son exemption devenait une ligne morte qui n'accusait rien.
+    // Une exemption qui ne s'applique plus à rien est le symptôme exact d'un
+    // détecteur qui a perdu la vue.
+    const lus = new Set(LECTEURS.map((f) => f.chemin))
+    const morts = Object.keys(LECTEURS_TRANSITIFS).filter((c) => !lus.has(c))
+    expect(
+      morts,
+      `exemption(s) devenue(s) sans objet : le détecteur ne voit plus ces fichiers comme lecteurs.\n  ${morts.join(
+        '\n  '
+      )}\nSoit le fichier a cessé de lire le mode — retirez l'entrée ; soit le DÉTECTEUR a régressé — c'est le cas grave.`
+    ).toEqual([])
+  })
+
   it('chaque entrée de l’allowlist porte une raison ET existe sur disque', () => {
     for (const [chemin, raison] of Object.entries(LECTEURS_TRANSITIFS)) {
       expect(raison.trim().length, `${chemin} : raison vide`).toBeGreaterThan(20)
@@ -241,7 +355,7 @@ describe('ÉTAPE B — NIVEAU 2 : tout décideur est déclaré dans un domaine',
     expect(DECIDEURS.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('les deux domaines de l’étape B couvrent bien 13 fichiers', () => {
+  it('les deux domaines de l’étape B couvrent bien 17 fichiers', () => {
     const d = (id: string) => DOMAIN_REGISTRY.find((x) => x.id === id)!
     // ETAPE 2 -- 6 depuis que `catalog/search` interroge `hasSupplierCatalog` :
     // il est devenu un lecteur, donc une surface a declarer.
@@ -250,7 +364,9 @@ describe('ÉTAPE B — NIVEAU 2 : tout décideur est déclaré dans un domaine',
     // alors que le PLANCHER des decideurs bruts baisse : ce n'est pas une
     // contradiction, c'est exactement le mouvement recherche -- une decision
     // qui cesse d'etre implicite devient une surface nommee et declaree.
-    expect(d('site-mode-decision-surfaces').ownedFiles).toHaveLength(8)
+    // DEBT-054 -- 12 : quatre decideurs reels que le detecteur ne voyait pas
+    // (toolCapabilities, modeGuidance, onboarding, chat) sont declares.
+    expect(d('site-mode-decision-surfaces').ownedFiles).toHaveLength(12)
     expect(d('human-ui-mode-display').ownedFiles).toHaveLength(5)
   })
 
@@ -322,6 +438,97 @@ describe('ÉTAPE B — le détecteur lui-même est éprouvé', () => {
     expect(litLeMode(codeUtile("const t = { 'home.mode.website': 'Site web' }"))).toBe(false)
     expect(litLeMode(codeUtile('const r = "s.mode === 3"'))).toBe(false)
     expect(litLeMode(codeUtile('const g = `mode === 2`'))).toBe(false)
+  })
+
+  // ============================================================
+  // DEBT-054 — LES FORMES QUE LE DÉTECTEUR NE VOYAIT PAS.
+  //
+  // Chacune de ces entrées correspond à une SONDE RÉELLE qui a survécu au
+  // cliquet à l'état `4ce0d01` : le fichier existait, décidait, et les 37
+  // tests restaient verts. Elles ne sont pas hypothétiques.
+  //
+  // Sans ce bloc, la correction des motifs ne serait protégée par RIEN : un
+  // rétrécissement futur de LECTURE ou DECISION rouvrirait la brèche en
+  // silence, exactement comme elle s'était ouverte.
+  // ============================================================
+  const FORMES_054: [string, string][] = [
+    // — couche 1 : appartenance sur identifiant NU (la couche dominante) —
+    ['appartenance Set sur paramètre', 'const A = new Set([2,3]); export function f(siteMode: unknown) { return A.has(siteMode) }'],
+    ['appartenance Map sur paramètre', 'const G = new Map(); export function f(siteMode: unknown) { return G.get(siteMode) }'],
+    ['appartenance tableau sur paramètre', 'export function f(chosenMode: number) { return [1,2,3].includes(chosenMode) }'],
+    ['appartenance sur propriété camelCase', 'export function f(body: any) { return [1,2,3].includes(body.chosenMode) }'],
+    // — couche 2 : la casse —
+    ['comparaison camelCase à un littéral', 'export function f(siteMode: number) { return siteMode === 3 }'],
+    ['comparaison camelCase ordinale', 'export function f(finalMode: number) { return finalMode > 1 }'],
+    ['switch camelCase', 'export function f(siteMode: number) { switch (siteMode) { case 3: return 1 } }'],
+    // — couche 3 : la comparaison à une constante NOMMÉE —
+    ['comparaison à une constante nommée', 'const SUPPLIER_SITE_MODE = 3; export function f(siteMode: number) { return siteMode === SUPPLIER_SITE_MODE }'],
+  ]
+
+  for (const [nom, src] of FORMES_054) {
+    it(`DEBT-054 — détecté comme LECTURE : ${nom}`, () => {
+      expect(litLeMode(codeUtile(src)), nom).toBe(true)
+    })
+    it(`DEBT-054 — détecté comme DÉCISION : ${nom}`, () => {
+      expect(decideSurLeMode(codeUtile(src)), nom).toBe(true)
+    })
+  }
+
+  it('DEBT-054 — un décideur camelCase non déclaré serait bien signalé aux DEUX niveaux', () => {
+    // CONTRÔLE POSITIF de bout en bout : la forme exacte de la sonde V1, qui
+    // laissait le cliquet vert avant correction.
+    const sonde = codeUtile('const M = new Set([2,3]); export function f(siteMode: unknown) { return M.has(siteMode) }')
+    expect(litLeMode(sonde), 'NIVEAU 1 le verrait').toBe(true)
+    expect(decideSurLeMode(sonde), 'NIVEAU 2 le verrait').toBe(true)
+    expect(DECLARES.has('src/lib/__sonde054.ts')).toBe(false)
+    expect('src/lib/__sonde054.ts' in LECTEURS_TRANSITIFS).toBe(false)
+  })
+
+  it('DEBT-054 — les six AUTORITÉS de mode sont désormais TOUTES détectées', () => {
+    // AVANT : 0 / 6. Elles n'étaient au registre que par déclaration manuelle.
+    // C'est la mesure qui donne son sens à la correction : le cliquet garde
+    // maintenant ce qu'il existe pour garder.
+    const AUTORITES = [
+      'src/lib/commerce-admission/canTransact.ts',
+      'src/lib/dropship/catalogAdmission.ts',
+      'src/lib/dropship/subtypeAdmission.ts',
+      'src/lib/order-domain/resolve.ts',
+      'src/lib/agent-tools/toolCapabilities.ts',
+      'src/lib/agent-tools/modeGuidance.ts',
+    ]
+    const vues = DECIDEURS.map((f) => f.chemin)
+    for (const a of AUTORITES) {
+      expect(vues, `${a} doit être vue comme DÉCIDEUR par le détecteur, pas seulement déclarée à la main`).toContain(a)
+    }
+  })
+
+  it('DEBT-054 — FAUX POSITIFS : un identifiant `*Mode` sans rapport n’est jamais un DÉCIDEUR', () => {
+    // L'élargissement de LECTURE est assumé et absorbé par l'allowlist. Ce qui
+    // ne doit JAMAIS céder, c'est le niveau 2 : aucune de ces formes ne dérive
+    // une règle de `sites.mode`, aucune ne doit exiger une déclaration.
+    const HOMONYMES_CAMEL = [
+      "const roundMode = 'up'; if (roundMode === 'up') { arrondir() }",
+      "if (session.mode === 'payment') { encaisser() }",
+      "const displayMode = 'grid'; if (displayMode === 'grid') { grille() }",
+      "if (themeMode === 'dark') { sombre() }",
+      "const editMode = true; if (editMode) { editer() }",
+      "if (viewMode !== 'list') { autre() }",
+    ]
+    for (const src of HOMONYMES_CAMEL) {
+      expect(decideSurLeMode(codeUtile(src)), src).toBe(false)
+    }
+  })
+
+  it('DEBT-054 — une variable sans aucun rapport avec le mode n’est classée NI lecteur NI décideur', () => {
+    for (const src of [
+      'export function total(a: number, b: number) { return a + b }',
+      'const model = MODELS.get(id); return model.name',
+      'const node = document.querySelector(sel)',
+      'export function f(x: number) { return [1,2,3].includes(x) }',
+    ]) {
+      expect(litLeMode(codeUtile(src)), src).toBe(false)
+      expect(decideSurLeMode(codeUtile(src)), src).toBe(false)
+    }
   })
 
   it('les HOMONYMES ne sont jamais des décideurs', () => {

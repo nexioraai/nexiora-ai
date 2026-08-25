@@ -536,6 +536,23 @@ export const DOMAIN_REGISTRY: DomainDefinition[] = [
       'src/app/api/catalog/enhance/route.ts',
       'src/app/api/catalog/selections/route.ts',
       'src/app/sites/[slug]/themes/shared.tsx',
+      // DEBT-054 -- QUATRE ENTREES AJOUTEES. Elles ne sont pas nouvelles :
+      // elles DECIDAIENT deja, et le detecteur d'exhaustivite ne pouvait pas
+      // les voir parce qu'il ignorait la forme parametrique (`SET.has(siteMode)`)
+      // et le camelCase. Les declarer ici ne change AUCUN comportement -- c'est
+      // mesure : les six SITE_MODE_ACQUISITION_RULES sont ancrees sur le
+      // litteral `site.mode`, qu'aucun de ces quatre fichiers n'emploie, donc
+      // zero violation. Ce qui change, c'est qu'elles cessent de dependre de la
+      // vigilance humaine pour rester visibles.
+      //
+      // `toolCapabilities` decide quelles familles d'outils l'agent peut
+      // appeler ; `modeGuidance` selectionne la guidance envoyee au modele ;
+      // `onboarding` et `chat` valident et FIXENT le mode a la creation du
+      // site -- c'est la decision la plus en amont de tout le systeme.
+      'src/lib/agent-tools/toolCapabilities.ts',
+      'src/lib/agent-tools/modeGuidance.ts',
+      'src/app/api/onboarding/route.ts',
+      'src/app/api/chat/route.ts',
     ],
     forbiddenPatterns: SITE_MODE_ACQUISITION_RULES,
     ignoreLinePattern: IGNORE_COMMENT_LINES,
