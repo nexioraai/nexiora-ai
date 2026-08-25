@@ -10,6 +10,8 @@ interface CatalogProduct {
   id: string;
   supplier_id: string;
   supplier_product_id?: string;
+  /** LOT 4 / R4-02 -- transmis tel quel a `ProductModal`. */
+  requires_variant?: boolean;
   name: string;
   description?: string;
   price: number;

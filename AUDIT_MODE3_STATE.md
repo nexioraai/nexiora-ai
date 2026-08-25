@@ -287,7 +287,7 @@ fail-closed. **Les deux autorités de sous-mode sont solidement verrouillées.**
 | **1** | Socle transversal (DEBT-050, DEBT-051, autorités de sous-mode) | ✅ **RÉSOLU** — 14/14 mutations tuées, 3088 tests |
 | **2** | Frontières internes (DEBT-048, DEBT-049) | ✅ **RÉSOLU** — 19/19 mutations tuées, 3178 tests |
 | **3** | **POD_BRAND** (+ DEBT-055/058/059, puis DEBT-062/063) | ✅ **RÉSOLU** — 23 mutations tuées, 3220 tests |
-| **4** | RESELLER | ✅ **RÉSOLU** — 11 mutations tuées, 3240 tests · 1 décision produit ouverte (DEBT-066) |
+| **4** | RESELLER | ✅ **RÉSOLU** — 21 mutations tuées, 3264 tests · 1 décision produit ouverte (DEBT-066) |
 | 5 | POD_CUSTOM | à faire |
 | 6 | Transversal final (+ **DEBT-054**, rattachée depuis le LOT 1) | à faire |
 
@@ -689,3 +689,42 @@ pour toute commande nouvelle, le checkout refusant en amont.
 73 sélections (19 approuvées), empreinte `a42f80d2ce5a0c9a`, `updated_at`
 inchangé. Les 19 produits approuvés sont **tous CJ et tous sans parent** — donc
 exactement ceux que la nouvelle règle protège.
+
+
+---
+
+# LOT 4 — CONTRE-VÉRIFICATION (2026-08-25)
+
+La contre-vérification a **réfuté ma propre correction**. Une anomalie,
+corrigée avant de reconfirmer.
+
+## DEBT-067 🟠 — la condition d'achat restait un proxy
+
+Les trois surfaces écrivaient chacune `variants.length > 0 && !selectedVariant`.
+Le proxy s'effondre quand la liste revient **vide** — rupture totale, ou erreur
+**avalée** par `/api/catalog/variants`, qui rend `{variants: []}` dans les deux
+cas. Le bouton s'activait pour un produit que la garde `catalogStock` du LOT 4
+refuse : **bouton actif, refus garanti**.
+
+**Ma correction de la fiche produit portait encore ce proxy.** Avant le LOT 4
+ce chemin « fonctionnait » — en expédiant une variante arbitraire ; le LOT 4
+l'a rendu fail-closed sans corriger l'interface.
+
+**Cause profonde : trois copies de la même règle** — le motif que le LOT 3
+avait déjà démontré. Règle écrite **une fois** dans
+`themes/variantRequirement.ts`, miroir client de la règle serveur (même patron
+que `modeCapabilities` vis-à-vis de `CheckoutPolicy`), et signal
+`requiresVariant` remontant de la base jusqu'aux trois surfaces.
+
+## Mutations — 21 au total sur le LOT 4, 21 tuées
+
+S1–S8, T1–T3 (première passe) · **U1–U10 (contre-vérification)**.
+U6–U10 ont d'abord survécu : U6/U7 tuées par des tests comportementaux de
+`/catalog/search` ; U8–U10 par un cliquet d'argument dont **la limite est
+nommée** — la valeur passée n'est observable qu'après un effet React, et ce
+dépôt n'a ni jsdom ni testing-library.
+
+## Production — aucune écriture
+
+73 sélections, empreinte `a42f80d2ce5a0c9a` **inchangée**, `updated_at` de
+juillet sur les 8 sites Mode 3.

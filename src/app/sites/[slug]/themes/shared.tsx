@@ -113,6 +113,16 @@ family?: string
  * mecanisme qu'elles n'utilisent pas.
  */
 hasProductPage?: boolean
+/**
+ * LOT 4 / R4-02 -- cette ligne catalogue exige-t-elle une variante explicite ?
+ *
+ * `true` quand `catalog_products.supplier_parent_id` est NULL : la ligne
+ * designe alors un PRODUIT, et son `supplier_product_id` ne peut pas tenir
+ * lieu de variante (mesure : CJ 25 006 lignes a 100 % sans parent ; Printful
+ * 8 392 et Gelato 182 a 0 %). Optionnel : `undefined` vaut « non », le
+ * comportement de toutes les surfaces qui n'ont pas de fournisseur.
+ */
+requiresVariant?: boolean
 }
 
 export type Service = {
@@ -430,7 +440,7 @@ async function loadCatalogSelections(data: any, diagnostics?: string[]) {
 if (data.mode === 3 && (data.dropship_type === 'reseller' || data.dropship_type === 'pod_custom')) {
 const { data: catSels, error: catSelsError } = await supabase
 .from('site_catalog_selections')
-.select('id, sell_price, custom_name, custom_description, catalog_product_id, catalog_products(name, description, price, currency, images, supplier_id, supplier_product_id, shipping_days_min, shipping_days_max, in_stock, category)')
+.select('id, sell_price, custom_name, custom_description, catalog_product_id, catalog_products(name, description, price, currency, images, supplier_id, supplier_product_id, supplier_parent_id, shipping_days_min, shipping_days_max, in_stock, category)')
 .eq('site_id', data.id)
 .eq('merchant_approved', true)
 .order('sort_order', { ascending: true })
@@ -464,6 +474,12 @@ shippingDaysMin: cp.shipping_days_min || null,
 shippingDaysMax: cp.shipping_days_max || null,
 supplierId: cp.supplier_id || null,
 supplierProductId: cp.supplier_product_id || null,
+// LOT 4 / R4-02 -- le signal remonte jusqu'a la surface d'achat. Sans lui,
+// la modale se rabattait sur le proxy `variants.length > 0` : une liste de
+// variantes revenue VIDE (rupture totale, ou erreur avalee par
+// `/api/catalog/variants`, qui rend `{variants: []}` dans les deux cas)
+// activait le bouton pour un produit que le checkout refuse desormais.
+requiresVariant: !cp.supplier_parent_id,
 family: ((data.product_families || {}) as Record<string,string>)[cp.category] || undefined,
 }
 })

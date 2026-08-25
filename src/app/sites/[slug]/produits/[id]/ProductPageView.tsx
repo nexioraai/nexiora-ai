@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import type { ProductPage } from './fetchProduct'
 import AddToCartButton from '../../themes/AddToCartButton'
+import { achatPossible, choixDeVarianteRequis } from '../../themes/variantRequirement'
 import { THEME_TOKENS, ThemeKey } from '../../themes/CatalogSearch'
 
 const CART_LABELS: Record<string, string> = {
@@ -57,7 +58,21 @@ export default function ProductPageView({ product }: { product: ProductPage }) {
       .finally(() => { if (!annule) setChargementVariantes(false) })
     return () => { annule = true }
   }, [product.requiresVariant, product.supplierId, product.supplierProductId])
-  const variantsRequises = product.requiresVariant && variantes.length > 0
+  // LOT 4 / R4-02 -- LA CONDITION NE DEPEND PLUS DE LA LISTE.
+  //
+  // Elle etait `requiresVariant && variantes.length > 0` : une liste revenue
+  // VIDE -- rupture totale, ou erreur avalee par `/api/catalog/variants` --
+  // rendait la condition fausse, donc le bouton ACTIF, pour un produit que le
+  // checkout refuse. Ma propre correction du LOT 4 portait encore ce proxy :
+  // la contre-verification l'a trouve. La regle vient de la donnee, pas de la
+  // reponse reseau.
+  const variantsRequises = choixDeVarianteRequis(product.requiresVariant, variantes.length)
+  const achetable = achatPossible({
+    requiresVariant: product.requiresVariant,
+    variantesConnues: variantes.length,
+    varianteChoisie,
+    chargementEnCours: chargementVariantes,
+  })
   const imgs = product.images.length > 0 ? product.images : []
   const tokens = THEME_TOKENS[(product.theme as ThemeKey)] || THEME_TOKENS.editorial
   const priceLabel =
@@ -159,7 +174,7 @@ export default function ProductPageView({ product }: { product: ProductPage }) {
                 fournisseur : `supplierId` vaut `null`, aucun appel n'est
                 fait, le rendu est rigoureusement celui d'avant.
             ============================================================ */}
-            {variantsRequises && (
+            {variantes.length > 0 && (
               <div style={{ marginTop: 24 }}>
                 <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.6 }}>
                   {product.lang === 'fr' ? 'Taille / Couleur' : 'Size / Color'}
@@ -192,8 +207,8 @@ export default function ProductPageView({ product }: { product: ProductPage }) {
                   image={imgs[0]}
                   primary={product.primary}
                   variantId={varianteChoisie || undefined}
-                  label={chargementVariantes ? (product.lang === 'fr' ? 'Chargement…' : 'Loading…') : (variantsRequises ? (product.lang === 'fr' ? 'Choisissez une option' : 'Choose an option') : addLabel)}
-                  disabled={!product.inStock || chargementVariantes || (variantsRequises && !varianteChoisie)}
+                  label={chargementVariantes ? (product.lang === 'fr' ? 'Chargement…' : 'Loading…') : (achetable ? addLabel : (product.lang === 'fr' ? 'Choisissez une option' : 'Choose an option'))}
+                  disabled={!product.inStock || !achetable}
                 />
               ) : (
                 <div style={{ fontSize: 14, opacity: 0.7 }}>{notForSaleLabel}</div>

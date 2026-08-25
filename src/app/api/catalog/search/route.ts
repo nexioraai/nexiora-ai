@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
   if (words.length > 0) {
     let cQuery = supabaseAdmin
       .from('site_catalog_selections')
-      .select('id, sell_price, custom_name, custom_description, catalog_product_id, catalog_products(id, name, description, price, currency, images, supplier_id, supplier_product_id, shipping_days_min, shipping_days_max, warehouse_country, in_stock)')
+      .select('id, sell_price, custom_name, custom_description, catalog_product_id, catalog_products(id, name, description, price, currency, images, supplier_id, supplier_product_id, supplier_parent_id, shipping_days_min, shipping_days_max, warehouse_country, in_stock)')
       .eq('site_id', site.id)
       .eq('merchant_approved', true);
 
@@ -113,6 +113,9 @@ export async function GET(req: NextRequest) {
             id: `catalog-${cp.id}`,
             supplier_id: cp.supplier_id,
             supplier_product_id: cp.supplier_product_id,
+            // LOT 4 / R4-02 -- voir themes/shared.tsx : une ligne sans parent
+            // designe un PRODUIT, donc la variante doit etre choisie.
+            requires_variant: !cp.supplier_parent_id,
             name: s.custom_name || cp.name,
             description: s.custom_description || cp.description || '',
             price: resolveDisplayPrice(cost, s.sell_price, margin, roundMode),
@@ -139,7 +142,7 @@ export async function GET(req: NextRequest) {
   // reellement necessaires a l'affichage storefront quittent la DB.
   let query2 = supabaseAdmin
     .from('catalog_products')
-    .select('id, supplier_id, supplier_product_id, name, description, category, images, variants, price, currency, shipping_days_min, shipping_days_max, warehouse_country', { count: 'exact' })
+    .select('id, supplier_id, supplier_product_id, supplier_parent_id, name, description, category, images, variants, price, currency, shipping_days_min, shipping_days_max, warehouse_country', { count: 'exact' })
     // Meme regle qu'ailleurs : seul un false explicite masque le produit.
     .not('in_stock', 'is', false);
 
@@ -203,6 +206,7 @@ export async function GET(req: NextRequest) {
         id: `catalog-${p.id}`,
         supplier_id: p.supplier_id,
         supplier_product_id: p.supplier_product_id,
+        requires_variant: !p.supplier_parent_id,
         name: p.name,
         description: p.description || '',
         category: p.category,

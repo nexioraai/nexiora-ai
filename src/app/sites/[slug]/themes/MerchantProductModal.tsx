@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { achatPossible } from './variantRequirement';
 import { X } from 'lucide-react';
 import AddToCartButton from './AddToCartButton';
 
@@ -15,6 +16,8 @@ interface MerchantProduct {
   variants?: { variant_id: string; label: string; price: number; currency: string }[];
   supplierId?: string | null;
   supplierProductId?: string | null;
+  /** LOT 4 / R4-02 -- voir la condition `disabled` ci-dessous. */
+  requiresVariant?: boolean;
 }
 
 interface Props {
@@ -93,6 +96,7 @@ export default function MerchantProductModal({ product: p, primary, lang = 'en',
   }, [p.supplierId, p.supplierProductId]);
 
   const variants = cachedVariants.length > 0 ? cachedVariants : liveVariants;
+  const achetable = achatPossible({ requiresVariant: p.requiresVariant, variantesConnues: variants.length, varianteChoisie: selectedVariant, chargementEnCours: loadingVariants });
 
   return (
     <div
@@ -172,8 +176,25 @@ export default function MerchantProductModal({ product: p, primary, lang = 'en',
               currency={p.currency || 'USD'}
               image={p.image}
               primary={primary}
-              label={loadingVariants ? t.loadingVariants : (variants.length > 0 && !selectedVariant ? t.chooseOption : t.addToCart)}
-              disabled={loadingVariants || (variants.length > 0 && !selectedVariant)}
+            // ============================================================
+            // LOT 4 / R4-02 -- LA CONDITION N'EST PLUS UN PROXY.
+            //
+            // C'etait `variants.length > 0 && !selectedVariant` : « il y a des
+            // options, donc il faut en choisir une ». Le proxy s'effondre quand
+            // la liste revient VIDE -- rupture totale de stock, ou erreur
+            // avalee par `/api/catalog/variants`, qui rend `{variants: []}`
+            // dans les deux cas. Le bouton s'activait alors pour un produit
+            // dont l'identifiant de panier n'aurait AUCUNE variante, et que le
+            // checkout refuse (garde `catalogStock`, LOT 4). Bouton actif,
+            // refus garanti : exactement la divergence « ce que l'UI permet
+            // n'est pas ce que le checkout vend » que ce lot ferme.
+            //
+            // `requiresVariant` vient de la donnee (`supplier_parent_id`), pas
+            // d'une heuristique. `undefined` pour un produit sans fournisseur
+            // (Mode 2, maquettes POD) : comportement rigoureusement inchange.
+            // ============================================================
+              label={loadingVariants ? t.loadingVariants : (achetable ? t.addToCart : t.chooseOption)}
+              disabled={!achetable}
               onAdded={onClose}
             />
 

@@ -185,3 +185,63 @@ describe("GET /api/catalog/search — LOT 2 : l'admission au mecanisme de select
     expect(fromMock).toHaveBeenCalledWith('catalog_products');
   });
 });
+
+// ============================================================
+// LOT 4 / R4-02 -- LA RECHERCHE DOIT TRANSPORTER L'EXIGENCE DE VARIANTE.
+//
+// `ProductModal` s'en sert pour decider si le bouton d'achat est actif. Sans
+// ce champ, il retombe sur le proxy `variants.length > 0` -- qui s'effondre
+// quand la liste revient vide et laisse ajouter au panier un article que le
+// checkout refuse (garde `catalogStock`).
+//
+// La valeur est DERIVEE DE LA DONNEE : une ligne sans `supplier_parent_id`
+// designe un PRODUIT (CJ : 25 006 lignes, 100 %), une ligne avec parent EST
+// deja une variante (Printful 8 392, Gelato 182 : 0 %).
+// ============================================================
+describe('GET /api/catalog/search — LOT 4 : `requires_variant` derive de `supplier_parent_id`', () => {
+  it('produit du catalogue GLOBAL sans parent (CJ) -> requires_variant = true', async () => {
+    setupTables({ catalog_products: { data: [{ ...GLOBAL_PRODUCT, supplier_parent_id: null }], error: null, count: 1 } });
+    const json = await (await GET(req({ slug: 'x', q: 'bracelet' }))).json();
+    expect(json.products[0].requires_variant).toBe(true);
+  });
+
+  it('produit du catalogue GLOBAL avec parent (POD) -> requires_variant = false', async () => {
+    setupTables({ catalog_products: { data: [{ ...GLOBAL_PRODUCT, supplier_id: 'printful', supplier_parent_id: 'parent-1' }], error: null, count: 1 } });
+    const json = await (await GET(req({ slug: 'x', q: 'bracelet' }))).json();
+    expect(json.products[0].requires_variant).toBe(false);
+  });
+
+  it('produit CURATED sans parent -> requires_variant = true', async () => {
+    setupTables({
+      site_catalog_selections: { data: [{
+        id: 'sel-1', sell_price: null, custom_name: null, custom_description: null, catalog_product_id: 'cp-1',
+        catalog_products: { ...GLOBAL_PRODUCT, supplier_parent_id: null },
+      }], error: null },
+      catalog_products: { data: [], error: null, count: 0 },
+    });
+    const json = await (await GET(req({ slug: 'x', q: 'bracelet' }))).json();
+    const curated = json.products.find((p: { id: string }) => p.id === 'catalog-cp-1');
+    expect(curated?.requires_variant).toBe(true);
+  });
+
+  it('produit CURATED avec parent -> requires_variant = false', async () => {
+    setupTables({
+      site_catalog_selections: { data: [{
+        id: 'sel-1', sell_price: null, custom_name: null, custom_description: null, catalog_product_id: 'cp-1',
+        catalog_products: { ...GLOBAL_PRODUCT, supplier_id: 'printful', supplier_parent_id: 'parent-1' },
+      }], error: null },
+      catalog_products: { data: [], error: null, count: 0 },
+    });
+    setupTables({
+      sites: { data: { ...SITE, dropship_type: 'pod_custom' }, error: null },
+      site_catalog_selections: { data: [{
+        id: 'sel-1', sell_price: null, custom_name: null, custom_description: null, catalog_product_id: 'cp-1',
+        catalog_products: { ...GLOBAL_PRODUCT, supplier_id: 'printful', supplier_parent_id: 'parent-1' },
+      }], error: null },
+      catalog_products: { data: [], error: null, count: 0 },
+    });
+    const json = await (await GET(req({ slug: 'x', q: 'bracelet' }))).json();
+    const curated = json.products.find((p: { id: string }) => p.id === 'catalog-cp-1');
+    expect(curated?.requires_variant).toBe(false);
+  });
+});
