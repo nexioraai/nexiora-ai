@@ -657,7 +657,34 @@ ${JSON.stringify(
     area_served: site.area_served,
     price_range: site.price_range,
     social_links: site.social_links,
-    contact: { phone: site.phone, email: site.contact_email, address: site.address },
+    // DEBT-033 -- CETTE LIGNE LISAIT DEUX COLONNES QUI N'EXISTENT PAS.
+    //
+    // Elle valait `{ phone: site.phone, email: site.contact_email, address:
+    // site.address }`. Or `sites.phone` et `sites.contact_email` n'existent
+    // pas : le schema reel, reconstruit depuis
+    // `lot_g_final_field_level_authorization.sql`, compte 41 colonnes
+    // editables + 18 protegees = 59 colonnes nommees, et aucune ne porte ces
+    // deux noms. `chat/route.ts` en etait le SEUL lecteur du depot.
+    //
+    // CE QUE LE MODELE RECEVAIT REELLEMENT. `JSON.stringify` elide les cles
+    // `undefined` : le contexte partait donc avec `"contact": { "address":
+    // ... }`, sans telephone ni courriel. Interroge sur son numero, l'agent
+    // repondait « je n'en vois pas » -- alors que les quatre themes
+    // l'affichent, que `llms.txt` le publie et que JSON-LD l'emet en
+    // `telephone`. Pire : `propose_contact_update` peut ECRIRE ces deux
+    // champs, donc l'agent ecrasait une valeur qu'il n'avait aucun moyen de
+    // lire.
+    //
+    // EXACTEMENT LE DEFAUT DU CHANTIER 1 (`services` mort face a `sections`)
+    // ET DE LA DETTE 4 (`testimonials` absent), reste ouvert : le contexte
+    // montrait au modele une donnee qui n'existe pas en base.
+    //
+    // EXPOSE BRUT, comme `sections`, `testimonials`, `faq` et `whyus`. C'est
+    // aussi ce que le VISITEUR voit : les quatre themes font
+    // `const contact = site.contact || {}`, sans aucun repli vers
+    // `sites.address`. Projeter ici une forme resolue montrerait au modele une
+    // donnee que la page ne rend pas.
+    contact: site.contact,
     cj_margin_percent: site.cj_margin_percent,
     lang: site.lang,
   },
