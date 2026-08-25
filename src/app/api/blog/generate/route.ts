@@ -1,14 +1,71 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import Anthropic from "@anthropic-ai/sdk";
+import { requirePlatformAdmin } from "@/lib/auth/require-platform-admin";
+import { logAiUsage } from "@/lib/ai-usage";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+// ============================================================
+// LOT 6 -- CETTE ROUTE ETAIT OUVERTE A TOUT INTERNET.
+//
+// CE QU'ELLE PERMETTAIT. Aucune authentification, aucune limite de debit,
+// aucun appelant dans le depot : n'importe qui pouvait POSTER un `topic`
+// arbitraire, faire executer un appel Claude Sonnet FACTURE (2 000 jetons)
+// sur un prompt qu'il choisissait, et faire INSERER le resultat dans
+// `blog_posts` -- table lue par `/blog`, `/blog/[slug]` et le sitemap
+// deribfy.com. Trois problemes en un : depense illimitee, injection de prompt
+// (`topic` interpole brut), et ecriture dans une table publiee.
+//
+// A QUI APPARTIENT CE CONTENU. Etabli avant toute correction : `blog_posts`
+// n'a AUCUNE colonne de site (id, title, slug, content, cover_image,
+// published, created_at) et ses trois consommateurs sont tous des surfaces
+// de la PLATEFORME. Le blog des sites clients existe separement --
+// `/api/marketing/generate` -> `marketing_assets`, avec `slug` et
+// `owner_email` -- et n'est pas touche. Deux systemes, deux tables, deux
+// regimes d'autorisation.
+//
+// L'AUTORITE N'EST PAS NOUVELLE : c'est le controle admin deja present dans
+// les cinq routes `admin/*`, desormais nomme `requirePlatformAdmin`.
+// `requireSiteOwner` serait ici non seulement inadapte mais IMPOSSIBLE : il
+// n'existe aucun site a posseder.
+// ============================================================
+
+/** Une minute, comme la limite deja en place sur `catalog/image-search`. */
+const FENETRE_MS = 60_000;
+/** Un administrateur ne redige pas dix articles par minute ; une boucle, si. */
+const PLAFOND_PAR_MINUTE = 3;
+/** Un sujet d'article, pas un prompt. Borne la surface d'injection. */
+const TOPIC_MAX = 200;
+
 export async function POST(req: NextRequest) {
   try {
+    // 1. IDENTITE -- avant toute lecture de corps et toute depense.
+    const admin = await requirePlatformAdmin(req);
+    if (!admin.ok) return admin.response;
+
     const { topic } = await req.json();
-    if (!topic) {
+    if (!topic || typeof topic !== "string" || topic.length > TOPIC_MAX) {
       return NextResponse.json({ error: "topic required" }, { status: 400 });
+    }
+
+    // 2. DEPENSE -- meme mecanisme que `catalog/image-search` : un comptage
+    // DB-natif sur `ai_usage_log`, table deja alimentee par `logAiUsage`, qui
+    // documentait deja `'blog'` parmi ses types d'usage. Le blog central
+    // n'appartient a aucun site : les lignes portent `site_id = null`, et le
+    // comptage se fait sur ce meme critere. Aucune table nouvelle.
+    const depuis = new Date(Date.now() - FENETRE_MS).toISOString();
+    const { count: recents } = await supabaseAdmin
+      .from("ai_usage_log")
+      .select("id", { count: "exact", head: true })
+      .is("site_id", null)
+      .eq("usage_type", "blog")
+      .gte("created_at", depuis);
+    if ((recents ?? 0) >= PLAFOND_PAR_MINUTE) {
+      return NextResponse.json(
+        { error: "Trop de requetes, reessayez dans une minute." },
+        { status: 429 }
+      );
     }
 
     const msg = await anthropic.messages.create({
@@ -21,6 +78,11 @@ export async function POST(req: NextRequest) {
         },
       ],
     });
+
+    // 3. TRACE -- la depense est comptabilisee AVANT l'ecriture : meme si
+    // l'article echoue a s'inserer, l'appel a bien ete facture et doit peser
+    // sur la fenetre. `siteId: null` -- le blog central n'a pas de site.
+    await logAiUsage({ siteId: null, usageType: "blog", model: "claude-sonnet-4-6", usage: msg.usage });
 
     const raw = msg.content
       .map((b) => (b.type === "text" ? b.text : ""))

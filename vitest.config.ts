@@ -122,6 +122,11 @@ export default defineConfig({
       // un test ecrit sans cette ligne passe en isolation mais n'est JAMAIS
       // collecte par `vitest run` (donc jamais en CI), silencieusement.
       'src/app/api/admin/**/*.test.ts',
+      // LOT 6 -- prefixe AJOUTE. `src/app/api/blog/` n'etait pas collecte :
+      // la route de generation du blog central n'avait aucune couverture, et
+      // un test ecrit la n'aurait ete execute par personne. Meme piege qu'au
+      // LOT 0 et qu'au LOT 1 (`api/onboarding`), meme correction.
+      'src/app/api/blog/**/*.test.ts',
       // Separation Mode 2 / Mode 3, PHASE 1 (docs/PLAN-SEPARATION-MODE2-MODE3.md) :
       // src/lib/order-domain/ porte le point de decision unique de la frontiere.
       // Sans cette ligne, son test passe en isolation mais n'est JAMAIS collecte
