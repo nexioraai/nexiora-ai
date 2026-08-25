@@ -13,6 +13,8 @@ import { toolNamesForSite } from '@/lib/agent-tools/toolCapabilities';
 // Extraite et rendue vivante. Voir modeGuidance.ts pour la mesure complete.
 import { guidanceForSite } from '@/lib/agent-tools/modeGuidance';
 import { SUPPORTED_LANGUAGE_CODES } from '@/lib/i18n/supportedLanguages';
+import { PRICE_RANGE_VALUES } from '@/lib/site-profile/priceRange';
+import { AREA_SERVED_MAX_LENGTH } from '@/lib/site-profile/areaServed';
 
 const allTools: Anthropic.Tool[] = [
   {
@@ -23,7 +25,7 @@ const allTools: Anthropic.Tool[] = [
       properties: {
         field: {
           type: 'string',
-          enum: ['name', 'slogan', 'about', 'hero_title', 'hero_subtitle', 'cta', 'type', 'lang'],
+          enum: ['name', 'slogan', 'about', 'hero_title', 'hero_subtitle', 'cta', 'type', 'lang', 'area_served', 'price_range'],
           description: 'Field to update',
         },
         // CHANTIER 3 -- `lang` rejoint cette liste, et c'est le SEUL champ
@@ -37,7 +39,9 @@ const allTools: Anthropic.Tool[] = [
           description:
             "New value for the field. For `lang`, the ONLY accepted values are the languages this platform can actually serve: " +
             SUPPORTED_LANGUAGE_CODES.join(', ') +
-            ". Anything else is rejected. Changing `lang` switches the site's interface labels, navigation and metadata -- it does NOT translate the merchant's own text, which must be rewritten separately.",
+            ". Anything else is rejected. Changing `lang` switches the site's interface labels, navigation and metadata -- it does NOT translate the merchant's own text, which must be rewritten separately. " +
+            'For `price_range`, the ONLY accepted values are ' + PRICE_RANGE_VALUES.join(', ') + ' -- never a number, a currency or a word. ' +
+            'For `area_served`, give a SHORT place name such as "Montreal" or "Greater Montreal" (max ' + AREA_SERVED_MAX_LENGTH + ' characters, single line, no formatting characters); it drives which population appears in generated marketing visuals.',
         },
         reason: { type: 'string', description: 'Brief explanation of why this change is proposed' },
       },
@@ -630,6 +634,11 @@ ${JSON.stringify(
     // donnee qui n'existe pas telle quelle en base.
     faq: site.faq,
     whyus: site.whyus,
+    // CHANTIER 5 -- l'agent peut desormais ECRIRE ces deux champs ; il doit
+    // donc pouvoir LIRE ce qu'ils valent, sinon il proposerait a l'aveugle
+    // et ne saurait pas repondre « ta gamme de prix est $$ ».
+    area_served: site.area_served,
+    price_range: site.price_range,
     social_links: site.social_links,
     contact: { phone: site.phone, email: site.contact_email, address: site.address },
     cj_margin_percent: site.cj_margin_percent,

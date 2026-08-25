@@ -59,8 +59,11 @@ describe('DETTE 4 — `testimonials` dans CURRENT SITE STATE', () => {
   // générateur les produit toujours, les quatre thèmes les rendent, et
   // l'adressage par question/titre des six nouveaux outils en dépend
   // directement. Le compte avance, le cliquet reste.
-  it('le contexte porte 19 champs — 17 + faq + whyus', () => {
-    expect(champs()).toHaveLength(19)
+  // CHANTIER 5 — 19 → 21. `area_served` et `price_range` entrent : l'agent
+  // peut désormais les ÉCRIRE, il doit donc pouvoir les LIRE. Le compte
+  // avance, le cliquet reste — c'est lui qui oblige à justifier chaque champ.
+  it('le contexte porte 21 champs — 19 + area_served + price_range', () => {
+    expect(champs()).toHaveLength(21)
   })
 
   // CHANTIER 1 (MODE 1) — CE CLIQUET A CHANGÉ DE CAMP.
@@ -75,12 +78,13 @@ describe('DETTE 4 — `testimonials` dans CURRENT SITE STATE', () => {
     expect(contexte()).not.toMatch(/^ {4}services: site\.services,$/m)
   })
 
-  it('les 19 champs, dans le même ordre — faq et whyus après les témoignages', () => {
+  it('les 21 champs, dans le même ordre — area_served et price_range après whyus', () => {
     expect(champs()).toEqual([
       'name', 'slogan', 'type', 'about', 'hero_title', 'hero_subtitle',
       'primary_color', 'theme', 'cta', 'mode', 'dropship_type', 'sections',
       'testimonials',
       'faq', 'whyus',
+      'area_served', 'price_range',
       'social_links', 'contact', 'cj_margin_percent', 'lang',
     ])
   })

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isSupportedLanguage, SUPPORTED_LANGUAGE_CODES } from '@/lib/i18n/supportedLanguages';
+import { isSupportedPriceRange, PRICE_RANGE_VALUES } from '@/lib/site-profile/priceRange';
+import { validateAreaServed } from '@/lib/site-profile/areaServed';
 import {
   resolveFaqEntry,
   resolveWhyUsEntry,
@@ -84,6 +86,12 @@ const ALLOWED_FIELDS = new Set([
   'hero_subtitle',
   'cta',
   'type',
+  // CHANTIER 5 -- deux champs de profil, chacun borne dans le `case`
+  // correspondant. Leur presence ICI ne vaut PAS validation : `price_range`
+  // n'accepte que quatre valeurs, `area_served` est borne en longueur et en
+  // caracteres. L'allowlist dit QUELS champs sont ouverts, jamais AVEC QUOI.
+  'area_served',
+  'price_range',
 ]);
 
 const ALLOWED_CONTACT_FIELDS = new Set(['phone', 'email', 'address']);
@@ -162,6 +170,27 @@ export async function POST(
         // `lang: 'english'` ou `lang: 'de'` -- valeurs qu'aucun dictionnaire
         // ne sert, et qui rendraient le site en anglais de repli sans que
         // rien ne le signale. Le refus precede toute ecriture.
+        // CHANTIER 5 -- `price_range` : le contrat « $ | $$ | $$$ | $$$$ »
+        // n'existait que comme phrase du prompt de generation, jamais comme
+        // regle (zod dit `z.string()`). Il tenait par l'ABSENCE de tout
+        // chemin d'ecriture ; ouvrir l'agent supprime cette protection-la.
+        if (field === 'price_range' && !isSupportedPriceRange(value)) {
+          return NextResponse.json(
+            { error: `Gamme de prix invalide "${value}". Valeurs acceptees : ${PRICE_RANGE_VALUES.join(', ')}.` },
+            { status: 400 }
+          );
+        }
+        // CHANTIER 5 -- `area_served` : texte geographique libre, mais BORNE.
+        // La forme libre est necessaire a `geoNuance`, qui confronte cette
+        // valeur a des noms de lieux ; la borne ferme la porte au paragraphe
+        // injecte. On REFUSE, on ne tronque pas : une valeur silencieusement
+        // raccourcie ferait croire au marchand qu'il a ecrit sa demande.
+        if (field === 'area_served') {
+          const zone = validateAreaServed(value);
+          if (!zone.ok) return NextResponse.json({ error: zone.message }, { status: 400 });
+          updates.area_served = zone.value;
+          break;
+        }
         if (field === 'lang' && !isSupportedLanguage(value)) {
           return NextResponse.json(
             { error: `Unsupported language "${value}". Supported: ${SUPPORTED_LANGUAGE_CODES.join(', ')}` },

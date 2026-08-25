@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { logAiUsage } from '@/lib/ai-usage';
+import { sanitizeAreaServedForPrompt } from '@/lib/site-profile/areaServed';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -44,7 +45,26 @@ async function generateSocialImage(site: any, brief: any): Promise<string | null
       return "Les personnes représentées reflètent fidèlement la population locale de la zone desservie, avec une diversité naturelle et réaliste.";
     })();
 
-    const prompt = `Visuel premium pour un post de réseau social d'une marque nommée "${site.name}" (secteur : ${site.type || 'business'}), zone : ${site.area_served || 'locale'}. \
+    // ============================================================
+    // CHANTIER 5 -- POINT D'ENTREE 1 SUR 3 : LE PROMPT IMAGE.
+    //
+    // `area_served` est du texte controle par le marchand, interpole tel quel
+    // dans trois prompts LLM. La protection est posee ICI, au point d'entree,
+    // et non a l'ecriture -- parce qu'elle doit couvrir aussi les valeurs
+    // DEJA EN BASE, produites par le generateur avant ce chantier, qu'aucune
+    // borne n'a jamais filtrees. Valider a l'ecriture seule laisserait ces
+    // lignes historiques passer intactes dans les prompts.
+    //
+    // `geoNuance` ci-dessus lit VOLONTAIREMENT la valeur BRUTE : il ne
+    // l'interpole pas, il la classe (minuscules + expressions de noms de
+    // lieux) pour rendre une phrase fixe. Le nettoyer la n'apporterait
+    // aucune securite et sa troncature pourrait effacer le nom de lieu qui
+    // declenche la bonne branche -- ce serait perdre le comportement existant
+    // pour rien.
+    // ============================================================
+    const zonePrompt = sanitizeAreaServedForPrompt(site.area_served);
+
+    const prompt = `Visuel premium pour un post de réseau social d'une marque nommée "${site.name}" (secteur : ${site.type || 'business'}), zone : ${zonePrompt || 'locale'}. \
 ${sectorScene} \
 ${geoNuance} \
 Style photographique professionnel, esthétique éditoriale haut de gamme, lumière soignée et naturelle. \
@@ -125,7 +145,7 @@ DONNÉES DU BUSINESS :
 - Produits : ${JSON.stringify(site.products || [])}
 - Mission : ${site.mission || ''}
 - Vision : ${site.vision || ''}
-- Zone desservie : ${site.area_served || ''}
+- Zone desservie : ${sanitizeAreaServedForPrompt(site.area_served)}
 
 Réponds UNIQUEMENT en JSON (sans markdown), dans la MÊME LANGUE que les données :
 
@@ -158,7 +178,7 @@ tu parles à la persona, tu ancres dans la zone géographique réelle.
 BRIEF STRATÉGIQUE :
 ${JSON.stringify(brief)}
 
-BUSINESS : ${site.name || ''} — ${site.slogan || ''} | ${site.type || ''} | ${site.area_served || ''}
+BUSINESS : ${site.name || ''} — ${site.slogan || ''} | ${site.type || ''} | ${sanitizeAreaServedForPrompt(site.area_served)}
 
 Écris dans la MÊME LANGUE que le brief. Réponds UNIQUEMENT en JSON, sans markdown.
 Aucun placeholder type [Marque] : utilise le vrai nom. Pas de texte générique.`;
@@ -325,6 +345,11 @@ export async function POST(req: Request) {
     }
     // Couverture Pexels pour l'article (photo de stock, gratuite)
     if (format === 'article') {
+      // CHANTIER 5 -- QUATRIEME INTERPOLATION, VERIFIEE ET LAISSEE INTACTE.
+      // Ce n'est pas un prompt : la chaine part en parametre de recherche
+      // Pexels, et `fetchPexelsCover` l'encode par `encodeURIComponent`
+      // (l. 97). Rien a restructurer, donc rien a nettoyer -- la modifier
+      // serait elargir le perimetre sans motif mesure.
       const coverQuery = `${site.type || 'business'} ${site.area_served || ''}`.trim();
       const cover = await fetchPexelsCover(coverQuery, site.primary_color);
       if (cover) content.cover = cover;

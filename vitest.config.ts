@@ -137,6 +137,10 @@ export default defineConfig({
       // reellement servies. Prefixe absent : sans cette ligne son test
       // passe en isolation mais n'est JAMAIS collecte par `vitest run`.
       'src/lib/i18n/**/*.test.ts',
+      // CHANTIER 5 -- src/lib/site-profile/ porte la borne de `area_served`
+      // et l'allowlist de `price_range`. Prefixe absent : sans cette ligne,
+      // leurs tests passent en isolation mais ne sont JAMAIS collectes.
+      'src/lib/site-profile/**/*.test.ts',
       'src/lib/agent-tools/**/*.test.ts',
       'src/app/api/agent/**/*.test.ts',
       // CHANTIER 4 -- variante `.tsx` AJOUTEE. Le prefixe ci-dessus ne
