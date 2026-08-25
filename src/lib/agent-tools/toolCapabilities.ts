@@ -49,6 +49,11 @@ export const CONTENT_TOOLS = [
   'propose_testimonial_add',
   'propose_testimonial_remove',
   'propose_testimonial_update',
+  // CHANTIER 7 -- l'agent ne savait que RETIRER : `remove` et `clear`
+  // existaient, `add` non. La galerie ne pouvait que retrecir. L'outil
+  // rejoint la meme famille, donc les memes modes {1, 2} : AUCUNE frontiere
+  // n'est deplacee.
+  'propose_gallery_add',
   'propose_gallery_remove',
   'propose_gallery_clear',
   // CHANTIER 4 -- `faq` et `whyus` rejoignent le contenu editorial. Ils y

@@ -337,6 +337,23 @@ const allTools: Anthropic.Tool[] = [
     // modele ne contient AUCUNE galerie (`gallery` est absent des 16 champs de
     // CURRENT SITE STATE) : un index demande ici ne pouvait etre que devine, et
     // une devinette dans les bornes supprimait la mauvaise image sans erreur.
+    // CHANTIER 7 -- L'AJOUT MANQUAIT. `remove` et `clear` existaient depuis
+    // toujours ; la galerie ne pouvait que retrecir. Le modele n'INVENTE
+    // jamais une URL -- le prompt de generation l'interdit deja pour ce champ
+    // (`chat/route.ts:467`), et une URL inventee produirait une image morte
+    // sur le site du marchand.
+    name: 'propose_gallery_add',
+    description: "Propose to add ONE image to the gallery, using an exact image URL the merchant gave you. NEVER invent, guess or reconstruct a URL: if you do not have one from the merchant, ask for it. The URL must be a complete https:// address, copied character for character — URLs are case-sensitive. An image already present in the gallery is refused, because a duplicate could no longer be removed unambiguously.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        image_url: { type: 'string', description: 'The exact image URL given by the merchant. Do not shorten, re-encode or change its case.' },
+        reason: { type: 'string' },
+      },
+      required: ['image_url', 'reason'],
+    },
+  },
+  {
     name: 'propose_gallery_remove',
     description: 'Propose to remove ONE image from the gallery, identified by its exact URL. Use the URL the merchant gave you, character for character — URLs are case-sensitive. If the same URL appears several times in the gallery, the change is refused and you must ask the merchant which one they mean. To remove EVERY image instead, that is propose_gallery_clear.',
     input_schema: {

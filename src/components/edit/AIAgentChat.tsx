@@ -509,6 +509,9 @@ function ToolProposalCard({
       // DETTE 4 (gallery) -- l'URL, plus jamais un numero. La carte affichait
       // « Remove gallery image #2 » : le marchand approuvait une suppression
       // sans pouvoir verifier sur quoi elle portait.
+      // CHANTIER 7 -- sans ce cas, le marchand lisait le nom technique brut.
+      case 'propose_gallery_add':
+        return <>Add this image to the gallery: <strong className="text-[#FA5D1E]">{input.image_url}</strong></>;
       case 'propose_gallery_remove':
         return (
           <>

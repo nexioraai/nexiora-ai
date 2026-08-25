@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { galleryUrlOf, resolveGalleryImage, galleryResolutionMessage } from '../galleryResolution'
+import { galleryUrlOf, resolveGalleryImage, galleryResolutionMessage, validateGalleryUrl } from '../galleryResolution'
 
 // ============================================================
 // DETTE 4 (volet gallery) — LE MODÈLE NE DOIT JAMAIS INVENTER D'INDEX.
@@ -176,3 +176,98 @@ describe('galleryResolutionMessage — le modèle doit savoir quoi redemander', 
     expect(m.toLowerCase()).toContain('aucun changement')
   })
 })
+
+// ============================================================
+// CHANTIER 7 (MODE 1) — LA PORTE D'ÉCRITURE D'UNE IMAGE.
+//
+// Elle est PLUS STRICTE que `galleryUrlOf`, et c'est délibéré : ce dernier
+// LIT une donnée historique dont il ne choisit pas la forme ; celle-ci ÉCRIT,
+// et la forme est la nôtre. Les quatre thèmes ne rendent qu'une chaîne en
+// `http` — écrire autre chose réussirait sans rien afficher.
+// ============================================================
+describe('CHANTIER 7 — validateGalleryUrl', () => {
+  const REELLES = [
+    'https://images.pexels.com/photos/1234/sesame.jpeg',
+    'https://xyz.supabase.co/storage/v1/object/public/site-images/a.png',
+    'https://cdn.test/Photo-A.JPG?w=800&h=600',
+    'http://cdn.test/legacy.jpg',
+    'https://cdn.test/photo%20avec%20espace.jpg',
+    'https://cdn.test/الصورة.jpg',
+  ];
+
+  it('chaque URL d’image réelle est acceptée, telle quelle', () => {
+    for (const u of REELLES) {
+      const r = validateGalleryUrl(u);
+      expect(r.ok, u).toBe(true);
+      expect(r.ok && r.value).toBe(u);
+    }
+  });
+
+  it('http:// est accepté — la porte ne refuse pas ce que les thèmes rendent', () => {
+    // Les quatre thèmes testent `startsWith('http')`. Exiger https ici
+    // refuserait à l'agent une image que la page afficherait très bien.
+    expect(validateGalleryUrl('http://cdn.test/a.jpg').ok).toBe(true);
+  });
+
+  it('le trim de bord est appliqué, la CASSE est préservée', () => {
+    const r = validateGalleryUrl('   https://cdn.test/Photo-A.JPG   ');
+    expect(r.ok && r.value).toBe('https://cdn.test/Photo-A.JPG');
+  });
+
+  it('🔴 les schémas dangereux sont refusés par ALLOWLIST, pas par hasard', () => {
+    for (const u of [
+      'javascript:alert(1)',
+      'data:text/html,<script>alert(1)</script>',
+      'data:image/png;base64,iVBORw0KGgo=',
+      'file:///etc/passwd',
+      'ftp://cdn.test/a.jpg',
+      'vbscript:msgbox(1)',
+    ]) {
+      expect(validateGalleryUrl(u).ok, u).toBe(false);
+    }
+  });
+
+  it('🔴 un schéma qui COMMENCE par « http » sans en être un est refusé', () => {
+    // `startsWith('http')` — la règle des thèmes — laisserait passer ceci.
+    // L'allowlist de schémas, non.
+    for (const u of ['httpfoo://cdn.test/a.jpg', 'https-evil://x']) {
+      expect(validateGalleryUrl(u).ok, u).toBe(false);
+    }
+  });
+
+  it('🔴 ce qui n’est pas une URL complète est refusé', () => {
+    for (const u of ['photo.jpg', '/uploads/a.jpg', './a.jpg', '//cdn.test/a.jpg', 'cdn.test/a.jpg', '']) {
+      expect(validateGalleryUrl(u).ok, JSON.stringify(u)).toBe(false);
+    }
+  });
+
+  it('🔴 les non-chaînes sont refusées, jamais coercées', () => {
+    for (const v of [null, undefined, 42, true, {}, [], { url: 'https://a.test/b.jpg' }, ['https://a.test/b.jpg']]) {
+      expect(validateGalleryUrl(v).ok, String(v)).toBe(false);
+    }
+  });
+
+  it('chaque refus dit qu’AUCUN changement n’a eu lieu', () => {
+    for (const v of [null, '', 'photo.jpg', 'javascript:alert(1)']) {
+      const r = validateGalleryUrl(v);
+      expect(r.ok).toBe(false);
+      expect(!r.ok && r.message).toContain("Aucun changement n'a ete fait");
+    }
+  });
+
+  it('la porte d’écriture et la porte de lecture divergent VOLONTAIREMENT', () => {
+    // `galleryUrlOf` tolère `{ url }` pour lire l'historique ; l'écriture le
+    // refuse, parce qu'aucun thème ne le rendrait.
+    expect(galleryUrlOf({ url: 'https://a.test/b.jpg' })).toBe('https://a.test/b.jpg');
+    expect(validateGalleryUrl({ url: 'https://a.test/b.jpg' }).ok).toBe(false);
+  });
+
+  it('une URL validée est ensuite ADRESSABLE par le résolveur', () => {
+    // Le contrat de bout en bout : ce que l'ajout écrit, la suppression doit
+    // savoir le retrouver. Sinon l'image serait inretirable.
+    const r = validateGalleryUrl('  https://cdn.test/A.jpg  ');
+    expect(r.ok).toBe(true);
+    const galerie = [r.ok ? r.value : ''];
+    expect(resolveGalleryImage(galerie, 'https://cdn.test/A.jpg')).toEqual({ ok: true, index: 0 });
+  });
+});

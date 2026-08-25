@@ -18,7 +18,7 @@ import {
   sectionItemMessage,
 } from '@/lib/agent-tools/sectionItemResolution';
 import { resolveProductByName, resolutionMessage } from '@/lib/agent-tools/productResolution';
-import { resolveGalleryImage, galleryResolutionMessage } from '@/lib/agent-tools/galleryResolution';
+import { resolveGalleryImage, galleryResolutionMessage, validateGalleryUrl } from '@/lib/agent-tools/galleryResolution';
 
 /**
  * Ce que `/apply` lit reellement d'un produit de `shop_products` : son
@@ -48,6 +48,8 @@ const ALLOWED_TOOLS = new Set([
   'propose_product_add',
   'propose_product_remove',
   'propose_product_update',
+  // CHANTIER 7 -- l'ajout, seul verbe galerie qui manquait.
+  'propose_gallery_add',
   'propose_gallery_remove',
   'propose_gallery_clear',
   // CHANTIER 4 -- six outils, adresses par contenu, jamais par index.
@@ -548,6 +550,34 @@ export async function POST(
           );
         }
         updates.whyus = current.map((e, i) => (i === cible.index ? { ...e, [field]: v.value } : e));
+        break;
+      }
+      // ===== CHANTIER 7 -- AJOUT D'UNE IMAGE A LA GALERIE =====
+      //
+      // `tool_input` n'est jamais recopie : l'URL est extraite, validee, et
+      // c'est la valeur VALIDEE qui est ecrite -- jamais l'objet recu.
+      //
+      // LA FORME ECRITE EST UNE CHAINE, et c'est la mesure qui l'impose : les
+      // quatre themes filtrent `typeof u === 'string' && u.startsWith('http')`
+      // avant de rendre. Ecrire `{ url }` reussirait en base et n'afficherait
+      // rien -- une ecriture muette, exactement ce que le chantier 1 a corrige
+      // pour `services`.
+      case 'propose_gallery_add': {
+        const url = validateGalleryUrl(tool_input.image_url);
+        if (!url.ok) return NextResponse.json({ error: url.message }, { status: 400 });
+        const current = Array.isArray(site.gallery) ? site.gallery : [];
+        // REFUS DU DOUBLON. `propose_gallery_remove` refuse deja d'agir sur une
+        // URL presente deux fois -- il ne peut pas choisir a la place du
+        // marchand. Autoriser l'ajout d'un doublon fabriquerait donc une image
+        // que l'agent ne saurait plus jamais retirer. On refuse de creer
+        // l'impasse plutot que d'avoir a la denouer.
+        if (resolveGalleryImage(current, url.value).ok) {
+          return NextResponse.json(
+            { error: `Cette image est deja dans la galerie. Aucun changement n'a ete fait.` },
+            { status: 409 }
+          );
+        }
+        updates.gallery = [...current, url.value];
         break;
       }
       case 'propose_gallery_remove': {

@@ -118,9 +118,12 @@ describe('ÉTAPE 3 — invariants de forme', () => {
   // contenu éditorial, au même titre que les témoignages. Le nombre est mis à
   // jour, jamais l'assertion supprimée — c'est elle qui oblige à justifier
   // chaque outil supplémentaire.
-  it('32 outils au total — 26 du chantier catalogue, +6 pour faq et whyus', () => {
+  // CHANTIER 7 — 32 → 33. Un seul outil : `propose_gallery_add`. Le cliquet
+  // avance, il n'est pas supprimé — c'est lui qui oblige à justifier chaque
+  // outil supplémentaire, un par un.
+  it('33 outils au total — 26 du chantier catalogue, +6 faq/whyus, +1 ajout galerie', () => {
     const familles = [UNIVERSAL_TOOLS, CONTENT_TOOLS, MANUAL_PRODUCT_TOOLS, CATALOG_TOOLS, PROMO_TOOLS, INVENTORY_TOOLS, PRODUCT_FIELD_TOOLS];
-    expect(familles.flatMap((f) => [...f])).toHaveLength(32);
+    expect(familles.flatMap((f) => [...f])).toHaveLength(33);
   });
 
   it('la route ne décide plus : elle délègue', async () => {

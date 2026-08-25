@@ -105,3 +105,70 @@ export function galleryResolutionMessage(r: Extract<GalleryResolution, { ok: fal
   }
   return `${r.count} images de la galerie portent la meme URL "${r.query}". Aucun changement n'a ete fait : demande au marchand laquelle il vise avant de recommencer.`
 }
+
+// ============================================================
+// CHANTIER 7 (MODE 1) -- CE QU'UNE IMAGE AJOUTEE DOIT ETRE.
+//
+// LA MESURE QUI COMMANDE TOUT. Les QUATRE themes filtrent leur galerie de
+// la meme facon avant de rendre quoi que ce soit :
+//     (site.gallery || []).filter(u => typeof u === 'string'
+//                                   && u.length > 0
+//                                   && u.startsWith('http'))
+// (`VifTheme:32`, `NoirTheme:169`, `EditorialTheme:74`, `AuroraTheme:37`).
+//
+// Consequence directe : une entree qui n'est pas une CHAINE en `http` est
+// ecrite, stockee, et rendue par AUCUN theme. L'agent repondrait « c'est
+// fait », la base changerait, la page non. C'est exactement la classe de
+// defaut corrigee au chantier 1 pour `services` -- une ecriture qui reussit
+// sans que rien ne bouge. On refuse donc a l'ECRITURE ce qu'aucun theme ne
+// saurait afficher, plutot que de le decouvrir en production.
+//
+// POURQUOI CETTE PORTE EST PLUS STRICTE QUE `galleryUrlOf`. Ce dernier
+// tolere `{ url }` parce qu'il LIT une donnee historique dont il ne
+// choisit pas la forme. Ici on ECRIT : la forme est la notre, et c'est la
+// seule que les themes rendent. Meme asymetrie deliberee qu'aux chantiers 3
+// et 5 -- porte d'ecriture stricte, porte de lecture tolerante.
+//
+// ALLOWLIST DE SCHEMES, jamais `startsWith`. `'javascript:alert(1)'` et
+// `'data:text/html,...'` seraient refuses par les themes, mais s'appuyer sur
+// ce filtrage-la reviendrait a faire d'un detail de rendu une protection.
+// `new URL()` donne le schema reel, et seuls deux sont admis.
+// ============================================================
+
+const GALLERY_URL_SCHEMES = new Set<unknown>(['http:', 'https:']);
+
+export type GalleryUrlValidation =
+  | { ok: true; value: string }
+  | { ok: false; message: string };
+
+export function validateGalleryUrl(raw: unknown): GalleryUrlValidation {
+  if (typeof raw !== 'string') {
+    return {
+      ok: false,
+      message: "L'adresse de l'image doit etre du texte. Aucun changement n'a ete fait : demande au marchand l'URL exacte de son image.",
+    };
+  }
+  const value = raw.trim();
+  if (value === '') {
+    return {
+      ok: false,
+      message: "L'adresse de l'image ne peut pas etre vide. Aucun changement n'a ete fait.",
+    };
+  }
+  let scheme: string;
+  try {
+    scheme = new URL(value).protocol;
+  } catch {
+    return {
+      ok: false,
+      message: `"${value}" n'est pas une adresse d'image valide. Aucun changement n'a ete fait : il faut une URL complete commencant par https://`,
+    };
+  }
+  if (!GALLERY_URL_SCHEMES.has(scheme)) {
+    return {
+      ok: false,
+      message: `"${value}" n'est pas une adresse d'image utilisable (seules les adresses http:// et https:// le sont). Aucun changement n'a ete fait.`,
+    };
+  }
+  return { ok: true, value };
+}
