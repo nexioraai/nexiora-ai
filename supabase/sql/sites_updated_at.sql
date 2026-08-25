@@ -129,8 +129,30 @@ CREATE TRIGGER trg_sites_touch_updated_at
 -- l'identique, PLUS `updated_at` -- aucune colonne retiree, aucune ajoutee
 -- par ailleurs.
 -- ------------------------------------------------------------
+-- `security_invoker = false` -- IDENTIQUE A LA DEFINITION EXISTANTE, et ce
+-- n'est PAS un detail de style. Une premiere redaction de ce script portait
+-- `true` : verification avant execution, la difference aurait mis TOUTES LES
+-- VITRINES PUBLIQUES HORS LIGNE.
+--
+-- POURQUOI. `CREATE OR REPLACE VIEW` accepte de changer cette option. Avec
+-- `security_invoker = true`, la vue evalue la RLS de la table de base sous
+-- l'identite de L'APPELANT. Or `sites_public_view.sql` (etape 3/4) a resserre
+-- la policy SELECT de `sites` a la seule
+--   "Owners can read their own site" -> TO authenticated USING (owner_id = auth.uid())
+-- Il n'existe AUCUNE policy SELECT pour `anon`. La vitrine publique, servie
+-- par le client anon, aurait donc recu ZERO LIGNE sur chaque site.
+--
+-- Avec `false` (le comportement en place), la vue s'execute sous l'identite de
+-- SON PROPRIETAIRE et contourne donc la RLS de l'appelant -- c'est
+-- precisement sa raison d'etre. Le filtrage public est assure par son propre
+-- `WHERE published = true AND archived_at IS NULL`, juste en dessous.
+--
+-- Les 44 colonnes existantes sont reprises A L'IDENTIQUE ET DANS LE MEME
+-- ORDRE : PostgreSQL refuse toute omission ou reordonnancement dans un
+-- `CREATE OR REPLACE VIEW`, et n'autorise que l'ajout en fin. `updated_at`
+-- est donc la 45e, en derniere position.
 CREATE OR REPLACE VIEW public.sites_public
-WITH (security_invoker = true)
+WITH (security_invoker = false)
 AS SELECT
   id, slug, name, slogan, type, mode, custom_domain, primary_color,
   hero_title, hero_subtitle, about, services, testimonials, gallery,

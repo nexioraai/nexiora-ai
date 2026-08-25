@@ -177,6 +177,49 @@ describe('DEBT-034 — 🔒 la migration preparee dit ce qu’elle fait', () => 
     expect(SQL).not.toMatch(/SET updated_at = now\(\)/);
   });
 
+  // ------------------------------------------------------------
+  // LA RECREATION DE LA VUE EST LE POINT LE PLUS RISQUE DU SCRIPT.
+  //
+  // `CREATE OR REPLACE VIEW` peut changer `security_invoker`, et une premiere
+  // redaction de cette migration portait `true` la ou la vue en place porte
+  // `false`. La difference n'est pas cosmetique : avec `true`, la vue evalue
+  // la RLS de `sites` sous l'identite de L'APPELANT, or la seule policy SELECT
+  // de cette table est `TO authenticated USING (owner_id = auth.uid())` --
+  // aucune pour `anon`. La vitrine publique, servie par le client anon, aurait
+  // recu ZERO LIGNE sur chaque site. Le defaut a ete vu avant execution ; ce
+  // cliquet existe pour qu'il ne puisse pas revenir.
+  // ------------------------------------------------------------
+  const VUE_EN_PLACE = readFileSync(
+    join(__dirname, '../../../../../..', 'supabase/sql/sites_public_view.sql'), 'utf-8'
+  );
+
+  /** (security_invoker, colonnes) d'une definition de `sites_public`. */
+  function definitionVue(sql: string): [string, string[]] {
+    const m = sql.match(
+      /CREATE OR REPLACE VIEW public\.sites_public\s*\n?WITH \(security_invoker = (\w+)\)\s*\n?AS\s*\n?SELECT([\s\S]*?)FROM public\.sites/
+    );
+    expect(m, 'definition de sites_public introuvable — extraction a revoir').toBeTruthy();
+    return [m![1], m![2].replace(/\n/g, ' ').split(',').map((c) => c.trim()).filter(Boolean)];
+  }
+
+  it('🔴 `security_invoker` est IDENTIQUE a la vue en place', () => {
+    const [enPlace] = definitionVue(VUE_EN_PLACE);
+    const [migration] = definitionVue(SQL);
+    expect(migration, 'changer security_invoker mettrait toutes les vitrines hors ligne')
+      .toBe(enPlace);
+    expect(migration, 'la vue doit contourner la RLS de l’appelant').toBe('false');
+  });
+
+  it('🔴 les colonnes existantes sont reprises A L’IDENTIQUE et dans le MEME ORDRE', () => {
+    // PostgreSQL refuse toute omission ou reordonnancement dans un
+    // `CREATE OR REPLACE VIEW` : le script echouerait. Mais une colonne
+    // silencieusement retiree de la vitrine serait pire qu'une erreur.
+    const [, enPlace] = definitionVue(VUE_EN_PLACE);
+    const [, migration] = definitionVue(SQL);
+    expect(migration.slice(0, enPlace.length)).toEqual(enPlace);
+    expect(migration.slice(enPlace.length), 'ajout en fin uniquement').toEqual(['updated_at']);
+  });
+
   it('la vue publique expose la colonne — sinon la vitrine ne la verrait jamais', () => {
     // `fetchSite` interroge `sites_public` en `select('*')` : une colonne
     // absente de la vue reste invisible meme si elle existe sur la table.
