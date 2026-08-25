@@ -98,6 +98,7 @@ export default function AuroraTheme({ site }: { site: Site }) {
             {!hidden('About') && <a href="#about" className="hover:text-neutral-900 transition-colors">{t.nav.about}</a>}
             {isShop && <a href="#shop" className="hover:text-neutral-900 transition-colors">{t.nav.shop}</a>}
             {testimonials.length > 0 && !hidden('Reviews') && <a href="#testimonials" className="hover:text-neutral-900 transition-colors">{t.nav.reviews}</a>}
+            {site.faq && site.faq.length > 0 && !hidden('FAQ') && <a href="#faq" className="hover:text-neutral-900 transition-colors">{t.nav.faq}</a>}
             {!hidden('Contact') && <a href="#contact" className="hover:text-neutral-900 transition-colors">{t.nav.contact}</a>}
           </nav>
           <a
@@ -264,6 +265,43 @@ export default function AuroraTheme({ site }: { site: Site }) {
             </div>
           </section>
         ))}
+
+        {/* FAQ
+            CHANTIER 2 (MODE 1) -- la FAQ etait rendue par le seul theme
+            Editorial, alors que `JsonLd` emet `FAQPage` pour les QUATRE
+            themes et que `llms.txt` la publie. Mesure sur
+            yiaglobalcommodities.com (theme Vif) : six questions completes
+            servies a Google et aux crawlers LLM, et AUCUNE section FAQ dans
+            le HTML. Les regles Google Rich Results exigent que le contenu
+            balise soit visible sur la page.
+            Meme motif qu'Editorial : accordeon <details> autonome, aucune
+            dependance ajoutee. Place entre les avis et le contact, comme
+            chez Editorial. */}
+        {site.faq && site.faq.length > 0 && !hidden('FAQ') && (
+          <section id="faq" className="py-20 md:py-28">
+            <div className="max-w-3xl mx-auto px-6">
+              <div className="text-center mb-12">
+                <div className="text-xs font-medium tracking-[0.2em] uppercase mb-3" style={{ color: primary }}>
+                  {t.sections.faqKicker}
+                </div>
+                <h2 className="text-3xl md:text-4xl font-semibold leading-tight text-neutral-900">
+                  {t.sections.faqTitle}
+                </h2>
+              </div>
+              <div className="space-y-3">
+                {site.faq.map((item, i) => (
+                  <details key={i} className="group rounded-2xl bg-white border border-neutral-200 p-5 md:p-6">
+                    <summary className="cursor-pointer list-none font-medium flex justify-between items-center text-neutral-900">
+                      {item.question}
+                      <span className="ml-4 transition-transform group-open:rotate-45" style={{ color: primary }}>+</span>
+                    </summary>
+                    <p className="mt-3 text-neutral-600 leading-relaxed">{item.answer}</p>
+                  </details>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* CONTACT */}
         {!hidden('Contact') && (

@@ -126,6 +126,7 @@ export default function EditorialTheme({ site }: { site: Site }) {
             {(site.pages || []).filter((p: any) => p && p.title).map((page: any, pi: number) => (
               <a key={`navpage-${pi}`} href={`#page-${pi}`} className="hover:text-black transition-colors">{page.title}</a>
             ))}
+            {site.faq && site.faq.length > 0 && !hidden('FAQ') && <a href="#faq" className="hover:text-black transition-colors">{t.nav.faq}</a>}
             {!hidden('Contact') && <a href="#contact" className="hover:text-black transition-colors">{t.nav.contact}</a>}
           </nav>
         </div>
@@ -453,7 +454,13 @@ export default function EditorialTheme({ site }: { site: Site }) {
         </section>
       )}
 
-      {site.faq && site.faq.length > 0 && (
+      {/* CHANTIER 2 -- `!hidden('FAQ')` AJOUTE ICI, et c'est une necessite
+          mesuree, pas une occasion. `Navbar:221` propose deja « FAQ » parmi
+          les sections masquables ; ce theme ignorait le reglage, si bien que
+          le marchand pouvait masquer sa FAQ sans effet. Rendre la FAQ dans
+          les trois autres themes AVEC la garde et la laisser sans garde ici
+          aurait fige l'incoherence a l'echelle du produit. */}
+      {site.faq && site.faq.length > 0 && !hidden('FAQ') && (
         <section id="faq" className="reveal py-28 md:py-36 bg-neutral-50">
           <div className="max-w-3xl mx-auto px-6 md:px-10">
             <div className="text-center mb-16">
