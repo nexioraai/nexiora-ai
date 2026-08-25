@@ -44,7 +44,7 @@ conformes, chemins de lecture/écriture corrects, rendu public juste.
 | M2-03 | 🟢 | Le pied du panier est à moitié traduit | **RÉSOLU** |
 | M2-04 | 🟢 | `PromoBanner` : langue **et devise** en dur | **RÉSOLU** |
 | M2-05 | 🟢 | Le test de la fiche produit masque M2-01 | **RÉSOLU** `d2244ea` |
-| M2-06 | 🟡 | `shipping_flat` : borne unique, bypassable **et non testée** | à traiter (critère de fermeture) |
+| M2-06 | 🟡 | `shipping_flat` : borne **testée** ; vecteur PostgREST direct restant | **BORNE FERMÉE** — reste 🟡 non bloquant (DDL indisponible) |
 | M2-07 | 🟡 | 1,1 s de latence par checkout Mode 2, quota fournisseur inutilisé | à traiter (critère de fermeture) |
 | M2-08 | ⚪ | `buildSupplierGroups` interrogé sur le chemin Mode 2 | lié à M2-07 |
 | M2-09 | 🟡 | `consume_promo_code` sans script versionné | à traiter (critère de fermeture) |
@@ -103,7 +103,7 @@ aiguillage du fulfillment sur `fulfillment_domain`, jamais `sites.mode`.
 - [x] Aucun test ne valide une composition inexistante en production *(M2-05)*
 - [x] La guidance transmise au modèle est cohérente avec ses outils *(M2-02)*
 - [x] Aucune surface publique Mode 2 n'affiche texte ou devise en dur *(M2-03, M2-04)*
-- [ ] Toute borne sur un paramètre commercial est **testée** *(M2-06)*
+- [x] Toute borne sur un paramètre commercial est **testée** *(M2-06)*
 - [ ] Le chemin de paiement Mode 2 n'exécute aucune logique fournisseur *(M2-07, M2-08)*
 - [ ] Toute RPC atteinte par un chemin Mode 2 a un script versionné *(M2-09)*
 - [ ] Aucun défaut 🔴/🟠 non traité
