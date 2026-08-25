@@ -92,11 +92,34 @@ export default async function ProductPage({ params }: Props) {
     <>
       {/* M1-01 : serialisation echappee, point d'entree unique. */}
       <JsonLdScript data={jsonLd} />
+      {/* ============================================================
+          M2-01 -- `products` MANQUAIT, ET LA PAGE LEVAIT UNE EXCEPTION.
+          Ce montage etait le seul des trois a ne pas transmettre `products`.
+          `CartShell` calcule sa propre verite par `getModeCapabilities`, et
+          pour un Mode 2 sans `products` la reponse est `hasShop = false` :
+          `CartProvider` n'etait donc pas monte, et `AddToCartButton` --
+          rendu des que `forSale` -- appelait `useCart()`, qui LEVE. La fiche
+          produit d'une boutique Mode 2 renvoyait 500, sur un chemin atteint
+          par chaque carte produit de la vitrine ET annonce par les deux
+          sitemaps.
+          Le Mode 3 y echappait par `CATALOG_BEFORE_OWN_PRODUCTS` (hasShop
+          vrai sans produit) et le Mode 1 n'a pas de fiche produit : le trou
+          etait exactement, et seulement, celui du Mode 2.
+
+          POURQUOI `[product]` EST LA VALEUR JUSTE, et non un contournement.
+          `hasShop` demande « ce site a-t-il au moins un produit ? ».
+          `fetchProduct` filtre par `site_id` sur ses deux branches : rendre
+          cette page PROUVE que le site en possede un -- celui qu'on affiche,
+          et qu'on s'apprete a rendre achetable. Aucune frontiere n'est
+          deplacee : `canTransact` reste seul juge de l'admission, et un Mode 1
+          n'atteint jamais cette page (404 de `fetchProduct`).
+          ============================================================ */}
       <CartShell
         primary={product.primary}
         labels={labels}
         slug={product.siteSlug}
         mode={product.mode}
+        products={[product]}
         shippingFlat={product.shippingFlat ?? undefined}
         variant={product.theme === 'noir' ? 'dark' : 'light'}
       >
