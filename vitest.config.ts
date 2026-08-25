@@ -125,10 +125,24 @@ export default defineConfig({
       'src/lib/order-domain/**/*.test.ts',
       // M2-07/M2-08 -- `src/lib/mode2/` n'etait PAS collecte : un test y aurait
       // passe en isolation sans jamais entrer dans `vitest run`. C'est le piege
-      // que ce fichier documente deja pour `commerce-admission`. Le domaine
-      // Mode 3 (`src/lib/mode3/`) porte le meme manque, latent : il n'a aucun
-      // test aujourd'hui. Consigne, hors perimetre Mode 2.
+      // que ce fichier documente deja pour `commerce-admission`.
       'src/lib/mode2/**/*.test.ts',
+      // LOT 0 (Mode 3) -- meme manque, ferme ici avant tout audit de sous-mode.
+      //
+      // MESURE DU 2026-08-25 : le manque etait LATENT, pas actif. Les 181
+      // fichiers de test presents sur disque etaient tous collectes ; aucun
+      // test n'etait perdu. Mais `src/lib/mode3/` porte les quatre modules du
+      // domaine fournisseur (`checkoutPolicy`, `catalogStock`,
+      // `supplierShipping`, `cancelSupplierOrder`) et n'avait AUCUN test :
+      // le premier qu'on y aurait ecrit serait passe en isolation sans jamais
+      // entrer dans `vitest run`. Un audit ne peut rien verrouiller dans un
+      // repertoire qu'il ne peut pas exercer en CI -- d'ou ce prealable.
+      //
+      // PORTEE VOLONTAIREMENT ETROITE. La meme mesure a recense 37 repertoires
+      // source dans le meme cas (UI, pages, `src/lib/email`, `src/lib/supabase`,
+      // `src/lib/translations`...). Les elargir tous serait un chantier de
+      // couverture, pas un prealable d'audit : consigne, non traite ici.
+      'src/lib/mode3/**/*.test.ts',
       // ETAPE 7 du chantier catalogue canonique -- DEUX prefixes ajoutes, tous
       // deux absents jusqu'ici :
       //   * src/lib/agent-tools/ porte la resolution nom -> produit (N7) ;

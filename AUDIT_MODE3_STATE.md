@@ -253,7 +253,7 @@ sous-type.**
 | **M3-02** | 🟠 | Trois couches en désaccord sur « ce site peut-il avoir des sélections catalogue ? » |
 | **M3-03** | 🟡 | `dropship_type = NULL` sur **3 sites Mode 3 sur 8** : reseller pour 2 couches, rien pour 2 autres |
 | **M3-04** | 🟡 | Repli `default → ['cj']` permissif, et un test en dépend |
-| **M3-05** | 🟠 | `src/lib/mode3/**` : **0 test, non collecté** par vitest |
+| **M3-05** | 🟢 | `src/lib/mode3/**` : non collecté — **FERMÉ au LOT 0** |
 | **M3-06** | ⚪ | `admin/stats` `|| 'reseller'` — reporting seul |
 
 Détail complet et preuves : `KNOWN_ISSUES.md`, `DEBT-048` → `DEBT-053`.
@@ -275,7 +275,16 @@ pod_brand ajouté à `CATALOG_SUBTYPES` · `CATALOG_SUBTYPES` vidé · reseller 
 les fournisseurs POD · pod_brand reçoit CJ · repli rendu permissif · repli rendu
 fail-closed. **Les deux autorités de sous-mode sont solidement verrouillées.**
 
-## Ordre d'audit recommandé — CONTESTÉ
+## Progression des lots
+
+| Lot | Objet | Statut |
+|---|---|---|
+| **0** | Collecte de `src/lib/mode3/**` | ✅ **TERMINÉ** — manque latent fermé, prouvé par sonde |
+| 1 | Socle transversal (DEBT-050, DEBT-051, autorités de sous-mode) | à faire |
+| 2 | Frontières internes (DEBT-048, DEBT-049) | à faire |
+| 3 | POD_BRAND · 4 RESELLER · 5 POD_CUSTOM · 6 transversal final | à faire |
+
+## Ordre d'audit — VALIDÉ
 
 Voir le rapport de phase : l'ordre `reseller → pod_brand → pod_custom` est
 **écarté** au profit d'un **socle transversal d'abord**.
