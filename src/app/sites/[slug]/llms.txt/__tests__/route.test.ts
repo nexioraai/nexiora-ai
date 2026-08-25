@@ -254,3 +254,53 @@ describe('CHANTIER 8 — INVARIANTS MODE 1', () => {
     }
   });
 });
+
+// ============================================================
+// DEBT-035 (MODE 1) — LA GAMME DE PRIX ETAIT PUBLIEE D'UN SEUL COTE.
+//
+// Le chantier 5 a rendu `area_served` ET `price_range` editables ENSEMBLE.
+// `JsonLd.tsx` emet les deux (`areaServed`, `priceRange`) ; ce fichier ne
+// publiait que le premier. Deux surfaces GEO, deux descriptions differentes
+// du meme site.
+// ============================================================
+describe('DEBT-035 — `price_range` est publie, comme `area_served`', () => {
+  it('🔴 la gamme de prix apparaît, sous son intitulé traduit', async () => {
+    for (const [lang, intitule] of [
+      ['fr', 'Gamme de prix'], ['en', 'Price range'],
+      ['es', 'Rango de precios'], ['ar', 'نطاق الأسعار'],
+    ] as const) {
+      siteRow = { ...siteRow, lang, price_range: '$$' };
+      const t = await corps();
+      expect(t, `${lang} / intitulé`).toContain('## ' + intitule);
+      expect(t, `${lang} / valeur`).toContain('$$');
+    }
+  });
+
+  it('les deux champs du chantier 5 sont publiés ENSEMBLE', async () => {
+    // C'est l'asymétrie même que cette dette corrige : l'un sans l'autre.
+    siteRow = { ...siteRow, lang: 'fr', area_served: 'Montréal', price_range: '$$$' };
+    const t = await corps();
+    expect(t).toContain('## Zone desservie');
+    expect(t).toContain('Montréal');
+    expect(t).toContain('## Gamme de prix');
+    expect(t).toContain('$$$');
+  });
+
+  it('un site sans gamme de prix ne produit aucun titre orphelin', async () => {
+    siteRow = { ...siteRow, lang: 'fr', price_range: undefined };
+    expect(await corps()).not.toContain('Gamme de prix');
+  });
+
+  it('🔴 INVARIANT MODE 1 — publier la gamme n’introduit aucun vocabulaire commercial', async () => {
+    // La valeur est bornée aux quatre symboles par `isSupportedPriceRange`,
+    // qui garde déjà le chemin d'écriture de l'agent : c'est un signal de
+    // positionnement, jamais un prix ni un chemin d'achat.
+    for (const lang of ['en', 'fr', 'es', 'ar']) {
+      siteRow = { ...siteRow, lang, mode: 1, products: [], price_range: '$$$$' };
+      const t = await corps();
+      for (const interdit of ['panier', 'checkout', '/produits/', 'Add to cart', 'Carrito', 'سلة']) {
+        expect(t, `${lang} / ${interdit}`).not.toContain(interdit);
+      }
+    }
+  });
+});

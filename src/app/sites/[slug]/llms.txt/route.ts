@@ -139,6 +139,24 @@ export async function GET(
     lines.push('')
   }
 
+  // DEBT-035 -- LA GAMME DE PRIX ETAIT PUBLIEE D'UN SEUL COTE.
+  //
+  // `JsonLd.tsx` l'emet en `priceRange` depuis le chantier 5 ; ce fichier ne
+  // la publiait pas. Deux surfaces GEO, deux descriptions differentes du meme
+  // site -- alors que le chantier 5 a rendu `area_served` ET `price_range`
+  // editables ENSEMBLE, et que le bloc juste au-dessus publie le premier.
+  //
+  // AUCUN VOCABULAIRE COMMERCIAL N'ENTRE ICI : la valeur est bornee aux
+  // quatre symboles `$`/`$$`/`$$$`/`$$$$` par `isSupportedPriceRange`, qui
+  // garde deja le chemin d'ecriture de l'agent. C'est un signal de
+  // positionnement, pas un prix -- un annuaire local en publie un, une
+  // vitrine aussi.
+  if (site.price_range) {
+    lines.push('## ' + t.priceRange)
+    lines.push(site.price_range)
+    lines.push('')
+  }
+
   const phone = site.contact?.phone
   const email = site.contact?.email
   const address = site.contact?.address

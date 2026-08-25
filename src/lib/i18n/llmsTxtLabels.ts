@@ -34,6 +34,12 @@ export type LlmsTxtLabels = {
   whyUs: string;
   faq: string;
   areaServed: string;
+  /**
+   * DEBT-035 -- `price_range` etait emis en JSON-LD (`priceRange`) et ABSENT
+   * de ce fichier. Le chantier 5 a rendu les deux champs de profil editables
+   * ensemble et n'en a publie qu'un dans le fichier destine aux crawlers LLM.
+   */
+  priceRange: string;
   contact: string;
   phone: string;
   email: string;
@@ -52,6 +58,7 @@ const en: LlmsTxtLabels = {
   whyUs: 'Why choose us',
   faq: 'Frequently asked questions',
   areaServed: 'Area served',
+  priceRange: 'Price range',
   contact: 'Contact',
   phone: 'Phone',
   email: 'Email',
@@ -70,6 +77,7 @@ const fr: LlmsTxtLabels = {
   whyUs: 'Pourquoi nous choisir',
   faq: 'Questions fréquentes',
   areaServed: 'Zone desservie',
+  priceRange: 'Gamme de prix',
   contact: 'Contact',
   phone: 'Téléphone',
   email: 'Email',
@@ -88,6 +96,7 @@ const es: LlmsTxtLabels = {
   whyUs: 'Por qué elegirnos',
   faq: 'Preguntas frecuentes',
   areaServed: 'Zona de servicio',
+  priceRange: 'Rango de precios',
   contact: 'Contacto',
   phone: 'Teléfono',
   email: 'Correo electrónico',
@@ -106,6 +115,7 @@ const ar: LlmsTxtLabels = {
   whyUs: 'لماذا تختارنا',
   faq: 'الأسئلة الشائعة',
   areaServed: 'منطقة الخدمة',
+  priceRange: 'نطاق الأسعار',
   contact: 'اتصل بنا',
   phone: 'الهاتف',
   email: 'البريد الإلكتروني',

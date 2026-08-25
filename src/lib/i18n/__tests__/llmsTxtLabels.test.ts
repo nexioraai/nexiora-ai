@@ -42,7 +42,7 @@ describe('CHANTIER 8 — 🔒 CLIQUET : les trois dictionnaires couvrent le MÊM
 
 describe('CHANTIER 8 — llms.txt : chaque langue est réellement traduite', () => {
   for (const code of SUPPORTED_LANGUAGE_CODES) {
-    it(`« ${code} » : les 15 intitulés existent et ne sont pas vides`, () => {
+    it(`« ${code} » : les 16 intitulés existent et ne sont pas vides`, () => {
       const t = getLlmsTxtLabels(code);
       for (const cle of CLES) {
         expect(typeof t[cle], `${code}.${cle}`).toBe('string');
