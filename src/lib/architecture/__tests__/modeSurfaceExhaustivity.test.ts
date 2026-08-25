@@ -119,6 +119,7 @@ const LECTEURS_TRANSITIFS: Record<string, string> = {
   'src/app/api/shop/shipping/route.ts': 'idem — canTransact() décide, la route transmet.',
   'src/app/api/shop/upload-design/route.ts': 'idem — canTransact() décide, la route transmet.',
   'src/lib/auth/require-product-owner.ts': 'idem — canTransact() décide, la primitive transmet.',
+  'src/app/api/agent/[slug]/apply/route.ts': 'fermeture Mode 1 volet 1 — lit `mode` et `dropship_type` pour les passer à toolNamesForSite() ; aucune comparaison de mode, la décision reste dans toolCapabilities.',
   'src/app/sites/[slug]/produits/[id]/fetchProduct.ts': 'recopie `mode` dans l’objet de page ; aucune branche.',
   'src/app/sites/[slug]/produits/[id]/page.tsx': 'passe `mode` en prop à CartShell ; aucune branche.',
   'src/app/sites/[slug]/themes/CartShell.tsx': 'passe `mode` à getModeCapabilities() et à CartDrawer ; la décision est ailleurs (étape A).',

@@ -18,6 +18,7 @@ import {
   sectionItemMessage,
 } from '@/lib/agent-tools/sectionItemResolution';
 import { resolveProductByName, resolutionMessage } from '@/lib/agent-tools/productResolution';
+import { toolNamesForSite } from '@/lib/agent-tools/toolCapabilities';
 import { resolveGalleryImage, galleryResolutionMessage, validateGalleryUrl } from '@/lib/agent-tools/galleryResolution';
 
 /**
@@ -154,6 +155,52 @@ export async function POST(
       return NextResponse.json(
         { error: `Tool "${tool_name}" is not allowed` },
         { status: 400 }
+      );
+    }
+
+    // ============================================================
+    // FERMETURE MODE 1, VOLET 1 -- LA FRONTIERE DE MODE S'APPLIQUE ENFIN A
+    // L'ECRITURE.
+    //
+    // LE DEFAUT CORRIGE (DEBT-030 / rapport M1-01), mesure par test
+    // adversarial sur un site `mode: 1, products: [], dropship_type: null`.
+    // `toolNamesForSite` gardait la PROPOSITION des outils (chat/route.ts) ;
+    // l'APPLICATION n'avait aucun equivalent. `ALLOWED_TOOLS` est PLATE :
+    // elle dit quels outils EXISTENT dans le produit, jamais lesquels sont
+    // permis A CE SITE. Une vitrine obtenait donc 200 sur `create_promo_code`,
+    // `catalog_set_margin` et `catalog_approve_all`.
+    //
+    // POURQUOI CE DEFAUT A SURVECU A HUIT CHANTIERS. Les autres outils
+    // commerciaux sont proteges INDIRECTEMENT : `catalog_curate` et
+    // `catalog_enhance` relaient vers des routes gardees par
+    // `hasSupplierCatalog` (chantier 6) ; `set_price`, `set_currency`,
+    // `set_for_sale` et `count_product_stock` relaient vers
+    // `requireProductOwner` (+ `canTransact`). Cette protection empruntee a
+    // masque l'absence totale de protection des QUATRE ECRIVAINS DIRECTS --
+    // ceux qui appellent `supabaseAdmin` sans route metier intermediaire. La
+    // distinction relais / ecriture directe n'avait jamais ete faite.
+    //
+    // MEME AUTORITE QUE LA PROPOSITION, DELIBEREMENT. Ecrire ici une seconde
+    // regle « quel outil pour quel mode » recreerait exactement la divergence
+    // que l'etape 3 a defaite en extrayant `toolCapabilities`. Les deux
+    // surfaces posent la meme question : elles doivent la poser au meme
+    // module, sans quoi elles rederiveront.
+    //
+    // 403 ET NON 400. L'outil EXISTE, il n'est simplement pas permis a ce
+    // site ; le 400 ci-dessus garde son sens propre -- outil inconnu du
+    // produit. `ALLOWED_TOOLS` devient une defense en profondeur, elle n'est
+    // plus l'autorite.
+    //
+    // LA ROUTE NE DECIDE PAS, ELLE TRANSMET. `site.mode` est lu puis passe ;
+    // aucune comparaison de mode n'est ecrite ici. Meme patron que
+    // `shop/products/route.ts` et `require-product-owner.ts` -- d'ou
+    // l'inscription dans LECTEURS_TRANSITIFS du cliquet d'exhaustivite, et
+    // jamais dans un domaine.
+    // ============================================================
+    if (!toolNamesForSite(site.mode, site.dropship_type).includes(tool_name)) {
+      return NextResponse.json(
+        { error: `Tool "${tool_name}" is not available for this site` },
+        { status: 403 }
       );
     }
 

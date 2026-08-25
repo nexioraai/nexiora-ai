@@ -65,14 +65,19 @@ chose que le module affirme à son sujet.
 
 ## 5. ÉTAPE EN COURS
 
-**Aucune.** Plan gelé exécuté, audit général profond livré.
+**Chantier de fermeture Mode 1 — volet 1/3 TERMINÉ**, volets 2 et 3 restants.
+
+| Volet | Statut | Preuve |
+|---|---|---|
+| 1 — garde de mode à l'écriture (`/apply`) | **VALIDÉ** | `modeFrontier.test.ts`, 30 tests ; suite complète 171 fichiers / **2762 tests**, 0 échec ; `tsc` clean |
+| 2 — `PromoBanner` + routes promo | à faire | ferme DEBT-031 |
+| 3 — propriété reliant les deux allowlists | à faire | ferme DEBT-032 |
 
 ## 6. PROCHAINE ÉTAPE
 
-**Chantier de fermeture Mode 1 — trois volets indissociables**, qui ferment
-DEBT-030 et DEBT-031 :
+**Volet 2**, puis **volet 3** :
 
-1. Garde de mode en tête de `POST /api/agent/[slug]/apply`, via `toolNamesForSite` → 403.
+1. ~~Garde de mode en tête de `POST /api/agent/[slug]/apply`~~ — **FAIT**, DEBT-030 fermé.
 2. `PromoBanner` conditionné à `canTransact(site.mode)` + garde de mode dans
    `promo/active` et `promo/validate`.
 3. Propriété exécutable : *pour tout mode m, `/apply` refuse tout outil absent de
@@ -90,7 +95,7 @@ d'un rapport antérieur. Détail complet et preuves dans `KNOWN_ISSUES.md`.
 
 | Réf. rapport | Registre | Niveau | Résumé |
 |---|---|---|---|
-| M1-01 | DEBT-030 | 🔴 | `/apply` n'applique **aucune** frontière de mode — 4 outils commerciaux acceptés sur une vitrine, 3 écrivant en base direct. **Prouvé 4/4** |
+| M1-01 | DEBT-030 | ✅ **FERMÉ** | `/apply` n'appliquait **aucune** frontière de mode — 4 outils commerciaux acceptés sur une vitrine. Corrigé au volet 1 |
 | M1-02 | DEBT-031 | 🔴 | `PromoBanner` monté sans condition de mode + routes promo publiques sans garde → bannière commerciale sur une vitrine |
 | M1-03 | DEBT-033 | 🟠 | Contexte agent lit `site.phone` / `site.contact_email`, **colonnes inexistantes**. **Prouvé 3/3** |
 | M1-04 | DEBT-034 | 🟠 | `sites.updated_at` n'existe pas → fraîcheur SEO/GEO gelée sur trois surfaces |
@@ -159,7 +164,32 @@ Mode 1 est fermé quand, et seulement quand, il est **démontré** que :
 - [x] son rendu est cohérent *(quatre thèmes, quatre langues)* ;
 - [ ] **il ne possède plus aucun défaut 🔴/🟠 non traité** → DEBT-030, 031, 033, 034.
 
-**STATUT AU 2026-08-25 : NON FERMÉ.** Deux critères sont violés, et démontrés.
+**STATUT : NON FERMÉ.** Le critère « ne peut pas les activer indirectement » est
+fermé côté applicatif depuis le volet 1 (DEBT-030), **sous la réserve du §10.1** :
+le vecteur PostgREST direct sur `promo_codes` reste non prouvé. Le critère
+« n'affiche aucune capacité commerciale interdite » reste ouvert (DEBT-031).
+
+---
+
+## 14. DÉCOUVERTE DU VOLET 1 — un test documentait le défaut
+
+`faqWhyUsTools.test.tsx` contenait **deux assertions contradictoires** :
+« le Mode 2 reçoit les six outils, **le Mode 3 ne les reçoit pas** » (l. 324) et
+« les Modes 2 **et 3** empruntent le même chemin d'écriture », qui exigeait un
+**200 sur un site Mode 3** (l. 340). Les deux ne coexistaient que parce que
+`/apply` ignorait le mode : le 200 ne mesurait pas un chemin partagé, il mesurait
+le trou.
+
+**Conséquence hors Mode 1, assumée et dite** — un site Mode 3 émettant une requête
+`/apply` forgée sur `propose_faq_*` / `propose_whyus_*` reçoit désormais **403** au
+lieu de 200. Ce n'est atteignable ni par l'agent (`toolNamesForSite` ne lui propose
+pas ces outils) ni par l'éditeur (le formulaire y existe pour tous les modes et
+n'emprunte pas `/apply`). Le chantier 4 n'est **pas invalidé** : c'est son contrat
+déclaré qui est appliqué au lieu d'être seulement écrit. L'intention d'origine du
+test est conservée et mieux prouvée — l'absence de branche de mode est vérifiée sur
+les deux modes que la famille admet (1 et 2), par égalité stricte des écritures.
+
+**Classification : B** — nécessaire à une étape déjà prévue (le volet 1 lui-même).
 
 ---
 

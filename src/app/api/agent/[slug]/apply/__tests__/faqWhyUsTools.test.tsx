@@ -337,14 +337,46 @@ describe('CHANTIER 4 — INVARIANTS MODE 1', () => {
     expect(siteRow.mode).toBe(1);
   });
 
-  it('les Modes 2 et 3 empruntent le même chemin d’écriture', async () => {
-    for (const mode of [2, 3]) {
+  // ============================================================
+  // FERMETURE MODE 1, VOLET 1 — CE TEST DOCUMENTAIT UNE ABSENCE DE GARDE.
+  //
+  // Il affirmait « les Modes 2 ET 3 empruntent le même chemin d'écriture » en
+  // exigeant un 200 sur un site Mode 3. Or le test frère, vingt lignes plus
+  // haut, affirme l'exact contraire du contrat : « le Mode 2 reçoit les six
+  // outils, LE MODE 3 NE LES REÇOIT PAS » — et `toolCapabilities.ts` le dit
+  // explicitement : « CONSEQUENCE ASSUMEE ET DITE : un site Mode 3 ne recoit
+  // pas ces six outils ».
+  //
+  // Les deux assertions ne coexistaient que parce que `/apply` ignorait le
+  // mode : le 200 sur Mode 3 ne mesurait pas un chemin partagé, il mesurait
+  // le trou (DEBT-030). Le chantier 4 n'est pas invalidé — c'est SON contrat
+  // qui est désormais appliqué au lieu d'être seulement déclaré.
+  //
+  // L'INTENTION D'ORIGINE EST CONSERVÉE, et vérifiée pour de vrai : le
+  // gestionnaire ne branche sur aucun mode. On le prouve sur les DEUX modes
+  // que la famille `content` admet — 1 et 2 — en exigeant une écriture
+  // rigoureusement identique. C'est une preuve plus forte qu'un 200 nu.
+  // ============================================================
+  it('le chemin d’écriture est le MÊME pour les deux modes admis (1 et 2)', async () => {
+    const ecrits: unknown[] = [];
+    for (const mode of [1, 2]) {
       ecritures = [];
       siteRow = { ...siteRow, mode, faq: JSON.parse(JSON.stringify(FAQ_YIA)) };
       const { statut } = await appeler('propose_faq_add', { question: 'Q?', answer: 'A.', reason: 'r' });
       expect(statut, `mode ${mode}`).toBe(200);
-      expect((ecritures[0].faq as any[])).toHaveLength(3);
+      expect((ecritures[0].faq as any[]), `mode ${mode}`).toHaveLength(3);
+      ecrits.push(ecritures[0].faq);
     }
+    // Aucune branche de mode dans le gestionnaire : même entrée, même sortie.
+    expect(ecrits[0]).toEqual(ecrits[1]);
+  });
+
+  it('🔴 le Mode 3 est refusé A LA PORTE, sans aucune écriture', async () => {
+    ecritures = [];
+    siteRow = { ...siteRow, mode: 3, dropship_type: 'reseller', faq: JSON.parse(JSON.stringify(FAQ_YIA)) };
+    const { statut } = await appeler('propose_faq_add', { question: 'Q?', answer: 'A.', reason: 'r' });
+    expect(statut).toBe(403);
+    expect(ecritures, 'aucune écriture ne doit avoir eu lieu').toEqual([]);
   });
 });
 

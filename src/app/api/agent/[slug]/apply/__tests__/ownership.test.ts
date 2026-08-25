@@ -60,6 +60,14 @@ function site(over: Record<string, unknown> = {}) {
   // destination déterminée — aucun repli arbitraire n'est prévu.
   return {
     id: 'site-1', slug: 'mon-site', name: 'S',
+    // FERMETURE MODE 1, VOLET 1 — `mode` AJOUTE AU FIXTURE. Il en etait
+    // absent, ce qu'aucun site reel n'est : `sites.mode` est ecrit a la
+    // creation et n'est jamais nul en base. Depuis que `/apply` applique la
+    // frontiere de mode, un site sans mode ne recoit plus que les outils
+    // UNIVERSELS — fail-closed correct, mais qui rendait ce test faux pour la
+    // mauvaise raison. Mode 1 : les cinq outils exerces ci-dessous relevent
+    // des familles `universal` et `content`, toutes deux ouvertes au Mode 1.
+    mode: 1,
     owner_id: 'user-A', owner_email: 'a@test.com',
     sections: [{ name: 'Nos offres', items: [] }],
     ...over,
