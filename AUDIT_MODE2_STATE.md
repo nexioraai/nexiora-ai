@@ -47,7 +47,7 @@ conformes, chemins de lecture/écriture corrects, rendu public juste.
 | M2-06 | 🟡 | `shipping_flat` : borne **testée** ; vecteur PostgREST direct restant | **BORNE FERMÉE** — reste 🟡 non bloquant (DDL indisponible) |
 | M2-07 | 🟢 | 1,1 s de latence par checkout Mode 2, quota fournisseur inutilisé | **RÉSOLU** |
 | M2-08 | 🟢 | `buildSupplierGroups` interrogé sur le chemin Mode 2 | **RÉSOLU** |
-| M2-09 | 🟡 | `consume_promo_code` sans script versionné | à traiter (critère de fermeture) |
+| M2-09 | 🟡 | `consume_promo_code` sans script versionné | **PARTIEL** — classe verrouillée par cliquet ; extraction préparée, **non exécutée** (DDL indisponible) |
 | M2-10 | ⚪ | `handlePaidCheckout` importe le fulfillment fournisseur | dette, aiguillage correct |
 
 Détail complet et preuves : `KNOWN_ISSUES.md`, entrées `DEBT-038` → `DEBT-047`.
