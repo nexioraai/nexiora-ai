@@ -65,27 +65,25 @@ chose que le module affirme à son sujet.
 
 ## 5. ÉTAPE EN COURS
 
-**Chantier de fermeture Mode 1 — volet 1/3 TERMINÉ**, volets 2 et 3 restants.
+**Chantier de fermeture Mode 1 — TERMINÉ, 3 volets sur 3.**
 
 | Volet | Statut | Preuve |
 |---|---|---|
 | 1 — garde de mode à l'écriture (`/apply`) | **VALIDÉ** (`71d5b23`) | `modeFrontier.test.ts`, 30 tests ; suite complète 171 fichiers / **2762 tests**, 0 échec ; `tsc` clean |
-| 2 — `PromoBanner` + routes promo | **VALIDÉ** | `promoFrontier.test.ts`, 28 tests, **4/4 mutations tuées** ; suite 172 fichiers / **2790 tests**, 0 échec |
-| 3 — propriété reliant les deux allowlists | à faire | ferme DEBT-032 |
+| 2 — `PromoBanner` + routes promo | **VALIDÉ** (`39173f0`) | `promoFrontier.test.ts`, 28 tests, **4/4 mutations tuées** ; suite 172 fichiers / **2790 tests**, 0 échec |
+| 3 — le lien `toolCapabilities` ↔ `canTransact` | **VALIDÉ** (`bee8bfd`) | `toolAllowlistCoherence.test.ts`, 44 tests, **8/8 mutations architecturales tuées** ; suite 173 fichiers / **2834 tests**, 0 échec |
 
 ## 6. PROCHAINE ÉTAPE
 
-**Volet 3**, puis DEBT-033 et DEBT-034 :
+Le chantier de fermeture Mode 1 est **terminé, 3 volets sur 3** :
 
-1. ~~Garde de mode en tête de `POST /api/agent/[slug]/apply`~~ — **FAIT**, DEBT-030 fermé.
-2. ~~`PromoBanner` sous `canTransact` + garde de mode dans les deux routes promo~~ — **FAIT**, DEBT-031 fermé.
-3. `PromoBanner` conditionné à `canTransact(site.mode)` + garde de mode dans
-   `promo/active` et `promo/validate`.
-Propriété exécutable reliant les deux allowlists — une propriété, non une
-   liste de cas, pour couvrir les modes et outils futurs sans réécriture.
+1. ~~Garde de mode en tête de `POST /api/agent/[slug]/apply`~~ — **FAIT**, DEBT-030 fermé (`71d5b23`).
+2. ~~`PromoBanner` sous `canTransact` + garde de mode dans les deux routes promo~~ — **FAIT**, DEBT-031 fermé (`39173f0`).
+3. ~~Lien entre les capacités d'outils et l'admission au commerce~~ — **FAIT**, DEBT-032 fermé (`bee8bfd`).
 
-Puis **DEBT-033** (correctif d'une ligne) et **DEBT-034** (migration de schéma)
-avant de déclarer Mode 1 fermé.
+Restent avant de déclarer Mode 1 fermé : **DEBT-033** (contexte de l'agent,
+correctif d'une ligne) puis **DEBT-034** (fraîcheur SEO/GEO, migration de
+schéma). Ensuite, statuer explicitement sur DEBT-035 et DEBT-036.
 
 ## 7. DÉCOUVERTES — AUDIT GÉNÉRAL PROFOND DU 2026-08-25
 
@@ -100,7 +98,7 @@ d'un rapport antérieur. Détail complet et preuves dans `KNOWN_ISSUES.md`.
 | M1-03 | DEBT-033 | 🟠 | Contexte agent lit `site.phone` / `site.contact_email`, **colonnes inexistantes**. **Prouvé 3/3** |
 | M1-04 | DEBT-034 | 🟠 | `sites.updated_at` n'existe pas → fraîcheur SEO/GEO gelée sur trois surfaces |
 | M1-05 | DEBT-035 | 🟡 | `price_range` en JSON-LD, absent de `llms.txt` |
-| M1-06 | DEBT-032 | 🟡 | Aucun cliquet ne surveille les **écrivains** d'artefacts commerciaux — cause structurelle de M1-01 |
+| M1-06 | DEBT-032 | ✅ **FERMÉ** | Aucun lien n'existait entre `toolCapabilities` et `canTransact` — inscrire le Mode 1 dans `PROMO_MODES` n'aurait fait rougir aucun test. Cause structurelle de M1-01. Corrigé au volet 3 |
 | M1-07 | DEBT-036 | ⚪ | Colonnes commerciales éditables en PostgREST par un Mode 1 — classe C, non exploitable |
 
 ### Méthode de preuve
