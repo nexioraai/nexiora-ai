@@ -123,7 +123,7 @@ rating: number
 // ---------- Supabase ----------
 
 export const PUBLIC_COLS =
-'id,slug,name,slogan,type,mode,custom_domain,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image,lang,faq,whyus,mission,vision,geo_lat,geo_lng,area_served,price_range,hidden_sections,section_label,sections,created_at,dropship_type,pod_designs,product_families,cj_margin_percent,cj_round_mode,shipping_flat'
+'id,slug,name,slogan,type,mode,custom_domain,primary_color,hero_title,hero_subtitle,about,services,testimonials,gallery,products,contact,menu,team,hours,social_links,address,pages,cta,theme,hero_image,lang,faq,whyus,mission,vision,geo_lat,geo_lng,area_served,price_range,hidden_sections,section_label,sections,created_at,dropship_type,pod_designs,product_families,cj_margin_percent,cj_round_mode,shipping_flat,updated_at'
 
 // ---------- Resolution d'URL multi-domaines ----------
 //

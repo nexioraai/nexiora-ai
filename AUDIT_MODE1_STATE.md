@@ -4,7 +4,7 @@ Standard exigé : **ELITE 2026 / A+** — aucun chantier déclaré validé sans 
 réelle (test exécuté, rendu mesuré, schéma vérifié). Distinction stricte :
 **code terminé ≠ test effectué ≠ preuve validée**.
 
-Dernière mise à jour : 2026-08-25 (audit général profond — Mode 1 **NON FERMÉ**).
+Dernière mise à jour : 2026-08-25 — **MODE 1 FERMÉ** (voir §11).
 
 | | |
 |---|---|
@@ -65,7 +65,8 @@ chose que le module affirme à son sujet.
 
 ## 5. ÉTAPE EN COURS
 
-**Chantier de fermeture Mode 1 — TERMINÉ, 3 volets sur 3.**
+**Aucune.** Le chantier de fermeture Mode 1 est terminé — 3 volets sur 3, puis
+DEBT-033, DEBT-034 et DEBT-035.
 
 | Volet | Statut | Preuve |
 |---|---|---|
@@ -81,12 +82,14 @@ Le chantier de fermeture Mode 1 est **terminé, 3 volets sur 3** :
 2. ~~`PromoBanner` sous `canTransact` + garde de mode dans les deux routes promo~~ — **FAIT**, DEBT-031 fermé (`39173f0`).
 3. ~~Lien entre les capacités d'outils et l'admission au commerce~~ — **FAIT**, DEBT-032 fermé (`bee8bfd`).
 
-~~**DEBT-033**~~ — **FAIT**. ~~**DEBT-034**~~ — **code livré, migration
-préparée mais NON EXÉCUTÉE** : la seule action restante est humaine et hors de
-cet environnement — exécuter `supabase/sql/sites_updated_at.sql`, constater
-les vérifications A/B/C/D, puis ajouter `,updated_at` à `PUBLIC_COLS`.
+~~**DEBT-033**~~ — **FAIT** (`e86940f`). ~~**DEBT-034**~~ — **FAIT** : migration
+exécutée et vérifiée en production, `PUBLIC_COLS` portée à 45 colonnes.
+~~**DEBT-035**~~ — **FAIT** (`94a6f4c`).
 
-Reste ensuite à statuer explicitement sur DEBT-035, DEBT-036 et DEBT-037.
+**Aucune étape suivante dans le périmètre Mode 1.** DEBT-036 (⚪) et DEBT-037
+(🟡) restent hors traitement par décision, et ne sont pas des blocages. La
+progression vers un autre mode est une décision produit, hors de cette feuille
+de route.
 
 ## 7. DÉCOUVERTES — AUDIT GÉNÉRAL PROFOND DU 2026-08-25
 
@@ -99,7 +102,7 @@ d'un rapport antérieur. Détail complet et preuves dans `KNOWN_ISSUES.md`.
 | M1-01 | DEBT-030 | ✅ **FERMÉ** | `/apply` n'appliquait **aucune** frontière de mode — 4 outils commerciaux acceptés sur une vitrine. Corrigé au volet 1 |
 | M1-02 | DEBT-031 | ✅ **FERMÉ** | `PromoBanner` monté sans condition de mode (**à deux endroits**, découverte du volet 2) + routes promo publiques sans garde. Corrigé au volet 2 |
 | M1-03 | DEBT-033 | ✅ **FERMÉ** | Contexte agent lisait `site.phone` / `site.contact_email`, **colonnes inexistantes**. Corrigé, et la CLASSE fermée par un invariant Proxy contre le schéma réel |
-| M1-04 | DEBT-034 | 🟠 **PARTIEL** | Code livré et sûr dans les deux états du schéma. **Migration TOUJOURS NON EXÉCUTÉE** — accès base vérifié le 2026-08-25 : aucun `DATABASE_URL`, aucune CLI Supabase, aucun `psql`, aucun token Management, aucune RPC d'exécution SQL. Sondage REST : `sites.updated_at` → `42703` *n'existe pas*. Un défaut réel de la migration a été trouvé et corrigé avant exécution (`security_invoker`) |
+| M1-04 | DEBT-034 | 🟢 **FERMÉ** | Fraîcheur SEO/GEO gelée sur trois surfaces. Migration `sites_updated_at.sql` **réellement exécutée et vérifiée en production** (A/B/C/D/D+), re-contrôlée indépendamment par sondage REST, puis `PUBLIC_COLS` portée à 45 colonnes |
 | M1-05 | DEBT-035 | ✅ **FERMÉ** | `price_range` émis en JSON-LD mais absent de `llms.txt` — les deux champs du chantier 5 sont désormais publiés ensemble, en 4 langues |
 | M1-06 | DEBT-032 | ✅ **FERMÉ** | Aucun lien n'existait entre `toolCapabilities` et `canTransact` — inscrire le Mode 1 dans `PROMO_MODES` n'aurait fait rougir aucun test. Cause structurelle de M1-01. Corrigé au volet 3 |
 | M1-07 | DEBT-036 | ⚪ | Colonnes commerciales éditables en PostgREST par un Mode 1 — classe C, non exploitable |
@@ -109,9 +112,9 @@ d'un rapport antérieur. Détail complet et preuves dans `KNOWN_ISSUES.md`.
 
 | Niveau | Problèmes | Action |
 |---|---|---|
-| 🟢 **PARFAIT** | Les 10 invariants Mode 1 du §8 · DEBT-030 · DEBT-031 · DEBT-032 · DEBT-033 · DEBT-035 | Rien à faire — vérifiés, corrigés, verrouillés par cliquet et mutation |
+| 🟢 **PARFAIT** | Les 10 invariants Mode 1 du §8 · DEBT-030 · DEBT-031 · DEBT-032 · DEBT-033 · **DEBT-034** · DEBT-035 | Rien à faire — vérifiés, corrigés, verrouillés par cliquet et mutation |
 | 🔴 **IMMÉDIAT** | *(aucun)* | — |
-| 🟠 **AVANT POURSUITE** | **DEBT-034** | Le code est livré et sûr dans les deux états du schéma ; il reste **une action humaine hors de cet environnement** : exécuter `supabase/sql/sites_updated_at.sql`, constater A/B/C/D, ajouter `,updated_at` à `PUBLIC_COLS`. **Le défaut persiste d'ici là.** |
+| 🟠 **AVANT POURSUITE** | *(aucun)* | — |
 | 🟡 **SURVEILLER** | **DEBT-037** · l'incertitude §10.1 (privilèges PostgREST sur `promo_codes`) | Les deux demandent une **mesure en base** avant toute décision. Corriger DEBT-037 à l'aveugle changerait ce que des sites réels publient aujourd'hui |
 | ⚪ **DETTE** | **DEBT-036** · DEBT-002 · DEBT-003 · DEBT-007 · DEBT-026 | Ne pas traiter pendant la fermeture de Mode 1 |
 
@@ -171,17 +174,28 @@ Mode 1 est fermé quand, et seulement quand, il est **démontré** que :
 
 - [x] il respecte son contrat de vitrine ;
 - [x] il ne peut pas accéder aux capacités Mode 2/3 *(admission, catalogue, commande, produits)* ;
-- [ ] **il n'affiche aucune capacité commerciale interdite** → DEBT-031 ;
-- [ ] **il ne peut pas les activer indirectement** → DEBT-030 ;
+- [x] **il n'affiche aucune capacité commerciale interdite** → DEBT-031 fermé ;
+- [x] **il ne peut pas les activer indirectement** → DEBT-030 fermé ;
 - [x] ses chemins d'écriture/lecture sont cohérents ;
 - [x] ses données sont protégées ;
 - [x] son rendu est cohérent *(quatre thèmes, quatre langues)* ;
-- [ ] **il ne possède plus aucun défaut 🔴/🟠 non traité** → DEBT-030, 031, 033, 034.
+- [x] **il ne possède plus aucun défaut 🔴/🟠 non traité** → DEBT-030, 031, 032, 033, 034, 035 tous fermés.
 
-**STATUT : NON FERMÉ.** Le critère « ne peut pas les activer indirectement » est
-fermé côté applicatif depuis le volet 1 (DEBT-030), **sous la réserve du §10.1** :
-le vecteur PostgREST direct sur `promo_codes` reste non prouvé. Le critère
-« n'affiche aucune capacité commerciale interdite » reste ouvert (DEBT-031).
+# ✅ MODE 1 FERMÉ — 2026-08-25
+
+**Les huit critères sont satisfaits et démontrés.** Le dernier blocage 🟠,
+DEBT-034, est résolu : la migration a été réellement exécutée et vérifiée en
+production (A/B/C/D/D+), re-contrôlée indépendamment par sondage REST — dont un
+appel sous clé `anon` prouvant qu'aucune vitrine publique n'est tombée — puis la
+dernière ligne de code appliquée et la requête réelle de `fetchSitePreview`
+rejouée avec succès contre la base.
+
+**Aucun défaut 🔴 ni 🟠 ne subsiste.**
+
+Restent, et ils ne constituent PAS des blocages selon le classement verrouillé :
+DEBT-037 (🟡, atteignabilité non prouvée), l'incertitude sur les privilèges
+PostgREST de `promo_codes` (🟡, demande une mesure en base), et DEBT-036
+(⚪, classe C non exploitable).
 
 ---
 
