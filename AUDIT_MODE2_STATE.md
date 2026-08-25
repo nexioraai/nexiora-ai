@@ -4,7 +4,7 @@ Standard exigé : **ELITE 2026 / A+** — aucun problème déclaré résolu sans
 réelle (test exécuté, mutation tuée, mesure en base). Distinction stricte :
 **code terminé ≠ test effectué ≠ preuve validée**.
 
-Dernière mise à jour : 2026-08-25 — **résolution terminée, 7 critères sur 8 satisfaits**. Voir §8.
+Dernière mise à jour : 2026-08-25 — **MODE 2 FERMÉ** (voir §8).
 
 | | |
 |---|---|
@@ -47,7 +47,7 @@ conformes, chemins de lecture/écriture corrects, rendu public juste.
 | M2-06 | 🟡 | `shipping_flat` : borne **testée** ; vecteur PostgREST direct restant | **BORNE FERMÉE** — reste 🟡 non bloquant (DDL indisponible) |
 | M2-07 | 🟢 | 1,1 s de latence par checkout Mode 2, quota fournisseur inutilisé | **RÉSOLU** |
 | M2-08 | 🟢 | `buildSupplierGroups` interrogé sur le chemin Mode 2 | **RÉSOLU** |
-| M2-09 | 🟡 | `consume_promo_code` sans script versionné | **PARTIEL** — classe verrouillée par cliquet ; extraction préparée, **non exécutée** (DDL indisponible) |
+| M2-09 | 🟢 | `consume_promo_code` sans script versionné | **RÉSOLU** — définition extraite de la production et versionnée à l'identique ; durcissement appliqué et vérifié |
 | M2-10 | ⚪ | `handlePaidCheckout` importe le fulfillment fournisseur | dette, aiguillage correct |
 
 Détail complet et preuves : `KNOWN_ISSUES.md`, entrées `DEBT-038` → `DEBT-047`.
@@ -105,33 +105,29 @@ aiguillage du fulfillment sur `fulfillment_domain`, jamais `sites.mode`.
 - [x] Aucune surface publique Mode 2 n'affiche texte ou devise en dur *(M2-03, M2-04)*
 - [x] Toute borne sur un paramètre commercial est **testée** *(M2-06)*
 - [x] Le chemin de paiement Mode 2 n'exécute aucune logique fournisseur *(M2-07, M2-08)*
-- [ ] Toute RPC atteinte par un chemin Mode 2 a un script versionné *(M2-09)*
-- [ ] Aucun défaut 🔴/🟠 non traité
+- [x] Toute RPC atteinte par un chemin Mode 2 a un script versionné *(M2-09)*
+- [x] Aucun défaut 🔴/🟠 non traité
 
-**STATUT : NON FERMÉ — un seul blocage, et il est hors de cet environnement.**
+# ✅ MODE 2 FERMÉ — 2026-08-25
 
-Sept critères sur huit sont satisfaits et démontrés. Le huitième — « toute RPC
-atteinte par un chemin Mode 2 a un script versionné » — reste ouvert du seul
-fait de **M2-09** : la définition de `consume_promo_code` vit uniquement en
-base, et la réécrire de mémoire remplacerait en production une fonction
-illisible d'ici. `supabase/sql/consume_promo_code_versioning.sql` est préparé
-(extraction + durcissement, sans aucune redéfinition) mais **non exécuté** :
-ni `DATABASE_URL`, ni CLI Supabase, ni `psql`, ni token Management.
+**Les huit critères sont satisfaits et démontrés.** Le dernier blocage,
+M2-09, est levé : la définition de `consume_promo_code` a été extraite de la
+production par `pg_get_functiondef`, versionnée à l'identique (fidélité
+vérifiée caractère par caractère), et le durcissement `REVOKE`/`GRANT`
+appliqué puis vérifié — `anon = false`, `authenticated = false`,
+`service_role = true`, corroboré par sonde REST indépendante montrant que
+l'appelant légitime n'a pas été cassé.
 
-**Aucun défaut 🔴 ni 🟠 ne subsiste.** Restent : M2-09 🟡 (partiel, ci-dessus),
-M2-06 🟡 pour son seul vecteur PostgREST direct (borne applicative fermée et
-testée ; fermer le reste exigerait une contrainte `CHECK`, donc du DDL), et
-M2-10 ⚪ (dette architecturale, aiguillage correct, hors critères).
+**Aucun défaut 🔴 ni 🟠 ne subsiste.**
 
-### Action exacte pour fermer Mode 2
+Restent, et ils ne constituent PAS des blocages selon le classement verrouillé :
+**M2-06** 🟡 pour son seul vecteur PostgREST direct (borne applicative fermée
+et testée ; fermer le reste exigerait une contrainte `CHECK`, donc du DDL) et
+**M2-10** ⚪ (dette architecturale, aiguillage correct, hors critères).
 
-1. Exécuter l'étape 1 de `supabase/sql/consume_promo_code_versioning.sql` et
-   renvoyer la sortie de `pg_get_functiondef`.
-2. Versionner cette définition dans un `supabase/sql/consume_promo_code.sql`
-   propre, avec son patron `REVOKE`/`GRANT`.
-3. Retirer l'exception de l'allowlist de `rpcVersioning.test.ts` — le cliquet
-   redeviendra vert par lui-même.
+## 9. ORDRE DE TRAITEMENT — EXÉCUTÉ INTÉGRALEMENT
 
-## 9. ORDRE DE TRAITEMENT
+① M2-01 + M2-05 `d2244ea` · ② M2-02 `1b1e0bc` · ③ M2-03 + M2-04 `0352fbe` ·
+④ M2-06 `4e6b3ac` · ⑤ M2-07 + M2-08 `cbe6d53` · ⑥ M2-09 `27c0434` puis clôture.
 
-① M2-01 + M2-05 · ② M2-02 · ③ M2-03 + M2-04 · ④ M2-06 · ⑤ M2-07 + M2-08 · ⑥ M2-09
+**26 mutations adversariales tuées** sur l'ensemble de la phase de résolution.

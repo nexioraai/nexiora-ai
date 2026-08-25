@@ -68,13 +68,18 @@ const VERSIONNEES = (() => {
  * justification est exactement ce que ce fichier existe pour empecher.
  */
 const NON_VERSIONNEES_ADMISES: Record<string, string> = {
-  consume_promo_code:
-    'M2-09 (2026-08-25) — definition presente uniquement en base ; la reecrire ' +
-    'de memoire remplacerait en production une fonction qu’on ne peut pas relire. ' +
-    'Sonde adversariale anon : 42501 permission denied (protegee). Role ' +
-    '`authenticated` NON MESURE — aucun JWT utilisateur disponible. Extraction et ' +
-    'durcissement prepares dans supabase/sql/consume_promo_code_versioning.sql, ' +
-    'non executes : DDL indisponible depuis cet environnement.',
+  // M2-09 (2026-08-25) — VIDE, et c'est le resultat recherche.
+  //
+  // `consume_promo_code` y figurait : sa definition ne vivait qu'en base, et
+  // la reecrire de memoire aurait remplace en production une fonction
+  // illisible depuis le depot. Elle a ete EXTRAITE par `pg_get_functiondef`,
+  // puis versionnee a l'identique dans `supabase/sql/consume_promo_code.sql`
+  // -- fidelite verifiee caractere par caractere apres normalisation des
+  // espaces. L'exception n'a donc plus d'objet.
+  //
+  // Toute entree future doit porter sa raison ET son etat de mesure. Une
+  // exemption sans justification ecrite est ce que ce fichier existe pour
+  // empecher.
 };
 
 // ------------------------------------------------------------
@@ -113,10 +118,17 @@ describe('M2-09 — 🔴 toute RPC appelee a un script versionne', () => {
     }
   });
 
-  it('🔴 l’allowlist reste minuscule — une seule exception aujourd’hui', () => {
-    // Ce n'est pas une cible, c'est un declencheur de revue. L'elargir doit
-    // etre un acte visible en diff.
-    expect(Object.keys(NON_VERSIONNEES_ADMISES)).toHaveLength(1);
+  it('🔴 l’allowlist est VIDE — toute RPC appelee est versionnee', () => {
+    // Elle comptait une entree jusqu'au 2026-08-25. Ce n'est pas une cible a
+    // maintenir, c'est un declencheur de revue : la reouvrir doit etre un acte
+    // visible en diff, jamais une ligne de plus qui passe inapercue.
+    expect(Object.keys(NON_VERSIONNEES_ADMISES)).toHaveLength(0);
+  });
+
+  it('🔴 `consume_promo_code` est desormais versionnee, et non exemptee', () => {
+    expect(VERSIONNEES, 'la definition doit vivre dans supabase/sql/').toContain('consume_promo_code');
+    expect(NON_VERSIONNEES_ADMISES, 'elle ne doit plus etre une exception')
+      .not.toHaveProperty('consume_promo_code');
   });
 });
 
