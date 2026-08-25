@@ -119,6 +119,8 @@ const LECTEURS_TRANSITIFS: Record<string, string> = {
   'src/app/api/shop/shipping/route.ts': 'idem — canTransact() décide, la route transmet.',
   'src/app/api/shop/upload-design/route.ts': 'idem — canTransact() décide, la route transmet.',
   'src/lib/auth/require-product-owner.ts': 'idem — canTransact() décide, la primitive transmet.',
+  'src/app/api/shop/promo/active/route.ts': 'fermeture Mode 1 volet 2 — idem : canTransact() décide qu’une vitrine ne sert aucun code promo, la route transmet.',
+  'src/app/api/shop/promo/validate/route.ts': 'fermeture Mode 1 volet 2 — idem : canTransact() décide, la route transmet ; la garde précède l’écriture dans checkout_anomalies.',
   'src/app/api/agent/[slug]/apply/route.ts': 'fermeture Mode 1 volet 1 — lit `mode` et `dropship_type` pour les passer à toolNamesForSite() ; aucune comparaison de mode, la décision reste dans toolCapabilities.',
   'src/app/sites/[slug]/produits/[id]/fetchProduct.ts': 'recopie `mode` dans l’objet de page ; aucune branche.',
   'src/app/sites/[slug]/produits/[id]/page.tsx': 'passe `mode` en prop à CartShell ; aucune branche.',
@@ -139,7 +141,20 @@ const LECTEURS_TRANSITIFS: Record<string, string> = {
  * l'allowlist devient un acte délibéré, lisible en diff, qu'une revue peut
  * refuser — au lieu d'une ligne de plus qui passe inaperçue.
  */
-const PLAFOND_ALLOWLIST = 16
+// FERMETURE MODE 1, VOLETS 1 ET 2 — RELEVEMENT DELIBERE : 16 -> 18.
+//
+// Le plafond a joué exactement son rôle : il a fait de ces trois inscriptions
+// un acte visible en diff au lieu de trois lignes passées inaperçues. Les
+// trois relèvent du même patron déjà porté par six entrées existantes —
+// `canTransact()` décide, la route transmet — et aucune ne DÉRIVE de règle du
+// mode (niveau 2 le vérifie indépendamment, et l'allowlist n'en dispense pas).
+//
+// Ce n'est pas un affaiblissement du cliquet : c'est le mouvement recherché.
+// Trois surfaces qui franchissaient une frontière SANS JAMAIS LIRE LE MODE
+// (donc invisibles à ce cliquet, cf. DEBT-032) la posent désormais
+// explicitement — elles deviennent des lecteurs déclarés. Le compte MONTE ici
+// parce que le nombre de décisions implicites BAISSE.
+const PLAFOND_ALLOWLIST = 18
 
 const TOUS = fichiersSource(SRC)
 const rel = (p: string) => relative(RACINE, p).split(sep).join('/')

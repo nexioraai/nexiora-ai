@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { logAnomaly } from '@/lib/anomaly';
+import { canTransact } from '@/lib/commerce-admission/canTransact';
 
 /**
  * POST /api/shop/promo/validate
@@ -14,10 +15,48 @@ export async function POST(req: NextRequest) {
 
     const { data: site } = await supabaseAdmin
       .from('sites')
-      .select('id')
+      .select('id, mode')
       .eq('slug', slug)
       .single();
     if (!site) return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
+
+    // ============================================================
+    // FERMETURE MODE 1, VOLET 2 -- LA ROUTE PORTE SA PROPRE FRONTIERE
+    // (DEBT-031).
+    //
+    // POURQUOI ICI ALORS QUE `PromoBanner` GARDE DEJA L'AFFICHAGE. Une
+    // protection d'interface n'est pas une frontiere : cette route est
+    // PUBLIQUE et NON AUTHENTIFIEE, un appel direct ne passe par aucun
+    // composant. La capacite doit etre fermee la ou elle devient reellement
+    // possible -- et pour une route, c'est la route.
+    //
+    // CE SUR QUOI ELLE NE REPOSAIT PLUS QUE. Apres le volet 1, aucun chemin
+    // applicatif ne cree plus de code promo pour une vitrine. La route etait
+    // donc protegee par l'ABSENCE d'ecriture en amont -- une defense
+    // accidentelle, pas une autorite : elle redeviendrait ouverte au premier
+    // chemin d'ecriture ajoute, et le vecteur PostgREST direct sur
+    // `promo_codes` n'est a ce jour ni prouve ni ferme.
+    //
+    // `canTransact` EST L'AUTORITE. Un code promo est un artefact commercial ;
+    // la question posee est celle de l'ADMISSION, pas de l'affichage
+    // (`hasShop`, qui depend d'un produit) ni du routage (`order-domain`).
+    //
+    // FORME DE REPONSE INCHANGEE, comme `catalog/search` pour un site sans
+    // catalogue : la reponse vide et valide, en 200. Un 403 distinguerait
+    // publiquement le mode d'un site, et changerait le contrat du client pour
+    // rien. Fail-closed : `undefined`, `null`, `'2'`, `4`, `NaN` n'obtiennent
+    // aucun code promo.
+    // ============================================================
+    //
+    // PLACEE AVANT TOUTE ECRITURE, et ce n'est pas un detail : contrairement a
+    // `promo/active`, cette route N'EST PAS EN LECTURE SEULE -- le chemin
+    // « code introuvable » ecrit une ligne dans `checkout_anomalies`
+    // (DEBT-028). Sans cette garde ici, une vitrine offrait a un appelant
+    // anonyme un moyen de faire grossir une table sur SON `site_id`. Le refus
+    // precede donc la recherche du code, et donc l'ecriture.
+    if (!canTransact((site as { mode?: unknown }).mode)) {
+      return NextResponse.json({ valid: false, reason: 'invalid' });
+    }
 
     // Passe de cloture (P-2) -- `ilike` a ete retire : il interpretait '%' et
     // '_' comme des JOKERS. Un acheteur saisissant '%' matchait n'importe quel

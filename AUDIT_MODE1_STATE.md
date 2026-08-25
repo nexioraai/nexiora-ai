@@ -69,20 +69,20 @@ chose que le module affirme à son sujet.
 
 | Volet | Statut | Preuve |
 |---|---|---|
-| 1 — garde de mode à l'écriture (`/apply`) | **VALIDÉ** | `modeFrontier.test.ts`, 30 tests ; suite complète 171 fichiers / **2762 tests**, 0 échec ; `tsc` clean |
-| 2 — `PromoBanner` + routes promo | à faire | ferme DEBT-031 |
+| 1 — garde de mode à l'écriture (`/apply`) | **VALIDÉ** (`71d5b23`) | `modeFrontier.test.ts`, 30 tests ; suite complète 171 fichiers / **2762 tests**, 0 échec ; `tsc` clean |
+| 2 — `PromoBanner` + routes promo | **VALIDÉ** | `promoFrontier.test.ts`, 28 tests, **4/4 mutations tuées** ; suite 172 fichiers / **2790 tests**, 0 échec |
 | 3 — propriété reliant les deux allowlists | à faire | ferme DEBT-032 |
 
 ## 6. PROCHAINE ÉTAPE
 
-**Volet 2**, puis **volet 3** :
+**Volet 3**, puis DEBT-033 et DEBT-034 :
 
 1. ~~Garde de mode en tête de `POST /api/agent/[slug]/apply`~~ — **FAIT**, DEBT-030 fermé.
-2. `PromoBanner` conditionné à `canTransact(site.mode)` + garde de mode dans
+2. ~~`PromoBanner` sous `canTransact` + garde de mode dans les deux routes promo~~ — **FAIT**, DEBT-031 fermé.
+3. `PromoBanner` conditionné à `canTransact(site.mode)` + garde de mode dans
    `promo/active` et `promo/validate`.
-3. Propriété exécutable : *pour tout mode m, `/apply` refuse tout outil absent de
-   `toolNamesForSite(m, …)`* — une propriété, non une liste de cas, pour couvrir
-   les modes et outils futurs sans réécriture.
+Propriété exécutable reliant les deux allowlists — une propriété, non une
+   liste de cas, pour couvrir les modes et outils futurs sans réécriture.
 
 Puis **DEBT-033** (correctif d'une ligne) et **DEBT-034** (migration de schéma)
 avant de déclarer Mode 1 fermé.
@@ -96,7 +96,7 @@ d'un rapport antérieur. Détail complet et preuves dans `KNOWN_ISSUES.md`.
 | Réf. rapport | Registre | Niveau | Résumé |
 |---|---|---|---|
 | M1-01 | DEBT-030 | ✅ **FERMÉ** | `/apply` n'appliquait **aucune** frontière de mode — 4 outils commerciaux acceptés sur une vitrine. Corrigé au volet 1 |
-| M1-02 | DEBT-031 | 🔴 | `PromoBanner` monté sans condition de mode + routes promo publiques sans garde → bannière commerciale sur une vitrine |
+| M1-02 | DEBT-031 | ✅ **FERMÉ** | `PromoBanner` monté sans condition de mode (**à deux endroits**, découverte du volet 2) + routes promo publiques sans garde. Corrigé au volet 2 |
 | M1-03 | DEBT-033 | 🟠 | Contexte agent lit `site.phone` / `site.contact_email`, **colonnes inexistantes**. **Prouvé 3/3** |
 | M1-04 | DEBT-034 | 🟠 | `sites.updated_at` n'existe pas → fraîcheur SEO/GEO gelée sur trois surfaces |
 | M1-05 | DEBT-035 | 🟡 | `price_range` en JSON-LD, absent de `llms.txt` |

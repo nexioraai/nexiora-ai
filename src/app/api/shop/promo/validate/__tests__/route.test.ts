@@ -37,7 +37,14 @@ function chain(result: Result) {
   return c;
 }
 
-const SITE = { data: { id: 'site-1' }, error: null };
+// FERMETURE MODE 1, VOLET 2 -- `mode` AJOUTE AU FIXTURE. Il en etait absent,
+// ce qu'aucun site reel n'est. Depuis que la route porte sa frontiere
+// d'admission (DEBT-031), un site sans mode est refuse AVANT la recherche du
+// code -- fail-closed correct, mais qui rendait ces huit tests faux pour la
+// mauvaise raison. Mode 2 : un site qui valide un code promo est, par
+// definition, un site admis au commerce. Le refus d'une vitrine a son propre
+// fichier (`promoFrontier.test.ts`).
+const SITE = { data: { id: 'site-1', mode: 2 }, error: null };
 const PROMO_VALIDE = {
   data: { id: 'promo-1', code: 'ETE20', discount_type: 'percent', discount_value: 20,
           min_order: 0, max_uses: null, used_count: 0, expires_at: null },
