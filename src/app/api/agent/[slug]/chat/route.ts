@@ -8,6 +8,10 @@ import { logAiUsage } from '@/lib/ai-usage';
 // ETAPE 3 -- les familles d'outils par mode vivent desormais dans une
 // primitive dediee, en allowlists positives. Cette route ne decide plus.
 import { toolNamesForSite } from '@/lib/agent-tools/toolCapabilities';
+// ETAPE 4 -- la guidance par mode etait ECHAPPEE dans ce template : les cinq
+// branches n'etaient jamais evaluees et l'agent recevait les cinq a la fois.
+// Extraite et rendue vivante. Voir modeGuidance.ts pour la mesure complete.
+import { guidanceForSite } from '@/lib/agent-tools/modeGuidance';
 
 const allTools: Anthropic.Tool[] = [
   {
@@ -499,55 +503,7 @@ ${JSON.stringify(
 \`\`\`
 
 SITE-SPECIFIC CONTEXT & GUIDANCE:
-\${site.mode === 1 ? \`
-MODE: SHOWCASE / VITRINE (mode 1)
-This is a local business site (restaurant, salon, clinic, etc.). The owner manages their content directly here.
-- They can add/edit/remove services, products (menu items), testimonials, gallery images
-- Help them improve their site content, descriptions, and marketing
-- NO catalog, NO dropshipping features — everything is manually managed
-\` : ''}
-\${site.mode === 2 ? \`
-MODE: LOCAL BOUTIQUE (mode 2)
-This is an online boutique where the owner sells their OWN inventory.
-- Their products live in the dashboard (Products section: name, price, stock, visibility). You CANNOT add, edit or remove products yourself — guide the merchant to the dashboard instead, and never claim you have done it
-- They can create promo codes for their customers
-- Help them write product descriptions, manage their catalog, and market their shop
-- NO dropshipping — the owner physically holds inventory
-\` : ''}
-\${site.mode === 3 && site.dropship_type === 'reseller' ? \`
-MODE: DROPSHIPPING RESELLER (mode 3, reseller)
-This store resells trending products. Deribfy auto-curates 30 trending products and handles everything automatically.
-- CATALOG TOOLS: You can curate products (AI picks the best 30 for this niche), enhance titles/descriptions, approve suggestions, and set margin percentages
-- PROMO CODES: You can create and deactivate discount codes
-- IMPORTANT FEATURE TO EXPLAIN: Customers see the 30 curated products on the storefront, BUT they also have a SEARCH BAR to explore the full catalog of 7,000+ products. If a customer finds a product via search and buys it, the order is fulfilled automatically.
-- Shipping times: vary by warehouse — North America 5-12 days, international 7-25 days depending on destination
-- MARGIN: The current margin is stored in cj_margin_percent (shown in CURRENT SITE STATE above). Prices are computed live as supplier_cost x (1 + margin/100), so changing the margin updates every product at once. A product with a manually fixed price keeps that price and ignores the margin. Minimum margin is 15% (covers the Deribfy commission, refunds and disputes) - never propose lower. Always tell the merchant their current margin when they ask.
-- PROACTIVE FLOW: After running catalog_curate, ALWAYS immediately tell the merchant: "I've selected [N] products for your store. They are pending approval — would you like me to approve them all now so they become visible to your customers?" Do NOT wait for the merchant to ask about visibility.
-- Do NOT offer to add services, testimonials, or gallery — this site type doesn't use them
-\` : ''}
-\${site.mode === 3 && site.dropship_type === 'pod_brand' ? \`
-MODE: PRINT-ON-DEMAND BRAND (mode 3, pod_brand)
-This store sells products featuring the MERCHANT'S OWN original designs (logos, artwork, patterns) printed on premium products. Deribfy handles everything automatically.
-- PROMO CODES: You can create and deactivate discount codes
-- NO CATALOG CURATION: Products come from the merchant's uploaded designs — do NOT suggest catalog_curate
-- IMPORTANT: Guide the merchant to upload their designs and brand logo in the editor dashboard. Their designs are applied as mockups on products (t-shirts, hoodies, mugs, etc.) and displayed as the store's products
-- Production time: 3-7 business days + shipping
-- Help with brand storytelling, design strategy, collection naming, and marketing their unique brand
-- Do NOT offer to add services, testimonials, or gallery — this site type doesn't use them
-\` : ''}
-\${site.mode === 3 && site.dropship_type === 'pod_custom' ? \`
-MODE: PRINT-ON-DEMAND CUSTOM (mode 3, pod_custom)
-This store lets VISITORS create custom products by uploading their own design/logo/image at purchase time. Deribfy handles everything automatically.
-- CATALOG TOOLS: You can curate blank products (AI picks the best 30 blanks for this niche), enhance titles/descriptions, approve suggestions, and set margin percentages
-- PROMO CODES: You can create and deactivate discount codes
-- IMPORTANT FEATURE TO EXPLAIN: Each product page has a DESIGN UPLOADER where the visitor uploads their own image (PNG, JPG, SVG, max 10MB) before adding to cart. The design is printed on the product after purchase.
-- Customers see 30 curated blank products AND can search more blanks via the search bar
-- Production time: 3-7 business days + shipping
-- Help the merchant write compelling copy about personalization, customization, and creative freedom
-- MARGIN: The current margin is stored in cj_margin_percent (shown in CURRENT SITE STATE above). Prices are computed live as supplier_cost x (1 + margin/100), so changing the margin updates every product at once. A product with a manually fixed price keeps that price and ignores the margin. Minimum margin is 15% (covers the Deribfy commission, refunds and disputes) - never propose lower. Always tell the merchant their current margin when they ask.
-- PROACTIVE FLOW: After running catalog_curate, ALWAYS immediately tell the merchant: "I've selected [N] blank products for your store. They are pending approval — would you like me to approve them all now so they become visible to your customers?" Do NOT wait for the merchant to ask about visibility.
-- Do NOT offer to add services, testimonials, or gallery — this site type doesn't use them
-\` : ''}
+${guidanceForSite(site.mode, site.dropship_type)}
 
 HOW TO TALK TO THE MERCHANT (APPLIES TO EVERY ACTION):
 

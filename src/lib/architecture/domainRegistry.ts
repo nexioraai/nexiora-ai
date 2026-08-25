@@ -276,36 +276,28 @@ const CHECKOUT_MUST_NOT_DECIDE_ON_MODE: ForbiddenImportRule[] = [
  * refaite fichier par fichier avant de l'ajouter : R4 = 0 sur les six.
  *
  * ================================================================
- * POURQUOI `MODE_RULE_COMPARISON` N'Y EST TOUJOURS PAS.
+ * ETAPE 4 -- `MODE_RULE_COMPARISON` A REJOINT CE TABLEAU A SON TOUR.
  *
- * Ce n'est PAS une tolerance : c'est un constat mesure, et il tient a la
- * nature exacte de ce qui reste.
+ * Elle en etait absente pour une raison mesuree : ses cinq dernieres
+ * occurrences vivaient dans le template `systemPrompt` de
+ * `agent/[slug]/chat/route.ts`, ECHAPPEES -- du texte, pas du code. La regle
+ * y aurait vu du prompt qui ressemble a une decision.
  *
- * Les cinq dernieres occurrences vivent toutes dans
- * `agent/[slug]/chat/route.ts`, et AUCUNE n'est une decision JavaScript.
- * Ce sont des caracteres ECHAPPES a l'interieur du template `systemPrompt` :
- * le fichier contient litteralement `\${site.mode === 1 ? \`` -- un dollar
- * echappe, donc du TEXTE, jamais une interpolation. Mesure decisive : la
- * ligne 502 vaut, octet pour octet, '\\${site.mode === 1 ? \\`'. Le fence
- * markdown qui la precede est echappe de la meme facon, tandis que
- * l'interpolation `${JSON.stringify(...)}` juste au-dessus, elle, ne l'est
- * pas -- la difference est visible dans le fichier meme.
+ * L'evaluation reelle du prompt avec Node a montre que cet echappement etait
+ * un DEFAUT, pas une intention : les quatre autres interpolations du meme
+ * template fonctionnaient toutes, et l'agent recevait en consequence LES CINQ
+ * guidances -- 5 312 caracteres sur 14 780, 36 % du prompt, dont 6 lignes
+ * utiles sur 49 pour un site vitrine.
  *
- * Autrement dit : `MODE_RULE_COMPARISON` detecterait ici du TEXTE DE PROMPT
- * qui ressemble a du code, pas une frontiere metier. L'appliquer forcerait a
- * modifier ce que l'agent recoit -- un changement de comportement deguise en
- * conformite. La regle fonctionne ; ce qu'elle voit n'est pas une violation.
- *
- * CE CONSTAT N'EST PAS UNE APPROBATION. Que ces cinq blocs soient inertes est
- * un defaut reel : l'agent recoit les cinq guidances au lieu de la sienne.
- * Il est CONSIGNE ici, non corrige -- le corriger est un chantier a part
- * entiere (caracterisation, arbitrage sur le comportement voulu, tests), pas
- * une ligne glissee dans une passe d'architecture. Le NIVEAU 2 du cliquet
- * d'exhaustivite, agnostique du receveur, continue par ailleurs de tenir ce
- * fichier declare, donc visible.
- * ================================================================
- */
+ * La correction a extrait la decision dans `lib/agent-tools/modeGuidance.ts`
+ * plutot que de simplement desechapper : desechapper aurait rendu les cinq
+ * `site.mode === N` vivants DANS la route, ce que cette regle interdit
+ * precisement. La route interpole desormais `guidanceForSite(...)` et ne
+ * compare plus rien. Mesure refaite avant d'ajouter la regle : R1 = 0 sur les
+ * six fichiers du domaine.
+ * ================================================================ */
 export const SITE_MODE_ACQUISITION_RULES: ForbiddenImportRule[] = [
+  MODE_RULE_COMPARISON,
   MODE_RULE_SWITCH,
   MODE_RULE_MEMBERSHIP,
   MODE_RULE_TRUTHINESS,

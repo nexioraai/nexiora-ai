@@ -329,7 +329,8 @@ describe('ÉTAPE 4 — R4 est réellement appliquée', () => {
   it('la règle figure bien dans le jeu appliqué au domaine', () => {
     const motifs = domaine.forbiddenPatterns.map((r) => r.pattern.toString())
     expect(motifs).toContain(R4.toString())
-    expect(domaine.forbiddenPatterns).toHaveLength(5)
+    // 6 depuis que l'étape 4 y a ajouté MODE_RULE_COMPARISON.
+    expect(domaine.forbiddenPatterns).toHaveLength(6)
   })
 
   it('AUCUN fichier du domaine ne la viole — elle est tenue, pas décorative', () => {
@@ -347,46 +348,36 @@ describe('ÉTAPE 4 — R4 est réellement appliquée', () => {
   })
 })
 
-describe('ÉTAPE 4 — R1 est retenue pour une raison MESURÉE, pas par confort', () => {
-  const R1 = /\bsite\.mode\s*(===|!==|==|!=|>=|<=|>|<)/
-  const CHAT = 'src/app/api/agent/[slug]/chat/route.ts'
-  const source = () => readFileSync(join(RACINE, CHAT), 'utf-8')
+describe('ÉTAPE 4 — R1 est désormais APPLIQUÉE, et tenue', () => {
+  // CE BLOC A CHANGÉ DE CAMP, ET C'ÉTAIT SA FONCTION. Il constatait que R1
+  // restait dehors parce que ses cinq occurrences étaient du TEXTE DE PROMPT
+  // ÉCHAPPÉ. L'évaluation réelle du prompt avec Node a montré que cet
+  // échappement était un DÉFAUT : l'agent recevait les cinq guidances au lieu
+  // de la sienne. La décision a été extraite dans `modeGuidance.ts`, la route
+  // ne compare plus rien, et la règle peut enfin être appliquée pour de bon.
+  const domaine = DOMAIN_REGISTRY.find((d) => d.id === 'site-mode-decision-surfaces')!
+  const R1 = /\bsite\.mode\s*(===|!==|==|!=|>=|<=|>|<)|(===|!==|==|!=|>=|<=|>|<)\s*site\.mode\b/
+  const sansCommentaires = (f: string) =>
+    readFileSync(join(RACINE, f), 'utf-8')
+      .split('\n')
+      .filter((l) => !/^(\/\/|\*|\/\*)/.test(l.trim()))
+      .join('\n')
 
-  it('R1 n’est PAS appliquée au domaine', () => {
-    const domaine = DOMAIN_REGISTRY.find((d) => d.id === 'site-mode-decision-surfaces')!
-    expect(domaine.forbiddenPatterns.map((r) => r.pattern.toString())).not.toContain(R1.toString())
+  it('la règle figure dans le jeu appliqué au domaine', () => {
+    expect(domaine.forbiddenPatterns.map((r) => r.pattern.toString())).toContain(R1.toString())
+    expect(domaine.forbiddenPatterns).toHaveLength(6)
   })
 
-  it('🔴 les occurrences restantes sont du TEXTE ÉCHAPPÉ, jamais du code', () => {
-    // La preuve tient en un caractère : un antislash devant le dollar. Dans
-    // un template littéral, `\${` produit la chaîne `${` — donc du texte.
-    const lignes = source().split('\n').filter((l) => R1.test(l) && !l.trim().startsWith('//'))
-    expect(lignes.length, 'aucune occurrence restante — le constat serait vide').toBeGreaterThan(0)
-    for (const l of lignes) {
-      expect(l, `occurrence NON échappée trouvée : ${l.trim().slice(0, 60)}`).toMatch(/\\\$\{site\.mode/)
+  it('AUCUN fichier du domaine ne la viole — y compris la route de l’agent', () => {
+    for (const f of domaine.ownedFiles) {
+      expect(R1.test(sansCommentaires(f)), `${f} viole R1`).toBe(false)
     }
   })
 
-  it('elles vivent toutes dans le SEUL fichier mesuré', () => {
-    const domaine = DOMAIN_REGISTRY.find((d) => d.id === 'site-mode-decision-surfaces')!
-    for (const f of domaine.ownedFiles.filter((x) => x !== CHAT)) {
-      const code = readFileSync(join(RACINE, f), 'utf-8')
-        .split('\n')
-        .filter((l) => !/^(\/\/|\*|\/\*)/.test(l.trim()))
-        .join('\n')
-      expect(R1.test(code), `${f} porte une comparaison NON échappée`).toBe(false)
-    }
-  })
-
-  it('le system prompt n’a subi AUCUN changement fonctionnel', () => {
-    // Le défaut est consigné, pas corrigé : les cinq blocs restent inertes,
-    // au même endroit, dans la même forme. Le corriger est un chantier à part.
-    const src = source()
-    for (const n of [1, 2]) expect(src).toContain(`\\\${site.mode === ${n} ? \\\``)
-    for (const st of ['reseller', 'pod_brand', 'pod_custom']) {
-      expect(src).toContain(`site.dropship_type === '${st}' ? \\\``)
-    }
-    expect(src).toContain('MODE: SHOWCASE / VITRINE (mode 1)')
+  it('les cinq occurrences ont bien QUITTÉ la route pour une primitive', () => {
+    const route = sansCommentaires('src/app/api/agent/[slug]/chat/route.ts')
+    expect(route).toContain('guidanceForSite(site.mode, site.dropship_type)')
+    expect(route).not.toMatch(/site\.mode === [0-9]/)
   })
 })
 
