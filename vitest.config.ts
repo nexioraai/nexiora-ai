@@ -204,6 +204,12 @@ export default defineConfig({
       // `vitest run` -- le piege deja documente neuf fois dans ce fichier.
       // Verifie ici par le delta de comptage apres ajout.
       'src/lib/dropship/**/*.test.ts',
+      // LOT 6 -- LE PIEGE DE COLLECTE, DEUXIEME FOIS. Un fichier de test hors
+      // de cette liste n'est jamais execute et ne signale rien : il ressemble
+      // a une preuve, il n'en est pas une. `rate-limit` et `welcome` sont
+      // ajoutes AVANT que leurs tests soient ecrits, pas apres.
+      'src/lib/rate-limit/**/*.test.ts',
+      'src/app/api/welcome/**/*.test.ts',
     ],
     environment: 'node',
   },

@@ -549,6 +549,15 @@ export const DOMAIN_REGISTRY: DomainDefinition[] = [
       // appeler ; `modeGuidance` selectionne la guidance envoyee au modele ;
       // `onboarding` et `chat` valident et FIXENT le mode a la creation du
       // site -- c'est la decision la plus en amont de tout le systeme.
+      // LOT 6 / DEBT-057 + P5-05 -- DEUX ENTREES AJOUTEES, MEME MECANISME
+      // QU'A L'ETAPE 2 ET AU CHANTIER 6. Ces deux routes ne lisaient PAS le
+      // mode : elles n'avaient aucune admission du tout et servaient de proxy
+      // libre vers les credentials fournisseur. Elles interrogent desormais
+      // `usesCatalogSelections`, donc elles lisent `sites.mode`, donc le
+      // cliquet d'exhaustivite exige qu'elles se declarent ici -- au meme
+      // endroit que les six routes catalogue deja visibles.
+      'src/app/api/catalog/variants/route.ts',
+      'src/app/api/pod/printfile-info/route.ts',
       'src/lib/agent-tools/toolCapabilities.ts',
       'src/lib/agent-tools/modeGuidance.ts',
       'src/app/api/onboarding/route.ts',

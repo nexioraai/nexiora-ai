@@ -45,6 +45,9 @@ export default function ProductPageView({ product }: { product: ProductPage }) {
     if (!product.requiresVariant || !product.supplierId || !product.supplierProductId) return
     setChargementVariantes(true)
     const params = new URLSearchParams({
+      // LOT 6 / DEBT-057 -- le slug est desormais REQUIS : la route ne parle
+      // au fournisseur que pour un site reel, admis, et un produit indexe.
+      slug: product.siteSlug,
       supplier_id: product.supplierId,
       supplier_product_id: product.supplierProductId,
     })

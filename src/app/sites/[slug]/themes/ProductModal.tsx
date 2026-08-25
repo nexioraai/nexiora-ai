@@ -76,6 +76,8 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
     if (!p.supplier_id || !p.supplier_product_id) return;
     setLoadingVariants(true);
     const params = new URLSearchParams({
+      // LOT 6 / DEBT-057 -- slug requis par l'admission de la route.
+      slug,
       supplier_id: p.supplier_id,
       supplier_product_id: p.supplier_product_id,
     });

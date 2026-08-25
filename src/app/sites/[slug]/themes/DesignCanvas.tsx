@@ -102,7 +102,7 @@ export default function DesignCanvas({ productImage, variantId, onDesignChange, 
   // Fetch the real print area dimensions for this variant
   useEffect(() => {
     if (!variantId) return;
-    fetch(`/api/pod/printfile-info?variant_id=${variantId}`)
+    fetch(`/api/pod/printfile-info?slug=${encodeURIComponent(slug)}&variant_id=${encodeURIComponent(variantId)}`)
       .then(r => r.json())
       .then(d => {
         if (Array.isArray(d.placements) && d.placements.length > 0) {
@@ -111,7 +111,7 @@ export default function DesignCanvas({ productImage, variantId, onDesignChange, 
         }
       })
       .catch(() => {});
-  }, [variantId]);
+  }, [slug, variantId]);
 
   // Report every filled side upward, with printful-ready coordinates
   useEffect(() => {

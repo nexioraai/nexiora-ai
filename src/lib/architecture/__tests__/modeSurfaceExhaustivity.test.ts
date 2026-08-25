@@ -355,7 +355,7 @@ describe('ÉTAPE B — NIVEAU 2 : tout décideur est déclaré dans un domaine',
     expect(DECIDEURS.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('les deux domaines de l’étape B couvrent bien 17 fichiers', () => {
+  it('les deux domaines de l’étape B couvrent bien 19 fichiers', () => {
     const d = (id: string) => DOMAIN_REGISTRY.find((x) => x.id === id)!
     // ETAPE 2 -- 6 depuis que `catalog/search` interroge `hasSupplierCatalog` :
     // il est devenu un lecteur, donc une surface a declarer.
@@ -366,7 +366,7 @@ describe('ÉTAPE B — NIVEAU 2 : tout décideur est déclaré dans un domaine',
     // qui cesse d'etre implicite devient une surface nommee et declaree.
     // DEBT-054 -- 12 : quatre decideurs reels que le detecteur ne voyait pas
     // (toolCapabilities, modeGuidance, onboarding, chat) sont declares.
-    expect(d('site-mode-decision-surfaces').ownedFiles).toHaveLength(12)
+    expect(d('site-mode-decision-surfaces').ownedFiles).toHaveLength(14)
     expect(d('human-ui-mode-display').ownedFiles).toHaveLength(5)
   })
 

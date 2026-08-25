@@ -24,6 +24,8 @@ interface Props {
   product: MerchantProduct;
   primary: string;
   lang?: string;
+  /** LOT 6 / DEBT-057 -- requis par l'admission de `/api/catalog/variants`. */
+  slug: string;
   onClose: () => void;
   // Optionnel, retro-compatible : Editorial/Vif/Aurora ne le passent pas et
   // conservent donc exactement la fiche blanche actuelle (aucun diff visuel).
@@ -61,7 +63,7 @@ const TOKENS = {
   },
 }
 
-export default function MerchantProductModal({ product: p, primary, lang = 'en', onClose, variant = 'light' }: Props) {
+export default function MerchantProductModal({ product: p, primary, lang = 'en', slug, onClose, variant = 'light' }: Props) {
   const t = LABELS[lang] || LABELS.en;
   const c = TOKENS[variant]
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
@@ -76,6 +78,8 @@ export default function MerchantProductModal({ product: p, primary, lang = 'en',
     if (!p.supplierId || !p.supplierProductId) return;
     setLoadingVariants(true);
     const params = new URLSearchParams({
+      // LOT 6 / DEBT-057 -- slug requis par l'admission de la route.
+      slug,
       supplier_id: p.supplierId,
       supplier_product_id: p.supplierProductId,
     });

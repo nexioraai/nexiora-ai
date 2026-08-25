@@ -56,6 +56,7 @@ export default function ClickableProductCard({ product, primary, lang, slug, chi
           product={product}
           primary={primary}
           lang={lang}
+          slug={slug}
           variant={variant}
           onClose={() => setOpen(false)}
         />,
