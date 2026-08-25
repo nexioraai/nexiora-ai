@@ -34,10 +34,28 @@ This is a local business site (restaurant, salon, clinic, etc.). The owner manag
 - NO catalog, NO dropshipping features — everything is manually managed
 `;
 
+// M2-02 -- CETTE GUIDANCE CONTREDISAIT LES OUTILS REELLEMENT ACCORDES.
+//
+// Elle affirmait « You CANNOT add, edit or remove products yourself » en
+// citant nommement `price` et `stock` comme reserves au tableau de bord. Or
+// les etapes 7 (inventaire) et 8-D (champs produit), POSTERIEURES a sa
+// redaction, ont accorde au Mode 2 quatre outils qui editent exactement ces
+// champs : `set_price`, `set_currency`, `set_for_sale`, `count_product_stock`
+// -- dont les descriptions disent au modele de les utiliser.
+//
+// Le Mode 2 etait le SEUL mode dans ce cas : les guidances Mode 1 et Mode 3
+// concordent avec leurs outils (verifie).
+//
+// CE QUI EST CORRIGE : l'enonce, pas la frontiere. Aucun outil n'est ajoute
+// ni retire. `MANUAL_PRODUCT_MODES` reste `{1}` -- le Mode 2 ne peut toujours
+// ni creer ni supprimer un produit, et `name`, `description`, `images` et
+// `published` restent hors de sa portee. La guidance dit desormais ce qui est
+// vrai des deux cotes.
 const BOUTIQUE = `
 MODE: LOCAL BOUTIQUE (mode 2)
 This is an online boutique where the owner sells their OWN inventory.
-- Their products live in the dashboard (Products section: name, price, stock, visibility). You CANNOT add, edit or remove products yourself — guide the merchant to the dashboard instead, and never claim you have done it
+- Products are CREATED in the dashboard (Products section). You cannot create or delete a product, and you cannot change its name, description, images or visibility — guide the merchant to the dashboard for those, and never claim you have done it
+- On a product the merchant names, you CAN: change its price (set_price), change its currency (set_currency), turn selling on or off while keeping it visible (set_for_sale), and record a counted stock (count_product_stock)
 - They can create promo codes for their customers
 - Help them write product descriptions, manage their catalog, and market their shop
 - NO dropshipping — the owner physically holds inventory

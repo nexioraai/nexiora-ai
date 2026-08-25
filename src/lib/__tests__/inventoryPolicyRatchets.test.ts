@@ -241,6 +241,16 @@ describe("ÉTAPE 6 — les allowlists génériques restent fermées", () => {
       // code. Ce fichier ne lit, n'écrit ni n'interprète `for_sale` : il
       // déclare seulement à quels modes l'outil est proposé.
       'src/lib/agent-tools/toolCapabilities.ts',       // familles d'outils
+      // M2-02 — une entrée ajoutée CONSCIEMMENT, sur demande de ce cliquet
+      // lui-même : la correction M2-02 l'a fait rougir, ce qui est son
+      // office. La guidance Mode 2 affirmait que l'agent ne pouvait pas
+      // éditer les produits, alors que les étapes 7 et 8-D lui avaient
+      // accordé `set_for_sale`, `set_price`, `set_currency` et
+      // `count_product_stock`. Elle NOMME désormais ces outils pour dire
+      // vrai. Comme `toolCapabilities.ts` juste au-dessus, ce fichier ne
+      // lit, n'écrit ni n'interprète `for_sale` : il ne fait que citer le
+      // nom d'un outil dans un texte destiné au modèle.
+      'src/lib/agent-tools/modeGuidance.ts',           // guidance par mode
     ];
     const hors = SOURCES.filter((f) => /for_sale/.test(code(f))).map(relatif)
       .filter((f) => !AUTORISES.includes(f));

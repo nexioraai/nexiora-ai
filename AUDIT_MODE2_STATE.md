@@ -39,11 +39,11 @@ conformes, chemins de lecture/écriture corrects, rendu public juste.
 
 | ID | Niveau | Titre | Statut |
 |---|---|---|---|
-| M2-01 | 🔴 | La fiche produit Mode 2 renvoie 500 | **à traiter** |
-| M2-02 | 🟠 | La guidance Mode 2 contredit ses outils | à traiter |
+| M2-01 | 🟢 | La fiche produit Mode 2 renvoie 500 | **RÉSOLU** `d2244ea` |
+| M2-02 | 🟢 | La guidance Mode 2 contredit ses outils | **RÉSOLU** |
 | M2-03 | 🟠 | Le pied du panier est à moitié traduit | à traiter |
 | M2-04 | 🟠 | `PromoBanner` : langue **et devise** en dur | à traiter |
-| M2-05 | 🟠 | Le test de la fiche produit masque M2-01 | **à traiter** |
+| M2-05 | 🟢 | Le test de la fiche produit masque M2-01 | **RÉSOLU** `d2244ea` |
 | M2-06 | 🟡 | `shipping_flat` : borne unique, bypassable **et non testée** | à traiter (critère de fermeture) |
 | M2-07 | 🟡 | 1,1 s de latence par checkout Mode 2, quota fournisseur inutilisé | à traiter (critère de fermeture) |
 | M2-08 | ⚪ | `buildSupplierGroups` interrogé sur le chemin Mode 2 | lié à M2-07 |
@@ -99,9 +99,9 @@ aiguillage du fulfillment sur `fulfillment_domain`, jamais `sites.mode`.
 
 ## 8. CRITÈRES DE FERMETURE MODE 2
 
-- [ ] La fiche produit rend son bouton d'achat, verrouillé par un test sur la **composition réelle** *(M2-01, M2-05)*
-- [ ] Aucun test ne valide une composition inexistante en production *(M2-05)*
-- [ ] La guidance transmise au modèle est cohérente avec ses outils *(M2-02)*
+- [x] La fiche produit rend son bouton d'achat, verrouillé par un test sur la **composition réelle** *(M2-01, M2-05)*
+- [x] Aucun test ne valide une composition inexistante en production *(M2-05)*
+- [x] La guidance transmise au modèle est cohérente avec ses outils *(M2-02)*
 - [ ] Aucune surface publique Mode 2 n'affiche texte ou devise en dur *(M2-03, M2-04)*
 - [ ] Toute borne sur un paramètre commercial est **testée** *(M2-06)*
 - [ ] Le chemin de paiement Mode 2 n'exécute aucune logique fournisseur *(M2-07, M2-08)*
