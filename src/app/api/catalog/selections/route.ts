@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
+import { hasSupplierCatalog } from '@/lib/dropship/catalogAdmission';
 
 export const maxDuration = 10;
 
@@ -20,9 +21,33 @@ export async function GET(req: NextRequest) {
   const slug = req.nextUrl.searchParams.get('slug');
   if (!slug) return NextResponse.json({ error: 'slug requis' }, { status: 400 });
 
-  const auth = await requireSiteOwner(req, slug);
+  const auth = await requireSiteOwner(req, slug, 'id, mode');
   if (!auth.ok) return auth.response;
   const site = auth.site;
+
+  // ============================================================
+  // CHANTIER 6 (MODE 1) -- L'ADMISSION AU CATALOGUE PASSE PAR LA PRIMITIVE.
+  //
+  // AUCUN DES QUATRE VERBES NE POSAIT LA QUESTION DU MODE. Ce qui en tenait
+  // lieu differait d'un verbe a l'autre, et aucun n'etait une regle :
+  //   * GET / PATCH / DELETE : rien du tout. Un site Mode 1 obtenait
+  //     `{selections: []}` -- « sur » uniquement parce que la table etait
+  //     vide pour lui.
+  //   * POST : `suppliersForDropshipType(dropship_type)`. C'est la question
+  //     du SOUS-MODE (« quels fournisseurs »), jamais celle du MODE (« ce
+  //     site a-t-il un catalogue »). Mesure : un Mode 1 a `dropship_type`
+  //     null, et ce repli rend `RESELLER_SUPPLIERS` -- donc CJ. Un produit CJ
+  //     passait le controle et entrait dans `site_catalog_selections` d'une
+  //     vitrine. La ligne creee y rendait ensuite les trois autres verbes
+  //     operants : la protection « par absence de donnee » se detruisait
+  //     elle-meme au premier appel.
+  //
+  // La primitive tranche AVANT le sous-mode : « ce site a-t-il un catalogue »
+  // precede « lequel ». Meme contrat de reponse que `curate` et `enhance`.
+  // ============================================================
+  if (!hasSupplierCatalog(auth.site.mode)) {
+    return NextResponse.json({ error: 'Site non-dropshipping' }, { status: 400 });
+  }
 
   const { data, error } = await supabaseAdmin
     .from('site_catalog_selections')
@@ -65,8 +90,14 @@ export async function PATCH(req: NextRequest) {
     const { slug, id, ...updates } = await req.json();
     if (!slug || !id) return NextResponse.json({ error: 'slug et id requis' }, { status: 400 });
 
-    const auth = await requireSiteOwner(req, slug);
+    const auth = await requireSiteOwner(req, slug, 'id, mode');
     if (!auth.ok) return auth.response;
+
+    // CHANTIER 6 -- meme garde, meme primitive, meme contrat de reponse. La
+    // question du mode precede toujours celle du sous-mode.
+    if (!hasSupplierCatalog(auth.site.mode)) {
+      return NextResponse.json({ error: 'Site non-dropshipping' }, { status: 400 });
+    }
 
     const allowed = ['sell_price', 'merchant_approved', 'custom_name', 'custom_description', 'sort_order'];
     const clean: Record<string, any> = {};
@@ -98,8 +129,14 @@ export async function DELETE(req: NextRequest) {
   const id = req.nextUrl.searchParams.get('id');
   if (!slug || !id) return NextResponse.json({ error: 'slug et id requis' }, { status: 400 });
 
-  const auth = await requireSiteOwner(req, slug);
+  const auth = await requireSiteOwner(req, slug, 'id, mode');
   if (!auth.ok) return auth.response;
+
+  // CHANTIER 6 -- meme garde, meme primitive, meme contrat de reponse. La
+  // question du mode precede toujours celle du sous-mode.
+  if (!hasSupplierCatalog(auth.site.mode)) {
+    return NextResponse.json({ error: 'Site non-dropshipping' }, { status: 400 });
+  }
 
   const { error } = await supabaseAdmin
     .from('site_catalog_selections')
@@ -125,8 +162,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'slug et catalogProductId requis' }, { status: 400 });
     }
 
-    const auth = await requireSiteOwner(req, slug, 'id, dropship_type');
+    const auth = await requireSiteOwner(req, slug, 'id, mode, dropship_type');
     if (!auth.ok) return auth.response;
+
+    // CHANTIER 6 -- meme garde, meme primitive, meme contrat de reponse. La
+    // question du mode precede toujours celle du sous-mode.
+    if (!hasSupplierCatalog(auth.site.mode)) {
+      return NextResponse.json({ error: 'Site non-dropshipping' }, { status: 400 });
+    }
 
     const { data: product } = await supabaseAdmin
       .from('catalog_products')

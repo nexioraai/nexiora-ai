@@ -215,15 +215,20 @@ describe('ÉTAPE B — NIVEAU 2 : tout décideur est déclaré dans un domaine',
     expect(DECIDEURS.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('les deux domaines de l’étape B couvrent bien 10 fichiers', () => {
+  it('les deux domaines de l’étape B couvrent bien 13 fichiers', () => {
     const d = (id: string) => DOMAIN_REGISTRY.find((x) => x.id === id)!
     // ETAPE 2 -- 6 depuis que `catalog/search` interroge `hasSupplierCatalog` :
     // il est devenu un lecteur, donc une surface a declarer.
-    expect(d('site-mode-decision-surfaces').ownedFiles).toHaveLength(6)
+    // CHANTIER 6 -- 8 : `catalog/enhance` et `catalog/selections` posent
+    // desormais la meme question par la meme primitive. Le compte MONTE ici
+    // alors que le PLANCHER des decideurs bruts baisse : ce n'est pas une
+    // contradiction, c'est exactement le mouvement recherche -- une decision
+    // qui cesse d'etre implicite devient une surface nommee et declaree.
+    expect(d('site-mode-decision-surfaces').ownedFiles).toHaveLength(8)
     expect(d('human-ui-mode-display').ownedFiles).toHaveLength(5)
   })
 
-  it('les 5 surfaces hors UI sont CONTRAINTES, les 5 UI seulement DÉCLARÉES', () => {
+  it('les 8 surfaces hors UI sont CONTRAINTES, les 5 UI seulement DÉCLARÉES', () => {
     const d = (id: string) => DOMAIN_REGISTRY.find((x) => x.id === id)!
     // Ampleur décidée : déclarer les dix, ne contraindre que les cinq
     // premières. Une comparaison de mode dans l'UI humaine est un choix

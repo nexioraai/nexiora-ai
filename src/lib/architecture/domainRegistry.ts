@@ -526,6 +526,15 @@ export const DOMAIN_REGISTRY: DomainDefinition[] = [
       // lecteur que le cliquet d'exhaustivite doit voir. C'est le mecanisme
       // qui fonctionne : une surface nouvelle doit se declarer.
       'src/app/api/catalog/search/route.ts',
+      // CHANTIER 6 (MODE 1) -- deux entrees AJOUTEES, meme mecanisme qu'a
+      // l'etape 2. Ces routes ne lisaient pas le mode : `enhance` se fiait a
+      // l'absence de selection et `selections` au repli de
+      // `suppliersForDropshipType`. Elles interrogent desormais
+      // `hasSupplierCatalog`, donc elles lisent `sites.mode`, donc le cliquet
+      // d'exhaustivite exige qu'elles se declarent ici. Les six routes
+      // catalogue sont maintenant toutes visibles au meme endroit.
+      'src/app/api/catalog/enhance/route.ts',
+      'src/app/api/catalog/selections/route.ts',
       'src/app/sites/[slug]/themes/shared.tsx',
     ],
     forbiddenPatterns: SITE_MODE_ACQUISITION_RULES,

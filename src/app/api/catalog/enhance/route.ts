@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { logAiUsage } from '@/lib/ai-usage';
+import { hasSupplierCatalog } from '@/lib/dropship/catalogAdmission';
 
 export const maxDuration = 45;
 
@@ -20,9 +21,34 @@ export async function POST(req: NextRequest) {
 
     // Sans ce controle, n'importe qui declenche des appels Claude payants
     // sur la boutique d'un autre.
-    const auth = await requireSiteOwner(req, slug, 'id, type, lang');
+    const auth = await requireSiteOwner(req, slug, 'id, type, lang, mode');
     if (!auth.ok) return auth.response;
     const site = auth.site;
+
+    // ============================================================
+    // CHANTIER 6 (MODE 1) -- L'ADMISSION AU CATALOGUE PASSE PAR LA PRIMITIVE.
+    //
+    // CETTE ROUTE NE POSAIT PAS LA QUESTION. Sur les six routes catalogue,
+    // `curate`, `search` et `image-search` interrogeaient deja
+    // `hasSupplierCatalog` ; `enhance` et `selections` etaient les deux
+    // dernieres a en etre depourvues.
+    //
+    // CE QUI TENAIT LIEU DE REGLE ICI : L'ABSENCE DE DONNEES. Un site sans
+    // ligne dans `site_catalog_selections` sortait en « Tous les produits
+    // sont deja optimises » -- un 200 rassurant qui n'a jamais ete une
+    // decision d'autorisation. « Sur par absence de donnee » n'est pas une
+    // propriete de securite : elle cesse le jour ou une ligne apparait, par
+    // quelque chemin que ce soit.
+    //
+    // La garde est posee AVANT toute lecture de selection et AVANT tout appel
+    // Claude facture -- meme place que dans `curate`, et meme contrat de
+    // reponse (400, « Site non-dropshipping ») : ces deux routes forment une
+    // paire, un marchand ne doit pas recevoir deux refus differents pour la
+    // meme cause.
+    // ============================================================
+    if (!hasSupplierCatalog(site.mode)) {
+      return NextResponse.json({ error: 'Site non-dropshipping' }, { status: 400 });
+    }
 
     // Récupère les sélections sans custom_name (pas encore réécrites)
     const { data: selections } = await supabaseAdmin
