@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { hasSupplierCatalog } from '@/lib/dropship/catalogAdmission';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import Anthropic from '@anthropic-ai/sdk';
 import { sitePricing } from '@/lib/pricing';
@@ -32,9 +33,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Site not found' }, { status: 404 });
     }
 
-    // Seul le mode 3 a un catalogue fournisseur a fouiller. Mode 1 (vitrine)
-    // et mode 2 (stock propre du marchand) n'ont rien a y chercher.
-    if (site.mode !== 3) {
+    // Seul un site a catalogue fournisseur a quelque chose a y fouiller.
+    // ETAPE 2 -- l'admission au catalogue fournisseur passe par la primitive
+    // unique `hasSupplierCatalog`. La comparaison brute `site.mode !== 3`
+    // qui vivait ici etait la meme question, ecrite une troisieme fois dans
+    // le depot avec une reponse differente a chaque endroit. La garde reste
+    // AVANT tout appel externe facture, et le contrat de reponse est
+    // rigoureusement inchange.
+    if (!hasSupplierCatalog(site.mode)) {
       return NextResponse.json({ products: [], keywords: '', total: 0 });
     }
 

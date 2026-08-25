@@ -5,6 +5,9 @@ import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 import { logAiUsage } from '@/lib/ai-usage';
+// ETAPE 3 -- les familles d'outils par mode vivent desormais dans une
+// primitive dediee, en allowlists positives. Cette route ne decide plus.
+import { toolNamesForSite } from '@/lib/agent-tools/toolCapabilities';
 
 const allTools: Anthropic.Tool[] = [
   {
@@ -374,56 +377,18 @@ const allTools: Anthropic.Tool[] = [
   },
 ];
 
+// ETAPE 3 -- LA REGLE A ETE EXTRAITE, LA ROUTE NE DECIDE PLUS.
+//
+// Trois `if (mode === N)` empilaient ici des familles d'outils. La regle est
+// desormais dans `lib/agent-tools/toolCapabilities.ts`, sous forme
+// d'allowlists positives -- meme patron que `productDraft.ts` (dette 6c) et
+// `modeCapabilities.ts` (etape A). Deux gains : un mode inconnu ne recoit
+// `universal` que parce qu'il n'est inscrit nulle part, et non par absence de
+// branche ; et les quatorze cliquets qui lisaient le TEXTE de ce fichier
+// peuvent enfin appeler la fonction.
 function getToolsForSite(mode: number, dropshipType: string | null): Anthropic.Tool[] {
-  const universal = ['propose_field_update', 'propose_color_update', 'propose_theme_change', 'propose_contact_update', 'propose_update_social'];
-  const content = ['propose_add_service', 'propose_remove_service', 'propose_service_update', 'propose_testimonial_add', 'propose_testimonial_remove', 'propose_testimonial_update', 'propose_gallery_remove', 'propose_gallery_clear'];
-  const manualProducts = ['propose_product_add', 'propose_product_remove', 'propose_product_update'];
-  const catalog = ['catalog_curate', 'catalog_enhance', 'catalog_approve_all', 'catalog_set_margin'];
-  const promo = ['create_promo_code', 'deactivate_promo_code'];
-  // ETAPE 7 -- meme frontiere que l'admission au commerce (`canTransact` :
-  // modes 2 et 3, jamais 1). Un stock n'existe que pour un site qui vend ; la
-  // route d'inventaire le refuserait de toute facon en 403, et laisser le
-  // modele proposer un outil voue au refus serait une promesse fausse.
-  const inventory = ['count_product_stock'];
-  // ETAPE 8, VOLET D -- meme frontiere que `inventory`, et pour la meme
-  // raison : ces outils n'atteignent que `shop_products`, la table dont
-  // ProductManager est l'interface, elle-meme montee pour les modes 2 ET 3
-  // (edit/[slug]/page.tsx). Les catalogues fournisseurs du Mode 3 vivent
-  // ailleurs (`site_catalog_selections`, mockups pod_brand) et portent des
-  // identifiants prefixes `catalog-` que `GET /api/shop/products` ne renvoie
-  // jamais : ils sont donc hors d'atteinte par construction, et une demande
-  // les visant obtient un 404 explicite -- jamais une ecriture sur un autre
-  // produit.
-  const productFields = ['set_price', 'set_currency', 'set_for_sale'];
-
-  const allowed = [...universal];
-
-  if (mode === 1) {
-    allowed.push(...content, ...manualProducts);
-  }
-  // ETAPE 0 du chantier catalogue canonique -- le Mode 2 perd les outils
-  // `manualProducts`. Ils ecrivent dans `sites.products` (jsonb), or la
-  // vitrine d'une boutique Mode 2 lit `shop_products` : le chargeur public
-  // (themes/shared.tsx) ECRASE le jsonb des qu'une ligne `shop_products`
-  // publiee existe. Un produit ajoute ici etait donc soit invisible (ecrase),
-  // soit affiche mais NON ACHETABLE -- le checkout resout par
-  // `shop_products.id`, que ces objets jsonb ne possedent pas (0/32 mesures
-  // en production). Les produits Mode 2 se gerent dans le tableau de bord
-  // (ProductManager -> shop_products), seule source vendable.
-  // Le Mode 1 les conserve : sa `sites.products` n'a pas de contrepartie
-  // commerciale, et son traitement appartient a une etape ulterieure.
-  if (mode === 2) {
-    allowed.push(...content, ...promo, ...inventory, ...productFields);
-  }
-  if (mode === 3) {
-    allowed.push(...promo, ...inventory, ...productFields);
-    if (dropshipType === 'reseller' || dropshipType === 'pod_custom') {
-      allowed.push(...catalog);
-    }
-    // pod_brand: NO catalog tools — products come from merchant's own designs
-  }
-
-  return allTools.filter(t => allowed.includes(t.name));
+  const allowed = toolNamesForSite(mode, dropshipType);
+  return allTools.filter((t) => allowed.includes(t.name));
 }
 
 export async function POST(

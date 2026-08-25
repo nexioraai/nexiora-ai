@@ -14,6 +14,27 @@ import { join } from 'path';
 // MÊME que celle de l'admission au commerce (`canTransact` : {2, 3}).
 // ============================================================
 
+// ÉTAPE 3 — LES CLIQUETS D'EXPOSITION SONT DEVENUS COMPORTEMENTAUX.
+//
+// Ils lisaient le TEXTE de `chat/route.ts` faute de pouvoir appeler la règle :
+// `getToolsForSite` n'était pas exportée, et ce fichier le disait lui-même.
+// La règle vit désormais dans `lib/agent-tools/toolCapabilities.ts` : ces
+// assertions APPELLENT la fonction avec un mode réel au lieu de chercher un
+// motif dans une source. Elles ne sont pas affaiblies — elles cessent de
+// dépendre de la mise en forme du fichier qu'elles surveillent, et gagnent au
+// passage la couverture d'un mode inconnu, qu'aucun motif textuel ne pouvait
+// exprimer.
+import {
+  toolNamesForSite,
+  INVENTORY_TOOLS,
+  MANUAL_PRODUCT_TOOLS,
+  PRODUCT_FIELD_TOOLS,
+  CONTENT_TOOLS,
+} from '@/lib/agent-tools/toolCapabilities';
+
+/** Les outils réellement proposés à un site, par la règle réelle. */
+const outils = (mode: unknown, dropshipType: unknown = null) => toolNamesForSite(mode, dropshipType);
+
 const CHAT = readFileSync(join(__dirname, '../../chat/route.ts'), 'utf-8');
 const APPLY = readFileSync(join(__dirname, '../route.ts'), 'utf-8');
 
@@ -31,23 +52,25 @@ describe('count_product_stock — exposition par mode', () => {
   });
 
   it("le groupe `inventory` ne contient QUE cet outil", () => {
-    expect(CHAT).toMatch(/const inventory = \['count_product_stock'\];/);
+    expect([...INVENTORY_TOOLS]).toEqual(['count_product_stock']);
   });
 
   it('Mode 2 le reçoit', () => {
-    const bloc = CHAT.match(/if \(mode === 2\) \{[\s\S]*?\n  \}/)![0];
-    expect(bloc).toContain('...inventory');
+    expect(outils(2)).toContain('count_product_stock');
   });
 
   it('Mode 3 le reçoit', () => {
-    const bloc = CHAT.match(/if \(mode === 3\) \{[\s\S]*?\n  \}/)![0];
-    expect(bloc).toContain('...inventory');
+    expect(outils(3)).toContain('count_product_stock');
   });
 
   it("Mode 1 ne le reçoit JAMAIS — un stock n'existe pas pour une vitrine", () => {
-    const bloc = CHAT.match(/if \(mode === 1\) \{[\s\S]*?\n  \}/)![0];
-    expect(bloc).not.toContain('inventory');
-    expect(bloc).not.toContain('count_product_stock');
+    expect(outils(1)).not.toContain('count_product_stock');
+  });
+
+  it('🔴 un mode inconnu ne le reçoit pas non plus — fail-closed, jamais par accident', () => {
+    for (const m of [4, 42, 0, -1, null, undefined, '2', NaN]) {
+      expect(outils(m), String(m)).not.toContain('count_product_stock');
+    }
   });
 
   it("il est dans l'allowlist d'exécution de /apply (sans quoi il serait refusé)", () => {
@@ -76,7 +99,7 @@ describe('ÉTAPE 8, VOLET D — les trois outils produit', () => {
   }
 
   it('le groupe `productFields` ne contient QUE ces trois outils', () => {
-    expect(CHAT).toMatch(/const productFields = \['set_price', 'set_currency', 'set_for_sale'\];/);
+    expect([...PRODUCT_FIELD_TOOLS]).toEqual(['set_price', 'set_currency', 'set_for_sale']);
   });
 
   it('chacun prend `product_name`, JAMAIS un identifiant de produit', () => {
@@ -89,16 +112,14 @@ describe('ÉTAPE 8, VOLET D — les trois outils produit', () => {
   });
 
   it('Modes 2 et 3 les reçoivent ; le Mode 1 JAMAIS', () => {
-    const m1 = CHAT.match(/if \(mode === 1\) \{[\s\S]*?\n  \}/)![0];
-    const m2 = CHAT.match(/if \(mode === 2\) \{[\s\S]*?\n  \}/)![0];
-    const m3 = CHAT.match(/if \(mode === 3\) \{[\s\S]*?\n  \}/)![0];
-    expect(m2).toContain('...productFields');
-    expect(m3).toContain('...productFields');
+    for (const nom of OUTILS) {
+      expect(outils(2), nom).toContain(nom);
+      expect(outils(3), nom).toContain(nom);
+    }
     // Une vitrine n'a pas de shop_products : `canTransact` le refuserait de
     // toute façon en 403, et proposer un outil voué au refus est une promesse
     // fausse.
-    expect(m1).not.toContain('productFields');
-    for (const nom of OUTILS) expect(m1, nom).not.toContain(nom);
+    for (const nom of OUTILS) expect(outils(1), nom).not.toContain(nom);
   });
 
   it("`for_sale` n'apparaît dans chat/apply QUE via l'outil et son champ", () => {
@@ -113,10 +134,11 @@ describe('ÉTAPE 8, VOLET D — les trois outils produit', () => {
 
 describe('NON-RÉGRESSION ÉTAPE 0 — le Mode 2 ne récupère pas les outils produit jsonb', () => {
   it('`manualProducts` reste réservé au Mode 1', () => {
-    const m2 = CHAT.match(/if \(mode === 2\) \{[\s\S]*?\n  \}/)![0];
-    expect(m2).not.toContain('manualProducts');
-    const m1 = CHAT.match(/if \(mode === 1\) \{[\s\S]*?\n  \}/)![0];
-    expect(m1).toContain('...manualProducts');
+    for (const nom of MANUAL_PRODUCT_TOOLS) {
+      expect(outils(1), nom).toContain(nom);
+      expect(outils(2), nom).not.toContain(nom);
+      expect(outils(3), nom).not.toContain(nom);
+    }
   });
 });
 
@@ -193,13 +215,16 @@ describe('ÉTAPE 8, VOLET B — `propose_product_remove` / `_update`', () => {
   });
 
   it('ces outils restent réservés au Mode 1', () => {
-    const m1 = CHAT.match(/if \(mode === 1\) \{[\s\S]*?\n  \}/)![0];
-    const m2 = CHAT.match(/if \(mode === 2\) \{[\s\S]*?\n  \}/)![0];
-    const m3 = CHAT.match(/if \(mode === 3\) \{[\s\S]*?\n  \}/)![0];
-    expect(m1).toContain('...manualProducts');
-    expect(m2).not.toContain('manualProducts');
-    expect(m3).not.toContain('manualProducts');
-    expect(CHAT).toMatch(/const manualProducts = \['propose_product_add', 'propose_product_remove', 'propose_product_update'\];/);
+    for (const nom of MANUAL_PRODUCT_TOOLS) {
+      expect(outils(1), nom).toContain(nom);
+      expect(outils(2), nom).not.toContain(nom);
+      expect(outils(3), nom).not.toContain(nom);
+    }
+    expect([...MANUAL_PRODUCT_TOOLS]).toEqual([
+      'propose_product_add',
+      'propose_product_remove',
+      'propose_product_update',
+    ]);
   });
 
   it("le catalogue M1 reste `sites.products` : aucune écriture `shop_products` dans /apply", () => {
@@ -278,13 +303,13 @@ describe('DETTE 4 — `propose_gallery_remove` cible par URL', () => {
   });
 
   it('ces outils restent réservés aux Modes 1 et 2', () => {
-    const m1 = CHAT.match(/if \(mode === 1\) \{[\s\S]*?\n  \}/)![0];
-    const m2 = CHAT.match(/if \(mode === 2\) \{[\s\S]*?\n  \}/)![0];
-    const m3 = CHAT.match(/if \(mode === 3\) \{[\s\S]*?\n  \}/)![0];
-    expect(m1).toContain('...content');
-    expect(m2).toContain('...content');
-    expect(m3).not.toContain('...content');
-    expect(CHAT).toMatch(/'propose_gallery_remove', 'propose_gallery_clear'\]/);
+    for (const nom of ['propose_gallery_remove', 'propose_gallery_clear']) {
+      expect(outils(1), nom).toContain(nom);
+      expect(outils(2), nom).toContain(nom);
+      expect(outils(3), nom).not.toContain(nom);
+    }
+    expect([...CONTENT_TOOLS]).toContain('propose_gallery_remove');
+    expect([...CONTENT_TOOLS]).toContain('propose_gallery_clear');
   });
 
   it('la carte d\'approbation montre l\'URL, plus aucun `#index`', () => {

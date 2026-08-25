@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { toolNamesForSite } from '@/lib/agent-tools/toolCapabilities'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
@@ -151,13 +152,14 @@ describe('DETTE 4 — NON-RÉGRESSION : rien d\'autre n\'a bougé', () => {
   })
 
   it('les outils testimonials restent exposés aux Modes 1 et 2 SEULEMENT', () => {
-    const m1 = CHAT.match(/if \(mode === 1\) \{[\s\S]*?\n {2}\}/)![0]
-    const m2 = CHAT.match(/if \(mode === 2\) \{[\s\S]*?\n {2}\}/)![0]
-    const m3 = CHAT.match(/if \(mode === 3\) \{[\s\S]*?\n {2}\}/)![0]
-    expect(m1).toContain('...content')
-    expect(m2).toContain('...content')
-    expect(m3).not.toContain('...content')
-    expect(CHAT).toMatch(/'propose_testimonial_add', 'propose_testimonial_remove', 'propose_testimonial_update'/)
+    // ÉTAPE 3 — cliquet devenu comportemental : la règle est appelée, plus
+    // cherchée dans le texte de la route (voir toolCapabilities.ts).
+    for (const nom of ['propose_testimonial_add', 'propose_testimonial_remove', 'propose_testimonial_update']) {
+      expect(toolNamesForSite(1, null), nom).toContain(nom)
+      expect(toolNamesForSite(2, null), nom).toContain(nom)
+      expect(toolNamesForSite(3, null), nom).not.toContain(nom)
+      expect(toolNamesForSite(4, null), nom).not.toContain(nom)
+    }
   })
 
   it('`AIAgentChat.tsx` est INTACT — les cartes restent en `#index`', () => {

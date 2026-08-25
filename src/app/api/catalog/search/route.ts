@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { hasSupplierCatalog } from '@/lib/dropship/catalogAdmission';
 import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
 import { calcSellPrice, sitePricing, resolveDisplayPrice } from '@/lib/pricing';
 
@@ -33,6 +34,35 @@ export async function GET(req: NextRequest) {
 
   if (!site) {
     return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
+  }
+
+  // ============================================================
+  // ETAPE 2 -- CETTE GARDE N'EXISTAIT PAS, ET C'ETAIT UN TROU.
+  //
+  // Cette route selectionnait `mode` puis ne le lisait JAMAIS : elle s'en
+  // remettait entierement a `suppliersForDropshipType(dropship_type)`. Or ce
+  // dernier retombe sur `['cj']` quand le sous-type est absent -- « par
+  // securite, aucun melange », dit son commentaire, ce qui est juste POUR UN
+  // SITE MODE 3. Consequence mesuree : un site Mode 1 ou Mode 2, dont le
+  // sous-type est null, obtenait le catalogue CJ complet des lors qu'on
+  // connaissait son slug.
+  //
+  // AUCUN CLIENT LEGITIME N'EST TOUCHE : `CatalogSearch` n'est rendu que
+  // lorsque `site.mode === 3` (sites/[slug]/page.tsx). Seuls les appelants
+  // directs voient la difference -- et c'est precisement le point.
+  //
+  // FORME DE REPONSE INCHANGEE : meme objet que le succes, simplement vide.
+  // Un 403 aurait appris a un rodeur que le slug existe ; ce silence
+  // n'apprend rien de plus qu'une boutique sans resultat.
+  // ============================================================
+  if (!hasSupplierCatalog((site as { mode?: unknown }).mode)) {
+    return NextResponse.json({
+      products: [],
+      total: 0,
+      page,
+      page_size: pageSize,
+      has_more: false,
+    });
   }
 
   const { margin, roundMode } = sitePricing(site);

@@ -234,6 +234,13 @@ describe("ÉTAPE 6 — les allowlists génériques restent fermées", () => {
       'src/components/edit/productDraft.ts',              // brouillon marchand
       'src/app/sites/[slug]/themes/shared.tsx',           // projection publique
       'src/app/sites/[slug]/produits/[id]/fetchProduct.ts', // fiche produit
+      // ÉTAPE 3 du chantier des frontières — une entrée ajoutée CONSCIEMMENT.
+      // `set_for_sale` figurait dans `chat/route.ts` (déjà déclaré ci-dessus)
+      // au sein du groupe `productFields` ; ce groupe a été extrait dans une
+      // primitive d'allowlists positives. Le NOM de l'outil a donc suivi le
+      // code. Ce fichier ne lit, n'écrit ni n'interprète `for_sale` : il
+      // déclare seulement à quels modes l'outil est proposé.
+      'src/lib/agent-tools/toolCapabilities.ts',       // familles d'outils
     ];
     const hors = SOURCES.filter((f) => /for_sale/.test(code(f))).map(relatif)
       .filter((f) => !AUTORISES.includes(f));

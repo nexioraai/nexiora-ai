@@ -206,39 +206,113 @@ const MODE_3_MUST_NOT_DEPEND_ON_MODE_2: ForbiddenImportRule[] = [
  *  c'est exactement l'évasion que le contrôle de mutation de la phase 0 avait
  *  identifiée comme le trou d'un motif purement textuel. Interdire l'extraction
  *  ferme la dérivation en amont, plutôt que de courir après ses formes. */
+// ETAPE B -- LES SIX REGLES SONT DESORMAIS NOMMEES, UNE PAR UNE.
+//
+// Leur CONTENU est rigoureusement inchange : meme motif, meme raison, meme
+// ordre dans `CHECKOUT_MUST_NOT_DECIDE_ON_MODE`. Seule leur FORME change,
+// pour qu'un autre domaine puisse en reutiliser un sous-ensemble sans le
+// recopier -- recopier une regle, c'est en creer une seconde qui divergera.
+
+const MODE_RULE_COMPARISON: ForbiddenImportRule = {
+  pattern: /\bsite\.mode\s*(===|!==|==|!=|>=|<=|>|<)|(===|!==|==|!=|>=|<=|>|<)\s*site\.mode\b/,
+  reason:
+    "Phase 4 — comparer `site.mode` à une valeur, c'est réintroduire une règle de domaine dans le point de vente. La règle appartient à mode2/checkoutPolicy.ts ou mode3/checkoutPolicy.ts ; la route interroge la politique, elle ne la connaît pas.",
+}
+
+const MODE_RULE_SWITCH: ForbiddenImportRule = {
+  pattern: /\bswitch\s*\(\s*site\.mode\b/,
+  reason:
+    "Phase 4 — aiguiller sur `site.mode` est un branchement métier, quelle que soit sa syntaxe. La seule conversion autorisée est resolveFulfillmentDomain().",
+}
+
+const MODE_RULE_MEMBERSHIP: ForbiddenImportRule = {
+  pattern: /\.(includes|indexOf|has)\s*\(\s*site\.mode\b/,
+  reason:
+    "Phase 4 — tester l'appartenance de `site.mode` à un ensemble de modes est un branchement métier déguisé en test d'appartenance.",
+}
+
+const MODE_RULE_TRUTHINESS: ForbiddenImportRule = {
+  pattern: /\bsite\.mode\s*\?(?!\?)|\bif\s*\(\s*!?\s*site\.mode\b/,
+  reason:
+    "Phase 4 — brancher sur la véracité de `site.mode` (ternaire ou `if` direct) est une décision de domaine. `??` reste permis : il transporte une valeur, il n'en dérive rien.",
+}
+
+const MODE_RULE_EXTRACTION: ForbiddenImportRule = {
+  pattern: /\b(const|let|var)\s+[A-Za-z_$][\w$]*\s*(:[^=]+)?=\s*site\.mode\b|\{[^}]*\bmode\b[^}]*\}\s*=\s*site\b|\bsite\s*\[\s*['"`]mode['"`]\s*\]/,
+  reason:
+    "Phase 4 — extraire le mode dans une variable (affectation, destructuration ou accès par crochets) rend invisible le branchement qui suivra. Passer `site.mode` directement à resolveFulfillmentDomain() est la seule sortie prévue.",
+}
+
+const MODE_RULE_SITE_ALIAS: ForbiddenImportRule = {
+  pattern: /\b(const|let|var)\s+[A-Za-z_$][\w$]*\s*=\s*site\s*[;,)]/,
+  reason:
+    "Phase 4 — aliaser le site entier contourne toutes les règles ci-dessus en une ligne (`const s = site` puis `s.mode === 3`). La route n'a aucun besoin d'un alias du site.",
+}
+
 const CHECKOUT_MUST_NOT_DECIDE_ON_MODE: ForbiddenImportRule[] = [
-  {
-    pattern: /\bsite\.mode\s*(===|!==|==|!=|>=|<=|>|<)|(===|!==|==|!=|>=|<=|>|<)\s*site\.mode\b/,
-    reason:
-      "Phase 4 — comparer `site.mode` à une valeur, c'est réintroduire une règle de domaine dans le point de vente. La règle appartient à mode2/checkoutPolicy.ts ou mode3/checkoutPolicy.ts ; la route interroge la politique, elle ne la connaît pas.",
-  },
-  {
-    pattern: /\bswitch\s*\(\s*site\.mode\b/,
-    reason:
-      "Phase 4 — aiguiller sur `site.mode` est un branchement métier, quelle que soit sa syntaxe. La seule conversion autorisée est resolveFulfillmentDomain().",
-  },
-  {
-    pattern: /\.(includes|indexOf|has)\s*\(\s*site\.mode\b/,
-    reason:
-      "Phase 4 — tester l'appartenance de `site.mode` à un ensemble de modes est un branchement métier déguisé en test d'appartenance.",
-  },
-  {
-    pattern: /\bsite\.mode\s*\?(?!\?)|\bif\s*\(\s*!?\s*site\.mode\b/,
-    reason:
-      "Phase 4 — brancher sur la véracité de `site.mode` (ternaire ou `if` direct) est une décision de domaine. `??` reste permis : il transporte une valeur, il n'en dérive rien.",
-  },
-  {
-    pattern:
-      /\b(const|let|var)\s+[A-Za-z_$][\w$]*\s*(:[^=]+)?=\s*site\.mode\b|\{[^}]*\bmode\b[^}]*\}\s*=\s*site\b|\bsite\s*\[\s*['"`]mode['"`]\s*\]/,
-    reason:
-      "Phase 4 — extraire le mode dans une variable (affectation, destructuration ou accès par crochets) rend invisible le branchement qui suivra. Passer `site.mode` directement à resolveFulfillmentDomain() est la seule sortie prévue.",
-  },
-  {
-    pattern: /\b(const|let|var)\s+[A-Za-z_$][\w$]*\s*=\s*site\s*[;,)]/,
-    reason:
-      "Phase 4 — aliaser le site entier contourne toutes les règles ci-dessus en une ligne (`const s = site` puis `s.mode === 3`). La route n'a aucun besoin d'un alias du site.",
-  },
+  MODE_RULE_COMPARISON,
+  MODE_RULE_SWITCH,
+  MODE_RULE_MEMBERSHIP,
+  MODE_RULE_TRUTHINESS,
+  MODE_RULE_EXTRACTION,
+  MODE_RULE_SITE_ALIAS,
 ]
+
+/**
+ * ETAPE B -- LES VOIES D'ACQUISITION DU MODE, sans la comparaison elle-meme.
+ *
+ * Ce sous-ensemble ferme les formes qu'AUCUN detecteur textuel ne voit :
+ * extraire le mode dans une variable (`const m = site.mode` puis `m === 3`),
+ * aliaser le site entier, brancher par `switch` ou par appartenance. Le
+ * cliquet d'exhaustivite, lui, detecte les COMPARAISONS -- les deux se
+ * completent au lieu de se doubler.
+ *
+ * ETAPE 4 -- `MODE_RULE_TRUTHINESS` A REJOINT CE TABLEAU.
+ * A l'etape B, deux fichiers la violaient (`catalog/curate`,
+ * `catalog/image-search`) : tous deux ecrivaient `if (site.mode !== 3)`.
+ * L'etape 2 a remplace cette comparaison par `hasSupplierCatalog(site.mode)`,
+ * primitive unique d'admission au catalogue fournisseur. Les deux violations
+ * ont disparu, et la regle peut donc etre appliquee reellement -- mesure
+ * refaite fichier par fichier avant de l'ajouter : R4 = 0 sur les six.
+ *
+ * ================================================================
+ * POURQUOI `MODE_RULE_COMPARISON` N'Y EST TOUJOURS PAS.
+ *
+ * Ce n'est PAS une tolerance : c'est un constat mesure, et il tient a la
+ * nature exacte de ce qui reste.
+ *
+ * Les cinq dernieres occurrences vivent toutes dans
+ * `agent/[slug]/chat/route.ts`, et AUCUNE n'est une decision JavaScript.
+ * Ce sont des caracteres ECHAPPES a l'interieur du template `systemPrompt` :
+ * le fichier contient litteralement `\${site.mode === 1 ? \`` -- un dollar
+ * echappe, donc du TEXTE, jamais une interpolation. Mesure decisive : la
+ * ligne 502 vaut, octet pour octet, '\\${site.mode === 1 ? \\`'. Le fence
+ * markdown qui la precede est echappe de la meme facon, tandis que
+ * l'interpolation `${JSON.stringify(...)}` juste au-dessus, elle, ne l'est
+ * pas -- la difference est visible dans le fichier meme.
+ *
+ * Autrement dit : `MODE_RULE_COMPARISON` detecterait ici du TEXTE DE PROMPT
+ * qui ressemble a du code, pas une frontiere metier. L'appliquer forcerait a
+ * modifier ce que l'agent recoit -- un changement de comportement deguise en
+ * conformite. La regle fonctionne ; ce qu'elle voit n'est pas une violation.
+ *
+ * CE CONSTAT N'EST PAS UNE APPROBATION. Que ces cinq blocs soient inertes est
+ * un defaut reel : l'agent recoit les cinq guidances au lieu de la sienne.
+ * Il est CONSIGNE ici, non corrige -- le corriger est un chantier a part
+ * entiere (caracterisation, arbitrage sur le comportement voulu, tests), pas
+ * une ligne glissee dans une passe d'architecture. Le NIVEAU 2 du cliquet
+ * d'exhaustivite, agnostique du receveur, continue par ailleurs de tenir ce
+ * fichier declare, donc visible.
+ * ================================================================
+ */
+export const SITE_MODE_ACQUISITION_RULES: ForbiddenImportRule[] = [
+  MODE_RULE_SWITCH,
+  MODE_RULE_MEMBERSHIP,
+  MODE_RULE_TRUTHINESS,
+  MODE_RULE_EXTRACTION,
+  MODE_RULE_SITE_ALIAS,
+]
+
 
 /** Les lignes de commentaire sont exclues du scan de ce domaine.
  *
@@ -385,6 +459,117 @@ export const DOMAIN_REGISTRY: DomainDefinition[] = [
     contractTestsPath: 'src/lib/commerce-admission/__tests__/canTransact.test.ts',
   },
   {
+    // ETAPE A du chantier des frontieres -- NOUVEAU DOMAINE.
+    //
+    // POURQUOI IL NE POUVAIT PAS REJOINDRE `mode-1-showcase-domain`. Ce
+    // dernier est soumis a un test d'EXHAUSTIVITE indexe sur
+    // MODE_1_OWNED_DIRECTORIES = ['src/lib/commerce-admission'] : tout fichier
+    // declare hors de ce repertoire y devient un « fantome » et fait rougir la
+    // suite. Mesure faite avant toute modification. `modeCapabilities.ts` vit
+    // dans les themes ; il lui fallait donc son propre domaine, ce qui est de
+    // toute facon plus juste -- l'un porte l'ADMISSION, l'autre le RENDU.
+    id: 'mode-1-shop-surface',
+    description:
+      "Surface boutique de la vitrine (etape A) -- `getModeCapabilities` decide si un site AFFICHE une section Shop et monte un panier. Cette decision doit DERIVER de l'admission (`canTransact`), jamais la redefinir. Elle la redefinissait : une comparaison negative au mode vitrine y tenait lieu de frontiere, si bien qu'un mode inconnu obtenait une boutique des qu'il avait un produit -- alors que `canTransact` le refusait. Deux definitions de « ce site commerce » coexistaient, d'accord sur les trois modes connus et divergentes sur tout le reste. Ce domaine interdit le retour de cette forme, et l'entree de la frontiere de ROUTAGE dans une decision d'AFFICHAGE.",
+    ownedFiles: ['src/app/sites/[slug]/themes/modeCapabilities.ts'],
+    forbiddenPatterns: [
+      {
+        pattern: /!==?\s*1\b/,
+        reason:
+          "Etape A -- une comparaison NEGATIVE au mode vitrine fait du commerce le comportement PAR DEFAUT : un mode ajoute demain obtiendrait une boutique sans que personne l'ait decide. L'autorite est `canTransact`, allowlist positive. C'est la meme regle que celle qui garde `canTransact.ts` lui-meme.",
+      },
+      {
+        pattern: /from ['"]@\/lib\/order-domain/,
+        reason:
+          "Etape A -- `order-domain/` porte la frontiere de ROUTAGE (« qui execute la vente ? »). L'importer ici la ferait entrer dans une decision d'AFFICHAGE, rejouant la confusion entre admission et routage que neuf phases ont servi a defaire.",
+      },
+      {
+        pattern: /\bSUPPLIER_SITE_MODE\b/,
+        reason:
+          "Etape A -- meme raison : la coincidence de valeur entre le mode fournisseur et le mode a catalogue anticipe n'est PAS une dependance. Ces deux regles doivent pouvoir diverger sans se contredire ; l'allowlist locale les tient separees.",
+      },
+      {
+        pattern: /\bmode\s*===\s*[0-9]/,
+        reason:
+          "Etape A -- une valeur de mode comparee en dur est une frontiere ecrite sans nom. Les deux regles de ce fichier sont des allowlists (`canTransact` pour l'admission, `CATALOG_BEFORE_OWN_PRODUCTS` pour le catalogue anticipe) : y ajouter un mode doit rester une decision visible dans un diff.",
+      },
+      {
+        pattern: /\bdropship_type\b/,
+        reason:
+          "Etape A -- le sous-type est interne au domaine fournisseur. La surface boutique ne descend jamais a ce niveau : elle ne distingue que « affiche une boutique » de « n'en affiche pas ».",
+      },
+    ],
+    // Le fichier EXPLIQUE en prose pourquoi la forme negative est proscrite et
+    // pourquoi `SUPPLIER_SITE_MODE` n'est pas importe -- c'est meme la
+    // meilleure protection contre une reintroduction par meconnaissance.
+    // Meme derogation, meme raison qu'a `mode-1-showcase-domain`.
+    ignoreLinePattern: IGNORE_COMMENT_LINES,
+    capabilities: ['hasShop'],
+    contractTestsPath: 'src/app/sites/[slug]/themes/__tests__/mode1-isolation.test.tsx',
+  },
+  {
+    // ETAPE B -- LES SURFACES DE DECISION SUR LE MODE, HORS UI HUMAINE.
+    //
+    // Ces cinq fichiers derivent une regle du mode du site. Ils etaient
+    // invisibles a l'exhaustivite du registre, indexee par REPERTOIRE : aucun
+    // `*_OWNED_DIRECTORIES` ne pointait sur eux. C'est le meme angle mort qui
+    // avait laisse passer `modeCapabilities.ts` et `CartDrawer.tsx` -- le
+    // mecanisme fonctionnait, il ne regardait simplement pas la.
+    //
+    // AMPLEUR DELIBEREE. Ils recoivent les regles d'ACQUISITION, pas celles de
+    // COMPARAISON : trois d'entre eux comparent le mode aujourd'hui, et leur
+    // imposer `MODE_RULE_COMPARISON` aurait exige de corriger leur code --
+    // un autre chantier. La comparaison reste couverte par le NIVEAU 2 du
+    // cliquet d'exhaustivite, qui les oblige a etre declares ici.
+    id: 'site-mode-decision-surfaces',
+    description:
+      "Surfaces de decision sur `sites.mode` hors interface humaine (etape B) -- ces fichiers derivent une regle du mode : groupement analytique, familles d'outils IA, admission au catalogue fournisseur, chargement des selections. Ils n'ont pas a ACQUERIR le mode par une voie detournee : l'extraire dans une variable, aliaser le site, brancher par switch ou par appartenance rend invisible le branchement qui suit. Ces quatre voies leur sont fermees, avec les regles deja eprouvees par `checkout-domain-selection`. La comparaison directe leur reste permise en l'etat, et c'est un constat, pas une approbation : le niveau 2 du cliquet d'exhaustivite les tient declares ici, donc visibles.",
+    ownedFiles: [
+      'src/app/api/admin/stats/route.ts',
+      'src/app/api/agent/[slug]/chat/route.ts',
+      'src/app/api/catalog/curate/route.ts',
+      'src/app/api/catalog/image-search/route.ts',
+      // ETAPE 2 -- entree AJOUTEE. Cette route ne lisait pas le mode ; elle le
+      // lit desormais pour interroger `hasSupplierCatalog`, ce qui en fait un
+      // lecteur que le cliquet d'exhaustivite doit voir. C'est le mecanisme
+      // qui fonctionne : une surface nouvelle doit se declarer.
+      'src/app/api/catalog/search/route.ts',
+      'src/app/sites/[slug]/themes/shared.tsx',
+    ],
+    forbiddenPatterns: SITE_MODE_ACQUISITION_RULES,
+    ignoreLinePattern: IGNORE_COMMENT_LINES,
+    capabilities: ['siteMode'],
+    contractTestsPath: 'src/lib/architecture/__tests__/modeSurfaceExhaustivity.test.ts',
+  },
+  {
+    // ETAPE B -- L'INTERFACE HUMAINE : DECLAREE, PAS CONTRAINTE.
+    //
+    // Ces cinq fichiers comparent le mode pour decider ce qu'ils AFFICHENT --
+    // monter un onglet, activer un champ, choisir un libelle. C'est un choix
+    // d'affichage legitime, pas une frontiere metier. Leur interdire
+    // mecaniquement toute comparaison produirait des faux positifs en serie et
+    // pousserait a contourner le registre plutot qu'a s'y conformer.
+    //
+    // `forbiddenPatterns` VIDE, ET C'EST LE POINT. La valeur de cette entree
+    // n'est pas d'interdire : c'est de rendre ces fichiers VISIBLES au niveau
+    // 2 du cliquet. Sans elle, ils resteraient hors registre -- exactement
+    // l'etat qui a produit les deux breches. Declarer n'est pas contraindre,
+    // et c'est ici l'ampleur voulue.
+    id: 'human-ui-mode-display',
+    description:
+      "Interface humaine pilotee par le mode (etape B) -- editeur marchand, apercu, page publique, connexion des paiements, onboarding. Ces fichiers lisent `sites.mode` pour decider d'un AFFICHAGE, jamais d'une regle de vente : aucune admission, aucun routage, aucune facturation n'en depend. Ils sont declares pour etre visibles du cliquet d'exhaustivite -- toute nouvelle decision sur le mode ailleurs dans le depot devra rejoindre un domaine, celui-ci ou un autre -- mais ils ne recoivent volontairement aucune regle : une comparaison de mode y est un choix d'interface, pas une frontiere.",
+    ownedFiles: [
+      'src/app/edit/[slug]/page.tsx',
+      'src/app/preview/[slug]/page.tsx',
+      'src/app/sites/[slug]/page.tsx',
+      'src/components/edit/PaymentConnect.tsx',
+      'src/components/onboarding/OnboardingChat.tsx',
+    ],
+    forbiddenPatterns: [],
+    capabilities: ['siteMode'],
+    contractTestsPath: 'src/lib/architecture/__tests__/modeSurfaceExhaustivity.test.ts',
+  },
+  {
     id: 'order-cancellation',
     description:
       "Annulation acheteur (phase 5, vecteur F4) — un acheteur annule sa commande de la meme facon, qu'elle soit executee par le marchand ou par un fournisseur : cette route est traversee par les DEUX domaines. Elle importait pourtant `cj/client` et portait les identifiants CJ en tete de fichier. Elle ne s'adresse desormais qu'au point d'entree du domaine fournisseur. Le declencheur reste la presence d'une commande fournisseur, jamais le mode ni le sous-type.",
@@ -485,6 +670,7 @@ export const DOMAIN_REGISTRY: DomainDefinition[] = [
       'src/lib/cj/reconcile.ts',
       'src/lib/cj/shipping-tiers.ts',
       'src/lib/cj/statusMap.ts',
+      'src/lib/dropship/catalogAdmission.ts',
       'src/lib/dropship/suppliers.ts',
       'src/lib/mode3/cancelSupplierOrder.ts',
       'src/lib/mode3/catalogStock.ts',

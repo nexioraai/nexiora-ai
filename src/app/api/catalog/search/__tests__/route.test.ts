@@ -32,7 +32,11 @@ vi.mock('@/lib/supabase-admin', () => ({
 
 import { GET } from '../route';
 
-const SITE = { id: 'site-1', type: 'fashion store', mode: 2, dropship_type: 'reseller', cj_margin_percent: 30, cj_round_mode: null };
+// ETAPE 2 -- le fixture decrivait un site Mode 2, c'est-a-dire un site qui
+// n'a AUCUN catalogue fournisseur a fouiller. Il decrivait donc un appel qui
+// n'aurait jamais du aboutir. Correction de fixture seule : aucune assertion
+// de ce fichier ne change de sens.
+const SITE = { id: 'site-1', type: 'fashion store', mode: 3, dropship_type: 'reseller', cj_margin_percent: 30, cj_round_mode: null };
 
 const GLOBAL_PRODUCT = {
   id: 'cp-1',

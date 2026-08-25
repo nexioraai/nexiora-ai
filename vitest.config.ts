@@ -148,6 +148,13 @@ export default defineConfig({
       // verifie ici par le delta de comptage de tests apres ajout.
       'src/app/api/sites/**/*.test.ts',
       'src/app/api/marketing/**/*.test.ts',
+      // ETAPE 2 du chantier des frontieres -- `src/lib/dropship/` n'etait pas
+      // collecte, alors qu'il porte la « source UNIQUE » de la regle
+      // fournisseur et desormais l'admission au catalogue. Sans cette ligne,
+      // leurs tests passent en isolation mais ne sont JAMAIS collectes par
+      // `vitest run` -- le piege deja documente neuf fois dans ce fichier.
+      // Verifie ici par le delta de comptage apres ajout.
+      'src/lib/dropship/**/*.test.ts',
     ],
     environment: 'node',
   },
