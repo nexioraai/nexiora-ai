@@ -189,6 +189,99 @@ const allTools: Anthropic.Tool[] = [
       required: ['index', 'field', 'value', 'reason'],
     },
   },
+  // ===== CHANTIER 4 -- FAQ ET « POURQUOI NOUS », ADRESSES PAR CONTENU =====
+  //
+  // Six outils, jamais un `propose_list_item(list, ...)` generique : un outil
+  // parametre par un nom de liste deplacerait l'allowlist du code vers le
+  // modele. Meme raisonnement que `set_price` / `set_currency` / `set_for_sale`.
+  //
+  // AUCUN INDEX. `propose_testimonial_remove` adresse encore par index et une
+  // devinette dans les bornes supprime la mauvaise entree sans erreur. Ces six
+  // outils designent la QUESTION ou le TITRE exact, et refusent sur ambiguite.
+  {
+    name: 'propose_faq_add',
+    description:
+      'Propose to add a new question to the site FAQ. The question must not already exist. Note: if the merchant has hidden the FAQ section, the new entry will not be visible until they show it again.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        question: { type: 'string' },
+        answer: { type: 'string' },
+        reason: { type: 'string' },
+      },
+      required: ['question', 'answer', 'reason'],
+    },
+  },
+  {
+    name: 'propose_faq_remove',
+    description:
+      'Propose to remove one FAQ entry, identified by its exact question text as it appears on the site. Never guess it.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        question: { type: 'string', description: 'The exact existing question to remove' },
+        reason: { type: 'string' },
+      },
+      required: ['question', 'reason'],
+    },
+  },
+  {
+    name: 'propose_faq_update',
+    description:
+      'Propose to rewrite the question or the answer of one existing FAQ entry, identified by its exact current question text.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        question: { type: 'string', description: 'The exact CURRENT question identifying the entry' },
+        field: { type: 'string', enum: ['question', 'answer'] },
+        value: { type: 'string', description: 'The new text for that field' },
+        reason: { type: 'string' },
+      },
+      required: ['question', 'field', 'value', 'reason'],
+    },
+  },
+  {
+    name: 'propose_whyus_add',
+    description:
+      'Propose to add a new "why choose us" argument: a short punchy title and one concrete sentence. The title must not already exist.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        text: { type: 'string' },
+        reason: { type: 'string' },
+      },
+      required: ['title', 'text', 'reason'],
+    },
+  },
+  {
+    name: 'propose_whyus_remove',
+    description:
+      'Propose to remove one "why choose us" argument, identified by its exact title as it appears on the site.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'The exact existing title to remove' },
+        reason: { type: 'string' },
+      },
+      required: ['title', 'reason'],
+    },
+  },
+  {
+    name: 'propose_whyus_update',
+    description:
+      'Propose to rewrite the title or the text of one existing "why choose us" argument, identified by its exact current title.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'The exact CURRENT title identifying the argument' },
+        field: { type: 'string', enum: ['title', 'text'] },
+        value: { type: 'string', description: 'The new text for that field' },
+        reason: { type: 'string' },
+      },
+      required: ['title', 'field', 'value', 'reason'],
+    },
+  },
   {
     name: 'propose_product_add',
     description: 'Propose to add a new product to the shop.',
@@ -520,6 +613,23 @@ ${JSON.stringify(
     // uniforme montrerait au modele une galerie de temoignages qui n'existe
     // pas telle quelle en base.
     testimonials: site.testimonials,
+    // CHANTIER 4 -- `faq` ET `whyus` ENTRENT DANS LE CONTEXTE.
+    //
+    // Ils en etaient absents alors que le generateur les produit
+    // systematiquement, que les quatre themes les rendent (la FAQ depuis le
+    // chantier 2) et que `llms.txt` les publie. L'agent interroge sur la FAQ
+    // d'un site repondait donc a partir de rien.
+    //
+    // C'est aussi la condition de l'adressage : les six outils du chantier 4
+    // designent une entree par sa QUESTION ou son TITRE. Sans ces deux
+    // tableaux ici, le modele ne pourrait que deviner le libelle -- exactement
+    // le defaut corrige pour `testimonials` a la dette 4.
+    //
+    // EXPOSE BRUT, comme `testimonials` et `sections`. Une projection
+    // uniforme masquerait les formes historiques et montrerait au modele une
+    // donnee qui n'existe pas telle quelle en base.
+    faq: site.faq,
+    whyus: site.whyus,
     social_links: site.social_links,
     contact: { phone: site.phone, email: site.contact_email, address: site.address },
     cj_margin_percent: site.cj_margin_percent,

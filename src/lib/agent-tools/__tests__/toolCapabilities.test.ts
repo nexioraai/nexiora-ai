@@ -113,9 +113,14 @@ describe('ÉTAPE 3 — invariants de forme', () => {
     expect(new Set(tous).size).toBe(tous.length);
   });
 
-  it('26 outils au total — le compte du chantier catalogue canonique', () => {
+  // CHANTIER 4 (MODE 1) — LE COMPTE AVANCE DE 26 À 32, ET LE CLIQUET RESTE.
+  // Six outils ajoutés, tous dans `CONTENT_TOOLS` : `faq` et `whyus` sont du
+  // contenu éditorial, au même titre que les témoignages. Le nombre est mis à
+  // jour, jamais l'assertion supprimée — c'est elle qui oblige à justifier
+  // chaque outil supplémentaire.
+  it('32 outils au total — 26 du chantier catalogue, +6 pour faq et whyus', () => {
     const familles = [UNIVERSAL_TOOLS, CONTENT_TOOLS, MANUAL_PRODUCT_TOOLS, CATALOG_TOOLS, PROMO_TOOLS, INVENTORY_TOOLS, PRODUCT_FIELD_TOOLS];
-    expect(familles.flatMap((f) => [...f])).toHaveLength(26);
+    expect(familles.flatMap((f) => [...f])).toHaveLength(32);
   });
 
   it('la route ne décide plus : elle délègue', async () => {

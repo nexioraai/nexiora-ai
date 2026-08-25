@@ -55,8 +55,12 @@ describe('DETTE 4 — `testimonials` dans CURRENT SITE STATE', () => {
     expect(contexte()).not.toMatch(/testimonials:.*normalize/i)
   })
 
-  it('le contexte passe de 16 à 17 champs — un seul ajout', () => {
-    expect(champs()).toHaveLength(17)
+  // CHANTIER 4 — 17 → 19. `faq` et `whyus` entrent au contexte : le
+  // générateur les produit toujours, les quatre thèmes les rendent, et
+  // l'adressage par question/titre des six nouveaux outils en dépend
+  // directement. Le compte avance, le cliquet reste.
+  it('le contexte porte 19 champs — 17 + faq + whyus', () => {
+    expect(champs()).toHaveLength(19)
   })
 
   // CHANTIER 1 (MODE 1) — CE CLIQUET A CHANGÉ DE CAMP.
@@ -71,11 +75,12 @@ describe('DETTE 4 — `testimonials` dans CURRENT SITE STATE', () => {
     expect(contexte()).not.toMatch(/^ {4}services: site\.services,$/m)
   })
 
-  it('les 17 champs, dans le même ordre — seul `services` a cédé la place à `sections`', () => {
+  it('les 19 champs, dans le même ordre — faq et whyus après les témoignages', () => {
     expect(champs()).toEqual([
       'name', 'slogan', 'type', 'about', 'hero_title', 'hero_subtitle',
       'primary_color', 'theme', 'cta', 'mode', 'dropship_type', 'sections',
       'testimonials',
+      'faq', 'whyus',
       'social_links', 'contact', 'cj_margin_percent', 'lang',
     ])
   })

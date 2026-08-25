@@ -139,6 +139,12 @@ export default defineConfig({
       'src/lib/i18n/**/*.test.ts',
       'src/lib/agent-tools/**/*.test.ts',
       'src/app/api/agent/**/*.test.ts',
+      // CHANTIER 4 -- variante `.tsx` AJOUTEE. Le prefixe ci-dessus ne
+      // collecte que `.test.ts` : le test des outils faq/whyus rend du JSX
+      // (il prouve que `JsonLdScript` neutralise une question hostile) et
+      // n'etait donc JAMAIS collecte -- rencontre reellement, pas suppose.
+      // C'est le piege deja documente sept fois dans ce fichier.
+      'src/app/api/agent/**/*.test.tsx',
       // DETTE 6a, EXTENSION -- DEUX prefixes ajoutes, tous deux absents
       // jusqu'ici, alors que ces deux routes portaient chacune une garde de
       // propriete defaillante et AUCUN test :

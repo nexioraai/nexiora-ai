@@ -537,6 +537,20 @@ function ToolProposalCard({
         return <>{t('approveAll')}</>;
       case 'catalog_enhance':
         return <>{t('enhance')}</>;
+      // CHANTIER 4 -- sans ces cas, le marchand lisait le nom technique brut
+      // (`propose_faq_remove`) rendu par le `default` ci-dessous.
+      case 'propose_faq_add':
+        return <>Add FAQ question: <strong className="text-[#FA5D1E]">{input.question}</strong></>;
+      case 'propose_faq_remove':
+        return <>Remove FAQ question: <strong className="text-[#FA5D1E]">{input.question}</strong></>;
+      case 'propose_faq_update':
+        return <>Rewrite the {input.field} of FAQ question <strong className="text-[#FA5D1E]">{input.question}</strong></>;
+      case 'propose_whyus_add':
+        return <>Add reason to choose you: <strong className="text-[#FA5D1E]">{input.title}</strong></>;
+      case 'propose_whyus_remove':
+        return <>Remove reason: <strong className="text-[#FA5D1E]">{input.title}</strong></>;
+      case 'propose_whyus_update':
+        return <>Rewrite the {input.field} of reason <strong className="text-[#FA5D1E]">{input.title}</strong></>;
       default:
         return <>{block.name}</>;
     }

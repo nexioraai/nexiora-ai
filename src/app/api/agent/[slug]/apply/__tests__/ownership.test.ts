@@ -191,10 +191,14 @@ describe('DETTE 6a — CAS 9 et 12 : cohérence et non-régression', () => {
     }
   });
 
-  it('CAS 12 — les 26 outils restent déclarés et exécutables', () => {
-    expect([...CHAT.matchAll(/^ {4}name: '/gm)]).toHaveLength(26);
+  // CHANTIER 4 — 26 → 32. Ce cliquet vaut surtout par son ÉGALITÉ : il exige
+  // que la déclaration (`chat`) et l'allowlist d'exécution (`apply`) portent
+  // le même nombre. Un outil déclaré mais non exécutable — ou l'inverse — le
+  // fait échouer, quel que soit le total.
+  it('CAS 12 — les 32 outils restent déclarés et exécutables', () => {
+    expect([...CHAT.matchAll(/^ {4}name: '/gm)]).toHaveLength(32);
     const allowlist = APPLY.match(/const ALLOWED_TOOLS = new Set\(\[[\s\S]*?\]\);/)![0];
-    expect([...allowlist.matchAll(/^ {2}'/gm)]).toHaveLength(26);
+    expect([...allowlist.matchAll(/^ {2}'/gm)]).toHaveLength(32);
   });
 
   it('`require-site-owner.ts` est INTACT — il reste canonique', () => {

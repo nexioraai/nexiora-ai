@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server';
 import { isSupportedLanguage, SUPPORTED_LANGUAGE_CODES } from '@/lib/i18n/supportedLanguages';
+import {
+  resolveFaqEntry,
+  resolveWhyUsEntry,
+  faqResolutionMessage,
+  whyUsResolutionMessage,
+  validateEntryText,
+} from '@/lib/agent-tools/faqWhyUsResolution';
 import { MIN_MARGIN_PERCENT } from '@/lib/pricing';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
@@ -41,6 +48,13 @@ const ALLOWED_TOOLS = new Set([
   'propose_product_update',
   'propose_gallery_remove',
   'propose_gallery_clear',
+  // CHANTIER 4 -- six outils, adresses par contenu, jamais par index.
+  'propose_faq_add',
+  'propose_faq_remove',
+  'propose_faq_update',
+  'propose_whyus_add',
+  'propose_whyus_remove',
+  'propose_whyus_update',
   'catalog_curate',
   'catalog_enhance',
   'catalog_approve_all',
@@ -405,6 +419,108 @@ export async function POST(
       // reconnait deja, et que `gallerySchema.test.ts` documente un incident
       // reel ou le modele en a produit. Toute autre forme est NON ADRESSABLE :
       // on ne devine pas une URL dans un objet de convention inconnue.
+      // ===== CHANTIER 4 -- FAQ ET « POURQUOI NOUS » =====
+      //
+      // La forme ecrite est EXACTEMENT celle du generateur ({question,answer}
+      // et {title,text}) et celle que les quatre themes rendent. Aucune cle
+      // supplementaire n'est acceptee : `tool_input` n'est jamais recopie tel
+      // quel dans la base, chaque champ est extrait et valide un a un.
+      //
+      // L'appartenance a `ALLOWED_TOOLS` ne vaut JAMAIS validation : chaque
+      // cas revalide son entree, et refuse AVANT toute ecriture.
+      case 'propose_faq_add': {
+        const q = validateEntryText(tool_input.question, 'question');
+        if (!q.ok) return NextResponse.json({ error: q.message }, { status: 400 });
+        const a = validateEntryText(tool_input.answer, 'answer');
+        if (!a.ok) return NextResponse.json({ error: a.message }, { status: 400 });
+        const current: Record<string, unknown>[] = Array.isArray(site.faq) ? site.faq : [];
+        // REFUS DU DOUBLON. Deux questions identiques rendraient l'entree
+        // ambigue -- donc ni modifiable ni supprimable par l'agent ensuite.
+        // On refuse de creer l'impasse plutot que d'avoir a la denouer.
+        if (resolveFaqEntry(current, q.value).ok) {
+          return NextResponse.json(
+            { error: `La question "${q.value}" existe deja dans la FAQ. Aucun changement n'a ete fait : modifie-la plutot que d'en ajouter une seconde.` },
+            { status: 409 }
+          );
+        }
+        updates.faq = [...current, { question: q.value, answer: a.value }];
+        break;
+      }
+      case 'propose_faq_remove': {
+        const current: Record<string, unknown>[] = Array.isArray(site.faq) ? site.faq : [];
+        const cible = resolveFaqEntry(current, tool_input.question);
+        if (!cible.ok) {
+          return NextResponse.json(
+            { error: faqResolutionMessage(cible) },
+            { status: cible.reason === 'not_found' ? 404 : 409 }
+          );
+        }
+        updates.faq = current.filter((_, i) => i !== cible.index);
+        break;
+      }
+      case 'propose_faq_update': {
+        const { field } = tool_input;
+        if (field !== 'question' && field !== 'answer') {
+          return NextResponse.json({ error: 'Invalid field (question or answer)' }, { status: 400 });
+        }
+        const v = validateEntryText(tool_input.value, field);
+        if (!v.ok) return NextResponse.json({ error: v.message }, { status: 400 });
+        const current: Record<string, unknown>[] = Array.isArray(site.faq) ? site.faq : [];
+        const cible = resolveFaqEntry(current, tool_input.question);
+        if (!cible.ok) {
+          return NextResponse.json(
+            { error: faqResolutionMessage(cible) },
+            { status: cible.reason === 'not_found' ? 404 : 409 }
+          );
+        }
+        updates.faq = current.map((e, i) => (i === cible.index ? { ...e, [field]: v.value } : e));
+        break;
+      }
+      case 'propose_whyus_add': {
+        const ti = validateEntryText(tool_input.title, 'title');
+        if (!ti.ok) return NextResponse.json({ error: ti.message }, { status: 400 });
+        const tx = validateEntryText(tool_input.text, 'text');
+        if (!tx.ok) return NextResponse.json({ error: tx.message }, { status: 400 });
+        const current: Record<string, unknown>[] = Array.isArray(site.whyus) ? site.whyus : [];
+        if (resolveWhyUsEntry(current, ti.value).ok) {
+          return NextResponse.json(
+            { error: `L'argument "${ti.value}" existe deja. Aucun changement n'a ete fait : modifie-le plutot que d'en ajouter un second.` },
+            { status: 409 }
+          );
+        }
+        updates.whyus = [...current, { title: ti.value, text: tx.value }];
+        break;
+      }
+      case 'propose_whyus_remove': {
+        const current: Record<string, unknown>[] = Array.isArray(site.whyus) ? site.whyus : [];
+        const cible = resolveWhyUsEntry(current, tool_input.title);
+        if (!cible.ok) {
+          return NextResponse.json(
+            { error: whyUsResolutionMessage(cible) },
+            { status: cible.reason === 'not_found' ? 404 : 409 }
+          );
+        }
+        updates.whyus = current.filter((_, i) => i !== cible.index);
+        break;
+      }
+      case 'propose_whyus_update': {
+        const { field } = tool_input;
+        if (field !== 'title' && field !== 'text') {
+          return NextResponse.json({ error: 'Invalid field (title or text)' }, { status: 400 });
+        }
+        const v = validateEntryText(tool_input.value, field);
+        if (!v.ok) return NextResponse.json({ error: v.message }, { status: 400 });
+        const current: Record<string, unknown>[] = Array.isArray(site.whyus) ? site.whyus : [];
+        const cible = resolveWhyUsEntry(current, tool_input.title);
+        if (!cible.ok) {
+          return NextResponse.json(
+            { error: whyUsResolutionMessage(cible) },
+            { status: cible.reason === 'not_found' ? 404 : 409 }
+          );
+        }
+        updates.whyus = current.map((e, i) => (i === cible.index ? { ...e, [field]: v.value } : e));
+        break;
+      }
       case 'propose_gallery_remove': {
         const { image_url } = tool_input;
         const current = Array.isArray(site.gallery) ? site.gallery : [];

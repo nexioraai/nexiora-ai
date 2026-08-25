@@ -51,6 +51,20 @@ export const CONTENT_TOOLS = [
   'propose_testimonial_update',
   'propose_gallery_remove',
   'propose_gallery_clear',
+  // CHANTIER 4 -- `faq` et `whyus` rejoignent le contenu editorial. Ils y
+  // appartiennent par nature : ce sont deux blocs de texte que les quatre
+  // themes rendent et que `llms.txt` publie, au meme titre que les
+  // temoignages. AUCUNE frontiere de mode n'est deplacee -- la famille garde
+  // ses modes {1, 2}. CONSEQUENCE ASSUMEE ET DITE : un site Mode 3 ne recoit
+  // pas ces six outils, exactement comme il ne recoit pas ceux des
+  // temoignages ; son marchand edite ces champs dans l'editeur, ou le
+  // formulaire existe deja pour tous les modes.
+  'propose_faq_add',
+  'propose_faq_remove',
+  'propose_faq_update',
+  'propose_whyus_add',
+  'propose_whyus_remove',
+  'propose_whyus_update',
 ] as const;
 
 export const MANUAL_PRODUCT_TOOLS = [
