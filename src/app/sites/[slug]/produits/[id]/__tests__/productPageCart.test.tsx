@@ -51,6 +51,10 @@ function produit(over: Partial<ProductPage> = {}): ProductPage {
     priceNumber: 24.5, currency: 'CAD', images: [], inStock: true, forSale: true,
     siteName: 'Ma Boutique', siteSlug: 'ma-boutique', siteCustomDomain: null,
     primary: '#FA5D1E', theme: 'editorial', lang: 'fr', mode: 2, shippingFlat: 0,
+    // LOT 4 -- champs AJOUTES au contrat de `ProductPage`. Neutres ici : un
+    // produit du marchand n'a pas de variante fournisseur, donc le rendu de
+    // ces cas est rigoureusement celui d'avant.
+    supplierId: null, supplierProductId: null, requiresVariant: false,
     ...over,
   };
 }

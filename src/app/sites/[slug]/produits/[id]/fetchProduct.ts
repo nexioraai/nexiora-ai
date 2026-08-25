@@ -27,6 +27,15 @@ export type ProductPage = {
   lang: string
   mode: number
   shippingFlat: number | null
+  /**
+   * LOT 4 / R4-01 -- de quoi offrir le MEME choix de variante que la modale
+   * de la vitrine. `null` pour un produit du marchand (`shop_products`), qui
+   * n'a pas de variantes fournisseur : la fiche se comporte alors comme avant.
+   */
+  supplierId: string | null
+  supplierProductId: string | null
+  /** `true` si la ligne catalogue est un PRODUIT (variante obligatoire). */
+  requiresVariant: boolean
 }
 
 export async function fetchProduct(slug: string, rawId: string): Promise<ProductPage | null> {
@@ -76,7 +85,7 @@ export async function fetchProduct(slug: string, rawId: string): Promise<Product
     const catalogProductId = rawId.replace(/^catalog-/, '').split('::')[0]
     const { data: sel } = await supabase
       .from('site_catalog_selections')
-      .select('sell_price, custom_name, custom_description, catalog_product_id, catalog_products(name, description, price, currency, images, in_stock)')
+      .select('sell_price, custom_name, custom_description, catalog_product_id, catalog_products(name, description, price, currency, images, in_stock, supplier_id, supplier_product_id, supplier_parent_id)')
       .eq('site_id', (site as any).id)
       .eq('catalog_product_id', catalogProductId)
       .eq('merchant_approved', true)
@@ -105,6 +114,15 @@ export async function fetchProduct(slug: string, rawId: string): Promise<Product
       lang: (site as any).lang || 'fr',
       mode: (site as any).mode,
       shippingFlat: (site as any).shipping_flat ?? null,
+      // LOT 4 / R4-01 -- la fiche produit d'un produit catalogue emettait un
+      // identifiant de panier SANS variante, alors que la modale de la
+      // vitrine en EXIGE une pour le meme produit. Deux surfaces d'achat du
+      // meme article, deux contrats differents : mesure en production, deux
+      // commandes sont parties sans variante et le fulfillment a retenu
+      // `variants[0]`, c'est-a-dire une variante arbitraire.
+      supplierId: cp.supplier_id ?? null,
+      supplierProductId: cp.supplier_product_id ?? null,
+      requiresVariant: !cp.supplier_parent_id,
     }
   }
 
@@ -117,6 +135,10 @@ export async function fetchProduct(slug: string, rawId: string): Promise<Product
     .maybeSingle()
   if (!p) return null
   return {
+    // Produit du marchand : aucune variante fournisseur, comportement inchange.
+    supplierId: null,
+    supplierProductId: null,
+    requiresVariant: false,
     id: (p as any).id,
     name: (p as any).name,
     description: (p as any).description || '',

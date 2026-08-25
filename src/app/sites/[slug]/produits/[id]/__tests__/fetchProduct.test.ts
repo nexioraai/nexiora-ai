@@ -255,3 +255,59 @@ describe('LOT 2 / INVARIANT I — le parsing rejoint les cinq autres couches', (
     expect(filtres).toContainEqual(['site_catalog_selections', 'catalog_product_id', 'cp-1']);
   });
 });
+
+// ============================================================
+// LOT 4 / R4-01 -- « CETTE LIGNE CATALOGUE EXIGE-T-ELLE UNE VARIANTE ? »
+//
+// La regle est LUE DE LA DONNEE, pas du fournisseur. Mesure sur les 33 580
+// lignes reelles de `catalog_products` :
+//   cj       : 25 006 lignes, 100 % `supplier_parent_id IS NULL`  -> PRODUIT
+//   printful :  8 392 lignes,   0 % NULL                          -> VARIANTE
+//   gelato   :    182 lignes,   0 % NULL                          -> VARIANTE
+// Une ligne sans parent EST un produit : son `supplier_product_id` ne peut
+// pas tenir lieu de variante. C'est ce qui preserve `pod_brand`/`pod_custom`,
+// dont le LOT 3 a deliberement retire le suffixe d'identifiant.
+// ============================================================
+describe('LOT 4 — fetchProduct expose de quoi choisir une variante', () => {
+  const SEL = (cpOver: Record<string, unknown>) => ({
+    data: {
+      sell_price: null, custom_name: null, custom_description: null,
+      catalog_product_id: 'cp-1',
+      catalog_products: {
+        name: 'Bracelet', description: '', price: 10, currency: 'usd', images: [], in_stock: true,
+        supplier_id: 'cj', supplier_product_id: 'cj-pid-1', supplier_parent_id: null, ...cpOver,
+      },
+    },
+    error: null,
+  });
+
+  it('ligne SANS parent (CJ) -> `requiresVariant` vrai, et le fournisseur est transmis', async () => {
+    selectionResult = SEL({});
+    const p = await fp('my-shop', 'catalog-cp-1');
+    expect(p?.requiresVariant).toBe(true);
+    expect(p?.supplierId).toBe('cj');
+    expect(p?.supplierProductId).toBe('cj-pid-1');
+  });
+
+  it.each(['printful', 'gelato'])(
+    'ligne AVEC parent (%s) -> `requiresVariant` faux : elle EST deja une variante',
+    async (fournisseur) => {
+      selectionResult = SEL({ supplier_id: fournisseur, supplier_product_id: 'sp-1', supplier_parent_id: 'parent-1' });
+      const p = await fp('my-shop', 'catalog-cp-1');
+      expect(p?.requiresVariant).toBe(false);
+    }
+  );
+
+  it('la requete DEMANDE `supplier_parent_id` -- sans quoi la regle serait aveugle', async () => {
+    selectionResult = SEL({});
+    await fp('my-shop', 'catalog-cp-1');
+    expect(selectsAppeles.join(' ')).toContain('supplier_parent_id');
+  });
+
+  it('un produit du marchand n\'exige jamais de variante -- comportement inchange', async () => {
+    productResult = { data: { id: 'p1', name: 'X', description: '', price: 5, currency: 'usd', images: [], stock: 1, published: true, for_sale: true }, error: null };
+    const p = await fp('my-shop', 'p1');
+    expect(p?.requiresVariant).toBe(false);
+    expect(p?.supplierId).toBeNull();
+  });
+});

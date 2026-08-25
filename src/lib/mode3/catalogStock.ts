@@ -35,7 +35,7 @@ export async function checkCatalogStock(
   const ids = lines.map((l) => l.realId).filter(Boolean);
   const { data: products } = await supabaseAdmin
     .from('catalog_products')
-    .select('id, supplier_id, supplier_product_id, in_stock, name')
+    .select('id, supplier_id, supplier_product_id, supplier_parent_id, in_stock, name')
     .in('id', ids);
 
   if (!products || products.length === 0) {
@@ -56,6 +56,45 @@ export async function checkCatalogStock(
     // Cache dit deja epuise -> refus direct
     if (product.in_stock === false) {
       return { ok: false, reason: `"${product.name}" n'est plus disponible.` };
+    }
+
+    // ============================================================
+    // LOT 4 / R4-01 -- UNE LIGNE SANS VARIANTE EXPLICITE N'EST PAS VENDABLE
+    // QUAND `supplier_product_id` DESIGNE UN PRODUIT, PAS UNE VARIANTE.
+    //
+    // CE QUI SE PASSAIT. Le repli plus bas etait `line.variantId ||
+    // product.supplier_product_id`, et son propre commentaire disait deja
+    // « sans variantId explicite, les fournisseurs a variantes rejettent
+    // l'appel ». Il ne rejetaient pas toujours : deux commandes de production
+    // sont parties SANS variante et ont ete acceptees par CJ -- le
+    // fulfillment (`cj/fulfill`) retombe alors sur `variants[0]`, c'est-a-dire
+    // une variante ARBITRAIRE. L'acheteur recoit une couleur ou une taille
+    // que personne n'a choisie.
+    //
+    // LA REGLE EST LUE DE LA DONNEE, PAS INVENTEE. Mesure sur les 33 580
+    // lignes de `catalog_products` :
+    //   cj       : 25 006 lignes, 100 % `supplier_parent_id IS NULL`
+    //   printful :  8 392 lignes,   0 % NULL
+    //   gelato   :    182 lignes,   0 % NULL
+    // Autrement dit : une ligne SANS parent EST un produit -- son
+    // `supplier_product_id` ne peut pas servir de variante. Une ligne AVEC
+    // parent EST deja une variante -- le repli y est correct, et c'est
+    // exactement ce dont `pod_brand`/`pod_custom` dependent (LOT 3 a retire
+    // le suffixe de leurs identifiants precisement pour cette raison).
+    //
+    // FORMULATION PAR LA DONNEE ET NON PAR LE FOURNISSEUR : `suppliersWith
+    // Capability('listVariants')` inclut Printful, dont les lignes n'ont
+    // pourtant pas besoin de variante explicite. Le discriminant correct est
+    // la forme de la ligne catalogue, pas l'identite du fournisseur.
+    // ============================================================
+    if (!line.variantId && !product.supplier_parent_id) {
+      if (strict) {
+        await logAnomaly({
+          type: 'catalog_variant_missing',
+          details: { productId: product.id, supplierId: product.supplier_id },
+        });
+        return { ok: false, reason: `Choisissez une option pour "${product.name}".` };
+      }
     }
 
     const supplier = CHECK_STOCK_SUPPLIERS.get(product.supplier_id);

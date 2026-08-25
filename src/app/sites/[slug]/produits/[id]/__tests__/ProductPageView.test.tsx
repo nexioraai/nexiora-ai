@@ -14,6 +14,8 @@
 // ============================================================
 import { describe, it, expect, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 vi.mock('@/lib/supabase', () => ({ supabase: {} }));
 
@@ -27,6 +29,10 @@ function page(over: Partial<ProductPage> = {}): ProductPage {
     priceNumber: 24.5, currency: 'CAD', images: [], inStock: true, forSale: true,
     siteName: 'Ma Boutique', siteSlug: 'ma-boutique', siteCustomDomain: null,
     primary: '#111', theme: 'editorial', lang: 'fr', mode: 2, shippingFlat: 0,
+    // LOT 4 -- champs AJOUTES au contrat de `ProductPage`. Neutres ici : un
+    // produit du marchand n'a pas de variante fournisseur, donc le rendu de
+    // ces cas est rigoureusement celui d'avant.
+    supplierId: null, supplierProductId: null, requiresVariant: false,
     ...over,
   };
 }
@@ -91,5 +97,62 @@ describe('DETTE 6c — le libellé suit la langue du site', () => {
 
   it('langue inconnue -> repli anglais, jamais une page vide', () => {
     expect(render(page({ forSale: false, lang: 'zz' }))).toContain('not for sale');
+  });
+});
+
+// ============================================================
+// LOT 4 / R4-01 -- LA FICHE PRODUIT ET LA MODALE DOIVENT AVOIR LE MEME
+// CONTRAT D'ACHAT.
+//
+// La fiche emettait `catalog-<uuid>` SANS variante, alors que la modale de la
+// vitrine rend son bouton inactif tant qu'aucune variante n'est choisie pour
+// le MEME produit. Mesure en production : 19 fiches publiees et indexees, et
+// deux commandes parties sans variante -- le fulfillment a retenu
+// `variants[0]`, une variante arbitraire.
+//
+// LIMITE DU HARNAIS, ASSUMEE : ce depot n'a ni jsdom ni testing-library ; les
+// effets React ne s'executent pas sous `renderToStaticMarkup`. On ne peut
+// donc pas simuler le CLIC sur une variante. Ce qui EST observable -- et qui
+// est precisement l'etat dangereux -- c'est le premier rendu : le bouton doit
+// deja etre inactif. La seconde moitie de la garantie est posee cote serveur
+// (`checkCatalogStock`), ou elle est incontournable.
+// ============================================================
+describe('LOT 4 / R4-01 — la fiche produit n\'offre pas d\'achat sans variante', () => {
+  it('produit catalogue exigeant une variante -> bouton rendu INACTIF des le premier rendu', () => {
+    const html = render(page({ mode: 3, requiresVariant: true, supplierId: 'cj', supplierProductId: 'cj-pid-1' }));
+    expect(html).toContain('disabled');
+  });
+
+  it('produit du marchand (aucune variante fournisseur) -> comportement INCHANGE, bouton actif', () => {
+    const html = render(page({ mode: 2, requiresVariant: false }));
+    expect(html).toContain('Ajouter au panier');
+    expect(html).not.toContain('disabled=""');
+  });
+
+  it('produit catalogue DEJA une variante (Printful/Gelato) -> aucun blocage', () => {
+    const html = render(page({ mode: 3, requiresVariant: false, supplierId: 'printful', supplierProductId: 'sp-1' }));
+    expect(html).not.toContain('disabled=""');
+  });
+});
+
+describe('LOT 4 / R4-01 — l\'identifiant de panier porte la variante choisie', () => {
+  // LIMITE DU HARNAIS, NOMMEE : le suffixe n'apparait qu'APRES un clic sur une
+  // variante, et ce depot n'a ni jsdom ni testing-library -- aucun test ne
+  // peut declencher ce clic. Ce cliquet observe donc l'EXPRESSION REELLE du
+  // fichier, comme le depot le fait deja pour les conditions JSX qu'il ne
+  // peut pas rendre. Ce n'est pas la preuve complete : la garantie qui compte
+  // est posee cote SERVEUR (`checkCatalogStock`), ou elle est incontournable
+  // et ou elle EST testee comportementalement.
+  const source = readFileSync(join(__dirname, '../ProductPageView.tsx'), 'utf-8');
+
+  it('la variante choisie est concatenee a l\'identifiant, jamais ignoree', () => {
+    expect(source).toContain("id={product.id + (varianteChoisie ? '::' + varianteChoisie : '')}");
+  });
+
+  it('la meme forme que les deux modales : un seul `::`, jamais deux', () => {
+    // `product.id` d'une fiche catalogue vaut `catalog-<uuid>` (sans suffixe,
+    // cf. `fetchProduct`), donc la concatenation produit exactement un `::`.
+    // C'est la faute inverse -- deux suffixes -- qui avait produit L3-01.
+    expect(source).not.toMatch(/varianteChoisie[^\n]*::[^\n]*::/);
   });
 });

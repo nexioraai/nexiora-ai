@@ -287,7 +287,7 @@ fail-closed. **Les deux autorités de sous-mode sont solidement verrouillées.**
 | **1** | Socle transversal (DEBT-050, DEBT-051, autorités de sous-mode) | ✅ **RÉSOLU** — 14/14 mutations tuées, 3088 tests |
 | **2** | Frontières internes (DEBT-048, DEBT-049) | ✅ **RÉSOLU** — 19/19 mutations tuées, 3178 tests |
 | **3** | **POD_BRAND** (+ DEBT-055/058/059, puis DEBT-062/063) | ✅ **RÉSOLU** — 23 mutations tuées, 3220 tests |
-| 4 | RESELLER | à faire |
+| **4** | RESELLER | ✅ **RÉSOLU** — 11 mutations tuées, 3240 tests · 1 décision produit ouverte (DEBT-066) |
 | 5 | POD_CUSTOM | à faire |
 | 6 | Transversal final (+ **DEBT-054**, rattachée depuis le LOT 1) | à faire |
 
@@ -615,3 +615,77 @@ vitrine et checkout concordent dans tous les cas.
 Empreinte `pod_designs` **identique** avant/après (`2cc8f941c571615d`),
 `updated_at` inchangé. Design et 3 maquettes **conformes au préfixe** : la
 nouvelle garde ne casse pas le seul site réel.
+
+
+---
+
+# LOT 4 — `reseller` — RÉSOLU (2026-08-25)
+
+## Architecture réelle
+
+```
+curate / cron catalog-suggest  → site_catalog_selections (merchant_approved=false)
+POST /catalog/selections       → site_catalog_selections (merchant_approved=true)
+   └→ vitrine  : loadCatalogSelections  → id `catalog-<uuid>`
+   └→ recherche: /catalog/search        → id `catalog-<uuid>`
+   └→ fiche    : fetchProduct           → id `catalog-<uuid>`
+        └→ modale / fiche → `::<vid>` → checkout → checkCatalogStock
+             └→ cj-adapter (vid) → cj/fulfill (vid) → CJ
+```
+
+**L'unité vendable de `reseller` est la VARIANTE (vid), pas le produit.** C'est
+la propriété qui structure tout le sous-mode — et celle qu'une couche ne
+respectait pas.
+
+## Anomalies et corrections
+
+**DEBT-064 🔴 — la fiche produit vendait sans variante.** La modale exige une
+variante ; la fiche n'en offrait aucune. Deux commandes de production sont
+parties ainsi et `cj/fulfill` a retenu `variants[0]` — arbitraire. **19 fiches
+publiées et indexées** étaient concernées.
+
+Règle **lue de la donnée** (33 580 lignes mesurées) : `supplier_parent_id IS
+NULL` ⇒ la ligne est un PRODUIT ⇒ variante explicite obligatoire. CJ : 100 %
+sans parent. Printful/Gelato : 0 % — leur ligne EST une variante, ce qui
+préserve exactement ce dont `pod_brand`/`pod_custom` dépendent depuis le LOT 3.
+
+Garde **serveur** (`catalogStock`, incontournable) **et** sélecteur sur la
+fiche : les deux moitiés sont la même correction — sans l'UI, le bouton des 19
+fiches deviendrait une impasse.
+
+**DEBT-065 🟡 — l'isolation inter-locataires des écritures de sélection n'était
+testée par rien.** `.eq('site_id', …)` existait sur PATCH/DELETE, mais le
+retirer ne cassait aucun test.
+
+**DEBT-066 🟠 — le prix de la variante : DÉCISION PRODUIT, non tranchée.**
+
+## Autorités
+
+**Aucune nouvelle.** `usesCatalogSelections`, `suppliersForDropshipType`,
+`admitsCatalogSupplier`, `hasSupplierCatalog`, `showsVisitorCatalogSearch`,
+`CATALOG_SUBTYPES` : toutes consommées, aucune modifiée. La règle de variante
+est posée dans `catalogStock`, module existant qui possède déjà la
+vérification catalogue.
+
+## Mutations — 11 lancées, 11 tuées
+
+S1–S4 (règle serveur, dont S2 qui vérifie qu'elle ne casse pas Printful/Gelato)
+· S5–S8 (fiche produit) · T1–T3 (isolation et approbation). **S7, S8, T1, T2,
+T3 ont d'abord survécu** — aucune n'a été masquée.
+
+## Observations non corrigées
+
+`cron/catalog-suggest` filtre `mode=3 AND dropship_type='reseller'` en dur
+plutôt que par l'autorité. C'est un **sous-ensemble strict** de
+`usesCatalogSelections` — donc jamais faux. L'élargir à `pod_custom` serait une
+décision produit du LOT 5. **Consigné, non touché.**
+
+`cj/fulfill` conserve son repli `variants[0]` : deux commandes de production
+l'ont emprunté et doivent rester ré-exécutables. Il est désormais inatteignable
+pour toute commande nouvelle, le checkout refusant en amont.
+
+## Production — aucune écriture
+
+73 sélections (19 approuvées), empreinte `a42f80d2ce5a0c9a`, `updated_at`
+inchangé. Les 19 produits approuvés sont **tous CJ et tous sans parent** — donc
+exactement ceux que la nouvelle règle protège.

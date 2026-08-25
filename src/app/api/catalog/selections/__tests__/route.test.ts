@@ -16,12 +16,22 @@ vi.mock('@/lib/supabase', () => ({
   supabase: { auth: { getUser: (...a: unknown[]) => getUserMock(...a) } },
 }));
 
-function tableChain(response: { data: unknown; error?: unknown }) {
+// LOT 4 -- LES FILTRES DES ECRITURES SONT CAPTURES.
+//
+// `.eq('site_id', auth.site.id)` est l'isolation inter-locataires des verbes
+// PATCH et DELETE : sans lui, un marchand modifie ou supprime la selection
+// d'une AUTRE boutique. Le filtre existait, mais le retirer ne cassait aucun
+// test (mutation T1, survivante). Ajout pur du harnais.
+const filtres: [string, string, unknown][] = [];
+/** LOT 4 -- les charges reellement ecrites, pour asserer le COMPORTEMENT. */
+const upserts: unknown[] = [];
+
+function tableChain(response: { data: unknown; error?: unknown }, table = '') {
   const chain: Record<string, unknown> = {};
   const self = () => chain;
   chain.select = vi.fn(self);
-  chain.eq = vi.fn(self);
-  chain.upsert = vi.fn(self);
+  chain.eq = vi.fn((col: string, val: unknown) => { filtres.push([table, col, val]); return chain; });
+  chain.upsert = vi.fn((payload: unknown) => { upserts.push(payload); return chain; });
   // CHANTIER 6 -- quatre maillons AJOUTES. Ce fichier ne testait que POST ;
   // GET, PATCH et DELETE empruntent `order`, `update` et `delete`. Ajout pur :
   // aucun maillon existant n'est modifie, donc aucun cas anterieur ne change.
@@ -58,14 +68,16 @@ function req(body: unknown, token = 'owner-token') {
 // obtient ses propres tests plus bas -- deux regles, deux jeux de tests.
 function setup(site: { dropship_type: string | null; mode?: unknown }, product: { supplier_id: string | null } | null) {
   fromMock.mockImplementation((table: string) => {
-    if (table === 'sites') return tableChain({ data: { id: 'my-site-id', owner_id: 'owner-id', mode: 3, ...site }, error: null });
-    if (table === 'catalog_products') return tableChain({ data: product ? { id: 'cp-1', ...product } : null, error: null });
-    if (table === 'site_catalog_selections') return tableChain({ data: { id: 'sel-1', site_id: 'my-site-id', catalog_product_id: 'cp-1' }, error: null });
+    if (table === 'sites') return tableChain({ data: { id: 'my-site-id', owner_id: 'owner-id', mode: 3, ...site }, error: null }, table);
+    if (table === 'catalog_products') return tableChain({ data: product ? { id: 'cp-1', ...product } : null, error: null }, table);
+    if (table === 'site_catalog_selections') return tableChain({ data: { id: 'sel-1', site_id: 'my-site-id', catalog_product_id: 'cp-1' }, error: null }, table);
     return tableChain({ data: null, error: null });
   });
 }
 
 beforeEach(() => {
+  filtres.length = 0;
+  upserts.length = 0;
   getUserMock.mockReset().mockResolvedValue({ data: { user: { id: 'owner-id', email: 'owner@test.com' } }, error: null });
 });
 
@@ -263,5 +275,72 @@ describe('CHANTIER 6 — INVARIANTS', () => {
     for (const m of [1, 2, 0, 4, '3', null, undefined]) {
       expect(hasSupplierCatalog(m), String(m)).toBe(false);
     }
+  });
+});
+
+// ============================================================
+// LOT 4 -- L'ISOLATION INTER-LOCATAIRES DES ECRITURES DE SELECTION.
+//
+// `site_catalog_selections` est le mecanisme du sous-mode `reseller` (et de
+// `pod_custom`). Ses verbes d'ECRITURE prennent un `id` de selection fourni
+// par l'appelant : sans `.eq('site_id', …)`, un marchand modifie le prix, le
+// nom ou l'approbation d'une selection appartenant a une AUTRE boutique.
+// Le filtre existait ; rien ne le tenait (mutation T1, survivante).
+// ============================================================
+import { PATCH, DELETE, GET } from '../route';
+
+function reqUrl(method: string, qs = '', body?: unknown) {
+  return new NextRequest('https://x.test/api/catalog/selections' + qs, {
+    method,
+    headers: { 'Content-Type': 'application/json', authorization: 'Bearer owner-token' },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  });
+}
+
+describe('LOT 4 — PATCH/DELETE/GET : une selection d\'une autre boutique est hors de portee', () => {
+  it('PATCH borne l\'ecriture au site du proprietaire', async () => {
+    setup({ dropship_type: 'reseller' }, { supplier_id: 'cj' });
+    await PATCH(reqUrl('PATCH', '', { slug: 'my-shop', id: 'sel-DUNE-AUTRE-BOUTIQUE', sell_price: 1 }));
+    expect(filtres).toContainEqual(['site_catalog_selections', 'site_id', 'my-site-id']);
+    expect(filtres).toContainEqual(['site_catalog_selections', 'id', 'sel-DUNE-AUTRE-BOUTIQUE']);
+  });
+
+  it('DELETE borne la suppression au site du proprietaire', async () => {
+    setup({ dropship_type: 'reseller' }, { supplier_id: 'cj' });
+    await DELETE(reqUrl('DELETE', '?slug=my-shop&id=sel-DUNE-AUTRE-BOUTIQUE'));
+    expect(filtres).toContainEqual(['site_catalog_selections', 'site_id', 'my-site-id']);
+  });
+
+  it('GET ne lit que les selections du site', async () => {
+    setup({ dropship_type: 'reseller' }, { supplier_id: 'cj' });
+    await GET(reqUrl('GET', '?slug=my-shop'));
+    expect(filtres).toContainEqual(['site_catalog_selections', 'site_id', 'my-site-id']);
+  });
+
+  it('PATCH n\'accepte QUE les champs de la liste blanche', async () => {
+    setup({ dropship_type: 'reseller' }, { supplier_id: 'cj' });
+    const res = await PATCH(reqUrl('PATCH', '', { slug: 'my-shop', id: 'sel-1', site_id: 'autre-site', catalog_product_id: 'cp-vole' }));
+    // Aucun champ autorise dans le corps -> refus, et surtout aucune ecriture
+    // de `site_id` ou `catalog_product_id`, qui reattribueraient la ligne.
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('LOT 4 — un ajout manuel est approuve d\'emblee, et c\'est deliberе', () => {
+  it('POST cree une selection deja approuvee : le marchand a choisi ce produit lui-meme', async () => {
+    // A distinguer de `catalog/curate` et du cron de suggestion, qui ecrivent
+    // `merchant_approved: false` -- une SUGGESTION attend une approbation, un
+    // ajout manuel EST l'approbation. C'est cette difference qui decide de la
+    // publication au sitemap et de l'affichage en vitrine.
+    //
+    // ON ASSERE LA CHARGE REELLEMENT ECRITE. Une premiere version de ce test
+    // lisait le fichier source et cherchait `merchant_approved: true` : elle
+    // passait sur un COMMENTAIRE du meme fichier, donc ne prouvait rien --
+    // exactement l'assertion de facade que ces lots proscrivent.
+    setup({ dropship_type: 'reseller' }, { supplier_id: 'cj' });
+    const res = await POST(req({ slug: 'my-shop', catalogProductId: 'cp-1' }));
+    expect(res.status).toBe(200);
+    expect(upserts).toHaveLength(1);
+    expect(upserts[0]).toMatchObject({ site_id: 'my-site-id', catalog_product_id: 'cp-1', merchant_approved: true, ai_suggested: false });
   });
 });
