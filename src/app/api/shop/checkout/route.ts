@@ -13,6 +13,7 @@ import { logAnomaly } from '@/lib/anomaly';
 // unique de la frontiere, puis politique d'admission par domaine. La route
 // selectionne la politique -- elle n'en implemente aucune.
 import { canTransact } from '@/lib/commerce-admission/canTransact';
+import { findSellablePodBrandMockup, isOwnPodDesignUrl } from '@/lib/mode3/podBrandMockups';
 import { resolveFulfillmentDomain, isRecognisedSiteMode } from '@/lib/order-domain/resolve';
 import type { CheckoutPolicy } from '@/lib/order-domain/checkoutPolicy';
 import { MODE2_CHECKOUT_POLICY } from '@/lib/mode2/checkoutPolicy';
@@ -389,9 +390,23 @@ export async function POST(req: Request) {
           // MEME ORDRE DE PARCOURS QUE LA VITRINE (designs dans l'ordre,
           // premiere maquette rencontree pour un produit donne) : les deux
           // couches ne peuvent pas designer deux maquettes differentes.
-          const podDesignsArr = Array.isArray(site.pod_designs) ? site.pod_designs : [];
-          const mockups = podDesignsArr.flatMap((d: any) => (Array.isArray(d?.mockups) ? d.mockups : []));
-          const match = mockups.find((m: any) => String(m.catalog_product_id) === realId);
+          // LOT 3 -- LA MEME REGLE QUE LA VITRINE, PAR CONSTRUCTION.
+          //
+          // Cette ligne avait sa PROPRE selection : un `flatMap(...).find(...)`
+          // sans filtre. La contre-verification l'a executee face au module
+          // reel de la vitrine et prouve qu'elles designaient des maquettes
+          // differentes -- une maquette PERIMEE de `designs[0]` etait retenue
+          // alors que la vitrine affichait celle, fraiche, de `designs[1]`.
+          // Le visiteur voyait un design, le fournisseur en recevait un autre.
+          //
+          // Aligner l'ORDRE de parcours ne suffisait pas : ce sont les FILTRES
+          // qui divergeaient (peremption, `catalog_product_id` absent,
+          // deduplication). Les deux couches interrogent desormais la meme
+          // fonction : elles ne peuvent plus diverger, quelle que soit
+          // l'evolution de la regle.
+          const match = findSellablePodBrandMockup(site.pod_designs, realId)?.mockup as
+            | { design_url?: unknown }
+            | undefined;
           item.customDesigns = undefined;
           // LOT 3 / L3-04 -- LE DESIGN DOIT APPARTENIR A CE SITE.
           //
@@ -414,9 +429,9 @@ export async function POST(req: Request) {
           // que d'en attacher un etranger. Une table equivalente a
           // `design_uploads` (liaison forte, usage unique) reste une decision
           // d'architecture distincte -- elle exige du DDL.
-          const designUrl: string | undefined = match?.design_url || undefined;
-          const prefixeDuSite = `/pod-designs/${slug}/`;
-          if (designUrl && !designUrl.includes(prefixeDuSite)) {
+          const designUrl =
+            typeof match?.design_url === 'string' && match.design_url ? match.design_url : undefined;
+          if (designUrl && !isOwnPodDesignUrl(designUrl, slug)) {
             await logAnomaly({
               type: 'pod_brand_design_foreign_url',
               siteId: site.id,

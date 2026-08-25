@@ -4,6 +4,8 @@ import { createHash } from 'crypto';
 export const maxDuration = 300;
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
+import { isOwnPodDesignUrl } from '@/lib/mode3/podBrandMockups';
+import { logAnomaly } from '@/lib/anomaly';
 
 const POSITION = {
   area_width: 1800,
@@ -319,11 +321,49 @@ export async function POST(req: Request) {
     }
     const designs = Array.isArray(ownedSite.pod_designs) ? ownedSite.pod_designs : [];
     if (designs.length === 0) return NextResponse.json({ error: 'No designs uploaded' }, { status: 400 });
-    const designUrl = designs[0].url;
+    // LE DESIGN ACTIF, NOMME. Le corps de requete porte `index`, qui est un
+    // index de PRODUIT (`idx >= todo.length` plus bas), jamais de design :
+    // cette route genere toujours pour le design actif, c'est-a-dire le
+    // premier du tableau -- convention rendue explicite au LOT 3 (l'editeur
+    // ajoute desormais en tete et l'etiquette « Actif »). On la nomme au lieu
+    // de la subir.
+    const designActif = designs[0];
+    const designUrl = designActif.url;
     if (!designUrl) return NextResponse.json({ error: 'Design URL missing' }, { status: 400 });
 
+    // ============================================================
+    // LOT 3 / L3-04 -- LE DESIGN DOIT APPARTENIR A CE SITE, ICI AUSSI.
+    //
+    // CE QUI MANQUAIT. La liaison locataire n'existait qu'au CHECKOUT. Or
+    // c'est ICI que la premiere depense a lieu : `designUrl` part quelques
+    // lignes plus bas dans `image_url` d'un `create-task` Printful REEL ET
+    // FACTURE. Et sa valeur vient de `sites.pod_designs`, colonne du GRANT
+    // UPDATE des 41 : le marchand l'ecrit DIRECTEMENT en PostgREST. Rien
+    // n'empechait donc de faire payer a la plateforme le rendu d'une image
+    // arbitraire -- y compris le design d'une AUTRE boutique.
+    //
+    // MEME REGLE, MEME DEFINITION : `isOwnPodDesignUrl`, l'unique definition
+    // du format `pod-designs/<slug>/`, deja consommee par le checkout. Aucune
+    // seconde definition, aucun schema nouveau.
+    //
+    // FAIL-CLOSED ET AVANT TOUTE DEPENSE : le refus precede la lecture du
+    // catalogue et tout appel fournisseur.
+    // ============================================================
+    if (!isOwnPodDesignUrl(designUrl, slug)) {
+      await logAnomaly({
+        type: 'pod_brand_design_foreign_url',
+        siteId: ownedSite.id,
+        slug,
+        details: { phase: 'generate-mockups' },
+      });
+      return NextResponse.json(
+        { error: 'Ce design n’appartient pas à cette boutique.' },
+        { status: 403 }
+      );
+    }
+
     // 1. Get selected products from pod_designs or fallback to auto
-    const selectedProducts = designs[0]?.selected_products || {};
+    const selectedProducts = designActif?.selected_products || {};
     const selectedIds = Object.entries(selectedProducts)
       .filter(([_, v]: [string, any]) => v.selected)
       .map(([id]: [string, any]) => id);
@@ -378,7 +418,7 @@ export async function POST(req: Request) {
     }
 
     // Skip products that already have a mockup (avoid burning rate limit)
-    const existingMockups = Array.isArray(designs[0]?.mockups) ? designs[0].mockups : [];
+    const existingMockups = Array.isArray(designActif?.mockups) ? designActif.mockups : [];
     const mockedIds = new Set(
       existingMockups
         .filter((m: any) => m.design_url === designUrl)

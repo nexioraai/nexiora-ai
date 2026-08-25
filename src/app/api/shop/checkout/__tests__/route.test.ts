@@ -555,6 +555,61 @@ describe('POST /api/shop/checkout — POD BRAND : design résolu côté serveur,
     ],
   };
 
+  // ============================================================
+  // LOT 3 / ANOMALIE A -- LE SCENARIO FALSIFICATEUR, AU CHECKOUT REEL.
+  //
+  // designs[0] portait une maquette PERIMEE du meme produit que designs[1].
+  // La vitrine l'ecartait, ce checkout la retenait : le visiteur voyait le
+  // design B et le fournisseur recevait l'ancien. Les deux couches
+  // interrogent desormais la meme fonction (`sellablePodBrandMockups`).
+  // ============================================================
+  const U_ANCIEN = 'https://sb.example/storage/v1/object/public/pod-designs/boutique/ANCIEN.png';
+  const SITE_MAQUETTE_PERIMEE = {
+    ...SITE_MODE3,
+    dropship_type: 'pod_brand',
+    pod_designs: [
+      { url: 'https://sb.example/storage/v1/object/public/pod-designs/boutique/design-a.png',
+        mockups: [{ catalog_product_id: 'cp-1', variant_id: 111, design_url: U_ANCIEN, mockup_url: 'https://x/ancien.png' }] },
+      { url: DESIGN_B,
+        mockups: [{ catalog_product_id: 'cp-1', variant_id: 111, design_url: DESIGN_B, mockup_url: 'https://x/b.png' }] },
+    ],
+  };
+
+  it('SCENARIO FALSIFICATEUR — une maquette PERIMEE de designs[0] n\'est jamais celle qui part en fabrication', async () => {
+    const chains = setupTables({
+      sites: { data: SITE_MAQUETTE_PERIMEE, error: null },
+      catalog_products: { data: [{ id: 'cp-1', supplier_product_id: 'sp-1', price: 20, currency: 'usd', supplier_id: 'printful' }], error: null },
+      site_catalog_selections: { data: null, error: null },
+      shipping_cache: { data: [{ supplier_product_id: 'sp-1', shipping_cost: 5, days_min: 10, days_max: 20, tiers: null }], error: null },
+      shop_orders: { data: { id: 'order-1' }, error: null },
+      shop_order_items: { data: [{ id: 'item-1' }], error: null },
+      order_item_designs: { data: [{ id: 'd-1' }], error: null },
+    });
+    const res = await POST(req({ slug: 'boutique', countryCode: 'US', items: [{ id: 'catalog-cp-1', quantity: 1, name: 'T' }] }));
+    expect(res.status).toBe(200);
+    const lignes = JSON.stringify((chains.get('order_item_designs') as any)?.insert?.mock?.calls?.[0]?.[0] ?? []);
+    expect(lignes).toContain(DESIGN_B);
+    expect(lignes).not.toContain('ANCIEN.png');
+  });
+
+  it('une maquette SANS catalog_product_id ne devient jamais une ligne vendue', async () => {
+    const chains = setupTables({
+      sites: { data: { ...SITE_MODE3, dropship_type: 'pod_brand', pod_designs: [{
+        url: DESIGN_B,
+        mockups: [{ variant_id: 111, design_url: DESIGN_B, mockup_url: 'https://x/b.png' }],
+      }] }, error: null },
+      catalog_products: { data: [{ id: 'cp-1', supplier_product_id: 'sp-1', price: 20, currency: 'usd', supplier_id: 'printful' }], error: null },
+      site_catalog_selections: { data: null, error: null },
+      shipping_cache: { data: [{ supplier_product_id: 'sp-1', shipping_cost: 5, days_min: 10, days_max: 20, tiers: null }], error: null },
+      shop_orders: { data: { id: 'order-1' }, error: null },
+      shop_order_items: { data: [{ id: 'item-1' }], error: null },
+    });
+    const res = await POST(req({ slug: 'boutique', countryCode: 'US', items: [{ id: 'catalog-cp-1', quantity: 1, name: 'T' }] }));
+    expect(res.status).toBe(200);
+    // Aucun design attache : la maquette n'etait pas vendable.
+    expect(chains.get('order_item_designs')).toBeUndefined();
+  });
+
   it('une maquette portee par le SECOND design part bien en fabrication AVEC son design', async () => {
     const chains = setupTables({
       sites: { data: SITE_DEUX_DESIGNS, error: null },

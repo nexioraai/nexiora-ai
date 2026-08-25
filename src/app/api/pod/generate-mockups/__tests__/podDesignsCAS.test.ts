@@ -1,3 +1,10 @@
+// LOT 3 / L3-04 -- LES URL DE DESIGN DEVIENNENT REALISTES.
+// `generate-mockups` exige desormais que le design appartienne au site :
+// prefixe `pod-designs/<slug>/`, seule definition du format
+// (`lib/mode3/podBrandMockups.ts`), deja consommee par le checkout. Une
+// fixture hors prefixe ne decrivait plus un design legitime -- c'est une
+// correction de FIXTURE, aucune assertion de ces fichiers ne change de sens.
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Audit Mode 3/POD BRAND, perfectionnement -- CREATE et POLL font tous les
@@ -105,13 +112,13 @@ beforeEach(() => {
 describe('generate-mockups — garde CAS JSONB sur pod_designs (retry en cas de conflit)', () => {
   it("CREATE : conflit sur la 1ère tentative (un autre écrivain a modifié pod_designs entre-temps) -> relecture réelle, la transformation est réappliquée dessus, PAS d'écrasement du changement concurrent", async () => {
     siteSelectMock.mockResolvedValue({
-      data: { id: 'my-site-id', owner_id: 'owner-id', dropship_type: 'pod_brand', pod_designs: [{ url: 'https://x.test/d.png', selected_products: {}, pending_task_keys: [] }] },
+      data: { id: 'my-site-id', owner_id: 'owner-id', dropship_type: 'pod_brand', pod_designs: [{ url: 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png', selected_products: {}, pending_task_keys: [] }] },
       error: null,
     });
     // Un autre écrivain concurrent a déjà ajouté 'tk-from-another-tab' pendant
     // que cette requête traitait sa propre logique métier (appels Printful).
     rereadResponses.push({
-      data: { pod_designs: [{ url: 'https://x.test/d.png', selected_products: {}, pending_task_keys: [{ task_key: 'tk-from-another-tab', design_url: 'https://x.test/d.png' }] }] },
+      data: { pod_designs: [{ url: 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png', selected_products: {}, pending_task_keys: [{ task_key: 'tk-from-another-tab', design_url: 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png' }] }] },
       error: null,
     });
     updateOutcomes = ['conflict', 'succeed'];
@@ -151,12 +158,12 @@ describe('generate-mockups — garde CAS JSONB sur pod_designs (retry en cas de 
     // préservé, pas perdu
     expect(finalPending.some((e) => e.task_key === 'tk-from-another-tab')).toBe(true);
     // notre propre ajout, avec le design capturé à la création
-    expect(finalPending).toContainEqual({ task_key: 'tk-nouvellement-cree', design_url: 'https://x.test/d.png' });
+    expect(finalPending).toContainEqual({ task_key: 'tk-nouvellement-cree', design_url: 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png' });
   });
 
   it("CREATE : conflit persistant sur TOUTES les tentatives -> abandon propre après la limite, 503 explicite, le task_key N'EST PAS renvoyé au client comme si tout avait réussi", async () => {
     siteSelectMock.mockResolvedValue({
-      data: { id: 'my-site-id', owner_id: 'owner-id', dropship_type: 'pod_brand', pod_designs: [{ url: 'https://x.test/d.png', selected_products: {}, pending_task_keys: [] }] },
+      data: { id: 'my-site-id', owner_id: 'owner-id', dropship_type: 'pod_brand', pod_designs: [{ url: 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png', selected_products: {}, pending_task_keys: [] }] },
       error: null,
     });
     // Chaque relecture renvoie une valeur toujours différente (contention
@@ -164,7 +171,7 @@ describe('generate-mockups — garde CAS JSONB sur pod_designs (retry en cas de 
     // relectures pour couvrir les 5 tentatives.
     for (let i = 0; i < 10; i++) {
       rereadResponses.push({
-        data: { pod_designs: [{ url: 'https://x.test/d.png', selected_products: {}, pending_task_keys: [`tk-churn-${i}`] }] },
+        data: { pod_designs: [{ url: 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png', selected_products: {}, pending_task_keys: [`tk-churn-${i}`] }] },
         error: null,
       });
     }
@@ -204,7 +211,7 @@ describe('generate-mockups — garde CAS JSONB sur pod_designs (retry en cas de 
     siteSelectMock.mockResolvedValue({
       data: {
         id: 'my-site-id', owner_id: 'owner-id', dropship_type: 'pod_brand',
-        pod_designs: [{ url: 'https://x.test/d.png', mockups: [], pending_task_keys: [{ task_key: 'tk-a', design_url: 'https://x.test/d.png' }] }],
+        pod_designs: [{ url: 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png', mockups: [], pending_task_keys: [{ task_key: 'tk-a', design_url: 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png' }] }],
       },
       error: null,
     });
@@ -214,9 +221,9 @@ describe('generate-mockups — garde CAS JSONB sur pod_designs (retry en cas de 
     rereadResponses.push({
       data: {
         pod_designs: [{
-          url: 'https://x.test/d.png',
-          mockups: [{ product_id: 99, variant_id: 99, design_url: 'https://x.test/d.png' }],
-          pending_task_keys: [{ task_key: 'tk-a', design_url: 'https://x.test/d.png' }],
+          url: 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png',
+          mockups: [{ product_id: 99, variant_id: 99, design_url: 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png' }],
+          pending_task_keys: [{ task_key: 'tk-a', design_url: 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png' }],
         }],
       },
       error: null,

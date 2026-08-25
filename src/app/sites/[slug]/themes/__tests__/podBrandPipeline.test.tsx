@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 vi.mock('@/lib/supabase', () => ({ supabase: {} }));
 
 import { mockupsToProducts } from '../shared';
+import { findSellablePodBrandMockup, sellablePodBrandMockups, isOwnPodDesignUrl } from '@/lib/mode3/podBrandMockups';
 
 // ============================================================
 // LOT 2 / INVARIANT B -- LE PIPELINE LEGITIME DE `pod_brand`.
@@ -237,5 +238,138 @@ describe('LOT 3 / DEBT-058 — la carte n\'annonce plus une fiche qui repond 404
   it('`hasProductPage: true` porte bien un href', () => {
     const html = rendre({ id: 'p-2', name: 'X', description: '', price: '5', hasProductPage: true });
     expect(html).toContain('/produits/p-2');
+  });
+});
+
+// ============================================================
+// LOT 3 / ANOMALIE A -- LE SCENARIO FALSIFICATEUR, REJOUE A L'IDENTIQUE.
+//
+// La contre-verification avait execute le module reel et prouve que la
+// vitrine et le checkout designaient des maquettes DIFFERENTES :
+//
+//   designs[0] : maquette de `cp-X`, `design_url` = ANCIENNE url (perimee)
+//   designs[1] : maquette de `cp-X`, `design_url` = url du design (fraiche)
+//
+//   vitrine  -> ecartait la perimee, affichait celle de designs[1]
+//   checkout -> `flatMap(...).find(...)` retenait la PERIMEE
+//
+// Le visiteur voyait le design B, le fournisseur recevait le design A.
+//
+// CE BLOC NE TESTE PAS UNE MUTATION : il teste l'ALIGNEMENT. Il interroge
+// les deux couches sur le meme etat et exige la meme reponse.
+// ============================================================
+const U_ANCIEN = 'https://sb.test/storage/v1/object/public/pod-designs/ma-marque/ANCIEN.png';
+const U_A = 'https://sb.test/storage/v1/object/public/pod-designs/ma-marque/A.png';
+const U_B = 'https://sb.test/storage/v1/object/public/pod-designs/ma-marque/B.png';
+
+const maquette = (over: Record<string, unknown> = {}) => ({
+  catalog_product_id: 'cp-X', product_id: 198, variant_id: 7791,
+  product_name: 'T-Shirt', mockup_url: 'https://img.test/defaut.png',
+  price: 10, currency: 'USD', ...over,
+});
+
+describe('LOT 3 / ANOMALIE A — la vitrine et le checkout designent la MEME maquette', () => {
+  const SITE_FALSIFICATEUR = (): any => ({
+    ...site(),
+    pod_designs: [
+      // designs[0] : son url a change, sa maquette reste etiquetee ANCIENNE.
+      { url: U_A, mockups: [maquette({ design_url: U_ANCIEN, mockup_url: 'https://img.test/ancien.png' })] },
+      // designs[1] : maquette FRAICHE du MEME produit catalogue.
+      { url: U_B, mockups: [maquette({ design_url: U_B, mockup_url: 'https://img.test/b.png' })] },
+    ],
+  });
+
+  it('SCENARIO FALSIFICATEUR — vitrine = B, checkout = B', () => {
+    const s = SITE_FALSIFICATEUR();
+    const produits = mockupsToProducts(s);
+    // Ce que le VISITEUR voit.
+    expect(produits).toHaveLength(1);
+    expect(produits[0].image).toBe('https://img.test/b.png');
+    // Ce que le CHECKOUT vendrait pour ce meme id de panier.
+    const vendu = findSellablePodBrandMockup(s.pod_designs, 'cp-X');
+    expect(vendu?.mockup.design_url).toBe(U_B);
+    // Et surtout : JAMAIS l'ancien.
+    expect(vendu?.mockup.design_url).not.toBe(U_ANCIEN);
+  });
+
+  it('ALIGNEMENT GENERAL — pour chaque produit affiche, le checkout retient la maquette de la carte', () => {
+    // La garantie ne porte pas sur un cas : sur tous. On confronte le rendu
+    // reel a la selection du checkout, produit par produit.
+    const s = SITE_FALSIFICATEUR();
+    const produits = mockupsToProducts(s);
+    for (const p of produits) {
+      const realId = String(p.id).replace(/^catalog-/, '');
+      const vendu = findSellablePodBrandMockup(s.pod_designs, realId);
+      expect(vendu, `aucune maquette vendable pour ${p.id}`).toBeTruthy();
+      expect(vendu!.mockup.mockup_url).toBe(p.image);
+    }
+  });
+
+  it('une maquette SANS catalog_product_id n\'est ni affichee ni vendable', () => {
+    const s: any = { ...site(), pod_designs: [{ url: U_A, mockups: [
+      { design_url: U_A, mockup_url: 'https://img.test/orphelin.png', price: 5, currency: 'USD', product_name: 'X' },
+    ] }] };
+    expect(mockupsToProducts(s)).toEqual([]);
+    expect(sellablePodBrandMockups(s.pod_designs)).toEqual([]);
+    expect(findSellablePodBrandMockup(s.pod_designs, 'undefined')).toBeUndefined();
+  });
+
+  it('VARIANTE 1 — designs[0] frais, designs[1] perime : c\'est designs[0] qui est retenu', () => {
+    const s: any = { ...site(), pod_designs: [
+      { url: U_A, mockups: [maquette({ design_url: U_A, mockup_url: 'https://img.test/a.png' })] },
+      { url: U_B, mockups: [maquette({ design_url: U_ANCIEN, mockup_url: 'https://img.test/perime.png' })] },
+    ] };
+    expect(mockupsToProducts(s)[0].image).toBe('https://img.test/a.png');
+    expect(findSellablePodBrandMockup(s.pod_designs, 'cp-X')?.mockup.design_url).toBe(U_A);
+  });
+
+  it('VARIANTE 2 — TOUTES les maquettes sont perimees : rien n\'est affiche, rien n\'est vendable', () => {
+    const s: any = { ...site(), pod_designs: [
+      { url: U_A, mockups: [maquette({ design_url: U_ANCIEN })] },
+      { url: U_B, mockups: [maquette({ design_url: U_ANCIEN })] },
+    ] };
+    expect(mockupsToProducts(s)).toEqual([]);
+    expect(findSellablePodBrandMockup(s.pod_designs, 'cp-X')).toBeUndefined();
+  });
+
+  it('VARIANTE 3 — deux designs FRAIS du meme produit : le premier gagne, des DEUX cotes', () => {
+    const s: any = { ...site(), pod_designs: [
+      { url: U_A, mockups: [maquette({ design_url: U_A, mockup_url: 'https://img.test/a.png' })] },
+      { url: U_B, mockups: [maquette({ design_url: U_B, mockup_url: 'https://img.test/b.png' })] },
+    ] };
+    expect(mockupsToProducts(s)).toHaveLength(1);
+    expect(mockupsToProducts(s)[0].image).toBe('https://img.test/a.png');
+    expect(findSellablePodBrandMockup(s.pod_designs, 'cp-X')?.mockup.design_url).toBe(U_A);
+  });
+
+  it('la convention `designs[0]` n\'est PAS reintroduite : un design d\'index >= 1 reste vendable seul', () => {
+    const s: any = { ...site(), pod_designs: [
+      { url: U_A, mockups: [] },
+      { url: U_B, mockups: [maquette({ design_url: U_B, mockup_url: 'https://img.test/b.png' })] },
+    ] };
+    expect(mockupsToProducts(s)).toHaveLength(1);
+    expect(findSellablePodBrandMockup(s.pod_designs, 'cp-X')?.mockup.design_url).toBe(U_B);
+  });
+});
+
+describe('LOT 3 / ANOMALIE B — la definition du prefixe locataire est UNIQUE', () => {
+  it('accepte le bon slug, refuse un autre slug et une URL exterieure', () => {
+    expect(isOwnPodDesignUrl(U_A, 'ma-marque')).toBe(true);
+    expect(isOwnPodDesignUrl(U_A.replace('/ma-marque/', '/autre-boutique/'), 'ma-marque')).toBe(false);
+    expect(isOwnPodDesignUrl('https://evil.example/x.png', 'ma-marque')).toBe(false);
+  });
+
+  it('fail-closed sur toute valeur non exploitable', () => {
+    for (const v of [null, undefined, '', 0, {}, []]) {
+      expect(isOwnPodDesignUrl(v, 'ma-marque')).toBe(false);
+      expect(isOwnPodDesignUrl(U_A, v)).toBe(false);
+    }
+  });
+
+  it('un slug qui est un PREFIXE d\'un autre ne passe pas pour lui', () => {
+    // `ma-marque` ne doit pas valider une URL de `ma-marque-bis`.
+    const urlBis = 'https://sb.test/storage/v1/object/public/pod-designs/ma-marque-bis/d.png';
+    expect(isOwnPodDesignUrl(urlBis, 'ma-marque')).toBe(false);
+    expect(isOwnPodDesignUrl(urlBis, 'ma-marque-bis')).toBe(true);
   });
 });

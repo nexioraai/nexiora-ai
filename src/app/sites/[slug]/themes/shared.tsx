@@ -3,6 +3,7 @@
 import { supabase } from '@/lib/supabase'
 import { calcSellPrice, sitePricing, resolveDisplayPrice } from '@/lib/pricing'
 import { canTransact } from '@/lib/commerce-admission/canTransact'
+import { sellablePodBrandMockups } from '@/lib/mode3/podBrandMockups'
 
 import {
 Wrench,
@@ -757,39 +758,33 @@ export function mockupsToProducts(site: Site): Product[] {
   // Prix unifie : le cout Printful passe par la meme formule marge que le
   // catalogue reseller. Le marchand fixe son %, le prix se calcule.
   const { margin, roundMode } = sitePricing(site)
-  // Deux designs peuvent porter une maquette du MEME produit catalogue. Leurs
-  // deux cartes auraient alors le meme id de panier, et le checkout ne
-  // pourrait pas savoir lequel vendre. Le premier rencontre gagne -- meme
-  // ordre de parcours que le checkout, donc jamais de desaccord.
-  const vus = new Set<string>()
-  for (const design of designs) {
-    if (!design.mockups?.length) continue
-    for (const m of design.mockups) {
-      if (m.design_url && design.url && m.design_url !== design.url) continue
-      if (!m.catalog_product_id) continue
-      const cle = String(m.catalog_product_id)
-      if (vus.has(cle)) continue
-      vus.add(cle)
-      const cost = m.price ? Number(m.price) : 0
-      const pr = resolveDisplayPrice(cost, undefined, margin, roundMode)
-      const cur = m.currency || "CAD"
-      products.push({
-        id: `catalog-${m.catalog_product_id}`,
-        name: m.product_name?.replace(/\s*—\s*.+$/, "") || "Produit",
-        description: "",
-        price: pr > 0 ? `${pr.toFixed(2)} ${cur}` : "",
-        priceNumber: pr,
-        currency: cur,
-        image: m.mockup_url,
-        shippingDaysMin: m.shipping_days_min || null,
-        shippingDaysMax: m.shipping_days_max || null,
-        // DEBT-058 -- ce produit n'a pas de fiche : `fetchProduct` sert la
-        // page depuis `site_catalog_selections`, mecanisme que `pod_brand`
-        // n'utilise pas (LOT 2). La carte ne doit donc pas porter un lien
-        // vers un 404 -- voir ClickableProductCard.
-        hasProductPage: false,
-      })
-    }
+  // LOT 3 -- LA REGLE « MAQUETTE VENDABLE » N'EST PLUS ECRITE ICI.
+  //
+  // Elle l'etait, et le checkout en avait une SECONDE, plus laxiste : une
+  // contre-verification a execute les deux et prouve qu'elles designaient des
+  // maquettes differentes -- le visiteur voyait un design, le fournisseur en
+  // recevait un autre. Aligner l'ordre ne suffisait pas : ce sont les filtres
+  // qui divergeaient. Une seule implementation, consommee des deux cotes.
+  for (const { mockup: m } of sellablePodBrandMockups(designs)) {
+    const cost = m.price ? Number(m.price) : 0
+    const pr = resolveDisplayPrice(cost, undefined, margin, roundMode)
+    const cur = m.currency || "CAD"
+    products.push({
+      id: `catalog-${m.catalog_product_id}`,
+      name: (m.product_name as string | undefined)?.replace(/\s*—\s*.+$/, "") || "Produit",
+      description: "",
+      price: pr > 0 ? `${pr.toFixed(2)} ${cur}` : "",
+      priceNumber: pr,
+      currency: cur as string,
+      image: m.mockup_url as string | undefined,
+      shippingDaysMin: (m.shipping_days_min as number | null) || null,
+      shippingDaysMax: (m.shipping_days_max as number | null) || null,
+      // DEBT-058 -- ce produit n'a pas de fiche : `fetchProduct` sert la
+      // page depuis `site_catalog_selections`, mecanisme que `pod_brand`
+      // n'utilise pas (LOT 2). La carte ne doit donc pas porter un lien
+      // vers un 404 -- voir ClickableProductCard.
+      hasProductPage: false,
+    })
   }
   return products
 }

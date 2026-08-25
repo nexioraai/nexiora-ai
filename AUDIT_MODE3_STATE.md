@@ -286,7 +286,7 @@ fail-closed. **Les deux autorités de sous-mode sont solidement verrouillées.**
 | **0** | Collecte de `src/lib/mode3/**` | ✅ **TERMINÉ** — manque latent fermé, prouvé par sonde |
 | **1** | Socle transversal (DEBT-050, DEBT-051, autorités de sous-mode) | ✅ **RÉSOLU** — 14/14 mutations tuées, 3088 tests |
 | **2** | Frontières internes (DEBT-048, DEBT-049) | ✅ **RÉSOLU** — 19/19 mutations tuées, 3178 tests |
-| **3** | **POD_BRAND** (+ DEBT-055, DEBT-058, DEBT-059) | ✅ **RÉSOLU** — 12/12 mutations tuées, 3201 tests |
+| **3** | **POD_BRAND** (+ DEBT-055/058/059, puis DEBT-062/063) | ✅ **RÉSOLU** — 23 mutations tuées, 3220 tests |
 | 4 | RESELLER | à faire |
 | 5 | POD_CUSTOM | à faire |
 | 6 | Transversal final (+ **DEBT-054**, rattachée depuis le LOT 1) | à faire |
@@ -551,3 +551,67 @@ rouvert : `pod_brand` ne l'atteint pas (`mockupsToProducts` ne renseigne ni
 `supplierId` ni `supplierProductId`, donc `MerchantProductModal` ne l'appelle
 jamais pour lui). **DEBT-054** reste **LOT 6**. Aucune découverte n'appartenait
 à `reseller` ni à `pod_custom`.
+
+
+---
+
+# LOT 3 — SECONDE PASSE, APRÈS CONTRE-VÉRIFICATION (2026-08-25)
+
+La contre-vérification adversariale a **falsifié le verdict 🟢** de la première
+passe. Deux anomalies, toutes deux dans la chaîne `pod_brand`, corrigées en une
+seule passe.
+
+## DEBT-062 🔴 — vitrine ≠ checkout, encore
+
+La première passe avait aligné l'**ordre** de parcours des designs. Ce n'était
+pas l'ordre : ce sont les **filtres**. La vitrine en applique deux que le
+checkout n'avait pas.
+
+**Démontré par exécution du module réel**, pas par lecture :
+
+```
+designs[0] : maquette de cp-X, design_url = ANCIENNE  (périmée)
+designs[1] : maquette de cp-X, design_url = celle du design (fraîche)
+
+vitrine  -> https://img/b.png          (design B)
+checkout -> .../pod-designs/…/ANCIEN.png   (design A)
+```
+
+**Cause profonde : deux implémentations de la même règle métier.** Corriger
+l'une sans l'autre reproduit le défaut — c'est littéralement ce qui venait
+d'arriver. La règle est donc **écrite une fois**, dans
+`src/lib/mode3/podBrandMockups.ts`, et consommée par les deux couches.
+Alignement **par construction**.
+
+Ce n'est pas une autorité nouvelle : ni `subtypeAdmission`, ni
+`CATALOG_SUBTYPES`, ni `suppliersForDropshipType`, ni `usesCatalogSelections`,
+ni `showsVisitorCatalogSearch` ne répond à « quelle maquette est vendable ».
+
+## DEBT-063 🟠 — la liaison locataire n'était posée qu'au point de vente
+
+`generate-mockups` envoie `designs[0].url` — écrit par le marchand en PostgREST
+— comme `image_url` d'un `create-task` Printful **facturé**. La garde y est
+désormais posée **avant toute dépense**, avec la **même unique** définition du
+format. Le design actif est **nommé** : `index` est un index de **produit**,
+jamais de design — vérifié dans le contrat de l'appelant avant modification.
+
+## Mutations — 11 lancées, 11 tuées
+
+R1–R4 (les trois filtres + l'ordre) · R5 (le checkout reprend sa propre
+sélection) · R6–R7 (la règle de préfixe) · R8–R10 (les deux gardes locataires)
+· **R11 (quel design la route génère)**, qui avait d'abord **survécu** et n'a
+pas été masquée : elle est tuée par une observable réelle — la route ne se
+rabat jamais sur un autre design.
+
+## Contre-vérification indépendante
+
+Sonde exécutée **hors dépôt**, important les modules réels : scénario
+falsificateur + 4 variantes (périmé en `[0]`, périmé en `[1]`, tout périmé,
+trois designs en correspondance 1:1, maquette sans `catalog_product_id`) —
+vitrine et checkout concordent dans tous les cas.
+
+## Production — aucune écriture
+
+Empreinte `pod_designs` **identique** avant/après (`2cc8f941c571615d`),
+`updated_at` inchangé. Design et 3 maquettes **conformes au préfixe** : la
+nouvelle garde ne casse pas le seul site réel.

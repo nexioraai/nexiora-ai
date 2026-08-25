@@ -682,6 +682,13 @@ export const DOMAIN_REGISTRY: DomainDefinition[] = [
       'src/lib/mode3/cancelSupplierOrder.ts',
       'src/lib/mode3/catalogStock.ts',
       'src/lib/mode3/checkoutPolicy.ts',
+      // LOT 3 -- entree AJOUTEE. `src/lib/mode3` est un repertoire
+      // entierement possede : un fichier non declare ici n'est couvert par
+      // aucune regle. Ce module porte les deux regles de contenu de
+      // `pod_designs` (maquette vendable, design du locataire), extraites
+      // apres qu'une contre-verification a demontre que la vitrine et le
+      // checkout en avaient deux implementations divergentes.
+      'src/lib/mode3/podBrandMockups.ts',
       'src/lib/mode3/supplierShipping.ts',
       'src/lib/fulfillment/idempotency-key.ts',
       'src/lib/fulfillment/observability.ts',
