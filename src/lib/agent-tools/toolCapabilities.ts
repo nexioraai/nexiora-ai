@@ -104,6 +104,64 @@ export const INVENTORY_TOOLS = ['count_product_stock'] as const;
  */
 export const PRODUCT_FIELD_TOOLS = ['set_price', 'set_currency', 'set_for_sale'] as const;
 
+// ============================================================
+// DEBT-032 -- CE QU'UN OUTIL PRODUIT, DECLARE ICI ET NON DEDUIT AILLEURS.
+//
+// LE LIEN QUI MANQUAIT. Ce module repond « quel mode recoit quel outil » ;
+// `canTransact` repond « quel mode a le droit de produire un artefact
+// commercial ». Les deux autorites coexistaient SANS AUCUNE RELATION
+// EXPRIMEE : rien n'empechait d'inscrire le mode 1 dans `PROMO_MODES`, et
+// aucun test n'aurait bronche. C'est la meme faille de forme que DEBT-030,
+// une couche plus haut -- une frontiere declaree quelque part, jamais reliee
+// a l'endroit qui la franchit.
+//
+// POURQUOI UNE LISTE D'OUTILS ET NON UNE NATURE PAR FAMILLE. Une nature
+// portee par la famille suivrait l'outil qui change de famille : deplacer
+// `create_promo_code` dans `CONTENT_TOOLS` le rendrait « editorial » par
+// simple deplacement, et le mode 1 l'obtiendrait sans qu'aucun controle ne
+// s'en apercoive. La nature appartient a l'OUTIL, parce qu'elle decrit ce
+// qu'il ECRIT -- pas le tiroir ou on le range.
+//
+// LE CRITERE, ET IL EST OBSERVABLE : l'outil produit-il un artefact qui
+// n'existe que pour un site qui encaisse ? Un code promo, une marge
+// fournisseur, une approbation de catalogue, un stock, un prix de vente :
+// oui. Un service, un temoignage, une image, une FAQ : non -- ce sont des
+// contenus, un site vitrine en a legitimement.
+//
+// `MANUAL_PRODUCT_TOOLS` EST ABSENT DE CETTE LISTE, DELIBEREMENT. Ces trois
+// outils ecrivent `sites.products` (jsonb), qui pour une vitrine est un menu
+// de presentation sans contrepartie commerciale -- c'est precisement pourquoi
+// le Mode 2, lui, les a PERDUS a l'etape 0 du catalogue canonique. Ranger un
+// menu de restaurant parmi les artefacts commerciaux interdirait au Mode 1
+// une capacite qui lui revient.
+//
+// L'INVARIANT QUE CETTE LISTE REND VERIFIABLE, teste par appel reel de
+// `toolNamesForSite` sur tous les modes et sous-types :
+//
+//     un mode qui recoit UN SEUL de ces outils DOIT etre admis par
+//     `canTransact` -- sans exception, sans derogation.
+//
+// Il echoue si l'on inscrit un mode non commercant dans une allowlist
+// commerciale, si l'on deplace un de ces outils vers une famille editoriale,
+// ou si l'on ouvre au Mode 1 une famille qui en contient un.
+// ============================================================
+export const COMMERCIAL_ARTIFACT_TOOLS = [
+  // Catalogue fournisseur : curation, enrichissement, approbation, marge.
+  'catalog_curate',
+  'catalog_enhance',
+  'catalog_approve_all',
+  'catalog_set_margin',
+  // Codes promo : une remise n'a de sens que pour un site qui encaisse.
+  'create_promo_code',
+  'deactivate_promo_code',
+  // Stock : un inventaire n'existe que pour un site qui vend.
+  'count_product_stock',
+  // Champs de vente de `shop_products` : prix, devise, achetabilite.
+  'set_price',
+  'set_currency',
+  'set_for_sale',
+] as const;
+
 // ---- Les allowlists : quel mode recoit quelle famille ----
 
 /** Le contenu editorial : services, temoignages, galerie. */
