@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { projeter } from '@/lib/testing/postgrest';
 
 // Audit Mode 3/POD BRAND, LOT 1 -- fetchProduct.ts interrogeait `sites`
 // directement (colonnes sensibles exposées via select=* à quiconque pour un
@@ -23,13 +24,46 @@ const selectsAppeles: string[] = [];
 // pur -- aucune assertion anterieure ne change de sens.
 const filtres: [string, string, unknown][] = [];
 
+// ============================================================
+// AUDIT GLOBAL / PASSE 2 -- CE HARNAIS ETAIT PLUS PERMISSIF QUE POSTGREST,
+// ET UNE MUTATION L'A PROUVE.
+//
+// `b.maybeSingle = async () => resolveValue` rendait le fixture ENTIER, quelle
+// que soit la projection. Mesure : retirer `supplier_id` de la projection de
+// `fetchProduct` -- ce qui rend AVEUGLE la garde d'eligibilite fournisseur --
+// ne faisait rougir AUCUN des 75 tests. Le cliquet de projection ne le voyait
+// pas non plus : il exclut explicitement les jointures imbriquees.
+//
+// La projection est desormais honoree, RELATIONS IMBRIQUEES COMPRISES :
+// `catalog_products(name, price)` ne rend que ces colonnes-la, comme
+// PostgREST. C'est precisement la ou vivait l'angle mort.
+// ============================================================
 function chain(resolveValue: { data: any; error: any }, table = '') {
   const b: any = {};
-  const self = () => b;
-  b.select = (cols?: string) => { if (typeof cols === 'string') selectsAppeles.push(cols); return b; };
+  let colonnes = '';
+  b.select = (cols?: string) => {
+    if (typeof cols === 'string') { selectsAppeles.push(cols); colonnes = cols; }
+    return b;
+  };
   b.eq = (col: string, val: unknown) => { filtres.push([table, col, val]); return b; };
-  b.maybeSingle = async () => resolveValue;
+  b.maybeSingle = async () => ({
+    ...resolveValue,
+    data: projeterAvecRelations(resolveValue.data, colonnes),
+  });
   return b;
+}
+
+/** `projeter` du double partage, etendu aux colonnes des relations imbriquees. */
+function projeterAvecRelations(donnee: unknown, colonnes: string): unknown {
+  const racine = projeter(donnee, colonnes) as Record<string, unknown> | null;
+  if (!racine || typeof racine !== 'object') return racine;
+  for (const m of colonnes.matchAll(/(\w+)\s*\(([^)]*)\)/g)) {
+    const [, relation, sousColonnes] = m;
+    if (racine[relation] && typeof racine[relation] === 'object') {
+      racine[relation] = projeter(racine[relation], sousColonnes);
+    }
+  }
+  return racine;
 }
 
 vi.mock('@/lib/supabase', () => ({
@@ -73,7 +107,7 @@ describe('fetchProduct — interroge sites_public, jamais sites', () => {
     selectionResult = {
       data: {
         sell_price: null, custom_name: null, custom_description: null, catalog_product_id: 'abc',
-        catalog_products: { name: 'T-shirt', description: 'desc', price: 10, currency: 'USD', images: ['x.jpg'], in_stock: true },
+        catalog_products: { supplier_id: 'cj', name: 'T-shirt', description: 'desc', price: 10, currency: 'USD', images: ['x.jpg'], in_stock: true },
       },
       error: null,
     };
@@ -158,7 +192,7 @@ describe('DETTE 6c — la fiche produit expose l’achetabilité', () => {
       data: {
         sell_price: null, custom_name: null, custom_description: null,
         catalog_product_id: 'abc',
-        catalog_products: { name: 'Mug', description: '', price: 10, currency: 'CAD', images: [], in_stock: true },
+        catalog_products: { supplier_id: 'cj', name: 'Mug', description: '', price: 10, currency: 'CAD', images: [], in_stock: true },
       },
       error: null,
     };
@@ -184,7 +218,7 @@ const SEL_OK = {
   data: {
     sell_price: null, custom_name: null, custom_description: null,
     catalog_product_id: 'cp-1',
-    catalog_products: { name: 'Bracelet', description: '', price: 10, currency: 'usd', images: [], in_stock: true },
+    catalog_products: { supplier_id: 'cj', name: 'Bracelet', description: '', price: 10, currency: 'usd', images: [], in_stock: true },
   },
   error: null,
 };
@@ -203,11 +237,45 @@ describe('LOT 2 — fetchProduct : admission au mecanisme de selection', () => {
     expect(fromCalls).not.toContain('site_catalog_selections');
   });
 
-  it.each(['reseller', 'pod_custom'])('Mode 3 %s -> la fiche est servie (chemin visiteur legitime)', async (t) => {
-    siteResult = { data: { ...siteResult.data, dropship_type: t }, error: null };
-    selectionResult = SEL_OK;
-    const p = await fp('my-shop', 'catalog-cp-1');
-    expect(p?.name).toBe('Bracelet');
+  it.each([['reseller', 'cj'], ['pod_custom', 'printful']])(
+    'Mode 3 %s -> la fiche est servie quand le fournisseur appartient au sous-type',
+    async (t, fournisseur) => {
+      // AUDIT GLOBAL / PASSE 2 -- le fournisseur fait desormais partie de la
+      // fixture. Un `cj` sur un `pod_custom` est un etat que l'ecriture
+      // n'autorise pas : l'imposer aurait fait echouer le test pour la bonne
+      // raison, en masquant ce qu'il veut prouver.
+      siteResult = { data: { ...siteResult.data, dropship_type: t }, error: null };
+      selectionResult = {
+        data: { ...(SEL_OK.data as any), catalog_products: { ...(SEL_OK.data as any).catalog_products, supplier_id: fournisseur } },
+        error: null,
+      };
+      const p = await fp('my-shop', 'catalog-cp-1');
+      expect(p?.name).toBe('Bracelet');
+    }
+  );
+
+  it.each([['reseller', 'printful'], ['pod_custom', 'cj'], ['reseller', 'gelato']])(
+    'AUDIT GLOBAL — Mode 3 %s avec une selection %s -> la fiche est REFUSEE',
+    async (t, fournisseur) => {
+      // LA QUATRIEME SURFACE. La passe 1 avait ferme la vitrine, le sitemap et
+      // la recherche ; sans cette garde la fiche restait servie a qui
+      // connaissait son URL -- page orpheline, achetable, refusee au paiement.
+      siteResult = { data: { ...siteResult.data, dropship_type: t }, error: null };
+      selectionResult = {
+        data: { ...(SEL_OK.data as any), catalog_products: { ...(SEL_OK.data as any).catalog_products, supplier_id: fournisseur } },
+        error: null,
+      };
+      expect(await fp('my-shop', 'catalog-cp-1')).toBeNull();
+    }
+  );
+
+  it('AUDIT GLOBAL — une selection sans fournisseur connu -> fiche REFUSEE', async () => {
+    siteResult = { data: { ...siteResult.data, dropship_type: 'reseller' }, error: null };
+    selectionResult = {
+      data: { ...(SEL_OK.data as any), catalog_products: { ...(SEL_OK.data as any).catalog_products, supplier_id: null } },
+      error: null,
+    };
+    expect(await fp('my-shop', 'catalog-cp-1')).toBeNull();
   });
 
   it('aucune garde de PROPRIETE n\'est introduite : la fiche reste une surface publique', async () => {
@@ -292,6 +360,9 @@ describe('LOT 4 — fetchProduct expose de quoi choisir une variante', () => {
   it.each(['printful', 'gelato'])(
     'ligne AVEC parent (%s) -> `requiresVariant` faux : elle EST deja une variante',
     async (fournisseur) => {
+      // Le site doit etre d'un sous-type qui ADMET ce fournisseur, sinon la
+      // fiche est refusee avant meme d'exposer `requiresVariant`.
+      siteResult = { data: { ...siteResult.data, dropship_type: 'pod_custom' }, error: null };
       selectionResult = SEL({ supplier_id: fournisseur, supplier_product_id: 'sp-1', supplier_parent_id: 'parent-1' });
       const p = await fp('my-shop', 'catalog-cp-1');
       expect(p?.requiresVariant).toBe(false);
@@ -331,8 +402,14 @@ describe('LOT 5 / P5-03 — la fiche produit sait si un design est exige', () =>
   });
 
   it('site reseller -> la fiche est servie, sans exigence de design', async () => {
+    // Un site `reseller` s'approvisionne chez CJ : la selection doit donc
+    // porter `cj`, sinon la fiche est refusee avant meme la question du design
+    // -- et le test prouverait le refus, pas l'absence d'exigence.
     siteResult = { data: { ...siteResult.data, dropship_type: 'reseller' }, error: null };
-    selectionResult = SEL;
+    selectionResult = {
+      data: { ...(SEL.data as any), catalog_products: { ...(SEL.data as any).catalog_products, supplier_id: 'cj', supplier_parent_id: null } },
+      error: null,
+    };
     const p = await fp('my-shop', 'catalog-cp-1');
     expect(p).not.toBeNull();
     expect(p?.requiresDesign).toBe(false);
