@@ -17,9 +17,12 @@ import { IDENTITE_FR, IDENTITE_EN, VERIFIE_LE } from './manifeste'
 // dire a quel type de site elle appartient serait un mensonge structure --
 // plus dangereux qu'une phrase, parce qu'une machine le lit comme un fait.
 //
-// NON MONTE. Le layout racine enveloppe AUSSI les sites clients : y placer ce
-// balisage attribuerait chaque site client a Deribfy. Le choix de la page
-// d'entite canonique est une decision produit, pas une decision de redaction.
+// MONTE SUR `/about`, ET NULLE PART AILLEURS -- decision produit du 2026-08-26.
+// Le layout racine enveloppe AUSSI les sites clients (le proxy y reecrit chaque
+// domaine personnalise) : l'y placer attribuerait chaque site client a Deribfy.
+// `/about` est la seule surface publique rendue cote serveur que le proxy
+// n'atteint jamais. `siteUrl` doit etre la RACINE du domaine, jamais `/about` :
+// `Organization` et `WebSite` designent l'entite et le site entier.
 // ============================================================
 
 export function jsonLdPlateforme(siteUrl: string, langue: 'fr' | 'en' = 'fr') {
