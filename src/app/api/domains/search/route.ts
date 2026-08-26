@@ -89,11 +89,18 @@ export async function POST(req: NextRequest) {
   const tld = clean.split('.').pop() || '';
 
   // Deja pris dans Nexiora ? Aucun appel API necessaire.
-  const { data: taken } = await supabaseAdmin
+  const { data: taken, error: erreurTaken } = await supabaseAdmin
     .from('site_domains')
     .select('id')
     .eq('domain', clean)
     .maybeSingle();
+  // AUDIT AGRESSIF / TOUR 2 -- le dernier controle encore ouvert. En panne, un
+  // domaine DEJA reserve par Deribfy etait annonce « disponible » : on
+  // promettait un domaine qu'on ne peut pas vendre, et le creneau du
+  // registraire etait consomme pour rien.
+  if (erreurTaken) {
+    return NextResponse.json({ error: 'Service momentanement indisponible.' }, { status: 503 });
+  }
   if (taken) {
     return NextResponse.json({ domain: clean, available: false, reason: 'deja_reserve' });
   }

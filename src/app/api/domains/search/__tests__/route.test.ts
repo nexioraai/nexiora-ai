@@ -185,3 +185,21 @@ describe('D-04 — marquage du verrou', () => {
     expect(journal.ecritures.cron_state?.length).toBeGreaterThan(0);
   });
 });
+
+// ============================================================
+// AUDIT AGRESSIF / TOUR 2 -- LE DERNIER CONTROLE ENCORE OUVERT.
+// ============================================================
+describe('TOUR 2 — le contrôle « déjà réservé » ferme en panne', () => {
+  it('panne sur `site_domains` -> 503, AUCUN appel registraire', async () => {
+    tables.site_domains = { reponse: { data: null, error: { message: 'db down' } } };
+    const res = await POST(req());
+    expect(res.status).toBe(503);
+    expect(checkDomainMock).not.toHaveBeenCalled();
+  });
+
+  it('un domaine réservé n’est JAMAIS annoncé disponible', async () => {
+    tables.site_domains = { reponse: { data: { id: 'd-1' }, error: null } };
+    const j = await (await POST(req())).json();
+    expect(j.available).toBe(false);
+  });
+});
