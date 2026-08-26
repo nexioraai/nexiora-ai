@@ -1,7 +1,7 @@
 // src/app/sitemap.ts
 import type { MetadataRoute } from 'next'
 import { supabase } from '@/lib/supabase'
-import { usesCatalogSelections } from '@/lib/dropship/catalogAdmission'
+import { selectionServable } from '@/lib/dropship/catalogAdmission'
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.deribfy.com'
@@ -115,14 +115,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // MEME AUTORITE que les cinq routes catalogue et que la fiche produit :
   // une seule regle decide qui possede des selections publiables.
   // ============================================================
+  // AUDIT GLOBAL -- LE FOURNISSEUR EST DESORMAIS PROJETE, ET RELU.
+  //
+  // La projection ne portait que `catalog_product_id, site_id` : le sitemap ne
+  // POUVAIT PAS verifier l'eligibilite fournisseur, faute d'avoir la colonne.
+  // Il annoncait donc aux moteurs des fiches produit que le checkout refuse.
+  // La jointure la ramene, et l'autorite tranche -- meme regle que la vitrine.
   const { data: catalogSels } = await supabase
     .from('site_catalog_selections')
-    .select('catalog_product_id, site_id')
+    .select('catalog_product_id, site_id, catalog_products(supplier_id)')
     .eq('merchant_approved', true)
   const catalogProductRoutes: MetadataRoute.Sitemap = (catalogSels ?? [])
     .filter((c: any) => {
       const site = idToSite.get(c.site_id)
-      return !!site && usesCatalogSelections(site.mode, site.dropship_type)
+      const fournisseur = c.catalog_products?.supplier_id
+      return !!site && selectionServable(site.mode, site.dropship_type, fournisseur)
     })
     .map((c: any) => ({
       url: SITE_URL + '/sites/' + idToSlug.get(c.site_id) + '/produits/' + encodeURIComponent('catalog-' + c.catalog_product_id),

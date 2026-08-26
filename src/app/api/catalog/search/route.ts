@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { usesCatalogSelections } from '@/lib/dropship/catalogAdmission';
+import { selectionServable, usesCatalogSelections } from '@/lib/dropship/catalogAdmission';
 import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
 import { calcSellPrice, sitePricing, resolveDisplayPrice } from '@/lib/pricing';
 
@@ -97,6 +97,17 @@ export async function GET(req: NextRequest) {
 
     if (curatedSels && curatedSels.length > 0) {
       curatedResults = curatedSels
+        // AUDIT GLOBAL -- la branche CURATED ne filtrait pas le fournisseur,
+        // alors que la branche GLOBALE juste en dessous le fait
+        // (`query2.in('supplier_id', allowedSuppliers)`). Deux branches de la
+        // MEME route servaient donc deux regles differentes au meme visiteur.
+        .filter((s: any) =>
+          selectionServable(
+            (site as { mode?: unknown }).mode,
+            (site as { dropship_type?: unknown }).dropship_type,
+            s.catalog_products?.supplier_id
+          )
+        )
         .filter((s: any) => {
           const cp = s.catalog_products;
           // in_stock null = jamais verifie : le produit reste visible.

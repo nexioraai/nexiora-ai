@@ -1,4 +1,5 @@
 import 'server-only';
+import { suppliersForDropshipType, type DropshipType } from '@/lib/dropship/suppliers';
 
 // ============================================================
 // ETAPE 2 -- L'ADMISSION AU CATALOGUE FOURNISSEUR.
@@ -120,4 +121,46 @@ const CATALOG_SELECTION_SUBTYPES = new Set<unknown>(['reseller', 'pod_custom']);
  */
 export function usesCatalogSelections(siteMode: unknown, dropshipType: unknown): boolean {
   return hasSupplierCatalog(siteMode) && CATALOG_SELECTION_SUBTYPES.has(dropshipType);
+}
+
+// ============================================================
+// AUDIT GLOBAL — « CETTE SELECTION EST-ELLE SERVABLE PAR CE SITE ? »
+//
+// QUESTION NOUVELLE, PAS AUTORITE NOUVELLE. `usesCatalogSelections` repond
+// « ce site utilise-t-il le mecanisme » et `suppliersForDropshipType` repond
+// « quels fournisseurs pour ce sous-type ». Aucune des deux ne repondait a la
+// troisieme, qui les compose : une LIGNE DEJA STOCKEE reste-t-elle servable
+// aujourd'hui ?
+//
+// LA REGLE ETAIT APPLIQUEE A L'ECRITURE, JAMAIS A LA LECTURE. Mesure faite
+// surface par surface :
+//   POST /catalog/selections   -> suppliersForDropshipType  ✅
+//   POST /catalog/curate       -> suppliersForDropshipType  ✅
+//   /catalog/search branche 2  -> .in('supplier_id', ...)   ✅
+//   /catalog/search branche 1 (curated)  -> AUCUN FILTRE    ❌
+//   shared.tsx loadCatalogSelections     -> AUCUN FILTRE    ❌
+//   sitemap.ts                           -> AUCUN FILTRE    ❌
+//   checkout                   -> REFUSE (catalog_supplier_not_eligible)
+//
+// Les trois surfaces de LECTURE faisaient donc confiance a une eligibilite
+// verifiee au moment de l'ecriture. Cette confiance ne tient que tant que le
+// sous-type ne bouge jamais. Consequence si elle cesse : un produit affiche,
+// indexe par les moteurs, ajoutable au panier -- et REFUSE au paiement. Le
+// visiteur decouvre le refus apres avoir saisi son adresse.
+//
+// ETAT MESURE EN PRODUCTION (lecture seule, 14 sites / 73 selections) :
+// ZERO incoherence, et aucun chemin applicatif ne mute `sites.mode` ni
+// `sites.dropship_type` -- verifie sur les 22 ecritures de la table `sites`.
+// C'est donc une DEFENSE EN PROFONDEUR, pas un incident : elle ferme l'ecart
+// AVANT que le produit n'autorise un changement de sous-type, moment ou il
+// deviendrait un defaut de production sans qu'une ligne de code ait change.
+// ============================================================
+export function selectionServable(
+  siteMode: unknown,
+  dropshipType: unknown,
+  supplierId: unknown
+): boolean {
+  if (!usesCatalogSelections(siteMode, dropshipType)) return false;
+  if (typeof supplierId !== 'string' || supplierId.length === 0) return false;
+  return suppliersForDropshipType(dropshipType as DropshipType).includes(supplierId);
 }

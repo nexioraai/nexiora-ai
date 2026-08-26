@@ -1,6 +1,7 @@
 // src/app/sites/[slug]/themes/shared.tsx
 
 import { supabase } from '@/lib/supabase'
+import { selectionServable } from '@/lib/dropship/catalogAdmission'
 import { calcSellPrice, sitePricing, resolveDisplayPrice } from '@/lib/pricing'
 import { canTransact } from '@/lib/commerce-admission/canTransact'
 import { sellablePodBrandMockups } from '@/lib/mode3/podBrandMockups'
@@ -457,6 +458,13 @@ const catalogProducts = catSels
 // Meme regle que la recherche : un produit epuise chez le fournisseur
 // n'est pas affiche. supplier-watch tient in_stock a jour.
 .filter((s: any) => s.catalog_products && s.catalog_products.in_stock !== false)
+// AUDIT GLOBAL -- L'ELIGIBILITE FOURNISSEUR EST REVERIFIEE A LA LECTURE.
+// Elle ne l'etait qu'a l'ECRITURE : une ligne deja stockee restait affichee
+// meme si son fournisseur n'appartenait plus au sous-type du site. Le
+// checkout, lui, la REFUSE (`catalog_supplier_not_eligible`) -- la vitrine
+// montrait donc un produit que le paiement rejette. Meme autorite que les
+// cinq routes catalogue, interrogee une granularite plus loin.
+.filter((s: any) => selectionServable(data.mode, data.dropship_type, s.catalog_products.supplier_id))
 .map((s: any) => {
 const cp = s.catalog_products
 const costPrice = cp.price ? Number(cp.price) : 0;

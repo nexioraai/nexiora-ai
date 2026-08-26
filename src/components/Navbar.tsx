@@ -112,9 +112,17 @@ export default function Navbar() {
     if (!addr || !site?.owner_email) return;
     setGeocoding(true);
     try {
+      // AUDIT GLOBAL -- la route est desormais authentifiee et bornee. La
+      // session existait deja sur cette page marchande ; seul l'en-tete
+      // manquait. Meme forme que /api/welcome.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
       const res = await fetch('/api/geocode', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({ address: addr }),
       });
       const data = await res.json();

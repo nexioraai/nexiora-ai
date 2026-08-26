@@ -1,4 +1,5 @@
 import { canTransact } from '@/lib/commerce-admission/canTransact';
+import { consommerJeton } from '@/lib/rate-limit/rateLimit';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { randomUUID } from 'crypto';
@@ -69,6 +70,34 @@ export async function POST(req: Request) {
 
     const allowed = ['image/png', 'image/jpeg', 'image/webp'];
     if (!allowed.includes(file.type)) return NextResponse.json({ error: 'Invalid file type' }, { status: 400 });
+
+    // ============================================================
+    // AUDIT GLOBAL — LA SEULE ECRITURE NON AUTHENTIFIEE ET NON BORNEE.
+    //
+    // Recensement des 68 routes : deux seulement ecrivent sans identite --
+    // `contact`, qui est borne depuis M1-02, et celle-ci, qui ne l'etait pas.
+    // Or elle ecrit DEUX fois : une ligne `design_uploads` ET un objet de
+    // 10 Mo dans le bucket. Un visiteur anonyme disposant d'un slug public
+    // (trivialement enumerable) pouvait donc faire croitre le storage sans
+    // aucune borne, pour le compte d'un marchand tiers.
+    //
+    // `canTransact` juste au-dessus repond « ce site vend-il ? », jamais
+    // « combien de fois ». La borne se pose APRES les controles gratuits
+    // (taille, type MIME) et AVANT toute ecriture -- un fichier refuse pour
+    // son type ne consomme aucun jeton.
+    //
+    // Meme autorite et meme direction de panne que les six autres surfaces
+    // bornees : le compteur qui ne repond pas REFUSE.
+    // ============================================================
+    const jeton = await consommerJeton({
+      type: 'design_upload_request',
+      siteId: (site as { id: string }).id,
+      fenetreMs: 60_000,
+      plafond: 10,
+      message: 'Trop de televersements, reessayez dans une minute.',
+      details: { slug },
+    });
+    if (!jeton.ok) return NextResponse.json({ error: jeton.erreur }, { status: jeton.statut });
 
     const ext = file.name.split('.').pop() || 'png';
     const path = `${randomUUID()}.${ext}`;

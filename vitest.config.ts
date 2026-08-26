@@ -210,6 +210,7 @@ export default defineConfig({
       // ajoutes AVANT que leurs tests soient ecrits, pas apres.
       'src/lib/rate-limit/**/*.test.ts',
       'src/app/api/welcome/**/*.test.ts',
+      'src/app/api/geocode/**/*.test.ts',
     ],
     environment: 'node',
   },

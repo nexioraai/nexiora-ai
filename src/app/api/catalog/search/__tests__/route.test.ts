@@ -245,3 +245,68 @@ describe('GET /api/catalog/search — LOT 4 : `requires_variant` derive de `supp
     expect(curated?.requires_variant).toBe(false);
   });
 });
+
+// ============================================================
+// AUDIT GLOBAL — LES DEUX BRANCHES DE CETTE ROUTE SERVAIENT DEUX REGLES.
+//
+// La branche GLOBALE filtrait deja le fournisseur
+// (`query2.in('supplier_id', allowedSuppliers)`). La branche CURATED, non.
+// Le MEME visiteur, sur la MEME route, recevait donc deux contrats selon la
+// branche qui repondait -- et le checkout refuse les lignes de la seconde
+// (`catalog_supplier_not_eligible`).
+//
+// CE TEST EXISTE PARCE QU'UNE MUTATION A SURVECU : retirer le filtre de la
+// branche curated ne faisait rougir aucun test.
+// ============================================================
+describe('AUDIT GLOBAL — la branche CURATED filtre le fournisseur comme la branche globale', () => {
+  const curatedChez = (supplier: string) => ({
+    site_catalog_selections: {
+      data: [{
+        id: 'sel-1', sell_price: null, custom_name: null, custom_description: null, catalog_product_id: 'cp-1',
+        catalog_products: { ...GLOBAL_PRODUCT, supplier_id: supplier, supplier_parent_id: null },
+      }],
+      error: null,
+    },
+    catalog_products: { data: [], error: null, count: 0 },
+  });
+
+  it.each(['printful', 'gelato'])(
+    'site reseller + selection curated %s -> le produit N’EST PAS servi',
+    async (supplier) => {
+      setupTables({ sites: { data: { ...SITE, dropship_type: 'reseller' }, error: null }, ...curatedChez(supplier) });
+      const json = await (await GET(req({ slug: 'x', q: 'bracelet' }))).json();
+      expect(json.products.some((p: { id: string }) => p.id === 'catalog-cp-1')).toBe(false);
+    }
+  );
+
+  it('site pod_custom + selection curated cj -> le produit N’EST PAS servi', async () => {
+    setupTables({ sites: { data: { ...SITE, dropship_type: 'pod_custom' }, error: null }, ...curatedChez('cj') });
+    const json = await (await GET(req({ slug: 'x', q: 'bracelet' }))).json();
+    expect(json.products.some((p: { id: string }) => p.id === 'catalog-cp-1')).toBe(false);
+  });
+
+  it.each([['reseller', 'cj'], ['pod_custom', 'printful']])(
+    'site %s + selection curated %s -> servi (chemin legitime intact)',
+    async (sousType, supplier) => {
+      setupTables({ sites: { data: { ...SITE, dropship_type: sousType }, error: null }, ...curatedChez(supplier) });
+      const json = await (await GET(req({ slug: 'x', q: 'bracelet' }))).json();
+      expect(json.products.some((p: { id: string }) => p.id === 'catalog-cp-1')).toBe(true);
+    }
+  );
+
+  it('une selection curated sans fournisseur n’est jamais servie', async () => {
+    setupTables({
+      sites: { data: { ...SITE, dropship_type: 'reseller' }, error: null },
+      site_catalog_selections: {
+        data: [{
+          id: 'sel-1', sell_price: null, custom_name: null, custom_description: null, catalog_product_id: 'cp-1',
+          catalog_products: { ...GLOBAL_PRODUCT, supplier_id: null, supplier_parent_id: null },
+        }],
+        error: null,
+      },
+      catalog_products: { data: [], error: null, count: 0 },
+    });
+    const json = await (await GET(req({ slug: 'x', q: 'bracelet' }))).json();
+    expect(json.products.some((p: { id: string }) => p.id === 'catalog-cp-1')).toBe(false);
+  });
+});

@@ -21,6 +21,9 @@ let catalogSelsResult: { data: any; error: any };
 // `merchant_approved` -- la condition de publication -- n'etait assertee par
 // rien : la retirer ne cassait aucun test (mutation A11). Ajout pur.
 const filtresCatalogSels: [string, unknown][] = [];
+/** AUDIT GLOBAL -- la projection reellement demandee : sans elle, la garde
+ *  d'eligibilite fournisseur lirait `undefined` et refuserait tout. */
+let projectionsCatalogSels = '';
 
 // LOT 6 / CHAINE D -- la projection est HONOREE. `b.select = () => b`
 // rendait le fixture entier : amputer la projection de `mode` ou de
@@ -29,7 +32,11 @@ const filtresCatalogSels: [string, unknown][] = [];
 function chain(resolveValue: { data: any; error: any }, capture?: [string, unknown][]) {
   const b: any = {};
   let colonnes = '';
-  b.select = (cols?: string) => { colonnes = typeof cols === 'string' ? cols : ''; return b; };
+  b.select = (cols?: string) => {
+    colonnes = typeof cols === 'string' ? cols : '';
+    if (capture === filtresCatalogSels) projectionsCatalogSels = colonnes;
+    return b;
+  };
   b.eq = (col: string, val: unknown) => { capture?.push([col, val]); return b; };
   b.then = (resolve: any) => resolve({ ...resolveValue, data: projeter(resolveValue.data, colonnes) });
   return b;
@@ -52,6 +59,7 @@ vi.mock('@/lib/supabase', () => ({
 beforeEach(() => {
   fromCalls.length = 0;
   filtresCatalogSels.length = 0;
+  projectionsCatalogSels = '';
   sitesPublicResult = { data: [{ id: 'site-1', slug: 'my-shop', created_at: '2026-01-01T00:00:00Z' }], error: null };
   blogPostsResult = { data: [], error: null };
   shopProductsResult = { data: [], error: null };
@@ -92,7 +100,7 @@ describe('sitemap — interroge sites_public, pas sites directement', () => {
     // desormais l'admission au mecanisme de selection ; sans ces champs, ce
     // cas ne testerait plus la publication mais le refus.
     sitesPublicResult = { data: [{ id: 'site-1', slug: 'shop', created_at: null, mode: 3, dropship_type: 'reseller' }], error: null };
-    catalogSelsResult = { data: [{ catalog_product_id: 'cat-1', site_id: 'site-1' }], error: null };
+    catalogSelsResult = { data: [{ catalog_product_id: 'cat-1', site_id: 'site-1', catalog_products: { supplier_id: 'cj' } }], error: null };
     const mod = await import('../sitemap');
     const routes = await mod.default();
     expect(routes.some((r: any) => r.url.includes('/produits/catalog-cat-1'))).toBe(true);
@@ -115,7 +123,16 @@ describe('sitemap — interroge sites_public, pas sites directement', () => {
 // cassait rien. Et elle n'avait AUCUNE garde de mode ni de sous-type.
 // ============================================================
 describe('LOT 2 — sitemap : la branche catalogue applique le mecanisme de selection', () => {
-  const SEL = { data: [{ catalog_product_id: 'cat-1', site_id: 'site-1' }], error: null };
+  // AUDIT GLOBAL -- LE FOURNISSEUR FAIT PARTIE DE LA FIXTURE, ET IL EST
+  // COHERENT AVEC LE SOUS-TYPE. Une selection CJ sur un site `pod_custom` est
+  // un etat que l'ecriture n'autorise pas : l'imposer a la fixture aurait
+  // fait echouer le test pour la bonne raison, ce qui aurait masque ce que le
+  // test veut reellement prouver.
+  const SEL_POUR = (supplier: string) => ({
+    data: [{ catalog_product_id: 'cat-1', site_id: 'site-1', catalog_products: { supplier_id: supplier } }],
+    error: null,
+  });
+  const SEL = SEL_POUR('cj');
   const site = (over: Record<string, unknown>) => ({
     data: [{ id: 'site-1', slug: 'shop', created_at: null, mode: 3, dropship_type: 'reseller', ...over }],
     error: null,
@@ -137,10 +154,38 @@ describe('LOT 2 — sitemap : la branche catalogue applique le mecanisme de sele
     expect((await urls()).some((u: string) => u.includes('/produits/catalog-'))).toBe(false);
   });
 
-  it.each(['reseller', 'pod_custom'])('Mode 3 %s -> l\'URL est publiee (chemin legitime)', async (t) => {
-    sitesPublicResult = site({ dropship_type: t });
+  it.each([['reseller', 'cj'], ['pod_custom', 'printful']])(
+    'Mode 3 %s -> l\'URL est publiee quand le fournisseur appartient au sous-type',
+    async (t, supplier) => {
+      sitesPublicResult = site({ dropship_type: t });
+      catalogSelsResult = SEL_POUR(supplier);
+      expect((await urls()).some((u: string) => u.includes('/produits/catalog-cat-1'))).toBe(true);
+    }
+  );
+
+  it.each([['reseller', 'printful'], ['pod_custom', 'cj'], ['reseller', 'gelato']])(
+    'AUDIT GLOBAL — Mode 3 %s avec une selection %s -> JAMAIS publiee au sitemap',
+    async (t, supplier) => {
+      // Le checkout REFUSE ces lignes (`catalog_supplier_not_eligible`). Les
+      // annoncer aux moteurs, c'est promettre une fiche que le paiement rejette.
+      sitesPublicResult = site({ dropship_type: t });
+      catalogSelsResult = SEL_POUR(supplier);
+      expect((await urls()).some((u: string) => u.includes('/produits/catalog-'))).toBe(false);
+    }
+  );
+
+  it('AUDIT GLOBAL — une selection sans fournisseur connu n\'est jamais publiee', async () => {
+    sitesPublicResult = site({ dropship_type: 'reseller' });
+    catalogSelsResult = { data: [{ catalog_product_id: 'cat-1', site_id: 'site-1', catalog_products: null }], error: null };
+    expect((await urls()).some((u: string) => u.includes('/produits/catalog-'))).toBe(false);
+  });
+
+  it('AUDIT GLOBAL — le fournisseur est REELLEMENT projete, sinon la garde est aveugle', async () => {
+    sitesPublicResult = site({ dropship_type: 'reseller' });
     catalogSelsResult = SEL;
-    expect((await urls()).some((u: string) => u.includes('/produits/catalog-cat-1'))).toBe(true);
+    await urls();
+    expect(projectionsCatalogSels).toContain('catalog_products');
+    expect(projectionsCatalogSels).toContain('supplier_id');
   });
 
   it('INVARIANT H — une selection NON approuvee n\'est jamais publiee (mutation A11)', async () => {
@@ -154,7 +199,7 @@ describe('LOT 2 — sitemap : la branche catalogue applique le mecanisme de sele
 
   it('une selection d\'un site inconnu ou non publie n\'est jamais publiee (mutation B5)', async () => {
     sitesPublicResult = site({});
-    catalogSelsResult = { data: [{ catalog_product_id: 'cat-9', site_id: 'site-INCONNU' }], error: null };
+    catalogSelsResult = { data: [{ catalog_product_id: 'cat-9', site_id: 'site-INCONNU', catalog_products: { supplier_id: 'cj' } }], error: null };
     expect((await urls()).some((u: string) => u.includes('catalog-cat-9'))).toBe(false);
   });
 });
