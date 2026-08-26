@@ -230,3 +230,31 @@ export async function ping(): Promise<string> {
   const data = await pbPost('/ping');
   return data.yourIp || '';
 }
+
+// ============================================================
+// F-2 -- ARRETER LE RENOUVELLEMENT, LA SEULE RESILIATION QUE L'API PERMET.
+//
+// CE QUE L'API NE PERMET PAS, ET QU'IL NE FAUT DONC JAMAIS PROMETTRE : il
+// n'existe AUCUN endpoint de suppression ou d'annulation d'un domaine. Un
+// domaine enregistre existe jusqu'a son expiration. « Resilier » ne peut donc
+// signifier qu'une chose : cesser de le renouveler et le laisser expirer.
+// Toute formulation promettant une suppression immediate serait fausse.
+//
+// L'API n'expose pas davantage de code d'autorisation pour un transfert
+// SORTANT (les endpoints de transfert couvrent l'entrant seul) : un depart
+// client reste une operation manuelle. C'est une limite du fournisseur, pas
+// une omission de ce module.
+// ============================================================
+export async function updateAutoRenew(domain: string, actif: boolean): Promise<{ ok: true }> {
+  const { apikey, secretapikey } = creds();
+  const res = await fetch(PORKBUN_BASE + '/domain/updateAutoRenew/' + encodeURIComponent(domain), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ apikey, secretapikey, status: actif ? 'on' : 'off' }),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || data?.status !== 'SUCCESS') {
+    throw new Error('Porkbun updateAutoRenew ' + res.status + ': ' + (data?.message || 'echec'));
+  }
+  return { ok: true };
+}
