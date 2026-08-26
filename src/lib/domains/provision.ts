@@ -367,6 +367,26 @@ export async function provisionDomain(domainId: string): Promise<{ ok: boolean; 
   // par sites.custom_domain, jamais site_domains). Domaine entierement
   // provisionne cote Porkbun/Vercel/DNS mais invisible cote application, sans
   // aucune trace. Desormais detecte et signale.
+  // ============================================================
+  // AUDIT AGRESSIF #2 -- CETTE ECRITURE ECRASAIT L'ANCIEN DOMAINE SANS TRACE.
+  //
+  // Scenario reel et atteignable : un marchand connecte `ancien.com` en BYOD,
+  // puis achete `nouveau.com` via Deribfy. Le provisionnement ecrit
+  // `custom_domain = nouveau.com` -- et `ancien.com` DISPARAIT, sans aucun
+  // evenement. C'est exactement le defaut que P1 existe pour fermer, sur un
+  // chemin que P1 n'avait pas couvert : seule la route de rattachement etait
+  // journalisee, pas celle du provisionnement.
+  //
+  // On lit donc l'etat ANTERIEUR avant de l'ecraser : une valeur ecrasee ne
+  // se reconstruit pas apres coup.
+  // ============================================================
+  const { data: siteAvant } = await supabaseAdmin
+    .from('sites')
+    .select('custom_domain')
+    .eq('id', row.site_id)
+    .maybeSingle();
+  const domainePrecedent = (siteAvant as { custom_domain?: string | null } | null)?.custom_domain ?? null;
+
   const { error: linkErr } = await supabaseAdmin
     .from('sites')
     .update({ custom_domain: row.domain })
@@ -398,6 +418,19 @@ export async function provisionDomain(domainId: string): Promise<{ ok: boolean; 
     origine: 'cron',
     details: { domainId, resultat: 'succes' },
   });
+
+  // DEUX FAITS DISTINCTS, DEUX EVENEMENTS. Le provisionnement dit « ce
+  // domaine est operationnel » ; le changement dit « ce site a cesse de
+  // servir l'ancien ». Les confondre reperdrait la valeur que P1 protege.
+  if (domainePrecedent && domainePrecedent !== row.domain) {
+    await consignerEvenementDomaine({
+      siteId: (row.site_id as string) ?? null,
+      domain: row.domain,
+      evenement: 'changement',
+      origine: 'cron',
+      details: { domainePrecedent, domainId },
+    });
+  }
 
   return { ok: true, status: 'dns_configured' };
 }

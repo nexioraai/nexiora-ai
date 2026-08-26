@@ -47,6 +47,11 @@ vi.mock('@/lib/domains/mail-guard', () => ({
   checkExistingMail: (...args: unknown[]) => checkExistingMailMock(...args),
 }));
 
+const consignerMock = vi.fn();
+vi.mock('@/lib/domains/history', () => ({
+  consignerEvenementDomaine: (...a: unknown[]) => consignerMock(...a),
+}));
+
 const logAnomalyMock = vi.fn();
 vi.mock('@/lib/anomaly', () => ({
   logAnomaly: (...args: unknown[]) => logAnomalyMock(...args),
@@ -90,6 +95,7 @@ vi.mock('@/lib/supabase-admin', () => ({
 let provisionDomain: typeof import('../provision').provisionDomain;
 
 beforeEach(async () => {
+  consignerMock.mockReset().mockResolvedValue(undefined);
   vi.resetModules();
   purchaseDomainMock.mockReset();
   previewPurchaseMock.mockReset();
@@ -123,6 +129,9 @@ describe('provisionDomain — token Google au renouvellement (bug corrigé)', ()
           site_id: 'site-1', gsc_token: 'deja-existant-abc123',
         },
       },
+      // AUDIT #2 -- lecture de l'etat ANTERIEUR, ajoutee avant l'UPDATE :
+      // sans elle, `domainePrecedent` serait indevinable apres ecrasement.
+      { data: { custom_domain: null }, error: null },
       // Etape 5 : sites.update({ custom_domain })
       { data: null, error: null },
     ]);
@@ -171,6 +180,8 @@ describe('provisionDomain — token Google au renouvellement (bug corrigé)', ()
           site_id: 'site-3', gsc_token: 'deja-existant',
         },
       },
+      // AUDIT #2 -- lecture de l'etat anterieur, posee AVANT l'UPDATE.
+      { data: { custom_domain: null }, error: null },
       { data: null, error: { code: '23505', message: 'duplicate key value violates unique constraint "sites_custom_domain_unique"' } }, // update sites.custom_domain
     ]);
 
@@ -461,5 +472,149 @@ describe('provisionDomain — état terminal et reprise (garde en tête de fonct
     await provisionDomain('dom-7');
 
     expect(getDnsVerificationTokenMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ============================================================
+// P1 -- LE SUCCES DE PROVISIONNEMENT N'ETAIT PAS CONSIGNE.
+//
+// CE TEST EXISTE PARCE QU'UNE MUTATION A SURVECU. Le journal ne gardait que
+// les ECHECS : impossible de repondre « quand ce domaine est-il devenu
+// operationnel ». Les horodatages de `site_domains` le disent, mais ils sont
+// ECRASABLES ; l'evenement, lui, est en ajout seul.
+// ============================================================
+describe('P1 — le provisionnement est consigné dans les DEUX sens', () => {
+  it('SUCCÈS -> événement `provisionnement` avec resultat succes', async () => {
+    currentMock = makeSupabaseMock([
+      {
+        data: {
+          // `sitemap_submitted` provoque une SORTIE ANTICIPEE (reprise sans
+          // effet) : le fixture n'atteindrait jamais le code teste. Un etat
+          // anterieur traverse la fonction jusqu'au rattachement final.
+          id: 'dom-9', domain: 'ok.com', price_cents: 1500, status: 'google_verified',
+          purchased_at: '2025-01-01T00:00:00Z', dns_configured_at: '2025-01-01T01:00:00Z',
+          site_id: 'site-9', gsc_token: 'deja-la',
+        },
+      },
+      { data: { custom_domain: null }, error: null },
+      { data: null, error: null },
+    ]);
+    const r = await provisionDomain('dom-9');
+    expect(r.ok).toBe(true);
+    expect(consignerMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        siteId: 'site-9',
+        domain: 'ok.com',
+        evenement: 'provisionnement',
+        origine: 'cron',
+      })
+    );
+    expect(consignerMock.mock.calls.at(-1)![0].details).toMatchObject({ resultat: 'succes' });
+  });
+
+  it('le rattachement en ÉCHEC -> AUCUN événement de succès', async () => {
+    // `link_failed` : le domaine est provisionne dehors mais invisible cote
+    // application. Le consigner comme un succes serait un mensonge.
+    currentMock = makeSupabaseMock([
+      {
+        data: {
+          id: 'dom-8', domain: 'ko.com', price_cents: 1500, status: 'google_verified',
+          purchased_at: '2025-01-01T00:00:00Z', dns_configured_at: '2025-01-01T01:00:00Z',
+          site_id: 'site-8', gsc_token: 'deja-la',
+        },
+      },
+      { data: { custom_domain: null }, error: null },
+      { data: null, error: { message: 'lien impossible' } },
+    ]);
+    const r = await provisionDomain('dom-8');
+    expect(r.ok).toBe(false);
+    const succes = consignerMock.mock.calls.filter(
+      (c) => (c[0] as any).details?.resultat === 'succes'
+    );
+    expect(succes).toHaveLength(0);
+  });
+
+  it('l’événement ne porte AUCUNE donnée personnelle', async () => {
+    currentMock = makeSupabaseMock([
+      {
+        data: {
+          id: 'dom-7', domain: 'sobre.com', price_cents: 1500, status: 'google_verified',
+          purchased_at: '2025-01-01T00:00:00Z', dns_configured_at: '2025-01-01T01:00:00Z',
+          site_id: 'site-7', gsc_token: 'deja-la',
+        },
+      },
+      { data: { custom_domain: null }, error: null },
+      { data: null, error: null },
+    ]);
+    await provisionDomain('dom-7');
+    const brut = JSON.stringify(consignerMock.mock.calls).toLowerCase();
+    for (const interdit of ['email', 'owner_email', 'adresse', 'phone']) {
+      expect(brut).not.toContain(interdit);
+    }
+  });
+});
+
+// ============================================================
+// AUDIT AGRESSIF #2 -- L'ANCIEN DOMAINE DISPARAISSAIT SANS TRACE.
+//
+// Scenario reel : un marchand connecte `ancien.com` en BYOD, puis achete
+// `nouveau.com`. Le provisionnement ecrit `custom_domain = nouveau.com` et
+// `ancien.com` disparait -- exactement le defaut que P1 existe pour fermer,
+// sur un chemin que P1 n'avait pas couvert.
+// ============================================================
+describe('AUDIT #2 — le provisionnement consigne le domaine remplacé', () => {
+  function fixture(domainePrecedent: string | null, domaine = 'nouveau.com') {
+    return makeSupabaseMock([
+      {
+        data: {
+          id: 'dom-6', domain: domaine, price_cents: 1500, status: 'google_verified',
+          purchased_at: '2025-01-01T00:00:00Z', dns_configured_at: '2025-01-01T01:00:00Z',
+          site_id: 'site-6', gsc_token: 'deja-la',
+        },
+      },
+      { data: { custom_domain: domainePrecedent }, error: null },
+      { data: null, error: null },
+    ]);
+  }
+
+  it('un domaine PRÉCÉDENT existant -> événement `changement` le portant', async () => {
+    currentMock = fixture('ancien.com');
+    await provisionDomain('dom-6');
+    const chg = consignerMock.mock.calls.map((c) => c[0]).find((e: any) => e.evenement === 'changement');
+    expect(chg, 'le remplacement doit etre consigne').toBeTruthy();
+    expect(chg.details.domainePrecedent).toBe('ancien.com');
+    expect(chg.domain).toBe('nouveau.com');
+  });
+
+  it('AUCUN domaine précédent -> aucun `changement`, seulement `provisionnement`', async () => {
+    currentMock = fixture(null);
+    await provisionDomain('dom-6');
+    const ev = consignerMock.mock.calls.map((c) => (c[0] as any).evenement);
+    expect(ev).toContain('provisionnement');
+    expect(ev).not.toContain('changement');
+  });
+
+  it('MÊME domaine que le précédent -> aucun `changement` (reprise, pas remplacement)', async () => {
+    currentMock = fixture('nouveau.com');
+    await provisionDomain('dom-6');
+    const ev = consignerMock.mock.calls.map((c) => (c[0] as any).evenement);
+    expect(ev).not.toContain('changement');
+  });
+
+  it('le rattachement ÉCHOUE -> aucun `changement` annoncé', async () => {
+    currentMock = makeSupabaseMock([
+      {
+        data: {
+          id: 'dom-6', domain: 'nouveau.com', price_cents: 1500, status: 'google_verified',
+          purchased_at: '2025-01-01T00:00:00Z', dns_configured_at: '2025-01-01T01:00:00Z',
+          site_id: 'site-6', gsc_token: 'deja-la',
+        },
+      },
+      { data: { custom_domain: 'ancien.com' }, error: null },
+      { data: null, error: { message: 'lien impossible' } },
+    ]);
+    await provisionDomain('dom-6');
+    const ev = consignerMock.mock.calls.map((c) => (c[0] as any).evenement);
+    expect(ev).not.toContain('changement');
   });
 });
