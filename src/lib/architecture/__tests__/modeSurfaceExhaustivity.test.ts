@@ -212,7 +212,12 @@ const LECTEURS_TRANSITIFS: Record<string, string> = {
 
   // — HOMONYMES : le jeton `mode` y désigne autre chose que `sites.mode` —
   'src/app/login/page.tsx': 'homonyme — `mode` y vaut « signup » ou « login », un état de formulaire.',
-  'src/lib/pricing.ts': 'homonyme — `mode` y vaut « up » ou « down », un mode d’arrondi.',
+  // LOT 6 / CHAINE E -- ENTREE RETIREE : elle ne s'appliquait JAMAIS.
+  // `src/lib/pricing.ts` est declare dans `ownedFiles` du domaine
+  // shop/pricing ; NIVEAU 1 le classait donc par `declare`, et cette ligne
+  // etait du poids mort qui consommait une place sous le plafond. Trouvee par
+  // l'audit agressif final, pas par le cliquet -- d'ou le test de
+  // non-chevauchement ajoute ci-dessous, qui l'aurait trouvee.
   'src/app/api/stripe/webhook/route.ts': 'homonyme — `session.mode` est un champ Stripe (« payment »), pas le mode du site.',
   'src/components/edit/CatalogSelections.tsx': 'DEBT-054 — homonyme camelCase : `roundMode` y vaut « up » ou « down », un mode d’arrondi de prix ; le composant ne lit jamais `sites.mode`.',
 
@@ -247,7 +252,7 @@ const LECTEURS_TRANSITIFS: Record<string, string> = {
 // maintenant `mode`/`dropship_type` pour les PASSER a `usesCatalogSelections`.
 // Meme patron que les huit entrees existantes -- l'autorite decide, le
 // fichier transmet -- et le niveau 2 le verifie independamment.
-// DEBT-054 — RELEVEMENT DELIBERE : 19 -> 21.
+// DEBT-054 — RELEVEMENT DELIBERE : 19 -> 21, puis 21 -> 20 (chaine E).
 //
 // Bilan NET de +1 pour DEUX ajouts et UN retrait :
 //   + `generationFailures.ts`  — transport pur de `requested_mode` ;
@@ -261,7 +266,7 @@ const LECTEURS_TRANSITIFS: Record<string, string> = {
 // Le mouvement est le bon : une exemption mensongere quitte l'allowlist pour
 // un domaine contraint, et deux transports honnetes s'y declarent. Le cliquet
 // a fait exactement son travail -- il a rendu l'operation visible en diff.
-const PLAFOND_ALLOWLIST = 21
+const PLAFOND_ALLOWLIST = 20
 
 const TOUS = fichiersSource(SRC)
 const rel = (p: string) => relative(RACINE, p).split(sep).join('/')
@@ -306,6 +311,21 @@ describe('ÉTAPE B — NIVEAU 1 : tout lecteur de `sites.mode` est classé', () 
       n,
       `l'allowlist compte ${n} entrées pour un plafond de ${PLAFOND_ALLOWLIST}. L'élargir est une décision, pas une formalité : justifiez chaque ajout, ou déclarez le fichier dans un domaine.`
     ).toBeLessThanOrEqual(PLAFOND_ALLOWLIST)
+  })
+
+  it('CHAINE E — aucun fichier n’est à la fois DÉCLARÉ et ALLOWLISTÉ', () => {
+    // « L'UN OU L'AUTRE, JAMAIS RIEN » dit le message du niveau 1 -- mais rien
+    // n'interdisait LES DEUX. Mesure : `src/lib/pricing.ts` etait declare dans
+    // un domaine ET allowliste ; son exemption ne s'appliquait jamais et
+    // consommait une place sous le plafond. Une exemption qui ne peut pas
+    // servir est une exemption qu'on ne relit plus.
+    const doubles = Object.keys(LECTEURS_TRANSITIFS).filter((c) => DECLARES.has(c))
+    expect(
+      doubles,
+      `fichier(s) declare(s) dans un domaine ET inscrit(s) dans l'allowlist :\n  ${doubles.join(
+        '\n  '
+      )}\nLa declaration suffit. Retirez l'entree d'allowlist : elle ne s'applique pas, et elle occupe une place sous le plafond.`
+    ).toEqual([])
   })
 
   it('DEBT-054 — chaque entrée de l’allowlist est RÉELLEMENT un lecteur aujourd’hui', () => {
