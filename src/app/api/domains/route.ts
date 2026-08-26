@@ -48,12 +48,19 @@ export async function POST(req: NextRequest) {
     const site = auth.site as { id: string; custom_domain: string | null }
 
     // Un domaine ne peut pas etre rattache a deux sites.
-    const { data: alreadyUsed } = await supabaseAdmin
+    const { data: alreadyUsed, error: erreurUsage } = await supabaseAdmin
       .from('sites')
       .select('id')
       .eq('custom_domain', clean)
       .neq('slug', slug)
       .maybeSingle()
+    // AUDIT AGRESSIF / TOUR 1 -- `error` n'etait pas lu. En panne, `data` vaut
+    // null : aucun conflit detecte. Celui-ci est rattrape par la contrainte
+    // UNIQUE, mais s'arreter la ferait dependre la securite d'un effet de
+    // bord. Ne pas savoir, c'est refuser.
+    if (erreurUsage) {
+      return NextResponse.json({ error: 'Service momentanement indisponible.' }, { status: 503 })
+    }
     if (alreadyUsed) {
       return NextResponse.json({ error: 'Ce domaine est deja utilise.' }, { status: 409 })
     }
@@ -64,11 +71,20 @@ export async function POST(req: NextRequest) {
     // domaine reserve/achete par un marchand pouvait etre revendique en BYOD
     // par un autre pendant la fenetre pending/paid/purchased -- les deux
     // mecanismes ne se recoupaient jamais.
-    const { data: reserved } = await supabaseAdmin
+    const { data: reserved, error: erreurReserve } = await supabaseAdmin
       .from('site_domains')
       .select('id, status')
       .eq('domain', clean)
       .maybeSingle()
+    // AUDIT AGRESSIF / TOUR 1 -- CELUI-CI N'A AUCUN FILET. Le controle est
+    // INTER-TABLES : aucune contrainte ne relie `site_domains` a
+    // `sites.custom_domain`. En panne de base, un domaine ACHETE et paye par
+    // un marchand pouvait donc etre revendique en BYOD par un autre. C'est la
+    // seule des quatre verifications d'unicite dont l'ouverture n'etait
+    // rattrapee par rien.
+    if (erreurReserve) {
+      return NextResponse.json({ error: 'Service momentanement indisponible.' }, { status: 503 })
+    }
     if (reserved && reserved.status !== 'failed') {
       return NextResponse.json({ error: 'Ce domaine est deja reserve.' }, { status: 409 })
     }

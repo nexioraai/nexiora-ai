@@ -469,3 +469,46 @@ describe('D-03 — détachement d’un domaine', () => {
     expect(updates[0].custom_domain).toBeNull();
   });
 });
+
+// ============================================================
+// AUDIT AGRESSIF / TOUR 1 -- LES CONTROLES D'UNICITE S'OUVRAIENT EN PANNE.
+//
+// Quatre verifications d'unicite existent. Aucune ne lisait `error`. Deux
+// sont rattrapees par la contrainte UNIQUE ; les deux autres sont
+// INTER-TABLES (`sites.custom_domain` <-> `site_domains`) et n'ont AUCUN
+// filet : aucune contrainte ne relie ces deux tables.
+//
+// Consequence mesuree : en panne de base, un domaine ACHETE et paye par un
+// marchand pouvait etre revendique en BYOD par un autre.
+// ============================================================
+describe('TOUR 1 — les contrôles d’unicité ferment en panne', () => {
+  it('panne sur le contrôle `sites` -> 503, AUCUN appel externe, AUCUNE écriture', async () => {
+    let sitesCall = 0;
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'sites') {
+        sitesCall++;
+        return tableChain(
+          sitesCall === 1 ? { data: SITE, error: null } : { data: null, error: { message: 'db down' } }
+        );
+      }
+      return tableChain({ data: null, error: null });
+    });
+    const res = await POST(req({ slug: 'boutique', domain: 'inconnu.com' }));
+    expect(res.status).toBe(503);
+    expect(addDomainToVercelMock).not.toHaveBeenCalled();
+  });
+
+  it('panne sur le contrôle `site_domains` -> 503 : un domaine ACHETÉ ne peut plus être revendiqué', async () => {
+    let sitesCall = 0;
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'sites') {
+        sitesCall++;
+        return tableChain(sitesCall === 1 ? { data: SITE, error: null } : { data: null, error: null });
+      }
+      return tableChain({ data: null, error: { message: 'db down' } });
+    });
+    const res = await POST(req({ slug: 'boutique', domain: 'achete-par-un-autre.com' }));
+    expect(res.status).toBe(503);
+    expect(addDomainToVercelMock).not.toHaveBeenCalled();
+  });
+});

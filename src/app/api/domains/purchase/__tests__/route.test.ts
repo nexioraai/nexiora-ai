@@ -223,3 +223,34 @@ describe('D-07 — domaines réservés refusés à l’achat', () => {
     expect(res.status).not.toBe(403);
   });
 });
+
+// ============================================================
+// AUDIT AGRESSIF / TOUR 1 -- MEME DEFAUT COTE ACHAT.
+// ============================================================
+describe('TOUR 1 — les contrôles d’unicité de l’achat ferment en panne', () => {
+  it('panne sur `site_domains` -> 503, AUCUN registraire, AUCUN Stripe', async () => {
+    fromMock.mockImplementation((table: string) =>
+      tableChain(table === 'sites' ? { data: SITE, error: null } : { data: null, error: { message: 'db down' } })
+    );
+    const res = await POST(req({ slug: 'boutique', domain: 'x-panne.com' }));
+    expect(res.status).toBe(503);
+    expect(checkDomainMock).not.toHaveBeenCalled();
+    expect(getStripeMock).not.toHaveBeenCalled();
+  });
+
+  it('panne sur le contrôle BYOD -> 503 : un domaine déjà connecté ne peut plus être acheté', async () => {
+    let sitesCall = 0;
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'sites') {
+        sitesCall++;
+        return tableChain(
+          sitesCall === 1 ? { data: SITE, error: null } : { data: null, error: { message: 'db down' } }
+        );
+      }
+      return tableChain({ data: null, error: null });
+    });
+    const res = await POST(req({ slug: 'boutique', domain: 'y-panne.com' }));
+    expect(res.status).toBe(503);
+    expect(checkDomainMock).not.toHaveBeenCalled();
+  });
+});

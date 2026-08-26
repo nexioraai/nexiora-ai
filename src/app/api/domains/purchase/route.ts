@@ -48,11 +48,15 @@ export async function POST(req: NextRequest) {
   const userEmail = auth.email ?? '';
 
   // 2. Domaine pas deja reserve dans Nexiora
-  const { data: existing } = await supabaseAdmin
+  const { data: existing, error: erreurExisting } = await supabaseAdmin
     .from('site_domains')
     .select('id, status')
     .eq('domain', clean)
     .maybeSingle();
+  // AUDIT AGRESSIF / TOUR 1 -- ne pas savoir, c'est refuser.
+  if (erreurExisting) {
+    return NextResponse.json({ error: 'Service momentanement indisponible.' }, { status: 503 });
+  }
   if (existing && existing.status !== 'failed') {
     return NextResponse.json({ error: 'Ce domaine est deja reserve' }, { status: 409 });
   }
@@ -62,11 +66,16 @@ export async function POST(req: NextRequest) {
   // apporte par un marchand). Sans ceci, un domaine deja rattache en BYOD a
   // un site pouvait etre "achete" via Porkbun par un autre marchand pour le
   // meme nom -- les deux mecanismes ne se recoupaient jamais.
-  const { data: byodConflict } = await supabaseAdmin
+  const { data: byodConflict, error: erreurByod } = await supabaseAdmin
     .from('sites')
     .select('id')
     .eq('custom_domain', clean)
     .maybeSingle();
+  // AUDIT AGRESSIF / TOUR 1 -- controle INTER-TABLES sans filet : en panne,
+  // un domaine deja connecte en BYOD pouvait etre achete par un autre.
+  if (erreurByod) {
+    return NextResponse.json({ error: 'Service momentanement indisponible.' }, { status: 503 });
+  }
   if (byodConflict) {
     return NextResponse.json({ error: 'Ce domaine est deja utilise' }, { status: 409 });
   }
