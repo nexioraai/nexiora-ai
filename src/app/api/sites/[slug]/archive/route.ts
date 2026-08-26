@@ -61,7 +61,7 @@ export async function POST(
   // reprise ou un archivage rejoue la termine.
   // ============================================================
   const site = auth.site as { id: string; custom_domain: string | null };
-  const detachement = await detacherDomaine(site.id, slug, site.custom_domain);
+  const detachement = await detacherDomaine(site.id, slug, site.custom_domain, 'archivage');
 
   if (!detachement.ok) {
     await logAnomaly({

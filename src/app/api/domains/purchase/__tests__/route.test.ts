@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { creerFrom, journalVierge } from '@/lib/testing/postgrest';
 
+const consignerMock = vi.fn();
+vi.mock('@/lib/domains/history', () => ({
+  consignerEvenementDomaine: (...a: unknown[]) => consignerMock(...a),
+}));
+
 /** Journal du double partage, pour les cas D-07. */
 const journalAchat = journalVierge();
 
@@ -252,5 +257,30 @@ describe('TOUR 1 — les contrôles d’unicité de l’achat ferment en panne',
     const res = await POST(req({ slug: 'boutique', domain: 'y-panne.com' }));
     expect(res.status).toBe(503);
     expect(checkDomainMock).not.toHaveBeenCalled();
+  });
+});
+
+// ============================================================
+// P1 -- `achat_demande` etait declare, jamais cable.
+//
+// L'ecart entre `achat_demande` et `achat_confirme` est ce qui rend un
+// abandon de panier distinguable d'un echec de provisionnement. Sans le
+// premier, les deux se confondent.
+// ============================================================
+describe('P1 — la demande d’achat est consignée', () => {
+  it('AUCUN événement tant que la réservation n’existe pas', async () => {
+    consignerMock.mockReset();
+    fromMock.mockImplementation(() => tableChain({ data: null, error: null }));
+    await POST(req({ slug: 'boutique', domain: 'x.com' }));
+    expect(consignerMock).not.toHaveBeenCalled();
+  });
+
+  it('domaine réservé -> AUCUN événement, aucune réservation', async () => {
+    consignerMock.mockReset();
+    fromMock.mockImplementation(() => {
+      throw new Error('aucune requête ne doit être émise');
+    });
+    await POST(req({ slug: 'boutique', domain: 'deribfy.com' }));
+    expect(consignerMock).not.toHaveBeenCalled();
   });
 });

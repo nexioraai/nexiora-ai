@@ -36,6 +36,10 @@ vi.mock('@/lib/domains/vercel', () => ({
   removeDomainFromVercel: (...a: unknown[]) => { ordre.push('detach'); return removeMock(...a); },
 }));
 vi.mock('@/lib/anomaly', () => ({ logAnomaly: (...a: unknown[]) => logAnomalyMock(...a) }));
+const consignerMock = vi.fn();
+vi.mock('@/lib/domains/history', () => ({
+  consignerEvenementDomaine: (...a: unknown[]) => consignerMock(...a),
+}));
 
 import { POST } from '../route';
 
@@ -62,6 +66,7 @@ beforeEach(() => {
   rpcMock.mockReset().mockResolvedValue({ data: [{ all_archived: true }], error: null });
   removeMock.mockReset().mockResolvedValue({ ok: true, dejaAbsent: false });
   logAnomalyMock.mockReset().mockResolvedValue(undefined);
+  consignerMock.mockReset().mockResolvedValue(undefined);
 });
 
 describe('D-06 — le domaine est détaché à l’archivage', () => {
@@ -215,5 +220,33 @@ describe('P3 — la décision de renouvellement est explicite', () => {
     tables.sites = { reponse: { data: { ...SITE, custom_domain: null }, error: null } };
     const j = await (await POST(req(), { params })).json();
     expect(j).toMatchObject({ domaineDetache: false, decisionRequise: null, domaine: null });
+  });
+});
+
+// ============================================================
+// P1 -- L'ARCHIVAGE PRODUIT UN DETACHEMENT, ET IL DOIT SE DISTINGUER.
+//
+// Le meme detachement peut venir du marchand ou de l'archivage d'un site. Le
+// journal doit pouvoir les separer : « il a retire son domaine » et « son
+// site a ete archive » ne racontent pas la meme histoire.
+// ============================================================
+describe('P1 — l’archivage consigne un détachement d’origine `archivage`', () => {
+  it('l’événement porte l’origine ARCHIVAGE, jamais marchand', async () => {
+    await POST(req(), { params });
+    expect(consignerMock).toHaveBeenCalledWith(
+      expect.objectContaining({ domain: 'client.com', evenement: 'detachement', origine: 'archivage' })
+    );
+  });
+
+  it('archivage REFUSÉ -> AUCUN événement', async () => {
+    rpcMock.mockResolvedValue({ data: [{ all_archived: false, blocking_statuses: ['paid'] }], error: null });
+    await POST(req(), { params });
+    expect(consignerMock).not.toHaveBeenCalled();
+  });
+
+  it('site sans domaine -> AUCUN événement', async () => {
+    tables.sites = { reponse: { data: { ...SITE, custom_domain: null }, error: null } };
+    await POST(req(), { params });
+    expect(consignerMock).not.toHaveBeenCalled();
   });
 });

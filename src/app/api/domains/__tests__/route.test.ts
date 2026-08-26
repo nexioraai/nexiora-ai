@@ -22,6 +22,10 @@ vi.mock('@/lib/supabase', () => ({
 const addDomainToVercelMock = vi.fn();
 const removeDomainFromVercelMock = vi.fn();
 vi.mock('@/lib/anomaly', () => ({ logAnomaly: vi.fn() }));
+const consignerMock = vi.fn();
+vi.mock('@/lib/domains/history', () => ({
+  consignerEvenementDomaine: (...a: unknown[]) => consignerMock(...a),
+}));
 vi.mock('@/lib/domains/vercel', () => ({
   addDomainToVercel: (...a: unknown[]) => addDomainToVercelMock(...a),
   removeDomainFromVercel: (...a: unknown[]) => removeDomainFromVercelMock(...a),
@@ -62,6 +66,7 @@ beforeEach(() => {
   getUserMock.mockReset();
   addDomainToVercelMock.mockReset();
   removeDomainFromVercelMock.mockReset().mockResolvedValue({ ok: true, dejaAbsent: false });
+  consignerMock.mockReset().mockResolvedValue(undefined);
   getUserMock.mockResolvedValue({ data: { user: { id: 'u1', email: 'owner@test.com' } }, error: null });
   // D-01 -- LE DOUBLE REND CE QUE REND REELLEMENT L'HEBERGEUR : `dns` ET
   // `verification`. L'ancien fixture n'avait que `verification` parce que la
@@ -510,5 +515,159 @@ describe('TOUR 1 — les contrôles d’unicité ferment en panne', () => {
     const res = await POST(req({ slug: 'boutique', domain: 'achete-par-un-autre.com' }));
     expect(res.status).toBe(503);
     expect(addDomainToVercelMock).not.toHaveBeenCalled();
+  });
+});
+
+// ============================================================
+// P1 -- `rattachement`, `changement` ET `detachement` ETAIENT DECLARES,
+// JAMAIS CABLES.
+//
+// C'est ici que vivait le trou d'origine : `sites.custom_domain` est ECRASE a
+// chaque changement, donc sans evenement un marchand qui change trois fois de
+// domaine ne laisse aucune trace des deux premiers.
+//
+// CE QUI EST PROUVE ICI : l'evenement part APRES le succes, porte le domaine
+// PRECEDENT quand il s'agit d'un changement, et ne part JAMAIS sur echec.
+// ============================================================
+describe('P1 — le rattachement et le changement sont consignés', () => {
+  function harnaisOk(siteCourant: any = SITE) {
+    let sitesCall = 0;
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'sites') {
+        sitesCall++;
+        const b: any = tableChain(sitesCall === 1 ? { data: siteCourant, error: null } : { data: null, error: null });
+        b.update = () => ({ eq: async () => ({ error: null }) });
+        return b;
+      }
+      return tableChain({ data: null, error: null });
+    });
+    addDomainToVercelMock.mockResolvedValue({ ok: true, alreadyExists: false, verification: [], dns: [] });
+  }
+
+  it('PREMIER rattachement -> événement `rattachement`, sans domaine précédent', async () => {
+    harnaisOk({ ...SITE, custom_domain: null });
+    await POST(req({ slug: 'boutique', domain: 'premier.com' }));
+    expect(consignerMock).toHaveBeenCalledWith(
+      expect.objectContaining({ siteId: 'site-1', domain: 'premier.com', evenement: 'rattachement', origine: 'marchand' })
+    );
+    expect(consignerMock.mock.calls[0][0].details).not.toHaveProperty('domainePrecedent');
+  });
+
+  it('CHANGEMENT -> événement `changement` PORTANT le domaine précédent', async () => {
+    // Cette valeur est la raison d'etre de P1 : sans elle, une redirection
+    // ancien -> nouveau est irreconstructible apres coup.
+    harnaisOk({ ...SITE, custom_domain: 'ancien.com' });
+    await POST(req({ slug: 'boutique', domain: 'nouveau.com' }));
+    expect(consignerMock).toHaveBeenCalledWith(
+      expect.objectContaining({ domain: 'nouveau.com', evenement: 'changement' })
+    );
+    expect(consignerMock.mock.calls[0][0].details.domainePrecedent).toBe('ancien.com');
+  });
+
+  it('resoumission du MÊME domaine -> `rattachement`, jamais `changement`', async () => {
+    harnaisOk({ ...SITE, custom_domain: 'meme.com' });
+    await POST(req({ slug: 'boutique', domain: 'meme.com' }));
+    expect(consignerMock.mock.calls[0][0].evenement).toBe('rattachement');
+  });
+
+  it('échec de l’hébergeur -> AUCUN événement (pas de faux succès)', async () => {
+    harnaisOk({ ...SITE, custom_domain: 'ancien.com' });
+    addDomainToVercelMock.mockRejectedValue(new Error('hote indisponible'));
+    const res = await POST(req({ slug: 'boutique', domain: 'nouveau.com' }));
+    expect(res.status).toBe(400);
+    expect(consignerMock).not.toHaveBeenCalled();
+  });
+
+  it('échec de la réservation -> AUCUN événement', async () => {
+    let sitesCall = 0;
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'sites') {
+        sitesCall++;
+        const b: any = tableChain(sitesCall === 1 ? { data: SITE, error: null } : { data: null, error: null });
+        b.update = () => ({ eq: async () => ({ error: { message: 'db down' } }) });
+        return b;
+      }
+      return tableChain({ data: null, error: null });
+    });
+    await POST(req({ slug: 'boutique', domain: 'x.com' }));
+    expect(consignerMock).not.toHaveBeenCalled();
+  });
+
+  it('domaine réservé -> AUCUN événement', async () => {
+    harnaisOk();
+    await POST(req({ slug: 'boutique', domain: 'deribfy.com' }));
+    expect(consignerMock).not.toHaveBeenCalled();
+  });
+
+  it('l’événement ne porte AUCUNE donnée personnelle', async () => {
+    harnaisOk({ ...SITE, custom_domain: null });
+    await POST(req({ slug: 'boutique', domain: 'sobre.com' }));
+    const brut = JSON.stringify(consignerMock.mock.calls[0][0]).toLowerCase();
+    for (const interdit of ['email', 'owner_email', 'adresse', 'phone']) {
+      expect(brut).not.toContain(interdit);
+    }
+  });
+});
+
+describe('P1 — le détachement est consigné', () => {
+  function harnaisDetach2(opts: { custom?: string | null; achat?: any } = {}) {
+    const domaineCourant = 'custom' in opts ? opts.custom : 'client.com';
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'sites') {
+        const b: any = tableChain({ data: { ...SITE, custom_domain: domaineCourant }, error: null });
+        b.update = () => ({ eq: async () => ({ error: null }) });
+        return b;
+      }
+      if (table === 'site_domains') return tableChain({ data: opts.achat ?? null, error: null });
+      return tableChain({ data: null, error: null });
+    });
+  }
+  const reqDel = () =>
+    new NextRequest(new URL('https://deribfy.test/api/domains?slug=boutique'), {
+      method: 'DELETE',
+      headers: { authorization: 'Bearer good-token' },
+    });
+
+  it('détachement BYOD -> événement `detachement`, origine marchand', async () => {
+    harnaisDetach2();
+    await POST_DELETE(reqDel());
+    expect(consignerMock).toHaveBeenCalledWith(
+      expect.objectContaining({ domain: 'client.com', evenement: 'detachement', origine: 'marchand' })
+    );
+    expect(consignerMock.mock.calls[0][0].details).toMatchObject({ achete: false, retireHebergeur: true });
+  });
+
+  it('détachement d’un domaine ACHETÉ -> l’événement le dit', async () => {
+    harnaisDetach2({ achat: { id: 'd1', status: 'sitemap_submitted' } });
+    await POST_DELETE(reqDel());
+    expect(consignerMock.mock.calls[0][0].details).toMatchObject({ achete: true, retireHebergeur: false });
+  });
+
+  it('aucun domaine à détacher -> AUCUN événement', async () => {
+    harnaisDetach2({ custom: null });
+    await POST_DELETE(reqDel());
+    expect(consignerMock).not.toHaveBeenCalled();
+  });
+
+  it('échec de l’écriture -> AUCUN événement (pas de faux succès)', async () => {
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'sites') {
+        const b: any = tableChain({ data: { ...SITE, custom_domain: 'client.com' }, error: null });
+        b.update = () => ({ eq: async () => ({ error: { message: 'db down' } }) });
+        return b;
+      }
+      return tableChain({ data: null, error: null });
+    });
+    await POST_DELETE(reqDel());
+    expect(consignerMock).not.toHaveBeenCalled();
+  });
+
+  it('IDEMPOTENCE — un second détachement ne produit aucun second événement', async () => {
+    harnaisDetach2();
+    await POST_DELETE(reqDel());
+    const premier = consignerMock.mock.calls.length;
+    harnaisDetach2({ custom: null });
+    await POST_DELETE(reqDel());
+    expect(consignerMock.mock.calls.length).toBe(premier);
   });
 });

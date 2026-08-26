@@ -3,6 +3,7 @@ import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getStripe } from '@/lib/stripe';
 import { estDomaineReserve } from '@/lib/domains/reserved';
+import { consignerEvenementDomaine } from '@/lib/domains/history';
 import { checkDomain, getRegistrationRequirements, NEXIORA_DOMAIN_MARGIN_USD } from '@/lib/domains/porkbun';
 
 /**
@@ -128,6 +129,19 @@ export async function POST(req: NextRequest) {
       }
       return NextResponse.json({ error: 'Enregistrement impossible' }, { status: 500 });
     }
+
+    // P1 -- `achat_demande` etait declare, jamais cable. La reservation
+    // existe (ligne `pending`), le paiement n'a pas encore eu lieu : c'est
+    // exactement le fait a consigner. `achat_confirme` viendra du webhook,
+    // et l'ecart entre les deux est ce qui rend un abandon de panier
+    // distinguable d'un echec de provisionnement.
+    await consignerEvenementDomaine({
+      siteId: site.id,
+      domain: clean,
+      evenement: 'achat_demande',
+      origine: 'marchand',
+      details: { domainId: row.id, tld },
+    });
 
     // 6. Abonnement annuel. Facture sur le prix de RENOUVELLEMENT : un TLD
     //    en promo la premiere annee (.store a 2,57$ puis 43,77$) ferait

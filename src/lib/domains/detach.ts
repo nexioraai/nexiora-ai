@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { removeDomainFromVercel } from '@/lib/domains/vercel';
 import { logAnomaly } from '@/lib/anomaly';
+import { consignerEvenementDomaine, type OrigineEvenement } from '@/lib/domains/history';
 
 // ============================================================
 // D-03 / D-06 -- UNE SEULE IMPLEMENTATION DU DETACHEMENT.
@@ -45,7 +46,11 @@ export type ResultatDetachement =
 export async function detacherDomaine(
   siteId: string,
   slug: string | null,
-  domaineActuel: string | null
+  domaineActuel: string | null,
+  // AUDIT P1 -- L'ORIGINE EST UN PARAMETRE, PAS UNE DEDUCTION. Le meme
+  // detachement peut venir du marchand ou de l'archivage d'un site ; le
+  // journal doit pouvoir les distinguer, et seul l'appelant le sait.
+  origine: OrigineEvenement = 'marchand'
 ): Promise<ResultatDetachement> {
   if (!domaineActuel) return { ok: true, detache: false, raison: 'aucun_domaine' };
 
@@ -95,6 +100,26 @@ export async function detacherDomaine(
       });
     }
   }
+
+  // ============================================================
+  // P1 -- L'EVENEMENT LE PLUS IMPORTANT MANQUAIT.
+  //
+  // `detachement` etait DECLARE mais jamais CABLE : un audit precedent l'a
+  // trouve en constatant qu'un detachement reel n'aurait produit aucune
+  // trace. C'est pourtant l'evenement qui repond a « qui detenait ce domaine
+  // et jusqu'a quand » -- la question meme qui motivait P1.
+  //
+  // APRES LE SUCCES, JAMAIS AVANT. Le pointeur est efface et, pour un domaine
+  // apporte, le retrait externe a ete tente. Consigner plus tot decrirait une
+  // intention, pas un fait.
+  // ============================================================
+  await consignerEvenementDomaine({
+    siteId,
+    domain: domaineActuel,
+    evenement: 'detachement',
+    origine,
+    details: { achete: estAchete, retireHebergeur },
+  });
 
   return { ok: true, detache: true, domaine: domaineActuel, achete: estAchete, retireHebergeur };
 }

@@ -384,5 +384,20 @@ export async function provisionDomain(domainId: string): Promise<{ ok: boolean; 
     return { ok: false, status: 'link_failed' };
   }
 
+  // P1 -- LE SUCCES N'ETAIT PAS CONSIGNE, SEUL L'ECHEC L'ETAIT.
+  //
+  // Un journal qui ne garde que les echecs ne permet pas de repondre « quand
+  // ce domaine est-il devenu operationnel ». Les horodatages d'etape vivent
+  // dans `site_domains`, mais ils sont ECRASABLES ; l'evenement, lui, est en
+  // ajout seul. C'est la difference entre l'etat courant et l'historique --
+  // la distinction meme sur laquelle P1 repose.
+  await consignerEvenementDomaine({
+    siteId: (row.site_id as string) ?? null,
+    domain: row.domain,
+    evenement: 'provisionnement',
+    origine: 'cron',
+    details: { domainId, resultat: 'succes' },
+  });
+
   return { ok: true, status: 'dns_configured' };
 }

@@ -5,6 +5,7 @@ import { addDomainToVercel } from '@/lib/domains/vercel'
 import { logAnomaly } from '@/lib/anomaly'
 import { estDomaineReserve } from '@/lib/domains/reserved'
 import { detacherDomaine } from '@/lib/domains/detach'
+import { consignerEvenementDomaine } from '@/lib/domains/history'
 
 function isValidDomain(d: string) {
   return /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(d)
@@ -168,6 +169,33 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({ error: e?.message || 'Erreur Vercel.' }, { status: 400 })
     }
+
+    // ============================================================
+    // P1 -- `rattachement` ET `changement` ETAIENT DECLARES, JAMAIS CABLES.
+    //
+    // C'EST ICI QUE VIT LE TROU D'ORIGINE. `sites.custom_domain` est une
+    // valeur unique, ECRASEE a chaque changement : sans cet evenement, un
+    // marchand qui change trois fois de domaine ne laisse aucune trace des
+    // deux premiers. Ni audit, ni facturation, ni redirection ancien ->
+    // nouveau ne redeviennent possibles apres coup.
+    //
+    // DEUX EVENEMENTS DISTINCTS, PAS UN SEUL. « Ce site recoit un domaine »
+    // et « ce site en change » ne repondent pas a la meme question, et seul
+    // le second doit porter le domaine PRECEDENT -- c'est cette valeur, et
+    // elle seule, qui rend une redirection reconstructible.
+    //
+    // APRES LE SUCCES : la reservation ET le rattachement chez l'hebergeur
+    // ont abouti. Un echec de l'un ou de l'autre est deja sorti plus haut,
+    // apres compensation.
+    await consignerEvenementDomaine({
+      siteId: site.id,
+      domain: clean,
+      evenement: isDomainChange ? 'changement' : 'rattachement',
+      origine: 'marchand',
+      details: isDomainChange
+        ? { domainePrecedent, verificationExigee: rattachement.verification.length > 0 }
+        : { verificationExigee: rattachement.verification.length > 0 },
+    })
 
     // D-01 -- LES ENREGISTREMENTS VIENNENT DE L'HEBERGEUR, JAMAIS D'UNE
     // CONSTANTE. `verification` est vide quand aucun TXT n'est exige : aucune
