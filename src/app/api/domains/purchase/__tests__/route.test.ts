@@ -1,4 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { creerFrom, journalVierge } from '@/lib/testing/postgrest';
+
+/** Journal du double partage, pour les cas D-07. */
+const journalAchat = journalVierge();
 
 // ============================================================
 // Audit Mode 3/POD BRAND, perfectionnement -- unicite atomique du domaine.
@@ -191,16 +195,27 @@ describe('D-07 — domaines réservés refusés à l’achat', () => {
   it('un domaine client légitime n’est PAS bloqué par cette garde', async () => {
     // La garde ne doit jamais refuser un domaine qui contient seulement la
     // racine sans en etre un sous-domaine.
+    // Le double PARTAGE plutot qu'un `select` permissif reconstruit a la
+    // main : il honore la projection et capture les filtres (chaine D du
+    // LOT 6). Un harnais nouveau ne doit pas faire croitre la population des
+    // doubles qui ignorent `.select(...)`.
     let call = 0;
-    fromMock.mockImplementation(() => {
-      call++;
-      const b: any = {};
-      const self = () => b;
-      b.select = self; b.eq = self; b.is = self; b.neq = self;
-      b.maybeSingle = async () => (call === 1 ? { data: SITE, error: null } : { data: null, error: null });
-      b.insert = () => ({ select: () => ({ single: async () => ({ data: null, error: { message: 'stop' } }) }) });
-      return b;
-    });
+    fromMock.mockImplementation((table: string) =>
+      creerFrom(
+        {
+          [table]: {
+            reponse: () => {
+              call++;
+              if (table === 'sites') {
+                return call === 1 ? { data: SITE, error: null } : { data: null, error: null };
+              }
+              return { data: null, error: null };
+            },
+          },
+        },
+        journalAchat
+      )(table)
+    );
     getRegistrationRequirementsMock.mockResolvedValue({ apiRegisterable: true, registrationDurationYears: 1 });
     checkDomainMock.mockResolvedValue({ available: true, registrationCents: 1200, sellRenewalUsd: 25, sellFirstYearUsd: 20, firstYearPromo: false });
     const res = await POST(req({ slug: 'boutique', domain: 'mondomaine-deribfy.com' }));
