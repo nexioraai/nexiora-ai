@@ -146,3 +146,78 @@ export async function resilierRenouvellement(params: {
 
   return { ok: true, dejaResilie: false, expireLe: row.renews_at ?? null };
 }
+
+// ============================================================
+// AUDIT FINAL -- « COMMENT PERDRAIT-ON ENCORE UN DOMAINE ? »
+//
+// Par un clic. La resiliation etait a SENS UNIQUE : un marchand qui arretait
+// le renouvellement par erreur -- ou qui changeait d'avis le lendemain --
+// n'avait AUCUN moyen de revenir en arriere. Le domaine expirait, puis
+// devenait rachetable par n'importe qui. Une operation destructrice sans
+// annulation est une perte programmee.
+//
+// `updateAutoRenew` accepte les deux sens ; seule la moitie etait cablee.
+// Reactiver ne coute rien et ne promet rien de faux : le domaine n'a pas
+// encore expire, son renouvellement reprend simplement.
+//
+// CE QUE CELA NE FAIT PAS : ressusciter un domaine DEJA expire. Passe
+// l'expiration, il quitte le compte et aucune API ne le rend. La reactivation
+// n'a de sens que tant que le domaine vit -- c'est pourquoi elle ne promet
+// rien au-dela.
+// ============================================================
+export async function reactiverRenouvellement(params: {
+  siteId: string;
+  domain: string;
+  origine: OrigineEvenement;
+}): Promise<ResultatResiliation> {
+  const { siteId, domain, origine } = params;
+
+  const { data: ligne, error: erreurLecture } = await supabaseAdmin
+    .from('site_domains')
+    .select('id, status, auto_renew, renews_at, renewal_sync_error')
+    .eq('site_id', siteId)
+    .eq('domain', domain)
+    .maybeSingle();
+
+  if (erreurLecture) return { ok: false, raison: 'base', message: erreurLecture.message };
+  if (!ligne) return { ok: false, raison: 'introuvable', message: 'Aucun domaine achete pour ce site.' };
+
+  const row = ligne as { id: string; auto_renew?: boolean | null; renews_at?: string | null; renewal_sync_error?: string | null };
+
+  // Deja actif et confirme : rien a refaire.
+  if (row.auto_renew !== false && !row.renewal_sync_error) {
+    return { ok: true, dejaResilie: false, expireLe: row.renews_at ?? null };
+  }
+
+  // LE REGISTRAIRE D'ABORD, meme raison qu'a la resiliation : lui seul decide
+  // si le renouvellement aura lieu.
+  try {
+    await updateAutoRenew(domain, true);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    await logAnomaly({
+      type: 'domain_renewal_reactivate_failed',
+      severity: 'blocked',
+      siteId,
+      details: { domain, domainId: row.id, error: message },
+    });
+    return { ok: false, raison: 'registraire', message };
+  }
+
+  const { error: erreurEcriture } = await supabaseAdmin
+    .from('site_domains')
+    .update({ auto_renew: true, renewal_cancelled_at: null, renewal_sync_error: null })
+    .eq('id', row.id);
+
+  if (erreurEcriture) return { ok: false, raison: 'base', message: erreurEcriture.message };
+
+  await consignerEvenementDomaine({
+    siteId,
+    domain,
+    evenement: 'renouvellement',
+    origine,
+    details: { domainId: row.id, action: 'reactivation' },
+  });
+
+  return { ok: true, dejaResilie: false, expireLe: row.renews_at ?? null };
+}

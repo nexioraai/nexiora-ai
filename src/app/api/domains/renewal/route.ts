@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
-import { resilierRenouvellement } from '@/lib/domains/renewal';
+import { resilierRenouvellement, reactiverRenouvellement } from '@/lib/domains/renewal';
 
 // ============================================================
 // P2 -- « DETACHER » ET « RESILIER » SONT DEUX OPERATIONS, DEUX ROUTES.
@@ -33,11 +33,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Aucun domaine a resilier' }, { status: 400 });
   }
 
-  const r = await resilierRenouvellement({
-    siteId: site.id,
-    domain: site.custom_domain,
-    origine: 'marchand',
-  });
+  // AUDIT FINAL -- LA RESILIATION ETAIT A SENS UNIQUE. Un marchand qui
+  // arretait le renouvellement par erreur n'avait aucun moyen de revenir en
+  // arriere : le domaine expirait, puis devenait rachetable par n'importe qui.
+  // Le verbe reste le meme ; l'intention est explicite dans la requete.
+  const reactiver = req.nextUrl.searchParams.get('reactiver') === 'true';
+
+  const r = reactiver
+    ? await reactiverRenouvellement({ siteId: site.id, domain: site.custom_domain, origine: 'marchand' })
+    : await resilierRenouvellement({ siteId: site.id, domain: site.custom_domain, origine: 'marchand' });
 
   if (!r.ok) {
     // AUCUN FAUX SUCCES. Un echec registraire remonte tel quel : l'interface
@@ -52,6 +56,8 @@ export async function POST(req: NextRequest) {
     expireLe: r.expireLe,
     // Formulation NORMATIVE, alignee sur ce que l'API permet reellement :
     // le domaine n'est pas supprime, il cesse d'etre renouvele.
-    message: 'Le renouvellement est arrete. Le domaine reste actif jusqu a son expiration.',
+    message: reactiver
+      ? 'Le renouvellement est retabli.'
+      : 'Le renouvellement est arrete. Le domaine reste actif jusqu a son expiration.',
   });
 }

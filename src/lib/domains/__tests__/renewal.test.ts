@@ -23,7 +23,7 @@ vi.mock('@/lib/supabase-admin', () => ({
 }));
 vi.mock('@/lib/anomaly', () => ({ logAnomaly: (...a: unknown[]) => logAnomalyMock(...a) }));
 
-import { resilierRenouvellement } from '../renewal';
+import { resilierRenouvellement, reactiverRenouvellement } from '../renewal';
 
 const LIGNE = {
   id: 'dom-1',
@@ -183,5 +183,70 @@ describe('P1 — l’historique est écrit', () => {
     for (const interdit of ['email', 'owner_email', 'adresse', 'phone', 'contact']) {
       expect(brut.toLowerCase()).not.toContain(interdit);
     }
+  });
+});
+
+// ============================================================
+// AUDIT FINAL -- « COMMENT PERDRAIT-ON ENCORE UN DOMAINE ? »
+//
+// Par un clic. La resiliation etait a SENS UNIQUE : un marchand qui arretait
+// le renouvellement par erreur n'avait aucun moyen de revenir en arriere. Le
+// domaine expirait, puis devenait rachetable par n'importe qui.
+// ============================================================
+describe('AUDIT FINAL — la résiliation est réversible tant que le domaine vit', () => {
+  const reactiver = () =>
+    reactiverRenouvellement({ siteId: 'site-1', domain: 'client.com', origine: 'marchand' });
+
+  it('un domaine résilié peut être RÉACTIVÉ', async () => {
+    tables.site_domains = { reponse: { data: { ...LIGNE, auto_renew: false }, error: null } };
+    const r = await reactiver();
+    expect(r.ok).toBe(true);
+    expect(updateAutoRenewMock).toHaveBeenCalledWith('client.com', true);
+  });
+
+  it('l’état interne repasse à actif et efface la trace d’annulation', async () => {
+    tables.site_domains = { reponse: { data: { ...LIGNE, auto_renew: false }, error: null } };
+    await reactiver();
+    const charge = (journal.ecritures.site_domains?.[0] as { charge?: Record<string, unknown> })?.charge;
+    expect(charge).toMatchObject({ auto_renew: true, renewal_cancelled_at: null, renewal_sync_error: null });
+  });
+
+  it('déjà actif -> aucun appel registraire (idempotent)', async () => {
+    tables.site_domains = { reponse: { data: { ...LIGNE, auto_renew: true }, error: null } };
+    const r = await reactiver();
+    expect(r.ok).toBe(true);
+    expect(updateAutoRenewMock).not.toHaveBeenCalled();
+  });
+
+  it('une réactivation NON confirmée est rejouée', async () => {
+    tables.site_domains = {
+      reponse: { data: { ...LIGNE, auto_renew: true, renewal_sync_error: 'panne precedente' }, error: null },
+    };
+    await reactiver();
+    expect(updateAutoRenewMock).toHaveBeenCalledWith('client.com', true);
+  });
+
+  it('échec du registraire -> ÉCHEC rendu, jamais un faux succès', async () => {
+    tables.site_domains = { reponse: { data: { ...LIGNE, auto_renew: false }, error: null } };
+    updateAutoRenewMock.mockRejectedValue(new Error('registraire indisponible'));
+    const r = await reactiver();
+    expect(r).toMatchObject({ ok: false, raison: 'registraire' });
+    expect(logAnomalyMock).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'domain_renewal_reactivate_failed', severity: 'blocked' })
+    );
+  });
+
+  it('aucun domaine acheté -> introuvable, AUCUN appel registraire', async () => {
+    tables.site_domains = { reponse: { data: null, error: null } };
+    const r = await reactiver();
+    expect(r).toMatchObject({ ok: false, raison: 'introuvable' });
+    expect(updateAutoRenewMock).not.toHaveBeenCalled();
+  });
+
+  it('résilier puis réactiver appelle le registraire dans LES DEUX SENS', async () => {
+    await resilierRenouvellement({ siteId: 'site-1', domain: 'client.com', origine: 'marchand' });
+    tables.site_domains = { reponse: { data: { ...LIGNE, auto_renew: false }, error: null } };
+    await reactiver();
+    expect(updateAutoRenewMock.mock.calls.map((c) => c[1])).toEqual([false, true]);
   });
 });
