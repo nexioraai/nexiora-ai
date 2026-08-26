@@ -1,3 +1,4 @@
+import { projeter } from '@/lib/testing/postgrest';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
 // ============================================================
@@ -77,10 +78,30 @@ vi.mock('@/lib/anomaly', () => ({
 
 type Handlers = Record<string, { data: unknown; error?: unknown }>;
 
+// ============================================================
+// LOT 6 / CHAINE D -- CE HARNAIS HONORE DESORMAIS LA PROJECTION.
+//
+// `chain.select = vi.fn(self)` ignorait la liste de colonnes et rendait le
+// fixture ENTIER. C'est exactement le double qui a masque DEBT-068 sur
+// `upload-design` : la route gardait sur `site.mode` sans le demander, la
+// production refusait tout le monde en 403, et le harnais affichait du vert.
+//
+// Cette route est la plus exposee du depot -- sa projection `sites` porte
+// `mode`, `dropship_type`, `payment_provider`, `payment_account_id`, et sa
+// projection produits porte `published`, `for_sale`, `consumed_at`. Un double
+// permissif y rend inobservable la panne la plus grave possible.
+//
+// La projection est appliquee par `projeter`, l'utilitaire partage, eprouve
+// par son propre cliquet (postgrestProjectionFidelity, niveau 3).
+// ============================================================
 function tableChain(response: { data: unknown; error?: unknown }) {
   const chain: Record<string, unknown> = {};
   const self = () => chain;
-  chain.select = vi.fn(self);
+  let colonnes = '';
+  chain.select = vi.fn((cols?: string) => {
+    colonnes = typeof cols === 'string' ? cols : '';
+    return chain;
+  });
   chain.eq = vi.fn(self);
   chain.in = vi.fn(self);
   chain.insert = vi.fn(self);
@@ -91,12 +112,16 @@ function tableChain(response: { data: unknown; error?: unknown }) {
   // route interroge parfois la meme table via .in() (liste) et ailleurs via
   // .maybeSingle() (une ligne) ; ce mock reproduit ce narrowing plutot que
   // d'exiger une forme figee par table.
-  const narrowed = Array.isArray(response.data)
-    ? { data: response.data[0] ?? null, error: response.error ?? null }
-    : response;
-  chain.single = vi.fn(async () => narrowed);
-  chain.maybeSingle = vi.fn(async () => narrowed);
-  chain.then = (resolve: (v: unknown) => void) => resolve(response);
+  const narrowed = () => {
+    const brut = Array.isArray(response.data)
+      ? { data: response.data[0] ?? null, error: response.error ?? null }
+      : response;
+    return { ...brut, data: projeter(brut.data, colonnes) };
+  };
+  chain.single = vi.fn(async () => narrowed());
+  chain.maybeSingle = vi.fn(async () => narrowed());
+  chain.then = (resolve: (v: unknown) => void) =>
+    resolve({ ...response, data: projeter(response.data, colonnes) });
   return chain;
 }
 

@@ -1,3 +1,4 @@
+import { projeter } from '@/lib/testing/postgrest';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Audit Mode 3/POD BRAND, LOT 1 -- sitemap.ts interrogeait `sites`
@@ -21,11 +22,16 @@ let catalogSelsResult: { data: any; error: any };
 // rien : la retirer ne cassait aucun test (mutation A11). Ajout pur.
 const filtresCatalogSels: [string, unknown][] = [];
 
+// LOT 6 / CHAINE D -- la projection est HONOREE. `b.select = () => b`
+// rendait le fixture entier : amputer la projection de `mode` ou de
+// `dropship_type` -- les deux colonnes dont depend la garde
+// `usesCatalogSelections` posee au LOT 2 -- restait strictement inobservable.
 function chain(resolveValue: { data: any; error: any }, capture?: [string, unknown][]) {
   const b: any = {};
-  b.select = () => b;
+  let colonnes = '';
+  b.select = (cols?: string) => { colonnes = typeof cols === 'string' ? cols : ''; return b; };
   b.eq = (col: string, val: unknown) => { capture?.push([col, val]); return b; };
-  b.then = (resolve: any) => resolve(resolveValue);
+  b.then = (resolve: any) => resolve({ ...resolveValue, data: projeter(resolveValue.data, colonnes) });
   return b;
 }
 
