@@ -18,23 +18,46 @@ vi.mock('@/lib/cron-tracker', () => ({
 }));
 
 const provisionDomainMock = vi.fn();
+const resilierMock = vi.fn();
+vi.mock('@/lib/domains/renewal', () => ({
+  resilierRenouvellement: (...a: unknown[]) => resilierMock(...a),
+}));
 vi.mock('@/lib/domains/provision', () => ({
   provisionDomain: (...args: unknown[]) => provisionDomainMock(...args),
 }));
 
-function makeSupabaseMock(rows: any[]) {
+/**
+ * AUDIT AGRESSIF -- LE DOUBLE NE CONNAISSAIT PAS `.not()`.
+ *
+ * Le cron interroge desormais DEUX ensembles : les provisionnements a
+ * reprendre (`.or(...)`) et les resiliations a reconcilier
+ * (`.not('renewal_sync_error','is',null)`). Un double qui ignore `.not`
+ * faisait tomber la route -- il rendait le nouveau comportement intestable.
+ *
+ * Les deux requetes sont distinguees par la PRESENCE de `.not` : c'est ce que
+ * PostgREST voit, et c'est donc ce que le double doit voir.
+ */
+function makeSupabaseMock(rows: any[], aReconcilier: any[] = []) {
   const orCalls: string[] = [];
-  const builder: any = {};
-  ['select', 'lt', 'order', 'limit', 'eq'].forEach((m) => {
-    builder[m] = (...args: unknown[]) => builder;
-  });
-  builder.or = (expr: string) => {
-    orCalls.push(expr);
-    return builder;
-  };
-  builder.update = () => builder;
-  builder.then = (resolve: any) => resolve({ data: rows, error: null });
-  const from = vi.fn(() => builder);
+  function nouveauBuilder() {
+    const b: any = {};
+    let estReconciliation = false;
+    ['select', 'lt', 'order', 'limit', 'eq'].forEach((m) => {
+      b[m] = () => b;
+    });
+    b.or = (expr: string) => {
+      orCalls.push(expr);
+      return b;
+    };
+    b.not = () => {
+      estReconciliation = true;
+      return b;
+    };
+    b.update = () => b;
+    b.then = (resolve: any) => resolve({ data: estReconciliation ? aReconcilier : rows, error: null });
+    return b;
+  }
+  const from = vi.fn(() => nouveauBuilder());
   return { supabaseAdmin: { from }, orCalls };
 }
 
@@ -52,6 +75,7 @@ function makeRequest() {
 }
 
 beforeEach(() => {
+  resilierMock.mockReset().mockResolvedValue({ ok: true, dejaResilie: false, expireLe: null });
   startCronRunMock.mockReset().mockResolvedValue('run-1');
   finishCronRunMock.mockReset().mockResolvedValue(undefined);
   provisionDomainMock.mockReset().mockResolvedValue({ ok: true, status: 'dns_configured' });
@@ -99,5 +123,48 @@ describe('GET /api/cron/domain-retry — reprise des paiements bloqués', () => 
 
     expect(provisionDomainMock).toHaveBeenCalledWith('dom-stuck');
     expect(body.results[0]).toMatchObject({ domain: 'coince-paid.com', ok: true });
+  });
+});
+
+// ============================================================
+// AUDIT AGRESSIF -- LA FUITE PERSISTAIT DANS LE CAS D'ECHEC.
+//
+// F-2 a rendu l'annulation effective. Mais quand l'appel registraire echoue,
+// la ligne garde `renewal_sync_error` et plus rien ne s'en occupait : le
+// registraire continuait d'auto-renouveler aux frais de Deribfy, precisement
+// dans le cas ou la resiliation avait rate.
+// ============================================================
+describe('AUDIT AGRESSIF — les résiliations échouées sont réconciliées', () => {
+  it('une ligne avec `renewal_sync_error` est REJOUÉE', async () => {
+    currentMock = makeSupabaseMock([], [{ id: 'dom-9', site_id: 'site-9', domain: 'a-reconcilier.com' }]);
+    const { GET } = await import('../route');
+    const res = await GET(makeRequest());
+    const body = await res.json();
+    expect(resilierMock).toHaveBeenCalledWith(
+      expect.objectContaining({ siteId: 'site-9', domain: 'a-reconcilier.com', origine: 'cron' })
+    );
+    expect(body.reconciliations).toEqual([{ domain: 'a-reconcilier.com', ok: true }]);
+  });
+
+  it('aucune ligne à réconcilier -> aucune tentative', async () => {
+    currentMock = makeSupabaseMock([], []);
+    const { GET } = await import('../route');
+    await GET(makeRequest());
+    expect(resilierMock).not.toHaveBeenCalled();
+  });
+
+  it('une ligne sans site ou sans domaine est ignorée, jamais devinée', async () => {
+    currentMock = makeSupabaseMock([], [{ id: 'dom-9', site_id: null, domain: 'orpheline.com' }]);
+    const { GET } = await import('../route');
+    await GET(makeRequest());
+    expect(resilierMock).not.toHaveBeenCalled();
+  });
+
+  it('un échec de réconciliation est rapporté, jamais avalé', async () => {
+    resilierMock.mockResolvedValue({ ok: false, raison: 'registraire', message: 'toujours indisponible' });
+    currentMock = makeSupabaseMock([], [{ id: 'dom-9', site_id: 'site-9', domain: 'encore-ko.com' }]);
+    const { GET } = await import('../route');
+    const body = await (await GET(makeRequest())).json();
+    expect(body.reconciliations).toEqual([{ domain: 'encore-ko.com', ok: false }]);
   });
 });

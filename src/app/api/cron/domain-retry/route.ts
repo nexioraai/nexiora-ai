@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { provisionDomain } from '@/lib/domains/provision';
+import { resilierRenouvellement } from '@/lib/domains/renewal';
 import { startCronRun, finishCronRun } from '@/lib/cron-tracker';
 
 export const maxDuration = 120;
@@ -74,8 +75,42 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    await finishCronRun(runId, { itemsProcessed: results.length });
-    return NextResponse.json({ done: true, processed: results.length, results });
+    // ============================================================
+    // AUDIT AGRESSIF -- LA FUITE PERSISTAIT DANS LE CAS D'ECHEC.
+    //
+    // F-2 a rendu l'annulation effective : le webhook appelle desormais le
+    // registraire. Mais quand CET APPEL echoue, la ligne garde
+    // `renewal_sync_error` et... plus rien ne s'en occupe. La requete
+    // ci-dessus ne cible que `failed`, `paid` perime et `purchase_uncertain`.
+    //
+    // Consequence : precisement dans le cas ou la resiliation a rate, le
+    // registraire continuait d'auto-renouveler AUX FRAIS DE DERIBFY, sans
+    // qu'aucune reprise n'existe. F-2 fermait le chemin nominal et laissait le
+    // chemin d'echec ouvert -- c'est l'audit agressif qui l'a trouve, pas les
+    // tests de F-2.
+    //
+    // `resilierRenouvellement` est IDEMPOTENT et rejoue precisement cet etat
+    // (resilie mais non confirme) : aucune garde supplementaire ici.
+    // ============================================================
+    const { data: aReconcilier } = await supabaseAdmin
+      .from('site_domains')
+      .select('id, site_id, domain')
+      .not('renewal_sync_error', 'is', null)
+      .limit(10);
+
+    const reconciliations: any[] = [];
+    for (const row of aReconcilier || []) {
+      if (!row.site_id || !row.domain) continue;
+      const r = await resilierRenouvellement({
+        siteId: row.site_id as string,
+        domain: row.domain as string,
+        origine: 'cron',
+      });
+      reconciliations.push({ domain: row.domain, ok: r.ok });
+    }
+
+    await finishCronRun(runId, { itemsProcessed: results.length + reconciliations.length });
+    return NextResponse.json({ done: true, processed: results.length, results, reconciliations });
   } catch (e: any) {
     await finishCronRun(runId, { itemsProcessed: 0, status: 'error', errorMessage: e?.message || String(e) });
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
