@@ -20,7 +20,11 @@ const { cacheRows, basketRow, upserts, deletes, upsertFails, recentQuotes } = vi
   upserts: [] as unknown[],
   deletes: [] as { col: string; val: string }[],
   upsertFails: { value: false },
-  recentQuotes: { value: 0, fails: false },     // budget d'appels CJ (fenetre 60 s)
+  // LOT 6 -- `fails` simulait une EXCEPTION. PostgREST n'en leve pas : il rend
+  // `{ count: null, error }`. Le `catch` du code n'attrapait donc rien dans le
+  // cas reel, et l'appel CJ partait. `renduEnErreur` reproduit le vrai
+  // comportement du client.
+  recentQuotes: { value: 0, fails: false, renduEnErreur: false }, // budget d'appels CJ (fenetre 60 s)
 }));
 vi.mock('@/lib/supabase-admin', () => ({
   supabaseAdmin: {
@@ -38,7 +42,9 @@ vi.mock('@/lib/supabase-admin', () => ({
         };
         chain.gte = () => recentQuotes.fails
           ? Promise.reject(new Error('count KO'))
-          : Promise.resolve({ count: recentQuotes.value });
+          : recentQuotes.renduEnErreur
+            ? Promise.resolve({ count: null, error: { message: 'db down' } })
+            : Promise.resolve({ count: recentQuotes.value, error: null });
         chain.delete = () => chain;
         chain.lt = (col: string, val: string) => { deletes.push({ col, val }); return Promise.resolve({ error: null }); };
         return chain;
@@ -54,9 +60,16 @@ vi.mock('@/lib/supabase-admin', () => ({
 // qui isole exactement les chemins testes.
 vi.mock('@/lib/suppliers/registry', () => ({ suppliersWithCapability: () => [] }));
 
-const { freight } = vi.hoisted(() => ({ freight: { value: null as unknown, delayMs: 0 } }));
+const { freight } = vi.hoisted(() => ({ freight: { value: null as unknown, delayMs: 0, appels: 0 } }));
 vi.mock('@/lib/cj/client', () => ({
   cjCalculateFreight: async () => {
+    // LOT 6 -- LE COMPTEUR D'APPELS EXISTE PARCE QU'UNE MUTATION A SURVECU.
+    // Assertion d'origine : `q.amount === 14.81`. Or ce montant est le MEME
+    // que la garde de budget ait ferme la voie OU que l'appel CJ soit parti et
+    // ait echoue -- le repli par produit rend 14.81 dans les deux cas. Le test
+    // observait donc le resultat, pas la garde. Ce que l'invariant dit est
+    // « CJ n'est PAS appele » : c'est cela qu'il faut mesurer.
+    freight.appels++;
     if (freight.delayMs) await new Promise((r) => setTimeout(r, freight.delayMs));
     if (freight.value instanceof Error) throw freight.value;
     return freight.value;
@@ -86,11 +99,13 @@ beforeEach(() => {
   basketRow.value = null;
   freight.value = null;
   freight.delayMs = 0;
+  freight.appels = 0;
   upserts.length = 0;
   deletes.length = 0;
   upsertFails.value = false;
   recentQuotes.value = 0;
   recentQuotes.fails = false;
+  recentQuotes.renduEnErreur = false;
 });
 
 describe('P0 -- multi-produits : un palier exige le MEME transporteur reel', () => {
@@ -444,6 +459,22 @@ describe('DEVIS PANIER -- budget d appels CJ (route panier PUBLIQUE)', () => {
     expect(q.logisticName).toBe('CJPacket Ordinary');
   });
 
+  it('LOT 6 — budget en ERREUR RENDUE (le vrai comportement PostgREST) -> repli, jamais un appel CJ', async () => {
+    // LE COMMENTAIRE DU CODE DISAIT DEJA LA BONNE REGLE -- « on ne suppose pas
+    // qu'il reste du budget » -- mais le `catch` ne pouvait pas l'appliquer :
+    // PostgREST ne LEVE pas. Le test existant juste en dessous simulait un
+    // `reject`, donc il prouvait le seul chemin qui ne se produit jamais.
+    recentQuotes.renduEnErreur = true;
+    cacheRows.value = CACHE_Q1;
+    freight.value = new Error('CJ ne doit PAS etre appele');
+    const q = await resolveShipping({
+      groups: { cj: [{ supplier_product_id: 'V1', quantity: 2 }] },
+      countryCode: 'CA', flat: 0,
+    });
+    expect(freight.appels, 'la garde de budget doit fermer la voie AVANT tout appel CJ').toBe(0);
+    expect(q.amount).toBe(14.81);
+  });
+
   it('budget indeterminable -> repli, jamais un appel CJ suppose autorise', async () => {
     recentQuotes.fails = true;
     cacheRows.value = CACHE_Q1;
@@ -452,6 +483,9 @@ describe('DEVIS PANIER -- budget d appels CJ (route panier PUBLIQUE)', () => {
       groups: { cj: [{ supplier_product_id: 'V1', quantity: 2 }] },
       countryCode: 'CA', flat: 0,
     });
+    // Meme correction que le test au-dessus : le montant seul ne distinguait
+    // pas « garde fermee » de « appel parti puis echoue ».
+    expect(freight.appels, 'aucun appel CJ ne doit partir').toBe(0);
     expect(q.amount).toBe(14.81);
   });
 });

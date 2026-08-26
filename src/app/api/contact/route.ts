@@ -72,12 +72,21 @@ export async function POST(req: NextRequest) {
     // degrader la reputation du domaine expediteur. Meme mecanisme DB-native
     // que promo/validate -- aucune infrastructure ajoutee.
     const oneHourAgo = new Date(Date.now() - 3_600_000).toISOString()
-    const { count: recent } = await supabase
+    // LOT 6 -- `error` N'ETAIT PAS LU, DONC LA BORNE S'OUVRAIT EN PANNE.
+    // PostgREST rend `count: null` quand la requete echoue ; `(null ?? 0) >= 20`
+    // vaut false, et l'e-mail partait quand meme -- au moment precis ou la base
+    // flanchait. Meme defaut que `blog/generate`, demontre par execution au
+    // LOT 6. Le client de cette route reste le sien : seule la lecture de
+    // `error` change.
+    const { count: recent, error: erreurCompteur } = await supabase
       .from('checkout_anomalies')
       .select('id', { count: 'exact', head: true })
       .eq('site_id', site.id)
       .eq('type', 'contact_message_sent')
       .gte('created_at', oneHourAgo)
+    if (erreurCompteur) {
+      return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 })
+    }
     if ((recent ?? 0) >= 20) {
       return NextResponse.json({ error: 'Too many messages, try again later' }, { status: 429 })
     }

@@ -50,8 +50,15 @@ export async function consommerJeton(params: {
   plafond: number;
   message?: string;
   details?: Record<string, unknown>;
+  /**
+   * Perimetre SUPPLEMENTAIRE, quand `site_id` ne suffit pas a designer
+   * l'abuseur. `/api/welcome` n'a pas de site : son perimetre naturel est le
+   * COMPTE appelant. Sans cela il faudrait un compteur global, et un seul
+   * abuseur priverait tous les nouveaux inscrits de leur e-mail de bienvenue.
+   */
+  perimetreSupplementaire?: { colonne: string; valeur: unknown };
 }): Promise<VerdictLimite> {
-  const { type, siteId, fenetreMs, plafond, message, details } = params;
+  const { type, siteId, fenetreMs, plafond, message, details, perimetreSupplementaire } = params;
   const depuis = new Date(Date.now() - fenetreMs).toISOString();
 
   let requete = supabaseAdmin
@@ -65,6 +72,9 @@ export async function consommerJeton(params: {
   // le service de tout le parc. `null` est un perimetre a part entiere (les
   // surfaces sans site, comme le blog central) et s'exprime par `is`.
   requete = siteId === null ? requete.is('site_id', null) : requete.eq('site_id', siteId);
+  if (perimetreSupplementaire) {
+    requete = requete.eq(perimetreSupplementaire.colonne, perimetreSupplementaire.valeur);
+  }
 
   const { count, error } = await requete;
 

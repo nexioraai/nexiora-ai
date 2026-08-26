@@ -76,6 +76,23 @@ describe('POST /api/catalog/image-search — limite de débit anti-abus (action 
     expect(messagesCreateMock).not.toHaveBeenCalled();
   });
 
+  it('LOT 6 — compteur en PANNE -> 503, aucun appel Claude facturé (la limite ne s’ouvre plus)', async () => {
+    // `error` n'etait pas lu. PostgREST rend `count: null` quand la requete
+    // echoue, `(null ?? 0) >= 10` valait false, et l'appel Claude FACTURE
+    // partait quand meme. Meme defaut que `blog/generate`, demontre par
+    // execution au LOT 6, present ici a l'identique.
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'sites') return tableChain({ data: SITE, error: null });
+      if (table === 'ai_usage_log') return tableChain({ data: null, error: { message: 'db down' }, count: null });
+      return tableChain({ data: [], error: null });
+    });
+
+    const res = await POST(req({ slug: 'boutique', image: IMAGE }));
+
+    expect(res.status).toBe(503);
+    expect(messagesCreateMock).not.toHaveBeenCalled();
+  });
+
   it('sous la limite -> l\'analyse procède normalement (comportement inchangé)', async () => {
     fromMock.mockImplementation((table: string) => {
       if (table === 'sites') return tableChain({ data: SITE, error: null });

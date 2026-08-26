@@ -101,12 +101,22 @@ export async function POST(req: NextRequest) {
     // croissance de checkout_anomalies sous enumeration.
     if (!promo) {
       const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString();
-      const { count: recentFailures } = await supabaseAdmin
+      // LOT 6 -- `error` N'ETAIT PAS LU. PostgREST rend `count: null` en
+      // panne, donc `(null ?? 0) >= 10` valait false : l'enumeration de codes
+      // promo redevenait ILLIMITEE au moment ou la base flanchait, ce qui est
+      // exactement le moment ou l'on peut le moins se le permettre.
+      const { count: recentFailures, error: erreurCompteur } = await supabaseAdmin
         .from('checkout_anomalies')
         .select('id', { count: 'exact', head: true })
         .eq('site_id', site.id)
         .eq('type', 'promo_validate_not_found')
         .gte('created_at', oneMinuteAgo);
+      if (erreurCompteur) {
+        return NextResponse.json(
+          { error: 'Service momentanement indisponible.' },
+          { status: 503 }
+        );
+      }
       if ((recentFailures ?? 0) >= 10) {
         return NextResponse.json(
           { error: 'Trop de tentatives, reessayez dans une minute.' },

@@ -52,11 +52,14 @@ const PROMO_VALIDE = {
 };
 
 /** `failures` = nombre d'echecs deja journalises dans la derniere minute. */
-function setup(promo: Result, failures = 0) {
+function setup(promo: Result, failures = 0, compteurEnPanne = false) {
   const tables: Record<string, Result> = {
     sites: SITE,
     promo_codes: promo,
-    checkout_anomalies: { count: failures, data: null, error: null },
+    // LOT 6 -- PostgREST rend `{ count: null, error }` en panne, il ne leve pas.
+    checkout_anomalies: compteurEnPanne
+      ? { count: null, data: null, error: { message: 'db down' } }
+      : { count: failures, data: null, error: null },
   };
   const built: Record<string, ReturnType<typeof chain>> = {};
   fromMock.mockImplementation((table: string) => {
@@ -111,6 +114,16 @@ describe('POST /api/shop/promo/validate — limitation de debit (DEBT-028)', () 
     setup({ data: null, error: null }, 10);
     const res = await call('INCONNU');
     expect(res.status).toBe(429);
+    expect(logAnomalyMock).not.toHaveBeenCalled();
+  });
+
+  it('LOT 6 — compteur en PANNE -> 503, jamais une enumeration illimitee', async () => {
+    // `error` n'etait pas lu : `(null ?? 0) >= 10` valait false et le
+    // bruteforce de codes promo redevenait illimite pendant la panne --
+    // exactement le moment ou l'on peut le moins se le permettre.
+    setup({ data: null, error: null }, 0, true);
+    const res = await call('INCONNU');
+    expect(res.status).toBe(503);
     expect(logAnomalyMock).not.toHaveBeenCalled();
   });
 

@@ -58,13 +58,23 @@ export async function POST(req: Request) {
     // rejette si ce site a deja declenche 10+ analyses d'image dans la
     // derniere minute -- un visiteur legitime n'en fait jamais autant
     // (une recherche = une photo), un usage automatise en boucle si.
+    // LOT 6 -- LE COMPTEUR NE LISAIT PAS `error`, DONC IL S'OUVRAIT EN PANNE.
+    // PostgREST rend `count: null` quand la requete echoue ; `(null ?? 0) >= 10`
+    // vaut false, et l'appel Claude FACTURE partait quand meme. C'est le
+    // defaut demontre par execution sur `blog/generate`, present a l'identique
+    // ici. La lecture de `error` ferme la voie ; le compteur reste
+    // `ai_usage_log`, deja alimente par `logAiUsage` plus bas -- c'est la
+    // source de verite de la depense IA, pas `checkout_anomalies`.
     const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString();
-    const { count: recentCount } = await supabaseAdmin
+    const { count: recentCount, error: erreurCompteur } = await supabaseAdmin
       .from('ai_usage_log')
       .select('id', { count: 'exact', head: true })
       .eq('site_id', site.id)
       .eq('usage_type', 'image')
       .gte('created_at', oneMinuteAgo);
+    if (erreurCompteur) {
+      return NextResponse.json({ error: 'Service momentanement indisponible.' }, { status: 503 });
+    }
     if ((recentCount ?? 0) >= 10) {
       return NextResponse.json({ error: 'Trop de requetes, reessayez dans une minute.' }, { status: 429 });
     }

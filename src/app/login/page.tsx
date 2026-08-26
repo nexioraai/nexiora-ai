@@ -57,11 +57,16 @@ export default function SignupPage() {
             .eq('id', user.id)
             .single();
           if (profile && !profile.welcomed) {
-            fetch('/api/welcome', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: user.email }),
-            }).catch(() => {});
+            // LOT 6 -- LE JETON DE LA SESSION QUI VIENT D'ETRE OUVERTE.
+            // La route ne lit plus l'adresse dans le corps : elle la derive
+            // du jeton. Rien a fournir, donc, sinon la preuve de qui appelle.
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+              fetch('/api/welcome', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${session.access_token}` },
+              }).catch(() => {});
+            }
             await supabase.from('profiles').update({ welcomed: true }).eq('id', user.id);
           }
         }

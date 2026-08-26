@@ -103,6 +103,7 @@ function setupTables(opts: {
   owned?: unknown;                        // passthrough historique (M1-06)
   product?: Record<string, unknown> | null; // ligne SOUMISE aux filtres
   recentCount?: number;                   // defaut : sous la borne
+  compteurEnPanne?: boolean;              // LOT 6 : PostgREST rend { count: null, error }
 }) {
   fromMock.mockImplementation((table: string) => {
     if (table === 'sites') return tableChain({ data: opts.site, error: null });
@@ -113,7 +114,11 @@ function setupTables(opts: {
       return filteringChain(opts.product === undefined ? { ...OWNED_ROW } : opts.product);
     }
     if (table === 'checkout_anomalies')
-      return tableChain({ data: null, error: null, count: opts.recentCount ?? 0 } as any);
+      return tableChain(
+        opts.compteurEnPanne
+          ? ({ data: null, error: { message: 'db down' }, count: null } as any)
+          : ({ data: null, error: null, count: opts.recentCount ?? 0 } as any)
+      );
     throw new Error('unexpected table: ' + table);
   });
 }
@@ -231,6 +236,16 @@ describe('M1-06 — borne de débit sur la file CJ partagée', () => {
   it('sous la borne -> servi', async () => {
     setupTables({ site: { id: 'site-1' }, cached: { tiers: TIERS }, recentCount: 29 });
     expect((await POST(req({ siteId: 'site-1', countryCode: 'US', products: [{ vid: 'v1', quantity: 1 }] }))).status).toBe(200);
+  });
+
+  it('LOT 6 — compteur en PANNE -> 503, AUCUN appel CJ (la borne ne s’ouvre plus)', async () => {
+    // `error` n'etait pas lu : en panne, `(null ?? 0) >= 30` valait false et la
+    // file CJ partagee restait exposee. Sans ce test la correction serait non
+    // prouvee -- la remettre en fail-open ne casserait rien.
+    setupTables({ site: { id: 'site-1' }, cached: null, compteurEnPanne: true });
+    const res = await POST(req({ siteId: 'site-1', countryCode: 'US', products: [{ vid: 'v1', quantity: 1 }] }));
+    expect(res.status).toBe(503);
+    expect(cjCalculateFreightMock).not.toHaveBeenCalled();
   });
 
   it('borne atteinte -> 429, AUCUN appel CJ (la file du fulfillment est protégée)', async () => {

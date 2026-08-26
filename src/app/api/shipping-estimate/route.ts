@@ -100,12 +100,17 @@ export async function POST(req: NextRequest) {
     // la confidentialite : un visiteur legitime consulte quelques produits,
     // jamais 30 par minute.
     const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString()
-    const { count: recent } = await supabase
+    // LOT 6 -- meme defaut fail-open que `contact` : `error` non lu, borne
+    // ouverte en panne, file CJ exposee. Client inchange.
+    const { count: recent, error: erreurCompteur } = await supabase
       .from('checkout_anomalies')
       .select('id', { count: 'exact', head: true })
       .eq('site_id', siteId)
       .eq('type', 'shipping_estimate_request')
       .gte('created_at', oneMinuteAgo)
+    if (erreurCompteur) {
+      return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 })
+    }
     if ((recent ?? 0) >= 30) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
