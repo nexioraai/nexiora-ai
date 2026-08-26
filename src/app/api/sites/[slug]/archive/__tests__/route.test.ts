@@ -173,3 +173,47 @@ describe('D-06 — idempotence et propriété', () => {
     expect(removeMock).not.toHaveBeenCalled();
   });
 });
+
+// ============================================================
+// P3 -- AUCUN COMPORTEMENT SILENCIEUX SUR LE DOMAINE.
+//
+// L'archivage detache mais ne resilie JAMAIS. Se taire ne suffit pas : le
+// marchand doit savoir que son abonnement de domaine CONTINUE de courir.
+// ============================================================
+describe('P3 — la décision de renouvellement est explicite', () => {
+  it('domaine ACHETÉ -> la réponse signale que le renouvellement reste actif', async () => {
+    tables.site_domains = { reponse: { data: { id: 'd1', status: 'sitemap_submitted' }, error: null } };
+    const j = await (await POST(req(), { params })).json();
+    expect(j).toMatchObject({
+      success: true,
+      domaineDetache: true,
+      domaineAchete: true,
+      renouvellementActif: true,
+      decisionRequise: 'resiliation_renouvellement',
+    });
+    expect(j.domaine).toBe('client.com');
+  });
+
+  it('domaine APPORTÉ -> aucune décision de renouvellement à prendre', async () => {
+    const j = await (await POST(req(), { params })).json();
+    expect(j).toMatchObject({ domaineAchete: false, renouvellementActif: false, decisionRequise: null });
+  });
+
+  it('l’archivage ne RÉSILIE JAMAIS de lui-même', async () => {
+    // Un domaine achete est un actif distinct du site : le detruire au
+    // passage serait irreversible.
+    tables.site_domains = { reponse: { data: { id: 'd1', status: 'sitemap_submitted' }, error: null } };
+    await POST(req(), { params });
+    const charges = (journal.ecritures.site_domains ?? []).map((e) => (e as { charge?: Record<string, unknown> }).charge);
+    for (const c of charges) {
+      expect(c).not.toHaveProperty('auto_renew');
+      expect(c).not.toHaveProperty('renewal_cancelled_at');
+    }
+  });
+
+  it('site sans domaine -> aucune décision requise', async () => {
+    tables.sites = { reponse: { data: { ...SITE, custom_domain: null }, error: null } };
+    const j = await (await POST(req(), { params })).json();
+    expect(j).toMatchObject({ domaineDetache: false, decisionRequise: null, domaine: null });
+  });
+});

@@ -10,6 +10,7 @@ import {
 import { getDnsVerificationToken } from '@/lib/domains/searchconsole';
 import { checkExistingMail } from '@/lib/domains/mail-guard';
 import { logAnomaly } from '@/lib/anomaly';
+import { consignerEvenementDomaine } from '@/lib/domains/history';
 
 /**
  * Chaine complete apres encaissement : achat Porkbun, DNS, Vercel.
@@ -122,6 +123,31 @@ export async function provisionDomain(domainId: string): Promise<{ ok: boolean; 
       .update({ status: 'failed', last_error: msg.slice(0, 500), updated_at: new Date().toISOString() })
       .eq('id', domainId);
     console.error('[provision]', row.domain, msg);
+    // ============================================================
+    // R7 -- UN ECHEC DE PROVISIONNEMENT ETAIT SILENCIEUX.
+    //
+    // Cette voie ne posait qu'un `console.error`. Or elle couvre les echecs
+    // les plus couteux : solde insuffisant chez le registraire, API
+    // indisponible, extension refusee. Le client a DEJA PAYE via Stripe, et
+    // personne n'etait prevenu -- ni lui, ni nous. Un journal de fonction
+    // serverless n'est pas une alerte.
+    //
+    // `blocked` et non `warning` : une commande payee qui n'aboutit pas
+    // exige une intervention humaine, pas une statistique.
+    // ============================================================
+    await logAnomaly({
+      type: 'domain_provision_failed',
+      severity: 'blocked',
+      siteId: row.site_id ?? null,
+      details: { domainId, domain: row.domain, status: row.status, error: msg.slice(0, 500) },
+    });
+    await consignerEvenementDomaine({
+      siteId: (row.site_id as string) ?? null,
+      domain: row.domain,
+      evenement: 'provisionnement',
+      origine: 'cron',
+      details: { domainId, resultat: 'echec', error: msg.slice(0, 300) },
+    });
     return { ok: false, status: 'failed' };
   };
 

@@ -73,8 +73,26 @@ export async function POST(
     });
   }
 
+  // ============================================================
+  // P3 -- AUCUN COMPORTEMENT SILENCIEUX SUR LE DOMAINE.
+  //
+  // L'archivage DETACHE mais ne resilie JAMAIS : un domaine achete est un
+  // actif distinct du site, et le detruire au passage serait irreversible.
+  // Mais se taire ne suffit pas non plus -- le marchand doit savoir que son
+  // abonnement de domaine CONTINUE de courir, et pouvoir en decider.
+  //
+  // La reponse porte donc la decision a prendre, pas seulement le resultat.
+  // ============================================================
+  const domaineAchete = detachement.ok && detachement.detache ? detachement.achete : false;
+
   return NextResponse.json({
     success: true,
     domaineDetache: detachement.ok && detachement.detache,
+    domaine: detachement.ok && detachement.detache ? detachement.domaine : null,
+    domaineAchete,
+    // Le renouvellement n'est PAS arrete par l'archivage. S'il reste actif,
+    // le marchand doit le savoir et pouvoir resilier explicitement.
+    renouvellementActif: domaineAchete,
+    decisionRequise: domaineAchete ? 'resiliation_renouvellement' : null,
   });
 }
