@@ -211,6 +211,8 @@ export default defineConfig({
       'src/lib/rate-limit/**/*.test.ts',
       'src/app/api/welcome/**/*.test.ts',
       'src/app/api/geocode/**/*.test.ts',
+      // D-08 -- le proxy de domaines personnalises n'avait aucun test.
+      'src/__tests__/**/*.test.ts',
     ],
     environment: 'node',
   },

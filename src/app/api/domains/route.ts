@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSiteOwner } from '@/lib/auth/require-site-owner'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { addDomainToVercel, removeDomainFromVercel } from '@/lib/domains/vercel'
+import { addDomainToVercel } from '@/lib/domains/vercel'
 import { logAnomaly } from '@/lib/anomaly'
 import { estDomaineReserve } from '@/lib/domains/reserved'
+import { detacherDomaine } from '@/lib/domains/detach'
 
 function isValidDomain(d: string) {
   return /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(d)
@@ -208,58 +209,12 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ ok: true, detache: false, raison: 'aucun_domaine' })
   }
 
-  const domaine = site.custom_domain
-
-  const { data: achete, error: erreurAchat } = await supabaseAdmin
-    .from('site_domains')
-    .select('id, status')
-    .eq('site_id', site.id)
-    .eq('domain', domaine)
-    .maybeSingle()
-
-  // LA PANNE FERME. Ne pas savoir si le domaine est achete, c'est ne pas
-  // savoir si l'on a le droit de le retirer de l'hebergeur.
-  if (erreurAchat) {
-    return NextResponse.json({ error: 'Service momentanement indisponible.' }, { status: 503 })
+  const r = await detacherDomaine(site.id, slug, site.custom_domain)
+  if (!r.ok) {
+    return r.statut === 503
+      ? NextResponse.json({ error: 'Service momentanement indisponible.' }, { status: 503 })
+      : NextResponse.json({ error: 'Erreur base de données.' }, { status: 500 })
   }
-
-  const estAchete = !!achete && achete.status !== 'failed'
-
-  // ORDRE VOULU : le pointeur d'abord. S'il tombe, rien n'a bouge dehors et
-  // l'etat reste coherent.
-  const { error: dbError } = await supabaseAdmin
-    .from('sites')
-    .update({
-      custom_domain: null,
-      custom_domain_google_status: null,
-      custom_domain_google_token: null,
-      custom_domain_google_attempts: null,
-      custom_domain_google_last_attempt_at: null,
-      custom_domain_google_last_error: null,
-    })
-    .eq('id', site.id)
-
-  if (dbError) {
-    return NextResponse.json({ error: 'Erreur base de données.' }, { status: 500 })
-  }
-
-  let retireHebergeur = false
-  if (!estAchete) {
-    try {
-      await removeDomainFromVercel(domaine)
-      retireHebergeur = true
-    } catch (e) {
-      // Le pointeur est deja retire : le site ne repond plus sur ce domaine.
-      // Un rattachement residuel chez l'hebergeur est signale, jamais masque.
-      await logAnomaly({
-        type: 'domain_detach_host_failed',
-        severity: 'warning',
-        siteId: site.id,
-        slug,
-        details: { domain: domaine, error: e instanceof Error ? e.message : String(e) },
-      })
-    }
-  }
-
-  return NextResponse.json({ ok: true, detache: true, domaine, achete: estAchete, retireHebergeur })
+  return NextResponse.json(r)
 }
+
