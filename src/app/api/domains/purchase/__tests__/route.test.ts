@@ -143,3 +143,68 @@ describe('POST /api/domains/purchase — course residuelle sur la reservation (2
     expect(getStripeMock).not.toHaveBeenCalled();
   });
 });
+
+// ============================================================
+// D-07 -- LES DOMAINES DE LA PLATEFORME NE S'ACHETENT PAS.
+//
+// CE TEST EXISTE PARCE QU'UNE MUTATION A SURVECU. La garde etait posee dans
+// la route d'achat, mais aucun test ne l'exercait : la retirer ne cassait
+// rien, et la protection n'etait donc pas prouvee.
+//
+// CE QUI EST PROUVE ICI : le refus intervient AVANT toute reservation, tout
+// appel au registraire et toute creation Stripe.
+// ============================================================
+describe('D-07 — domaines réservés refusés à l’achat', () => {
+  it.each(['deribfy.com', 'DERIBFY.COM', '  Deribfy.com  '])(
+    '%s -> 403, AUCUNE réservation, AUCUN appel registraire, AUCUN Stripe',
+    async (domain) => {
+      fromMock.mockImplementation(() => {
+        throw new Error('aucune requête ne doit être émise pour un domaine réservé');
+      });
+      const res = await POST(req({ slug: 'boutique', domain }));
+      expect(res.status).toBe(403);
+      expect(checkDomainMock).not.toHaveBeenCalled();
+      expect(getRegistrationRequirementsMock).not.toHaveBeenCalled();
+      expect(getStripeMock).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each(['www.deribfy.com', 'app.deribfy.com', 'blog.deribfy.com'])(
+    'le sous-domaine %s est refusé en amont : on n’achète pas un sous-domaine',
+    async (domain) => {
+      // COMPORTEMENT REEL, VERIFIE : la route n'accepte qu'un domaine de
+      // second niveau. Un sous-domaine n'est pas un enregistrement que l'on
+      // achete -- il se cree dans une zone que l'on possede deja. Le refus
+      // arrive donc en 400 (forme invalide), avant meme la garde des domaines
+      // reserves. Mon attente initiale d'un 403 etait fausse ; le code ne
+      // l'etait pas.
+      fromMock.mockImplementation(() => {
+        throw new Error('aucune requête ne doit être émise');
+      });
+      const res = await POST(req({ slug: 'boutique', domain }));
+      expect(res.status).toBe(400);
+      expect(checkDomainMock).not.toHaveBeenCalled();
+      expect(getStripeMock).not.toHaveBeenCalled();
+    }
+  );
+
+  it('un domaine client légitime n’est PAS bloqué par cette garde', async () => {
+    // La garde ne doit jamais refuser un domaine qui contient seulement la
+    // racine sans en etre un sous-domaine.
+    let call = 0;
+    fromMock.mockImplementation(() => {
+      call++;
+      const b: any = {};
+      const self = () => b;
+      b.select = self; b.eq = self; b.is = self; b.neq = self;
+      b.maybeSingle = async () => (call === 1 ? { data: SITE, error: null } : { data: null, error: null });
+      b.insert = () => ({ select: () => ({ single: async () => ({ data: null, error: { message: 'stop' } }) }) });
+      return b;
+    });
+    getRegistrationRequirementsMock.mockResolvedValue({ apiRegisterable: true, registrationDurationYears: 1 });
+    checkDomainMock.mockResolvedValue({ available: true, registrationCents: 1200, sellRenewalUsd: 25, sellFirstYearUsd: 20, firstYearPromo: false });
+    const res = await POST(req({ slug: 'boutique', domain: 'mondomaine-deribfy.com' }));
+    // Le parcours va au-dela de la garde : c'est tout ce qui est verifie ici.
+    expect(res.status).not.toBe(403);
+  });
+});

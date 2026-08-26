@@ -3,6 +3,7 @@ import { supabase as supabaseAnon } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { checkDomain, getRegistrationRequirements } from '@/lib/domains/porkbun';
 import { consommerJeton } from '@/lib/rate-limit/rateLimit';
+import { estDomaineReserve } from '@/lib/domains/reserved';
 
 // Porkbun limite checkDomain a 1 appel toutes les 10 secondes, pour tout le
 // compte. Le verrou est donc global et vit en base, pas en memoire : sur
@@ -78,6 +79,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Nom de domaine invalide' }, { status: 400 });
   }
   const clean = domain.trim().toLowerCase();
+
+  // D-07 -- un domaine reserve n'est jamais « disponible ». Refuser ici evite
+  // aussi de consommer un creneau du registraire pour rien.
+  if (estDomaineReserve(clean)) {
+    return NextResponse.json({ domain: clean, available: false, reason: 'domaine_reserve' });
+  }
+
   const tld = clean.split('.').pop() || '';
 
   // Deja pris dans Nexiora ? Aucun appel API necessaire.

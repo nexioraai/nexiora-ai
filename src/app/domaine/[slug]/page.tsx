@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { use } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
@@ -13,6 +13,33 @@ type Dns = { type: string; name: string; value: string }
 // Valeurs fixes retournees par POST /api/domains (voir domains/route.ts) —
 // ne dependent jamais du domaine connecte, reutilisables sans nouvel appel
 // pour reafficher les instructions apres un rechargement de page.
+/**
+ * D-01 -- Les enregistrements a afficher, SANS DOUBLON.
+ *
+ * Trois sources peuvent porter le meme TXT : la reponse de connexion
+ * (`verification`), le statut relu juste apres (`byodTxt`, qui interroge le
+ * meme hebergeur), et l'etat Google. Les concatener naivement affichait deux
+ * fois la meme ligne au client -- une instruction dupliquee est une
+ * instruction dont on doute.
+ */
+function deduireEnregistrements(
+  dns: Dns[] | null,
+  verification: Dns[],
+  byodTxt: Dns[] | undefined,
+  google: Dns[]
+): Dns[] {
+  const sortie: Dns[] = []
+  const vus = new Set<string>()
+  for (const r of [...(dns || STATIC_DNS), ...verification, ...(byodTxt || []), ...google]) {
+    if (!r || !r.type || r.value == null) continue
+    const cle = `${r.type}|${r.name}|${r.value}`
+    if (vus.has(cle)) continue
+    vus.add(cle)
+    sortie.push(r)
+  }
+  return sortie
+}
+
 const STATIC_DNS: Dns[] = [
   { type: 'A', name: '@', value: '76.76.21.21' },
   { type: 'CNAME', name: 'www', value: 'cname.vercel-dns.com' },
@@ -25,20 +52,84 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [dns, setDns] = useState<Dns[] | null>(null)
+  // D-01 -- les TXT REELLEMENT exiges par l'hebergeur, renvoyes par la
+  // connexion. Tableau vide quand aucun ne l'est : rien ne s'affiche alors.
+  const [verification, setVerification] = useState<Dns[]>([])
   const [connected, setConnected] = useState('')
   const [status, setStatus] = useState<any>(null)
 
+  // D-01/D-02 -- EXTRAIT DE L'EFFET POUR ETRE RAPPELABLE.
+  //
+  // Le statut n'etait charge qu'au montage : apres une connexion reussie,
+  // l'interface continuait d'afficher l'etat d'AVANT. Un client qui venait
+  // de connecter son domaine ne voyait donc jamais, dans sa session, les
+  // instructions produites par cette connexion.
+  const rechargerStatut = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.access_token) return
+    const res = await fetch(`/api/domains/status?slug=${slug}`, {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    })
+    if (res.ok) setStatus(await res.json())
+  }, [slug])
+
   useEffect(() => {
-    async function load() {
+    rechargerStatut()
+  }, [rechargerStatut])
+
+  // D-02 -- LE DECLENCHEUR MANQUANT.
+  //
+  // Le statut n'etait lu qu'au montage, et rien ne demandait jamais a
+  // l'hebergeur de RELIRE le DNS. Un client qui venait de poser ses
+  // enregistrements devait quitter puis revenir, sans savoir que c'etait
+  // necessaire -- et cela ne suffisait meme pas, faute de re-verification.
+  const [verifying, setVerifying] = useState(false)
+  async function handleVerify() {
+    setError('')
+    setVerifying(true)
+    try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) return
+      if (!session?.access_token) { setError(t('domain.errSession')); setVerifying(false); return }
       const res = await fetch(`/api/domains/status?slug=${slug}`, {
+        method: 'POST',
         headers: { Authorization: `Bearer ${session.access_token}` },
       })
-      if (res.ok) setStatus(await res.json())
+      const data = await res.json()
+      if (!res.ok) setError(data.error || t('domain.errGeneric'))
+      else setStatus(data)
+    } catch {
+      setError(t('domain.errConnection'))
     }
-    load()
-  }, [slug])
+    setVerifying(false)
+  }
+
+  // D-03 -- le detachement, absent jusqu'ici.
+  const [detaching, setDetaching] = useState(false)
+  async function handleDisconnect() {
+    if (!confirm(t('domain.disconnectConfirm'))) return
+    setError('')
+    setDetaching(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) { setError(t('domain.errSession')); setDetaching(false); return }
+      const res = await fetch(`/api/domains?slug=${slug}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      const data = await res.json()
+      if (!res.ok) setError(data.error || t('domain.errGeneric'))
+      else {
+        setDns(null)
+        setVerification([])
+        setConnected('')
+        setDomain('')
+        await rechargerStatut()
+      }
+    } catch {
+      setError(t('domain.errConnection'))
+    }
+    setDetaching(false)
+  }
 
   async function handleConnect() {
     setError('')
@@ -63,7 +154,11 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
         setError(data.error || t('domain.errGeneric'))
       } else {
         setDns(data.dns)
+        setVerification(Array.isArray(data.verification) ? data.verification : [])
         setConnected(data.domain)
+        // D-01 -- l'etat affiche reflete desormais la connexion qui vient
+        // d'aboutir, jamais celui d'avant.
+        await rechargerStatut()
       }
     } catch {
       setError(t('domain.errConnection'))
@@ -222,13 +317,31 @@ export default function DomainePage({ params }: { params: Promise<{ slug: string
                   {t('domain.dnsInstructions')}
                 </p>
                 <div className="space-y-2 mb-6">
-                  {(dns || STATIC_DNS).concat(status?.byodTxt || []).concat(byodGoogleTxt).map((r, i) => (
+                  {deduireEnregistrements(dns, verification, status?.byodTxt, byodGoogleTxt).map((r, i) => (
                     <div key={i} className="grid grid-cols-3 gap-3 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono">
                       <span><span className="text-slate-500">{t('domain.colType')} </span>{r.type}</span>
                       <span><span className="text-slate-500">{t('domain.colName')} </span>{r.name}</span>
                       <span className="truncate"><span className="text-slate-500">{t('domain.colValue')} </span>{r.value}</span>
                     </div>
                   ))}
+                </div>
+                <div className="flex flex-wrap gap-3 mb-6">
+                  <button
+                    onClick={handleVerify}
+                    disabled={verifying}
+                    className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition ${
+                      verifying ? 'bg-white/10 text-white/40 cursor-not-allowed' : 'bg-white text-black hover:opacity-90'
+                    }`}
+                  >
+                    {verifying ? t('domain.verifying') : t('domain.verifyNow')}
+                  </button>
+                  <button
+                    onClick={handleDisconnect}
+                    disabled={detaching}
+                    className="px-5 py-2.5 rounded-xl text-sm font-semibold border border-red-500/30 text-red-400/80 hover:text-red-400 hover:border-red-500/50 transition disabled:opacity-40"
+                  >
+                    {t('domain.disconnect')}
+                  </button>
                 </div>
                 <p className="text-xs text-slate-500">
                   {t('domain.dnsNote')}

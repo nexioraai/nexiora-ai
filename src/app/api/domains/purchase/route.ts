@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getStripe } from '@/lib/stripe';
+import { estDomaineReserve } from '@/lib/domains/reserved';
 import { checkDomain, getRegistrationRequirements, NEXIORA_DOMAIN_MARGIN_USD } from '@/lib/domains/porkbun';
 
 /**
@@ -15,6 +16,12 @@ export async function POST(req: NextRequest) {
   const clean = String(domain || '').trim().toLowerCase();
   if (!slug || !/^[a-z0-9-]+\.[a-z]{2,}$/i.test(clean)) {
     return NextResponse.json({ error: 'Domaine invalide' }, { status: 400 });
+  }
+
+  // D-07 -- meme garde, meme autorite, avant toute reservation et tout appel
+  // au registraire.
+  if (estDomaineReserve(clean)) {
+    return NextResponse.json({ error: 'Ce domaine est reserve' }, { status: 403 });
   }
 
   // 1. Le site appartient bien au demandeur
