@@ -38,18 +38,18 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
 | Banc | Protocole | Exécution |
 |---|---|---|
 | Coûts LLM (caching) | ✅ | 🟢 **EXÉCUTÉ** — caching ×6,5 global / ×10 entrée confirmé ; **découverte : refus `cyber` 7/10 sur prompts de forme moteur** (détail : `benchmarks/couts-unitaires.md`) |
-| P-001 Orchestration | ✅ | 🔴 bloqué — prérequis propriétaire (Docker OU projet Supabase test OU compte Inngest/Trigger.dev) |
+| P-001 Orchestration | ✅ | 🔵 **harnais candidat (a) pgmq+état PRÉPARÉ** (`benchmarks/orchestration/`, 5 épreuves scriptées, syntaxe validée) — exécution 🔴 bloquée : nécessite un Postgres de test avec pgmq (voir provisioning) ; adaptateurs (b) Inngest / (c) Trigger.dev : à la réception des comptes |
 | P-002 Sandbox | ✅ | 🔴 bloqué — comptes E2B/Modal/Fly/Vercel Sandbox + budget ~10-20 $ |
 | P-003 Styling RN | ✅ | 🔴 bloqué — Xcode complet + simulateurs OU appareils ([mesuré] : absents de la machine) |
 | E2E mobile | ✅ | 🔴 bloqué — mêmes prérequis que P-003 |
 | Coûts EAS | ✅ | 🔴 bloqué — compte Expo/EAS |
 | Coût projet Supabase | ✅ | 🔴 bloqué — token Management API (org de test) |
 
-**Proposition en attente de validation propriétaire** (issue du banc, non
-appliquée au plan) : intégrer à l'architecture la gestion systématique de
-`stop_reason: "refusal"` + stratégie de secours (`fallbacks`) sur tout
-chemin LLM du moteur, et le taux de refus comme métrique du Budget
-Governor. → à consigner dans `DECISIONS.md` après arbitrage.
+**D-015 ACTÉE (2026-08-27)** : résilience aux refus LLM — gestion explicite
+de `refusal` sur tout chemin LLM, zéro panne silencieuse, fallbacks prévus
+par l'architecture mobilisables, taux de refus = métrique Budget Governor ;
+**fréquence réelle [à mesurer] sur corpus représentatif** (le n=10 du banc
+prouve l'existence, pas le taux). Voir `DECISIONS.md` D-015.
 
 ## PHASES
 
@@ -93,7 +93,7 @@ Governor. → à consigner dans `DECISIONS.md` après arbitrage.
 | Review stores (délais, rejets) dans la boucle produit | ⚠️ externe | Policy Gate + preview séparé de la prod ; deadlines suivies au Fleet |
 | Coûts unitaires inconnus (LLM/sandbox/EAS/Supabase) | ⚠️ | Instrumentation dès Phase 1 ; Budget Governor |
 | Slices dérivant en construction manuelle du produit | ⚠️ méthode | Garde-fou Phase 8 : tout contournement manuel = dette consignée |
-| **Refus classifieur `cyber` sur prompts de forme moteur** — 7/10 appels [mesuré, n=10] | ⚠️ **nouveau (banc LLM)** | Proposition d'amendement soumise (refusal handling + fallbacks + métrique Budget Governor) ; taux précis [à mesurer] |
+| Refus classifieur `cyber` sur prompts de forme moteur — **existence [mesuré]** (7/10, n=10), **taux réel [à mesurer]** | ⚠️ suivi | **D-015 actée** : résilience structurelle (refusal géré partout, zéro panne silencieuse, fallbacks, métrique Budget Governor) ; mesure de fréquence sur corpus représentatif planifiée dans les campagnes aval |
 | ~~Upgrade SDK Anthropic : ruptures d'API possibles~~ | 🟢 clos | Re-baseline exécuté le 2026-08-27 : aucune rupture, parité prouvée |
 
 ## RÈGLE DE CONTINUITÉ

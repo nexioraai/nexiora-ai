@@ -1,5 +1,23 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — D-015 actée · harnais P-001 préparé
+
+- **D-015 (propriétaire)** : résilience aux refus LLM — gestion explicite de
+  `stop_reason: refusal` sur tout chemin LLM, zéro panne silencieuse,
+  fallbacks de l'architecture mobilisables, taux de refus = métrique du
+  Budget Governor. Consignée comme décision de RÉSILIENCE : le n=10 du banc
+  prouve l'existence du phénomène, la fréquence réelle reste [à mesurer]
+  sur corpus représentatif.
+- **P-001 préparé** : harnais complet du candidat (a) pgmq + machine à
+  états + workers (`benchmarks/orchestration/` — setup rejouable avec garde
+  anti-base-de-production, worker à arrêt propre, 5 épreuves du protocole
+  scriptées avec verdicts stricts et journal JSONL, driver installé,
+  syntaxe validée, garde `DATABASE_URL` fail-closed vérifiée). Exécution
+  en attente du prérequis : Postgres de test jetable avec pgmq. Adaptateurs
+  (b) Inngest / (c) Trigger.dev : à la réception des comptes.
+- P-002 : préparation des adaptateurs à la réception des comptes sandbox —
+  aucun contournement des prérequis.
+
 ## 2026-08-27 — PHASE 0 TERMINÉE · PHASE 1 OUVERTE
 
 - **Phase 0 close sur preuves complètes.** Dernier critère satisfait : CI

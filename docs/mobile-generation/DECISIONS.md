@@ -126,6 +126,37 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   backend provisionné de l'app. Les deux temporalités (instantané vs délais
   de review) sont assumées dans l'UX produit.
 
+## D-015 — Résilience aux refus LLM sur tout chemin du moteur (2026-08-27)
+
+- **Problème** : le banc coûts LLM (Phase 1, campagne n=10 du 2026-08-27) a
+  établi l'**existence** [mesuré] de refus classifieur
+  (`stop_reason: "refusal"`, `stop_details.category: "cyber"`) sur des
+  prompts au vocabulaire typique du moteur (contrats, permissions, réseau,
+  violations), facturés côté entrée. Un chemin LLM qui ne les gère pas
+  produirait des pannes silencieuses du pipeline.
+- **Nature de la décision** : **décision de RÉSILIENCE structurelle** —
+  PAS une conclusion quantitative. L'échantillon n=10 prouve que le
+  phénomène existe ; **la fréquence réelle sur les prompts du futur moteur
+  reste [à mesurer]** sur un corpus représentatif avant toute conclusion
+  chiffrée (dimensionnement, coûts, SLO).
+- **Options** : ignorer (panne silencieuse — inacceptable) ; gérer au cas
+  par cas (dérive garantie) ; règle structurelle transversale.
+- **Décision (propriétaire, 2026-08-27)** :
+  1. tout chemin LLM du moteur gère **explicitement** `stop_reason:
+     "refusal"` ;
+  2. **aucun refus ne provoque de panne silencieuse** du pipeline — un
+     refus est un événement de première classe (journalisé, typé, remonté) ;
+  3. le système peut mobiliser les **fallbacks/providers déjà prévus par
+     l'architecture** (§15 multi-provider, §28 modèles) ;
+  4. le **taux de refus devient une métrique observable du Budget
+     Governor** ;
+  5. la fréquence réelle des refus est **à mesurer** sur corpus
+     représentatif — mesure à intégrer aux campagnes des phases aval.
+- **Conséquences** : contrat d'appel LLM unique portant la gestion refusal
+  (aucun appel direct hors de ce contrat) ; champ « refus » dans
+  l'observabilité pipeline ; aucun autre choix architectural modifié,
+  aucune phase ajoutée.
+
 ---
 
 # EN ATTENTE
