@@ -1,0 +1,19 @@
+{
+  "name": "tamagui-candidate",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "expo": "~57.0.17",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "tamagui": "^2.7.7"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "typescript": "~6.0.3",
+    "@tamagui/babel-plugin": "^2.7.7"
+  },
+  "scripts": { "start": "expo start" },
+  "private": true
+}
