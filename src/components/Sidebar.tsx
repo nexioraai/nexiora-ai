@@ -6,8 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/lib/translations';
 import {
   Home, LayoutGrid, Settings, Globe, BarChart3,
-  Database, MapPin, Menu, X, Zap, Megaphone, Shield,
-} from 'lucide-react';
+  Database, MapPin, Menu, X, Zap, Megaphone, Shield, FileText } from 'lucide-react';
 
 export default function Sidebar() {
   const { t } = useTranslation();
@@ -38,6 +37,9 @@ export default function Sidebar() {
   const modules = [
     { label: t('sidebar.aiVisibility'), href: '/visibilite-ia', icon: BarChart3 },
     { label: t('sidebar.marketing'), href: '/dashboard/marketing', icon: Megaphone },
+    // LOT BLOG 9 -- espace proprietaire du blog. Meme rang que le marketing :
+    // c'est une surface de CONTENU, commune aux trois modes.
+    { label: t('blog.nav'), href: '/dashboard/blog', icon: FileText },
     // { label: t("sidebar.upgrade"), href: null, icon: Zap },
   ];
 

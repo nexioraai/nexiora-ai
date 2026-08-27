@@ -81,6 +81,7 @@ ci-dessous par domaine. Légende authentification :
 | POST | `/api/domains/purchase` | Prépare l'achat (prix, exigences d'enregistrement, abonnement Stripe annuel) — **aucun achat Porkbun tant que le paiement n'est pas confirmé** (déclenché plus tard par le webhook Stripe). | Utilisateur |
 | POST | `/api/domains/provision` | Provisionne un domaine déjà présent dans le compte Porkbun (transfert, ou achat hors Stripe) — n'achète rien. | Utilisateur + Cron |
 | GET | `/api/domains/status` | État du domaine d'un site pour affichage marchand. | Utilisateur |
+| POST | `/api/domains/renewal` | **Résilie ou réactive le renouvellement** d'un domaine. À ne pas confondre avec le détachement (`/api/domains`), qui retire le lien domaine ↔ site sans toucher à l'abonnement : **aucune des deux n'entraîne jamais l'autre**. Après résiliation, le domaine reste actif jusqu'à son expiration. | Propriétaire du site (`requireSiteOwner`) |
 
 ## 6. Génération de site / IA (Site Web)
 
@@ -98,8 +99,65 @@ ci-dessous par domaine. Légende authentification :
 | Méthode | Chemin | Objectif | Auth |
 |---|---|---|---|
 | POST | `/api/marketing/generate` | Génère un post marketing (texte + image via GPT Image) à partir d'un brief. | Utilisateur |
-| POST | `/api/blog/generate` | Génère un article de blog sur un sujet donné. | Public (aucune vérification propriétaire trouvée — voir §8 Constats) |
+| POST | `/api/blog/generate` | Génère un article du blog **de la plateforme** (`blog_posts`) sur un sujet donné. | **Administrateur de la plateforme** (`requirePlatformAdmin`), borné à 3 générations/minute (fail-closed) |
 | POST | `/api/chat` | Chat général assistant (site + score IA). | Utilisateur |
+
+### 7.1 Blog des sites clients (`site_blog_posts`)
+
+> **Ne pas confondre avec le blog de la plateforme.** `POST /api/blog/generate` écrit dans
+> `blog_posts` — le blog central de Deribfy, sans aucune colonne de site, réservé aux
+> administrateurs de la plateforme. Les routes ci-dessous écrivent dans `site_blog_posts`,
+> table dédiée au contenu éditorial **des sites clients**, rattachée par
+> `site_id UUID NOT NULL REFERENCES sites(id) ON DELETE CASCADE`.
+> Deux tables, deux surfaces, deux régimes d'autorisation — aucune n'emprunte l'autre.
+
+Le blog est une **capacité commune aux trois modes** (vitrine, boutique, dropshipping) :
+aucune garde d'admission commerciale n'y est appliquée.
+
+| Méthode | Chemin | Objectif | Auth |
+|---|---|---|---|
+| GET | `/api/blog/posts` | Liste les articles d'un site, **brouillons compris**. Le site est nommé par `?site=<slug>`. | Propriétaire du site (`requireSiteOwner`) |
+| POST | `/api/blog/posts` | Crée un brouillon. Corps : `{ site, title, slug?, excerpt?, content?, cover_image?, published? }`. | Propriétaire du site (`requireSiteOwner`) |
+| PATCH | `/api/blog/posts/[id]` | Modifie, publie ou dépublie un article. | Propriétaire de l'article (`requireArticleOwner`) |
+| DELETE | `/api/blog/posts/[id]` | Supprime un article. | Propriétaire de l'article (`requireArticleOwner`) |
+| POST | `/api/blog/posts/generate` | Génère un **brouillon** d'article par IA et le persiste. Corps : `{ site }`. Réutilise le moteur de prompts partagé avec `/api/marketing/generate` — aucun prompt n'est dupliqué. Le cache `marketing_briefs` est **lu, jamais écrit**. Aucune garde « site publié » : rédiger avant de publier son site est le parcours normal. Slug en collision : suffixé, pas refusé. Borné à 3 générations/minute et par site. | Propriétaire du site (`requireSiteOwner`) |
+| POST | `/api/blog/posts/[id]/cover` | Téléverse la couverture d'un article (`multipart/form-data`, champ `file`). Bucket `site-images`, chemin **construit côté serveur** `blog/{site_id}/{uuid}.{ext}` — jamais fourni par le client. ≤ 5 Mo, JPEG/PNG/WebP/GIF/AVIF (pas de SVG), 10 téléversements/minute et par site. Remplacer une couverture retire l'ancienne. | Propriétaire de l'article (`requireArticleOwner`) |
+
+**Invariants de ces quatre routes :**
+
+- `site_id` n'est **jamais** lu du corps ni de l'URL. Il provient soit du site vérifié par
+  `requireSiteOwner`, soit de l'article vérifié par `requireArticleOwner`.
+- **Allowlist explicite** : seuls `title`, `slug`, `excerpt`, `content`, `cover_image` et
+  `published` sont acceptés. `id`, `site_id`, `created_at`, `updated_at`, `published_at` et
+  `cover_storage_path` sont structurellement inatteignables depuis le corps.
+- `published_at` est **dérivé** de `published` par le serveur : posé à la première
+  publication, jamais écrasé ensuite — antidater ferait mentir le `<lastmod>` du sitemap et
+  le `datePublished` du JSON-LD.
+- Le `slug` d'article est **normalisé** côté serveur, qu'il vienne du client ou du titre.
+  Son unicité est `UNIQUE (site_id, slug)` : deux sites peuvent publier le même lien, deux
+  articles d'un même site non — une collision rend **409**, jamais 500.
+- Un article appartenant à un **autre locataire** rend **404**, indiscernable d'un article
+  inexistant (anti-énumération). Un appelant non authentifié rend 401.
+- Le champ `site` du corps et le paramètre `?site=` portent le **slug du site** ; `slug`
+  désigne toujours le slug de l'**article**. Divergence assumée avec `/api/shop/products`,
+  où `slug` nomme le site : un article possède son propre `slug`, deux sens pour une même
+  clé dans une même charge utile seraient un défaut.
+
+**Surfaces publiques correspondantes** (pages, pas routes d'API — hors portée de
+`check-api-docs`) :
+
+| Chemin | Origine plateforme | Domaine personnalisé |
+|---|---|---|
+| Index du blog | `/sites/{slug}/blog` | `mondomaine.com/blog` |
+| Article | `/sites/{slug}/blog/{slug-article}` | `mondomaine.com/blog/{slug-article}` |
+
+Ces deux formes sont servies par **le même fichier** : la réécriture existante de
+`src/proxy.ts` préfixe déjà `/sites/{slug}` sur un domaine personnalisé — **le proxy
+n'a pas été modifié**. Elles lisent la vue `site_blog_posts_public` sous la clé `anon`,
+jamais la table : « article publié ET site publié ET site non archivé » est un invariant
+**de la base**, pas de l'application. Le corps d'article est rendu en **texte** (jamais
+`dangerouslySetInnerHTML`) et aucune des deux pages ne déclare `revalidate` — elles
+résolvent le `Host`, un cache serait partagé entre locataires.
 
 ## 8. Administration
 
@@ -163,7 +221,7 @@ authentification détectée. **Aucune de ces observations n'a été corrigée** 
 cela sortirait du périmètre de cette tâche (documentation uniquement, aucune
 modification fonctionnelle demandée).
 
-- `/api/stripe/portal`, `/api/blog/generate` : aucun mécanisme
+- `/api/stripe/portal` : aucun mécanisme
   d'authentification détecté dans le code source à date de rédaction.
 - `/api/checkout` (abonnement marchand → Deribfy) et `/api/shop/checkout`
   (achat client → boutique marchande) sont deux routes distinctes qui
