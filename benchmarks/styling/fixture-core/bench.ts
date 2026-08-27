@@ -68,6 +68,22 @@ export interface BenchResult {
 }
 
 export function emitResult(result: BenchResult): void {
-  // console.log en release atteint os_log (iOS) / logcat (Android).
-  console.log(`BENCH_RESULT ${JSON.stringify(result)}`);
+  const line = `BENCH_RESULT ${JSON.stringify(result)}`;
+  console.log(line);
+  // Canal FIABLE d'extraction [mesuré : console.log release n'atteint pas
+  // os_log iOS] : écriture fichier via expo-file-system (dépendance ajoutée
+  // À L'IDENTIQUE aux 4 candidats — les deltas de poids restent équitables).
+  // Lecture harnais : simctl get_app_container … data → Documents/.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const FS = require("expo-file-system/legacy") as {
+      documentDirectory: string | null;
+      writeAsStringAsync: (uri: string, contents: string) => Promise<void>;
+    };
+    if (FS.documentDirectory !== null) {
+      void FS.writeAsStringAsync(`${FS.documentDirectory}bench-result.json`, JSON.stringify(result));
+    }
+  } catch {
+    // canal fichier indisponible — la console et l'écran restent.
+  }
 }

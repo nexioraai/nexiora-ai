@@ -3,7 +3,7 @@
 import React from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { StyleSheet, UnistylesRuntime, useUnistyles } from "react-native-unistyles";
-import type { Primitives, ThemeBridge } from "../fixture-core/contracts";
+import type { Primitives, ThemeBridge } from "../../fixture-core/contracts";
 
 export function useThemeBridge(): ThemeBridge {
   const { theme } = useUnistyles();

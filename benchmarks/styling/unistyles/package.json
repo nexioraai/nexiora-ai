@@ -4,17 +4,20 @@
   "main": "index.ts",
   "dependencies": {
     "expo": "~57.0.17",
+    "expo-file-system": "~57.0.6",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
     "react-native": "0.86.3",
-    "react-native-unistyles": "^3.3.0",
+    "react-native-edge-to-edge": "^1.8.1",
     "react-native-nitro-modules": "*",
-    "react-native-edge-to-edge": "*"
+    "react-native-unistyles": "^3.3.0"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
     "typescript": "~6.0.3"
   },
-  "scripts": { "start": "expo start" },
+  "scripts": {
+    "start": "expo start"
+  },
   "private": true
 }
