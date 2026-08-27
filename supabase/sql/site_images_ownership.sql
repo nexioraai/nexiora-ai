@@ -249,86 +249,112 @@ WHERE schemaname = 'storage' AND tablename = 'objects'
 
 
 -- ============================================================
--- 3/3 -- PREUVE COMPORTEMENTALE, sous l'identite d'un proprietaire REEL.
+-- 3/3 (v2) -- PREUVE COMPORTEMENTALE, EN UNE SEULE INSTRUCTION.
 --
--- Patron de DEBT-084 : `BEGIN; ... ROLLBACK;` -- aucune donnee ecrite, aucun
--- objet Storage touche. On evalue la sous-requete `EXISTS` des policies
--- exactement comme PostgreSQL l'evaluera, sous le role `authenticated` et avec
--- la RLS de `sites` active.
+-- POURQUOI v2 -- LECON MESUREE (2026-08-27) : la v1 exigeait que six
+-- instructions (BEGIN / CREATE TEMP TABLE / GRANT / set_config / SET LOCAL
+-- ROLE / SELECT) partagent une meme session et une meme transaction.
+-- L'editeur SQL Supabase ne le garantit pas : `42P01 relation "t_debt072"
+-- does not exist` obtenu a l'execution. Une table temporaire est un objet DE
+-- SESSION, et `ON COMMIT DROP` la detruit des la fin de la transaction
+-- creatrice -- en autocommit, des la fin du CREATE lui-meme.
 --
--- Les identites ne sont PAS ecrites en dur : deux proprietaires DISTINCTS sont
--- choisis dans `sites`. Si la base n'en contient qu'un seul, `slug_b` est NULL
--- et le test `prefixe_autrui` doit etre considere comme NON EXECUTE -- ne pas
--- le lire comme un succes.
+-- Tout vit desormais dans UNE instruction : ordre procedural garanti,
+-- identites relevees AVANT l'endossement, aucun etat entre instructions.
+--
+-- SORTIE : ce bloc se termine TOUJOURS par une RAISE EXCEPTION portant le
+-- verdict -- c'est VOULU, c'est le canal d'affichage que l'editeur garantit.
+-- Elle n'annule que la simulation, qui n'ecrit rien (aucune donnee, aucune
+-- policy, aucun objet). Le message commence par CONFORME ou NON CONFORME :
+-- c'est la preuve a renvoyer telle quelle.
+--
+-- EXECUTE le 2026-08-27 -- verdict recu : DEBT-072 3/3 [CONFORME] --
+-- identite_ok=t propre_prefixe=t sous_dossier=t prefixe_autrui=f
+-- racine_sans_slash=f traversee=f prefixe_blog=f slug_seul=t
+-- second_proprietaire_dispo=t.
 -- ============================================================
-BEGIN;
+DO $$
+DECLARE
+  v_uid_a  uuid;
+  v_slug_a text;
+  v_slug_b text;
+  r        record;
+  conforme boolean;
+BEGIN
+  -- 1. Identites relevees AVANT l'endossement (sous le role de l'editeur,
+  --    qui lit `sites` en entier). Jamais ecrites en dur.
+  SELECT s.owner_id, s.slug INTO v_uid_a, v_slug_a
+  FROM public.sites s
+  WHERE s.owner_id IS NOT NULL
+  ORDER BY s.slug
+  LIMIT 1;
 
-CREATE TEMP TABLE t_debt072 ON COMMIT DROP AS
-WITH a AS (
-  SELECT owner_id, slug
-  FROM public.sites
-  WHERE owner_id IS NOT NULL
-  ORDER BY slug
-  LIMIT 1
-)
-SELECT a.owner_id AS uid_a,
-       a.slug     AS slug_a,
-       (SELECT s.slug
-          FROM public.sites s
-         WHERE s.owner_id IS NOT NULL
-           AND s.owner_id <> a.owner_id
-         ORDER BY s.slug
-         LIMIT 1) AS slug_b
-FROM a;
+  IF v_uid_a IS NULL THEN
+    RAISE EXCEPTION 'DEBT-072 3/3 : aucun site avec owner_id renseigne -- preuve inexecutable.';
+  END IF;
 
-GRANT SELECT ON t_debt072 TO authenticated;
+  SELECT s.slug INTO v_slug_b
+  FROM public.sites s
+  WHERE s.owner_id IS NOT NULL
+    AND s.owner_id <> v_uid_a
+  ORDER BY s.slug
+  LIMIT 1;
 
--- On endosse l'identite du proprietaire A.
-SELECT set_config(
-         'request.jwt.claims',
-         json_build_object('sub', uid_a, 'role', 'authenticated')::text,
-         true                     -- `is_local` : annule au ROLLBACK
-       )
-FROM t_debt072;
+  -- 2. Endossement de l'identite du proprietaire A. `set_config(..., true)`
+  --    est local a la transaction du DO : tout est annule a la sortie,
+  --    exception comprise. Pas de `SET LOCAL` (no-op avec WARNING hors bloc
+  --    de transaction explicite) : la fonction, elle, s'applique toujours.
+  PERFORM set_config('request.jwt.claims',
+                     json_build_object('sub', v_uid_a, 'role', 'authenticated')::text,
+                     true);
+  PERFORM set_config('role', 'authenticated', true);
 
-SET LOCAL ROLE authenticated;
+  -- 3. Les huit evaluations de la v1, inchangees.
+  SELECT
+    auth.uid() = v_uid_a                               AS identite_ok,
+    EXISTS (SELECT 1 FROM public.sites s
+             WHERE s.slug = split_part(v_slug_a || '/hero.png', '/', 1)
+               AND s.owner_id = auth.uid())            AS propre_prefixe,
+    EXISTS (SELECT 1 FROM public.sites s
+             WHERE s.slug = split_part(v_slug_a || '/products/1.png', '/', 1)
+               AND s.owner_id = auth.uid())            AS sous_dossier,
+    EXISTS (SELECT 1 FROM public.sites s
+             WHERE s.slug = split_part(coalesce(v_slug_b, '__aucun_second_proprietaire__') || '/hero.png', '/', 1)
+               AND s.owner_id = auth.uid())            AS prefixe_autrui,
+    EXISTS (SELECT 1 FROM public.sites s
+             WHERE s.slug = split_part('hero.png', '/', 1)
+               AND s.owner_id = auth.uid())            AS racine_sans_slash,
+    EXISTS (SELECT 1 FROM public.sites s
+             WHERE s.slug = split_part('../' || coalesce(v_slug_b, '__aucun__') || '/x.png', '/', 1)
+               AND s.owner_id = auth.uid())            AS traversee,
+    EXISTS (SELECT 1 FROM public.sites s
+             WHERE s.slug = split_part('blog/2026/cover.png', '/', 1)
+               AND s.owner_id = auth.uid())            AS prefixe_blog,
+    EXISTS (SELECT 1 FROM public.sites s
+             WHERE s.slug = split_part(v_slug_a, '/', 1)
+               AND s.owner_id = auth.uid())            AS slug_seul
+  INTO r;
 
--- ATTENDU, dans l'ordre :
---   identite_ok      true   -- `auth.uid()` rend bien le proprietaire A
---   propre_prefixe   true   -- non-regression : le proprietaire ecrit chez lui
---   sous_dossier     true   -- non-regression : `{slug}/products/...`
---                              (`src/components/edit/ProductManager.tsx`)
---   prefixe_autrui   false  -- pas d'ouverture inter-locataire
---   racine_sans_slash false -- `hero.png` a la racine du bucket
---   traversee        false  -- `../{slug_b}/x.png`
---   prefixe_blog     false  -- `blog/...` reste reserve au serveur
---                              (premisse de `api/blog/posts/[id]/cover`)
---   slug_seul        true   -- inoffensif : `split_part` sans delimiteur rend
---                              la chaine entiere, qui reste SON slug
-SELECT
-  (SELECT auth.uid()) = t.uid_a AS identite_ok,
-  EXISTS (SELECT 1 FROM public.sites s
-           WHERE s.slug = split_part(t.slug_a || '/hero.png', '/', 1)
-             AND s.owner_id = auth.uid())            AS propre_prefixe,
-  EXISTS (SELECT 1 FROM public.sites s
-           WHERE s.slug = split_part(t.slug_a || '/products/1.png', '/', 1)
-             AND s.owner_id = auth.uid())            AS sous_dossier,
-  EXISTS (SELECT 1 FROM public.sites s
-           WHERE s.slug = split_part(coalesce(t.slug_b, '__aucun_second_proprietaire__') || '/hero.png', '/', 1)
-             AND s.owner_id = auth.uid())            AS prefixe_autrui,
-  EXISTS (SELECT 1 FROM public.sites s
-           WHERE s.slug = split_part('hero.png', '/', 1)
-             AND s.owner_id = auth.uid())            AS racine_sans_slash,
-  EXISTS (SELECT 1 FROM public.sites s
-           WHERE s.slug = split_part('../' || coalesce(t.slug_b, '__aucun__') || '/x.png', '/', 1)
-             AND s.owner_id = auth.uid())            AS traversee,
-  EXISTS (SELECT 1 FROM public.sites s
-           WHERE s.slug = split_part('blog/2026/cover.png', '/', 1)
-             AND s.owner_id = auth.uid())            AS prefixe_blog,
-  EXISTS (SELECT 1 FROM public.sites s
-           WHERE s.slug = split_part(t.slug_a, '/', 1)
-             AND s.owner_id = auth.uid())            AS slug_seul,
-  (t.slug_b IS NOT NULL)                             AS second_proprietaire_dispo
-FROM t_debt072 t;
+  -- 4. Verdict. `prefixe_autrui` et `traversee` ne sont PROBANTS que si un
+  --    second proprietaire existe en base.
+  conforme := r.identite_ok
+          AND r.propre_prefixe
+          AND r.sous_dossier
+          AND NOT r.racine_sans_slash
+          AND NOT r.prefixe_blog
+          AND r.slug_seul
+          AND (v_slug_b IS NULL OR (NOT r.prefixe_autrui AND NOT r.traversee));
 
-ROLLBACK;
+  RAISE EXCEPTION USING message = format(
+    'DEBT-072 3/3 [%s] -- SORTIE VOLONTAIRE, rien n''est modifie -- '
+    'identite_ok=%s propre_prefixe=%s sous_dossier=%s prefixe_autrui=%s '
+    'racine_sans_slash=%s traversee=%s prefixe_blog=%s slug_seul=%s '
+    'second_proprietaire_dispo=%s%s',
+    CASE WHEN conforme THEN 'CONFORME' ELSE 'NON CONFORME' END,
+    r.identite_ok, r.propre_prefixe, r.sous_dossier, r.prefixe_autrui,
+    r.racine_sans_slash, r.traversee, r.prefixe_blog, r.slug_seul,
+    (v_slug_b IS NOT NULL),
+    CASE WHEN v_slug_b IS NULL
+         THEN ' -- prefixe_autrui et traversee NON PROBANTS (un seul proprietaire en base)'
+         ELSE '' END);
+END $$;
