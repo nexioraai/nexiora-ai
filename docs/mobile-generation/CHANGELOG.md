@@ -1,5 +1,32 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — 2.4-H : fix v2 construit et VALIDÉ À BLANC ($0 API)
+
+- **Moteur de transcription v2** (`benchmarks/air-emission/transcribe-lib.mjs`,
+  transport injectable — aucun SDK importé par la simulation) : écrans
+  transcrits UN PAR UN ; **comptes attendus extraits du RENDU lui-même**
+  (jamais de l'AIR original — round-trip honnête) ; contrôles déterministes
+  de complétude (comptes de sections, blocs par écran, champs par entité,
+  routes, ordre et identité des écrans) ; retry borné par appel ; **refus
+  fail-closed** — aucune sortie incomplète/incohérente ne produit de
+  document, jamais d'assemblage partiel.
+- **Simulation à blanc** (`simulate-fix-v2.mjs`, node:assert, 2 runs) :
+  **25 scénarios PASS** — non-régression : transport honnête ⇒ **12/12 AIR
+  du corpus identiques au hash** (ordre des écrans préservé, plan d'appels
+  4+N vérifié) · défaillances TOUTES refusées : écran tronqué (mode observé
+  en campagne), actions/routes/champs tronqués schema-valides, échange
+  d'écrans, en-tête ≠ détail, clé étrangère, panne persistante, référence
+  sémantique cassée · pannes transitoires récupérées par retry ·
+  comptes du parseur exacts sur les 12 rendus.
+- **Limite résiduelle consignée** : une divergence de CONTENU à comptes
+  égaux (ex. props altérées) n'est pas refusée par les comptes — elle est
+  détectée par la comparaison de hash du banc ; en production, l'AIR stocké
+  reste la source de vérité (jamais reconstruit depuis du texte).
+- **Reste non simulable** (vrai appel requis) : comportement réel du modèle
+  sur sorties courtes par écran, acceptation de la grammaire par écran,
+  refus/cache/coûts. Test réel : 8 rejeux ≈ **$7-10** — EN ATTENTE de
+  l'accord propriétaire explicite.
+
 ## 2026-08-27 — 2.4-H : rejeu 8/8, cause des round-trips non identiques
 ## CONFIRMÉE par dumps instrumentés
 
