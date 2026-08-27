@@ -1,0 +1,2571 @@
+{
+  "identical": true,
+  "document": {
+    "airSchemaVersion": "1.0.0",
+    "projectId": "prj_plombier_interventions",
+    "app": {
+      "name": "Plomberie Express",
+      "slug": "plomberie-express",
+      "description": [
+        {
+          "locale": "fr-FR",
+          "text": "Application de demande d'intervention de plomberie : décrivez votre problème avec des photos, partagez votre adresse et votre position, puis suivez l'avancement de votre demande. Les devis et les paiements sont traités hors de l'application."
+        }
+      ],
+      "locales": {
+        "userLanguage": "fr-FR",
+        "appLocales": [
+          "fr-FR"
+        ],
+        "defaultAppLocale": "fr-FR",
+        "contentLocales": [
+          "fr-FR"
+        ],
+        "rtlSupported": false
+      }
+    },
+    "screens": [
+      {
+        "id": "scr_home",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Mes demandes"
+          }
+        ],
+        "blocks": [
+          {
+            "id": "blk_home_header",
+            "blockType": "header",
+            "props": [
+              {
+                "key": "title",
+                "value": "Plomberie Express"
+              },
+              {
+                "key": "subtitle",
+                "value": "Décrivez votre problème, nous intervenons vite"
+              },
+              {
+                "key": "showAvatar",
+                "value": true
+              },
+              {
+                "key": "routeId",
+                "value": "nav_home"
+              }
+            ]
+          },
+          {
+            "id": "blk_home_urgency_banner",
+            "blockType": "banner",
+            "props": [
+              {
+                "key": "tone",
+                "value": "info"
+              },
+              {
+                "key": "title",
+                "value": "Fuite ou dégât des eaux ?"
+              },
+              {
+                "key": "message",
+                "value": "Créez une demande en urgence : le plombier est prévenu immédiatement."
+              },
+              {
+                "key": "actionLabel",
+                "value": "Demande urgente"
+              },
+              {
+                "key": "targetRouteId",
+                "value": "nav_new_request"
+              },
+              {
+                "key": "dismissible",
+                "value": true
+              }
+            ]
+          },
+          {
+            "id": "blk_home_new_request_button",
+            "blockType": "button",
+            "props": [
+              {
+                "key": "label",
+                "value": "Nouvelle demande d'intervention"
+              },
+              {
+                "key": "style",
+                "value": "primary"
+              },
+              {
+                "key": "icon",
+                "value": "plumbing"
+              },
+              {
+                "key": "fullWidth",
+                "value": true
+              },
+              {
+                "key": "targetRouteId",
+                "value": "nav_new_request"
+              }
+            ]
+          },
+          {
+            "id": "blk_home_status_filter",
+            "blockType": "segmented_filter",
+            "entityId": "ent_service_request",
+            "props": [
+              {
+                "key": "fieldId",
+                "value": "fld_req_status"
+              },
+              {
+                "key": "options",
+                "value": [
+                  "toutes",
+                  "envoyee",
+                  "planifiee",
+                  "en_cours",
+                  "terminee"
+                ]
+              },
+              {
+                "key": "optionLabels",
+                "value": [
+                  "Toutes",
+                  "Envoyées",
+                  "Planifiées",
+                  "En cours",
+                  "Terminées"
+                ]
+              },
+              {
+                "key": "defaultOption",
+                "value": "toutes"
+              }
+            ]
+          },
+          {
+            "id": "blk_home_request_list",
+            "blockType": "list",
+            "entityId": "ent_service_request",
+            "props": [
+              {
+                "key": "sortFieldId",
+                "value": "fld_req_created_at"
+              },
+              {
+                "key": "sortDirection",
+                "value": "desc"
+              },
+              {
+                "key": "titleFieldId",
+                "value": "fld_req_reference"
+              },
+              {
+                "key": "subtitleFieldId",
+                "value": "fld_req_category"
+              },
+              {
+                "key": "badgeFieldId",
+                "value": "fld_req_status"
+              },
+              {
+                "key": "metaFieldId",
+                "value": "fld_req_city"
+              },
+              {
+                "key": "dateFieldId",
+                "value": "fld_req_created_at"
+              },
+              {
+                "key": "pageSize",
+                "value": 20
+              },
+              {
+                "key": "pullToRefresh",
+                "value": true
+              },
+              {
+                "key": "itemTargetRouteId",
+                "value": "nav_request_detail"
+              }
+            ]
+          },
+          {
+            "id": "blk_home_empty_state",
+            "blockType": "empty_state",
+            "props": [
+              {
+                "key": "title",
+                "value": "Aucune demande pour le moment"
+              },
+              {
+                "key": "message",
+                "value": "Créez votre première demande : photos du problème, adresse et suivi en temps réel."
+              },
+              {
+                "key": "icon",
+                "value": "water_drop"
+              },
+              {
+                "key": "actionLabel",
+                "value": "Créer une demande"
+              },
+              {
+                "key": "targetRouteId",
+                "value": "nav_new_request"
+              }
+            ]
+          },
+          {
+            "id": "blk_home_offline_notice",
+            "blockType": "notice",
+            "props": [
+              {
+                "key": "tone",
+                "value": "warning"
+              },
+              {
+                "key": "message",
+                "value": "Mode hors ligne : vos demandes seront synchronisées dès le retour du réseau."
+              },
+              {
+                "key": "visibleWhen",
+                "value": "offline"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "scr_new_request",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Décrire le problème"
+          }
+        ],
+        "blocks": [
+          {
+            "id": "blk_new_stepper",
+            "blockType": "step_indicator",
+            "props": [
+              {
+                "key": "steps",
+                "value": [
+                  "Problème",
+                  "Adresse",
+                  "Envoi"
+                ]
+              },
+              {
+                "key": "currentStep",
+                "value": 1
+              },
+              {
+                "key": "totalSteps",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "id": "blk_new_form",
+            "blockType": "form",
+            "entityId": "ent_service_request",
+            "props": [
+              {
+                "key": "layout",
+                "value": "vertical"
+              },
+              {
+                "key": "fieldIds",
+                "value": [
+                  "fld_req_category",
+                  "fld_req_urgency",
+                  "fld_req_description",
+                  "fld_req_preferred_date",
+                  "fld_req_contact_name",
+                  "fld_req_contact_phone"
+                ]
+              },
+              {
+                "key": "labels",
+                "value": [
+                  "Type de problème",
+                  "Niveau d'urgence",
+                  "Description détaillée",
+                  "Date souhaitée",
+                  "Votre nom",
+                  "Téléphone"
+                ]
+              },
+              {
+                "key": "descriptionPlaceholder",
+                "value": "Ex. : fuite sous l'évier de la cuisine depuis ce matin, l'eau coule en continu."
+              },
+              {
+                "key": "descriptionMinLength",
+                "value": 20
+              },
+              {
+                "key": "validationRuleId",
+                "value": "rule_request_completeness"
+              },
+              {
+                "key": "autosaveDraft",
+                "value": true
+              }
+            ]
+          },
+          {
+            "id": "blk_new_photo_picker",
+            "blockType": "media_picker",
+            "entityId": "ent_request_photo",
+            "props": [
+              {
+                "key": "label",
+                "value": "Photos du problème"
+              },
+              {
+                "key": "helpText",
+                "value": "Ajoutez jusqu'à 8 photos (robinet, canalisation, dégâts) pour un devis plus précis."
+              },
+              {
+                "key": "fileFieldId",
+                "value": "fld_photo_file"
+              },
+              {
+                "key": "sourceFieldId",
+                "value": "fld_photo_source"
+              },
+              {
+                "key": "captionFieldId",
+                "value": "fld_photo_caption"
+              },
+              {
+                "key": "orderFieldId",
+                "value": "fld_photo_position"
+              },
+              {
+                "key": "sources",
+                "value": [
+                  "camera",
+                  "galerie"
+                ]
+              },
+              {
+                "key": "maxItems",
+                "value": 8
+              },
+              {
+                "key": "maxSizeKb",
+                "value": 4096
+              },
+              {
+                "key": "processingSlotId",
+                "value": "slot_prepare_photo"
+              },
+              {
+                "key": "validationRuleId",
+                "value": "rule_photo_valid"
+              }
+            ]
+          },
+          {
+            "id": "blk_new_photo_preview",
+            "blockType": "thumbnail_grid",
+            "entityId": "ent_request_photo",
+            "props": [
+              {
+                "key": "sourceBlockId",
+                "value": "blk_new_photo_picker"
+              },
+              {
+                "key": "columns",
+                "value": 4
+              },
+              {
+                "key": "reorderable",
+                "value": true
+              },
+              {
+                "key": "deletable",
+                "value": true
+              },
+              {
+                "key": "orderFieldId",
+                "value": "fld_photo_position"
+              }
+            ]
+          },
+          {
+            "id": "blk_new_privacy_note",
+            "blockType": "notice",
+            "props": [
+              {
+                "key": "tone",
+                "value": "neutral"
+              },
+              {
+                "key": "message",
+                "value": "Devis et paiement sont établis hors de l'application, directement avec le plombier."
+              }
+            ]
+          },
+          {
+            "id": "blk_new_continue_button",
+            "blockType": "button",
+            "props": [
+              {
+                "key": "label",
+                "value": "Continuer vers l'adresse"
+              },
+              {
+                "key": "style",
+                "value": "primary"
+              },
+              {
+                "key": "fullWidth",
+                "value": true
+              },
+              {
+                "key": "enabledWhenFormValid",
+                "value": true
+              },
+              {
+                "key": "formBlockId",
+                "value": "blk_new_form"
+              },
+              {
+                "key": "targetRouteId",
+                "value": "nav_location"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "scr_location",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Adresse et position"
+          }
+        ],
+        "blocks": [
+          {
+            "id": "blk_loc_stepper",
+            "blockType": "step_indicator",
+            "props": [
+              {
+                "key": "steps",
+                "value": [
+                  "Problème",
+                  "Adresse",
+                  "Envoi"
+                ]
+              },
+              {
+                "key": "currentStep",
+                "value": 2
+              },
+              {
+                "key": "totalSteps",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "id": "blk_loc_address_form",
+            "blockType": "form",
+            "entityId": "ent_service_request",
+            "props": [
+              {
+                "key": "layout",
+                "value": "vertical"
+              },
+              {
+                "key": "fieldIds",
+                "value": [
+                  "fld_req_address_line",
+                  "fld_req_postal_code",
+                  "fld_req_city",
+                  "fld_req_access_notes"
+                ]
+              },
+              {
+                "key": "labels",
+                "value": [
+                  "Adresse",
+                  "Code postal",
+                  "Ville",
+                  "Accès (étage, code, interphone)"
+                ]
+              },
+              {
+                "key": "postalCodePattern",
+                "value": "^[0-9]{5}$"
+              },
+              {
+                "key": "validationRuleId",
+                "value": "rule_request_completeness"
+              }
+            ]
+          },
+          {
+            "id": "blk_loc_consent_toggle",
+            "blockType": "toggle",
+            "entityId": "ent_service_request",
+            "props": [
+              {
+                "key": "label",
+                "value": "Partager ma position GPS précise"
+              },
+              {
+                "key": "helpText",
+                "value": "Utilisée uniquement pour localiser l'intervention. Vous pouvez refuser et saisir l'adresse seule."
+              },
+              {
+                "key": "fieldId",
+                "value": "fld_req_location_consent"
+              },
+              {
+                "key": "defaultValue",
+                "value": false
+              },
+              {
+                "key": "validationRuleId",
+                "value": "rule_request_location_consent"
+              }
+            ]
+          },
+          {
+            "id": "blk_loc_locate_button",
+            "blockType": "button",
+            "entityId": "ent_service_request",
+            "props": [
+              {
+                "key": "label",
+                "value": "Utiliser ma position actuelle"
+              },
+              {
+                "key": "style",
+                "value": "secondary"
+              },
+              {
+                "key": "icon",
+                "value": "my_location"
+              },
+              {
+                "key": "fullWidth",
+                "value": true
+              },
+              {
+                "key": "requiresCapability",
+                "value": "geolocation"
+              },
+              {
+                "key": "gatedByBlockId",
+                "value": "blk_loc_consent_toggle"
+              },
+              {
+                "key": "latitudeFieldId",
+                "value": "fld_req_latitude"
+              },
+              {
+                "key": "longitudeFieldId",
+                "value": "fld_req_longitude"
+              }
+            ]
+          },
+          {
+            "id": "blk_loc_map",
+            "blockType": "map",
+            "entityId": "ent_service_request",
+            "props": [
+              {
+                "key": "latitudeFieldId",
+                "value": "fld_req_latitude"
+              },
+              {
+                "key": "longitudeFieldId",
+                "value": "fld_req_longitude"
+              },
+              {
+                "key": "requiresCapability",
+                "value": "maps"
+              },
+              {
+                "key": "draggableMarker",
+                "value": true
+              },
+              {
+                "key": "initialZoom",
+                "value": 15
+              },
+              {
+                "key": "height",
+                "value": 220
+              },
+              {
+                "key": "visibleWhenFieldId",
+                "value": "fld_req_location_consent"
+              }
+            ]
+          },
+          {
+            "id": "blk_loc_address_summary",
+            "blockType": "summary_card",
+            "entityId": "ent_service_request",
+            "props": [
+              {
+                "key": "title",
+                "value": "Adresse d'intervention"
+              },
+              {
+                "key": "slotId",
+                "value": "slot_format_full_address"
+              },
+              {
+                "key": "outputKeys",
+                "value": [
+                  "formattedAddress",
+                  "hasPreciseLocation"
+                ]
+              },
+              {
+                "key": "emptyText",
+                "value": "Complétez l'adresse ci-dessus"
+              }
+            ]
+          },
+          {
+            "id": "blk_loc_submit_button",
+            "blockType": "button",
+            "entityId": "ent_service_request",
+            "props": [
+              {
+                "key": "label",
+                "value": "Envoyer la demande"
+              },
+              {
+                "key": "style",
+                "value": "primary"
+              },
+              {
+                "key": "fullWidth",
+                "value": true
+              },
+              {
+                "key": "referenceSlotId",
+                "value": "slot_generate_request_reference"
+              },
+              {
+                "key": "statusFieldId",
+                "value": "fld_req_status"
+              },
+              {
+                "key": "statusValueOnSubmit",
+                "value": "envoyee"
+              },
+              {
+                "key": "confirmationMessage",
+                "value": "Demande envoyée. Le plombier vous recontacte pour le devis."
+              },
+              {
+                "key": "targetRouteId",
+                "value": "nav_request_detail"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "scr_request_detail",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Suivi de la demande"
+          }
+        ],
+        "blocks": [
+          {
+            "id": "blk_detail_header",
+            "blockType": "detail_header",
+            "entityId": "ent_service_request",
+            "props": [
+              {
+                "key": "titleFieldId",
+                "value": "fld_req_reference"
+              },
+              {
+                "key": "subtitleFieldId",
+                "value": "fld_req_category"
+              },
+              {
+                "key": "badgeFieldId",
+                "value": "fld_req_status"
+              },
+              {
+                "key": "dateFieldId",
+                "value": "fld_req_created_at"
+              },
+              {
+                "key": "authorizationRuleId",
+                "value": "rule_request_owner_access"
+              }
+            ]
+          },
+          {
+            "id": "blk_detail_timeline",
+            "blockType": "timeline",
+            "entityId": "ent_status_event",
+            "props": [
+              {
+                "key": "slotId",
+                "value": "slot_build_status_timeline"
+              },
+              {
+                "key": "statusFieldId",
+                "value": "fld_event_status"
+              },
+              {
+                "key": "noteFieldId",
+                "value": "fld_event_note"
+              },
+              {
+                "key": "authorFieldId",
+                "value": "fld_event_author"
+              },
+              {
+                "key": "dateFieldId",
+                "value": "fld_event_occurred_at"
+              },
+              {
+                "key": "sortDirection",
+                "value": "asc"
+              },
+              {
+                "key": "showProgressBar",
+                "value": true
+              },
+              {
+                "key": "relationId",
+                "value": "rel_request_events"
+              }
+            ]
+          },
+          {
+            "id": "blk_detail_problem_card",
+            "blockType": "detail_card",
+            "entityId": "ent_service_request",
+            "props": [
+              {
+                "key": "title",
+                "value": "Problème signalé"
+              },
+              {
+                "key": "fieldIds",
+                "value": [
+                  "fld_req_description",
+                  "fld_req_urgency",
+                  "fld_req_preferred_date"
+                ]
+              },
+              {
+                "key": "labels",
+                "value": [
+                  "Description",
+                  "Urgence",
+                  "Date souhaitée"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "blk_detail_photos",
+            "blockType": "gallery",
+            "entityId": "ent_request_photo",
+            "props": [
+              {
+                "key": "title",
+                "value": "Photos transmises"
+              },
+              {
+                "key": "fileFieldId",
+                "value": "fld_photo_file"
+              },
+              {
+                "key": "captionFieldId",
+                "value": "fld_photo_caption"
+              },
+              {
+                "key": "orderFieldId",
+                "value": "fld_photo_position"
+              },
+              {
+                "key": "relationId",
+                "value": "rel_request_photos"
+              },
+              {
+                "key": "columns",
+                "value": 3
+              },
+              {
+                "key": "fullscreenViewer",
+                "value": true
+              }
+            ]
+          },
+          {
+            "id": "blk_detail_address_card",
+            "blockType": "summary_card",
+            "entityId": "ent_service_request",
+            "props": [
+              {
+                "key": "title",
+                "value": "Lieu d'intervention"
+              },
+              {
+                "key": "slotId",
+                "value": "slot_format_full_address"
+              },
+              {
+                "key": "extraFieldIds",
+                "value": [
+                  "fld_req_access_notes",
+                  "fld_req_contact_name",
+                  "fld_req_contact_phone"
+                ]
+              },
+              {
+                "key": "showOpenInMaps",
+                "value": true
+              },
+              {
+                "key": "requiresCapability",
+                "value": "maps"
+              }
+            ]
+          },
+          {
+            "id": "blk_detail_share_button",
+            "blockType": "button",
+            "entityId": "ent_service_request",
+            "props": [
+              {
+                "key": "label",
+                "value": "Partager le suivi"
+              },
+              {
+                "key": "style",
+                "value": "secondary"
+              },
+              {
+                "key": "icon",
+                "value": "share"
+              },
+              {
+                "key": "requiresCapability",
+                "value": "share"
+              },
+              {
+                "key": "shareFieldIds",
+                "value": [
+                  "fld_req_reference",
+                  "fld_req_status",
+                  "fld_req_address_line"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "blk_detail_offapp_notice",
+            "blockType": "notice",
+            "props": [
+              {
+                "key": "tone",
+                "value": "info"
+              },
+              {
+                "key": "message",
+                "value": "Le devis et le règlement sont gérés hors application, directement avec votre plombier."
+              }
+            ]
+          },
+          {
+            "id": "blk_detail_cancel_button",
+            "blockType": "button",
+            "entityId": "ent_service_request",
+            "props": [
+              {
+                "key": "label",
+                "value": "Annuler la demande"
+              },
+              {
+                "key": "style",
+                "value": "destructive"
+              },
+              {
+                "key": "fullWidth",
+                "value": true
+              },
+              {
+                "key": "confirmTitle",
+                "value": "Annuler cette demande ?"
+              },
+              {
+                "key": "confirmMessage",
+                "value": "Le plombier sera informé de l'annulation. Cette action est définitive."
+              },
+              {
+                "key": "statusFieldId",
+                "value": "fld_req_status"
+              },
+              {
+                "key": "statusValueOnConfirm",
+                "value": "annulee"
+              },
+              {
+                "key": "hiddenForStatuses",
+                "value": [
+                  "terminee",
+                  "annulee"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "navigation": {
+      "entryScreenId": "scr_home",
+      "routes": [
+        {
+          "id": "nav_home",
+          "screenId": "scr_home",
+          "title": [
+            {
+              "locale": "fr-FR",
+              "text": "Accueil"
+            }
+          ]
+        },
+        {
+          "id": "nav_new_request",
+          "screenId": "scr_new_request",
+          "title": [
+            {
+              "locale": "fr-FR",
+              "text": "Nouvelle demande"
+            }
+          ]
+        },
+        {
+          "id": "nav_location",
+          "screenId": "scr_location",
+          "title": [
+            {
+              "locale": "fr-FR",
+              "text": "Adresse et position"
+            }
+          ]
+        },
+        {
+          "id": "nav_request_detail",
+          "screenId": "scr_request_detail",
+          "title": [
+            {
+              "locale": "fr-FR",
+              "text": "Suivi de la demande"
+            }
+          ]
+        }
+      ]
+    },
+    "entities": [
+      {
+        "id": "ent_service_request",
+        "name": "service_request",
+        "fields": [
+          {
+            "id": "fld_req_reference",
+            "name": "reference",
+            "type": "string",
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "fld_req_category",
+            "name": "category",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "fuite",
+              "engorgement",
+              "chauffe_eau",
+              "robinetterie",
+              "wc_sanitaires",
+              "installation",
+              "autre"
+            ]
+          },
+          {
+            "id": "fld_req_description",
+            "name": "description",
+            "type": "text",
+            "required": true
+          },
+          {
+            "id": "fld_req_urgency",
+            "name": "urgency",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "normal",
+              "rapide",
+              "urgence"
+            ]
+          },
+          {
+            "id": "fld_req_status",
+            "name": "status",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "brouillon",
+              "envoyee",
+              "acceptee",
+              "planifiee",
+              "en_cours",
+              "terminee",
+              "annulee"
+            ]
+          },
+          {
+            "id": "fld_req_address_line",
+            "name": "address_line",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_req_postal_code",
+            "name": "postal_code",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_req_city",
+            "name": "city",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_req_access_notes",
+            "name": "access_notes",
+            "type": "text",
+            "required": false
+          },
+          {
+            "id": "fld_req_latitude",
+            "name": "latitude",
+            "type": "decimal",
+            "required": false
+          },
+          {
+            "id": "fld_req_longitude",
+            "name": "longitude",
+            "type": "decimal",
+            "required": false
+          },
+          {
+            "id": "fld_req_location_consent",
+            "name": "location_consent",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "id": "fld_req_preferred_date",
+            "name": "preferred_date",
+            "type": "date",
+            "required": false
+          },
+          {
+            "id": "fld_req_contact_name",
+            "name": "contact_name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_req_contact_phone",
+            "name": "contact_phone",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_req_created_at",
+            "name": "created_at",
+            "type": "datetime",
+            "required": true
+          },
+          {
+            "id": "fld_req_updated_at",
+            "name": "updated_at",
+            "type": "datetime",
+            "required": false
+          }
+        ]
+      },
+      {
+        "id": "ent_request_photo",
+        "name": "request_photo",
+        "fields": [
+          {
+            "id": "fld_photo_request",
+            "name": "service_request",
+            "type": "reference",
+            "required": true,
+            "referencesEntityId": "ent_service_request"
+          },
+          {
+            "id": "fld_photo_file",
+            "name": "file",
+            "type": "asset",
+            "required": true
+          },
+          {
+            "id": "fld_photo_caption",
+            "name": "caption",
+            "type": "string",
+            "required": false
+          },
+          {
+            "id": "fld_photo_source",
+            "name": "source",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "camera",
+              "galerie"
+            ]
+          },
+          {
+            "id": "fld_photo_captured_at",
+            "name": "captured_at",
+            "type": "datetime",
+            "required": false
+          },
+          {
+            "id": "fld_photo_position",
+            "name": "position",
+            "type": "number",
+            "required": true
+          }
+        ]
+      },
+      {
+        "id": "ent_status_event",
+        "name": "status_event",
+        "fields": [
+          {
+            "id": "fld_event_request",
+            "name": "service_request",
+            "type": "reference",
+            "required": true,
+            "referencesEntityId": "ent_service_request"
+          },
+          {
+            "id": "fld_event_status",
+            "name": "status",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "brouillon",
+              "envoyee",
+              "acceptee",
+              "planifiee",
+              "en_cours",
+              "terminee",
+              "annulee"
+            ]
+          },
+          {
+            "id": "fld_event_note",
+            "name": "note",
+            "type": "text",
+            "required": false
+          },
+          {
+            "id": "fld_event_author",
+            "name": "author",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "client",
+              "plombier",
+              "systeme"
+            ]
+          },
+          {
+            "id": "fld_event_occurred_at",
+            "name": "occurred_at",
+            "type": "datetime",
+            "required": true
+          }
+        ]
+      }
+    ],
+    "relations": [
+      {
+        "id": "rel_request_photos",
+        "fromEntityId": "ent_service_request",
+        "toEntityId": "ent_request_photo",
+        "kind": "one_to_many"
+      },
+      {
+        "id": "rel_request_events",
+        "fromEntityId": "ent_service_request",
+        "toEntityId": "ent_status_event",
+        "kind": "one_to_many"
+      }
+    ],
+    "datasets": [],
+    "actions": [
+      {
+        "id": "act_app_start_analytics",
+        "name": "Initialiser la mesure d'audience au démarrage",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "app_start"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "analytics",
+          "method": "trackEvent",
+          "params": [
+            {
+              "key": "event",
+              "value": "app_start"
+            },
+            {
+              "key": "appVersionTracked",
+              "value": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_home_sign_in",
+        "name": "Authentifier le client depuis l'en-tête d'accueil",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_home_header"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "auth",
+          "method": "signIn",
+          "params": [
+            {
+              "key": "methods",
+              "value": [
+                "email_otp",
+                "phone_otp"
+              ]
+            },
+            {
+              "key": "allowAccountDeletion",
+              "value": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_home_sync_offline",
+        "name": "Synchroniser les demandes en attente à l'ouverture de l'accueil",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "screen_open",
+          "screenId": "scr_home"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "offline_storage",
+          "method": "syncPending",
+          "params": [
+            {
+              "key": "entities",
+              "value": [
+                "ent_service_request",
+                "ent_request_photo",
+                "ent_status_event"
+              ]
+            },
+            {
+              "key": "conflictPolicy",
+              "value": "server_wins"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_home_new_request",
+        "name": "Ouvrir le formulaire de nouvelle demande",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_home_new_request_button"
+        },
+        "effect": {
+          "kind": "navigate",
+          "screenId": "scr_new_request"
+        }
+      },
+      {
+        "id": "act_home_urgent_request",
+        "name": "Créer une demande urgente depuis la bannière",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_home_urgency_banner"
+        },
+        "effect": {
+          "kind": "navigate",
+          "screenId": "scr_new_request"
+        }
+      },
+      {
+        "id": "act_home_open_request",
+        "name": "Ouvrir le suivi d'une demande de la liste",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_home_request_list"
+        },
+        "effect": {
+          "kind": "navigate",
+          "screenId": "scr_request_detail"
+        }
+      },
+      {
+        "id": "act_new_capture_photo",
+        "name": "Prendre une photo du problème",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_new_photo_picker"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "camera",
+          "method": "capturePhoto",
+          "params": [
+            {
+              "key": "allowGallery",
+              "value": true
+            },
+            {
+              "key": "maxItems",
+              "value": 8
+            },
+            {
+              "key": "quality",
+              "value": "high"
+            },
+            {
+              "key": "audioEnabled",
+              "value": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_new_prepare_photo",
+        "name": "Optimiser les photos avant envoi",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_new_photo_preview"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_prepare_photo"
+        }
+      },
+      {
+        "id": "act_photo_upload",
+        "name": "Téléverser la photo rattachée à la demande",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_request_photo",
+          "event": "created"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "media_upload",
+          "method": "uploadAsset",
+          "params": [
+            {
+              "key": "fieldId",
+              "value": "fld_photo_file"
+            },
+            {
+              "key": "maxSizeKb",
+              "value": 4096
+            },
+            {
+              "key": "acceptedTypes",
+              "value": [
+                "image/jpeg",
+                "image/png",
+                "image/heic"
+              ]
+            },
+            {
+              "key": "retryOnReconnect",
+              "value": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_new_continue_location",
+        "name": "Passer à l'étape adresse et position",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_new_continue_button"
+        },
+        "effect": {
+          "kind": "navigate",
+          "screenId": "scr_location"
+        }
+      },
+      {
+        "id": "act_location_generate_reference",
+        "name": "Générer la référence de la demande",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "screen_open",
+          "screenId": "scr_location"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_generate_request_reference"
+        }
+      },
+      {
+        "id": "act_location_use_gps",
+        "name": "Récupérer la position GPS du client",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_loc_locate_button"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "geolocation",
+          "method": "getCurrentPosition",
+          "params": [
+            {
+              "key": "accuracy",
+              "value": "high"
+            },
+            {
+              "key": "timeoutMs",
+              "value": 15000
+            },
+            {
+              "key": "requiresConsent",
+              "value": true
+            },
+            {
+              "key": "latitudeFieldId",
+              "value": "fld_req_latitude"
+            },
+            {
+              "key": "longitudeFieldId",
+              "value": "fld_req_longitude"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_location_show_map",
+        "name": "Afficher le point d'intervention sur la carte",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_loc_map"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "maps",
+          "method": "showMarker",
+          "params": [
+            {
+              "key": "latitudeFieldId",
+              "value": "fld_req_latitude"
+            },
+            {
+              "key": "longitudeFieldId",
+              "value": "fld_req_longitude"
+            },
+            {
+              "key": "zoom",
+              "value": 15
+            },
+            {
+              "key": "draggableMarker",
+              "value": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_location_format_address",
+        "name": "Composer l'adresse complète d'intervention",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_loc_address_summary"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_format_full_address"
+        }
+      },
+      {
+        "id": "act_location_submit_request",
+        "name": "Envoyer la demande d'intervention",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_loc_submit_button"
+        },
+        "effect": {
+          "kind": "mutation",
+          "entityId": "ent_service_request",
+          "operation": "create"
+        }
+      },
+      {
+        "id": "act_request_created_subscribe",
+        "name": "S'abonner aux notifications de suivi de la demande",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_service_request",
+          "event": "created"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "push_notifications",
+          "method": "subscribeTopic",
+          "params": [
+            {
+              "key": "topicPrefix",
+              "value": "demande"
+            },
+            {
+              "key": "keyFieldId",
+              "value": "fld_req_reference"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_request_updated_notify",
+        "name": "Notifier le client du changement de statut",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_service_request",
+          "event": "updated"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "push_notifications",
+          "method": "showNotification",
+          "params": [
+            {
+              "key": "title",
+              "value": "Mise à jour de votre demande"
+            },
+            {
+              "key": "bodyFieldId",
+              "value": "fld_req_status"
+            },
+            {
+              "key": "channel",
+              "value": "suivi_intervention"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_status_event_analytics",
+        "name": "Mesurer l'avancement des interventions",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_status_event",
+          "event": "created"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "analytics",
+          "method": "trackEvent",
+          "params": [
+            {
+              "key": "event",
+              "value": "statut_intervention_change"
+            },
+            {
+              "key": "propertyFieldId",
+              "value": "fld_event_status"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_detail_build_timeline",
+        "name": "Construire la frise de suivi de la demande",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "screen_open",
+          "screenId": "scr_request_detail"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_build_status_timeline"
+        }
+      },
+      {
+        "id": "act_detail_open_maps",
+        "name": "Ouvrir le lieu d'intervention dans l'application de cartes",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_detail_address_card"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "maps",
+          "method": "openExternalMap",
+          "params": [
+            {
+              "key": "latitudeFieldId",
+              "value": "fld_req_latitude"
+            },
+            {
+              "key": "longitudeFieldId",
+              "value": "fld_req_longitude"
+            },
+            {
+              "key": "fallbackAddressFieldId",
+              "value": "fld_req_address_line"
+            },
+            {
+              "key": "mode",
+              "value": "driving"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_detail_share_status",
+        "name": "Partager le suivi de la demande",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_detail_share_button"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "share",
+          "method": "shareText",
+          "params": [
+            {
+              "key": "subject",
+              "value": "Suivi de mon intervention de plomberie"
+            },
+            {
+              "key": "includeFieldIds",
+              "value": [
+                "fld_req_reference",
+                "fld_req_status",
+                "fld_req_address_line"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_detail_cancel_request",
+        "name": "Annuler la demande d'intervention",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_detail_cancel_button"
+        },
+        "effect": {
+          "kind": "mutation",
+          "entityId": "ent_service_request",
+          "operation": "update"
+        }
+      }
+    ],
+    "rules": [
+      {
+        "id": "rule_request_completeness",
+        "description": "Une demande envoyée doit comporter une description, une catégorie, une adresse complète et un contact joignable.",
+        "kind": "validation",
+        "entityId": "ent_service_request",
+        "assertions": [
+          {
+            "fieldId": "fld_req_description",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_req_category",
+            "operator": "in",
+            "value": [
+              "fuite",
+              "engorgement",
+              "chauffe_eau",
+              "robinetterie",
+              "wc_sanitaires",
+              "installation",
+              "autre"
+            ]
+          },
+          {
+            "fieldId": "fld_req_address_line",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_req_postal_code",
+            "operator": "matches",
+            "value": "^[0-9]{5}$"
+          },
+          {
+            "fieldId": "fld_req_city",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_req_contact_name",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_req_contact_phone",
+            "operator": "matches",
+            "value": "^(\\+33|0)[1-9][0-9]{8}$"
+          }
+        ]
+      },
+      {
+        "id": "rule_request_location_consent",
+        "description": "La position GPS n'est enregistrée qu'après consentement explicite du client.",
+        "kind": "validation",
+        "entityId": "ent_service_request",
+        "assertions": [
+          {
+            "fieldId": "fld_req_location_consent",
+            "operator": "eq",
+            "value": true
+          },
+          {
+            "fieldId": "fld_req_latitude",
+            "operator": "gte",
+            "value": -90
+          },
+          {
+            "fieldId": "fld_req_longitude",
+            "operator": "lte",
+            "value": 180
+          }
+        ]
+      },
+      {
+        "id": "rule_request_owner_access",
+        "description": "Le client authentifié n'accède qu'à ses propres demandes, hors demandes annulées et purgées.",
+        "kind": "authorization",
+        "entityId": "ent_service_request",
+        "assertions": [
+          {
+            "fieldId": "fld_req_reference",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_req_status",
+            "operator": "neq",
+            "value": "annulee"
+          }
+        ]
+      },
+      {
+        "id": "rule_photo_valid",
+        "description": "Chaque photo doit être rattachée à une demande, provenir de la caméra ou de la galerie et être correctement ordonnée.",
+        "kind": "validation",
+        "entityId": "ent_request_photo",
+        "assertions": [
+          {
+            "fieldId": "fld_photo_file",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_photo_request",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_photo_source",
+            "operator": "in",
+            "value": [
+              "camera",
+              "galerie"
+            ]
+          },
+          {
+            "fieldId": "fld_photo_position",
+            "operator": "gte",
+            "value": 1
+          },
+          {
+            "fieldId": "fld_photo_position",
+            "operator": "lte",
+            "value": 8
+          }
+        ]
+      },
+      {
+        "id": "rule_status_event_valid",
+        "description": "Chaque évènement de suivi porte un statut connu, un auteur et une date.",
+        "kind": "validation",
+        "entityId": "ent_status_event",
+        "assertions": [
+          {
+            "fieldId": "fld_event_status",
+            "operator": "in",
+            "value": [
+              "brouillon",
+              "envoyee",
+              "acceptee",
+              "planifiee",
+              "en_cours",
+              "terminee",
+              "annulee"
+            ]
+          },
+          {
+            "fieldId": "fld_event_author",
+            "operator": "in",
+            "value": [
+              "client",
+              "plombier",
+              "systeme"
+            ]
+          },
+          {
+            "fieldId": "fld_event_occurred_at",
+            "operator": "required"
+          }
+        ]
+      }
+    ],
+    "slots": [
+      {
+        "id": "slot_format_full_address",
+        "description": "Compose une adresse postale française lisible à partir des champs saisis et des coordonnées éventuelles.",
+        "inputs": [
+          {
+            "name": "addressLine",
+            "type": "string"
+          },
+          {
+            "name": "postalCode",
+            "type": "string"
+          },
+          {
+            "name": "city",
+            "type": "string"
+          },
+          {
+            "name": "latitude",
+            "type": "decimal"
+          },
+          {
+            "name": "longitude",
+            "type": "decimal"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "formattedAddress",
+            "type": "string"
+          },
+          {
+            "name": "hasPreciseLocation",
+            "type": "boolean"
+          }
+        ],
+        "allowedImports": []
+      },
+      {
+        "id": "slot_build_status_timeline",
+        "description": "Construit la frise de suivi (étapes franchies, étape courante, progression) à partir des évènements de statut.",
+        "inputs": [
+          {
+            "name": "statusEvents",
+            "type": "json"
+          },
+          {
+            "name": "currentStatus",
+            "type": "enum"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "timeline",
+            "type": "json"
+          },
+          {
+            "name": "progressRatio",
+            "type": "decimal"
+          },
+          {
+            "name": "currentLabel",
+            "type": "string"
+          }
+        ],
+        "allowedImports": []
+      },
+      {
+        "id": "slot_prepare_photo",
+        "description": "Redimensionne et compresse une photo du problème avant envoi, et retire les métadonnées de localisation si le consentement est absent.",
+        "inputs": [
+          {
+            "name": "sourceAsset",
+            "type": "asset"
+          },
+          {
+            "name": "maxWidth",
+            "type": "number"
+          },
+          {
+            "name": "stripExifLocation",
+            "type": "boolean"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "optimizedAsset",
+            "type": "asset"
+          },
+          {
+            "name": "sizeKb",
+            "type": "number"
+          }
+        ],
+        "allowedImports": []
+      },
+      {
+        "id": "slot_generate_request_reference",
+        "description": "Génère une référence lisible et unique de demande (ex. PLB-2405-0137) côté client avant envoi.",
+        "inputs": [
+          {
+            "name": "createdAt",
+            "type": "datetime"
+          },
+          {
+            "name": "sequence",
+            "type": "number"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "reference",
+            "type": "string"
+          }
+        ],
+        "allowedImports": [
+          "dart:math"
+        ]
+      }
+    ],
+    "capabilities": [
+      {
+        "capability": "auth",
+        "config": [
+          {
+            "key": "providers",
+            "value": [
+              "email_otp",
+              "phone_otp"
+            ]
+          },
+          {
+            "key": "sessionDurationDays",
+            "value": 90
+          },
+          {
+            "key": "accountDeletionEnabled",
+            "value": true
+          }
+        ]
+      },
+      {
+        "capability": "camera",
+        "config": [
+          {
+            "key": "defaultFacing",
+            "value": "back"
+          },
+          {
+            "key": "videoEnabled",
+            "value": false
+          },
+          {
+            "key": "maxPhotoWidth",
+            "value": 1600
+          }
+        ]
+      },
+      {
+        "capability": "media_upload",
+        "config": [
+          {
+            "key": "acceptedTypes",
+            "value": [
+              "image/jpeg",
+              "image/png",
+              "image/heic"
+            ]
+          },
+          {
+            "key": "maxSizeKb",
+            "value": 4096
+          },
+          {
+            "key": "maxItemsPerRequest",
+            "value": 8
+          },
+          {
+            "key": "stripExifLocationWithoutConsent",
+            "value": true
+          }
+        ]
+      },
+      {
+        "capability": "geolocation",
+        "config": [
+          {
+            "key": "accuracy",
+            "value": "high"
+          },
+          {
+            "key": "backgroundUpdates",
+            "value": false
+          },
+          {
+            "key": "requiresExplicitConsent",
+            "value": true
+          }
+        ]
+      },
+      {
+        "capability": "maps",
+        "config": [
+          {
+            "key": "provider",
+            "value": "platform_default"
+          },
+          {
+            "key": "defaultZoom",
+            "value": 15
+          },
+          {
+            "key": "allowExternalNavigation",
+            "value": true
+          }
+        ]
+      },
+      {
+        "capability": "offline_storage",
+        "config": [
+          {
+            "key": "entities",
+            "value": [
+              "ent_service_request",
+              "ent_request_photo",
+              "ent_status_event"
+            ]
+          },
+          {
+            "key": "encrypted",
+            "value": true
+          },
+          {
+            "key": "maxCacheMb",
+            "value": 150
+          }
+        ]
+      },
+      {
+        "capability": "push_notifications",
+        "config": [
+          {
+            "key": "channels",
+            "value": [
+              "suivi_intervention",
+              "rappel_rendez_vous"
+            ]
+          },
+          {
+            "key": "defaultChannel",
+            "value": "suivi_intervention"
+          },
+          {
+            "key": "promptOnFirstRequest",
+            "value": true
+          }
+        ]
+      },
+      {
+        "capability": "share",
+        "config": [
+          {
+            "key": "targets",
+            "value": [
+              "system_sheet"
+            ]
+          },
+          {
+            "key": "includeAttachments",
+            "value": false
+          }
+        ]
+      },
+      {
+        "capability": "analytics",
+        "config": [
+          {
+            "key": "anonymizeIp",
+            "value": true
+          },
+          {
+            "key": "collectsUserContent",
+            "value": false
+          },
+          {
+            "key": "consentRequired",
+            "value": true
+          }
+        ]
+      }
+    ],
+    "permissions": [
+      {
+        "platform": "ios",
+        "permission": "NSCameraUsageDescription",
+        "reason": [
+          {
+            "locale": "fr-FR",
+            "text": "L'accès à l'appareil photo permet de photographier la fuite ou l'installation concernée afin de préciser votre demande d'intervention."
+          }
+        ],
+        "requiredByCapability": "camera"
+      },
+      {
+        "platform": "ios",
+        "permission": "NSMicrophoneUsageDescription",
+        "reason": [
+          {
+            "locale": "fr-FR",
+            "text": "Le microphone n'est sollicité que si vous enregistrez une séquence vidéo du problème depuis l'appareil photo."
+          }
+        ],
+        "requiredByCapability": "camera"
+      },
+      {
+        "platform": "android",
+        "permission": "android.permission.CAMERA",
+        "reason": [
+          {
+            "locale": "fr-FR",
+            "text": "L'accès à l'appareil photo permet de photographier le problème de plomberie à joindre à votre demande."
+          }
+        ],
+        "requiredByCapability": "camera"
+      },
+      {
+        "platform": "android",
+        "permission": "android.permission.RECORD_AUDIO",
+        "reason": [
+          {
+            "locale": "fr-FR",
+            "text": "L'accès au micro n'est utilisé que pour la capture vidéo optionnelle du problème depuis l'appareil photo."
+          }
+        ],
+        "requiredByCapability": "camera"
+      },
+      {
+        "platform": "ios",
+        "permission": "NSPhotoLibraryUsageDescription",
+        "reason": [
+          {
+            "locale": "fr-FR",
+            "text": "L'accès à vos photos permet de joindre des images déjà prises du dégât ou de l'installation à votre demande."
+          }
+        ],
+        "requiredByCapability": "media_upload"
+      },
+      {
+        "platform": "android",
+        "permission": "android.permission.READ_MEDIA_IMAGES",
+        "reason": [
+          {
+            "locale": "fr-FR",
+            "text": "L'accès à vos images permet de sélectionner des photos existantes du problème à transmettre au plombier."
+          }
+        ],
+        "requiredByCapability": "media_upload"
+      },
+      {
+        "platform": "ios",
+        "permission": "NSLocationWhenInUseUsageDescription",
+        "reason": [
+          {
+            "locale": "fr-FR",
+            "text": "Votre position est utilisée, avec votre accord, pour localiser précisément le lieu de l'intervention."
+          }
+        ],
+        "requiredByCapability": "geolocation"
+      },
+      {
+        "platform": "android",
+        "permission": "android.permission.ACCESS_FINE_LOCATION",
+        "reason": [
+          {
+            "locale": "fr-FR",
+            "text": "Votre position précise est utilisée, après consentement, pour indiquer au plombier l'adresse exacte de l'intervention."
+          }
+        ],
+        "requiredByCapability": "geolocation"
+      },
+      {
+        "platform": "android",
+        "permission": "android.permission.POST_NOTIFICATIONS",
+        "reason": [
+          {
+            "locale": "fr-FR",
+            "text": "Les notifications vous informent de l'évolution du statut de votre demande et du passage du plombier."
+          }
+        ],
+        "requiredByCapability": "push_notifications"
+      }
+    ],
+    "design": {
+      "theme": "plumbing_blue",
+      "tokensVersion": "1.0.0",
+      "overrides": [
+        {
+          "key": "color.primary",
+          "value": "#1663A8"
+        },
+        {
+          "key": "color.accent",
+          "value": "#F2A31B"
+        },
+        {
+          "key": "radius.card",
+          "value": 12
+        },
+        {
+          "key": "font.scale",
+          "value": 1.05
+        }
+      ]
+    },
+    "integrations": [
+      {
+        "id": "intg_backend_api",
+        "providerClass": "rest_api",
+        "capability": "offline_storage",
+        "config": [
+          {
+            "key": "baseUrl",
+            "value": "https://api.plomberie-express.app"
+          },
+          {
+            "key": "authScheme",
+            "value": "bearer_session"
+          },
+          {
+            "key": "timeoutMs",
+            "value": 15000
+          },
+          {
+            "key": "retryPolicy",
+            "value": "exponential_backoff"
+          },
+          {
+            "key": "syncEndpoint",
+            "value": "/v1/sync"
+          }
+        ]
+      },
+      {
+        "id": "intg_auth_otp",
+        "providerClass": "managed_auth",
+        "capability": "auth",
+        "config": [
+          {
+            "key": "methods",
+            "value": [
+              "email_otp",
+              "phone_otp"
+            ]
+          },
+          {
+            "key": "otpLength",
+            "value": 6
+          },
+          {
+            "key": "otpTtlSeconds",
+            "value": 300
+          },
+          {
+            "key": "accountDeletionEndpoint",
+            "value": "/v1/account/delete"
+          },
+          {
+            "key": "sessionStorage",
+            "value": "platform_secure_storage"
+          }
+        ]
+      },
+      {
+        "id": "intg_push_service",
+        "providerClass": "push_gateway",
+        "capability": "push_notifications",
+        "config": [
+          {
+            "key": "deviceRegistrationEndpoint",
+            "value": "/v1/devices"
+          },
+          {
+            "key": "topicPrefix",
+            "value": "demande"
+          },
+          {
+            "key": "channels",
+            "value": [
+              "suivi_intervention",
+              "rappel_rendez_vous"
+            ]
+          },
+          {
+            "key": "gatewayMode",
+            "value": "server_side_only"
+          }
+        ]
+      },
+      {
+        "id": "intg_media_storage",
+        "providerClass": "object_storage",
+        "capability": "media_upload",
+        "config": [
+          {
+            "key": "uploadUrlEndpoint",
+            "value": "/v1/uploads/sign"
+          },
+          {
+            "key": "acceptedTypes",
+            "value": [
+              "image/jpeg",
+              "image/png",
+              "image/heic"
+            ]
+          },
+          {
+            "key": "maxSizeKb",
+            "value": 4096
+          },
+          {
+            "key": "resumableUpload",
+            "value": true
+          },
+          {
+            "key": "stripExifLocationWithoutConsent",
+            "value": true
+          }
+        ]
+      },
+      {
+        "id": "intg_maps_platform",
+        "providerClass": "native_maps",
+        "capability": "maps",
+        "config": [
+          {
+            "key": "provider",
+            "value": "platform_default"
+          },
+          {
+            "key": "defaultZoom",
+            "value": 15
+          },
+          {
+            "key": "externalNavigationMode",
+            "value": "driving"
+          },
+          {
+            "key": "offlineFallback",
+            "value": "static_address"
+          }
+        ]
+      },
+      {
+        "id": "intg_analytics_product",
+        "providerClass": "analytics_sdk",
+        "capability": "analytics",
+        "config": [
+          {
+            "key": "ingestEndpoint",
+            "value": "/v1/analytics/events"
+          },
+          {
+            "key": "anonymizeIp",
+            "value": true
+          },
+          {
+            "key": "consentRequired",
+            "value": true
+          },
+          {
+            "key": "batchIntervalSeconds",
+            "value": 60
+          }
+        ]
+      }
+    ],
+    "network": {
+      "policy": "deny_by_default",
+      "allowedDomains": [
+        "api.plomberie-express.app"
+      ]
+    },
+    "native": {
+      "minIosVersion": "15.0",
+      "minAndroidSdk": 26
+    },
+    "compliance": {
+      "commerceClass": "none",
+      "accountDeletionRequired": true,
+      "dataCollected": [
+        "contact_info",
+        "identifiers",
+        "location",
+        "user_content",
+        "usage_data"
+      ]
+    },
+    "expectedTests": [
+      {
+        "id": "test_request_completeness_validation",
+        "description": "Vérifie que la règle de complétude rule_request_completeness rejette une demande sans description, sans catégorie ou avec un code postal non conforme au format à 5 chiffres, et accepte une demande complète lors de l'envoi.",
+        "kind": "deterministic",
+        "targetId": "act_location_submit_request"
+      },
+      {
+        "id": "test_contact_phone_format",
+        "description": "Vérifie que le champ téléphone fld_req_contact_phone de l'entité demande n'accepte que les numéros français au format +33XXXXXXXXX ou 0XXXXXXXXX et rejette les autres saisies.",
+        "kind": "deterministic",
+        "targetId": "ent_service_request"
+      },
+      {
+        "id": "test_location_consent_gate",
+        "description": "Vérifie qu'aucune latitude/longitude n'est enregistrée par la récupération GPS tant que le consentement de localisation est faux, et que les coordonnées restent dans les bornes valides après consentement.",
+        "kind": "deterministic",
+        "targetId": "act_location_use_gps"
+      },
+      {
+        "id": "test_photo_rule_limits",
+        "description": "Vérifie qu'une photo doit être rattachée à une demande, provenir de 'camera' ou 'galerie', et que la position est bornée entre 1 et 8.",
+        "kind": "deterministic",
+        "targetId": "ent_request_photo"
+      },
+      {
+        "id": "test_prepare_photo_slot",
+        "description": "Vérifie que l'optimisation des photos réduit la taille sous la limite de 4096 Ko et retire les métadonnées EXIF de localisation lorsque stripExifLocation vaut vrai.",
+        "kind": "deterministic",
+        "targetId": "act_new_prepare_photo"
+      },
+      {
+        "id": "test_format_full_address_slot",
+        "description": "Vérifie la composition de l'adresse française (ligne, code postal, ville) et la valeur de hasPreciseLocation selon la présence de coordonnées.",
+        "kind": "deterministic",
+        "targetId": "act_location_format_address"
+      },
+      {
+        "id": "test_status_timeline_slot",
+        "description": "Vérifie que la frise de suivi ordonne les évènements chronologiquement, identifie l'étape courante et calcule un ratio de progression entre 0 et 1.",
+        "kind": "deterministic",
+        "targetId": "act_detail_build_timeline"
+      },
+      {
+        "id": "test_request_reference_uniqueness",
+        "description": "Vérifie que la génération de référence produit un identifiant au format attendu et unique sur un grand nombre d'appels successifs.",
+        "kind": "deterministic",
+        "targetId": "act_location_generate_reference"
+      },
+      {
+        "id": "test_owner_access_rule",
+        "description": "Vérifie que la règle d'autorisation de l'écran de suivi empêche l'accès aux demandes d'un autre client et masque les demandes annulées.",
+        "kind": "deterministic",
+        "targetId": "scr_request_detail"
+      },
+      {
+        "id": "test_backend_sync_contract",
+        "description": "Vérifie le contrat de synchronisation avec api.plomberie-express.app : schéma des demandes, photos et évènements de statut, politique de conflit server_wins et rejet des domaines non autorisés.",
+        "kind": "contract",
+        "targetId": "act_home_sync_offline"
+      },
+      {
+        "id": "test_media_upload_contract",
+        "description": "Vérifie le contrat de téléversement : obtention d'une URL signée, types MIME acceptés, reprise après coupure réseau et refus des fichiers trop volumineux.",
+        "kind": "contract",
+        "targetId": "act_photo_upload"
+      },
+      {
+        "id": "test_push_subscription_contract",
+        "description": "Vérifie l'enregistrement du terminal et l'abonnement au sujet 'demande' dérivé de la référence, ainsi que la notification de changement de statut sur le canal suivi_intervention.",
+        "kind": "contract",
+        "targetId": "act_request_created_subscribe"
+      },
+      {
+        "id": "test_e2e_create_request_with_photos",
+        "description": "Parcours complet : connexion OTP, description du problème avec 3 photos (caméra et galerie), saisie de l'adresse, refus puis acceptation du partage GPS, envoi de la demande et affichage du statut 'envoyee'.",
+        "kind": "e2e",
+        "targetId": "scr_new_request"
+      },
+      {
+        "id": "test_e2e_location_step",
+        "description": "Parcours de l'étape adresse : validation du code postal, activation du consentement, récupération de la position, affichage du marqueur déplaçable sur la carte et résumé d'adresse formaté.",
+        "kind": "e2e",
+        "targetId": "scr_location"
+      },
+      {
+        "id": "test_e2e_track_and_share",
+        "description": "Parcours de suivi : ouverture d'une demande, affichage de la frise de statuts, consultation des photos en plein écran, partage du suivi et ouverture du lieu dans l'application de cartes.",
+        "kind": "e2e",
+        "targetId": "scr_request_detail"
+      },
+      {
+        "id": "test_e2e_offline_then_sync",
+        "description": "Crée une demande avec photos en mode hors ligne, vérifie l'affichage de l'avis hors ligne sur l'accueil, puis la synchronisation automatique et l'apparition de la demande dans la liste au retour du réseau.",
+        "kind": "e2e",
+        "targetId": "scr_home"
+      },
+      {
+        "id": "test_e2e_cancel_request",
+        "description": "Vérifie que l'annulation demande confirmation, passe le statut à 'annulee', et que le bouton d'annulation est masqué pour les demandes terminées ou déjà annulées.",
+        "kind": "e2e",
+        "targetId": "act_detail_cancel_request"
+      },
+      {
+        "id": "test_no_in_app_payment",
+        "description": "Vérifie qu'aucune capability de paiement n'est déclarée, que la classe commerce reste 'none' et que les mentions devis/paiement hors application sont bien affichées sur l'écran de suivi.",
+        "kind": "deterministic",
+        "targetId": "scr_request_detail"
+      }
+    ]
+  }
+}

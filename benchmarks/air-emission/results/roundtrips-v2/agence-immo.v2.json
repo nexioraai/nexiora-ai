@@ -1,0 +1,2676 @@
+{
+  "identical": true,
+  "document": {
+    "airSchemaVersion": "1.0.0",
+    "projectId": "prj_agence_immo_annonces",
+    "app": {
+      "name": "Vitrine Immo",
+      "slug": "vitrine-immo",
+      "description": [
+        {
+          "locale": "fr-FR",
+          "text": "Application d'annonces immobilières de l'agence : recherche de biens avec photos et carte, filtres par prix et quartier, mise en favoris et demande de visite sur un créneau. Aucune transaction n'est réalisée dans l'application."
+        }
+      ],
+      "locales": {
+        "userLanguage": "fr-FR",
+        "appLocales": [
+          "fr-FR"
+        ],
+        "defaultAppLocale": "fr-FR",
+        "contentLocales": [
+          "fr-FR"
+        ],
+        "rtlSupported": false
+      }
+    },
+    "screens": [
+      {
+        "id": "scr_listings",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Annonces"
+          }
+        ],
+        "blocks": [
+          {
+            "id": "blk_listings_header",
+            "blockType": "header",
+            "props": [
+              {
+                "key": "title",
+                "value": "Nos biens à vendre et à louer"
+              },
+              {
+                "key": "subtitle",
+                "value": "Sélection mise à jour par l'agence"
+              },
+              {
+                "key": "showBackButton",
+                "value": false
+              }
+            ]
+          },
+          {
+            "id": "blk_listings_search",
+            "blockType": "search_field",
+            "entityId": "ent_property",
+            "props": [
+              {
+                "key": "placeholder",
+                "value": "Ville, quartier ou référence"
+              },
+              {
+                "key": "debounceMs",
+                "value": 300
+              },
+              {
+                "key": "searchFieldIds",
+                "value": [
+                  "fld_property_title",
+                  "fld_property_neighborhood",
+                  "fld_property_city",
+                  "fld_property_reference"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "blk_listings_filters",
+            "blockType": "filter_panel",
+            "entityId": "ent_property",
+            "props": [
+              {
+                "key": "layout",
+                "value": "collapsible"
+              },
+              {
+                "key": "priceFieldId",
+                "value": "fld_property_price"
+              },
+              {
+                "key": "priceMin",
+                "value": 0
+              },
+              {
+                "key": "priceMax",
+                "value": 2000000
+              },
+              {
+                "key": "priceStep",
+                "value": 10000
+              },
+              {
+                "key": "neighborhoodFieldId",
+                "value": "fld_property_neighborhood"
+              },
+              {
+                "key": "kindFieldId",
+                "value": "fld_property_kind"
+              },
+              {
+                "key": "transactionFieldId",
+                "value": "fld_property_transaction"
+              },
+              {
+                "key": "slotId",
+                "value": "slot_filter_properties"
+              },
+              {
+                "key": "resetLabel",
+                "value": "Réinitialiser les filtres"
+              },
+              {
+                "key": "applyLabel",
+                "value": "Voir les résultats"
+              }
+            ]
+          },
+          {
+            "id": "blk_listings_result_count",
+            "blockType": "text",
+            "props": [
+              {
+                "key": "content",
+                "value": "{resultCount} bien(s) correspondant à votre recherche"
+              },
+              {
+                "key": "variant",
+                "value": "caption"
+              },
+              {
+                "key": "sourceSlotId",
+                "value": "slot_filter_properties"
+              }
+            ]
+          },
+          {
+            "id": "blk_listings_sort",
+            "blockType": "segmented_control",
+            "props": [
+              {
+                "key": "label",
+                "value": "Trier par"
+              },
+              {
+                "key": "options",
+                "value": [
+                  "Plus récents",
+                  "Prix croissant",
+                  "Prix décroissant",
+                  "Surface"
+                ]
+              },
+              {
+                "key": "defaultOption",
+                "value": "Plus récents"
+              }
+            ]
+          },
+          {
+            "id": "blk_listings_list",
+            "blockType": "card_list",
+            "entityId": "ent_property",
+            "props": [
+              {
+                "key": "filterStatusFieldId",
+                "value": "fld_property_status"
+              },
+              {
+                "key": "filterStatusValue",
+                "value": "publie"
+              },
+              {
+                "key": "imageFieldId",
+                "value": "fld_property_cover_photo"
+              },
+              {
+                "key": "titleFieldId",
+                "value": "fld_property_title"
+              },
+              {
+                "key": "subtitleFieldIds",
+                "value": [
+                  "fld_property_neighborhood",
+                  "fld_property_city"
+                ]
+              },
+              {
+                "key": "metaFieldIds",
+                "value": [
+                  "fld_property_surface",
+                  "fld_property_rooms",
+                  "fld_property_energy_class"
+                ]
+              },
+              {
+                "key": "priceFieldId",
+                "value": "fld_property_price"
+              },
+              {
+                "key": "priceSlotId",
+                "value": "slot_format_price"
+              },
+              {
+                "key": "favoriteToggleEnabled",
+                "value": true
+              },
+              {
+                "key": "onItemTapScreenId",
+                "value": "scr_listing_detail"
+              },
+              {
+                "key": "pageSize",
+                "value": 20
+              },
+              {
+                "key": "pullToRefresh",
+                "value": true
+              }
+            ]
+          },
+          {
+            "id": "blk_listings_empty_state",
+            "blockType": "empty_state",
+            "props": [
+              {
+                "key": "title",
+                "value": "Aucun bien ne correspond à ces critères"
+              },
+              {
+                "key": "message",
+                "value": "Élargissez la fourchette de prix ou ajoutez un autre quartier."
+              },
+              {
+                "key": "actionLabel",
+                "value": "Réinitialiser les filtres"
+              }
+            ]
+          },
+          {
+            "id": "blk_listings_map_shortcut",
+            "blockType": "floating_button",
+            "props": [
+              {
+                "key": "label",
+                "value": "Voir sur la carte"
+              },
+              {
+                "key": "icon",
+                "value": "map"
+              },
+              {
+                "key": "targetScreenId",
+                "value": "scr_map"
+              },
+              {
+                "key": "position",
+                "value": "bottom_center"
+              }
+            ]
+          },
+          {
+            "id": "blk_listings_tabbar",
+            "blockType": "tab_bar",
+            "props": [
+              {
+                "key": "items",
+                "value": [
+                  "Annonces",
+                  "Carte",
+                  "Favoris"
+                ]
+              },
+              {
+                "key": "targetScreenIds",
+                "value": [
+                  "scr_listings",
+                  "scr_map",
+                  "scr_favorites"
+                ]
+              },
+              {
+                "key": "activeIndex",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "scr_listing_detail",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Détail du bien"
+          }
+        ],
+        "blocks": [
+          {
+            "id": "blk_detail_gallery",
+            "blockType": "image_carousel",
+            "entityId": "ent_property",
+            "props": [
+              {
+                "key": "coverFieldId",
+                "value": "fld_property_cover_photo"
+              },
+              {
+                "key": "galleryFieldId",
+                "value": "fld_property_gallery"
+              },
+              {
+                "key": "showCounter",
+                "value": true
+              },
+              {
+                "key": "enableFullscreen",
+                "value": true
+              },
+              {
+                "key": "aspectRatio",
+                "value": "4:3"
+              }
+            ]
+          },
+          {
+            "id": "blk_detail_summary",
+            "blockType": "detail_header",
+            "entityId": "ent_property",
+            "props": [
+              {
+                "key": "titleFieldId",
+                "value": "fld_property_title"
+              },
+              {
+                "key": "priceFieldId",
+                "value": "fld_property_price"
+              },
+              {
+                "key": "priceSlotId",
+                "value": "slot_format_price"
+              },
+              {
+                "key": "badgeFieldIds",
+                "value": [
+                  "fld_property_transaction",
+                  "fld_property_kind",
+                  "fld_property_status"
+                ]
+              },
+              {
+                "key": "locationFieldIds",
+                "value": [
+                  "fld_property_neighborhood",
+                  "fld_property_city",
+                  "fld_property_postal_code"
+                ]
+              },
+              {
+                "key": "referenceFieldId",
+                "value": "fld_property_reference"
+              }
+            ]
+          },
+          {
+            "id": "blk_detail_actions",
+            "blockType": "action_bar",
+            "entityId": "ent_favorite",
+            "props": [
+              {
+                "key": "favoriteLabel",
+                "value": "Ajouter aux favoris"
+              },
+              {
+                "key": "favoriteActiveLabel",
+                "value": "Retiré des favoris"
+              },
+              {
+                "key": "shareLabel",
+                "value": "Partager cette annonce"
+              },
+              {
+                "key": "shareEnabled",
+                "value": true
+              }
+            ]
+          },
+          {
+            "id": "blk_detail_key_facts",
+            "blockType": "stat_grid",
+            "entityId": "ent_property",
+            "props": [
+              {
+                "key": "fieldIds",
+                "value": [
+                  "fld_property_surface",
+                  "fld_property_rooms",
+                  "fld_property_bedrooms",
+                  "fld_property_floor",
+                  "fld_property_energy_class"
+                ]
+              },
+              {
+                "key": "columns",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "id": "blk_detail_description",
+            "blockType": "rich_text",
+            "entityId": "ent_property",
+            "props": [
+              {
+                "key": "fieldId",
+                "value": "fld_property_description"
+              },
+              {
+                "key": "collapsedLines",
+                "value": 6
+              },
+              {
+                "key": "expandLabel",
+                "value": "Lire la suite"
+              }
+            ]
+          },
+          {
+            "id": "blk_detail_map",
+            "blockType": "map_preview",
+            "entityId": "ent_property",
+            "props": [
+              {
+                "key": "latitudeFieldId",
+                "value": "fld_property_latitude"
+              },
+              {
+                "key": "longitudeFieldId",
+                "value": "fld_property_longitude"
+              },
+              {
+                "key": "zoom",
+                "value": 15
+              },
+              {
+                "key": "markerLabelFieldId",
+                "value": "fld_property_neighborhood"
+              },
+              {
+                "key": "interactive",
+                "value": false
+              },
+              {
+                "key": "openFullMapScreenId",
+                "value": "scr_map"
+              },
+              {
+                "key": "disclaimer",
+                "value": "Localisation approximative du quartier"
+              }
+            ]
+          },
+          {
+            "id": "blk_detail_agent",
+            "blockType": "contact_card",
+            "entityId": "ent_property",
+            "props": [
+              {
+                "key": "nameFieldId",
+                "value": "fld_property_agent_name"
+              },
+              {
+                "key": "agencyName",
+                "value": "Vitrine Immo"
+              },
+              {
+                "key": "note",
+                "value": "Votre conseiller vous répond sous 24 h ouvrées."
+              }
+            ]
+          },
+          {
+            "id": "blk_detail_visit_slots",
+            "blockType": "slot_picker",
+            "entityId": "ent_visit_request",
+            "props": [
+              {
+                "key": "slotId",
+                "value": "slot_available_visit_slots"
+              },
+              {
+                "key": "label",
+                "value": "Choisissez un créneau de visite"
+              },
+              {
+                "key": "horizonDays",
+                "value": 7
+              },
+              {
+                "key": "startFieldId",
+                "value": "fld_visit_slot_start"
+              },
+              {
+                "key": "endFieldId",
+                "value": "fld_visit_slot_end"
+              },
+              {
+                "key": "visibleIfFieldId",
+                "value": "fld_property_visit_enabled"
+              },
+              {
+                "key": "emptyMessage",
+                "value": "Aucun créneau disponible cette semaine."
+              }
+            ]
+          },
+          {
+            "id": "blk_detail_visit_form",
+            "blockType": "form",
+            "entityId": "ent_visit_request",
+            "props": [
+              {
+                "key": "title",
+                "value": "Demander une visite"
+              },
+              {
+                "key": "fieldIds",
+                "value": [
+                  "fld_visit_full_name",
+                  "fld_visit_email",
+                  "fld_visit_phone",
+                  "fld_visit_message",
+                  "fld_visit_consent"
+                ]
+              },
+              {
+                "key": "consentLabel",
+                "value": "J'accepte d'être recontacté(e) par l'agence au sujet de cette demande."
+              },
+              {
+                "key": "validationRuleId",
+                "value": "rule_visit_request_valid"
+              },
+              {
+                "key": "submitLabel",
+                "value": "Envoyer ma demande"
+              },
+              {
+                "key": "successMessage",
+                "value": "Demande envoyée : l'agence vous confirmera le créneau."
+              },
+              {
+                "key": "errorMessage",
+                "value": "Impossible d'envoyer la demande. Vérifiez vos informations et réessayez."
+              },
+              {
+                "key": "noticeNoPayment",
+                "value": "Aucun paiement n'est demandé dans l'application."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "scr_map",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Carte"
+          }
+        ],
+        "blocks": [
+          {
+            "id": "blk_map_header",
+            "blockType": "header",
+            "props": [
+              {
+                "key": "title",
+                "value": "Les biens sur la carte"
+              },
+              {
+                "key": "showBackButton",
+                "value": true
+              }
+            ]
+          },
+          {
+            "id": "blk_map_filter_chips",
+            "blockType": "chip_group",
+            "entityId": "ent_property",
+            "props": [
+              {
+                "key": "label",
+                "value": "Filtres actifs"
+              },
+              {
+                "key": "neighborhoodFieldId",
+                "value": "fld_property_neighborhood"
+              },
+              {
+                "key": "kindFieldId",
+                "value": "fld_property_kind"
+              },
+              {
+                "key": "priceFieldId",
+                "value": "fld_property_price"
+              },
+              {
+                "key": "slotId",
+                "value": "slot_filter_properties"
+              },
+              {
+                "key": "editLabel",
+                "value": "Modifier les filtres"
+              },
+              {
+                "key": "editTargetScreenId",
+                "value": "scr_listings"
+              }
+            ]
+          },
+          {
+            "id": "blk_map_view",
+            "blockType": "map",
+            "entityId": "ent_property",
+            "props": [
+              {
+                "key": "markersSlotId",
+                "value": "slot_build_map_markers"
+              },
+              {
+                "key": "latitudeFieldId",
+                "value": "fld_property_latitude"
+              },
+              {
+                "key": "longitudeFieldId",
+                "value": "fld_property_longitude"
+              },
+              {
+                "key": "clusteringEnabled",
+                "value": true
+              },
+              {
+                "key": "showUserLocationButton",
+                "value": true
+              },
+              {
+                "key": "initialZoom",
+                "value": 12
+              },
+              {
+                "key": "fitToBoundingBox",
+                "value": true
+              }
+            ]
+          },
+          {
+            "id": "blk_map_selected_card",
+            "blockType": "card_preview",
+            "entityId": "ent_property",
+            "props": [
+              {
+                "key": "imageFieldId",
+                "value": "fld_property_cover_photo"
+              },
+              {
+                "key": "titleFieldId",
+                "value": "fld_property_title"
+              },
+              {
+                "key": "priceFieldId",
+                "value": "fld_property_price"
+              },
+              {
+                "key": "priceSlotId",
+                "value": "slot_format_price"
+              },
+              {
+                "key": "subtitleFieldIds",
+                "value": [
+                  "fld_property_neighborhood",
+                  "fld_property_surface"
+                ]
+              },
+              {
+                "key": "onTapScreenId",
+                "value": "scr_listing_detail"
+              },
+              {
+                "key": "dismissible",
+                "value": true
+              }
+            ]
+          },
+          {
+            "id": "blk_map_permission_notice",
+            "blockType": "notice",
+            "props": [
+              {
+                "key": "variant",
+                "value": "info"
+              },
+              {
+                "key": "message",
+                "value": "Autorisez la localisation pour centrer la carte autour de vous. Vous pouvez naviguer sans partager votre position."
+              },
+              {
+                "key": "actionLabel",
+                "value": "Activer la localisation"
+              }
+            ]
+          },
+          {
+            "id": "blk_map_list_shortcut",
+            "blockType": "floating_button",
+            "props": [
+              {
+                "key": "label",
+                "value": "Voir la liste"
+              },
+              {
+                "key": "icon",
+                "value": "list"
+              },
+              {
+                "key": "targetScreenId",
+                "value": "scr_listings"
+              },
+              {
+                "key": "position",
+                "value": "bottom_center"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "scr_favorites",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Favoris"
+          }
+        ],
+        "blocks": [
+          {
+            "id": "blk_favorites_header",
+            "blockType": "header",
+            "props": [
+              {
+                "key": "title",
+                "value": "Mes favoris"
+              },
+              {
+                "key": "subtitle",
+                "value": "Vos biens enregistrés, disponibles hors connexion"
+              },
+              {
+                "key": "showBackButton",
+                "value": false
+              }
+            ]
+          },
+          {
+            "id": "blk_favorites_list",
+            "blockType": "card_list",
+            "entityId": "ent_favorite",
+            "props": [
+              {
+                "key": "ownerRuleId",
+                "value": "rule_favorite_owner_access"
+              },
+              {
+                "key": "referenceFieldId",
+                "value": "fld_favorite_property"
+              },
+              {
+                "key": "imageFieldId",
+                "value": "fld_property_cover_photo"
+              },
+              {
+                "key": "titleFieldId",
+                "value": "fld_property_title"
+              },
+              {
+                "key": "subtitleFieldIds",
+                "value": [
+                  "fld_property_neighborhood",
+                  "fld_property_city"
+                ]
+              },
+              {
+                "key": "priceFieldId",
+                "value": "fld_property_price"
+              },
+              {
+                "key": "priceSlotId",
+                "value": "slot_format_price"
+              },
+              {
+                "key": "sortFieldId",
+                "value": "fld_favorite_created_at"
+              },
+              {
+                "key": "sortDirection",
+                "value": "desc"
+              },
+              {
+                "key": "swipeDeleteLabel",
+                "value": "Retirer des favoris"
+              },
+              {
+                "key": "onItemTapScreenId",
+                "value": "scr_listing_detail"
+              },
+              {
+                "key": "offlineCacheEnabled",
+                "value": true
+              }
+            ]
+          },
+          {
+            "id": "blk_favorites_note",
+            "blockType": "inline_editor",
+            "entityId": "ent_favorite",
+            "props": [
+              {
+                "key": "fieldId",
+                "value": "fld_favorite_note"
+              },
+              {
+                "key": "label",
+                "value": "Ma note personnelle"
+              },
+              {
+                "key": "placeholder",
+                "value": "Ex. : à visiter en priorité, proche de l'école"
+              },
+              {
+                "key": "maxLength",
+                "value": 500
+              },
+              {
+                "key": "saveLabel",
+                "value": "Enregistrer la note"
+              }
+            ]
+          },
+          {
+            "id": "blk_favorites_empty_state",
+            "blockType": "empty_state",
+            "props": [
+              {
+                "key": "title",
+                "value": "Aucun favori pour l'instant"
+              },
+              {
+                "key": "message",
+                "value": "Touchez le cœur sur une annonce pour la retrouver ici."
+              },
+              {
+                "key": "actionLabel",
+                "value": "Parcourir les annonces"
+              },
+              {
+                "key": "actionTargetScreenId",
+                "value": "scr_listings"
+              }
+            ]
+          },
+          {
+            "id": "blk_favorites_visits_summary",
+            "blockType": "list",
+            "entityId": "ent_visit_request",
+            "props": [
+              {
+                "key": "title",
+                "value": "Mes demandes de visite"
+              },
+              {
+                "key": "ownerRuleId",
+                "value": "rule_visit_request_owner_access"
+              },
+              {
+                "key": "titleFieldId",
+                "value": "fld_visit_slot_start"
+              },
+              {
+                "key": "subtitleFieldIds",
+                "value": [
+                  "fld_visit_slot_end",
+                  "fld_visit_status"
+                ]
+              },
+              {
+                "key": "referenceFieldId",
+                "value": "fld_visit_property"
+              },
+              {
+                "key": "cancelLabel",
+                "value": "Annuler la demande"
+              },
+              {
+                "key": "emptyMessage",
+                "value": "Vous n'avez aucune demande de visite en cours."
+              }
+            ]
+          },
+          {
+            "id": "blk_favorites_account_actions",
+            "blockType": "settings_group",
+            "props": [
+              {
+                "key": "title",
+                "value": "Mon compte"
+              },
+              {
+                "key": "items",
+                "value": [
+                  "Gérer les notifications",
+                  "Politique de confidentialité",
+                  "Supprimer mon compte et mes données"
+                ]
+              },
+              {
+                "key": "deletionConfirmMessage",
+                "value": "La suppression efface définitivement votre compte, vos favoris et vos demandes de visite."
+              }
+            ]
+          },
+          {
+            "id": "blk_favorites_tabbar",
+            "blockType": "tab_bar",
+            "props": [
+              {
+                "key": "items",
+                "value": [
+                  "Annonces",
+                  "Carte",
+                  "Favoris"
+                ]
+              },
+              {
+                "key": "targetScreenIds",
+                "value": [
+                  "scr_listings",
+                  "scr_map",
+                  "scr_favorites"
+                ]
+              },
+              {
+                "key": "activeIndex",
+                "value": 2
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "navigation": {
+      "entryScreenId": "scr_listings",
+      "routes": [
+        {
+          "id": "nav_listings",
+          "screenId": "scr_listings",
+          "title": [
+            {
+              "locale": "fr-FR",
+              "text": "Annonces"
+            }
+          ]
+        },
+        {
+          "id": "nav_listing_detail",
+          "screenId": "scr_listing_detail",
+          "title": [
+            {
+              "locale": "fr-FR",
+              "text": "Détail du bien"
+            }
+          ]
+        },
+        {
+          "id": "nav_map",
+          "screenId": "scr_map",
+          "title": [
+            {
+              "locale": "fr-FR",
+              "text": "Carte"
+            }
+          ]
+        },
+        {
+          "id": "nav_favorites",
+          "screenId": "scr_favorites",
+          "title": [
+            {
+              "locale": "fr-FR",
+              "text": "Favoris"
+            }
+          ]
+        }
+      ]
+    },
+    "entities": [
+      {
+        "id": "ent_property",
+        "name": "property",
+        "fields": [
+          {
+            "id": "fld_property_reference",
+            "name": "reference",
+            "type": "string",
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "fld_property_title",
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_property_description",
+            "name": "description",
+            "type": "text",
+            "required": false
+          },
+          {
+            "id": "fld_property_transaction",
+            "name": "transaction_type",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "vente",
+              "location"
+            ]
+          },
+          {
+            "id": "fld_property_kind",
+            "name": "property_kind",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "appartement",
+              "maison",
+              "studio",
+              "terrain",
+              "local_commercial"
+            ]
+          },
+          {
+            "id": "fld_property_price",
+            "name": "price",
+            "type": "decimal",
+            "required": true
+          },
+          {
+            "id": "fld_property_currency",
+            "name": "currency",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "EUR"
+            ]
+          },
+          {
+            "id": "fld_property_neighborhood",
+            "name": "neighborhood",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_property_city",
+            "name": "city",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_property_postal_code",
+            "name": "postal_code",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_property_surface",
+            "name": "surface_m2",
+            "type": "number",
+            "required": true
+          },
+          {
+            "id": "fld_property_rooms",
+            "name": "rooms",
+            "type": "number",
+            "required": false
+          },
+          {
+            "id": "fld_property_bedrooms",
+            "name": "bedrooms",
+            "type": "number",
+            "required": false
+          },
+          {
+            "id": "fld_property_floor",
+            "name": "floor",
+            "type": "number",
+            "required": false
+          },
+          {
+            "id": "fld_property_energy_class",
+            "name": "energy_class",
+            "type": "enum",
+            "required": false,
+            "enumValues": [
+              "A",
+              "B",
+              "C",
+              "D",
+              "E",
+              "F",
+              "G",
+              "non_soumis"
+            ]
+          },
+          {
+            "id": "fld_property_latitude",
+            "name": "latitude",
+            "type": "decimal",
+            "required": true
+          },
+          {
+            "id": "fld_property_longitude",
+            "name": "longitude",
+            "type": "decimal",
+            "required": true
+          },
+          {
+            "id": "fld_property_cover_photo",
+            "name": "cover_photo",
+            "type": "asset",
+            "required": true
+          },
+          {
+            "id": "fld_property_gallery",
+            "name": "gallery",
+            "type": "json",
+            "required": false
+          },
+          {
+            "id": "fld_property_status",
+            "name": "status",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "brouillon",
+              "publie",
+              "sous_offre",
+              "archive"
+            ]
+          },
+          {
+            "id": "fld_property_visit_enabled",
+            "name": "visit_enabled",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "id": "fld_property_published_at",
+            "name": "published_at",
+            "type": "datetime",
+            "required": false
+          },
+          {
+            "id": "fld_property_agent_name",
+            "name": "agent_name",
+            "type": "string",
+            "required": false
+          }
+        ]
+      },
+      {
+        "id": "ent_visit_request",
+        "name": "visit_request",
+        "fields": [
+          {
+            "id": "fld_visit_property",
+            "name": "property",
+            "type": "reference",
+            "required": true,
+            "referencesEntityId": "ent_property"
+          },
+          {
+            "id": "fld_visit_user_ref",
+            "name": "user_ref",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_visit_full_name",
+            "name": "full_name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_visit_email",
+            "name": "email",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_visit_phone",
+            "name": "phone",
+            "type": "string",
+            "required": false
+          },
+          {
+            "id": "fld_visit_slot_start",
+            "name": "slot_start",
+            "type": "datetime",
+            "required": true
+          },
+          {
+            "id": "fld_visit_slot_end",
+            "name": "slot_end",
+            "type": "datetime",
+            "required": true
+          },
+          {
+            "id": "fld_visit_message",
+            "name": "message",
+            "type": "text",
+            "required": false
+          },
+          {
+            "id": "fld_visit_status",
+            "name": "status",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "demandee",
+              "confirmee",
+              "refusee",
+              "annulee",
+              "realisee"
+            ]
+          },
+          {
+            "id": "fld_visit_created_at",
+            "name": "created_at",
+            "type": "datetime",
+            "required": true
+          },
+          {
+            "id": "fld_visit_consent",
+            "name": "contact_consent",
+            "type": "boolean",
+            "required": true
+          }
+        ]
+      },
+      {
+        "id": "ent_favorite",
+        "name": "favorite",
+        "fields": [
+          {
+            "id": "fld_favorite_property",
+            "name": "property",
+            "type": "reference",
+            "required": true,
+            "referencesEntityId": "ent_property"
+          },
+          {
+            "id": "fld_favorite_user_ref",
+            "name": "user_ref",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_favorite_created_at",
+            "name": "created_at",
+            "type": "datetime",
+            "required": true
+          },
+          {
+            "id": "fld_favorite_note",
+            "name": "note",
+            "type": "text",
+            "required": false
+          }
+        ]
+      }
+    ],
+    "relations": [
+      {
+        "id": "rel_property_visit_requests",
+        "fromEntityId": "ent_property",
+        "toEntityId": "ent_visit_request",
+        "kind": "one_to_many"
+      },
+      {
+        "id": "rel_property_favorites",
+        "fromEntityId": "ent_property",
+        "toEntityId": "ent_favorite",
+        "kind": "one_to_many"
+      }
+    ],
+    "datasets": [
+      {
+        "id": "data_property_seed",
+        "entityId": "ent_property",
+        "contentHash": "3f9c1d7ae4b28650cf13a72d980e5b46c7182f39ab04de5719c6238a4f0b7d15",
+        "rowCount": 24
+      }
+    ],
+    "actions": [
+      {
+        "id": "act_bootstrap_session",
+        "name": "Restaurer la session au démarrage",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "app_start"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "auth",
+          "method": "restoreSession",
+          "params": [
+            {
+              "key": "allowAnonymous",
+              "value": true
+            },
+            {
+              "key": "redirectScreenId",
+              "value": "scr_listings"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_register_deep_links",
+        "name": "Enregistrer les liens profonds d'annonces",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "app_start"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "deep_links",
+          "method": "registerRoutes",
+          "params": [
+            {
+              "key": "patterns",
+              "value": [
+                "/annonces",
+                "/annonces/:reference",
+                "/favoris"
+              ]
+            },
+            {
+              "key": "defaultScreenId",
+              "value": "scr_listings"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_load_listings",
+        "name": "Charger et filtrer les annonces publiées",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "screen_open",
+          "screenId": "scr_listings"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_filter_properties"
+        }
+      },
+      {
+        "id": "act_apply_filters",
+        "name": "Appliquer les filtres prix et quartier",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_listings_filters"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_filter_properties"
+        }
+      },
+      {
+        "id": "act_search_listings",
+        "name": "Rechercher un bien par ville, quartier ou référence",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_listings_search"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_filter_properties"
+        }
+      },
+      {
+        "id": "act_sort_listings",
+        "name": "Trier les résultats",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_listings_sort"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_filter_properties"
+        }
+      },
+      {
+        "id": "act_reset_filters",
+        "name": "Réinitialiser les filtres depuis l'état vide",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_listings_empty_state"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_filter_properties"
+        }
+      },
+      {
+        "id": "act_open_listing_detail",
+        "name": "Ouvrir le détail d'un bien",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_listings_list"
+        },
+        "effect": {
+          "kind": "navigate",
+          "screenId": "scr_listing_detail"
+        }
+      },
+      {
+        "id": "act_open_map_from_list",
+        "name": "Basculer vers la carte",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_listings_map_shortcut"
+        },
+        "effect": {
+          "kind": "navigate",
+          "screenId": "scr_map"
+        }
+      },
+      {
+        "id": "act_tabbar_listings_to_favorites",
+        "name": "Naviguer vers les favoris depuis la barre d'onglets",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_listings_tabbar"
+        },
+        "effect": {
+          "kind": "navigate",
+          "screenId": "scr_favorites"
+        }
+      },
+      {
+        "id": "act_build_map_markers",
+        "name": "Construire les marqueurs de la carte",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "screen_open",
+          "screenId": "scr_map"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_build_map_markers"
+        }
+      },
+      {
+        "id": "act_request_location",
+        "name": "Demander la localisation pour centrer la carte",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_map_permission_notice"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "geolocation",
+          "method": "requestWhenInUse",
+          "params": [
+            {
+              "key": "accuracy",
+              "value": "balanced"
+            },
+            {
+              "key": "optional",
+              "value": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_center_map_on_user",
+        "name": "Centrer la carte sur la position de l'utilisateur",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_map_view"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "maps",
+          "method": "centerOnUser",
+          "params": [
+            {
+              "key": "zoom",
+              "value": 13
+            },
+            {
+              "key": "animated",
+              "value": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_open_detail_from_map",
+        "name": "Ouvrir le bien sélectionné sur la carte",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_map_selected_card"
+        },
+        "effect": {
+          "kind": "navigate",
+          "screenId": "scr_listing_detail"
+        }
+      },
+      {
+        "id": "act_map_edit_filters",
+        "name": "Revenir à la liste pour modifier les filtres",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_map_filter_chips"
+        },
+        "effect": {
+          "kind": "navigate",
+          "screenId": "scr_listings"
+        }
+      },
+      {
+        "id": "act_map_back_to_list",
+        "name": "Revenir à la liste des annonces",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_map_list_shortcut"
+        },
+        "effect": {
+          "kind": "navigate",
+          "screenId": "scr_listings"
+        }
+      },
+      {
+        "id": "act_track_listing_view",
+        "name": "Mesurer la consultation d'une annonce",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "screen_open",
+          "screenId": "scr_listing_detail"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "analytics",
+          "method": "trackEvent",
+          "params": [
+            {
+              "key": "eventName",
+              "value": "listing_viewed"
+            },
+            {
+              "key": "screenId",
+              "value": "scr_listing_detail"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_load_visit_slots",
+        "name": "Calculer les créneaux de visite disponibles",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "screen_open",
+          "screenId": "scr_listing_detail"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_available_visit_slots"
+        }
+      },
+      {
+        "id": "act_pick_visit_slot",
+        "name": "Sélectionner un créneau de visite",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_detail_visit_slots"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_available_visit_slots"
+        }
+      },
+      {
+        "id": "act_add_favorite",
+        "name": "Ajouter le bien aux favoris",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_detail_actions"
+        },
+        "effect": {
+          "kind": "mutation",
+          "entityId": "ent_favorite",
+          "operation": "create"
+        }
+      },
+      {
+        "id": "act_share_listing",
+        "name": "Partager l'annonce",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_detail_summary"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "share",
+          "method": "shareLink",
+          "params": [
+            {
+              "key": "subject",
+              "value": "Une annonce Vitrine Immo"
+            },
+            {
+              "key": "linkPattern",
+              "value": "https://api.vitrine-immo.app/annonces/{reference}"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_submit_visit_request",
+        "name": "Envoyer la demande de visite",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_detail_visit_form"
+        },
+        "effect": {
+          "kind": "mutation",
+          "entityId": "ent_visit_request",
+          "operation": "create"
+        }
+      },
+      {
+        "id": "act_notify_visit_created",
+        "name": "Notifier la prise en compte de la demande de visite",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_visit_request",
+          "event": "created"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "push_notifications",
+          "method": "sendLocal",
+          "params": [
+            {
+              "key": "title",
+              "value": "Demande de visite envoyée"
+            },
+            {
+              "key": "body",
+              "value": "L'agence vous confirmera le créneau choisi sous 24 h ouvrées."
+            },
+            {
+              "key": "channel",
+              "value": "visites"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_track_visit_request",
+        "name": "Mesurer les demandes de visite",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_visit_request",
+          "event": "created"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "analytics",
+          "method": "trackEvent",
+          "params": [
+            {
+              "key": "eventName",
+              "value": "visit_requested"
+            },
+            {
+              "key": "containsPersonalData",
+              "value": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_notify_visit_status",
+        "name": "Notifier la mise à jour d'une demande de visite",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_visit_request",
+          "event": "updated"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "push_notifications",
+          "method": "sendRemote",
+          "params": [
+            {
+              "key": "title",
+              "value": "Mise à jour de votre visite"
+            },
+            {
+              "key": "body",
+              "value": "Le statut de votre demande de visite a changé."
+            },
+            {
+              "key": "channel",
+              "value": "visites"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_cache_favorites",
+        "name": "Mettre les favoris en cache hors ligne",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "screen_open",
+          "screenId": "scr_favorites"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "offline_storage",
+          "method": "syncCollection",
+          "params": [
+            {
+              "key": "collection",
+              "value": "ent_favorite"
+            },
+            {
+              "key": "includeReferences",
+              "value": [
+                "ent_property"
+              ]
+            },
+            {
+              "key": "maxAgeMinutes",
+              "value": 1440
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_open_detail_from_favorites",
+        "name": "Ouvrir un bien favori",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_favorites_list"
+        },
+        "effect": {
+          "kind": "navigate",
+          "screenId": "scr_listing_detail"
+        }
+      },
+      {
+        "id": "act_save_favorite_note",
+        "name": "Enregistrer la note personnelle d'un favori",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_favorites_note"
+        },
+        "effect": {
+          "kind": "mutation",
+          "entityId": "ent_favorite",
+          "operation": "update"
+        }
+      },
+      {
+        "id": "act_remove_favorite",
+        "name": "Retirer un bien des favoris",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_favorites_header"
+        },
+        "effect": {
+          "kind": "mutation",
+          "entityId": "ent_favorite",
+          "operation": "delete"
+        }
+      },
+      {
+        "id": "act_cancel_visit_request",
+        "name": "Annuler une demande de visite",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_favorites_visits_summary"
+        },
+        "effect": {
+          "kind": "mutation",
+          "entityId": "ent_visit_request",
+          "operation": "update"
+        }
+      },
+      {
+        "id": "act_browse_from_empty_favorites",
+        "name": "Parcourir les annonces depuis l'état vide",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_favorites_empty_state"
+        },
+        "effect": {
+          "kind": "navigate",
+          "screenId": "scr_listings"
+        }
+      },
+      {
+        "id": "act_delete_account",
+        "name": "Supprimer le compte et les données associées",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_favorites_account_actions"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "auth",
+          "method": "deleteAccount",
+          "params": [
+            {
+              "key": "requireConfirmation",
+              "value": true
+            },
+            {
+              "key": "purgeLocalCache",
+              "value": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_tabbar_favorites_to_listings",
+        "name": "Revenir aux annonces depuis les favoris",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_favorites_tabbar"
+        },
+        "effect": {
+          "kind": "navigate",
+          "screenId": "scr_listings"
+        }
+      }
+    ],
+    "rules": [
+      {
+        "id": "rule_property_publication",
+        "description": "Un bien publié doit avoir un prix strictement positif, une surface positive, une photo de couverture, un quartier et des coordonnées géographiques valides.",
+        "kind": "validation",
+        "entityId": "ent_property",
+        "assertions": [
+          {
+            "fieldId": "fld_property_price",
+            "operator": "gt",
+            "value": 0
+          },
+          {
+            "fieldId": "fld_property_surface",
+            "operator": "gt",
+            "value": 0
+          },
+          {
+            "fieldId": "fld_property_cover_photo",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_property_neighborhood",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_property_latitude",
+            "operator": "gte",
+            "value": -90
+          },
+          {
+            "fieldId": "fld_property_longitude",
+            "operator": "lte",
+            "value": 180
+          },
+          {
+            "fieldId": "fld_property_status",
+            "operator": "in",
+            "value": [
+              "brouillon",
+              "publie",
+              "sous_offre",
+              "archive"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "rule_visit_request_valid",
+        "description": "Une demande de visite exige un nom, un e-mail valide, un créneau complet, le consentement de contact et un statut connu.",
+        "kind": "validation",
+        "entityId": "ent_visit_request",
+        "assertions": [
+          {
+            "fieldId": "fld_visit_full_name",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_visit_email",
+            "operator": "matches",
+            "value": "^[^@\\s]+@[^@\\s]+\\.[A-Za-z]{2,}$"
+          },
+          {
+            "fieldId": "fld_visit_slot_start",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_visit_slot_end",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_visit_consent",
+            "operator": "eq",
+            "value": true
+          },
+          {
+            "fieldId": "fld_visit_status",
+            "operator": "in",
+            "value": [
+              "demandee",
+              "confirmee",
+              "refusee",
+              "annulee",
+              "realisee"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "rule_visit_request_owner_access",
+        "description": "Un utilisateur ne peut consulter, modifier ou annuler que ses propres demandes de visite.",
+        "kind": "authorization",
+        "entityId": "ent_visit_request",
+        "assertions": [
+          {
+            "fieldId": "fld_visit_user_ref",
+            "operator": "eq",
+            "value": "@current_user"
+          }
+        ]
+      },
+      {
+        "id": "rule_favorite_owner_access",
+        "description": "Les favoris ne sont lisibles et modifiables que par l'utilisateur qui les a créés.",
+        "kind": "authorization",
+        "entityId": "ent_favorite",
+        "assertions": [
+          {
+            "fieldId": "fld_favorite_user_ref",
+            "operator": "eq",
+            "value": "@current_user"
+          },
+          {
+            "fieldId": "fld_favorite_property",
+            "operator": "required"
+          }
+        ]
+      }
+    ],
+    "slots": [
+      {
+        "id": "slot_format_price",
+        "description": "Formate un prix immobilier en euros pour l'affichage (locale fr-FR), avec suffixe mensuel si le bien est en location.",
+        "inputs": [
+          {
+            "name": "price",
+            "type": "decimal"
+          },
+          {
+            "name": "transactionType",
+            "type": "enum"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "formattedPrice",
+            "type": "string"
+          }
+        ],
+        "allowedImports": [
+          "intl"
+        ]
+      },
+      {
+        "id": "slot_filter_properties",
+        "description": "Filtre et trie la liste des biens publiés selon la fourchette de prix, les quartiers sélectionnés et le type de bien.",
+        "inputs": [
+          {
+            "name": "properties",
+            "type": "json"
+          },
+          {
+            "name": "minPrice",
+            "type": "decimal"
+          },
+          {
+            "name": "maxPrice",
+            "type": "decimal"
+          },
+          {
+            "name": "neighborhoods",
+            "type": "json"
+          },
+          {
+            "name": "propertyKind",
+            "type": "enum"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "filteredProperties",
+            "type": "json"
+          },
+          {
+            "name": "resultCount",
+            "type": "number"
+          }
+        ],
+        "allowedImports": []
+      },
+      {
+        "id": "slot_build_map_markers",
+        "description": "Construit les marqueurs de carte et la zone d'affichage englobante à partir des biens filtrés.",
+        "inputs": [
+          {
+            "name": "properties",
+            "type": "json"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "markers",
+            "type": "json"
+          },
+          {
+            "name": "boundingBox",
+            "type": "json"
+          }
+        ],
+        "allowedImports": []
+      },
+      {
+        "id": "slot_available_visit_slots",
+        "description": "Calcule les créneaux de visite disponibles sur les sept prochains jours en excluant les créneaux déjà demandés ou confirmés.",
+        "inputs": [
+          {
+            "name": "fromDate",
+            "type": "date"
+          },
+          {
+            "name": "openingHours",
+            "type": "json"
+          },
+          {
+            "name": "bookedSlots",
+            "type": "json"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "availableSlots",
+            "type": "json"
+          }
+        ],
+        "allowedImports": [
+          "date-fns"
+        ]
+      }
+    ],
+    "capabilities": [
+      {
+        "capability": "auth",
+        "config": [
+          {
+            "key": "methods",
+            "value": [
+              "email_otp",
+              "anonymous"
+            ]
+          },
+          {
+            "key": "sessionTtlDays",
+            "value": 30
+          },
+          {
+            "key": "accountDeletionEnabled",
+            "value": true
+          }
+        ]
+      },
+      {
+        "capability": "maps",
+        "config": [
+          {
+            "key": "defaultZoom",
+            "value": 12
+          },
+          {
+            "key": "clustering",
+            "value": true
+          },
+          {
+            "key": "mapStyle",
+            "value": "standard"
+          }
+        ]
+      },
+      {
+        "capability": "geolocation",
+        "config": [
+          {
+            "key": "accuracy",
+            "value": "balanced"
+          },
+          {
+            "key": "backgroundUpdates",
+            "value": false
+          },
+          {
+            "key": "optional",
+            "value": true
+          }
+        ]
+      },
+      {
+        "capability": "offline_storage",
+        "config": [
+          {
+            "key": "collections",
+            "value": [
+              "ent_favorite",
+              "ent_property"
+            ]
+          },
+          {
+            "key": "maxCacheMb",
+            "value": 80
+          },
+          {
+            "key": "encryptAtRest",
+            "value": true
+          }
+        ]
+      },
+      {
+        "capability": "share",
+        "config": [
+          {
+            "key": "channels",
+            "value": [
+              "system_sheet"
+            ]
+          },
+          {
+            "key": "includeAppLink",
+            "value": true
+          }
+        ]
+      },
+      {
+        "capability": "push_notifications",
+        "config": [
+          {
+            "key": "channels",
+            "value": [
+              "visites",
+              "nouveautes"
+            ]
+          },
+          {
+            "key": "optInPrompt",
+            "value": "contextual"
+          }
+        ]
+      },
+      {
+        "capability": "deep_links",
+        "config": [
+          {
+            "key": "scheme",
+            "value": "vitrineimmo"
+          },
+          {
+            "key": "universalLinkDomain",
+            "value": "api.vitrine-immo.app"
+          }
+        ]
+      },
+      {
+        "capability": "analytics",
+        "config": [
+          {
+            "key": "anonymizeIp",
+            "value": true
+          },
+          {
+            "key": "collectDeviceId",
+            "value": false
+          },
+          {
+            "key": "consentRequired",
+            "value": true
+          }
+        ]
+      }
+    ],
+    "permissions": [
+      {
+        "platform": "ios",
+        "permission": "NSLocationWhenInUseUsageDescription",
+        "reason": [
+          {
+            "locale": "fr-FR",
+            "text": "Votre position sert uniquement à centrer la carte des biens autour de vous et à afficher les annonces proches. Vous pouvez utiliser l'application sans la partager."
+          }
+        ],
+        "requiredByCapability": "geolocation"
+      },
+      {
+        "platform": "android",
+        "permission": "android.permission.ACCESS_FINE_LOCATION",
+        "reason": [
+          {
+            "locale": "fr-FR",
+            "text": "Votre position sert uniquement à centrer la carte des biens autour de vous et à afficher les annonces proches. Vous pouvez utiliser l'application sans la partager."
+          }
+        ],
+        "requiredByCapability": "geolocation"
+      },
+      {
+        "platform": "android",
+        "permission": "android.permission.POST_NOTIFICATIONS",
+        "reason": [
+          {
+            "locale": "fr-FR",
+            "text": "Les notifications vous informent de la confirmation ou de la modification de vos demandes de visite par l'agence."
+          }
+        ],
+        "requiredByCapability": "push_notifications"
+      }
+    ],
+    "design": {
+      "theme": "immo_light",
+      "tokensVersion": "1.0.0",
+      "overrides": [
+        {
+          "key": "color.primary",
+          "value": "#1B4D3E"
+        },
+        {
+          "key": "color.accent",
+          "value": "#C8A15A"
+        },
+        {
+          "key": "radius.card",
+          "value": 12
+        },
+        {
+          "key": "font.family.heading",
+          "value": "Inter"
+        }
+      ]
+    },
+    "integrations": [
+      {
+        "id": "intg_backend_api",
+        "providerClass": "rest_backend",
+        "config": [
+          {
+            "key": "baseUrl",
+            "value": "https://api.vitrine-immo.app"
+          },
+          {
+            "key": "timeoutMs",
+            "value": 10000
+          },
+          {
+            "key": "retryCount",
+            "value": 2
+          },
+          {
+            "key": "authMode",
+            "value": "session_token"
+          },
+          {
+            "key": "resources",
+            "value": [
+              "properties",
+              "visit_requests",
+              "favorites"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "intg_auth_managed",
+        "providerClass": "managed_auth",
+        "capability": "auth",
+        "config": [
+          {
+            "key": "methods",
+            "value": [
+              "email_otp",
+              "anonymous"
+            ]
+          },
+          {
+            "key": "otpLength",
+            "value": 6
+          },
+          {
+            "key": "otpTtlSeconds",
+            "value": 600
+          },
+          {
+            "key": "sessionTtlDays",
+            "value": 30
+          },
+          {
+            "key": "accountDeletionEndpoint",
+            "value": "/v1/account/delete"
+          }
+        ]
+      },
+      {
+        "id": "intg_maps_native",
+        "providerClass": "native_maps",
+        "capability": "maps",
+        "config": [
+          {
+            "key": "provider",
+            "value": "platform_default"
+          },
+          {
+            "key": "mapStyle",
+            "value": "standard"
+          },
+          {
+            "key": "clustering",
+            "value": true
+          },
+          {
+            "key": "clusterRadiusPx",
+            "value": 60
+          },
+          {
+            "key": "defaultZoom",
+            "value": 12
+          }
+        ]
+      },
+      {
+        "id": "intg_location_native",
+        "providerClass": "native_location",
+        "capability": "geolocation",
+        "config": [
+          {
+            "key": "accuracy",
+            "value": "balanced"
+          },
+          {
+            "key": "backgroundUpdates",
+            "value": false
+          },
+          {
+            "key": "maxAgeSeconds",
+            "value": 120
+          },
+          {
+            "key": "optional",
+            "value": true
+          }
+        ]
+      },
+      {
+        "id": "intg_offline_store",
+        "providerClass": "local_encrypted_store",
+        "capability": "offline_storage",
+        "config": [
+          {
+            "key": "engine",
+            "value": "sqlite"
+          },
+          {
+            "key": "collections",
+            "value": [
+              "ent_favorite",
+              "ent_property"
+            ]
+          },
+          {
+            "key": "maxCacheMb",
+            "value": 80
+          },
+          {
+            "key": "encryptAtRest",
+            "value": true
+          },
+          {
+            "key": "evictionPolicy",
+            "value": "lru"
+          }
+        ]
+      },
+      {
+        "id": "intg_share_sheet",
+        "providerClass": "native_share",
+        "capability": "share",
+        "config": [
+          {
+            "key": "channels",
+            "value": [
+              "system_sheet"
+            ]
+          },
+          {
+            "key": "includeAppLink",
+            "value": true
+          },
+          {
+            "key": "linkDomain",
+            "value": "api.vitrine-immo.app"
+          }
+        ]
+      },
+      {
+        "id": "intg_push_managed",
+        "providerClass": "managed_push",
+        "capability": "push_notifications",
+        "config": [
+          {
+            "key": "channels",
+            "value": [
+              "visites",
+              "nouveautes"
+            ]
+          },
+          {
+            "key": "defaultChannel",
+            "value": "visites"
+          },
+          {
+            "key": "optInPrompt",
+            "value": "contextual"
+          },
+          {
+            "key": "deviceRegistrationPath",
+            "value": "/v1/devices"
+          }
+        ]
+      },
+      {
+        "id": "intg_deep_links",
+        "providerClass": "universal_links",
+        "capability": "deep_links",
+        "config": [
+          {
+            "key": "scheme",
+            "value": "vitrineimmo"
+          },
+          {
+            "key": "universalLinkDomain",
+            "value": "api.vitrine-immo.app"
+          },
+          {
+            "key": "patterns",
+            "value": [
+              "/annonces",
+              "/annonces/:reference",
+              "/favoris"
+            ]
+          },
+          {
+            "key": "fallbackScreenId",
+            "value": "scr_listings"
+          }
+        ]
+      },
+      {
+        "id": "intg_analytics_privacy",
+        "providerClass": "privacy_analytics",
+        "capability": "analytics",
+        "config": [
+          {
+            "key": "anonymizeIp",
+            "value": true
+          },
+          {
+            "key": "collectDeviceId",
+            "value": false
+          },
+          {
+            "key": "consentRequired",
+            "value": true
+          },
+          {
+            "key": "events",
+            "value": [
+              "listing_viewed",
+              "visit_requested",
+              "favorite_added",
+              "filters_applied"
+            ]
+          }
+        ]
+      }
+    ],
+    "network": {
+      "policy": "deny_by_default",
+      "allowedDomains": [
+        "api.vitrine-immo.app"
+      ]
+    },
+    "native": {
+      "minIosVersion": "16.0",
+      "minAndroidSdk": 26
+    },
+    "compliance": {
+      "commerceClass": "none",
+      "accountDeletionRequired": true,
+      "dataCollected": [
+        "contact_info",
+        "identifiers",
+        "usage_data",
+        "location",
+        "user_content",
+        "diagnostics"
+      ]
+    },
+    "expectedTests": [
+      {
+        "id": "test_slot_format_price_fr",
+        "description": "Sur l'écran des annonces, les prix sont affichés au format fr-FR (espace insécable, symbole €) via le slot de formatage, avec le suffixe « /mois » uniquement pour les biens en location.",
+        "kind": "deterministic",
+        "targetId": "scr_listings"
+      },
+      {
+        "id": "test_slot_filter_price_range",
+        "description": "L'application des filtres exclut les biens hors de la fourchette [minPrice, maxPrice], conserve les bornes incluses et met à jour le compteur de résultats en cohérence avec la liste filtrée.",
+        "kind": "deterministic",
+        "targetId": "act_apply_filters"
+      },
+      {
+        "id": "test_slot_filter_neighborhoods",
+        "description": "Le filtrage par liste de quartiers ne retient que les biens dont le quartier figure dans la sélection, et retourne l'ensemble des biens publiés lorsque la liste est vide.",
+        "kind": "deterministic",
+        "targetId": "act_apply_filters"
+      },
+      {
+        "id": "test_slot_map_markers_bounds",
+        "description": "La construction des marqueurs produit un marqueur par bien filtré avec latitude/longitude valides et une zone englobante couvrant tous les marqueurs.",
+        "kind": "deterministic",
+        "targetId": "act_build_map_markers"
+      },
+      {
+        "id": "test_slot_visit_slots_exclusion",
+        "description": "Le calcul des créneaux couvre au maximum sept jours à partir de la date de départ, respecte les horaires d'ouverture et exclut tout créneau déjà demandé ou confirmé.",
+        "kind": "deterministic",
+        "targetId": "act_load_visit_slots"
+      },
+      {
+        "id": "test_rule_property_publication",
+        "description": "Un bien avec prix nul, surface négative, photo de couverture absente ou coordonnées hors bornes est rejeté par la règle de publication.",
+        "kind": "deterministic",
+        "targetId": "ent_property"
+      },
+      {
+        "id": "test_rule_visit_request_valid",
+        "description": "Une demande de visite sans consentement, avec e-mail invalide ou créneau incomplet est refusée ; une demande complète et consentie est acceptée.",
+        "kind": "deterministic",
+        "targetId": "ent_visit_request"
+      },
+      {
+        "id": "test_rule_favorite_owner_access",
+        "description": "Un utilisateur ne peut lire ni supprimer un favori appartenant à un autre user_ref.",
+        "kind": "deterministic",
+        "targetId": "ent_favorite"
+      },
+      {
+        "id": "test_rule_visit_owner_access",
+        "description": "La consultation et l'annulation d'une demande de visite sont refusées si le user_ref ne correspond pas à l'utilisateur courant.",
+        "kind": "deterministic",
+        "targetId": "ent_visit_request"
+      },
+      {
+        "id": "test_e2e_filter_and_open_detail",
+        "description": "Depuis l'écran des annonces, l'application des filtres prix et quartier met à jour la liste et le compteur, puis l'ouverture d'une carte affiche l'écran de détail du bien correspondant.",
+        "kind": "e2e",
+        "targetId": "scr_listings"
+      },
+      {
+        "id": "test_e2e_visit_request_flow",
+        "description": "Sur le détail d'un bien avec visites activées, la sélection d'un créneau puis l'envoi du formulaire consenti crée une demande de visite et affiche le message de succès.",
+        "kind": "e2e",
+        "targetId": "act_submit_visit_request"
+      },
+      {
+        "id": "test_e2e_favorites_offline",
+        "description": "L'ajout d'un bien aux favoris depuis le détail le fait apparaître dans l'écran Favoris, y compris hors connexion grâce au cache local, et le retrait le supprime de la liste.",
+        "kind": "e2e",
+        "targetId": "scr_favorites"
+      },
+      {
+        "id": "test_e2e_map_without_location",
+        "description": "L'écran Carte affiche les marqueurs des biens filtrés et reste utilisable si l'utilisateur refuse la permission de localisation.",
+        "kind": "e2e",
+        "targetId": "scr_map"
+      },
+      {
+        "id": "test_e2e_account_deletion",
+        "description": "L'action de suppression de compte demande une confirmation, purge le cache local des favoris et déconnecte l'utilisateur.",
+        "kind": "e2e",
+        "targetId": "act_delete_account"
+      },
+      {
+        "id": "test_contract_backend_api",
+        "description": "Les biens chargés depuis le backend respectent les champs et énumérations de l'entité property, et ne sont récupérés qu'en HTTPS sur api.vitrine-immo.app.",
+        "kind": "contract",
+        "targetId": "ent_property"
+      },
+      {
+        "id": "test_contract_push_visit_channel",
+        "description": "La notification de mise à jour d'une demande de visite est émise sur le canal « visites » avec un titre et un corps localisés en fr-FR, sans donnée personnelle.",
+        "kind": "contract",
+        "targetId": "act_notify_visit_status"
+      },
+      {
+        "id": "test_contract_deep_links_routing",
+        "description": "Les motifs /annonces/:reference et /favoris résolvent respectivement l'écran de détail et l'écran des favoris, avec repli sur scr_listings pour une référence inconnue.",
+        "kind": "contract",
+        "targetId": "act_register_deep_links"
+      },
+      {
+        "id": "test_contract_analytics_no_pii",
+        "description": "L'événement de consultation d'annonce n'émet aucun identifiant d'appareil ni donnée personnelle et n'est pas envoyé avant obtention du consentement.",
+        "kind": "contract",
+        "targetId": "act_track_listing_view"
+      }
+    ]
+  }
+}

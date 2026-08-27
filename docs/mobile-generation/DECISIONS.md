@@ -278,9 +278,13 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   inchangés 12/12 · T4 simulation 27 scénarios PASS ×2 (dont 2 nouveaux
   prouvant la garde) · équivalence EXACTE du schéma d'émission réel avec
   le bras X3′ (7/7 identique ×2 sur l'API réelle).
-- **Périmètre du verdict** : CORRECTION LOCALEMENT PROUVÉE — la
-  validation du comportement du VRAI modèle (12 rejeux, ~$9-14) reste une
-  étape séparée soumise à autorisation.
+- **Validation réelle finale (2026-08-27, autorisée, $9,67)** :
+  **🟢 12/12 IDENTIQUES au hash canonique** — 90 appels, ZÉRO retry,
+  zéro refus ; les 7 documents historiquement fautifs passent, les 5
+  sains restent identiques ; contre-vérification indépendante
+  (re-parse, hash, forme canonique, validateurs : 0 diagnostic) ;
+  code gelé pendant la campagne (HEAD identique, tree propre).
+  **D-019 VALIDÉE — cycle D-018 complet respecté de bout en bout.**
 
 ---
 
