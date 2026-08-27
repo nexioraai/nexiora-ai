@@ -1,5 +1,29 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — Environnement P-003/E2E PROVISIONNÉ et AUDITÉ (option A, $0)
+
+- **Option A retenue après analyse comparative** (consignée en session) :
+  l'option B (appareils+EAS) était techniquement incapable d'exécuter le
+  comparatif E2E protocolé (Detox ne supporte pas les appareils iOS
+  physiques) ; l'option A est conforme mot pour mot aux deux protocoles.
+- **Provisionné et PROUVÉ** : Xcode 26.6 (17F113) + runtime iOS 26.5 +
+  simulateur iPhone 17 Pro (**boot réel 24 s**, shutdown propre) ·
+  Android Studio 2026.1.3.8 arm64 + SDK android-36 + platform-tools +
+  émulateur + AVD `bench_pixel` google_apis arm64 (**boot réel 38 s,
+  Android 16**) · CocoaPods 1.17.0 (Homebrew arm64) · applesimutils
+  0.9.12 (tap wix, confiance LIMITÉE à la formule) · Maestro 2.9.0 (JVM =
+  JBR OpenJDK 25 injectée à l'invocation, aucune config système) · Node
+  24.16/npm 11.13 · 283 Go libres.
+- **Découvertes consignées** : Homebrew Intel préexistant CASSÉ (Bad CPU
+  type, sans Rosetta) → remplacé par Homebrew arm64 (propriétaire) ;
+  `mas` v7 exige sudo (voie App Store CLI fermée) ; Xcode/licences/brew
+  installés par le propriétaire (droits admin), le reste en autonomie.
+- **Audit final 12 points : 🟢 PRÊT** — P-003 et E2E exécutables SANS
+  dérogation ; discipline de mesure consignée : GPU MATÉRIEL pour les
+  runs de perf (le smoke test utilisait swiftshader), cold boot épinglé,
+  valeurs comparatives jamais absolues. Dépôt resté intact pendant tout
+  le provisionnement ($0, aucun compte créé).
+
 ## 2026-08-27 — 2.5 : REGISTRE v1 GELÉ (D-020) — PHASE 2 TERMINÉE
 
 - **Gel exécuté sur décisions propriétaire** (après double confrontation

@@ -1,8 +1,8 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-08-27** (**PHASE 2 TERMINÉE** — registre v1 GELÉ 1.0.0, D-020 ;
-> bancs Phase 1 en attente de prérequis ; Phase 3 NON ouverte — P-003).
+> **2026-08-27** (environnement P-003/E2E PROVISIONNÉ et AUDITÉ 🟢 —
+> bancs exécutables sans dérogation ; Phase 2 close ; Phase 3 attend P-003).
 
 ## ÉTAT GLOBAL
 
@@ -51,15 +51,14 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
   critère d'inclusion v2, candidates tier B consignées) — **PHASE 2
   TERMINÉE, critères de sortie tous satisfaits**.
 - **En cours** : Phase 1 uniquement (bancs sur prérequis).
-- **Bloqué, prérequis propriétaire** : **Phase 3** (exige P-003 tranché) ·
-  Phase 1 : P-002 (comptes E2B/Modal/Fly/Vercel Sandbox + budget
-  ~10-20 $) · P-003 & E2E (Xcode complet + simulateurs et Android Studio,
-  OU 2 appareils physiques + compte EAS) · coûts EAS (compte Expo/EAS) ·
-  coût projet Supabase (token Management API, org de test).
-- **Prochaine étape EXACTEMENT autorisée** : **le premier banc de Phase 1
-  dont le prérequis arrive** (P-002 en priorité recommandée : il
-  débloque la Phase 6 et P-003 débloque la Phase 3) — aucune étape de
-  phase n'est exécutable sans prérequis propriétaire.
+- **Bloqué, prérequis propriétaire** : **Phase 3** (exige P-003 tranché —
+  banc désormais exécutable) · P-002 (comptes E2B/Modal/Fly/Vercel
+  Sandbox + budget ~10-20 $) · coûts EAS (compte Expo/EAS) · coût projet
+  Supabase (token Management API, org de test).
+- **Prochaine étape EXACTEMENT autorisée** : **banc P-003** — fixture
+  commune (protocole versionné) puis 4 variantes et mesures ; **E2E
+  ensuite** sur la même fixture. Environnement 🟢 prouvé (option A,
+  audit du 2026-08-27).
 - **INTERDIT à ce stade** : toute phase dont les dépendances ROADMAP ne
   sont pas satisfaites (Phase 3 exige P-003 ; Phases 4+ dépendent de 2/3),
   tout push sans accord explicite, toute décision P-00x sans les mesures
@@ -83,8 +82,8 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
 | Coûts LLM (caching) | ✅ | 🟢 **EXÉCUTÉ** — caching ×6,5 global / ×10 entrée confirmé ; **découverte : refus `cyber` 7/10 sur prompts de forme moteur** (détail : `benchmarks/couts-unitaires.md`) |
 | P-001 Orchestration | ✅ | 🟢 **CANDIDAT (a) pgmq+état : CAMPAGNE OFFICIELLE EXÉCUTÉE — 5/5 épreuves éliminatoires réussies** (2026-08-27, base de test `deribfy-mobile-test`, durées du protocole ; journaux versionnés `benchmarks/orchestration/results/`). Mesures : E1 kill -9 → redélivrance prouvée (2 exécutions étape 3), 0 artefact dupliqué · E2 ré-enfilage idempotent 6 jobs/30 artefacts/0 doublon en 342 s (budget calculé 471 s, 2 workers) · E3 annulation propre · E4 exactement 2 tentatives puis `failed` · E5 fenêtre sans worker **prouvée** vide puis reprise. LOC orchestrateur candidat : 158. Campagne 1 (4/5) conservée : faux négatif E2 + fuite worker = **défauts du harnais v1, corrigés en v2** — le candidat n'a montré aucun défaut. **Candidat (b) Inngest : CAMPAGNE OFFICIELLE 5/5 également** (2026-08-27, mode connect, journal `benchmarks/orchestration/inngest/results/`) — E1 redélivrance cloud 157 s avec mémoïsation prouvée (étape 1 : 1 seule exécution) · E2 déduplication par id d'événement : 6 démarrages/12 envois, 160 s (parallélisme natif vs 342 s pour (a)) · E3 `cancelOn` : étape 3 jamais exécutée · E4 `retries:1`+`onFailure` : exactement 2 tentatives · E5 fenêtre prouvée vide puis reprise. **Candidat (c) Trigger.dev v4 : CAMPAGNE OFFICIELLE 5/5 également** (2026-08-27, cloud managé, version `20260827.1`, journal `benchmarks/orchestration/triggerdev/results/`) — E1 redélivrance **2 s** (backoff 1 s configuré) · E2 **101 s**, dédup `idempotencyKey` 6/12 · E3 `runs.cancel` propre · E4 exactement 2 tentatives · E5 fenêtre différée prouvée vide. **DÉCISION PRISE → D-016 : Trigger.dev v4** (arbitrage propriétaire du 2026-08-27 sur dossier complet — les trois candidats à 5/5 ; mesures, coûts, risques et mitigations consignés dans `DECISIONS.md`) |
 | P-002 Sandbox | ✅ | 🔴 bloqué — comptes E2B/Modal/Fly/Vercel Sandbox + budget ~10-20 $ |
-| P-003 Styling RN | ✅ | 🔴 bloqué — Xcode complet + simulateurs OU appareils ([mesuré] : absents de la machine) |
-| E2E mobile | ✅ | 🔴 bloqué — mêmes prérequis que P-003 |
+| P-003 Styling RN | ✅ | 🟢 **DÉBLOQUÉ — environnement provisionné et audité** (2026-08-27, option A) : Xcode 26.6 + simulateur iPhone 17 Pro (iOS 26.5, boot prouvé 24 s) · Android Studio 2026.1.3.8 + SDK android-36 + AVD `bench_pixel` arm64 (boot prouvé 38 s, Android 16) · CocoaPods 1.17.0 · JBR OpenJDK 25 · conformité protocole vérifiée point par point — banc PRÊT à exécuter |
+| E2E mobile | ✅ | 🟢 **DÉBLOQUÉ — même environnement que P-003, audité** : Maestro 2.9.0 ✓ · applesimutils 0.9.12 ✓ (prérequis Detox iOS) · image émulateur google_apis sans Play Store (recommandation Detox) ✓ — s'exécute après P-003 (même fixture) |
 | Coûts EAS | ✅ | 🔴 bloqué — compte Expo/EAS |
 | Coût projet Supabase | ✅ | 🔴 bloqué — token Management API (org de test) |
 
