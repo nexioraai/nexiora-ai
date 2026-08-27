@@ -235,6 +235,23 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   du comportement réel ; mécanisme des 7 échecs = NON ÉTABLI ; sonde
   instrumentée conçue pour un maximum d'information par dollar, aucune
   dépense sans autorisation explicite.
+- **Complément (propriétaire, 2026-08-27) — standard de preuve 100 %** :
+  trois états SEULS pour les décisions importantes : 🟢 PROUVÉ ·
+  🔴 RÉFUTÉ · 🟠 NON DÉTERMINÉ. Vocabulaire de conjecture (probablement,
+  semble, devrait, cause probable, confiance X %, fortement soutenue…)
+  INTERDIT hors d'une section « HYPOTHÈSES NON PROUVÉES ». Transformer
+  🟠 en 🟢 par interprétation est interdit. « La cause est X » exige :
+  test démontrant X · résultat obtenu · résultat attendu si X était faux ·
+  élimination des hypothèses concurrentes · réplication ·
+  contre-vérification indépendante — sinon 🟠. Une simulation ne prouve
+  QUE ce qu'elle simule. Une correction n'est 🟢 qu'après : disparition du
+  problème initial + cas fautifs corrects + cas sains conservés +
+  non-régression + critères ROADMAP + contre-vérification. Cycle
+  obligatoire : DIAGNOSTIC → HYPOTHÈSE → TEST DISCRIMINANT → PREUVE →
+  CORRECTION → SIMULATION → TEST RÉEL → CONTRE-VÉRIFICATION →
+  NON-RÉGRESSION → VERDICT. Chercher activement à DÉTRUIRE ses propres
+  hypothèses, pas à les confirmer. Si on ne peut pas le prouver, on ne le
+  déclare pas.
 
 ---
 

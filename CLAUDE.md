@@ -310,7 +310,11 @@ Règles obligatoires :
    « résolu » exige vérification indépendante + critères ROADMAP ; preuve
    contraire ⇒ abandon immédiat de l'hypothèse ; incertitude énoncée
    explicitement ; dépense API : option la moins chère d'abord +
-   autorisation ; jamais fermer une étape pour finir. Détail :
+   autorisation ; jamais fermer une étape pour finir. **Standard 100 %** :
+   trois états seuls (🟢 PROUVÉ / 🔴 RÉFUTÉ / 🟠 NON DÉTERMINÉ) ;
+   vocabulaire de conjecture interdit hors section « HYPOTHÈSES NON
+   PROUVÉES » ; une simulation ne prouve que ce qu'elle simule ; chercher
+   à DÉTRUIRE ses hypothèses, pas à les confirmer. Détail :
    DECISIONS.md D-018.
 7. **Pilotage opérationnel (complément D-017)** : Claude Code pilote
    l'exécution du plan — croiser ROADMAP/MASTER_PLAN/STATUS/DECISIONS et
