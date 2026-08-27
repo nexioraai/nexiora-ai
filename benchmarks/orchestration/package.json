@@ -4,6 +4,7 @@
   "type": "module",
   "description": "Banc P-001 - candidat (a) pgmq + machine a etats. Hors workspaces (outillage de mesure).",
   "dependencies": {
+    "inngest": "^3.54.2",
     "pg": "^8.16.0"
   }
 }

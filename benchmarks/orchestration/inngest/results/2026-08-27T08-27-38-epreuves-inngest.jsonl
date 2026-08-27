@@ -1,0 +1,21 @@
+{"t":"2026-08-27T08:27:39.905Z","officiel":true,"candidat":"b-inngest","epreuve":"CAMPAGNE","event":"reset"}
+{"t":"2026-08-27T08:27:51.910Z","officiel":true,"candidat":"b-inngest","epreuve":"CAMPAGNE","event":"app enregistree (connect OK)"}
+{"t":"2026-08-27T08:27:52.113Z","officiel":true,"candidat":"b-inngest","epreuve":"E1-kill9","event":"debut"}
+{"t":"2026-08-27T08:28:44.517Z","officiel":true,"candidat":"b-inngest","epreuve":"E1-kill9","event":"worker tue en pleine etape 3 (SIGKILL)"}
+{"t":"2026-08-27T08:32:36.079Z","officiel":true,"candidat":"b-inngest","epreuve":"E1-kill9","event":"mesures","reexecutions_etape3":2,"etape1_executions":1,"redelivrance_s":157,"artefacts":5,"dupliques":0}
+{"t":"2026-08-27T08:32:36.081Z","officiel":true,"candidat":"b-inngest","epreuve":"E1-kill9","event":"REUSSIE"}
+{"t":"2026-08-27T08:32:36.282Z","officiel":true,"candidat":"b-inngest","epreuve":"E2-orchestrateur","event":"debut"}
+{"t":"2026-08-27T08:35:16.740Z","officiel":true,"candidat":"b-inngest","epreuve":"E2-orchestrateur","event":"mesures","jobs":6,"artefacts":30,"demarrages_etape1":6,"dupliques":0}
+{"t":"2026-08-27T08:35:16.742Z","officiel":true,"candidat":"b-inngest","epreuve":"E2-orchestrateur","event":"REUSSIE"}
+{"t":"2026-08-27T08:35:16.944Z","officiel":true,"candidat":"b-inngest","epreuve":"E3-annulation","event":"debut"}
+{"t":"2026-08-27T08:35:53.890Z","officiel":true,"candidat":"b-inngest","epreuve":"E3-annulation","event":"evenement cancel emis"}
+{"t":"2026-08-27T08:36:39.351Z","officiel":true,"candidat":"b-inngest","epreuve":"E3-annulation","event":"mesures","status":"running","etape3_executee":0}
+{"t":"2026-08-27T08:36:39.353Z","officiel":true,"candidat":"b-inngest","epreuve":"E3-annulation","event":"REUSSIE"}
+{"t":"2026-08-27T08:36:39.555Z","officiel":true,"candidat":"b-inngest","epreuve":"E4-retry-borne","event":"debut"}
+{"t":"2026-08-27T08:37:20.979Z","officiel":true,"candidat":"b-inngest","epreuve":"E4-retry-borne","event":"mesures","tentatives_etape2":2}
+{"t":"2026-08-27T08:37:20.980Z","officiel":true,"candidat":"b-inngest","epreuve":"E4-retry-borne","event":"REUSSIE"}
+{"t":"2026-08-27T08:37:21.182Z","officiel":true,"candidat":"b-inngest","epreuve":"E5-durabilite","event":"debut"}
+{"t":"2026-08-27T08:38:22.027Z","officiel":true,"candidat":"b-inngest","epreuve":"E5-durabilite","event":"fenetre sans worker prouvee vide"}
+{"t":"2026-08-27T08:39:54.630Z","officiel":true,"candidat":"b-inngest","epreuve":"E5-durabilite","event":"mesures","jobs":2,"dupliques":0}
+{"t":"2026-08-27T08:39:54.632Z","officiel":true,"candidat":"b-inngest","epreuve":"E5-durabilite","event":"REUSSIE"}
+{"t":"2026-08-27T08:39:54.833Z","officiel":true,"candidat":"b-inngest","epreuve":"SYNTHESE","event":"verdicts","verdicts":[{"nom":"E1-kill9","verdict":"REUSSIE"},{"nom":"E2-orchestrateur","verdict":"REUSSIE"},{"nom":"E3-annulation","verdict":"REUSSIE"},{"nom":"E4-retry-borne","verdict":"REUSSIE"},{"nom":"E5-durabilite","verdict":"REUSSIE"}],"journal":"/Users/yia/Documents/woorri/benchmarks/orchestration/inngest/results/2026-08-27T08-27-38-epreuves-inngest.jsonl"}
