@@ -1,54 +1,96 @@
 // src/app/llms.txt/route.ts
+//
+// ============================================================
+// SURFACE DERIVEE -- NE PAS REDIGER ICI.
+//
+// Ce fichier est ASSEMBLE a partir de `documentation/manifeste.ts`. Il ne
+// contient aucune phrase qui lui soit propre : chaque fait vient du corpus
+// canonique. C'est la seule facon d'empecher qu'il le contredise.
+//
+// POURQUOI CETTE REGLE EXISTE. La version precedente etait ecrite a la main.
+// Elle affirmait une capacite que le produit n'a pas, et sous-declarait le
+// nombre de langues d'un facteur neuf. Une surface libre de dire ce qu'elle
+// veut finit par dire autre chose que le produit.
+//
+// Pour modifier ce contenu : modifier le manifeste, jamais ce fichier.
+// ============================================================
+import {
+  IDENTITE_FR,
+  CONCENTRIQUE_FR,
+  IMMEDIAT_FR,
+  NIVEAUX,
+  VERIFIE_LE,
+} from '../../../documentation/manifeste'
+
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.deribfy.com'
 
 export function GET() {
-  const today = new Date().toISOString().split('T')[0]
+  const niveaux = NIVEAUX.map(
+    (n) =>
+      `### ${n.fr}\n` +
+      `Portee : ${n.portee}.\n` +
+      n.capacites_fr.map((c) => `- ${c}`).join('\n')
+  ).join('\n\n')
 
   const body = `# Deribfy
 
-> Deribfy est une plateforme canadienne premium de génération de sites web, de boutiques en ligne et d'applications de gestion d'entreprise par intelligence artificielle. Vous décrivez votre activité en langage naturel, et Deribfy crée pour vous, en quelques secondes, un produit professionnel, multilingue et optimisé à la fois pour les moteurs de recherche (SEO) et les IA génératives (GEO). Aucune compétence technique requise.
+> ${IDENTITE_FR}
 
-## À propos
-- Plateforme canadienne basée à Montréal, Québec (deribfy.com)
-- Pilotée par intelligence artificielle générative : décrivez votre besoin en langage humain, Deribfy fait le reste
-- Aucune compétence technique ni connaissance en programmation nécessaire
-- Multilingue : français, anglais, arabe, espagnol
-- Optimisé pour les moteurs de recherche (SEO) et les IA génératives (GEO)
-- Abonnement mensuel unique en dollars canadiens (CAD), sans engagement
-- Hébergement et mise en ligne inclus
+## Capacites
 
-## Produits et fonctionnalités
-- **Sites web** : génération de sites vitrines professionnels et premium, multilingues, dans la langue de votre description
-- **Boutique en ligne (e-commerce)** : création de boutiques avec pages produits, panier, encaissement et suivi des commandes
-- **AI Visibility** : mesure réelle de la visibilité de votre marque sur les moteurs IA (Perplexity, ChatGPT), avec score et historique
-- **SEO / GEO** : optimisation technique automatique (Schema.org, données structurées, llms.txt, balises sémantiques) pour Google et pour les moteurs IA
+${CONCENTRIQUE_FR}
 
-## Questions fréquentes
+${niveaux}
 
-### Faut-il savoir coder pour utiliser Deribfy ?
-Non. Deribfy est entièrement génératif. Vous décrivez votre activité en langage naturel et la plateforme crée automatiquement votre site, votre boutique ou votre application de gestion.
+## Parcours
 
-### Dans quelles langues Deribfy génère-t-il ?
-Deribfy prend en charge le français, l'anglais, l'arabe et l'espagnol, avec support de l'écriture de droite à gauche (RTL) pour l'arabe.
+Creer un site avec Deribfy suit six etapes : decrire son activite, laisser le
+site se generer, l'editer, le previsualiser en prive, le publier en activant
+l'abonnement, puis continuer a le modifier. Les six etapes sont les memes pour
+les trois types de site.
 
-### Combien coûte Deribfy ?
-Deribfy fonctionne avec un abonnement mensuel unique en dollars canadiens (CAD), sans engagement. L'hébergement et la mise en ligne sont inclus.
+${IMMEDIAT_FR}
 
-### Où est basée Deribfy ?
-Deribfy est une plateforme canadienne, basée à Montréal, au Québec.
+## Ce que Deribfy prepare pour les moteurs
 
-### Mon site est-il optimisé pour les IA ?
-Oui. Chaque produit généré inclut automatiquement les optimisations GEO (données structurées Schema.org, fichier llms.txt, contenu structuré en questions-réponses) pour être compris et cité par les moteurs IA comme ChatGPT et Perplexity.
+Chaque site publie dispose d'un sitemap, d'un fichier robots, de donnees
+structurees, d'un fichier llms.txt et d'URLs stables avec une page dediee par
+produit. Pour un domaine personnalise, la verification de propriete aupres de
+Google et la soumission du sitemap sont automatisees.
+
+Deribfy prepare et automatise le travail technique. Google decide seul de
+l'indexation et du classement. Aucun service ne peut promettre une position
+dans les resultats de recherche.
+
+## Limites
+
+- Le type de site est fixe a la creation et ne peut pas etre change ensuite.
+- Un site n'est pas accessible publiquement avant l'activation de l'abonnement.
+- Si l'abonnement s'arrete, le site est retire de la ligne.
+- Les sites clients ne comportent pas de blog.
+- Google decide de l'indexation et du classement.
+
+## Documentation
+
+- [Qu'est-ce que Deribfy ?](${SITE_URL}/documentation/identite)
+- [Comment ca marche](${SITE_URL}/documentation/comment-ca-marche)
+- [Types de site et capacites](${SITE_URL}/documentation/types-et-capacites)
+- [Generation et edition](${SITE_URL}/documentation/generation-et-edition)
+- [Boutique en ligne](${SITE_URL}/documentation/boutique-en-ligne)
+- [Dropshipping](${SITE_URL}/documentation/dropshipping)
+- [Marketing et contenu](${SITE_URL}/documentation/marketing-et-contenu)
+- [SEO, Google et visibilite IA](${SITE_URL}/documentation/seo-google-visibilite-ia)
+- [Domaines](${SITE_URL}/documentation/domaines)
+- [Limites](${SITE_URL}/documentation/limites)
+- [Questions frequentes](${SITE_URL}/documentation/faq)
+- [Glossaire](${SITE_URL}/documentation/glossaire)
 
 ## Liens
-- [Accueil](${SITE_URL})
-- [Créer un compte](${SITE_URL}/login)
-- [Connexion](${SITE_URL}/login)
 
----
-Dernière mise à jour : ${today}
-Deribfy — plateforme canadienne de génération par IA — ${SITE_URL}
+- [Accueil](${SITE_URL})
+
+Derniere verification : ${VERIFIE_LE}
 `
 
   return new Response(body, {
