@@ -253,6 +253,35 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   hypothèses, pas à les confirmer. Si on ne peut pas le prouver, on ne le
   déclare pas.
 
+## D-019 — Correction 2.4-H : ordre de déclaration du schéma de bloc
+## (2026-08-27)
+
+- **Cause racine prouvée** (matrice X1-X4 + généralisation sur artefacts,
+  12/12 sans contre-exemple) : fourche ordre×optionalité — `props`
+  optionnelle déclarée AVANT `entityId` rendait légale la trajectoire
+  naturelle du modèle (entityId d'abord), forcluant les props des blocs
+  « armés » (props+entityId), présents uniquement dans les 7 documents
+  fautifs (14-19 chacun ; 0 dans les 5 sains).
+- **Correction appliquée (autorisée)** : permutation de deux lignes dans
+  `blockInstanceSchema` (`air.ts`) — `entityId` avant `props`, `props` en
+  dernier, aligné sur l'ordre d'émission naturel MESURÉ. Aucune
+  modification de renderer, corpus, prompts ou architecture. RÈGLE
+  dérivée pour les schémas futurs : l'ordre de déclaration est
+  SIGNIFICATIF pour l'émission — jamais d'optionnel lourd avant un champ
+  que le modèle préfère émettre plus tôt.
+- **Garde ajoutée (harnais uniquement)** : comptes de pairs de props par
+  bloc extraits du rendu, refus fail-closed `PROPS_COUNT` — ferme le trou
+  prouvé par les bruts A2/A4 (props supprimées = schema-valides).
+- **Preuves locales ($0)** : T1 diff de projection = relocalisation du
+  seul nœud `entityId` (10 lignes, zéro parasite) · T2 121/121 tests
+  paquets + typecheck + lint 0 · T3 hashes canoniques des 12 AIR
+  inchangés 12/12 · T4 simulation 27 scénarios PASS ×2 (dont 2 nouveaux
+  prouvant la garde) · équivalence EXACTE du schéma d'émission réel avec
+  le bras X3′ (7/7 identique ×2 sur l'API réelle).
+- **Périmètre du verdict** : CORRECTION LOCALEMENT PROUVÉE — la
+  validation du comportement du VRAI modèle (12 rejeux, ~$9-14) reste une
+  étape séparée soumise à autorisation.
+
 ---
 
 # EN ATTENTE

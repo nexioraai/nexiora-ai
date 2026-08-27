@@ -83,8 +83,15 @@ const blockInstanceSchema = z.strictObject({
   // Clé du registre de Smart Blocks — la version exacte est résolue dans le
   // lock, jamais choisie par le LLM.
   blockType: z.string().regex(/^[a-z][a-z0-9_]*$/),
-  props: flatConfigSchema.optional(),
+  // ORDRE DE DÉCLARATION SIGNIFICATIF POUR L'ÉMISSION (D-019 / 2.4-H) :
+  // la grammaire structured outputs suit cet ordre ; `props` déclarée avant
+  // `entityId` créait une trajectoire légale qui forcloait les props sur les
+  // blocs portant les deux (cause racine prouvée par la matrice X1-X4 :
+  // X3' 7/7 identique ×2). `props` reste EN DERNIER — aligné sur l'ordre
+  // d'émission naturel mesuré du modèle. Ne pas réordonner sans re-dérouler
+  // le cycle de preuve D-018.
   entityId: entityIdSchema.optional(),
+  props: flatConfigSchema.optional(),
 });
 
 const screenSchema = z.strictObject({

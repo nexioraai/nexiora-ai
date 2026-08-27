@@ -39,13 +39,25 @@ export function parseRenderCounts(rendered) {
     return Number(line.slice(line.lastIndexOf("(") + 1, line.lastIndexOf(")")));
   };
 
-  // Écrans : ids en ordre de rendu + nombre de blocs par écran.
+  // Écrans : ids en ordre de rendu + nombre de blocs par écran + GARDE
+  // 2.4-H : nombre de pairs de props par bloc (null = bloc sans props).
+  // Ferme le trou prouvé par les bruts A2/A4 : des props supprimées restent
+  // schema-valides (optionnelles) et passaient les comptes de blocs.
+  const propsPairsOf = (line) => {
+    const idx = line.indexOf("· props: ");
+    if (idx === -1) return null;
+    const parsed = JSON.parse(line.slice(idx + "· props: ".length));
+    if (!Array.isArray(parsed)) {
+      throw new TranscriptionRefusedError("RENDER_PARSE", "comptes", "props non-tableau dans le rendu");
+    }
+    return parsed.length;
+  };
   const screens = [];
   let current = null;
   for (const line of lines) {
     const m = line.match(/^### Écran `([^`]+)`/);
     if (m) {
-      current = { id: m[1], blocks: 0 };
+      current = { id: m[1], blocks: 0, propsPairs: [] };
       screens.push(current);
       continue;
     }
@@ -54,6 +66,7 @@ export function parseRenderCounts(rendered) {
     }
     if (current !== null && line.startsWith("- bloc ")) {
       current.blocks++;
+      current.propsPairs.push(propsPairsOf(line));
     }
   }
 
@@ -166,6 +179,19 @@ function validateScreen(index, expectedScreen, data) {
     throw new TranscriptionRefusedError("SCREEN_ID_MISMATCH", `ecran[${index}]`, `"${s.id}" ≠ "${expectedScreen.id}" attendu (ordre du rendu)`);
   }
   checkArrayCount(`ecran[${index}]`, `blocks de ${s.id}`, s.blocks.length, expectedScreen.blocks);
+  // GARDE 2.4-H : les props de chaque bloc doivent exister et compter
+  // EXACTEMENT les pairs annoncées par le rendu (null = pas de props).
+  s.blocks.forEach((b, j) => {
+    const attendu = expectedScreen.propsPairs[j];
+    const emis = b.props === undefined ? null : b.props.length;
+    if (attendu !== emis) {
+      throw new TranscriptionRefusedError(
+        "PROPS_COUNT",
+        `ecran[${index}]`,
+        `bloc "${b.id}" : props ${emis === null ? "absentes" : `${emis} pair(s)`} vs ${attendu === null ? "aucune" : `${attendu} pair(s)`} attendu d'après le rendu`,
+      );
+    }
+  });
   return s;
 }
 

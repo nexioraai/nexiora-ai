@@ -174,6 +174,29 @@ await scenario("échec transitoire d'un appel individuel → récupéré", async
   console.log("  PASS panne transitoire récupérée — hash identique");
 });
 
+await scenario("props supprimées à comptes de blocs corrects (mode réel A2/A4) → REFUS par la garde 2.4-H", async () => {
+  const t = honestTransport(air);
+  const transport = async (call) => {
+    const out = await t(call);
+    if (call.kind === "screen" && call.index === 1) delete out.screen.blocks[0].props;
+    return out;
+  };
+  await expectRefusal("props supprimées", transcribeAirV2({ rendered, transport }), "PROPS_COUNT");
+});
+
+await scenario("props tronquées (pairs manquantes) → REFUS par la garde 2.4-H", async () => {
+  const t = honestTransport(air);
+  const transport = async (call) => {
+    const out = await t(call);
+    if (call.kind === "screen" && call.index === 0) {
+      const b = out.screen.blocks.find((x) => (x.props ?? []).length >= 2);
+      if (b) b.props = b.props.slice(0, 1);
+    }
+    return out;
+  };
+  await expectRefusal("props tronquées", transcribeAirV2({ rendered, transport }), "PROPS_COUNT");
+});
+
 await scenario("échec persistant d'un appel → refus, jamais d'assemblage partiel", async () => {
   const t = honestTransport(air);
   const transport = async (call) => {
@@ -203,13 +226,15 @@ await scenario("props modifiées (comptes égaux) → non refusé, mais DÉTECT�
     const out = await t(call);
     if (call.kind === "screen" && call.index === 0) {
       const withProps = out.screen.blocks.find((b) => b.props !== undefined);
-      if (withProps) withProps.props = [{ key: "altere", value: true }];
+      // MÊME nombre de pairs (la garde PROPS_COUNT ne voit rien), valeurs
+      // altérées — c'est la limite résiduelle réelle restante.
+      if (withProps) withProps.props = withProps.props.map((p, i) => ({ key: p.key, value: `altere_${i}` }));
     }
     return out;
   };
   const { hash } = await transcribeAirV2({ rendered, transport });
   assert.notEqual(hash, airSchema.hashCanonical(air), "le hash aurait dû différer");
-  console.log("  PASS divergence de contenu : document valide retourné, hash ≠ → détectée par la comparaison du banc (limite consignée : non REFUSÉE par les comptes)");
+  console.log("  PASS divergence de contenu à comptes égaux : document valide retourné, hash ≠ → détectée par la comparaison du banc (limite consignée : non REFUSÉE par les comptes)");
 });
 
 console.log("\n== 4. PARSING DU RENDU : comptes extraits = réalité des 12 AIR ==");
