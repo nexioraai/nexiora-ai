@@ -2,7 +2,11 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # `fix/xss-jsonld` : branche de travail du chantier mobile-generation
+    # (D-014) -- la CI doit verifier l'etat REEL de la branche, pas seulement
+    # les PR de release vers main. Le rapport de sante ne verifie les
+    # invariants base QUE sur main (voir report-system-health.ts).
+    branches: [main, fix/xss-jsonld]
   pull_request:
     branches: [main]
 
