@@ -139,6 +139,9 @@ function makeTransport(rendered, stats) {
       cacheRead: response.usage.cache_read_input_tokens ?? 0,
       cacheWrite: response.usage.cache_creation_input_tokens ?? 0,
       out: response.usage.output_tokens ?? 0,
+      // Règle propriétaire (validation D-019) : TOUT le brut est conservé,
+      // y compris les émissions que le moteur refusera ensuite.
+      raw: response.content.filter((b) => b.type === "text").map((b) => b.text).join(""),
     });
     if (response.stop_reason === "refusal") {
       stats.refusals++;
