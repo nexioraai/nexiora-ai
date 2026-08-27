@@ -1,5 +1,24 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — D-014 : monorepo à workspaces en place
+
+- **P-005 tranché par le propriétaire → D-014** : monorepo à workspaces.
+- Migration exécutée (`5200cac`) : l'app web déplacée EN BLOC dans
+  `apps/web/` (702 renames git à 100 %, historique préservé, **zéro fichier
+  de code/cliquet/script modifié** — couplages de chemins tous relatifs au
+  paquet, vérifié avant migration) ; racine = workspace `deribfy`
+  (`apps/*`, `packages/*`) ; `packages/` vide par conception (aucun code
+  moteur avant Phases 2+) ; `.gitignore` étendu ; lockfile workspace unique.
+- **Parité prouvée après migration** : tsc EXIT=0 · 221 fichiers /
+  4071 tests, 0 échec (compte identique) · `next build` EXIT=0 ·
+  `check-api-docs` 73/73 · cliquets d'architecture verts.
+- CI adaptée aux workspaces (install racine, étapes dans `apps/web`, gate
+  inchangé) — verte à confirmer au premier run distant.
+- ⚠️ Opération requise avant tout déploiement : **Root Directory Vercel →
+  `apps/web`**.
+- Phase 0 : toutes les sous-étapes locales terminées ; critère restant =
+  CI verte sur run réel (push sur accord).
+
 ## 2026-08-27 — Plan v0.1 VALIDÉ · ouverture de la Phase 0
 
 - **Validation officielle du propriétaire** : le plan v0.1 est FIGÉ ; toute

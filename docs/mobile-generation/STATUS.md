@@ -18,14 +18,21 @@
 |---|---|
 | Règle de continuité inscrite dans `CLAUDE.md` | 🟢 TERMINÉ (2026-08-27) |
 | STATUS.md reflétant la validation et l'ouverture | 🟢 TERMINÉ (2026-08-27) |
-| **P-005 : arbitrage monorepo vs dépôt séparé** | 🔴 **BLOQUÉ — ATTENTE ARBITRAGE PROPRIÉTAIRE** (recommandation : monorepo ; bloque workspaces + CI) |
-| Upgrade SDK Anthropic + re-baseline routes IA web | 🟢 TERMINÉ (2026-08-27) — `@anthropic-ai/sdk` 0.99.0 → 0.121.0 ; preuves : tsc EXIT=0, 221 fichiers / 4071 tests verts, `next build` EXIT=0 ; 21 fichiers consommateurs, import par défaut inchangé, aucun code modifié |
-| Mise en place des workspaces (app web → paquet, parité prouvée) | ⏳ (bloqué par P-005) |
-| Extension CI (lanes par paquet, nouveaux paquets lint-bloquant) | ⏳ (bloqué par P-005) |
+| P-005 : arbitrage monorepo vs dépôt séparé | 🟢 TRANCHÉ → **D-014 monorepo** (propriétaire, 2026-08-27) |
+| Upgrade SDK Anthropic + re-baseline routes IA web | 🟢 TERMINÉ (2026-08-27) — `@anthropic-ai/sdk` 0.99.0 → 0.121.0 ; tsc EXIT=0, 4071 tests verts, build EXIT=0, aucun code modifié (`6fda588`) |
+| Mise en place des workspaces (app web → paquet, parité prouvée) | 🟢 TERMINÉ (2026-08-27, `5200cac`) — 702 renames git à 100 % vers `apps/web/`, aucun fichier de code/cliquet/script modifié ; **parité prouvée après migration** : tsc EXIT=0 · 221 fichiers / 4071 tests, 0 échec (compte identique) · `next build` EXIT=0 · `check-api-docs` 73/73 · cliquets (273 tests) verts |
+| Extension CI aux workspaces | 🟢 CÂBLÉE (2026-08-27) — `npm ci` racine, étapes dans `apps/web`, gate bloquant inchangé, YAML validé ; **verte à CONFIRMER au premier run distant** (nécessite un push) |
+| Règle lint-bloquant des futurs paquets | 🟢 Inscrite (`packages/README.md`) — s'applique à la création du premier paquet |
 
-**Critères de sortie Phase 0** (aucun assouplissement) : suite complète verte
-inchangée (4071+ tests) · build et déploiement web inchangés (parité de
-comportement) · nouveaux paquets lint-bloquant · CI verte · STATUS à jour.
+**Critères de sortie Phase 0** : suite complète verte inchangée ✅ (4071/4071,
+compte identique) · build web inchangé ✅ (EXIT=0) · nouveaux paquets
+lint-bloquant ✅ (règle inscrite, aucun paquet encore) · **CI verte ⏳ — seul
+critère restant, vérifiable uniquement par un run GitHub Actions réel
+(push requis, sur accord)** · STATUS à jour ✅.
+
+⚠️ **AVANT TOUT DÉPLOIEMENT de cette structure : régler le Root Directory
+Vercel sur `apps/web`** (consigné dans D-014). Sans ce réglage, le build de
+production échouera ; `vercel.json` (crons) est lu depuis ce root.
 
 ## PHASES
 
@@ -54,7 +61,7 @@ comportement) · nouveaux paquets lint-bloquant · CI verte · STATUS à jour.
 
 | ID | Sujet | Quand | État |
 |---|---|---|---|
-| **P-005** | Monorepo à workspaces (recommandé) vs dépôt séparé | **MAINTENANT** — bloque la suite de la Phase 0 | 🔴 attente propriétaire |
+| ~~P-005~~ | Monorepo à workspaces | — | 🟢 tranché → D-014 (2026-08-27) |
 | P-001 | Moteur d'orchestration | Banc Phase 1 | ⏳ |
 | P-002 | Provider de sandbox | Banc Phase 1 | ⏳ |
 | P-003 | Lib de styling RN | Banc Phase 1 | ⏳ |
