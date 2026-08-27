@@ -1,6 +1,9 @@
 -- ============================================================
 -- DEBT-078 -- ETAPE 2/2 : FERMETURE DE LA FENETRE DE MIGRATION.
 --
+-- EXECUTE le 2026-08-27 -- 3.A/3.B conformes (site_id NOT NULL sur les deux
+-- tables, slug intact ; les 4 FK coexistent, actions CASCADE recopiees).
+--
 -- ⚠️ NE PAS EXECUTER CE FICHIER TANT QUE LES DEUX CONDITIONS SUIVANTES NE
 --    SONT PAS VRAIES. Il n'est pas dangereux -- il est fail-closed et ne
 --    modifie rien tant qu'il n'est pas sur de lui -- mais lance trop tot il
