@@ -2,8 +2,12 @@ import { z } from "zod";
 import type { CapabilityDefinition } from "./schema.ts";
 import { capabilityDefinitionSchema } from "./schema.ts";
 
-// Registre v1 (0.1.0) — 15 capabilities cœur. NON GELÉ : le gel en 1.0.0
-// intervient à l'étape 2.5 après revue propriétaire (décision produit).
+// REGISTRE v1 — 15 capabilities cœur — GELÉ (D-020, revue propriétaire du
+// 2026-08-27). Le gel porte sur les CONTRATS, pas sur le catalogue : tout
+// AJOUT compatible = décision consignée + édition consciente du cliquet +
+// version MINEURE ; tout retrait/renommage/changement de contrat = RUPTURE
+// (décision + migration d'AIR éventuelle + version MAJEURE). Critère
+// d'inclusion v2 et candidates futures : DECISIONS.md D-020.
 // Invariants mécaniques, verrouillés par les cliquets de registre :
 //   impact none  ⇒ profils [core, standard, extended] · OTA ✓ · rebuild ✗
 //   impact light ⇒ profils [standard, extended]       · OTA ✗ · rebuild ✓
@@ -14,7 +18,7 @@ import { capabilityDefinitionSchema } from "./schema.ts";
 const RAW_DEFINITIONS: CapabilityDefinition[] = [
   {
     id: "analytics",
-    version: "0.1.0",
+    version: "1.0.0",
     title: "Analytics produit",
     description:
       "Événements d'usage anonymisés pour le pilotage produit de l'app générée.",
@@ -38,7 +42,7 @@ const RAW_DEFINITIONS: CapabilityDefinition[] = [
   },
   {
     id: "auth",
-    version: "0.1.0",
+    version: "1.0.0",
     title: "Authentification utilisateurs finaux",
     description:
       "Comptes des utilisateurs finaux de l'app générée (email/OTP), adossés au projet Supabase provisionné par app.",
@@ -62,7 +66,7 @@ const RAW_DEFINITIONS: CapabilityDefinition[] = [
   },
   {
     id: "barcode_scan",
-    version: "0.1.0",
+    version: "1.0.0",
     title: "Lecture de codes-barres / QR",
     description:
       "Scan de codes (produits, tickets, QR) via le flux caméra — dépend de la capability camera.",
@@ -86,7 +90,7 @@ const RAW_DEFINITIONS: CapabilityDefinition[] = [
   },
   {
     id: "biometrics",
-    version: "0.1.0",
+    version: "1.0.0",
     title: "Authentification biométrique",
     description: "Face ID / Touch ID / empreinte pour déverrouiller des actions sensibles.",
     implementation: { kind: "expo_module", package: "expo-local-authentication", version: "~17" },
@@ -114,7 +118,7 @@ const RAW_DEFINITIONS: CapabilityDefinition[] = [
   },
   {
     id: "calendar",
-    version: "0.1.0",
+    version: "1.0.0",
     title: "Calendrier de l'appareil",
     description:
       "Lecture/écriture d'événements dans le calendrier (réservations, rendez-vous).",
@@ -144,7 +148,7 @@ const RAW_DEFINITIONS: CapabilityDefinition[] = [
   },
   {
     id: "camera",
-    version: "0.1.0",
+    version: "1.0.0",
     title: "Caméra",
     description: "Prise de photo/vidéo dans l'app (produits, justificatifs, avatars).",
     implementation: { kind: "expo_module", package: "expo-camera", version: "~17" },
@@ -174,7 +178,7 @@ const RAW_DEFINITIONS: CapabilityDefinition[] = [
   },
   {
     id: "deep_links",
-    version: "0.1.0",
+    version: "1.0.0",
     title: "Liens profonds / universels",
     description:
       "Ouverture directe d'un écran depuis une URL (partages, campagnes, QR).",
@@ -202,7 +206,7 @@ const RAW_DEFINITIONS: CapabilityDefinition[] = [
   },
   {
     id: "geolocation",
-    version: "0.1.0",
+    version: "1.0.0",
     title: "Géolocalisation",
     description: "Position de l'utilisateur (livraison, points de vente proches).",
     implementation: { kind: "expo_module", package: "expo-location", version: "~19" },
@@ -230,7 +234,7 @@ const RAW_DEFINITIONS: CapabilityDefinition[] = [
   },
   {
     id: "maps",
-    version: "0.1.0",
+    version: "1.0.0",
     title: "Cartes",
     description: "Affichage de cartes et de marqueurs (points de vente, livraisons).",
     implementation: { kind: "react_native_module", package: "react-native-maps", version: "^2" },
@@ -254,7 +258,7 @@ const RAW_DEFINITIONS: CapabilityDefinition[] = [
   },
   {
     id: "media_upload",
-    version: "0.1.0",
+    version: "1.0.0",
     title: "Import de médias",
     description: "Sélection de photos/vidéos de la galerie et envoi vers le stockage de l'app.",
     implementation: { kind: "expo_module", package: "expo-image-picker", version: "~17" },
@@ -282,7 +286,7 @@ const RAW_DEFINITIONS: CapabilityDefinition[] = [
   },
   {
     id: "offline_storage",
-    version: "0.1.0",
+    version: "1.0.0",
     title: "Stockage hors-ligne",
     description: "Base locale SQLite pour le mode hors-ligne et le cache structuré.",
     implementation: { kind: "expo_module", package: "expo-sqlite", version: "~16" },
@@ -303,7 +307,7 @@ const RAW_DEFINITIONS: CapabilityDefinition[] = [
   },
   {
     id: "payments.iap",
-    version: "0.1.0",
+    version: "1.0.0",
     title: "Achats intégrés (IAP)",
     description:
       "Biens et services DIGITAUX consommés dans l'app — passage OBLIGATOIRE par les achats intégrés des stores.",
@@ -329,7 +333,7 @@ const RAW_DEFINITIONS: CapabilityDefinition[] = [
   },
   {
     id: "payments.psp",
-    version: "0.1.0",
+    version: "1.0.0",
     title: "Paiement PSP (biens physiques / hors app)",
     description:
       "Encaissement par PSP (Stripe) — RÉSERVÉ aux biens physiques ou services consommés hors de l'app (guideline 3.1.1).",
@@ -354,9 +358,13 @@ const RAW_DEFINITIONS: CapabilityDefinition[] = [
   },
   {
     id: "push_notifications",
-    version: "0.1.0",
-    title: "Notifications push",
-    description: "Notifications transactionnelles (commande, réservation, statut).",
+    version: "1.0.0",
+    title: "Notifications push et locales programmées",
+    // Clarification D-020 : le contrat couvre les DEUX voies — push distant
+    // (APNs/FCM) ET notifications locales programmées sur l'appareil
+    // (rappels) — l'implémentation expo-notifications est commune.
+    description:
+      "Notifications transactionnelles push (commande, réservation, statut) ET notifications locales programmées sur l'appareil (rappels).",
     implementation: { kind: "expo_module", package: "expo-notifications", version: "~0.32" },
     dependencies: { capabilities: [], nativeModules: [] },
     platforms: { ios: { supported: true, minOsVersion: "15.1" }, android: { supported: true, minSdk: 24 } },
@@ -381,7 +389,7 @@ const RAW_DEFINITIONS: CapabilityDefinition[] = [
   },
   {
     id: "share",
-    version: "0.1.0",
+    version: "1.0.0",
     title: "Partage système",
     description: "Partage de contenus via la feuille de partage native.",
     implementation: { kind: "expo_module", package: "expo-sharing", version: "~14" },
@@ -409,4 +417,5 @@ export const CAPABILITIES: readonly CapabilityDefinition[] = z
   .parse(RAW_DEFINITIONS)
   .sort((a, b) => (a.id < b.id ? -1 : 1));
 
-export const CAPABILITY_REGISTRY_VERSION = "0.1.0";
+// GEL v1 (D-020, 2026-08-27) : toute évolution passe par le cliquet.
+export const CAPABILITY_REGISTRY_VERSION = "1.0.0";

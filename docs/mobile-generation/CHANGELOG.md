@@ -1,5 +1,29 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — 2.5 : REGISTRE v1 GELÉ (D-020) — PHASE 2 TERMINÉE
+
+- **Gel exécuté sur décisions propriétaire** (après double confrontation
+  technique) : `CAPABILITY_REGISTRY_VERSION` **0.1.0 → 1.0.0**, les 15
+  contrats passés en 1.0.0, cliquet verrouillé (version + liste exacte +
+  versions de contrats) ; `push_notifications` clarifiée (push distant ET
+  notifications locales programmées).
+- **D-020 consignée** : les 15 capabilities gelées (`biometrics`
+  CONSERVÉE — l'inférence « 0/12 usage corpus → inutile » est déclarée
+  INVALIDE, biais circulaire démontré) ; critère d'inclusion v2 (digue
+  anti-inflation) ; candidates tier B HORS registre (documents,
+  audio/micro, background_fetch, contacts ; passkeys = future évolution
+  d'`auth`) ; défauts tiers (PostHog, RevenueCat, Stripe) révisables au
+  lock ; gel = CONTRATS, catalogue extensible par la porte consciente ;
+  items de surveillance (empreinte `auth`, versions par défaut, demande
+  hors-allowlist non mesurée).
+- **Preuves** : 122/122 tests paquets verts (nouveau cliquet de version
+  compris), tsc/lint 0, corpus 12/12 AIR toujours valides (39 tests),
+  aucun changement parasite au diff.
+- **PHASE 2 TERMINÉE** — critères de sortie tous satisfaits : round-trip
+  100 % conforme ✓ (et 12/12 identiques via D-019) · migrations testées ✓ ·
+  registre gelé v1 ✓ · revue propriétaire ✓. Phase 3 NON ouverte
+  (dépendances : Phase 2 ✓ + P-003 tranché — banc bloqué sur prérequis).
+
 ## 2026-08-27 — 2.4-H : GÉNÉRALISATION DÉMONTRÉE SUR ARTEFACTS EXISTANTS
 ## ($0) — la « densité » était un PROXY ; vrai discriminant : blocs armés
 

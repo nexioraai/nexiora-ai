@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   CAPABILITIES,
+  CAPABILITY_REGISTRY_VERSION,
   capabilityDefinitionSchema,
   getCapability,
 } from "../src";
@@ -10,8 +11,11 @@ import {
 // affaiblir un invariant DOIT faire échouer un test ici — la modification du
 // cliquet est alors un acte conscient, revu, jamais un effet de bord.
 
-// Liste v1 EXACTE — toute évolution passe par l'édition consciente de ce
-// cliquet (et, après le gel 2.5, par une décision consignée).
+// Liste v1 EXACTE — GELÉE (D-020, revue propriétaire du 2026-08-27).
+// Règle d'évolution post-gel : AJOUT compatible = décision consignée dans
+// DECISIONS.md + édition consciente de cette liste + version MINEURE du
+// registre ; retrait/renommage/changement de contrat = RUPTURE (décision +
+// migration d'AIR éventuelle + version MAJEURE).
 const V1_CAPABILITY_IDS = [
   "analytics",
   "auth",
@@ -31,6 +35,13 @@ const V1_CAPABILITY_IDS = [
 ];
 
 describe("cliquets de registre", () => {
+  it("le registre v1 est GELÉ en 1.0.0 et chaque contrat porte la version 1.0.0 (D-020)", () => {
+    expect(CAPABILITY_REGISTRY_VERSION).toBe("1.0.0");
+    for (const c of CAPABILITIES) {
+      expect(c.version, c.id).toBe("1.0.0");
+    }
+  });
+
   it("contient EXACTEMENT les 15 capabilities cœur v1, triées", () => {
     expect(CAPABILITIES.map((c) => c.id)).toEqual(V1_CAPABILITY_IDS);
   });

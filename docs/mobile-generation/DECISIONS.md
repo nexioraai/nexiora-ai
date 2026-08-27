@@ -286,6 +286,57 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   code gelé pendant la campagne (HEAD identique, tree propre).
   **D-019 VALIDÉE — cycle D-018 complet respecté de bout en bout.**
 
+## D-020 — GEL DU REGISTRE DE CAPABILITIES v1 (2026-08-27)
+
+- **Décision (propriétaire, après double confrontation technique)** : le
+  registre v1 est **GELÉ en 1.0.0** avec EXACTEMENT les 15 capabilities :
+  analytics · auth · barcode_scan · biometrics · calendar · camera ·
+  deep_links · geolocation · maps · media_upload · offline_storage ·
+  payments.iap · payments.psp · push_notifications · share.
+- **`biometrics` est CONSERVÉE malgré 0 usage dans le corpus** —
+  l'inférence « 0/12 usage → pas nécessaire » est INVALIDE (biais
+  circulaire démontré : émissions contraintes à l'allowlist + scénarios
+  choisis par le concepteur ; le corpus de test ne définit JAMAIS la
+  frontière du produit). La recommandation initiale de retrait a été
+  attaquée et retirée (D-018 §7).
+- **Aucun ajout** : les candidates futures restent HORS registre —
+  **tier B (sur demande réelle)** : `documents` (génération/partage de
+  fichiers — candidat le plus fort), `audio/micro`, `background_fetch`,
+  `contacts` ; **évolutions de contrat futures** : passkeys (`auth` v2),
+  portées étendues de `calendar`/`share`/`geolocation` (bump de version,
+  pas de nouvelles entrées).
+- **Critère d'inclusion v2** (digue anti-inflation — remplace le critère
+  v1 invalidé par contre-exemples auth/analytics) : une capability entre
+  au registre si (1) demande plausible dans ≥ 2 familles de domaines du
+  produit ; (2) contrat stable et mûr DANS SA CATÉGORIE — natives :
+  primitive OS/Expo de première classe ; services : classe de provider
+  abstraite avec ≥ 1 provider viable et chemin de sortie (#12) ;
+  (3) impact intégralement exprimable dans les 17 champs existants, sans
+  nouvelle classe de menace ni de conformité ; (4) aucun engagement
+  provider irréversible.
+- **`push_notifications` clarifiée** : le contrat couvre push distant
+  (APNs/FCM) ET notifications locales programmées (rappels) —
+  implémentation commune expo-notifications.
+- **Défauts d'implémentation tiers RÉVISABLES AU LOCK** : PostHog
+  (analytics), RevenueCat (payments.iap), Stripe (payments.psp) sont des
+  défauts de résolution, PAS des engagements architecturaux — le
+  multi-provider (#12) et `project.lock` restent l'autorité.
+- **Sens du gel** : gel des CONTRATS, pas fermeture du catalogue.
+  Règle d'évolution : AJOUT compatible = décision consignée + édition
+  consciente du cliquet + version MINEURE (les AIR existants restent
+  valides sans migration — démontré : référence par motif, appartenance
+  dynamique) ; retrait/renommage/changement de contrat = RUPTURE
+  (décision + migration d'AIR + version MAJEURE).
+- **Items de surveillance consignés** : empreinte réelle d'`auth`
+  (stockage sécurisé de session natif — à re-mesurer en Phase 3 au choix
+  de l'adaptateur runtime) ; versions de packages par défaut [proposé],
+  résolues au lock ; demande hors-allowlist des modèles non mesurée
+  (mesurable plus tard sur banc dédié sans allowlist).
+- **Conséquence ROADMAP** : les critères de sortie de la Phase 2 sont
+  TOUS satisfaits — **Phase 2 TERMINÉE**. Phase 3 NON ouverte
+  (dépendances : Phase 2 ✓ + **P-003 tranché** — banc bloqué sur
+  prérequis propriétaire).
+
 ---
 
 # EN ATTENTE

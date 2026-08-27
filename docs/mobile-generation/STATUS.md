@@ -1,8 +1,8 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-08-27** (2.4-H VALIDÉE : 12/12 identiques en conditions réelles —
-> D-019 ; Phase 2 : reste 2.5 ; bancs Phase 1 en attente de prérequis).
+> **2026-08-27** (**PHASE 2 TERMINÉE** — registre v1 GELÉ 1.0.0, D-020 ;
+> bancs Phase 1 en attente de prérequis ; Phase 3 NON ouverte — P-003).
 
 ## ÉTAT GLOBAL
 
@@ -10,9 +10,9 @@
 |---|---|
 | Plan v0.1 | 🟢 **VALIDÉ ET FIGÉ** (propriétaire, 2026-08-27) — toute évolution passe par `DECISIONS.md` |
 | Phase 0 — Fondations | 🟢 **TERMINÉE** (2026-08-27) — tous les critères de sortie vérifiés, dont **CI GitHub réelle verte : run #32, commit `54ef2a1`, `success`** (capture propriétaire + confirmation API Actions indépendante) |
-| Phase actuelle | **PHASE 2 — AIR v1 + CAPABILITY REGISTRY v1** : 🔵 EN COURS (ouverte le 2026-08-27 sur autorisation propriétaire ; dépendances ROADMAP satisfaites — « Phase 1 non bloquante ») · **PHASE 1** : 🔵 bancs restants bloqués sur prérequis propriétaire |
+| Phase actuelle | **PHASE 2 : 🟢 TERMINÉE** (2026-08-27 — critères de sortie tous satisfaits, registre v1 gelé D-020) · **PHASE 1** : 🔵 bancs restants bloqués sur prérequis propriétaire · **PHASE 3** : ⏳ NON ouverte (dépend de P-003, bloqué sur prérequis) |
 | Générateur mobile | 🔵 **EN IMPLÉMENTATION** — premier paquet du moteur : `packages/air-schema` (AIR v1) |
-| Progression globale | 1/15 phases terminées (Phase 0) · Phases 1 et 2 en cours |
+| Progression globale | **2/15 phases terminées (0, 2)** · Phase 1 en cours |
 
 ## PHASE 0 — DÉTAIL DES SOUS-ÉTAPES
 
@@ -47,17 +47,19 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
   correction minimale appliquée (permutation entityId/props + garde
   PROPS_COUNT), **validation réelle finale 12/12 IDENTIQUES** ($9,67,
   0 retry, contre-vérifiée indépendamment — cycle D-018 complet).
-- **En cours** : Phase 2 — AIR v1 + Capability Registry v1.
-- **Bloqué, prérequis propriétaire** : **2.5 — revue propriétaire des 15
-  capabilities v1** (décision produit exigée par la ROADMAP avant gel du
-  registre ; suspension propriétaire à lever) · Phase 1 : P-002 (comptes
-  E2B/Modal/Fly/Vercel Sandbox + budget ~10-20 $) · P-003 & E2E (Xcode
-  complet + simulateurs et Android Studio, OU 2 appareils physiques +
-  compte EAS) · coûts EAS (compte Expo/EAS) · coût projet Supabase (token
-  Management API, org de test).
-- **Prochaine étape EXACTEMENT autorisée** : **2.5 — gel du registre v1**
-  après revue propriétaire des capabilities (dernière étape de la
-  Phase 2).
+  **2.5 🟢 gel du registre v1** (D-020 : 15 capabilities, version 1.0.0,
+  critère d'inclusion v2, candidates tier B consignées) — **PHASE 2
+  TERMINÉE, critères de sortie tous satisfaits**.
+- **En cours** : Phase 1 uniquement (bancs sur prérequis).
+- **Bloqué, prérequis propriétaire** : **Phase 3** (exige P-003 tranché) ·
+  Phase 1 : P-002 (comptes E2B/Modal/Fly/Vercel Sandbox + budget
+  ~10-20 $) · P-003 & E2E (Xcode complet + simulateurs et Android Studio,
+  OU 2 appareils physiques + compte EAS) · coûts EAS (compte Expo/EAS) ·
+  coût projet Supabase (token Management API, org de test).
+- **Prochaine étape EXACTEMENT autorisée** : **le premier banc de Phase 1
+  dont le prérequis arrive** (P-002 en priorité recommandée : il
+  débloque la Phase 6 et P-003 débloque la Phase 3) — aucune étape de
+  phase n'est exécutable sans prérequis propriétaire.
 - **INTERDIT à ce stade** : toute phase dont les dépendances ROADMAP ne
   sont pas satisfaites (Phase 3 exige P-003 ; Phases 4+ dépendent de 2/3),
   tout push sans accord explicite, toute décision P-00x sans les mesures
@@ -72,7 +74,7 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
 | 2.3 | Paquet `@deribfy/capability-registry` : **15 capabilities cœur** (analytics, auth, barcode_scan, biometrics, calendar, camera, deep_links, geolocation, maps, media_upload, offline_storage, payments.iap, payments.psp, push_notifications, share) avec les 17 champs d'ARCHITECTURE §2 ; API allowlist positive (référence inconnue = refus net), fermeture transitive des dépendances, **empreinte native CALCULÉE** (autorité Router), permissions induites agrégées, conflits (PSP ↔ IAP), contrainte de classe commerce ; pont `validateAirCapabilities` (AIR ↔ registre, permissions induites à déclarer) ; **cliquets de registre** : liste v1 exacte verrouillée, invariants OTA⇔impact⇔rebuild⇔profils, dépendances acycliques, conflits symétriques, permissions ⊆ config native, contrainte commerce ⇔ paiement | 🟢 TERMINÉ (2026-08-27) — tsc EXIT=0 · lint bloquant 0 écart · **25/25 tests** · registre v0.1.0 NON GELÉ (gel = 2.5, revue propriétaire) · web intact : tsc EXIT=0 + 4071/4071 |
 | 2.4 | Émission LLM structured outputs + round-trip + golden corpus. **Campagne complète exécutée** (12 intentions fixes, 3 classes commerce, ~$19,71 sur le budget de 20 $) : **12/12 AIR valides** (émission par sections + réparation bornée ≤ 1 passe : 14-32 diagnostics 1ʳᵉ passe → **0** partout) · **round-trip 12/12 conforme au schéma** (critère de sortie phase ✓) · **identité stricte au hash canonique : 5/12** [mesuré] · **corpus : 12 AIR de 12 domaines distincts** versionnés (`packages/golden-corpus/corpus/`), validés en CI sans réseau (39 tests). Contraintes API [mesuré] consignées (objets fermés, pas de oneOf/patternProperties/bornes, ≤ 24 optionnels, grammaire bornée → émission par sections) → évolution AIR v1 en paires fermées. **Limitation consignée** : 7/12 transcriptions round-trip sémantiquement cassées (motif binaire : 0 ou 14-37 diagnostics, sans corrélation de taille) — diagnostic instrumenté prêt (`replay-roundtrip.mjs`, dump complet) mais NON exécuté (budget épuisé, ~$0,5-1/rejeu) ; amélioration NON bloquante pour 2.5 | 🟢 **TERMINÉE** (2026-08-27) — critères ROADMAP satisfaits : émission structured outputs ✓ · round-trip 100 % conforme au schéma sur le corpus ✓ · corpus ≥ 10 domaines ✓ |
 | 2.4-H | Hardening round-trip (hors ROADMAP, consigné — validé propriétaire). **Rejeu 8/8 exécuté** (7 échecs + 1 témoin, $6,09 réel vs 4-6 annoncés) : témoin **identique** (0 régression) ; les 7 échecs **rejouent tous à l'identique de la campagne**. **Cause CONFIRMÉE par dumps** : 18/19 sections canoniquement identiques partout — seule `screens` diffère, **tronquée à 1 écran sur 4** (2-4 blocs sur 20-31) dans les 7 cas : clôture volontaire schema-valide des tableaux longs (sections ≥ ~8 k chars), PAS une dérive d'ids ni d'échantillonnage. Hypothèses infirmées [mesuré] : `temperature` **déprécié/refusé (400) sur claude-opus-5** ; ancrage des ids sans effet (les ids n'étaient pas le problème) | 🟠 **CAMPAGNE RÉELLE v2 EXÉCUTÉE (12 rejeux, $8,94)** : **5/12 identiques** (contre-vérifiés à l'octet canonique, 0 diagnostic) — exactement les 5 succès v1 (non-régression ✓) ; **7/12 REFUSÉS fail-closed** (`SECTION_COUNT`, jamais de document partiel) — le modèle sous-émet les blocs d'un écran précis (1-3 émis sur 5-9) même en appel MONO-ÉCRAN avec contrat de comptes explicite, sorties minuscules (110-231 tokens), **reproductible** (mêmes 7 documents en campagne, rejeu v1 et rejeu v2, à deux granularités et trois prompts). Causes ÉLIMINÉES [mesuré] : longueur de sortie, dérive d'ids, échantillonnage (reproductible), prompt. **SONDE EXÉCUTÉE ($0,30, brut intégral conservé)** : H-B contexte INFIRMÉE (tronque aussi en rendu minimal) · H-D modèle infirmée (sonnet tronque aussi) · **décodage contraint = facteur nécessaire** (sans grammaire : 7/7 blocs fidèles) · **DÉCOUVERTE H-I** : le rendu étiquette « type »/« entité » alors que le schéma exige `blockType`/`entityId` — sans grammaire le modèle émet naturellement `"type"` ; sous grammaire ce vocabulaire interdit fait dérailler la génération sur matériel dense (brut : props supprimées — schema-valides car optionnelles —, ids fabriqués, clôture précoce). Corrélation parfaite 12/12 : docs fautifs = pairsMax ≥ 9 / ligne-bloc moyenne ≥ 305 chars. **MATRICE X1-X4 EXÉCUTÉE ($0,54)** — mécanisme démontré sur le cas canonique (`scr_article`, ×2 par bras, contre-vérifié à l'octet) : **fourche ordre×optionalité** — la grammaire suit l'ordre de déclaration du schéma (`props` avant `entityId`) alors que l'ordre naturel du modèle est inverse ; `props` étant OPTIONNELLE, la branche naturelle est légale et FORCLOT les props → dégradation en cascade. Preuves : X4 (props requises) 7/7 identique ×2 · X3′ (ordre naturel) 7/7 identique ×2 · X1 (JSON inline) 7/7 identique ×2 · X2 (labels) échoue comme la base → **H-I/vocabulaire RÉFUTÉE, densité-suffit RÉFUTÉE, présentation-nécessaire RÉFUTÉE**. **Généralisation ensuite DÉMONTRÉE sur artefacts ($0)** : vrai discriminant = blocs « armés » (props+entityId — 14-19 dans chaque doc fautif, 0 dans les 5 sains ; densité = proxy), signatures conformes 17/17, 0 contre-exemple. **CORRECTION D-019 APPLIQUÉE ET LOCALEMENT PROUVÉE ($0)** : permutation entityId/props dans `blockInstanceSchema` (= X3′, 7/7 identique ×2 sur API réelle) + garde harnais `PROPS_COUNT` ; preuves T1 (diff = seule relocalisation du nœud entityId) · T2 (121/121, tsc/lint 0) · T3 (12/12 hashes corpus inchangés) · T4 (simulation 27 scénarios ×2). **VALIDATION RÉELLE FINALE EXÉCUTÉE (2026-08-27, $9,67 / plafond $14) : 🟢 2.4-H VALIDÉE — 12/12 IDENTIQUES** (90 appels, 0 retry contenu, 0 retry API, 0 refus, brut intégral journalisé, HEAD gelé prouvé) ; contre-vérification indépendante : re-parse + hash + forme canonique 12/12, ex-fautifs 7/7, ex-sains 5/5, 0 diagnostic |
-| 2.5 | Gel registre v1 + revue propriétaire des capabilities (décision produit) | ⏭️ SUIVANT — dernière étape de la Phase 2 |
+| 2.5 | Gel registre v1 + revue propriétaire. Double confrontation technique menée (périmètre, biais corpus, critère d'inclusion) ; décisions propriétaire consignées **D-020** : 15 capabilities gelées (biometrics CONSERVÉE — inférence corpus invalidée), version **1.0.0** (registre + 15 contrats), cliquet verrouillé (version + liste + contrats), `push_notifications` clarifiée (push + locales), candidates tier B hors registre (documents, audio/micro, background_fetch, contacts, passkeys), défauts tiers révisables au lock, critère d'inclusion v2, règle d'évolution post-gel | 🟢 **TERMINÉE** (2026-08-27) — 122/122 tests paquets verts, corpus 12/12 valide |
 
 ## PHASE 1 — DÉTAIL (ouverte le 2026-08-27)
 
@@ -101,7 +103,7 @@ prouve l'existence, pas le taux). Voir `DECISIONS.md` D-015.
 | — | Validation du plan par le propriétaire | 🟢 TERMINÉ (2026-08-27) |
 | 0 | Fondations (workspaces, CI, SDK) | 🟢 TERMINÉ (2026-08-27) |
 | 1 | Bancs de mesure (P-001→P-003, coûts, E2E) | 🔵 EN COURS (bancs restants sur prérequis) |
-| 2 | AIR v1 + Capability Registry v1 | 🔵 EN COURS (2.1 🟢) |
+| 2 | AIR v1 + Capability Registry v1 | 🟢 TERMINÉ (2026-08-27) |
 | 3 | Design System + Primitives + Blocks | ⏳ |
 | 4 | Compilateur déterministe v1 | ⏳ |
 | 5 | Backend Provisioner v1 | ⏳ |
