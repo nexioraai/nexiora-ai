@@ -81,6 +81,7 @@ ci-dessous par domaine. Légende authentification :
 | POST | `/api/domains/purchase` | Prépare l'achat (prix, exigences d'enregistrement, abonnement Stripe annuel) — **aucun achat Porkbun tant que le paiement n'est pas confirmé** (déclenché plus tard par le webhook Stripe). | Utilisateur |
 | POST | `/api/domains/provision` | Provisionne un domaine déjà présent dans le compte Porkbun (transfert, ou achat hors Stripe) — n'achète rien. | Utilisateur + Cron |
 | GET | `/api/domains/status` | État du domaine d'un site pour affichage marchand. | Utilisateur |
+| POST | `/api/domains/renewal` | **Résilie ou réactive le renouvellement** d'un domaine. À ne pas confondre avec le détachement (`/api/domains`), qui retire le lien domaine ↔ site sans toucher à l'abonnement : **aucune des deux n'entraîne jamais l'autre**. Après résiliation, le domaine reste actif jusqu'à son expiration. | Propriétaire du site (`requireSiteOwner`) |
 
 ## 6. Génération de site / IA (Site Web)
 
