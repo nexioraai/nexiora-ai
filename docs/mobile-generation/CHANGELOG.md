@@ -1,5 +1,18 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — D-016 : P-001 TRANCHÉ → Trigger.dev v4
+
+- Arbitrage propriétaire sur le dossier comparatif complet (trois candidats
+  à 5/5 en campagnes officielles). Décision consignée dans `DECISIONS.md`
+  (D-016) avec : tableau des épreuves, distinction mesures du banc vs
+  propriétés intrinsèques, coûts et hypothèses (grilles du 2026-08-27),
+  risques et mitigations exigées (abstraction provider obligatoire,
+  auto-hébergement = chemin de sortie, seuil de réexamen ~10k gén./mois,
+  moindre privilège des secrets, source de vérité métier dans NOTRE
+  Postgres).
+- Périmètre strictement respecté : P-002 non commencé, générateur non
+  commencé, aucun push.
+
 ## 2026-08-27 — P-001 : campagne (c) Trigger.dev 5/5 — comparaison COMPLÈTE
 
 - Candidat (c) exécuté sur le **cloud managé** Trigger.dev (v4, version

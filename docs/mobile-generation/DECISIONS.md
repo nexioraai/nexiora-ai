@@ -161,13 +161,79 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
 
 # EN ATTENTE
 
-## P-001 — Moteur d'orchestration durable
+## ~~P-001~~ → D-016 — Moteur d'orchestration : **Trigger.dev v4** (TRANCHÉ, 2026-08-27)
 
-- **Options** : Supabase Queues (pgmq) + state machine explicite en
-  Postgres + workers conteneurisés ; Inngest ; Trigger.dev ; Temporal
-  (écarté v1 sauf preuve contraire au banc — coût opérationnel).
-- **Tranché par** : banc Phase 1 (kill -9, idempotence, cancellation, coût,
-  observabilité).
+- **Contexte** : décision prise par le propriétaire le 2026-08-27, sur le
+  dossier comparatif COMPLET du banc P-001 — trois candidats, campagnes
+  officielles aux durées du protocole (étapes 5-30 s), même charge, mêmes
+  épreuves, même instrumentation (base de test `deribfy-mobile-test`), même
+  journal JSONL. Journaux versionnés : `benchmarks/orchestration/results/`
+  (a), `…/inngest/results/` (b), `…/triggerdev/results/` (c). Temporal :
+  écarté avant banc (coût opérationnel), conformément au protocole.
+- **Problème** : moteur du workflow asynchrone durable du pipeline
+  (ARCHITECTURE §14) — jobs durables, retries, idempotence, annulation,
+  reprise après crash, état inspectable.
+- **Options mesurées — épreuves éliminatoires (5/5 pour les trois)** :
+
+  | Épreuve | (a) pgmq+état | (b) Inngest | (c) Trigger.dev v4 |
+  |---|---|---|---|
+  | E1 mort brutale en étape 3 | ✅ 215 s | ✅ 284 s | ✅ 181 s |
+  | — latence de reprise | ≤ 60 s (vt configuré) | 157 s (lease défaut) | 2 s (backoff 1 s configuré) |
+  | — étapes antérieures re-exécutées | 0 | 0 (mémoïsation prouvée) | 0 (structurel + idempotencyKey) |
+  | E2 ré-émission idempotente, 6 jobs | ✅ 342 s (2 workers) | ✅ 160 s | ✅ **101 s** |
+  | E3 annulation propre | ✅ | ✅ (`cancelOn`) | ✅ (`runs.cancel`) |
+  | E4 exactement 2 tentatives puis failed | ✅ | ✅ | ✅ |
+  | E5 durabilité, fenêtre prouvée vide | ✅ | ✅ | ✅ (équivalence différés — runtime managée) |
+  | Artefacts dupliqués (total) | 0 | 0 | 0 |
+  | LOC d'orchestrateur à notre charge | 158 | ~120 | ~110 |
+
+  ⚠️ **Mesures du banc ≠ propriétés intrinsèques** : les latences de reprise
+  comparent des MÉCANISMES différents (visibility timeout / lease cloud /
+  backoff de retry), tous CONFIGURABLES — les chiffres reflètent les
+  configurations du banc, pas des plafonds. Les équivalences d'épreuves de
+  (b) et (c) sont documentées dans le code des adaptateurs et les journaux.
+- **Coûts estimés** (grilles publiques relevées le 2026-08-27 ; hypothèses :
+  volume protocole 1 000 générations/mois, pipeline proxy du banc
+  ~5 étapes/génération, travaux lourds réels — sandbox, builds EAS —
+  EXTERNES à l'orchestrateur) :
+  - (a) : ~10-45 $/mois fixe (Postgres + workers conteneurisés), plat ;
+  - (b) : 0 $ en Hobby mais **5 steps concurrents** → réalistement
+    99 $/mois (Pro) + workers ~5-20 $ ;
+  - (c) : **~0-10 $/mois** à ce volume (compute 0,0000338 $/s small-1x +
+    0,25 $/10k runs ; crédits Free 5 $ / Hobby 10 $) — les attentes > 5 s
+    sont checkpointées et NON facturées, ce qui correspond à la forme
+    réelle du pipeline (orchestrateur = colle autour de travaux externes).
+- **Décision (propriétaire)** : **candidat (c) — Trigger.dev v4**, exécution
+  managée cloud.
+- **Raisons factuelles** : 5/5 comme les autres, avec — E2 le plus rapide
+  (101 s) ; reprise la plus rapide dans la configuration du banc ; le moins
+  de code d'orchestration à notre charge (~110 LOC, état durable, retries,
+  dédup, annulation et checkpointing délégués) ; coût le plus bas au volume
+  cible avec un modèle de facturation aligné sur la forme du pipeline ;
+  primitives natives couvrant exactement les besoins de l'ARCHITECTURE §14
+  (triggerAndWait + idempotencyKey, retry borné, cancel API, différés).
+- **Limites et risques consignés, avec mitigations exigées** :
+  1. **Lock-in du plan de contrôle** : l'état d'orchestration vit chez
+     Trigger.dev. Mitigations : la couche jobs du moteur passe par NOTRE
+     abstraction provider (ARCHITECTURE §15) — aucun appel direct au SDK
+     hors de l'adaptateur ; Trigger.dev est open-source et auto-hébergeable
+     (chemin de sortie documenté) ; les candidats (a)/(b) restent bancés et
+     rejouables (adaptateurs versionnés).
+  2. **Coût linéaire à fort volume** vs (a) plat : seuil de réexamen fixé —
+     re-chiffrer quand le volume réel dépasse ~10 000 générations/mois
+     (métrique portée par le Budget Governor).
+  3. **Custody de secrets côté tiers** : les env vars des tâches vivent
+     chez Trigger.dev — n'y placer que des credentials de moindre privilège
+     par environnement (règle Vault, ARCHITECTURE §16) ; les étapes
+     manipulant des secrets sensibles peuvent rester des workers à nous.
+  4. La machine à états MÉTIER (project.air/lock/deployment state) reste
+     dans NOTRE Postgres — Trigger.dev orchestre, il ne devient pas la
+     source de vérité des données du moteur.
+- **Conséquences** : l'implémentation du workflow (Phase 7) ciblera
+  Trigger.dev v4 derrière l'interface d'orchestration du moteur ; les
+  mesures comparatives restantes du protocole (débit 20 jobs/5 workers…)
+  deviennent sans objet pour la sélection et seront relevées sur (c) seul
+  en Phase 7 si utiles au dimensionnement.
 
 ## P-002 — Provider de sandbox
 
