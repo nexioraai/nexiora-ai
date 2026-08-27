@@ -1,5 +1,23 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — PHASE 0 TERMINÉE · PHASE 1 OUVERTE
+
+- **Phase 0 close sur preuves complètes.** Dernier critère satisfait : CI
+  GitHub réelle **verte** — run **#32** sur `54ef2a1`, `success` (3 min 01),
+  vérifié par capture du propriétaire ET confirmation indépendante via
+  l'API Actions. Push de la branche autorisé et effectué
+  (`61cec23..54ef2a1`, 9 commits). Root Directory Vercel réglé sur
+  `apps/web` par le propriétaire avant push (risque D-014 levé).
+- **Phase 1 (bancs de mesure) ouverte.** Protocoles définis AVANT toute
+  mesure (`docs/mobile-generation/benchmarks/`) pour : P-001 orchestration,
+  P-002 sandbox, P-003 styling RN, E2E mobile, coûts unitaires. Premier
+  banc exécuté : coûts LLM avec/sans prompt caching (résultats sous
+  `benchmarks/llm-cost/`). Les bancs nécessitant des comptes externes
+  (E2B/Modal/Fly, Inngest, EAS, Management API Supabase) sont **bloqués
+  sur prérequis propriétaire**, listés dans STATUS.
+- Aucun code du générateur. Aucune décision P-00x transformée en décision
+  théorique.
+
 ## 2026-08-27 — D-014 : monorepo à workspaces en place
 
 - **P-005 tranché par le propriétaire → D-014** : monorepo à workspaces.
