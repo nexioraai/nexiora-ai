@@ -1,0 +1,1420 @@
+{
+  "identical": true,
+  "document": {
+    "airSchemaVersion": "1.0.0",
+    "projectId": "prj_scene_locale",
+    "app": {
+      "name": "Scène Locale",
+      "slug": "scene-locale",
+      "description": [
+        {
+          "locale": "fr",
+          "text": "Découvrez les concerts près de chez vous, achetez vos billets par carte, présentez votre billet à code scannable à l'entrée et ajoutez l'événement à votre calendrier."
+        }
+      ],
+      "locales": {
+        "userLanguage": "fr",
+        "appLocales": [
+          "fr"
+        ],
+        "defaultAppLocale": "fr",
+        "contentLocales": [
+          "fr"
+        ],
+        "rtlSupported": false
+      }
+    },
+    "screens": [
+      {
+        "id": "scr_events_list",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Concerts à venir"
+          }
+        ],
+        "blocks": [
+          {
+            "id": "blk_events_header",
+            "blockType": "header",
+            "props": [
+              {
+                "key": "title",
+                "value": "Concerts à venir"
+              },
+              {
+                "key": "subtitle",
+                "value": "La scène locale, près de chez vous"
+              },
+              {
+                "key": "style",
+                "value": "large"
+              }
+            ]
+          },
+          {
+            "id": "blk_events_filters",
+            "blockType": "filter_bar",
+            "props": [
+              {
+                "key": "options",
+                "value": [
+                  "Tous",
+                  "Cette semaine",
+                  "Ce mois-ci",
+                  "Dernières places"
+                ]
+              },
+              {
+                "key": "defaultOption",
+                "value": "Tous"
+              },
+              {
+                "key": "filterFieldId",
+                "value": "fld_event_starts_at"
+              }
+            ]
+          },
+          {
+            "id": "blk_events_list",
+            "blockType": "list",
+            "entityId": "ent_event"
+          },
+          {
+            "id": "blk_events_empty",
+            "blockType": "empty_state",
+            "props": [
+              {
+                "key": "title",
+                "value": "Aucun concert programmé"
+              },
+              {
+                "key": "message",
+                "value": "Revenez bientôt : de nouvelles dates sont annoncées chaque semaine."
+              },
+              {
+                "key": "icon",
+                "value": "calendar_music"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "navigation": {
+      "entryScreenId": "scr_events_list",
+      "routes": [
+        {
+          "id": "nav_events_list",
+          "screenId": "scr_events_list",
+          "title": [
+            {
+              "locale": "fr",
+              "text": "Concerts à venir"
+            }
+          ]
+        }
+      ]
+    },
+    "entities": [
+      {
+        "id": "ent_venue",
+        "name": "venue",
+        "fields": [
+          {
+            "id": "fld_venue_name",
+            "name": "name",
+            "type": "string",
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "fld_venue_address",
+            "name": "address",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_venue_city",
+            "name": "city",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_venue_postal_code",
+            "name": "postal_code",
+            "type": "string",
+            "required": false
+          },
+          {
+            "id": "fld_venue_latitude",
+            "name": "latitude",
+            "type": "decimal",
+            "required": false
+          },
+          {
+            "id": "fld_venue_longitude",
+            "name": "longitude",
+            "type": "decimal",
+            "required": false
+          },
+          {
+            "id": "fld_venue_capacity",
+            "name": "capacity",
+            "type": "number",
+            "required": false
+          }
+        ]
+      },
+      {
+        "id": "ent_event",
+        "name": "event",
+        "fields": [
+          {
+            "id": "fld_event_title",
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_event_slug",
+            "name": "slug",
+            "type": "string",
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "fld_event_artist",
+            "name": "artist",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_event_description",
+            "name": "description",
+            "type": "text",
+            "required": false
+          },
+          {
+            "id": "fld_event_cover",
+            "name": "cover_image",
+            "type": "asset",
+            "required": false
+          },
+          {
+            "id": "fld_event_starts_at",
+            "name": "starts_at",
+            "type": "datetime",
+            "required": true
+          },
+          {
+            "id": "fld_event_ends_at",
+            "name": "ends_at",
+            "type": "datetime",
+            "required": false
+          },
+          {
+            "id": "fld_event_doors_open_at",
+            "name": "doors_open_at",
+            "type": "datetime",
+            "required": false
+          },
+          {
+            "id": "fld_event_price",
+            "name": "price",
+            "type": "decimal",
+            "required": true
+          },
+          {
+            "id": "fld_event_currency",
+            "name": "currency",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "EUR",
+              "CHF"
+            ]
+          },
+          {
+            "id": "fld_event_seats_available",
+            "name": "seats_available",
+            "type": "number",
+            "required": true
+          },
+          {
+            "id": "fld_event_status",
+            "name": "status",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "draft",
+              "on_sale",
+              "sold_out",
+              "cancelled",
+              "past"
+            ]
+          },
+          {
+            "id": "fld_event_venue",
+            "name": "venue",
+            "type": "reference",
+            "required": true,
+            "referencesEntityId": "ent_venue"
+          }
+        ]
+      },
+      {
+        "id": "ent_ticket",
+        "name": "ticket",
+        "fields": [
+          {
+            "id": "fld_ticket_reference",
+            "name": "reference",
+            "type": "string",
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "fld_ticket_event",
+            "name": "event",
+            "type": "reference",
+            "required": true,
+            "referencesEntityId": "ent_event"
+          },
+          {
+            "id": "fld_ticket_holder_name",
+            "name": "holder_name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_ticket_buyer_email",
+            "name": "buyer_email",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_ticket_quantity",
+            "name": "quantity",
+            "type": "number",
+            "required": true
+          },
+          {
+            "id": "fld_ticket_amount_paid",
+            "name": "amount_paid",
+            "type": "decimal",
+            "required": true
+          },
+          {
+            "id": "fld_ticket_currency",
+            "name": "currency",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "EUR",
+              "CHF"
+            ]
+          },
+          {
+            "id": "fld_ticket_status",
+            "name": "status",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "reserved",
+              "paid",
+              "checked_in",
+              "refunded",
+              "cancelled"
+            ]
+          },
+          {
+            "id": "fld_ticket_purchased_at",
+            "name": "purchased_at",
+            "type": "datetime",
+            "required": false
+          },
+          {
+            "id": "fld_ticket_checked_in_at",
+            "name": "checked_in_at",
+            "type": "datetime",
+            "required": false
+          },
+          {
+            "id": "fld_ticket_scan_payload",
+            "name": "scan_payload",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_ticket_calendar_added",
+            "name": "calendar_added",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "id": "fld_ticket_metadata",
+            "name": "metadata",
+            "type": "json",
+            "required": false
+          }
+        ]
+      }
+    ],
+    "relations": [
+      {
+        "id": "rel_venue_events",
+        "fromEntityId": "ent_venue",
+        "toEntityId": "ent_event",
+        "kind": "one_to_many"
+      },
+      {
+        "id": "rel_event_tickets",
+        "fromEntityId": "ent_event",
+        "toEntityId": "ent_ticket",
+        "kind": "one_to_many"
+      }
+    ],
+    "datasets": [
+      {
+        "id": "data_venues_seed",
+        "entityId": "ent_venue",
+        "contentHash": "9f3c1a7be4d20c85af6719d3e082b45c1d7fa9036be2c84195da7f30cb61e2a4",
+        "rowCount": 6
+      },
+      {
+        "id": "data_events_seed",
+        "entityId": "ent_event",
+        "contentHash": "3b8e57a1cd490f26b71ea4c05d83f19267ac5be04f1d38a9c26b70ed415a9c38",
+        "rowCount": 12
+      }
+    ],
+    "actions": [
+      {
+        "id": "act_restaurer_session",
+        "name": "Restaurer la session de l'acheteur au lancement",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "app_start"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "auth",
+          "method": "restoreSession",
+          "params": [
+            {
+              "key": "anonymousAllowed",
+              "value": true
+            },
+            {
+              "key": "redirectScreenId",
+              "value": "scr_events_list"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_precharger_hors_ligne",
+        "name": "Précharger les concerts pour consultation hors-ligne",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "app_start"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "offline_storage",
+          "method": "syncEntities",
+          "params": [
+            {
+              "key": "entities",
+              "value": [
+                "ent_event",
+                "ent_venue",
+                "ent_ticket"
+              ]
+            },
+            {
+              "key": "maxAgeMinutes",
+              "value": 120
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_trier_concerts_a_venir",
+        "name": "Trier et filtrer les concerts à venir",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "screen_open",
+          "screenId": "scr_events_list"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_upcoming_events_sorter"
+        }
+      },
+      {
+        "id": "act_suivre_ecran_concerts",
+        "name": "Mesurer l'ouverture de la liste des concerts",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "screen_open",
+          "screenId": "scr_events_list"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "analytics",
+          "method": "trackScreen",
+          "params": [
+            {
+              "key": "screenName",
+              "value": "concerts_a_venir"
+            },
+            {
+              "key": "includeFilters",
+              "value": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_formater_tarif_concert",
+        "name": "Formater les tarifs des concerts affichés",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "screen_open",
+          "screenId": "scr_events_list"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_event_price_formatter"
+        }
+      },
+      {
+        "id": "act_reserver_billet",
+        "name": "Créer la réservation de billet pour le concert sélectionné",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_events_list"
+        },
+        "effect": {
+          "kind": "mutation",
+          "entityId": "ent_ticket",
+          "operation": "create"
+        }
+      },
+      {
+        "id": "act_payer_billet_carte",
+        "name": "Payer le billet par carte bancaire",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_ticket",
+          "event": "created"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "payments.psp",
+          "method": "createCheckout",
+          "params": [
+            {
+              "key": "entityId",
+              "value": "ent_ticket"
+            },
+            {
+              "key": "amountFieldId",
+              "value": "fld_ticket_amount_paid"
+            },
+            {
+              "key": "currencyFieldId",
+              "value": "fld_ticket_currency"
+            },
+            {
+              "key": "captureMode",
+              "value": "automatic"
+            },
+            {
+              "key": "paymentMethods",
+              "value": [
+                "card"
+              ]
+            },
+            {
+              "key": "returnScreenId",
+              "value": "scr_events_list"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_programmer_rappel_concert",
+        "name": "Programmer un rappel avant le concert",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_ticket",
+          "event": "created"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "push_notifications",
+          "method": "scheduleReminder",
+          "params": [
+            {
+              "key": "title",
+              "value": "Votre concert approche"
+            },
+            {
+              "key": "body",
+              "value": "Pensez à votre billet : présentez le code scannable à l'entrée."
+            },
+            {
+              "key": "offsetMinutesBeforeStart",
+              "value": 180
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_generer_code_scannable",
+        "name": "Générer le code scannable du billet payé",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_ticket",
+          "event": "updated"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_scan_payload_builder"
+        }
+      },
+      {
+        "id": "act_preparer_entree_calendrier",
+        "name": "Préparer l'entrée de calendrier du concert",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_ticket",
+          "event": "updated"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_calendar_event_builder"
+        }
+      },
+      {
+        "id": "act_ajouter_concert_calendrier",
+        "name": "Ajouter le concert au calendrier du téléphone",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_events_header"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "calendar",
+          "method": "addEvent",
+          "params": [
+            {
+              "key": "calendarTarget",
+              "value": "default"
+            },
+            {
+              "key": "reminderMinutesBefore",
+              "value": 120
+            },
+            {
+              "key": "allowDuplicates",
+              "value": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_marquer_calendrier_ajoute",
+        "name": "Marquer le billet comme ajouté au calendrier",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "screen_close",
+          "screenId": "scr_events_list"
+        },
+        "effect": {
+          "kind": "mutation",
+          "entityId": "ent_ticket",
+          "operation": "update"
+        }
+      }
+    ],
+    "rules": [
+      {
+        "id": "rule_event_publication_valide",
+        "description": "Un concert publié doit avoir un titre, une date de début, un statut connu et un tarif positif ou nul.",
+        "kind": "validation",
+        "entityId": "ent_event",
+        "assertions": [
+          {
+            "fieldId": "fld_event_title",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_event_starts_at",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_event_venue",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_event_price",
+            "operator": "gte",
+            "value": 0
+          },
+          {
+            "fieldId": "fld_event_status",
+            "operator": "in",
+            "value": [
+              "draft",
+              "on_sale",
+              "sold_out",
+              "cancelled",
+              "past"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "rule_event_stock_disponible",
+        "description": "Le nombre de places restantes ne peut jamais être négatif.",
+        "kind": "validation",
+        "entityId": "ent_event",
+        "assertions": [
+          {
+            "fieldId": "fld_event_seats_available",
+            "operator": "gte",
+            "value": 0
+          }
+        ]
+      },
+      {
+        "id": "rule_ticket_achat_valide",
+        "description": "Un achat de billet porte sur 1 à 6 places, avec un e-mail acheteur valide et un montant payé positif.",
+        "kind": "validation",
+        "entityId": "ent_ticket",
+        "assertions": [
+          {
+            "fieldId": "fld_ticket_quantity",
+            "operator": "gte",
+            "value": 1
+          },
+          {
+            "fieldId": "fld_ticket_quantity",
+            "operator": "lte",
+            "value": 6
+          },
+          {
+            "fieldId": "fld_ticket_buyer_email",
+            "operator": "matches",
+            "value": "^[^@\\s]+@[^@\\s]+\\.[a-z]{2,}$"
+          },
+          {
+            "fieldId": "fld_ticket_amount_paid",
+            "operator": "gt",
+            "value": 0
+          },
+          {
+            "fieldId": "fld_ticket_holder_name",
+            "operator": "required"
+          }
+        ]
+      },
+      {
+        "id": "rule_ticket_reference_unique",
+        "description": "Chaque billet possède une référence et une charge utile de code scannable non vides.",
+        "kind": "validation",
+        "entityId": "ent_ticket",
+        "assertions": [
+          {
+            "fieldId": "fld_ticket_reference",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_ticket_scan_payload",
+            "operator": "required"
+          }
+        ]
+      },
+      {
+        "id": "rule_ticket_affichage_autorise",
+        "description": "Le code scannable n'est affiché que pour un billet payé ou déjà contrôlé à l'entrée.",
+        "kind": "authorization",
+        "entityId": "ent_ticket",
+        "assertions": [
+          {
+            "fieldId": "fld_ticket_status",
+            "operator": "in",
+            "value": [
+              "paid",
+              "checked_in"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "rule_ticket_remboursement_masque",
+        "description": "Un billet remboursé ou annulé ne peut plus être présenté au contrôle d'accès.",
+        "kind": "authorization",
+        "entityId": "ent_ticket",
+        "assertions": [
+          {
+            "fieldId": "fld_ticket_status",
+            "operator": "neq",
+            "value": "refunded"
+          },
+          {
+            "fieldId": "fld_ticket_status",
+            "operator": "neq",
+            "value": "cancelled"
+          }
+        ]
+      }
+    ],
+    "slots": [
+      {
+        "id": "slot_scan_payload_builder",
+        "description": "Construit la charge utile signée du code scannable présenté à l'entrée du concert à partir de la référence du billet.",
+        "inputs": [
+          {
+            "name": "ticketReference",
+            "type": "string"
+          },
+          {
+            "name": "eventId",
+            "type": "string"
+          },
+          {
+            "name": "issuedAt",
+            "type": "datetime"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "scanPayload",
+            "type": "string"
+          },
+          {
+            "name": "expiresAt",
+            "type": "datetime"
+          }
+        ],
+        "allowedImports": []
+      },
+      {
+        "id": "slot_calendar_event_builder",
+        "description": "Prépare les données d'événement (titre, horaires, lieu, rappel) à insérer dans le calendrier du téléphone.",
+        "inputs": [
+          {
+            "name": "eventTitle",
+            "type": "string"
+          },
+          {
+            "name": "startsAt",
+            "type": "datetime"
+          },
+          {
+            "name": "endsAt",
+            "type": "datetime"
+          },
+          {
+            "name": "venueLabel",
+            "type": "string"
+          },
+          {
+            "name": "notes",
+            "type": "text"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "calendarEntry",
+            "type": "json"
+          }
+        ],
+        "allowedImports": []
+      },
+      {
+        "id": "slot_event_price_formatter",
+        "description": "Formate le prix d'un concert et le montant total du panier selon la locale française et la devise du concert.",
+        "inputs": [
+          {
+            "name": "amount",
+            "type": "decimal"
+          },
+          {
+            "name": "currency",
+            "type": "enum"
+          },
+          {
+            "name": "quantity",
+            "type": "number"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "formattedUnitPrice",
+            "type": "string"
+          },
+          {
+            "name": "formattedTotal",
+            "type": "string"
+          },
+          {
+            "name": "totalAmount",
+            "type": "decimal"
+          }
+        ],
+        "allowedImports": [
+          "intl"
+        ]
+      },
+      {
+        "id": "slot_upcoming_events_sorter",
+        "description": "Trie et filtre la liste des concerts à venir (statut en vente, date future) pour l'écran d'accueil.",
+        "inputs": [
+          {
+            "name": "events",
+            "type": "json"
+          },
+          {
+            "name": "now",
+            "type": "datetime"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "upcomingEvents",
+            "type": "json"
+          },
+          {
+            "name": "nextEventLabel",
+            "type": "string"
+          }
+        ],
+        "allowedImports": []
+      }
+    ],
+    "capabilities": [
+      {
+        "capability": "auth",
+        "config": [
+          {
+            "key": "methods",
+            "value": [
+              "email_otp",
+              "email_password"
+            ]
+          },
+          {
+            "key": "accountDeletionEnabled",
+            "value": true
+          },
+          {
+            "key": "sessionDurationDays",
+            "value": 90
+          }
+        ]
+      },
+      {
+        "capability": "payments.psp",
+        "config": [
+          {
+            "key": "commerceClass",
+            "value": "physical_or_offapp"
+          },
+          {
+            "key": "currencies",
+            "value": [
+              "EUR",
+              "CHF"
+            ]
+          },
+          {
+            "key": "paymentMethods",
+            "value": [
+              "card"
+            ]
+          },
+          {
+            "key": "refundsEnabled",
+            "value": true
+          }
+        ]
+      },
+      {
+        "capability": "calendar",
+        "config": [
+          {
+            "key": "defaultReminderMinutes",
+            "value": 120
+          },
+          {
+            "key": "writeOnlyUserInitiated",
+            "value": true
+          }
+        ]
+      },
+      {
+        "capability": "push_notifications",
+        "config": [
+          {
+            "key": "provider",
+            "value": "managed"
+          },
+          {
+            "key": "topics",
+            "value": [
+              "rappel_concert",
+              "changement_horaire"
+            ]
+          }
+        ]
+      },
+      {
+        "capability": "offline_storage",
+        "config": [
+          {
+            "key": "encrypted",
+            "value": true
+          },
+          {
+            "key": "maxCacheMb",
+            "value": 40
+          }
+        ]
+      },
+      {
+        "capability": "analytics",
+        "config": [
+          {
+            "key": "anonymizeIp",
+            "value": true
+          },
+          {
+            "key": "collectCrashDiagnostics",
+            "value": true
+          }
+        ]
+      }
+    ],
+    "permissions": [
+      {
+        "platform": "ios",
+        "permission": "NSCalendarsFullAccessUsageDescription",
+        "reason": [
+          {
+            "locale": "fr",
+            "text": "L'accès à votre calendrier permet d'ajouter la date et le lieu du concert pour lequel vous avez acheté un billet."
+          }
+        ],
+        "requiredByCapability": "calendar"
+      },
+      {
+        "platform": "android",
+        "permission": "android.permission.READ_CALENDAR",
+        "reason": [
+          {
+            "locale": "fr",
+            "text": "La lecture du calendrier sert à vérifier que le concert n'y figure pas déjà avant de l'ajouter."
+          }
+        ],
+        "requiredByCapability": "calendar"
+      },
+      {
+        "platform": "android",
+        "permission": "android.permission.WRITE_CALENDAR",
+        "reason": [
+          {
+            "locale": "fr",
+            "text": "L'écriture dans le calendrier permet d'y enregistrer le concert avec son horaire, son lieu et un rappel."
+          }
+        ],
+        "requiredByCapability": "calendar"
+      },
+      {
+        "platform": "android",
+        "permission": "android.permission.POST_NOTIFICATIONS",
+        "reason": [
+          {
+            "locale": "fr",
+            "text": "Les notifications vous rappellent l'heure d'ouverture des portes et vous préviennent en cas de changement concernant votre concert."
+          }
+        ],
+        "requiredByCapability": "push_notifications"
+      }
+    ],
+    "design": {
+      "theme": "concert_night",
+      "tokensVersion": "1.0.0",
+      "overrides": [
+        {
+          "key": "color.primary",
+          "value": "#6C2BD9"
+        },
+        {
+          "key": "color.surface",
+          "value": "#12101A"
+        },
+        {
+          "key": "radius.card",
+          "value": 16
+        },
+        {
+          "key": "typography.title.weight",
+          "value": "700"
+        }
+      ]
+    },
+    "integrations": [
+      {
+        "id": "intg_auth_comptes",
+        "providerClass": "managed_auth",
+        "capability": "auth",
+        "config": [
+          {
+            "key": "baseUrl",
+            "value": "https://api.scene-locale.app"
+          },
+          {
+            "key": "authPath",
+            "value": "/v1/auth"
+          },
+          {
+            "key": "methods",
+            "value": [
+              "email_otp",
+              "email_password"
+            ]
+          },
+          {
+            "key": "sessionDurationDays",
+            "value": 90
+          },
+          {
+            "key": "accountDeletionPath",
+            "value": "/v1/auth/account/delete"
+          }
+        ]
+      },
+      {
+        "id": "intg_psp_carte",
+        "providerClass": "managed_psp",
+        "capability": "payments.psp",
+        "config": [
+          {
+            "key": "commerceClass",
+            "value": "physical_or_offapp"
+          },
+          {
+            "key": "checkoutPath",
+            "value": "/v1/payments/checkout"
+          },
+          {
+            "key": "webhookPath",
+            "value": "/v1/payments/webhook"
+          },
+          {
+            "key": "currencies",
+            "value": [
+              "EUR",
+              "CHF"
+            ]
+          },
+          {
+            "key": "paymentMethods",
+            "value": [
+              "card"
+            ]
+          },
+          {
+            "key": "captureMode",
+            "value": "automatic"
+          },
+          {
+            "key": "refundsEnabled",
+            "value": true
+          },
+          {
+            "key": "statementDescriptor",
+            "value": "SCENE LOCALE"
+          }
+        ]
+      },
+      {
+        "id": "intg_calendrier_appareil",
+        "providerClass": "device_calendar",
+        "capability": "calendar",
+        "config": [
+          {
+            "key": "calendarTarget",
+            "value": "default"
+          },
+          {
+            "key": "defaultReminderMinutes",
+            "value": 120
+          },
+          {
+            "key": "writeOnlyUserInitiated",
+            "value": true
+          },
+          {
+            "key": "allowDuplicates",
+            "value": false
+          },
+          {
+            "key": "timezoneMode",
+            "value": "event_local"
+          }
+        ]
+      },
+      {
+        "id": "intg_push_rappels",
+        "providerClass": "managed_push",
+        "capability": "push_notifications",
+        "config": [
+          {
+            "key": "registrationPath",
+            "value": "/v1/devices/register"
+          },
+          {
+            "key": "topics",
+            "value": [
+              "rappel_concert",
+              "changement_horaire"
+            ]
+          },
+          {
+            "key": "defaultOffsetMinutesBeforeStart",
+            "value": 180
+          }
+        ]
+      },
+      {
+        "id": "intg_analytics_produit",
+        "providerClass": "managed_analytics",
+        "capability": "analytics",
+        "config": [
+          {
+            "key": "ingestPath",
+            "value": "/v1/analytics/events"
+          },
+          {
+            "key": "anonymizeIp",
+            "value": true
+          },
+          {
+            "key": "collectCrashDiagnostics",
+            "value": true
+          },
+          {
+            "key": "batchIntervalSeconds",
+            "value": 30
+          },
+          {
+            "key": "piiFieldsExcluded",
+            "value": [
+              "fld_ticket_buyer_email",
+              "fld_ticket_holder_name"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "intg_cache_hors_ligne",
+        "providerClass": "encrypted_local_store",
+        "capability": "offline_storage",
+        "config": [
+          {
+            "key": "encrypted",
+            "value": true
+          },
+          {
+            "key": "maxCacheMb",
+            "value": 40
+          },
+          {
+            "key": "syncedEntities",
+            "value": [
+              "ent_event",
+              "ent_venue",
+              "ent_ticket"
+            ]
+          },
+          {
+            "key": "maxAgeMinutes",
+            "value": 120
+          },
+          {
+            "key": "evictionPolicy",
+            "value": "lru"
+          }
+        ]
+      },
+      {
+        "id": "intg_api_backend",
+        "providerClass": "rest_api",
+        "config": [
+          {
+            "key": "baseUrl",
+            "value": "https://api.scene-locale.app"
+          },
+          {
+            "key": "eventsPath",
+            "value": "/v1/events"
+          },
+          {
+            "key": "ticketsPath",
+            "value": "/v1/tickets"
+          },
+          {
+            "key": "timeoutMs",
+            "value": 8000
+          },
+          {
+            "key": "retryCount",
+            "value": 2
+          },
+          {
+            "key": "authMode",
+            "value": "bearer_from_session"
+          }
+        ]
+      }
+    ],
+    "network": {
+      "policy": "deny_by_default",
+      "allowedDomains": [
+        "api.scene-locale.app"
+      ]
+    },
+    "native": {
+      "minIosVersion": "16.0",
+      "minAndroidSdk": 26
+    },
+    "compliance": {
+      "commerceClass": "physical_or_offapp",
+      "accountDeletionRequired": true,
+      "dataCollected": [
+        "contact_info",
+        "identifiers",
+        "purchases",
+        "usage_data",
+        "diagnostics"
+      ]
+    },
+    "expectedTests": [
+      {
+        "id": "test_rule_achat_billet_valide",
+        "description": "Règle rule_ticket_achat_valide : vérifie que l'achat rejette une quantité hors bornes (0 ou 7), un e-mail acheteur mal formé ou un montant payé nul, et accepte un achat de 1 à 6 places avec e-mail valide.",
+        "kind": "deterministic",
+        "targetId": "ent_ticket"
+      },
+      {
+        "id": "test_rule_stock_non_negatif",
+        "description": "Règle rule_event_stock_disponible : vérifie qu'un concert dont les places restantes deviendraient négatives est refusé.",
+        "kind": "deterministic",
+        "targetId": "ent_event"
+      },
+      {
+        "id": "test_rule_publication_concert",
+        "description": "Règle rule_event_publication_valide : vérifie qu'un concert sans titre, sans date de début, sans lieu, avec tarif négatif ou statut inconnu est rejeté à la publication.",
+        "kind": "deterministic",
+        "targetId": "ent_event"
+      },
+      {
+        "id": "test_rule_affichage_code_scannable",
+        "description": "Règles rule_ticket_affichage_autorise et rule_ticket_remboursement_masque : le code scannable n'est exposé que pour un billet payé ou contrôlé, jamais pour un billet réservé, annulé ou remboursé.",
+        "kind": "deterministic",
+        "targetId": "ent_ticket"
+      },
+      {
+        "id": "test_slot_scan_payload",
+        "description": "Slot slot_scan_payload_builder : vérifie que la charge utile générée est non vide, stable pour une même référence de billet, avec une date d'expiration postérieure à l'émission.",
+        "kind": "deterministic",
+        "targetId": "act_generer_code_scannable"
+      },
+      {
+        "id": "test_slot_entree_calendrier",
+        "description": "Slot slot_calendar_event_builder : vérifie que l'entrée de calendrier générée contient le titre du concert, un horaire de fin cohérent avec le début et le libellé du lieu.",
+        "kind": "deterministic",
+        "targetId": "act_preparer_entree_calendrier"
+      },
+      {
+        "id": "test_slot_formatage_prix",
+        "description": "Slot slot_event_price_formatter : vérifie le formatage du tarif unitaire et du total en locale française pour EUR et CHF, y compris le calcul du total pour plusieurs places.",
+        "kind": "deterministic",
+        "targetId": "act_formater_tarif_concert"
+      },
+      {
+        "id": "test_slot_tri_concerts_a_venir",
+        "description": "Slot slot_upcoming_events_sorter : seuls les concerts en vente et à date future sont conservés, triés par date croissante, avec un libellé de prochain concert correct.",
+        "kind": "deterministic",
+        "targetId": "act_trier_concerts_a_venir"
+      },
+      {
+        "id": "test_contract_psp_checkout",
+        "description": "Contrat du PSP carte (intg_psp_carte) : la création de paiement envoie le montant et la devise du billet, respecte la politique réseau (api.scene-locale.app uniquement) et ne transporte aucun secret côté application.",
+        "kind": "contract",
+        "targetId": "act_payer_billet_carte"
+      },
+      {
+        "id": "test_contract_calendrier",
+        "description": "Contrat de l'intégration calendrier (intg_calendrier_appareil) : l'ajout n'est déclenché qu'à l'initiative de l'utilisateur, applique un rappel de 120 minutes et n'insère pas de doublon.",
+        "kind": "contract",
+        "targetId": "act_ajouter_concert_calendrier"
+      },
+      {
+        "id": "test_contract_push_rappels",
+        "description": "Contrat des notifications (intg_push_rappels) : enregistrement de l'appareil et programmation d'un rappel 180 minutes avant le début du concert sur le sujet rappel_concert.",
+        "kind": "contract",
+        "targetId": "act_programmer_rappel_concert"
+      },
+      {
+        "id": "test_contract_api_backend",
+        "description": "Contrat de l'API backend (intg_api_backend) : les appels concerts et billets ciblent uniquement les chemins déclarés du domaine autorisé api.scene-locale.app, avec délai et nouvelles tentatives conformes.",
+        "kind": "contract",
+        "targetId": "ent_event"
+      },
+      {
+        "id": "test_contract_analytics_sans_pii",
+        "description": "Contrat analytics (intg_analytics_produit) : les événements envoyés excluent l'e-mail et le nom du porteur du billet et anonymisent l'adresse IP.",
+        "kind": "contract",
+        "targetId": "act_suivre_ecran_concerts"
+      },
+      {
+        "id": "test_e2e_liste_concerts",
+        "description": "Parcours : à l'ouverture de l'app la liste des concerts à venir s'affiche, le filtre « Cette semaine » réduit la liste, et l'état vide apparaît quand aucun concert n'est programmé.",
+        "kind": "e2e",
+        "targetId": "scr_events_list"
+      },
+      {
+        "id": "test_e2e_achat_billet_carte",
+        "description": "Parcours : depuis la liste, la réservation est créée puis payée par carte, et le billet passe au statut payé avec retour sur l'écran des concerts.",
+        "kind": "e2e",
+        "targetId": "act_payer_billet_carte"
+      },
+      {
+        "id": "test_e2e_affichage_code_entree",
+        "description": "Parcours : après paiement, le code scannable du billet est généré et présentable au contrôle à l'entrée.",
+        "kind": "e2e",
+        "targetId": "act_generer_code_scannable"
+      },
+      {
+        "id": "test_e2e_ajout_calendrier",
+        "description": "Parcours : l'utilisateur ajoute le concert à son calendrier après octroi de la permission, et le billet est marqué comme ajouté au calendrier.",
+        "kind": "e2e",
+        "targetId": "act_ajouter_concert_calendrier"
+      },
+      {
+        "id": "test_e2e_consultation_hors_ligne",
+        "description": "Parcours : après préchargement, la liste des concerts et le billet payé restent consultables sans réseau.",
+        "kind": "e2e",
+        "targetId": "act_precharger_hors_ligne"
+      }
+    ]
+  }
+}

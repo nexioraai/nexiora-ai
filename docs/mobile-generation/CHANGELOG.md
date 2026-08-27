@@ -1,5 +1,32 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — 2.4-H : campagne réelle v2 (12 rejeux) — 5/12 identiques,
+## 7 refus fail-closed reproductibles, causes candidates éliminées
+
+- **12 rejeux réels** avec le moteur v2 validé à blanc ($8,94 réel vs
+  $13-18 devisés — les refus émettent peu ; 80 appels, 9 retries contenu,
+  0 erreur API, 0 refus classifieur).
+- **5/12 identiques** — contre-vérification indépendante : re-parse,
+  0 diagnostic, hash ET forme canonique à l'octet — exactement les 5
+  succès v1 : **non-régression confirmée**.
+- **7/12 REFUSÉS fail-closed** (`SECTION_COUNT`) : sous-émission des blocs
+  d'un écran précis (1-3 émis sur 5-9 attendus, sorties de 110-231
+  tokens), y compris en appel MONO-ÉCRAN avec contrat de comptes
+  explicite et retry. **Reproductible** : les MÊMES 7 documents échouent
+  en campagne, rejeu v1 et rejeu v2 — deux granularités, trois prompts.
+- **Causes éliminées [mesuré]** : longueur de sortie (écrans fautifs =
+  2-3,5 k chars ≈ 650-1000 tokens), dérive d'identifiants (18/19 sections
+  identiques dans les dumps v1), échantillonnage aléatoire
+  (reproductibilité parfaite), consigne (trois variantes sans effet),
+  marqueurs d'abrègement dans le corpus (aucun), structure du rendu
+  (lignes saines vérifiées).
+- **Cause résiduelle** : comportement document-spécifique du modèle sur
+  certains écrans — mécanisme exact à établir par SONDE INSTRUMENTÉE
+  (conservation du contenu brut des émissions refusées, ~$0,3-0,5,
+  accord propriétaire requis avant toute dépense).
+- Les gardes v2 ont tenu à 100 % : aucun document partiel ou divergent
+  n'est jamais sorti du moteur.
+
 ## 2026-08-27 — 2.4-H : fix v2 construit et VALIDÉ À BLANC ($0 API)
 
 - **Moteur de transcription v2** (`benchmarks/air-emission/transcribe-lib.mjs`,
