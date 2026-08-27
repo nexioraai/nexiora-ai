@@ -1,8 +1,8 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-08-27** (Phase 2 OUVERTE — étape 2.1 livrée : paquet
-> `@deribfy/air-schema` ; bancs Phase 1 restants en attente de prérequis).
+> **2026-08-27** (2.4-H VALIDÉE : 12/12 identiques en conditions réelles —
+> D-019 ; Phase 2 : reste 2.5 ; bancs Phase 1 en attente de prérequis).
 
 ## ÉTAT GLOBAL
 
@@ -41,21 +41,23 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
   Phase 2 : **2.1 🟢 `@deribfy/air-schema`** · **2.2 🟢 migrations d'AIR** ·
   **2.3 🟢 `@deribfy/capability-registry`** (15 capabilities, cliquets) ·
   **2.4 🟢 émission structured outputs + corpus** (12/12 AIR valides,
-  round-trip 12/12 conforme au schéma, 5/12 identiques [mesuré], corpus de
-  12 domaines validé en CI — 121 tests paquets verts).
+  corpus de 12 domaines validé en CI — 121 tests paquets verts) ·
+  **2.4-H 🟢 VALIDÉE (D-019)** : cause racine prouvée (fourche
+  ordre×optionalité, matrice X1-X4 + généralisation sur artefacts),
+  correction minimale appliquée (permutation entityId/props + garde
+  PROPS_COUNT), **validation réelle finale 12/12 IDENTIQUES** ($9,67,
+  0 retry, contre-vérifiée indépendamment — cycle D-018 complet).
 - **En cours** : Phase 2 — AIR v1 + Capability Registry v1.
-- **Bloqué, prérequis propriétaire** : **2.4-H fix v2** — arbitrage +
-  budget re-test ~$7-9 (transcription par écran ; cause confirmée par
-  dumps) · **2.5 — revue propriétaire des 15 capabilities v1** (décision
-  produit exigée par la ROADMAP avant gel du registre) · Phase 1 : P-002
-  (comptes E2B/Modal/Fly/Vercel Sandbox + budget ~10-20 $) · P-003 & E2E
-  (Xcode complet + simulateurs et Android Studio, OU 2 appareils
-  physiques + compte EAS) · coûts EAS (compte Expo/EAS) · coût projet
-  Supabase (token Management API, org de test).
+- **Bloqué, prérequis propriétaire** : **2.5 — revue propriétaire des 15
+  capabilities v1** (décision produit exigée par la ROADMAP avant gel du
+  registre ; suspension propriétaire à lever) · Phase 1 : P-002 (comptes
+  E2B/Modal/Fly/Vercel Sandbox + budget ~10-20 $) · P-003 & E2E (Xcode
+  complet + simulateurs et Android Studio, OU 2 appareils physiques +
+  compte EAS) · coûts EAS (compte Expo/EAS) · coût projet Supabase (token
+  Management API, org de test).
 - **Prochaine étape EXACTEMENT autorisée** : **2.5 — gel du registre v1**
   après revue propriétaire des capabilities (dernière étape de la
-  Phase 2) ; **2.4-H fix v2** en parallèle sur arbitrage (non bloquant
-  pour 2.5).
+  Phase 2).
 - **INTERDIT à ce stade** : toute phase dont les dépendances ROADMAP ne
   sont pas satisfaites (Phase 3 exige P-003 ; Phases 4+ dépendent de 2/3),
   tout push sans accord explicite, toute décision P-00x sans les mesures
