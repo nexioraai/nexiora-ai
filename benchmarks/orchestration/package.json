@@ -1,0 +1,9 @@
+{
+  "name": "bench-orchestration",
+  "private": true,
+  "type": "module",
+  "description": "Banc P-001 - candidat (a) pgmq + machine a etats. Hors workspaces (outillage de mesure).",
+  "dependencies": {
+    "pg": "^8.16.0"
+  }
+}
