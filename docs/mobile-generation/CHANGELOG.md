@@ -1,5 +1,25 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — P-001 : campagne officielle du candidat (a) — 5/5
+
+- Base de test `deribfy-mobile-test` provisionnée par le propriétaire ;
+  `DATABASE_URL` fourni **hors dépôt** (`~/.deribfy-mobile-test.env`, 600,
+  jamais versionné). Preflight de cible : hôte pooler session, user du
+  projet de test, ≠ production — vérifié avant toute écriture.
+- **Campagne 1 : 4/5** — analyse post-hoc en base : E2 était un **faux
+  négatif du harnais** (timeout 600 s < somme des durées ; au fond : 6/6
+  `done`, 30/30 artefacts, 0 dupliqué) + **fuite d'un worker** invalidant
+  la fenêtre d'E5. Défauts du harnais, pas du candidat.
+- **Harnais v2** : workers tués en `finally`, timeout E2 calculé depuis les
+  durées déterministes, isolation/purge entre épreuves, fenêtre E5 prouvée
+  vide, exit code capturé.
+- **Campagne 2 (OFFICIELLE) : 5/5 épreuves éliminatoires réussies** —
+  E1 215 s (redélivrance kill -9, 0 doublon) · E2 342 s (budget 471 s,
+  idempotence totale) · E3 50 s · E4 27 s (borne exacte) · E5 226 s
+  (durabilité prouvée). Journaux des DEUX campagnes versionnés.
+- **Aucune décision P-001 prise** — en attente : comparaison (b)/(c) ou
+  arbitrage propriétaire sur la suffisance de (a).
+
 ## 2026-08-27 — D-015 actée · harnais P-001 préparé
 
 - **D-015 (propriétaire)** : résilience aux refus LLM — gestion explicite de

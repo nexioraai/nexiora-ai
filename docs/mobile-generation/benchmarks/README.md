@@ -17,7 +17,7 @@ ne sont jamais ajustés après coup pour faire passer un candidat.
 | Banc | Protocole | Exécution | Blocage |
 |---|---|---|---|
 | Coûts LLM (avec/sans caching) | ✅ `couts-unitaires.md` | ✅ **exécuté** — résultats dans `benchmarks/llm-cost/` | — |
-| P-001 Orchestration | ✅ `P-001-orchestration.md` | ⏳ | Postgres local absent (pas de Docker [mesuré]) → projet Supabase de test OU installation Docker ; comptes d'essai Inngest/Trigger.dev |
+| P-001 Orchestration | ✅ `P-001-orchestration.md` | 🟢 **candidat (a) : campagne officielle 5/5** (2026-08-27, `benchmarks/orchestration/results/`) — décision EN ATTENTE (comparaison (b)/(c) sur comptes, ou arbitrage) | Comptes d'essai Inngest/Trigger.dev pour la comparaison |
 | P-002 Sandbox | ✅ `P-002-sandbox.md` | ⏳ | Comptes + clés API E2B / Modal / Fly / Vercel Sandbox + petit budget |
 | P-003 Styling RN | ✅ `P-003-styling.md` | ⏳ | Xcode complet + simulateurs OU appareils physiques ([mesuré] : absents de la machine) |
 | E2E mobile | ✅ `E2E-mobile.md` | ⏳ | Mêmes prérequis que P-003 |
