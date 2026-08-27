@@ -1,5 +1,35 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — 2.4-H : GÉNÉRALISATION DÉMONTRÉE SUR ARTEFACTS EXISTANTS
+## ($0) — la « densité » était un PROXY ; vrai discriminant : blocs armés
+
+- **Audit gratuit de généralisation** (exigé par le propriétaire avant
+  toute dépense — il a eu raison : le test payant proposé à $0,40 était
+  INUTILE).
+- **Découverte** : le discriminant réel des 12 documents n'est PAS la
+  densité de props mais la présence de **blocs « armés »** (props ET
+  entityId dans le même bloc — la configuration où la fourche du piège
+  existe) : les 7 documents fautifs en ont 14-19 chacun ; les 5 documents
+  qui réussissent en ont **ZÉRO** (séparation 12/12, aucune exception).
+  `suivi-chantier` (le plus gros, 33 blocs) réussit car ses blocs portent
+  soit props, soit entityId, jamais les deux. La corrélation de densité
+  était un proxy (les blocs armés sont aussi les plus riches en props).
+- **Signatures du mécanisme vérifiées dans les émissions v1 des 7
+  documents** (ordre d'émission préservé dans les dumps) : 17/17 blocs
+  émis suivent l'ordre du schéma ; classification exhaustive : 9 INTACT ·
+  7 PIÈGE-ENTITYID (props supprimées, entityId présent — la porte du
+  piège) · 1 CLÔTURE-TERMINALE · **0 contre-signature**. Témoin réussi :
+  33/33 blocs intacts, ordres (id,blockType,entityId) ou
+  (id,blockType,props) — un seul optionnel par bloc, pas de fourche.
+- **Verdict : 🟢 GÉNÉRALISATION DÉMONTRÉE À PARTIR DES ARTEFACTS
+  EXISTANTS** — préconditions présentes dans les 7 échecs, absentes des
+  5 succès, signatures conformes partout, aucune contre-preuve (ni
+  document armé qui réussit, ni document désarmé qui échoue).
+- Cause racine 2.4-H désormais complète : fourche ordre×optionalité sur
+  blocs armés (X1-X4 : preuve d'intervention ; cet audit : préconditions
+  et signatures sur les 12 documents). AUCUNE correction appliquée —
+  décision propriétaire attendue pour le cycle de correction D-018.
+
 ## 2026-08-27 — 2.4-H : audit gratuit exhaustif — CAUSE RACINE NON DÉMONTRÉE,
 ## faits décisifs établis, confusion densité×présentation identifiée
 
