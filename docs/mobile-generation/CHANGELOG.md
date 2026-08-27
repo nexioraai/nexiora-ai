@@ -1,5 +1,21 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — P-001 : campagne officielle du candidat (b) Inngest — 5/5
+
+- Compte Inngest de test fourni ; clés **hors dépôt**
+  (`~/.deribfy-inngest-test.env`, 600). Adaptateur en mode **connect**
+  (worker sortant, sans URL publique), enregistrement d'app vérifié,
+  `INNGEST_DEV` refusé.
+- **5/5 épreuves officielles** — mêmes charge/épreuves/journal que (a) :
+  E1 redélivrance cloud **157 s** après kill -9, mémoïsation prouvée ·
+  E2 déduplication par id d'événement (6 démarrages/12 envois), **160 s**
+  (parallélisme natif ; (a) : 342 s à 2 workers) · E3 `cancelOn` propre ·
+  E4 exactement 2 tentatives (`retries: 1` + `onFailure`) · E5 durabilité
+  prouvée (fenêtre vide sans worker connecté).
+- Comparatif partiel (a)/(b) disponible ; **décision P-001 toujours
+  ouverte** : (c) Trigger.dev prévu par le protocole — comparaison sur
+  compte, ou arbitrage propriétaire explicite consigné en dérogation.
+
 ## 2026-08-27 — P-001 : campagne officielle du candidat (a) — 5/5
 
 - Base de test `deribfy-mobile-test` provisionnée par le propriétaire ;
