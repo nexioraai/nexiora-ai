@@ -60,9 +60,15 @@ for (const part of PARTS) {
   );
 }
 
+// 2.4-H : fix minimal validé par le propriétaire. NOTE [mesuré 2026-08-27] :
+// `temperature` est DÉPRÉCIÉ et refusé (400) sur claude-opus-5 — le levier
+// d'échantillonnage n'existe plus sur la famille Claude 5 ; le fix repose
+// donc sur l'ancrage explicite des identifiants ci-dessous.
 const SYSTEM_TRANSCRIBE = `Tu reçois le rendu texte DÉTERMINISTE et COMPLET d'une spécification AIR existante. Tu transcris par sections : à chaque appel, émets UNIQUEMENT les sections demandées, en JSON strictement conforme au schéma fourni.
 
-RÈGLE ABSOLUE : reproduction à l'IDENTIQUE. Chaque identifiant, chaque valeur, chaque ordre de liste, chaque texte localisé doit être repris VERBATIM depuis le rendu. Les valeurs entre backticks sont des littéraux exacts ; les objets/tableaux JSON inclus dans le rendu sont à recopier tels quels. N'ajoute rien, n'omets rien, ne reformule rien, ne "corrige" rien. Un champ optionnel absent du rendu reste absent du JSON.`;
+RÈGLE ABSOLUE : reproduction à l'IDENTIQUE. Chaque identifiant, chaque valeur, chaque ordre de liste, chaque texte localisé doit être repris VERBATIM depuis le rendu. Les valeurs entre backticks sont des littéraux exacts ; les objets/tableaux JSON inclus dans le rendu sont à recopier tels quels. N'ajoute rien, n'omets rien, ne reformule rien, ne "corrige" rien. Un champ optionnel absent du rendu reste absent du JSON.
+
+ANCRAGE DES IDENTIFIANTS : chaque identifiant entre backticks (préfixes prj_, scr_, blk_, nav_, ent_, fld_, rel_, data_, act_, rule_, slot_, intg_, test_) doit réapparaître CARACTÈRE PAR CARACTÈRE dans le JSON émis. Inventer, renommer ou « améliorer » un identifiant est une FAUTE. Avant d'émettre une section, repère dans le rendu les identifiants exacts qu'elle doit contenir et recopie-les tels quels — y compris ceux définis dans d'autres sections et simplement référencés ici.`;
 
 function extractJson(response) {
   const text = response.content.filter((b) => b.type === "text").map((b) => b.text).join("").trim();
@@ -73,7 +79,17 @@ function extractJson(response) {
 const DUMP_DIR = join(HERE, "results", "roundtrips");
 mkdirSync(DUMP_DIR, { recursive: true });
 
+// Surveillance budgétaire (2.4-H) : coût affiché par rejeu et cumulé.
+const PRIX = { in: 5, cacheWrite: 6.25, cacheRead: 0.5, out: 25 };
+const coutUSD = (u) =>
+  ((u.input_tokens ?? 0) * PRIX.in +
+    (u.cache_creation_input_tokens ?? 0) * PRIX.cacheWrite +
+    (u.cache_read_input_tokens ?? 0) * PRIX.cacheRead +
+    (u.output_tokens ?? 0) * PRIX.out) / 1e6;
+let totalUSD = 0;
+
 for (const slug of process.argv.slice(2)) {
+  const usage = [];
   const air = airSchema.projectAirSchema.parse(
     JSON.parse(readFileSync(join(REPO, "packages/golden-corpus/corpus", `${slug}.air.json`), "utf8")),
   );
@@ -94,6 +110,7 @@ for (const slug of process.argv.slice(2)) {
       output_config: { format: { type: "json_schema", schema: part.schema } },
     });
     if (response.stop_reason === "refusal") throw new Error(`refus sur ${part.name}`);
+    usage.push(response.usage);
     Object.assign(assembled, extractJson(response));
   }
   const parsed = airSchema.projectAirSchema.safeParse(assembled);
@@ -106,7 +123,10 @@ for (const slug of process.argv.slice(2)) {
     join(DUMP_DIR, `${slug}.transcrit.json`),
     JSON.stringify({ identical, schemaValid: parsed.success, diagnostics, document: assembled }, null, 2),
   );
+  const cout = usage.reduce((s, u) => s + coutUSD(u ?? {}), 0);
+  totalUSD += cout;
   console.log(
-    `[${slug}] schemaValid=${parsed.success} diagnostics=${diagnostics.length} identical=${identical} → results/roundtrips/${slug}.transcrit.json`,
+    `[${slug}] schemaValid=${parsed.success} diagnostics=${diagnostics.length} identical=${identical} $${cout.toFixed(3)} (cumul $${totalUSD.toFixed(2)}) → results/roundtrips/${slug}.transcrit.json`,
   );
 }
+console.log(`\nBILAN REJEUX : coût total ~$${totalUSD.toFixed(2)}`);

@@ -1,5 +1,32 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — 2.4-H : rejeu 8/8, cause des round-trips non identiques
+## CONFIRMÉE par dumps instrumentés
+
+- **Rejeu approuvé exécuté** (7 échecs + témoin, depuis le corpus
+  versionné, AUCUNE ré-émission ; coût réel $6,09 vs 4-6 annoncés).
+- **Témoin (`suivi-chantier`) : identique, 0 diagnostic** — aucune
+  régression ; le rendu texte reste prouvé sans perte (round-trip parfait
+  sur un document de 33 blocs).
+- **Les 7 échecs rejouent tous** avec une signature 100 % uniforme :
+  **18/19 sections canoniquement IDENTIQUES** ; seule `screens` diffère —
+  **tronquée à 1 écran sur 4** (2-4 blocs sur 20-31), JSON complet et
+  schema-valide ⇒ clôture volontaire des tableaux longs par le modèle
+  (sections ≥ ~8 k caractères), et non une coupe max_tokens (qui aurait
+  produit du JSON invalide).
+- **Hypothèses infirmées [mesuré]** : (a) `temperature` est DÉPRÉCIÉ et
+  refusé (400) sur claude-opus-5 — le levier d'échantillonnage n'existe
+  plus sur la famille Claude 5 ; (b) l'ancrage renforcé des identifiants
+  est sans effet — les identifiants n'étaient pas le problème (aucune
+  dérive d'ids dans les dumps).
+- **Cause racine consignée** : troncature schema-valide des sorties
+  longues en transcription. Leçon d'architecture : borner la taille de
+  sortie par appel LLM ; une sortie structurée peut être VALIDE et
+  INCOMPLÈTE — seule la vérification déterministe de complétude protège.
+- **Fix v2 proposé (en attente d'arbitrage)** : transcription des écrans
+  UN PAR UN + ancrage des comptes ("EXACTEMENT N écrans, M blocs") +
+  contrôle déterministe de complétude ; re-test 7+1 estimé ~$7-9.
+
 ## 2026-08-27 — étape 2.4 TERMINÉE : campagne d'émission complète + corpus
 
 - **Campagne complète** (12 intentions, 3 classes commerce, ~$19,71 sur le
