@@ -302,6 +302,16 @@ Règles obligatoires :
    moment), vérifié contre l'état réel du dépôt ; chaque fin d'étape
    énonce : terminé / où / prochaine étape exacte / prérequis /
    exécutable ou bloquée. Détail : MASTER_PLAN.md §5.
+7bis. **Protocole de preuve (D-018)** : niveaux de preuve jamais confondus
+   (hypothèse → observation → corrélation → cause probable → cause
+   confirmée → correction proposée/testée/validée → non-régression →
+   validation finale) ; diagnostic avant correction ; simulation ≠
+   validation réelle (elle valide moteur/gardes, jamais le vrai modèle) ;
+   « résolu » exige vérification indépendante + critères ROADMAP ; preuve
+   contraire ⇒ abandon immédiat de l'hypothèse ; incertitude énoncée
+   explicitement ; dépense API : option la moins chère d'abord +
+   autorisation ; jamais fermer une étape pour finir. Détail :
+   DECISIONS.md D-018.
 7. **Pilotage opérationnel (complément D-017)** : Claude Code pilote
    l'exécution du plan — croiser ROADMAP/MASTER_PLAN/STATUS/DECISIONS et
    l'état réel, déterminer soi-même la prochaine étape autorisée et

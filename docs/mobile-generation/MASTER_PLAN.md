@@ -122,6 +122,12 @@ Détail de chaque étage : `ARCHITECTURE.md`.
   autorisée n'est disponible) et les vraies décisions propriétaire. Si
   plusieurs chemins sont réellement autorisés : brève présentation +
   recommandation technique. Les interdits ci-dessus restent inchangés.
+- **Protocole de preuve (D-018)** — standard ELITE 2027 A++ : niveaux de
+  preuve jamais confondus (hypothèse → … → validation finale) ; diagnostic
+  avant correction ; simulation ≠ validation réelle ; comportement LLM
+  validé sur le vrai modèle ; « résolu » exige vérification indépendante ;
+  preuve contraire ⇒ abandon immédiat ; incertitude explicite ; jamais
+  fermer une étape pour finir. Détail : `DECISIONS.md` D-018.
 - **Décisions produit** (périmètre v1, priorités commerciales, arbitrages de
   coût) : propriétaire. **Arbitrages techniques** : meilleure solution
   démontrée, quelle qu'en soit l'origine.

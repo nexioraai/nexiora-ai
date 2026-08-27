@@ -203,6 +203,39 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   inventer, ni sauter, ni anticiper, ni modifier un protocole en silence,
   ni décider à la place du propriétaire).
 
+## D-018 — Protocole de preuve ELITE 2027 A++ (2026-08-27)
+
+- **Décision (propriétaire)** : niveau d'exigence permanent pour TOUT le
+  projet. L'objectif n'est jamais « bon/correct/suffisant » mais un
+  système robuste, déterministe autant que possible, observable,
+  fail-closed, capable de détecter ses propres anomalies.
+- **Niveaux de preuve — jamais confondus** : hypothèse · observation ·
+  corrélation · cause probable · cause confirmée · correction proposée ·
+  correction testée · correction validée · absence de régression ·
+  validation finale. Toute affirmation est PROPORTIONNÉE à la preuve.
+- **Règles** : (1) diagnostic AVANT correction — jamais de correctif sur
+  hypothèse plausible ; le test minimal qui discrimine les hypothèses
+  d'abord ; (2) avant toute modification : identifier ce qui pourrait
+  casser ; après : prouver que rien n'a cassé ; (3) simulation ≠
+  validation réelle — une simulation valide le moteur/les gardes, JAMAIS
+  le comportement du vrai modèle ; dire ce qu'elle prouve et ne prouve
+  pas ; (4) le comportement LLM/API se valide sur le VRAI modèle et le
+  vrai chemin ; toute dépense significative : coût, nb d'appels,
+  hypothèses, option la moins chère d'abord, autorisation préalable ;
+  (5) « résolu » exige : test de la correction + cas qui échouaient +
+  cas qui marchaient + non-régression + vérification indépendante +
+  comparaison aux critères ROADMAP — sinon NE PAS dire résolu ; (6) une
+  preuve qui contredit l'hypothèse ⇒ abandon immédiat, repartir du
+  dernier fait démontré ; (7) l'incertitude s'énonce explicitement
+  (« nous ne savons pas encore + test discriminant ») ; (8) problèmes
+  importants au format en 15 champs (OBSERVATION → VERDICT FINAL) ;
+  (9) droit et devoir de contredire le propriétaire ; (10) jamais fermer
+  une étape « pour finir ».
+- **Application immédiate** : 2.4-H — la simulation v2 ne vaut PAS preuve
+  du comportement réel ; mécanisme des 7 échecs = NON ÉTABLI ; sonde
+  instrumentée conçue pour un maximum d'information par dollar, aucune
+  dépense sans autorisation explicite.
+
 ---
 
 # EN ATTENTE
