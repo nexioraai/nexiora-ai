@@ -208,10 +208,21 @@ export default defineConfig({
       // de cette liste n'est jamais execute et ne signale rien : il ressemble
       // a une preuve, il n'en est pas une. `rate-limit` et `welcome` sont
       // ajoutes AVANT que leurs tests soient ecrits, pas apres.
+      // DEBT-079 -- prefixe AJOUTE. `src/lib/marketing/` n'etait pas collecte :
+      // un test place la passait en isolation mais n'etait JAMAIS execute par
+      // `vitest run`. Meme piege que les sept prefixes precedents.
+      'src/lib/marketing/**/*.test.ts',
       'src/lib/rate-limit/**/*.test.ts',
       'src/app/api/welcome/**/*.test.ts',
       'src/app/api/geocode/**/*.test.ts',
       // D-08 -- le proxy de domaines personnalises n'avait aucun test.
+      // LOT BLOG 9 -- prefixe AJOUTE. `src/app/dashboard/` n'etait pas
+      // collecte : l'espace proprietaire n'avait aucune couverture, et un
+      // test ecrit la n'aurait ete execute par personne. Meme piege que
+      // backfill-hero, shipping-estimate, contact, onboarding et blog --
+      // detecte par le delta de comptage apres ajout du fichier de test.
+      'src/app/dashboard/**/*.test.ts',
+      'src/app/dashboard/**/*.test.tsx',
       'src/__tests__/**/*.test.ts',
     ],
     environment: 'node',

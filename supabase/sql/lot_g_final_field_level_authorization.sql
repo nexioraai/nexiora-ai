@@ -74,8 +74,13 @@ WHERE table_name = 'sites' AND grantee = 'authenticated' AND privilege_type = 'U
 ORDER BY column_name;
 
 -- C. RLS inchangée (ne doit jamais avoir été modifiée par ce lot).
--- Attendu : identique à la preuve déjà fournie précédemment (5 policies sur
--- sites, UPDATE avec qual/with_check = owner_id = auth.uid()).
+-- Attendu : QUATRE policies sur `sites`, toutes a perimetre proprietaire --
+-- INSERT / SELECT / UPDATE / DELETE, qual et with_check = owner_id = auth.uid().
+-- DEBT-080 : ce commentaire annoncait CINQ policies ; la base en montre quatre
+-- (releve du 2026-08-26). L'ecart vient de `sites_public_view.sql`, qui a
+-- remplace « Sites readable if published or owned » par « Owners can read their
+-- own site ». Les policies INSERT et DELETE sont d'ailleurs INERTES : ce meme
+-- fichier a revoque ces deux grants pour `authenticated`.
 SELECT schemaname, tablename, policyname, cmd, qual, with_check
 FROM pg_policies
 WHERE tablename IN ('sites', 'shop_products')
