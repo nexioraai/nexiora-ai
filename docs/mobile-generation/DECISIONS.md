@@ -158,12 +158,36 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
 - **Tranché par** : décision produit (coût/risque) + mesure du coût réel de
   provisioning par app (Phase 1) ; avant la Phase 5.
 
-## P-005 — Monorepo à workspaces vs dépôt séparé
+## ~~P-005~~ → D-014 — Monorepo à workspaces (TRANCHÉ, 2026-08-27)
 
-- **Recommandation Claude Code** : monorepo (cliquets existants étendus aux
-  paquets, cohérence d'outillage, refactors atomiques).
-- **Tranché par** : validation du propriétaire (impacte le dépôt entier) ;
-  exécution en Phase 0.
+- **Problème** : où faire vivre le moteur de génération (paquets AIR,
+  primitives, blocks, compilateur, registre, runtime…) alors que le dépôt
+  est une application Next unique dont les cliquets et la config de test
+  sont calibrés pour cette seule app.
+- **Options étudiées** : (a) monorepo à workspaces npm dans le dépôt
+  existant ; (b) dépôt moteur séparé ; (c) paquets ajoutés à la racine sans
+  déplacer l'app (écarté : racine ambiguë app/workspace, hors plan).
+- **Décision (propriétaire, 2026-08-27)** : **(a) monorepo à workspaces** —
+  recommandation Claude Code adoptée.
+- **Raisons** : repository unique ; frontières de packages explicites ;
+  outillage et CI communs ; tests inter-packages ; refactors atomiques ;
+  visibilité des dépendances ; cliquets d'architecture couvrant l'ensemble
+  du système ; continuité avec le centre de contrôle
+  `docs/mobile-generation/`.
+- **Conséquences** : l'app web est déplacée EN BLOC dans `apps/web/`
+  (src, public, supabase, scripts, documentation, measures, docs produit,
+  configs) — mesuré : tous ses couplages de chemins sont relatifs au paquet
+  (`__dirname`/`REPO_ROOT` calculés), donc aucun cliquet ni script n'est
+  modifié ; `packages/` accueillera les paquets moteur à partir des
+  Phases 2+ ; lockfile unique à la racine ; CI exécutée dans le workspace ;
+  les tests s'exécutent avec cwd = `apps/web` (quatre cliquets utilisent
+  `process.cwd()`).
+- **Risques consignés** : (1) **Vercel : Root Directory du projet doit être
+  réglé sur `apps/web` AVANT tout déploiement de cette structure** — sans ce
+  réglage, le build de production échouera ; `vercel.json` (crons) suit
+  l'app et sera lu depuis le Root Directory. (2) Le lockfile racine est
+  régénéré pour la structure workspace (grosse diff attendue, sans
+  changement de versions applicatives hors SDK déjà mis à niveau).
 
 ## P-006 — Domaine du Vertical Slice 2
 
