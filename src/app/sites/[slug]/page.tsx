@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { fetchSite, resolveSiteBaseUrl } from './themes/shared'
+import { logAnomaly } from '@/lib/anomaly'
 import JsonLd from './themes/JsonLd'
 import HtmlLang from './themes/HtmlLang'
 import EditorialTheme from './themes/EditorialTheme'
@@ -11,8 +12,16 @@ import VifTheme from './themes/VifTheme'
 import AuroraTheme from './themes/AuroraTheme'
 import CartShell from './themes/CartShell'
 import { getCartLabels } from './themes/cartLabels'
+import { resolveShopCurrency } from './themes/shopCurrency'
+import { ogLocaleFor } from '@/lib/i18n/supportedLanguages'
 import ScrollRevealInit from './themes/ScrollRevealInit'
 import CatalogSearch, { type ThemeKey } from './themes/CatalogSearch'
+// LOT 1 / L1-02 -- la montee de la barre de recherche etait une NEGATION
+// (`!== 'pod_brand'`) recopiee ici, dans l'apercu et dans AuroraTheme : un
+// sous-type ABSENT y passait. Regle unique, allowlist positive. Et le repli
+// `|| 'reseller'` sur la prop est retire : il fabriquait un sous-type que la
+// base ne porte pas.
+import { showsVisitorCatalogSearch } from '@/app/sites/[slug]/themes/catalogSearchVisibility'
 import PromoBanner from './themes/PromoBanner'
 
 // M1-08 : `revalidate` retire, il etait TROMPEUR. Cette page appelle
@@ -63,7 +72,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: site.name,
       images,
       type: 'website',
-      locale: 'fr_FR',
+      // CHANTIER 3 -- `locale` valait `'fr_FR'` EN DUR. Mesure sur
+      // yiaglobalcommodities.com : contenu anglais, `og:locale fr_FR`
+      // servi a Facebook et LinkedIn. Ce n'etait pas propre a ce site --
+      // TOUS les sites annoncaient le francais, y compris ceux generes en
+      // arabe. La locale suit desormais la meme regle que `getDict()`,
+      // seule autorite de ce que la page rend reellement.
+      locale: ogLocaleFor(site.lang),
     },
     twitter: {
       card: images ? 'summary_large_image' : 'summary',
@@ -77,8 +92,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function SitePage({ params, searchParams }: Props) {
   const { slug } = await params
   const sp = await searchParams
-  const site = await fetchSite(slug, sp.paid === '1')
+
+// DETTE 3 -- `logAnomaly` est appele ICI, jamais dans `shared.tsx`.
+// Ce dernier est bi-environnement (quatre composants 'use client'
+// l'importent) et `anomaly.ts -> supabase-admin.ts -> server-only` fait
+// echouer le build s'il y entre -- mesure, pas suppose. Le signal remonte
+// donc par un tableau `diagnostics`, et seuls les appelants SERVEUR
+// journalisent.
+  const diagnostics: string[] = []
+  const site = await fetchSite(slug, sp.paid === '1', diagnostics)
+  // `notFound()` reste conditionne au SEUL site introuvable. Une panne de
+  // catalogue n'a jamais produit de 404 et ne doit pas commencer.
   if (!site) notFound()
+  if (diagnostics.length > 0) {
+    await logAnomaly({
+      type: 'storefront_query_failed',
+      severity: 'warning',
+      siteId: (site as { id?: string }).id ?? null,
+      slug,
+      details: { surface: 'storefront', failures: diagnostics },
+    })
+  }
 
   const host = (await headers()).get('host')
   const url = resolveSiteBaseUrl(site, host)
@@ -93,10 +127,10 @@ export default async function SitePage({ params, searchParams }: Props) {
     <>
       <HtmlLang lang={site.lang} />
       <JsonLd site={site} url={url} />
-      <PromoBanner slug={site.slug} primary={primary} />
+      <PromoBanner slug={site.slug} primary={primary} mode={site.mode} labels={cartLabels} currency={resolveShopCurrency(site.products)} />
       <CartShell primary={primary} labels={cartLabels} slug={site.slug} mode={site.mode} products={site.products} shippingFlat={site.shipping_flat} variant={key === 'noir' ? 'dark' : 'light'}>
         <Theme site={site} />
-        {site.mode === 3 && site.dropship_type !== 'pod_brand' && site.theme !== 'aurora' && <CatalogSearch slug={site.slug} primary={primary} lang={site.lang} theme={key as ThemeKey} dropshipType={site.dropship_type || 'reseller'} />}
+        {site.mode === 3 && showsVisitorCatalogSearch(site.dropship_type) && site.theme !== 'aurora' && <CatalogSearch slug={site.slug} primary={primary} lang={site.lang} theme={key as ThemeKey} dropshipType={site.dropship_type} />}
       </CartShell>
       <ScrollRevealInit />
     </>

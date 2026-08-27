@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { fetchOwnedSite, updateOwnedSite } from '@/lib/supabase-owned-site';
 import { useTranslation } from '@/lib/translations';
 import LanguageSwitcher from './LanguageSwitcher';
+import { SUPPORTED_LANGUAGES } from '@/lib/i18n/supportedLanguages';
 import { Menu as MenuIcon, X, ArrowLeft, Plus, Trash2, Check, Loader2, Upload, Eye, EyeOff, MapPin } from 'lucide-react';
 
 export default function Navbar() {
@@ -287,6 +288,39 @@ export default function Navbar() {
                     <div>
                       <label className="block text-xs text-slate-400 uppercase tracking-wider font-semibold mb-2">Primary Color</label>
                       <input type="color" value={site.primary_color || '#FA5D1E'} onChange={(e) => updateField('primary_color', e.target.value)} className="w-24 h-12 rounded-xl border border-white/10 bg-transparent cursor-pointer" />
+                    </div>
+                    {/* CHANTIER 3 (MODE 1) -- `sites.lang` DEVIENT EDITABLE.
+                        La colonne etait ecrite une fois, a la generation, a
+                        partir de la langue detectee dans la conversation
+                        d'onboarding -- et plus jamais. Mesure sur
+                        yiaglobalcommodities.com : contenu entierement anglais,
+                        `lang` a `fr`, aucun chemin pour le corriger.
+                        Menu deroulant et non champ libre : le depot possede
+                        deja l'enum des langues qu'il sait servir, et proposer
+                        `de` ou `pt` livrerait un site a moitie traduit.
+                        AUCUNE seconde voie d'ecriture : `updateField` alimente
+                        la sauvegarde automatique existante (`updateOwnedSite`,
+                        l.80), qui portait deja `lang` dans son aller-retour. */}
+                    <div>
+                      <label className="block text-xs text-slate-400 uppercase tracking-wider font-semibold mb-2">Site Language</label>
+                      <select
+                        value={site.lang || ''}
+                        onChange={(e) => updateField('lang', e.target.value)}
+                        className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FA5D1E] cursor-pointer"
+                        aria-label="Site Language"
+                      >
+                        {!SUPPORTED_LANGUAGES.some((l) => l.code === site.lang) && (
+                          <option value={site.lang || ''} disabled>
+                            {site.lang ? `${site.lang} (unsupported)` : 'Not set'}
+                          </option>
+                        )}
+                        {SUPPORTED_LANGUAGES.map((l) => (
+                          <option key={l.code} value={l.code}>{l.flag} {l.label}</option>
+                        ))}
+                      </select>
+                      <p className="mt-2 text-xs text-slate-500">
+                        Changes the interface labels, navigation and metadata of your site. Your own text is not translated.
+                      </p>
                     </div>
                     <Field label="CTA Button Text" value={site.cta || ''} onChange={(v) => updateField('cta', v)} />
                     <div className="pt-4 border-t border-white/10">

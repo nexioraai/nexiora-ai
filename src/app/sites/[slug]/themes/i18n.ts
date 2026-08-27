@@ -8,6 +8,7 @@ export type ThemeDict = {
     shop: string
     gallery: string
     reviews: string
+    faq: string
     contact: string
   }
   hero: {
@@ -25,6 +26,8 @@ export type ThemeDict = {
     galleryTitle: string
     testimonialsKicker: string
     testimonialsTitle: string
+    faqKicker: string
+    faqTitle: string
     contactKicker: string
     contactTitle: string
     contactSubtitle: string
@@ -100,6 +103,7 @@ const en: ThemeDict = {
     shop: 'Shop',
     gallery: 'Gallery',
     reviews: 'Reviews',
+    faq: 'FAQ',
     contact: 'Contact',
   },
   hero: {
@@ -117,6 +121,8 @@ const en: ThemeDict = {
     galleryTitle: 'Gallery',
     testimonialsKicker: 'What clients say',
     testimonialsTitle: 'They trust us',
+    faqKicker: 'FAQ',
+    faqTitle: 'Your questions, answered',
     contactKicker: 'Get in touch',
     contactTitle: "Let's talk about your project",
     contactSubtitle: 'A question, a quote? We reply within 24h.',
@@ -192,6 +198,7 @@ const fr: ThemeDict = {
     shop: 'Boutique',
     gallery: 'Galerie',
     reviews: 'Avis',
+    faq: 'FAQ',
     contact: 'Contact',
   },
   hero: {
@@ -209,6 +216,8 @@ const fr: ThemeDict = {
     galleryTitle: 'Galerie',
     testimonialsKicker: 'Ce qu’ils disent',
     testimonialsTitle: 'Ils nous font confiance',
+    faqKicker: 'Questions fréquentes',
+    faqTitle: 'Vos questions, nos réponses',
     contactKicker: 'Contactez-nous',
     contactTitle: 'Parlons de votre projet',
     contactSubtitle: 'Une question, un devis ? Nous répondons sous 24h.',
@@ -284,6 +293,7 @@ const es: ThemeDict = {
     shop: 'Tienda',
     gallery: 'Galería',
     reviews: 'Opiniones',
+    faq: 'FAQ',
     contact: 'Contacto',
   },
   hero: {
@@ -301,6 +311,8 @@ const es: ThemeDict = {
     galleryTitle: 'Galería',
     testimonialsKicker: 'Lo que dicen los clientes',
     testimonialsTitle: 'Confían en nosotros',
+    faqKicker: 'Preguntas frecuentes',
+    faqTitle: 'Tus preguntas, respondidas',
     contactKicker: 'Contáctanos',
     contactTitle: 'Hablemos de tu proyecto',
     contactSubtitle: '¿Una pregunta, un presupuesto? Respondemos en 24h.',
@@ -376,6 +388,7 @@ const ar: ThemeDict = {
     shop: 'المتجر',
     gallery: 'المعرض',
     reviews: 'الآراء',
+    faq: 'الأسئلة',
     contact: 'اتصل بنا',
   },
   hero: {
@@ -393,6 +406,8 @@ const ar: ThemeDict = {
     galleryTitle: 'المعرض',
     testimonialsKicker: 'ماذا يقول العملاء',
     testimonialsTitle: 'يثقون بنا',
+    faqKicker: 'الأسئلة الشائعة',
+    faqTitle: 'أسئلتك، إجاباتنا',
     contactKicker: 'تواصل معنا',
     contactTitle: 'لنتحدث عن مشروعك',
     contactSubtitle: 'سؤال أو طلب عرض سعر؟ نرد خلال 24 ساعة.',

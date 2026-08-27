@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { supabase as supabaseAnon } from '@/lib/supabase';
+import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 import { logAiUsage } from '@/lib/ai-usage';
+// ETAPE 3 -- les familles d'outils par mode vivent desormais dans une
+// primitive dediee, en allowlists positives. Cette route ne decide plus.
+import { toolNamesForSite } from '@/lib/agent-tools/toolCapabilities';
+// ETAPE 4 -- la guidance par mode etait ECHAPPEE dans ce template : les cinq
+// branches n'etaient jamais evaluees et l'agent recevait les cinq a la fois.
+// Extraite et rendue vivante. Voir modeGuidance.ts pour la mesure complete.
+import { guidanceForSite } from '@/lib/agent-tools/modeGuidance';
+import { SUPPORTED_LANGUAGE_CODES } from '@/lib/i18n/supportedLanguages';
+import { PRICE_RANGE_VALUES } from '@/lib/site-profile/priceRange';
+import { AREA_SERVED_MAX_LENGTH } from '@/lib/site-profile/areaServed';
 
 const allTools: Anthropic.Tool[] = [
   {
@@ -15,10 +25,24 @@ const allTools: Anthropic.Tool[] = [
       properties: {
         field: {
           type: 'string',
-          enum: ['name', 'slogan', 'about', 'hero_title', 'hero_subtitle', 'cta', 'type'],
+          enum: ['name', 'slogan', 'about', 'hero_title', 'hero_subtitle', 'cta', 'type', 'lang', 'area_served', 'price_range'],
           description: 'Field to update',
         },
-        value: { type: 'string', description: 'New value for the field' },
+        // CHANTIER 3 -- `lang` rejoint cette liste, et c'est le SEUL champ
+        // qu'elle porte dont les valeurs soient bornees. Le schema d'outil ne
+        // sait pas exprimer un enum par champ ; la borne reelle est donc
+        // posee a l'APPLICATION (`apply/route.ts`, `isSupportedLanguage`),
+        // qui refuse en 400 -- la description ci-dessous guide le modele,
+        // elle ne le contraint pas, et n'est pas la garantie.
+        value: {
+          type: 'string',
+          description:
+            "New value for the field. For `lang`, the ONLY accepted values are the languages this platform can actually serve: " +
+            SUPPORTED_LANGUAGE_CODES.join(', ') +
+            ". Anything else is rejected. Changing `lang` switches the site's interface labels, navigation and metadata -- it does NOT translate the merchant's own text, which must be rewritten separately. " +
+            'For `price_range`, the ONLY accepted values are ' + PRICE_RANGE_VALUES.join(', ') + ' -- never a number, a currency or a word. ' +
+            'For `area_served`, give a SHORT place name such as "Montreal" or "Greater Montreal" (max ' + AREA_SERVED_MAX_LENGTH + ' characters, single line, no formatting characters); it drives which population appears in generated marketing visuals.',
+        },
         reason: { type: 'string', description: 'Brief explanation of why this change is proposed' },
       },
       required: ['field', 'value', 'reason'],
@@ -54,12 +78,18 @@ const allTools: Anthropic.Tool[] = [
   },
   {
     name: 'propose_add_service',
-    description: 'Propose to add a new service to the services list.',
+    description:
+      'Propose to add a new offering to a section of the site. Sections are what the visitor actually sees (CURRENT SITE STATE lists them with their items). If the site has exactly one section, `section` may be omitted. If it has several, you MUST name the target section exactly as it appears — there is no default.',
     input_schema: {
       type: 'object',
       properties: {
-        title: { type: 'string' },
+        title: { type: 'string', description: 'Title of the new offering.' },
         description: { type: 'string' },
+        section: {
+          type: 'string',
+          description:
+            'Exact name of the section that receives it. Optional only when the site has a single section.',
+        },
         reason: { type: 'string' },
       },
       required: ['title', 'description', 'reason'],
@@ -67,14 +97,15 @@ const allTools: Anthropic.Tool[] = [
   },
   {
     name: 'propose_remove_service',
-    description: 'Propose to remove a service from the list by its zero-based index.',
+    description:
+      'Propose to remove ONE offering, identified by its exact title. Use the title the merchant gave you, exactly as it appears in CURRENT SITE STATE. If the same title appears in several sections, the change is refused and you must ask which one they mean.',
     input_schema: {
       type: 'object',
       properties: {
-        index: { type: 'integer', description: 'Zero-based index of the service to remove' },
+        title: { type: 'string', description: 'Exact title of the offering to remove.' },
         reason: { type: 'string' },
       },
-      required: ['index', 'reason'],
+      required: ['title', 'reason'],
     },
   },
   {
@@ -108,16 +139,17 @@ const allTools: Anthropic.Tool[] = [
   },
   {
     name: 'propose_service_update',
-    description: 'Propose to modify an existing service by its zero-based index.',
+    description:
+      'Propose to modify ONE existing offering, identified by its exact current title. If the same title appears in several sections, the change is refused and you must ask which one they mean.',
     input_schema: {
       type: 'object',
       properties: {
-        index: { type: 'integer' },
+        title: { type: 'string', description: 'Exact CURRENT title of the offering.' },
         field: { type: 'string', enum: ['title', 'description'] },
         value: { type: 'string' },
         reason: { type: 'string' },
       },
-      required: ['index', 'field', 'value', 'reason'],
+      required: ['title', 'field', 'value', 'reason'],
     },
   },
   {
@@ -161,6 +193,99 @@ const allTools: Anthropic.Tool[] = [
       required: ['index', 'field', 'value', 'reason'],
     },
   },
+  // ===== CHANTIER 4 -- FAQ ET « POURQUOI NOUS », ADRESSES PAR CONTENU =====
+  //
+  // Six outils, jamais un `propose_list_item(list, ...)` generique : un outil
+  // parametre par un nom de liste deplacerait l'allowlist du code vers le
+  // modele. Meme raisonnement que `set_price` / `set_currency` / `set_for_sale`.
+  //
+  // AUCUN INDEX. `propose_testimonial_remove` adresse encore par index et une
+  // devinette dans les bornes supprime la mauvaise entree sans erreur. Ces six
+  // outils designent la QUESTION ou le TITRE exact, et refusent sur ambiguite.
+  {
+    name: 'propose_faq_add',
+    description:
+      'Propose to add a new question to the site FAQ. The question must not already exist. Note: if the merchant has hidden the FAQ section, the new entry will not be visible until they show it again.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        question: { type: 'string' },
+        answer: { type: 'string' },
+        reason: { type: 'string' },
+      },
+      required: ['question', 'answer', 'reason'],
+    },
+  },
+  {
+    name: 'propose_faq_remove',
+    description:
+      'Propose to remove one FAQ entry, identified by its exact question text as it appears on the site. Never guess it.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        question: { type: 'string', description: 'The exact existing question to remove' },
+        reason: { type: 'string' },
+      },
+      required: ['question', 'reason'],
+    },
+  },
+  {
+    name: 'propose_faq_update',
+    description:
+      'Propose to rewrite the question or the answer of one existing FAQ entry, identified by its exact current question text.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        question: { type: 'string', description: 'The exact CURRENT question identifying the entry' },
+        field: { type: 'string', enum: ['question', 'answer'] },
+        value: { type: 'string', description: 'The new text for that field' },
+        reason: { type: 'string' },
+      },
+      required: ['question', 'field', 'value', 'reason'],
+    },
+  },
+  {
+    name: 'propose_whyus_add',
+    description:
+      'Propose to add a new "why choose us" argument: a short punchy title and one concrete sentence. The title must not already exist.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        text: { type: 'string' },
+        reason: { type: 'string' },
+      },
+      required: ['title', 'text', 'reason'],
+    },
+  },
+  {
+    name: 'propose_whyus_remove',
+    description:
+      'Propose to remove one "why choose us" argument, identified by its exact title as it appears on the site.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'The exact existing title to remove' },
+        reason: { type: 'string' },
+      },
+      required: ['title', 'reason'],
+    },
+  },
+  {
+    name: 'propose_whyus_update',
+    description:
+      'Propose to rewrite the title or the text of one existing "why choose us" argument, identified by its exact current title.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'The exact CURRENT title identifying the argument' },
+        field: { type: 'string', enum: ['title', 'text'] },
+        value: { type: 'string', description: 'The new text for that field' },
+        reason: { type: 'string' },
+      },
+      required: ['title', 'field', 'value', 'reason'],
+    },
+  },
   {
     name: 'propose_product_add',
     description: 'Propose to add a new product to the shop.',
@@ -176,41 +301,68 @@ const allTools: Anthropic.Tool[] = [
     },
   },
   {
+    // ETAPE 8, VOLET B -- `product_name` remplace `index`. Le contexte envoye
+    // au modele ne contient AUCUN produit (`products` est absent des 16 champs
+    // de CURRENT SITE STATE) : un index demande ici ne pouvait etre que devine,
+    // et une devinette dans les bornes etait acceptee sans controle d'identite.
+    // Le nom, lui, vient de la phrase meme du marchand.
     name: 'propose_product_remove',
-    description: 'Propose to remove a product by zero-based index.',
+    description: 'Propose to remove a product from the shop, identified by its exact name. Use the name the merchant used. If several products share that name, the change is refused and you must ask the merchant which one they mean.',
     input_schema: {
       type: 'object',
       properties: {
-        index: { type: 'integer' },
+        product_name: { type: 'string', description: 'The product name exactly as it appears in the shop. Do not paraphrase, translate or shorten it.' },
         reason: { type: 'string' },
       },
-      required: ['index', 'reason'],
+      required: ['product_name', 'reason'],
     },
   },
   {
+    // ETAPE 8, VOLET B -- meme correction que propose_product_remove.
     name: 'propose_product_update',
-    description: 'Propose to modify a product field.',
+    description: 'Propose to modify one field of a product, identified by its exact name. Use the name the merchant used. If several products share that name, the change is refused and you must ask which one they mean.',
     input_schema: {
       type: 'object',
       properties: {
-        index: { type: 'integer' },
+        product_name: { type: 'string', description: 'The product name exactly as it appears in the shop. Do not paraphrase, translate or shorten it.' },
         field: { type: 'string', enum: ['name', 'price', 'description'] },
         value: { type: 'string' },
         reason: { type: 'string' },
       },
-      required: ['index', 'field', 'value', 'reason'],
+      required: ['product_name', 'field', 'value', 'reason'],
+    },
+  },
+  {
+    // DETTE 4 (gallery) -- `image_url` remplace `index`. Le contexte envoye au
+    // modele ne contient AUCUNE galerie (`gallery` est absent des 16 champs de
+    // CURRENT SITE STATE) : un index demande ici ne pouvait etre que devine, et
+    // une devinette dans les bornes supprimait la mauvaise image sans erreur.
+    // CHANTIER 7 -- L'AJOUT MANQUAIT. `remove` et `clear` existaient depuis
+    // toujours ; la galerie ne pouvait que retrecir. Le modele n'INVENTE
+    // jamais une URL -- le prompt de generation l'interdit deja pour ce champ
+    // (`chat/route.ts:467`), et une URL inventee produirait une image morte
+    // sur le site du marchand.
+    name: 'propose_gallery_add',
+    description: "Propose to add ONE image to the gallery, using an exact image URL the merchant gave you. NEVER invent, guess or reconstruct a URL: if you do not have one from the merchant, ask for it. The URL must be a complete https:// address, copied character for character — URLs are case-sensitive. An image already present in the gallery is refused, because a duplicate could no longer be removed unambiguously.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        image_url: { type: 'string', description: 'The exact image URL given by the merchant. Do not shorten, re-encode or change its case.' },
+        reason: { type: 'string' },
+      },
+      required: ['image_url', 'reason'],
     },
   },
   {
     name: 'propose_gallery_remove',
-    description: 'Propose to remove an image from the gallery by zero-based index.',
+    description: 'Propose to remove ONE image from the gallery, identified by its exact URL. Use the URL the merchant gave you, character for character — URLs are case-sensitive. If the same URL appears several times in the gallery, the change is refused and you must ask the merchant which one they mean. To remove EVERY image instead, that is propose_gallery_clear.',
     input_schema: {
       type: 'object',
       properties: {
-        index: { type: 'integer' },
+        image_url: { type: 'string', description: 'The exact image URL, as it appears in the gallery. Do not shorten, re-encode or change its case.' },
         reason: { type: 'string' },
       },
-      required: ['index', 'reason'],
+      required: ['image_url', 'reason'],
     },
   },
   {
@@ -297,32 +449,85 @@ const allTools: Anthropic.Tool[] = [
       required: ['margin_percent', 'reason'],
     },
   },
+  {
+    // ETAPE 7 du chantier catalogue canonique. `product_name` et NON un
+    // identifiant : le contexte envoye au modele ne contient aucun produit
+    // (il est bati depuis `sites` seule), donc tout `product_id` demande ici
+    // serait necessairement invente. Le nom, lui, vient de la phrase meme du
+    // marchand. La resolution nom -> produit se fait cote serveur, dans
+    // `/apply`, sur la liste reellement possedee.
+    name: 'count_product_stock',
+    description: 'Count the stock of ONE product and start tracking its inventory. Use when the merchant states a real counted quantity: "I have 12 mugs left", "count 30 units of the black hoodie", "start tracking stock for X". Identify the product by the exact name the merchant used. NEVER invent a quantity, and NEVER call this to guess or estimate a stock: it records a physical count the merchant has actually made. If you are unsure which product is meant, ask the merchant before calling this.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        product_name: { type: 'string', description: 'The product name exactly as the merchant said it. Do not paraphrase, translate or shorten it.' },
+        units: { type: 'integer', description: 'Number of units the merchant counted. Integer, 0 or more.' },
+        reason: { type: 'string' },
+      },
+      required: ['product_name', 'units', 'reason'],
+    },
+  },
+  {
+    // ETAPE 8, VOLET D. Meme ciblage que count_product_stock : `product_name`
+    // et jamais un identifiant. Le contexte envoye au modele ne contient
+    // aucun produit, donc tout `product_id` demande ici serait invente.
+    // Le nom vient du plan verrouille. Il cotoie `catalog_set_margin` en
+    // Mode 3, ou les prix du catalogue fournisseur se calculent par la marge
+    // du site et non par produit : c'est la DESCRIPTION qui leve l'ambiguite,
+    // le nom seul ne le fait pas.
+    name: 'set_price',
+    description: 'Change the selling price of ONE product the merchant manages themselves. Use when the merchant says "the mug is now 25", "raise the price of X to 30", "drop the black hoodie to 19.99". Identify the product by the exact name the merchant used. This only reaches products the merchant created in their dashboard — NOT supplier catalog products, whose prices are driven by the site-wide margin (catalog_set_margin). If you are unsure which product is meant, ask before calling.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        product_name: { type: 'string', description: 'The product name exactly as the merchant said it. Do not paraphrase, translate or shorten it.' },
+        price: { type: 'number', description: 'New price, in the product currency. 0 or more. Never invent a price the merchant did not state.' },
+        reason: { type: 'string' },
+      },
+      required: ['product_name', 'price', 'reason'],
+    },
+  },
+  {
+    name: 'set_currency',
+    description: 'Change the currency of ONE product the merchant manages themselves. Use when the merchant says "sell the mug in euros", "switch X to USD". Three-letter code (EUR, USD, CAD...). Warning: a cart mixing several currencies is refused at checkout, so tell the merchant that all products of a shop should share one currency.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        product_name: { type: 'string', description: 'The product name exactly as the merchant said it.' },
+        currency: { type: 'string', description: 'Three-letter ISO currency code, e.g. EUR, USD, CAD.' },
+        reason: { type: 'string' },
+      },
+      required: ['product_name', 'currency', 'reason'],
+    },
+  },
+  {
+    name: 'set_for_sale',
+    description: 'Turn selling ON or OFF for ONE product, WITHOUT hiding it. Use when the merchant says "stop selling X but keep showing it", "X is out of stock, remove the buy button", "put X back on sale". A product with selling turned off stays fully visible on the storefront, on its product page and in the sitemap — customers simply cannot pay for it. To make a product DISAPPEAR instead, that is the separate visibility setting in the dashboard, not this tool.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        product_name: { type: 'string', description: 'The product name exactly as the merchant said it.' },
+        for_sale: { type: 'boolean', description: 'true = customers can buy it, false = shown but not payable.' },
+        reason: { type: 'string' },
+      },
+      required: ['product_name', 'for_sale', 'reason'],
+    },
+  },
 ];
 
+// ETAPE 3 -- LA REGLE A ETE EXTRAITE, LA ROUTE NE DECIDE PLUS.
+//
+// Trois `if (mode === N)` empilaient ici des familles d'outils. La regle est
+// desormais dans `lib/agent-tools/toolCapabilities.ts`, sous forme
+// d'allowlists positives -- meme patron que `productDraft.ts` (dette 6c) et
+// `modeCapabilities.ts` (etape A). Deux gains : un mode inconnu ne recoit
+// `universal` que parce qu'il n'est inscrit nulle part, et non par absence de
+// branche ; et les quatorze cliquets qui lisaient le TEXTE de ce fichier
+// peuvent enfin appeler la fonction.
 function getToolsForSite(mode: number, dropshipType: string | null): Anthropic.Tool[] {
-  const universal = ['propose_field_update', 'propose_color_update', 'propose_theme_change', 'propose_contact_update', 'propose_update_social'];
-  const content = ['propose_add_service', 'propose_remove_service', 'propose_service_update', 'propose_testimonial_add', 'propose_testimonial_remove', 'propose_testimonial_update', 'propose_gallery_remove', 'propose_gallery_clear'];
-  const manualProducts = ['propose_product_add', 'propose_product_remove', 'propose_product_update'];
-  const catalog = ['catalog_curate', 'catalog_enhance', 'catalog_approve_all', 'catalog_set_margin'];
-  const promo = ['create_promo_code', 'deactivate_promo_code'];
-
-  const allowed = [...universal];
-
-  if (mode === 1) {
-    allowed.push(...content, ...manualProducts);
-  }
-  if (mode === 2) {
-    allowed.push(...content, ...manualProducts, ...promo);
-  }
-  if (mode === 3) {
-    allowed.push(...promo);
-    if (dropshipType === 'reseller' || dropshipType === 'pod_custom') {
-      allowed.push(...catalog);
-    }
-    // pod_brand: NO catalog tools — products come from merchant's own designs
-  }
-
-  return allTools.filter(t => allowed.includes(t.name));
+  const allowed = toolNamesForSite(mode, dropshipType);
+  return allTools.filter((t) => allowed.includes(t.name));
 }
 
 export async function POST(
@@ -330,32 +535,37 @@ export async function POST(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const { data: { user }, error: userError } = await supabaseAnon.auth.getUser(token);
-    if (userError || !user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { slug } = await params;
 
-    // CRITICAL: verify the site belongs to this user before exposing its content
-    const { data: site, error: siteError } = await supabase
-      .from('sites')
-      .select('*')
-      .eq('slug', slug)
-      .eq('owner_email', user.email)
-      .maybeSingle();
-
-    if (siteError || !site) {
-      return NextResponse.json(
-        { error: 'Site not found or you are not the owner' },
-        { status: 404 }
-      );
-    }
+    // ============================================================
+    // DETTE 6a -- `owner_id` EST L'IDENTITE CANONIQUE, PAS `owner_email`.
+    //
+    // LE DEFAUT CORRIGE, ET CE N'ETAIT PAS UNE SIMPLE INCOHERENCE.
+    // Cette garde filtrait sur `.eq('owner_email', user.email)`. Or
+    // `sites.owner_email` est ecrite UNE SEULE FOIS, a la creation du site, et
+    // n'est JAMAIS mise a jour ensuite -- recherche exhaustive : aucun
+    // `update` sur cette colonne dans tout le depot.
+    //
+    // Consequence mesurable : si B change son adresse, `sites.owner_email`
+    // garde l'ancienne. Qu'un tiers s'inscrive ensuite avec cette adresse
+    // liberee, et son `user.email` apparie la ligne de B -- il LISAIT et
+    // MODIFIAIT le site de B. Ce n'est pas une faille d'implementation, c'est
+    // l'usage d'un identifiant INSTABLE comme cle d'identite.
+    //
+    // `requireSiteOwner` (primitive canonique M2-02, deja utilisee par 18
+    // autres appels) compare `owner_id` en priorite -- identite stable,
+    // insensible a tout changement d'adresse -- et ne se replie sur
+    // `owner_email` que si `owner_id` est encore null. Mesure du 2026-08-21 :
+    // 0 site sur 14 dans ce cas, le repli ne s'exerce plus en pratique.
+    //
+    // Le miroir etait vrai aussi : un proprietaire ayant change d'adresse
+    // perdait l'acces a SON site par ces deux routes, alors que les six
+    // autres continuaient de le reconnaitre.
+    // ============================================================
+    const auth = await requireSiteOwner(req, slug, '*');
+    if (!auth.ok) return auth.response;
+    const site = auth.site as any;
+    const ownerEmail = auth.email ?? '';
 
     const body = await req.json();
     const message: string = body.message || '';
@@ -365,7 +575,7 @@ export async function POST(
       return NextResponse.json({ error: 'Empty message' }, { status: 400 });
     }
 
-    const systemPrompt = `You are the personal AI assistant for the website "${site.name}" (slug: "${slug}"), owned by ${user.email}.
+    const systemPrompt = `You are the personal AI assistant for the website "${site.name}" (slug: "${slug}"), owned by ${ownerEmail}.
 
 ABSOLUTE RULES (security boundaries — never violate):
 1. You can ONLY modify THIS specific site. Never propose changes to other sites or to Deribfy itself.
@@ -401,9 +611,80 @@ ${JSON.stringify(
     cta: site.cta,
     mode: site.mode,
     dropship_type: site.dropship_type,
-    services: site.services,
+    // CHANTIER 1 -- `sections` REMPLACE `services` DANS LE CONTEXTE.
+    //
+    // L'agent voyait `services`, que le generateur ne produit jamais et
+    // qu'aucun theme ne rend. Sur un site reel il lisait donc `[]` alors que
+    // la page affichait six offres : interroge, il aurait repondu « aucun ».
+    // Il voit desormais ce que le visiteur voit -- les sections et leurs
+    // items, avec leurs titres, qui sont aussi la cle d'adressage des outils.
+    sections: site.sections,
+    // DETTE 4 (volet testimonials) -- INJECTE ICI, et rien d'autre n'a bouge.
+    //
+    // `propose_testimonial_remove` et `_update` adressent par INDEX de
+    // tableau. Ce n'etait pas le defaut : `services` fait exactement pareil et
+    // FONCTIONNE, parce qu'il figure dans ce contexte. Le defaut etait que
+    // `testimonials` en etait absent -- le modele ne pouvait donc que DEVINER
+    // un index, et `/apply` n'opposait qu'un controle d'intervalle : une
+    // devinette dans les bornes supprimait le mauvais temoignage, sans erreur.
+    //
+    // EXPOSE BRUT, comme `services`. Aucune normalisation : `normalizeTestimonial`
+    // tolere `company`, `text` et `message`, et `Navbar` lit aussi `author` --
+    // des formes historiques reelles. Les masquer derriere une projection
+    // uniforme montrerait au modele une galerie de temoignages qui n'existe
+    // pas telle quelle en base.
+    testimonials: site.testimonials,
+    // CHANTIER 4 -- `faq` ET `whyus` ENTRENT DANS LE CONTEXTE.
+    //
+    // Ils en etaient absents alors que le generateur les produit
+    // systematiquement, que les quatre themes les rendent (la FAQ depuis le
+    // chantier 2) et que `llms.txt` les publie. L'agent interroge sur la FAQ
+    // d'un site repondait donc a partir de rien.
+    //
+    // C'est aussi la condition de l'adressage : les six outils du chantier 4
+    // designent une entree par sa QUESTION ou son TITRE. Sans ces deux
+    // tableaux ici, le modele ne pourrait que deviner le libelle -- exactement
+    // le defaut corrige pour `testimonials` a la dette 4.
+    //
+    // EXPOSE BRUT, comme `testimonials` et `sections`. Une projection
+    // uniforme masquerait les formes historiques et montrerait au modele une
+    // donnee qui n'existe pas telle quelle en base.
+    faq: site.faq,
+    whyus: site.whyus,
+    // CHANTIER 5 -- l'agent peut desormais ECRIRE ces deux champs ; il doit
+    // donc pouvoir LIRE ce qu'ils valent, sinon il proposerait a l'aveugle
+    // et ne saurait pas repondre « ta gamme de prix est $$ ».
+    area_served: site.area_served,
+    price_range: site.price_range,
     social_links: site.social_links,
-    contact: { phone: site.phone, email: site.contact_email, address: site.address },
+    // DEBT-033 -- CETTE LIGNE LISAIT DEUX COLONNES QUI N'EXISTENT PAS.
+    //
+    // Elle valait `{ phone: site.phone, email: site.contact_email, address:
+    // site.address }`. Or `sites.phone` et `sites.contact_email` n'existent
+    // pas : le schema reel, reconstruit depuis
+    // `lot_g_final_field_level_authorization.sql`, compte 41 colonnes
+    // editables + 18 protegees = 59 colonnes nommees, et aucune ne porte ces
+    // deux noms. `chat/route.ts` en etait le SEUL lecteur du depot.
+    //
+    // CE QUE LE MODELE RECEVAIT REELLEMENT. `JSON.stringify` elide les cles
+    // `undefined` : le contexte partait donc avec `"contact": { "address":
+    // ... }`, sans telephone ni courriel. Interroge sur son numero, l'agent
+    // repondait « je n'en vois pas » -- alors que les quatre themes
+    // l'affichent, que `llms.txt` le publie et que JSON-LD l'emet en
+    // `telephone`. Pire : `propose_contact_update` peut ECRIRE ces deux
+    // champs, donc l'agent ecrasait une valeur qu'il n'avait aucun moyen de
+    // lire.
+    //
+    // EXACTEMENT LE DEFAUT DU CHANTIER 1 (`services` mort face a `sections`)
+    // ET DE LA DETTE 4 (`testimonials` absent), reste ouvert : le contexte
+    // montrait au modele une donnee qui n'existe pas en base.
+    //
+    // EXPOSE BRUT, comme `sections`, `testimonials`, `faq` et `whyus`. C'est
+    // aussi ce que le VISITEUR voit : les quatre themes font
+    // `const contact = site.contact || {}`, sans aucun repli vers
+    // `sites.address`. Projeter ici une forme resolue montrerait au modele une
+    // donnee que la page ne rend pas.
+    contact: site.contact,
     cj_margin_percent: site.cj_margin_percent,
     lang: site.lang,
   },
@@ -413,55 +694,7 @@ ${JSON.stringify(
 \`\`\`
 
 SITE-SPECIFIC CONTEXT & GUIDANCE:
-\${site.mode === 1 ? \`
-MODE: SHOWCASE / VITRINE (mode 1)
-This is a local business site (restaurant, salon, clinic, etc.). The owner manages their content directly here.
-- They can add/edit/remove services, products (menu items), testimonials, gallery images
-- Help them improve their site content, descriptions, and marketing
-- NO catalog, NO dropshipping features — everything is manually managed
-\` : ''}
-\${site.mode === 2 ? \`
-MODE: LOCAL BOUTIQUE (mode 2)
-This is an online boutique where the owner sells their OWN inventory.
-- They can add/edit/remove their products manually with prices
-- They can create promo codes for their customers
-- Help them write product descriptions, manage their catalog, and market their shop
-- NO dropshipping — the owner physically holds inventory
-\` : ''}
-\${site.mode === 3 && site.dropship_type === 'reseller' ? \`
-MODE: DROPSHIPPING RESELLER (mode 3, reseller)
-This store resells trending products. Deribfy auto-curates 30 trending products and handles everything automatically.
-- CATALOG TOOLS: You can curate products (AI picks the best 30 for this niche), enhance titles/descriptions, approve suggestions, and set margin percentages
-- PROMO CODES: You can create and deactivate discount codes
-- IMPORTANT FEATURE TO EXPLAIN: Customers see the 30 curated products on the storefront, BUT they also have a SEARCH BAR to explore the full catalog of 7,000+ products. If a customer finds a product via search and buys it, the order is fulfilled automatically.
-- Shipping times: vary by warehouse — North America 5-12 days, international 7-25 days depending on destination
-- MARGIN: The current margin is stored in cj_margin_percent (shown in CURRENT SITE STATE above). Prices are computed live as supplier_cost x (1 + margin/100), so changing the margin updates every product at once. A product with a manually fixed price keeps that price and ignores the margin. Minimum margin is 15% (covers the Deribfy commission, refunds and disputes) - never propose lower. Always tell the merchant their current margin when they ask.
-- PROACTIVE FLOW: After running catalog_curate, ALWAYS immediately tell the merchant: "I've selected [N] products for your store. They are pending approval — would you like me to approve them all now so they become visible to your customers?" Do NOT wait for the merchant to ask about visibility.
-- Do NOT offer to add services, testimonials, or gallery — this site type doesn't use them
-\` : ''}
-\${site.mode === 3 && site.dropship_type === 'pod_brand' ? \`
-MODE: PRINT-ON-DEMAND BRAND (mode 3, pod_brand)
-This store sells products featuring the MERCHANT'S OWN original designs (logos, artwork, patterns) printed on premium products. Deribfy handles everything automatically.
-- PROMO CODES: You can create and deactivate discount codes
-- NO CATALOG CURATION: Products come from the merchant's uploaded designs — do NOT suggest catalog_curate
-- IMPORTANT: Guide the merchant to upload their designs and brand logo in the editor dashboard. Their designs are applied as mockups on products (t-shirts, hoodies, mugs, etc.) and displayed as the store's products
-- Production time: 3-7 business days + shipping
-- Help with brand storytelling, design strategy, collection naming, and marketing their unique brand
-- Do NOT offer to add services, testimonials, or gallery — this site type doesn't use them
-\` : ''}
-\${site.mode === 3 && site.dropship_type === 'pod_custom' ? \`
-MODE: PRINT-ON-DEMAND CUSTOM (mode 3, pod_custom)
-This store lets VISITORS create custom products by uploading their own design/logo/image at purchase time. Deribfy handles everything automatically.
-- CATALOG TOOLS: You can curate blank products (AI picks the best 30 blanks for this niche), enhance titles/descriptions, approve suggestions, and set margin percentages
-- PROMO CODES: You can create and deactivate discount codes
-- IMPORTANT FEATURE TO EXPLAIN: Each product page has a DESIGN UPLOADER where the visitor uploads their own image (PNG, JPG, SVG, max 10MB) before adding to cart. The design is printed on the product after purchase.
-- Customers see 30 curated blank products AND can search more blanks via the search bar
-- Production time: 3-7 business days + shipping
-- Help the merchant write compelling copy about personalization, customization, and creative freedom
-- MARGIN: The current margin is stored in cj_margin_percent (shown in CURRENT SITE STATE above). Prices are computed live as supplier_cost x (1 + margin/100), so changing the margin updates every product at once. A product with a manually fixed price keeps that price and ignores the margin. Minimum margin is 15% (covers the Deribfy commission, refunds and disputes) - never propose lower. Always tell the merchant their current margin when they ask.
-- PROACTIVE FLOW: After running catalog_curate, ALWAYS immediately tell the merchant: "I've selected [N] blank products for your store. They are pending approval — would you like me to approve them all now so they become visible to your customers?" Do NOT wait for the merchant to ask about visibility.
-- Do NOT offer to add services, testimonials, or gallery — this site type doesn't use them
-\` : ''}
+${guidanceForSite(site.mode, site.dropship_type)}
 
 HOW TO TALK TO THE MERCHANT (APPLIES TO EVERY ACTION):
 

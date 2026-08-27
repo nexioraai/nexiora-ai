@@ -16,12 +16,28 @@ vi.mock('@/lib/supabase', () => ({
   supabase: { auth: { getUser: (...a: unknown[]) => getUserMock(...a) } },
 }));
 
-function tableChain(response: { data: unknown; error?: unknown }) {
+// LOT 4 -- LES FILTRES DES ECRITURES SONT CAPTURES.
+//
+// `.eq('site_id', auth.site.id)` est l'isolation inter-locataires des verbes
+// PATCH et DELETE : sans lui, un marchand modifie ou supprime la selection
+// d'une AUTRE boutique. Le filtre existait, mais le retirer ne cassait aucun
+// test (mutation T1, survivante). Ajout pur du harnais.
+const filtres: [string, string, unknown][] = [];
+/** LOT 4 -- les charges reellement ecrites, pour asserer le COMPORTEMENT. */
+const upserts: unknown[] = [];
+
+function tableChain(response: { data: unknown; error?: unknown }, table = '') {
   const chain: Record<string, unknown> = {};
   const self = () => chain;
   chain.select = vi.fn(self);
-  chain.eq = vi.fn(self);
-  chain.upsert = vi.fn(self);
+  chain.eq = vi.fn((col: string, val: unknown) => { filtres.push([table, col, val]); return chain; });
+  chain.upsert = vi.fn((payload: unknown) => { upserts.push(payload); return chain; });
+  // CHANTIER 6 -- quatre maillons AJOUTES. Ce fichier ne testait que POST ;
+  // GET, PATCH et DELETE empruntent `order`, `update` et `delete`. Ajout pur :
+  // aucun maillon existant n'est modifie, donc aucun cas anterieur ne change.
+  chain.order = vi.fn(async () => response);
+  chain.update = vi.fn(self);
+  chain.delete = vi.fn(self);
   chain.maybeSingle = vi.fn(async () => response);
   chain.single = vi.fn(async () => response);
   chain.then = (resolve: (v: unknown) => void) => resolve(response);
@@ -43,16 +59,25 @@ function req(body: unknown, token = 'owner-token') {
   });
 }
 
-function setup(site: { dropship_type: string | null }, product: { supplier_id: string | null } | null) {
+// CHANTIER 6 -- LA FIXTURE GAGNE `mode`, ET CE N'EST PAS UN AFFAIBLISSEMENT.
+// Elle decrivait un site reseller SANS mode : une forme qui n'existe pas en
+// base, puisqu'un site reseller est par definition un Mode 3. La route
+// interroge desormais `hasSupplierCatalog(site.mode)` avant le sous-mode ;
+// sans ce champ, ces cinq cas ne testaient plus le sous-mode mais le refus
+// d'admission. Le `mode` est donc rendu explicite, et le refus d'admission
+// obtient ses propres tests plus bas -- deux regles, deux jeux de tests.
+function setup(site: { dropship_type: string | null; mode?: unknown }, product: { supplier_id: string | null } | null) {
   fromMock.mockImplementation((table: string) => {
-    if (table === 'sites') return tableChain({ data: { id: 'my-site-id', owner_id: 'owner-id', ...site }, error: null });
-    if (table === 'catalog_products') return tableChain({ data: product ? { id: 'cp-1', ...product } : null, error: null });
-    if (table === 'site_catalog_selections') return tableChain({ data: { id: 'sel-1', site_id: 'my-site-id', catalog_product_id: 'cp-1' }, error: null });
+    if (table === 'sites') return tableChain({ data: { id: 'my-site-id', owner_id: 'owner-id', mode: 3, ...site }, error: null }, table);
+    if (table === 'catalog_products') return tableChain({ data: product ? { id: 'cp-1', ...product } : null, error: null }, table);
+    if (table === 'site_catalog_selections') return tableChain({ data: { id: 'sel-1', site_id: 'my-site-id', catalog_product_id: 'cp-1' }, error: null }, table);
     return tableChain({ data: null, error: null });
   });
 }
 
 beforeEach(() => {
+  filtres.length = 0;
+  upserts.length = 0;
   getUserMock.mockReset().mockResolvedValue({ data: { user: { id: 'owner-id', email: 'owner@test.com' } }, error: null });
 });
 
@@ -63,16 +88,31 @@ describe("POST /api/catalog/selections — N1/N2 : le produit ajouté doit appar
     expect(res.status).toBe(409);
   });
 
-  it("site pod_brand + produit CJ -> 409", async () => {
-    setup({ dropship_type: 'pod_brand' }, { supplier_id: 'cj' });
+  // LOT 2 -- CES DEUX CAS CHANGENT DE CODE, ET C'EST VOULU. Ils prouvaient
+  // le cloisonnement FOURNISSEUR sur des sous-types qui, depuis le LOT 2,
+  // n'atteignent plus ce controle : `pod_brand` n'utilise pas le mecanisme de
+  // selection, et un sous-type absent non plus. Le refus est desormais posé
+  // PLUS TOT (400) et il est plus fort. La preuve du cloisonnement
+  // fournisseur, elle, est conservee ci-dessous sur un sous-type qui atteint
+  // reellement ce controle -- sans quoi la correction du LOT 2 aurait efface
+  // une garantie en la deplacant.
+  it("site pod_custom + produit CJ -> 409 : le cloisonnement fournisseur reste prouve", async () => {
+    setup({ dropship_type: 'pod_custom' }, { supplier_id: 'cj' });
     const res = await POST(req({ slug: 'my-shop', catalogProductId: 'cp-1' }));
     expect(res.status).toBe(409);
   });
 
-  it("site null dropship_type + produit Printful (fallback reseller/CJ) -> 409", async () => {
+  it("site pod_brand -> 400 AVANT tout controle fournisseur : il n'utilise pas le mecanisme de selection", async () => {
+    setup({ dropship_type: 'pod_brand' }, { supplier_id: 'printful' });
+    const res = await POST(req({ slug: 'my-shop', catalogProductId: 'cp-1' }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe('Site non-dropshipping');
+  });
+
+  it("site sans sous-type -> 400 : ni mecanisme, ni fournisseur devine", async () => {
     setup({ dropship_type: null }, { supplier_id: 'printful' });
     const res = await POST(req({ slug: 'my-shop', catalogProductId: 'cp-1' }));
-    expect(res.status).toBe(409);
+    expect(res.status).toBe(400);
   });
 
   it("site reseller + produit CJ (cas légitime) -> 200, ajouté", async () => {
@@ -85,5 +125,222 @@ describe("POST /api/catalog/selections — N1/N2 : le produit ajouté doit appar
     setup({ dropship_type: 'pod_custom' }, { supplier_id: 'gelato' });
     const res = await POST(req({ slug: 'my-shop', catalogProductId: 'cp-1' }));
     expect(res.status).toBe(200);
+  });
+});
+
+// ============================================================
+// CHANTIER 6 (MODE 1) — L'ADMISSION AU CATALOGUE, SUR LES QUATRE VERBES.
+//
+// CE QUI TENAIT LIEU DE RÈGLE, ET QUI N'EN ÉTAIT PAS UNE :
+//   * GET / PATCH / DELETE : rien. Un site Mode 1 obtenait `{selections: []}`
+//     — « sûr » uniquement parce que la table était vide pour lui.
+//   * POST : `suppliersForDropshipType`, qui répond « QUELS fournisseurs »,
+//     jamais « ce site en a-t-il un ». Mesuré : un Mode 1 a `dropship_type`
+//     null, et ce repli rend `RESELLER_SUPPLIERS` — donc CJ. Un produit CJ
+//     passait le contrôle et entrait dans les sélections d'une VITRINE. La
+//     ligne ainsi créée rendait ensuite les trois autres verbes opérants :
+//     la protection « par absence de donnée » se détruisait elle-même au
+//     premier appel.
+//
+// La question du MODE précède désormais celle du SOUS-MODE.
+// ============================================================
+
+const MODES_REFUSES: unknown[] = [1, 2, null, undefined, 0, 4, '3', 'trois', NaN, {}, [3], true];
+
+// GET et DELETE lisent `req.nextUrl` : un `Request` nu n'en a pas. On
+// construit donc un `NextRequest`, comme le fait le test de `catalog/search`.
+function requete(verbe: 'GET' | 'DELETE') {
+  const url = verbe === 'GET'
+    ? 'https://x.test/api/catalog/selections?slug=yia'
+    : 'https://x.test/api/catalog/selections?slug=yia&id=sel-1';
+  return new NextRequest(url, { method: verbe, headers: { authorization: 'Bearer t' } });
+}
+function requeteCorps(verbe: 'POST' | 'PATCH', body: unknown) {
+  return new NextRequest('https://x.test/api/catalog/selections', {
+    method: verbe,
+    headers: { 'Content-Type': 'application/json', authorization: 'Bearer t' },
+    body: JSON.stringify(body),
+  });
+}
+
+describe('CHANTIER 6 — sans admission, les QUATRE verbes refusent', () => {
+  it('🔴 Mode 1 : GET, PATCH, DELETE et POST renvoient tous 400', async () => {
+    setup({ dropship_type: null, mode: 1 }, { supplier_id: 'cj' });
+    const mod = await import('../route');
+    const reponses = [
+      await mod.GET(requete('GET')),
+      await mod.PATCH(requeteCorps('PATCH', { slug: 'yia', id: 'sel-1', sell_price: 10 })),
+      await mod.DELETE(requete('DELETE')),
+      await mod.POST(requeteCorps('POST', { slug: 'yia', catalogProductId: 'cp-1' })),
+    ];
+    for (const [i, r] of reponses.entries()) {
+      expect(r.status, `verbe #${i}`).toBe(400);
+      expect((await r.json()).error, `verbe #${i}`).toBe('Site non-dropshipping');
+    }
+  });
+
+  it('🔴 LE CAS DÉCISIF : Mode 1 + produit CJ éligible au repli → refusé', async () => {
+    // Avant ce chantier : `suppliersForDropshipType(null)` rend CJ, le produit
+    // est CJ, le contrôle de sous-mode passe, la ligne est écrite. C'est la
+    // création d'une sélection sur une vitrine.
+    setup({ dropship_type: null, mode: 1 }, { supplier_id: 'cj' });
+    const { POST } = await import('../route');
+    const res = await POST(requeteCorps('POST', { slug: 'yia', catalogProductId: 'cp-1' }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe('Site non-dropshipping');
+  });
+
+  it('🔴 Mode 2 refusé aussi — vendre n’est pas avoir un catalogue fournisseur', async () => {
+    setup({ dropship_type: 'reseller', mode: 2 }, { supplier_id: 'cj' });
+    const { POST, GET } = await import('../route');
+    expect((await POST(requeteCorps('POST', { slug: 'yia', catalogProductId: 'cp-1' }))).status).toBe(400);
+    expect((await GET(requete('GET'))).status).toBe(400);
+  });
+
+  it('🔴 fail-closed : toute valeur de mode inattendue refuse', async () => {
+    for (const mode of MODES_REFUSES) {
+      setup({ dropship_type: 'reseller', mode }, { supplier_id: 'cj' });
+      const { POST } = await import('../route');
+      const res = await POST(requeteCorps('POST', { slug: 'yia', catalogProductId: 'cp-1' }));
+      expect(res.status, JSON.stringify(mode)).toBe(400);
+    }
+  });
+
+  it('🔴 la présence de données ne rachète jamais l’absence d’admission', async () => {
+    // Un produit catalogue parfaitement conforme, un site qui n'y a pas droit.
+    setup({ dropship_type: 'reseller', mode: 1 }, { supplier_id: 'cj' });
+    const { POST } = await import('../route');
+    expect((await POST(requeteCorps('POST', { slug: 'yia', catalogProductId: 'cp-1' }))).status).toBe(400);
+  });
+});
+
+describe('CHANTIER 6 — avec admission, les quatre verbes fonctionnent', () => {
+  it('Mode 3 : GET, PATCH, DELETE et POST poursuivent leur logique normale', async () => {
+    setup({ dropship_type: 'reseller', mode: 3 }, { supplier_id: 'cj' });
+    const mod = await import('../route');
+    expect((await mod.GET(requete('GET'))).status).toBe(200);
+    expect((await mod.PATCH(requeteCorps('PATCH', { slug: 'yia', id: 'sel-1', sell_price: 10 }))).status).toBe(200);
+    expect((await mod.DELETE(requete('DELETE'))).status).toBe(200);
+    expect((await mod.POST(requeteCorps('POST', { slug: 'yia', catalogProductId: 'cp-1' }))).status).toBe(200);
+  });
+
+  it('🔴 l’admission ne remplace PAS le contrôle de sous-mode — les deux tiennent', async () => {
+    // Mode 3 admis, mais produit d'un fournisseur du mauvais sous-mode : le
+    // 409 d'origine subsiste. Deux règles distinctes, deux refus distincts.
+    setup({ dropship_type: 'reseller', mode: 3 }, { supplier_id: 'printful' });
+    const { POST } = await import('../route');
+    const res = await POST(requeteCorps('POST', { slug: 'yia', catalogProductId: 'cp-1' }));
+    expect(res.status).toBe(409);
+  });
+
+  it('🔴 le refus de propriété précède l’admission', async () => {
+    getUserMock.mockResolvedValue({ data: { user: { id: 'un-autre', email: 'x@t.com' } }, error: null });
+    setup({ dropship_type: 'reseller', mode: 1 }, { supplier_id: 'cj' });
+    const { POST } = await import('../route');
+    const res = await POST(requeteCorps('POST', { slug: 'yia', catalogProductId: 'cp-1' }));
+    expect(res.status).not.toBe(400);
+    expect(res.status).not.toBe(200);
+  });
+});
+
+describe('CHANTIER 6 — INVARIANTS', () => {
+  it('les cinq routes catalogue interrogent toutes la MÊME primitive', async () => {
+    // LOT 2 — LA PRIMITIVE COMMUNE DESCEND D'UN CRAN. Ce que ce cliquet
+    // protège — « une seule règle pour cinq routes, jamais cinq
+    // interprétations » — est inchangé ; c'est la règle qui est plus fine.
+    // `usesCatalogSelections` appelle `hasSupplierCatalog` : l'admission de
+    // mode reste la même autorité, complétée par le mécanisme de sélection.
+    const { readFileSync } = await import('fs');
+    const { join } = await import('path');
+    const base = join(__dirname, '../../');
+    for (const r of ['curate', 'search', 'image-search', 'enhance', 'selections']) {
+      const src = readFileSync(join(base, r, 'route.ts'), 'utf-8');
+      expect(src, r).toContain('usesCatalogSelections');
+    }
+  });
+
+  it('🔴 aucune route ne réintroduit une comparaison de mode en dur', async () => {
+    const { readFileSync } = await import('fs');
+    const { join } = await import('path');
+    for (const r of ['enhance', 'selections']) {
+      const src = readFileSync(join(__dirname, '../../', r, 'route.ts'), 'utf-8')
+        .split('\n').filter((l) => !l.trim().startsWith('//')).join('\n');
+      expect(src, r).not.toMatch(/mode\s*[!=]==?\s*[0-9]/);
+    }
+  });
+
+  it('la primitive garde son allowlist : le mode 3, et lui seul', async () => {
+    const { hasSupplierCatalog } = await import('@/lib/dropship/catalogAdmission');
+    expect(hasSupplierCatalog(3)).toBe(true);
+    for (const m of [1, 2, 0, 4, '3', null, undefined]) {
+      expect(hasSupplierCatalog(m), String(m)).toBe(false);
+    }
+  });
+});
+
+// ============================================================
+// LOT 4 -- L'ISOLATION INTER-LOCATAIRES DES ECRITURES DE SELECTION.
+//
+// `site_catalog_selections` est le mecanisme du sous-mode `reseller` (et de
+// `pod_custom`). Ses verbes d'ECRITURE prennent un `id` de selection fourni
+// par l'appelant : sans `.eq('site_id', …)`, un marchand modifie le prix, le
+// nom ou l'approbation d'une selection appartenant a une AUTRE boutique.
+// Le filtre existait ; rien ne le tenait (mutation T1, survivante).
+// ============================================================
+import { PATCH, DELETE, GET } from '../route';
+
+function reqUrl(method: string, qs = '', body?: unknown) {
+  return new NextRequest('https://x.test/api/catalog/selections' + qs, {
+    method,
+    headers: { 'Content-Type': 'application/json', authorization: 'Bearer owner-token' },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  });
+}
+
+describe('LOT 4 — PATCH/DELETE/GET : une selection d\'une autre boutique est hors de portee', () => {
+  it('PATCH borne l\'ecriture au site du proprietaire', async () => {
+    setup({ dropship_type: 'reseller' }, { supplier_id: 'cj' });
+    await PATCH(reqUrl('PATCH', '', { slug: 'my-shop', id: 'sel-DUNE-AUTRE-BOUTIQUE', sell_price: 1 }));
+    expect(filtres).toContainEqual(['site_catalog_selections', 'site_id', 'my-site-id']);
+    expect(filtres).toContainEqual(['site_catalog_selections', 'id', 'sel-DUNE-AUTRE-BOUTIQUE']);
+  });
+
+  it('DELETE borne la suppression au site du proprietaire', async () => {
+    setup({ dropship_type: 'reseller' }, { supplier_id: 'cj' });
+    await DELETE(reqUrl('DELETE', '?slug=my-shop&id=sel-DUNE-AUTRE-BOUTIQUE'));
+    expect(filtres).toContainEqual(['site_catalog_selections', 'site_id', 'my-site-id']);
+  });
+
+  it('GET ne lit que les selections du site', async () => {
+    setup({ dropship_type: 'reseller' }, { supplier_id: 'cj' });
+    await GET(reqUrl('GET', '?slug=my-shop'));
+    expect(filtres).toContainEqual(['site_catalog_selections', 'site_id', 'my-site-id']);
+  });
+
+  it('PATCH n\'accepte QUE les champs de la liste blanche', async () => {
+    setup({ dropship_type: 'reseller' }, { supplier_id: 'cj' });
+    const res = await PATCH(reqUrl('PATCH', '', { slug: 'my-shop', id: 'sel-1', site_id: 'autre-site', catalog_product_id: 'cp-vole' }));
+    // Aucun champ autorise dans le corps -> refus, et surtout aucune ecriture
+    // de `site_id` ou `catalog_product_id`, qui reattribueraient la ligne.
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('LOT 4 — un ajout manuel est approuve d\'emblee, et c\'est deliberе', () => {
+  it('POST cree une selection deja approuvee : le marchand a choisi ce produit lui-meme', async () => {
+    // A distinguer de `catalog/curate` et du cron de suggestion, qui ecrivent
+    // `merchant_approved: false` -- une SUGGESTION attend une approbation, un
+    // ajout manuel EST l'approbation. C'est cette difference qui decide de la
+    // publication au sitemap et de l'affichage en vitrine.
+    //
+    // ON ASSERE LA CHARGE REELLEMENT ECRITE. Une premiere version de ce test
+    // lisait le fichier source et cherchait `merchant_approved: true` : elle
+    // passait sur un COMMENTAIRE du meme fichier, donc ne prouvait rien --
+    // exactement l'assertion de facade que ces lots proscrivent.
+    setup({ dropship_type: 'reseller' }, { supplier_id: 'cj' });
+    const res = await POST(req({ slug: 'my-shop', catalogProductId: 'cp-1' }));
+    expect(res.status).toBe(200);
+    expect(upserts).toHaveLength(1);
+    expect(upserts[0]).toMatchObject({ site_id: 'my-site-id', catalog_product_id: 'cp-1', merchant_approved: true, ai_suggested: false });
   });
 });

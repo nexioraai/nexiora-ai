@@ -23,6 +23,8 @@
 // ancres sur la meme page, pas des URLs distinctes) — seuls les produits
 // ont leur propre route.
 import { fetchSite, resolveSiteBaseUrl } from '@/app/sites/[slug]/themes/shared'
+import { resolveSiteFreshness } from '@/app/sites/[slug]/themes/siteFreshness'
+import { logAnomaly } from '@/lib/anomaly'
 
 function escapeXml(value: string): string {
   return value
@@ -36,10 +38,27 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params
-  const site = await fetchSite(slug)
+
+// DETTE 3 -- `logAnomaly` est appele ICI, jamais dans `shared.tsx`.
+// Ce dernier est bi-environnement (quatre composants 'use client'
+// l'importent) et `anomaly.ts -> supabase-admin.ts -> server-only` fait
+// echouer le build s'il y entre -- mesure, pas suppose. Le signal remonte
+// donc par un tableau `diagnostics`, et seuls les appelants SERVEUR
+// journalisent.
+  const diagnostics: string[] = []
+  const site = await fetchSite(slug, false, diagnostics)
 
   if (!site) {
     return new Response('Not found', { status: 404 })
+  }
+  if (diagnostics.length > 0) {
+    await logAnomaly({
+      type: 'storefront_query_failed',
+      severity: 'warning',
+      siteId: (site as { id?: string }).id ?? null,
+      slug,
+      details: { surface: 'site-sitemap', failures: diagnostics },
+    })
   }
 
   // Meme domaine que celui reellement utilise pour servir la requete —
@@ -47,7 +66,10 @@ export async function GET(
   // Le Host original est preserve par NextResponse.rewrite() dans
   // proxy.ts, meme si le chemin interne a change.
   const base = resolveSiteBaseUrl(site, req.headers.get('host'))
-  const lastmod = site.created_at ? new Date(site.created_at).toISOString() : new Date().toISOString()
+  // DEBT-034 -- `<lastmod>` suivait `created_at`, ce qui contredisait
+  // frontalement le `changefreq: daily` annonce juste en dessous.
+  const fraicheur = resolveSiteFreshness(site)
+  const lastmod = fraicheur ? new Date(fraicheur).toISOString() : new Date().toISOString()
 
   const urls: { loc: string; lastmod: string; changefreq: string; priority: string }[] = [
     { loc: base, lastmod, changefreq: 'daily', priority: '1.0' },

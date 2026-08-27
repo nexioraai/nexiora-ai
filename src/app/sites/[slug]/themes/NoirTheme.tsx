@@ -266,6 +266,7 @@ export default function NoirTheme({ site }: { site: Site }) {
             {(site.pages || []).filter((p: any) => p && p.title).map((page: any, pi: number) => (
               <NavLink key={`navpage-${pi}`} href={`#page-${pi}`}>{page.title}</NavLink>
             ))}
+            {site.faq && site.faq.length > 0 && !hidden('FAQ') && <NavLink href="#faq">{t.nav.faq}</NavLink>}
             {!hidden('Contact') && <NavLink href="#contact">{t.nav.contact}</NavLink>}
           </nav>
         </div>
@@ -589,6 +590,43 @@ export default function NoirTheme({ site }: { site: Site }) {
             </div>
           </section>
         ))}
+
+        {/* =================== FAQ ===================
+            CHANTIER 2 (MODE 1) -- la FAQ etait rendue par le seul theme
+            Editorial, alors que `JsonLd` emet `FAQPage` pour les QUATRE
+            themes et que `llms.txt` la publie. Mesure sur
+            yiaglobalcommodities.com (theme Vif) : six questions completes
+            servies a Google et aux crawlers LLM, et AUCUNE section FAQ dans
+            le HTML. Les regles Google Rich Results exigent que le contenu
+            balise soit visible sur la page.
+            Meme motif qu'Editorial : accordeon <details> autonome, aucune
+            dependance ajoutee. Place entre les avis et le contact, comme
+            chez Editorial. */}
+        {site.faq && site.faq.length > 0 && !hidden('FAQ') && (
+          <section id="faq" className="reveal py-28 md:py-36">
+            <div className="max-w-3xl mx-auto px-6 md:px-10">
+              <div className="text-center mb-16">
+                <div className="text-[11px] uppercase tracking-[0.25em] mb-4" style={{ color: gold }}>
+                  {t.sections.faqKicker}
+                </div>
+                <h2 className="text-4xl md:text-5xl font-light leading-tight" style={{ color: '#F5F3EE' }}>
+                  {t.sections.faqTitle}
+                </h2>
+              </div>
+              <div className="space-y-4">
+                {site.faq.map((item, i) => (
+                  <details key={i} className="group rounded-2xl p-6 md:p-8" style={{ border: `1px solid ${LINE}`, backgroundColor: 'rgba(245,243,238,0.03)' }}>
+                    <summary className="cursor-pointer list-none font-medium text-lg flex justify-between items-center" style={{ color: '#F5F3EE' }}>
+                      {item.question}
+                      <span className="ml-4 transition-transform group-open:rotate-45" style={{ color: gold }}>+</span>
+                    </summary>
+                    <p className="mt-4 leading-relaxed" style={{ color: 'rgba(245,243,238,0.65)' }}>{item.answer}</p>
+                  </details>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* =================== CONTACT =================== */}
         {!hidden('Contact') && (

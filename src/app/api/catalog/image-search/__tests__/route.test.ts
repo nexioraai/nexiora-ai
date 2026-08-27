@@ -76,6 +76,23 @@ describe('POST /api/catalog/image-search — limite de débit anti-abus (action 
     expect(messagesCreateMock).not.toHaveBeenCalled();
   });
 
+  it('LOT 6 — compteur en PANNE -> 503, aucun appel Claude facturé (la limite ne s’ouvre plus)', async () => {
+    // `error` n'etait pas lu. PostgREST rend `count: null` quand la requete
+    // echoue, `(null ?? 0) >= 10` valait false, et l'appel Claude FACTURE
+    // partait quand meme. Meme defaut que `blog/generate`, demontre par
+    // execution au LOT 6, present ici a l'identique.
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'sites') return tableChain({ data: SITE, error: null });
+      if (table === 'ai_usage_log') return tableChain({ data: null, error: { message: 'db down' }, count: null });
+      return tableChain({ data: [], error: null });
+    });
+
+    const res = await POST(req({ slug: 'boutique', image: IMAGE }));
+
+    expect(res.status).toBe(503);
+    expect(messagesCreateMock).not.toHaveBeenCalled();
+  });
+
   it('sous la limite -> l\'analyse procède normalement (comportement inchangé)', async () => {
     fromMock.mockImplementation((table: string) => {
       if (table === 'sites') return tableChain({ data: SITE, error: null });
@@ -89,5 +106,47 @@ describe('POST /api/catalog/image-search — limite de débit anti-abus (action 
     expect(res.status).toBe(200);
     expect(messagesCreateMock).toHaveBeenCalledTimes(1);
     expect(logAiUsageMock).toHaveBeenCalledWith(expect.objectContaining({ siteId: 'site-1', usageType: 'image' }));
+  });
+});
+
+// ============================================================
+// LOT 2 -- LE CABLAGE DE L'ADMISSION, ENFIN COUVERT.
+//
+// LA MUTATION QUI SURVIVAIT. Retirer purement et simplement la garde
+// d'admission de cette route ne cassait AUCUN test : la primitive etait
+// testee comme FONCTION (`catalogAdmission.test.ts`), jamais comme CABLAGE.
+// Une garde non cablee est une garde absente.
+//
+// `pod_brand` est le cas qui compte : il A un catalogue fournisseur
+// (`hasSupplierCatalog(3)` est vrai, ses produits SONT des Printful), mais il
+// n'utilise PAS `site_catalog_selections`. Une garde de mode seule le laissait
+// donc passer.
+// ============================================================
+
+describe("POST /api/catalog/image-search — LOT 2 : meme admission que la recherche texte", () => {
+  it.each([
+    ['Mode 1', { ...SITE, mode: 1, dropship_type: null }],
+    ['Mode 2', { ...SITE, mode: 2, dropship_type: null }],
+    ['Mode 3 pod_brand', { ...SITE, dropship_type: 'pod_brand' }],
+    ['Mode 3 sans sous-type', { ...SITE, dropship_type: null }],
+  ])('%s -> reponse vide, et AUCUN appel Claude facture', async (_l, site) => {
+    fromMock.mockImplementation((t: string) => {
+      if (t === 'sites') return tableChain({ data: site, error: null });
+      return tableChain({ data: [], error: null, count: 0 });
+    });
+    const res = await POST(req({ slug: 'x', image: IMAGE }));
+    expect(await res.json()).toEqual({ products: [], keywords: '', total: 0 });
+    // La garde reste AVANT l'appel facture : c'est sa raison d'etre.
+    expect(messagesCreateMock).not.toHaveBeenCalled();
+    expect(logAiUsageMock).not.toHaveBeenCalled();
+  });
+
+  it('Mode 3 reseller -> l\'analyse procede (chemin legitime, non casse)', async () => {
+    fromMock.mockImplementation((t: string) => {
+      if (t === 'sites') return tableChain({ data: SITE, error: null });
+      return tableChain({ data: [], error: null, count: 0 });
+    });
+    await POST(req({ slug: 'x', image: IMAGE }));
+    expect(messagesCreateMock).toHaveBeenCalled();
   });
 });

@@ -100,20 +100,41 @@ describe('Bloc 5 — checkSectionOrder généralise à un thème totalement fict
 // ============================================================
 // 3. Mode Capabilities — comportement sur un Mode 4 hypothétique
 // ============================================================
-describe('Bloc 5 — getModeCapabilities ne casse pas sur un mode inconnu du produit aujourd’hui', () => {
-  // Limite honnête, pas cachée : getModeCapabilities contient DEJA une
-  // règle spécifique "mode === 3" (dropshipping toujours actif même sans
-  // produit), décidée en Phase 1 -- c'est une règle MÉTIER, pas le moteur
-  // générique visé par ce Bloc 5 (domainRegistry/themeRegistry). Un futur
-  // Mode 4 hérite du comportement "mode 2"-like (hasShop nécessite des
-  // produits) par défaut, sans qu'aucune ligne n'ait besoin d'être ajoutée
-  // -- mais s'il doit se comporter différemment (comme le mode 3), cette
-  // règle métier devra être étendue consciemment, ce n'est pas automatique.
-  it('mode 4 sans produit : hasShop=false (hérite du comportement générique, pas de crash)', () => {
+describe('Bloc 5 — getModeCapabilities sur un mode inconnu du produit aujourd’hui', () => {
+  // ÉTAPE A — CE BLOC A CHANGÉ DE CAMP, ET C'ÉTAIT SA FONCTION.
+  //
+  // Écrit au Bloc 5, il consignait une limite en la nommant honnêtement : un
+  // Mode 4 héritait du comportement « mode 2 »-like, donc obtenait une
+  // boutique dès qu'il avait un produit. La prose le disait déjà :
+  //
+  //     « s'il doit se comporter différemment, cette règle métier devra
+  //       être étendue CONSCIEMMENT, ce n'est pas automatique. »
+  //
+  // C'était consigné, pas approuvé. L'audit des frontières a montré que
+  // cette limite était en réalité une SECONDE définition de « ce site
+  // commerce », écrite en forme négative, à côté de `canTransact` — la forme
+  // même que le registre d'architecture interdit.
+  //
+  // L'étape A l'a corrigée : `canTransact` est désormais l'autorité unique,
+  // et un mode absent de son allowlist n'obtient AUCUNE boutique, avec ou
+  // sans produit. Le second test est passé au rouge à la correction (mesuré :
+  // « expected false to be true ») puis retourné — c'est exactement ce qu'on
+  // attend d'un test de caractérisation.
+  it('mode 4 sans produit : hasShop=false', () => {
     expect(getModeCapabilities({ mode: 4, products: [] }).hasShop).toBe(false)
   })
 
-  it('mode 4 avec produit : hasShop=true (hérite du comportement générique)', () => {
-    expect(getModeCapabilities({ mode: 4, products: [{}] }).hasShop).toBe(true)
+  it('mode 4 AVEC produit : hasShop=false — un mode non admis ne commerce pas', () => {
+    expect(getModeCapabilities({ mode: 4, products: [{}] }).hasShop).toBe(false)
+  })
+
+  it('un mode futur doit être inscrit CONSCIEMMENT dans les deux allowlists', () => {
+    // Le mécanisme d'extension n'a pas disparu, il est devenu explicite :
+    // admission (`TRANSACTING_SITE_MODES`) puis, si le catalogue précède les
+    // produits, `CATALOG_BEFORE_OWN_PRODUCTS`. Rien ne s'hérite plus.
+    for (const mode of [4, 5, 42]) {
+      expect(getModeCapabilities({ mode, products: [] }).hasShop, `mode ${mode}`).toBe(false)
+      expect(getModeCapabilities({ mode, products: [{}] }).hasShop, `mode ${mode}`).toBe(false)
+    }
   })
 })

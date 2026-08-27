@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { usesCatalogSelections } from '@/lib/dropship/catalogAdmission';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import Anthropic from '@anthropic-ai/sdk';
 import { sitePricing } from '@/lib/pricing';
@@ -32,9 +33,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Site not found' }, { status: 404 });
     }
 
-    // Seul le mode 3 a un catalogue fournisseur a fouiller. Mode 1 (vitrine)
-    // et mode 2 (stock propre du marchand) n'ont rien a y chercher.
-    if (site.mode !== 3) {
+    // Seul un site a catalogue fournisseur a quelque chose a y fouiller.
+    // ETAPE 2 -- l'admission au catalogue fournisseur passe par la primitive
+    // unique `hasSupplierCatalog`. La comparaison brute `site.mode !== 3`
+    // qui vivait ici etait la meme question, ecrite une troisieme fois dans
+    // le depot avec une reponse differente a chaque endroit. La garde reste
+    // AVANT tout appel externe facture, et le contrat de reponse est
+    // rigoureusement inchange.
+    // LOT 2 -- meme descente du mode vers le mecanisme que `catalog/search`,
+    // dont cette route est la variante par image. Contrat de reponse
+    // inchange, et la garde reste AVANT tout appel Claude facture.
+    if (!usesCatalogSelections(site.mode, (site as { dropship_type?: unknown }).dropship_type)) {
       return NextResponse.json({ products: [], keywords: '', total: 0 });
     }
 
@@ -49,13 +58,23 @@ export async function POST(req: Request) {
     // rejette si ce site a deja declenche 10+ analyses d'image dans la
     // derniere minute -- un visiteur legitime n'en fait jamais autant
     // (une recherche = une photo), un usage automatise en boucle si.
+    // LOT 6 -- LE COMPTEUR NE LISAIT PAS `error`, DONC IL S'OUVRAIT EN PANNE.
+    // PostgREST rend `count: null` quand la requete echoue ; `(null ?? 0) >= 10`
+    // vaut false, et l'appel Claude FACTURE partait quand meme. C'est le
+    // defaut demontre par execution sur `blog/generate`, present a l'identique
+    // ici. La lecture de `error` ferme la voie ; le compteur reste
+    // `ai_usage_log`, deja alimente par `logAiUsage` plus bas -- c'est la
+    // source de verite de la depense IA, pas `checkout_anomalies`.
     const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString();
-    const { count: recentCount } = await supabaseAdmin
+    const { count: recentCount, error: erreurCompteur } = await supabaseAdmin
       .from('ai_usage_log')
       .select('id', { count: 'exact', head: true })
       .eq('site_id', site.id)
       .eq('usage_type', 'image')
       .gte('created_at', oneMinuteAgo);
+    if (erreurCompteur) {
+      return NextResponse.json({ error: 'Service momentanement indisponible.' }, { status: 503 });
+    }
     if ((recentCount ?? 0) >= 10) {
       return NextResponse.json({ error: 'Trop de requetes, reessayez dans une minute.' }, { status: 429 });
     }

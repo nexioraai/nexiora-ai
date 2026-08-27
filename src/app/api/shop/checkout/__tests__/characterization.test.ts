@@ -139,7 +139,7 @@ describe('CARACTERISATION -- Mode 2 (forfait)', () => {
   function setupMode2(promo: unknown = null, price = 100) {
     return setupTables({
       sites: { data: SITE_MODE2 },
-      shop_products: { data: [{ id: 'p1', cj_vid: null, price, currency: 'usd', published: true }] },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price, currency: 'usd', published: true, for_sale: true }] },
       promo_codes: { data: promo },
       shop_orders: { data: { id: 'order-1' } },
       shop_order_items: { data: [{ id: 'item-1' }] },
@@ -721,7 +721,7 @@ describe('M2-01 — la commission n’existe qu’en Mode 3', () => {
   it('MODE 2 — commission 0 et profit = encaissé, quel que soit le montant', async () => {
     const chains = setupTables({
       sites: { data: SITE_MODE2 },
-      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 250, currency: 'usd', published: true }] },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 250, currency: 'usd', published: true, for_sale: true }] },
       promo_codes: { data: null },
       shop_orders: { data: { id: 'order-1' } },
       shop_order_items: { data: [{ id: 'item-1' }] },
@@ -739,7 +739,7 @@ describe('M2-01 — la commission n’existe qu’en Mode 3', () => {
   it('MODE 2 — aucune commission n’est jamais enregistrée, même avec remise', async () => {
     const chains = setupTables({
       sites: { data: SITE_MODE2 },
-      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 100, currency: 'usd', published: true }] },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 100, currency: 'usd', published: true, for_sale: true }] },
       promo_codes: { data: { id: 'p', discount_type: 'percent', discount_value: 50, min_order: 0, max_uses: null, used_count: 0, expires_at: null } },
       shop_orders: { data: { id: 'order-1' } },
       shop_order_items: { data: [{ id: 'item-1' }] },
@@ -755,7 +755,7 @@ describe('M2-01 — la commission n’existe qu’en Mode 3', () => {
     // commission existe.
     const chains = setupTables({
       sites: { data: SITE_MODE3 },
-      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 100, currency: 'usd', published: true }] },
+      shop_products: { data: [{ id: 'p1', cj_vid: null, price: 100, currency: 'usd', published: true, for_sale: true }] },
       promo_codes: { data: { id: 'p', discount_type: 'percent', discount_value: 20, min_order: 0, max_uses: null, used_count: 0, expires_at: null } },
       shipping_cache: { data: [{ supplier_product_id: 'v1', shipping_cost: 2, days_min: 7, days_max: 15, tiers: CACHE_TIERS }] },
       shop_orders: { data: { id: 'order-1' } },

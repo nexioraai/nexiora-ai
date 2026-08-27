@@ -5,6 +5,7 @@ import { ShieldCheck, ArrowLeft, AlertTriangle, XCircle } from "lucide-react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import { computeGlobalState, type GlobalState } from "@/lib/systemHealth/computeGlobalState";
+import { deriveDbInvariantsState } from "@/lib/systemHealth/dbInvariants";
 
 interface Domain {
   id: string;
@@ -105,6 +106,10 @@ export default function SystemHealthPage() {
             tableMissing: data.tableMissing,
             isStale: data.isStale,
             latestOverallStatus: data.latest?.overall_status ?? null,
+            // DETTE 5 — le verdict de la base se relit dans les `raw_failures`
+            // du dernier rapport : une base conforme n'y écrit RIEN, une base
+            // rompue ou invérifiable y laisse une entrée `DB_INVARIANTS:`.
+            dbInvariants: deriveDbInvariantsState(data.latest?.raw_failures),
           });
           const meta = STATE_META[state];
           return (

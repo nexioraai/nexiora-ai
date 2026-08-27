@@ -9,6 +9,8 @@ import 'server-only';
 //   - reseller   : produits finis  -> CJ uniquement
 //   - pod_brand  : impression POD   -> Printful + Gelato (jamais CJ)
 //   - pod_custom : impression POD   -> Printful + Gelato (jamais CJ)
+//   - absent / inconnu : AUCUN fournisseur (LOT 1 / L1-03) -- un sous-type
+//     manquant n'est pas un reseller, c'est une donnee absente.
 //
 // Une boutique pod_brand ne doit JAMAIS afficher un produit CJ (reseller),
 // et inversement : un produit CJ ne peut pas recevoir le logo du marchand,
@@ -30,9 +32,41 @@ export function suppliersForDropshipType(dropshipType: DropshipType): string[] {
     case 'pod_custom':
       return [...POD_SUPPLIERS];
     default:
-      // Sous-type inconnu / non renseigne : par securite, aucun melange.
-      // On retombe sur reseller (comportement historique = CJ) plutot que
-      // d'exposer tout le catalogue. Le sous-type devrait toujours etre defini.
-      return [...RESELLER_SUPPLIERS];
+      // ============================================================
+      // LOT 1 / L1-03 -- CE REPLI RENDAIT `['cj']`, ET IL A SERVI.
+      //
+      // CE QU'IL FAISAIT. « Le sous-type devrait toujours etre defini »,
+      // disait le commentaire precedent -- mais rien ne l'imposait, et pour
+      // trois sites de production il ne l'etait pas. Ce `default` decidait
+      // alors du fournisseur A LA PLACE DU MARCHAND. Ce n'etait pas une
+      // hypothese : ces trois sites portent 12 commandes reelles, toutes en
+      // domaine fournisseur, DEUX avec un `cj_order_id`. Le repli a ete
+      // exerce en production.
+      //
+      // POURQUOI « c'est deja garde en amont » NE SUFFISAIT PAS. C'est vrai,
+      // et cela reste vrai : les cinq appelants passent par
+      // `hasSupplierCatalog(site.mode)`, donc aucun site Mode 1 ou Mode 2
+      // n'atteint cette fonction. Mais cette garde protege les AUTRES MODES,
+      // pas l'interieur du Mode 3 : elle n'a jamais empeche un site Mode 3
+      // sans sous-type d'obtenir le catalogue CJ. Un repli fournisseur ne
+      // doit pas devenir une decision implicite de sous-mode.
+      //
+      // LISTE VIDE = FAIL-CLOSED, et chaque appelant y repond deja
+      // correctement, verifie un par un :
+      //   catalog/search    `.in('supplier_id', [])`  -> 0 produit
+      //   catalog/curate    idem                      -> 0 produit curable
+      //   catalog/selections `[].includes(...)`       -> 409, refus
+      //   mode3/checkoutPolicy.admitsCatalogSupplier  -> false, refus
+      //   cron/catalog-suggest appelle avec 'reseller' litteral -> inchange
+      // Aucun n'avait besoin d'etre modifie : ils etaient tous ecrits pour
+      // consommer une liste, jamais pour supposer qu'elle est non vide.
+      //
+      // CONSEQUENCE ASSUMEE, ET C'EST LE POINT. Un site Mode 3 sans
+      // sous-type ne vend plus rien du catalogue -- au lieu de vendre du CJ
+      // que personne n'a choisi. La regle d'ecriture (`subtypeAdmission`)
+      // empeche desormais d'en creer de nouveaux ; les trois existants
+      // relevent d'une decision de donnee, pas de code.
+      // ============================================================
+      return [];
   }
 }

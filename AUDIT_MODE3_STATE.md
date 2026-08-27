@@ -4,7 +4,15 @@ Standard exigé : **ELITE 2026 / A+** — aucun lot déclaré validé sans preuv
 (résultat SQL littéral, test exécuté, tsc/vitest réels). Distinction stricte :
 **code terminé ≠ test effectué ≠ preuve validée**.
 
-Dernière mise à jour : 2026-08-22 (phase 2 close).
+Dernière mise à jour : 2026-08-25 — **LOT 3 (`pod_brand`) RÉSOLU** (voir en fin de fichier).
+
+> ⚠️ **Le plan 9/9 lots ci-dessous date du 2026-08-22 et PRÉCÈDE les audits Mode 1
+> et Mode 2.** Il n'a donc pas appliqué les classes de défaut que ceux-ci ont
+> révélées : contexte LLM mentant au modèle, composition de rendu non testée,
+> i18n de surface publique, borne non testée, RPC non versionnée, protection
+> reposant uniquement sur une autre couche. **Sa validation reste acquise sur
+> son propre périmètre ; elle ne vaut pas audit selon la méthodologie
+> actuelle.**
 
 ---
 
@@ -200,3 +208,571 @@ avoir fait auditer.
   résoudre le binding fichier par fichier.
 - Tout nouveau répertoire de test doit être ajouté à l'`include` de `vitest.config.ts`,
   sinon il passe en isolation mais n'est **jamais** collecté en CI.
+
+
+---
+---
+
+# PHASE 0 — CARTOGRAPHIE GLOBALE (2026-08-25)
+
+Commit de référence : `45a5861` · branche `fix/xss-jsonld` · working tree propre.
+**Aucune correction faite.** Cette phase précède l'audit détaillé par sous-mode.
+
+## Surface mesurée
+
+**26 fichiers** lisent `dropship_type` · **5 répertoires de domaine** (`mode3/` 4
+fichiers, `cj/` 7, `suppliers/` 6, `dropship/` 2, `fulfillment/` 12) · **11 routes**
+(6 catalogue, 3 POD, 2 webhooks) · **491 tests** sur ces surfaces.
+
+## Autorités de sous-mode — il n'y en a que DEUX
+
+| Autorité | Fichier | Décide |
+|---|---|---|
+| `CATALOG_SUBTYPES` `{reseller, pod_custom}` | `agent-tools/toolCapabilities.ts` | quels sous-types ont les **outils** de catalogue |
+| `suppliersForDropshipType` | `dropship/suppliers.ts` | quels **fournisseurs** un sous-type admet |
+
+Tout le reste (`hasSupplierCatalog`, `CATALOG_SITE_MODES`) décide au niveau du
+**mode**, pas du sous-type. **C'est la faiblesse structurelle du Mode 3 :
+la granularité de l'admission est le mode ; la granularité du besoin est le
+sous-type.**
+
+## Matrice des sous-modes
+
+| sous-type | outils catalogue | fournisseurs | guidance LLM | `CatalogSearch` | vitrine charge les sélections |
+|---|---|---|---|---|---|
+| `reseller` | oui | `cj` | RESELLER | monté | oui |
+| `pod_brand` | **non** | `printful,gelato` | POD_BRAND | non | **non** |
+| `pod_custom` | oui | `printful,gelato` | POD_CUSTOM | monté | oui |
+| `null` / inconnu / `''` | non | **`[]`** *(LOT 1)* | AUCUNE | **non monté** *(LOT 1)* | non |
+
+**Après le LOT 1, la ligne « sans sous-type » est cohérente de bout en bout :
+elle ne peut plus être créée, et là où elle subsiste (3 sites historiques) elle
+ne déclenche plus rien.**
+
+## Défauts identifiés — aucun corrigé
+
+| ID | Niveau | Titre |
+|---|---|---|
+| **M3-01** | 🟠 | `AuroraTheme` monte `CatalogSearch` sur `isShop`, pas sur `mode === 3` |
+| **M3-02** | 🟠 | Trois couches en désaccord sur « ce site peut-il avoir des sélections catalogue ? » |
+| **M3-03** | 🟡 | `dropship_type = NULL` sur **3 sites Mode 3 sur 8** : reseller pour 2 couches, rien pour 2 autres |
+| **M3-04** | 🟡 | Repli `default → ['cj']` permissif, et un test en dépend |
+| **M3-05** | 🟢 | `src/lib/mode3/**` : non collecté — **FERMÉ au LOT 0** |
+| **M3-06** | ⚪ | `admin/stats` `|| 'reseller'` — reporting seul |
+
+Détail complet et preuves : `KNOWN_ISSUES.md`, `DEBT-048` → `DEBT-053`.
+
+## Volumétrie production (lecture seule, 2026-08-25)
+
+8 sites Mode 3 : 4 `reseller`… en fait **4 avec sous-type** (2 reseller nommés,
+1 pod_brand, 1 pod_custom, 1 reseller) et **3 à `dropship_type = NULL`** ·
+73 sélections dont **54 non approuvées** · 33 580 `catalog_products` ·
+26 commandes toutes `fulfillment_domain = supplier`, 3 avec `cj_order_id` ·
+0 `design_uploads` · **0 sélection pour un pod_brand** · **0 sélection pour un
+sous-type NULL**.
+
+Les deux défauts 🟠 ont donc **zéro occurrence matérialisée aujourd'hui**.
+
+## Mutations de cartographie — 6/6 tuées
+
+pod_brand ajouté à `CATALOG_SUBTYPES` · `CATALOG_SUBTYPES` vidé · reseller reçoit
+les fournisseurs POD · pod_brand reçoit CJ · repli rendu permissif · repli rendu
+fail-closed. **Les deux autorités de sous-mode sont solidement verrouillées.**
+
+## Progression des lots
+
+| Lot | Objet | Statut |
+|---|---|---|
+| **0** | Collecte de `src/lib/mode3/**` | ✅ **TERMINÉ** — manque latent fermé, prouvé par sonde |
+| **1** | Socle transversal (DEBT-050, DEBT-051, autorités de sous-mode) | ✅ **RÉSOLU** — 14/14 mutations tuées, 3088 tests |
+| **2** | Frontières internes (DEBT-048, DEBT-049) | ✅ **RÉSOLU** — 19/19 mutations tuées, 3178 tests |
+| **3** | **POD_BRAND** (+ DEBT-055/058/059, puis DEBT-062/063) | ✅ **RÉSOLU** — 23 mutations tuées, 3220 tests |
+| **4** | RESELLER | ✅ **RÉSOLU** — 21 mutations tuées, 3264 tests · 1 décision produit ouverte (DEBT-066) |
+| **5** | POD_CUSTOM | ✅ **RÉSOLU** — 15/15 mutations tuées, 3296 tests |
+| 6 | Transversal final (+ **DEBT-054**, rattachée depuis le LOT 1) | à faire |
+
+### Rattachement des deux découvertes du LOT 1 — sans réouverture
+
+**DEBT-055 → lot `pod_brand`.** Elle vit dans un fichier transversal
+(`api/chat/route.ts:835`, chemin de création) mais la question qu'elle pose —
+*qui a le droit de curer ?* — est propre à un sous-mode : la route déclenche
+l'auto-curation pour `pod_brand`, alors que `CATALOG_SUBTYPES` lui refuse les
+outils de curation et que sa guidance dit « do NOT suggest catalog_curate ».
+C'est le cas prévu par la règle « un problème cru transversal se révèle
+spécifique à un sous-mode » : signalé avant tout déplacement de périmètre.
+
+**Le LOT 1 ne l'a ni créée ni aggravée**, mesuré sur le diff `f0740f9..244267d` :
+la garde est passée de `finalMode === 3 && dropshipType` à
+`finalMode === 3 && persistedDropshipType` — pour un `pod_brand`, les deux
+expressions sont vraies. Le comportement `pod_brand` est **strictement
+inchangé** par le LOT 1 (fournisseurs POD inchangés ; `showsVisitorCatalogSearch('pod_brand')`
+rend `false`, exactement comme la négation qu'elle remplace).
+
+**DEBT-054 → lot transversal final.** Elle ne porte sur aucun sous-mode : elle
+porte sur le **dénominateur d'un cliquet**. Elle doit être *connue* pendant les
+lots 2 à 5 — toute garantie du type « cette surface est déclarée donc visible »
+y est plus faible qu'annoncée — mais elle ne doit pas y être traitée, sous
+peine de mêler une correction d'architecture à un lot de sous-mode.
+
+**Aucun lot fermé n'est rouvert.** Ces deux dettes préexistaient au LOT 1 ;
+elles ont été *découvertes*, pas introduites. Mode 1, Mode 2, LOT 0 et LOT 1
+restent fermés.
+
+## Ordre d'audit — VALIDÉ
+
+Voir le rapport de phase : l'ordre `reseller → pod_brand → pod_custom` est
+**écarté** au profit d'un **socle transversal d'abord**.
+
+
+---
+
+# LOT 1 — SOCLE TRANSVERSAL — RÉSOLU (2026-08-25)
+
+## Ce que le diagnostic avait changé au modèle
+
+Il n'y avait pas **deux** autorités de sous-type mais **trois** — la troisième,
+`isValidDropshipType`, vivant dans `api/chat/route.ts`, décidait de ce qui est
+**persistable**. Et le défaut n'était dans **aucune** des trois : elles sont
+solides (6/6 mutations en phase 0, 5/6 sur les appelants). Il était dans le
+**chemin d'écriture** et dans les **replis des couches appelantes**.
+
+Aucune des trois n'a été refondue. Une **quatrième question**, que personne ne
+posait, a reçu son autorité : *ce COUPLE (mode, sous-type) est-il écrivable ?*
+
+## Les cinq problèmes
+
+| ID | Niveau | Statut | Preuve |
+|---|---|---|---|
+| L1-01 | 🟠 | ✅ résolu | `subtypeAdmission.ts` + refus 400 au point d'écriture + `need_dropship_type` à l'onboarding — M1–M6 tuées |
+| L1-02 | 🟠 | ✅ résolu | 4 replis supprimés, allowlist positive unique — M8–M13 tuées, dont **M11 = l'ancienne survivante C5** |
+| L1-03 | 🟡 | ✅ résolu | `default → []`, banc A7 réécrit délibérément — M7, M14 tuées |
+| L1-04 | 🟡 | ✅ résolu | `NULL` est fail-closed dans **toutes** les couches mesurées (voir matrice) |
+| L1-05 | ⚪ | ✅ résolu | 115 tests neufs sur le couple (mode 3, absent), 4 fichiers **prouvés collectés** (181 → 185) |
+
+## Matrice après correction — plus aucune divergence sur `NULL`
+
+| Couche | avant | après |
+|---|---|---|
+| écriture (`chat/route.ts`) | **fail-open** — `null` accepté | **refus 400** |
+| `onboarding` | **fail-open** — `null` produit | **réclame le sous-type** |
+| `suppliersForDropshipType` | **fail-open** — `['cj']` | **`[]`** |
+| `CatalogSearch` (défaut param.) | **fail-open** — `'reseller'` | **aucun défaut** |
+| montage vitrine ×3 | **fail-open** — négation | **allowlist positive** |
+| `CATALOG_SUBTYPES`, `modeGuidance`, `shared.tsx`, éditeur, mockups, `pod-fulfill`, checkout/design | fail-closed | inchangé |
+
+## Frontières — non rouvertes, et c'est mesuré
+
+- **Mode 1 / Mode 2** : `resolvePersistedSubtype` rend toujours `{ok, null}` pour
+  eux ; leur création est testée intacte (`onboarding`, modes 1 et 2).
+- **Mode 2 ↔ Mode 3** : toutes les corrections vont dans le sens **restrictif**.
+  `suppliersForDropshipType` n'est atteignable que sous `hasSupplierCatalog`
+  (`{3}`) ; lui faire rendre `[]` ne peut rien ouvrir vers le Mode 2.
+- **DEBT-048 tenue ouverte volontairement** : `showsVisitorCatalogSearch` ne
+  connaît **pas** le mode, précisément pour qu'`AuroraTheme` conserve sa garde
+  manquante. Un test la verrouille comme **constat** et échouera le jour où le
+  LOT 2 la traitera.
+
+## Production — lecture seule, après correction
+
+Les 3 sites sans sous-type sont **inchangés** : `updated_at` de juillet
+(`techflow-electronics` 07-05, `athletehub` 07-16, `tiny-threads-global` 07-16).
+Aucune écriture n'a été faite. **Leur attribution d'un sous-type reste une
+décision produit ouverte.**
+
+⚠️ **Conséquence assumée sur `techflow-electronics` (publié)** : sa barre de
+recherche n'est plus montée et le checkout d'un produit catalogue est refusé.
+Le site avait déjà 0 sélection et 0 produit ; il vendait, via la recherche, du
+CJ qu'aucune décision produit n'avait choisi.
+
+## Découvertes nouvelles — consignées, non corrigées
+
+`DEBT-054` 🟠 le cliquet d'exhaustivité est aveugle au camelCase (`finalMode`) —
+transversal · `DEBT-055` 🟠 l'auto-curation se déclenche aussi pour `pod_brand` —
+**appartient au sous-mode `pod_brand`** · `DEBT-056` ⚪ branche client
+`choose_mode` morte.
+
+Deux constats intégrés aux corrections : `api/onboarding/**` n'était **pas
+collecté** par vitest (préfixe ajouté, même piège qu'au LOT 0), et les fixtures
+Mode 3 du checkout **ne portaient aucun sous-type** — le banc de test
+reproduisait exactement l'état des 3 sites défectueux.
+
+
+---
+
+# LOT 2 — FRONTIÈRES INTERNES MODE 3 — RÉSOLU (2026-08-25)
+
+## La thèse initiale était fausse, et c'est ce qui a permis de trouver la bonne
+
+Le premier diagnostic du LOT 2 concluait qu'il fallait vider
+`suppliersForDropshipType('pod_brand')`. **La contre-vérification l'a réfutée**,
+et le dépôt lui-même l'a tuée : 6 tests, dont le banc protégé A7
+« 3 · pod_brand → POD ». Trois mesures indépendantes :
+
+- `mockupsToProducts` émet `catalog-${catalog_product_id}::${variant_id}` ;
+- `pod-fulfill` n'exécute **que** des lignes `catalog-*` ;
+- production : **0 `shop_products` sur l'ensemble des sites Mode 3**.
+
+Les produits `pod_brand` **sont** des produits catalogue Printful. Vider ses
+fournisseurs aurait refusé 100 % de ses ventes au checkout.
+
+## La vraie frontière : la SOURCE de la sélection
+
+| | source des produits | mécanisme |
+|---|---|---|
+| `reseller`, `pod_custom` | `site_catalog_selections` | curation / approbation |
+| `pod_brand` | `sites.pod_designs[].mockups` | supports POD + mockups |
+
+Les deux aboutissent à `catalog_products` et à des ids `catalog-*`. **Confondre
+« produit catalogue » et « sélection catalogue » était la cause racine de toute
+la divergence.**
+
+## L'autorité : `usesCatalogSelections(mode, subtype)`
+
+Posée dans **`catalogAdmission.ts`**, qui portait déjà `hasSupplierCatalog`.
+Ce n'est pas une cinquième autorité : c'est **la même question, une granularité
+plus bas**. Elle appelle `hasSupplierCatalog` — imbriquée, jamais parallèle.
+
+**Sept couches la consomment** : `curate` · `enhance` · `selections` (4 verbes) ·
+`search` · `image-search` · `fetchProduct` · `sitemap`.
+**`pod/catalog`** reçoit la garde de son jumeau `generate-mockups` (`pod_brand`
+seul) — les deux surfaces du mécanisme des supports portent enfin la même règle.
+
+## Ce qui n'a PAS bougé, délibérément
+
+`suppliersForDropshipType` (inchangée — elle protège `pod_brand` contre un
+`catalog_product_id` CJ forgé dans `pod_designs`) · `CATALOG_SUBTYPES` ·
+`shared.tsx:358` · `showsVisitorCatalogSearch` (volontairement aveugle au mode).
+
+## Mutations — 19 lancées, **19 tuées**
+
+Autorité (4) · routes catalogue (3) · `fetchProduct` (4, dont l'isolation
+inter-locataires) · sitemap (2) · Aurora (1) · `mockupsToProducts` (1) ·
+`pod/catalog` (1) · éligibilité fournisseur (1) · **thèse réfutée `pod_brand → []`
+(1)** · UI `pod_custom` (1).
+
+**Aucune mutation comptée sur un crash de harnais.** C19 a d'abord survécu ;
+elle a été tuée en verrouillant la condition de rendu réelle, pas par un test
+de façade. Une mutation restée appliquée après un dépassement de délai
+(`pod/catalog`) a été détectée par la suite et restaurée.
+
+## Impact production — mesuré, lecture seule
+
+**Nul.** Les 73 sélections existantes sont **toutes** sur des sites `reseller`
+(19 approuvées, 54 non approuvées) : aucun site ne perd une URL de sitemap ni
+une fiche produit. Les 3 sites sans sous-type sont **intacts** (`updated_at` de
+juillet).
+
+## Découvertes nouvelles — consignées, non corrigées
+
+**DEBT-057** 🟠 `/api/catalog/variants` : aucune admission d'aucune sorte, proxy
+non authentifié vers l'API fournisseur avec nos identifiants — **DÉCISION
+REQUISE**, LOT 2 s'est arrêté là volontairement.
+**DEBT-058** 🟡 les cartes produit `pod_brand` pointent vers une page qui répond
+404 → **LOT 3**.
+**DEBT-059** 🟡 `pod_designs` est écrivable par le marchand via PostgREST ;
+trois gardes tiennent et sont désormais testées → **LOT 3**.
+
+DEBT-055 reste **LOT 3**, DEBT-054 reste **LOT 6** : ni l'un ni l'autre n'a été
+touché. `chat/route.ts` n'a pas été modifié — l'auto-curation d'un `pod_brand`
+reçoit désormais un 400 non bloquant, exactement comme la contre-vérification
+l'avait prédit.
+
+
+---
+
+# LOT 3 — `pod_brand` — RÉSOLU (2026-08-25)
+
+## La reconstruction a précédé le code, et elle a tout décidé
+
+Trois faits, tous mesurés au code avant la moindre modification :
+
+1. **L'identité d'un design existe déjà : `design_url`.** Elle est capturée à la
+   création de la tâche (`pending_task_keys`), portée par chaque maquette,
+   résolue au checkout et transmise au fournisseur. Aucune autorité à créer.
+2. **L'index 0 est un accident, pas une intention.** `mockups` et
+   `selected_products` sont stockés **sur chaque design**, et la vitrine les
+   parcourt tous. Seuls la génération et le checkout s'y étaient repliés.
+3. **La variante normative est `catalog_products.id`.** `printful-adapter`
+   envoie `Number(order.supplier_product_id)` et **n'utilise jamais**
+   `order.variant_id` ; `gelato-adapter` envoie `productUid`. Seul CJ consomme
+   `variant_id` — d'où l'existence d'un suffixe qui appartient au monde
+   `reseller`.
+
+## Les défauts, et ce qui les ferme
+
+| ID | Sév. | Fermé par | Mutations |
+|---|---|---|---|
+| **L3-01** variante du visiteur ignorée *(DEBT-060)* | 🔴 | id sans suffixe + retrait du sélecteur impossible à honorer | Q1, Q2 |
+| **L3-02/03/07** convention `pod_designs[0]` *(DEBT-061)* | 🟠 | checkout parcourt tous les designs · vitrine déduplique · design actif explicite | Q3, Q9 |
+| **L3-04** design non lié au locataire | 🟠 | `design_url` doit être sous `pod-designs/<slug>/`, sinon aucun design + anomalie | Q12 |
+| **L3-05** prix affiché ≠ prix vendu | 🟡 | `loadPodBrandCatalogPrices` relit prix/devise en base | Q4, Q6 |
+| **L3-06** filtre fournisseur de `pod-fulfill` | 🟡 | harnais rendu fidèle + 3 tests | Q10 |
+| **DEBT-055** | 🟡 | `usesCatalogSelections` (autorité LOT 2) | Q11 |
+| **DEBT-058** | 🟡 | plus de `href` vers un 404, prouvé au rendu | Q7, Q8 |
+
+**12 mutations lancées, 12 tuées. Aucune sur un crash de harnais.** Q8 a
+d'abord survécu : elle a été tuée par un **rendu réel**, jamais masquée.
+
+## Ce qui n'a pas bougé, délibérément
+
+`suppliersForDropshipType` (`pod_brand` garde Printful + Gelato — la thèse
+inverse du LOT 2 était fausse) · `CATALOG_SUBTYPES` · `usesCatalogSelections`
+(consommée, jamais dupliquée) · `shared.tsx:358` · le filtre fournisseur de
+`pod-fulfill`, qui répond à « quels fournisseurs ce **moteur** sait exécuter »
+— d'où `printify`, absent de l'autre liste. Deux questions, deux listes.
+
+## Production — lecture seule, aucune écriture
+
+Simulation de la chaîne corrigée sur les données réelles : les 3 produits
+gardent leur identité, **les prix sont identiques** (le JSON concordait avec la
+base — aucune falsification en production), la variante livrée devient celle du
+catalogue, et le `design_url` réel **respecte** le préfixe du site. `updated_at`
+inchangé (juillet). 0 commande.
+
+**Changement visible assumé** : le sélecteur de taille disparaît de ce site.
+Ce n'est pas une perte de capacité — c'est le retrait d'un choix que la chaîne
+ne pouvait pas honorer.
+
+## Risques résiduels — documentés, non masqués
+
+1. Une maquette pointant un produit **CJ** s'affiche encore : `shared.tsx` est
+   dans le bundle client (`NoirTheme`, `StorefrontDense` portent `'use client'`)
+   et ne peut ni importer `suppliersForDropshipType` (`server-only`) ni en
+   recopier la liste. Elle reste **inachetable** — 409 au checkout, garde testée.
+2. Une table équivalente à `design_uploads` pour `pod_brand` (liaison forte,
+   usage unique) exige du **DDL** : décision d'architecture distincte.
+3. La politique d'**écriture** du bucket `pod-designs` n'est pas versionnée et
+   n'a pas été sondée — la sonder exigerait une écriture en production.
+
+## Hors périmètre — non traité
+
+**DEBT-057** (`/api/catalog/variants` sans admission) reste **LOT 2**, non
+rouvert : `pod_brand` ne l'atteint pas (`mockupsToProducts` ne renseigne ni
+`supplierId` ni `supplierProductId`, donc `MerchantProductModal` ne l'appelle
+jamais pour lui). **DEBT-054** reste **LOT 6**. Aucune découverte n'appartenait
+à `reseller` ni à `pod_custom`.
+
+
+---
+
+# LOT 3 — SECONDE PASSE, APRÈS CONTRE-VÉRIFICATION (2026-08-25)
+
+La contre-vérification adversariale a **falsifié le verdict 🟢** de la première
+passe. Deux anomalies, toutes deux dans la chaîne `pod_brand`, corrigées en une
+seule passe.
+
+## DEBT-062 🔴 — vitrine ≠ checkout, encore
+
+La première passe avait aligné l'**ordre** de parcours des designs. Ce n'était
+pas l'ordre : ce sont les **filtres**. La vitrine en applique deux que le
+checkout n'avait pas.
+
+**Démontré par exécution du module réel**, pas par lecture :
+
+```
+designs[0] : maquette de cp-X, design_url = ANCIENNE  (périmée)
+designs[1] : maquette de cp-X, design_url = celle du design (fraîche)
+
+vitrine  -> https://img/b.png          (design B)
+checkout -> .../pod-designs/…/ANCIEN.png   (design A)
+```
+
+**Cause profonde : deux implémentations de la même règle métier.** Corriger
+l'une sans l'autre reproduit le défaut — c'est littéralement ce qui venait
+d'arriver. La règle est donc **écrite une fois**, dans
+`src/lib/mode3/podBrandMockups.ts`, et consommée par les deux couches.
+Alignement **par construction**.
+
+Ce n'est pas une autorité nouvelle : ni `subtypeAdmission`, ni
+`CATALOG_SUBTYPES`, ni `suppliersForDropshipType`, ni `usesCatalogSelections`,
+ni `showsVisitorCatalogSearch` ne répond à « quelle maquette est vendable ».
+
+## DEBT-063 🟠 — la liaison locataire n'était posée qu'au point de vente
+
+`generate-mockups` envoie `designs[0].url` — écrit par le marchand en PostgREST
+— comme `image_url` d'un `create-task` Printful **facturé**. La garde y est
+désormais posée **avant toute dépense**, avec la **même unique** définition du
+format. Le design actif est **nommé** : `index` est un index de **produit**,
+jamais de design — vérifié dans le contrat de l'appelant avant modification.
+
+## Mutations — 11 lancées, 11 tuées
+
+R1–R4 (les trois filtres + l'ordre) · R5 (le checkout reprend sa propre
+sélection) · R6–R7 (la règle de préfixe) · R8–R10 (les deux gardes locataires)
+· **R11 (quel design la route génère)**, qui avait d'abord **survécu** et n'a
+pas été masquée : elle est tuée par une observable réelle — la route ne se
+rabat jamais sur un autre design.
+
+## Contre-vérification indépendante
+
+Sonde exécutée **hors dépôt**, important les modules réels : scénario
+falsificateur + 4 variantes (périmé en `[0]`, périmé en `[1]`, tout périmé,
+trois designs en correspondance 1:1, maquette sans `catalog_product_id`) —
+vitrine et checkout concordent dans tous les cas.
+
+## Production — aucune écriture
+
+Empreinte `pod_designs` **identique** avant/après (`2cc8f941c571615d`),
+`updated_at` inchangé. Design et 3 maquettes **conformes au préfixe** : la
+nouvelle garde ne casse pas le seul site réel.
+
+
+---
+
+# LOT 4 — `reseller` — RÉSOLU (2026-08-25)
+
+## Architecture réelle
+
+```
+curate / cron catalog-suggest  → site_catalog_selections (merchant_approved=false)
+POST /catalog/selections       → site_catalog_selections (merchant_approved=true)
+   └→ vitrine  : loadCatalogSelections  → id `catalog-<uuid>`
+   └→ recherche: /catalog/search        → id `catalog-<uuid>`
+   └→ fiche    : fetchProduct           → id `catalog-<uuid>`
+        └→ modale / fiche → `::<vid>` → checkout → checkCatalogStock
+             └→ cj-adapter (vid) → cj/fulfill (vid) → CJ
+```
+
+**L'unité vendable de `reseller` est la VARIANTE (vid), pas le produit.** C'est
+la propriété qui structure tout le sous-mode — et celle qu'une couche ne
+respectait pas.
+
+## Anomalies et corrections
+
+**DEBT-064 🔴 — la fiche produit vendait sans variante.** La modale exige une
+variante ; la fiche n'en offrait aucune. Deux commandes de production sont
+parties ainsi et `cj/fulfill` a retenu `variants[0]` — arbitraire. **19 fiches
+publiées et indexées** étaient concernées.
+
+Règle **lue de la donnée** (33 580 lignes mesurées) : `supplier_parent_id IS
+NULL` ⇒ la ligne est un PRODUIT ⇒ variante explicite obligatoire. CJ : 100 %
+sans parent. Printful/Gelato : 0 % — leur ligne EST une variante, ce qui
+préserve exactement ce dont `pod_brand`/`pod_custom` dépendent depuis le LOT 3.
+
+Garde **serveur** (`catalogStock`, incontournable) **et** sélecteur sur la
+fiche : les deux moitiés sont la même correction — sans l'UI, le bouton des 19
+fiches deviendrait une impasse.
+
+**DEBT-065 🟡 — l'isolation inter-locataires des écritures de sélection n'était
+testée par rien.** `.eq('site_id', …)` existait sur PATCH/DELETE, mais le
+retirer ne cassait aucun test.
+
+**DEBT-066 🟠 — le prix de la variante : DÉCISION PRODUIT, non tranchée.**
+
+## Autorités
+
+**Aucune nouvelle.** `usesCatalogSelections`, `suppliersForDropshipType`,
+`admitsCatalogSupplier`, `hasSupplierCatalog`, `showsVisitorCatalogSearch`,
+`CATALOG_SUBTYPES` : toutes consommées, aucune modifiée. La règle de variante
+est posée dans `catalogStock`, module existant qui possède déjà la
+vérification catalogue.
+
+## Mutations — 11 lancées, 11 tuées
+
+S1–S4 (règle serveur, dont S2 qui vérifie qu'elle ne casse pas Printful/Gelato)
+· S5–S8 (fiche produit) · T1–T3 (isolation et approbation). **S7, S8, T1, T2,
+T3 ont d'abord survécu** — aucune n'a été masquée.
+
+## Observations non corrigées
+
+`cron/catalog-suggest` filtre `mode=3 AND dropship_type='reseller'` en dur
+plutôt que par l'autorité. C'est un **sous-ensemble strict** de
+`usesCatalogSelections` — donc jamais faux. L'élargir à `pod_custom` serait une
+décision produit du LOT 5. **Consigné, non touché.**
+
+`cj/fulfill` conserve son repli `variants[0]` : deux commandes de production
+l'ont emprunté et doivent rester ré-exécutables. Il est désormais inatteignable
+pour toute commande nouvelle, le checkout refusant en amont.
+
+## Production — aucune écriture
+
+73 sélections (19 approuvées), empreinte `a42f80d2ce5a0c9a`, `updated_at`
+inchangé. Les 19 produits approuvés sont **tous CJ et tous sans parent** — donc
+exactement ceux que la nouvelle règle protège.
+
+
+---
+
+# LOT 4 — CONTRE-VÉRIFICATION (2026-08-25)
+
+La contre-vérification a **réfuté ma propre correction**. Une anomalie,
+corrigée avant de reconfirmer.
+
+## DEBT-067 🟠 — la condition d'achat restait un proxy
+
+Les trois surfaces écrivaient chacune `variants.length > 0 && !selectedVariant`.
+Le proxy s'effondre quand la liste revient **vide** — rupture totale, ou erreur
+**avalée** par `/api/catalog/variants`, qui rend `{variants: []}` dans les deux
+cas. Le bouton s'activait pour un produit que la garde `catalogStock` du LOT 4
+refuse : **bouton actif, refus garanti**.
+
+**Ma correction de la fiche produit portait encore ce proxy.** Avant le LOT 4
+ce chemin « fonctionnait » — en expédiant une variante arbitraire ; le LOT 4
+l'a rendu fail-closed sans corriger l'interface.
+
+**Cause profonde : trois copies de la même règle** — le motif que le LOT 3
+avait déjà démontré. Règle écrite **une fois** dans
+`themes/variantRequirement.ts`, miroir client de la règle serveur (même patron
+que `modeCapabilities` vis-à-vis de `CheckoutPolicy`), et signal
+`requiresVariant` remontant de la base jusqu'aux trois surfaces.
+
+## Mutations — 21 au total sur le LOT 4, 21 tuées
+
+S1–S8, T1–T3 (première passe) · **U1–U10 (contre-vérification)**.
+U6–U10 ont d'abord survécu : U6/U7 tuées par des tests comportementaux de
+`/catalog/search` ; U8–U10 par un cliquet d'argument dont **la limite est
+nommée** — la valeur passée n'est observable qu'après un effet React, et ce
+dépôt n'a ni jsdom ni testing-library.
+
+## Production — aucune écriture
+
+73 sélections, empreinte `a42f80d2ce5a0c9a` **inchangée**, `updated_at` de
+juillet sur les 8 sites Mode 3.
+
+
+---
+
+# LOT 5 — `pod_custom` — RÉSOLU (2026-08-25)
+
+## Trois défauts, deux critiques
+
+**DEBT-068 🔴 — `/api/shop/upload-design` refusait tout le monde.** Projection
+`.select('id')`, garde sur `site.mode` : `undefined` → `canTransact` faux →
+**403 systématique**. Toute la chaîne de design de `pod_custom` était morte.
+Production : `design_uploads` = **0 ligne**. Le test était une **façade** — son
+harnais ignorait la liste de colonnes.
+
+**DEBT-069 🔴 — un support `pod_custom` était achetable nu.** Aucune couche
+n'exigeait de design ; `pod-fulfill` envoyait `files: []` et le fournisseur
+fabriquait un **blanc**, payé par la plateforme. La fiche produit n'avait même
+aucun téléverseur, alors qu'elle est publiée au sitemap.
+
+**DEBT-070 🟡 — les gardes du design n'étaient tenues par rien.** Le harnais
+enregistrait les filtres sans les appliquer.
+
+## Autorités
+
+**Aucune nouvelle.** `canTransact` **non modifiée** (elle était juste).
+`achatPossible` (LOT 4) **étendue**, jamais dupliquée. `design_uploads` reste
+la source de vérité. La règle normative est **serveur** ; le module client en
+est le miroir, comme `modeCapabilities` l'est de `CheckoutPolicy`.
+
+## Mutations — 15 lancées, 15 tuées
+
+W1–W3 (upload) · W4–W9 (checkout) · W10–W11 (fulfillment) · W12–W15 (règle et
+propagation). **W8 et W12–W15 ont d'abord survécu** : W8 tuée en modélisant la
+**course** ; W12/W14/W15 par des tests comportementaux ; **W13 par un cliquet
+dont la limite est nommée** — `ProductModal` passe par `createPortal` et rend
+`null` sans cible de portail, donc non observable au rendu statique.
+
+## Deux erreurs de ma part, corrigées
+
+Une délégation de mock incorrecte (`(generic as any).get?.(t)`) produisant des
+500 ; et une assertion **fausse** attendant `requiresDesign === false` pour
+`pod_brand`, alors que la règle du LOT 2 refuse la fiche **entièrement** — le
+comportement réel est plus fort que ce que je testais.
+
+## Production — aucune écriture
+
+`design_uploads` 0 · `order_item_designs` 0 · 73 sélections, empreinte
+`a42f80d2ce5a0c9a` **inchangée** · `updated_at` de juillet/août sur les 8 sites.

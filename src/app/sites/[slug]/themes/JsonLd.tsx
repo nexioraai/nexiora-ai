@@ -1,5 +1,6 @@
 // src/app/sites/[slug]/themes/JsonLd.tsx
 import type { Site } from './shared'
+import { resolveSiteFreshness } from './siteFreshness'
 import JsonLdScript from './JsonLdScript'
 
 function resolveSchemaType(rawType?: string): {
@@ -120,8 +121,10 @@ export default function JsonLd({ site, url }: { site: Site; url: string }) {
   // Niveau de prix
   if (site.price_range) data.priceRange = site.price_range
 
-  // Fraicheur du contenu
-  if (site.created_at) data.dateModified = site.created_at
+  // Fraicheur du contenu -- DEBT-034 : la derniere MODIFICATION, plus la
+  // creation. Repli sur `created_at` tant que la migration n'est pas passee.
+  const fraicheur = resolveSiteFreshness(site)
+  if (fraicheur) data.dateModified = fraicheur
 
   const faqData =
     site.faq && site.faq.length > 0

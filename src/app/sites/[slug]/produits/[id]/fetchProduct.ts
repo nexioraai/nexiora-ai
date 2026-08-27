@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { sitePricing, resolveDisplayPrice } from '@/lib/pricing'
+import { usesCatalogSelections } from '@/lib/dropship/catalogAdmission'
 
 export type ProductPage = {
   id: string
@@ -9,6 +10,15 @@ export type ProductPage = {
   currency: string
   images: string[]
   inStock: boolean
+  /**
+   * DETTE 6c — ACHETABILITE, distincte de `inStock` et de `published`.
+   *   `published` decide si cette page EXISTE (filtre de la requete) ;
+   *   `inStock`   decide s'il en reste ;
+   *   `forSale`   decide si le marchand accepte de le vendre.
+   * Les produits de catalogue fournisseur n'ont pas cette notion : ils valent
+   * `true`, comme avant cette dette.
+   */
+  forSale: boolean
   siteName: string
   siteSlug: string
   siteCustomDomain: string | null
@@ -17,6 +27,22 @@ export type ProductPage = {
   lang: string
   mode: number
   shippingFlat: number | null
+  /**
+   * LOT 4 / R4-01 -- de quoi offrir le MEME choix de variante que la modale
+   * de la vitrine. `null` pour un produit du marchand (`shop_products`), qui
+   * n'a pas de variantes fournisseur : la fiche se comporte alors comme avant.
+   */
+  supplierId: string | null
+  supplierProductId: string | null
+  /** `true` si la ligne catalogue est un PRODUIT (variante obligatoire). */
+  requiresVariant: boolean
+  /**
+   * LOT 5 / P5-02 -- `true` sur un site `pod_custom` : le visiteur doit
+   * televerser SON design avant tout achat. La fiche produit ne l'offrait pas
+   * du tout -- seule la modale de la vitrine portait le televerseur -- si bien
+   * qu'un achat depuis la fiche partait TOUJOURS en fabrication sans design.
+   */
+  requiresDesign: boolean
 }
 
 export async function fetchProduct(slug: string, rawId: string): Promise<ProductPage | null> {
@@ -32,10 +58,41 @@ export async function fetchProduct(slug: string, rawId: string): Promise<Product
   if (!site) return null
 
   if (rawId.startsWith('catalog-')) {
-    const catalogProductId = rawId.slice('catalog-'.length)
+    // ============================================================
+    // LOT 2 -- DEUX DEFAUTS SUR LA MEME BRANCHE, TRAITES ENSEMBLE.
+    //
+    // 1. AUCUNE ADMISSION. Cette branche selectionnait `dropship_type` et ne
+    //    le lisait JAMAIS. Sa seule porte etait la DONNEE -- l'existence
+    //    d'une selection approuvee -- jamais une REGLE. Un `pod_brand`, admis
+    //    a tort par `POST /catalog/selections` avant ce lot, obtenait donc
+    //    une fiche produit publique pour un produit que sa propre vitrine
+    //    refuse d'afficher.
+    //
+    //    SURFACE VISITEUR : la garde correcte n'est PAS une garde de
+    //    propriete -- cette page doit rester publique -- mais l'admission au
+    //    mecanisme qui produit ces fiches. Meme regle que les cinq routes
+    //    catalogue, meme autorite.
+    //
+    //    CONSEQUENCE POUR `pod_brand`, ASSUMEE ET CONSIGNEE : ses produits
+    //    (issus de `pod_designs`) n'ont pas de fiche produit. C'etait deja le
+    //    cas AVANT ce lot -- mais par accident de parsing (voir 2), pas par
+    //    decision. Ce refus devient une regle explicite. SAVOIR SI UN
+    //    `pod_brand` DOIT AVOIR DES FICHES PRODUIT EST UNE DECISION DE
+    //    SOUS-MODE : elle appartient au LOT 3, pas ici.
+    //
+    // 2. UN PARSING DIVERGENT. Cinq couches decodent l'id panier de la meme
+    //    facon -- `checkout`, `resolveShipping`, `pod-fulfill`, `cj/fulfill`
+    //    et `ProductModal` font toutes `replace(/^catalog-/,'').split('::')`.
+    //    Celle-ci faisait un `slice()` brut : un id porteur d'une variante
+    //    (`catalog-<uuid>::<variantId>`) produisait `<uuid>::<variantId>`,
+    //    valeur qui n'est pas un uuid et ne correspond a aucune ligne. La
+    //    variante est un detail d'ACHAT ; la fiche produit decrit le produit.
+    // ============================================================
+    if (!usesCatalogSelections((site as any).mode, (site as any).dropship_type)) return null
+    const catalogProductId = rawId.replace(/^catalog-/, '').split('::')[0]
     const { data: sel } = await supabase
       .from('site_catalog_selections')
-      .select('sell_price, custom_name, custom_description, catalog_product_id, catalog_products(name, description, price, currency, images, in_stock)')
+      .select('sell_price, custom_name, custom_description, catalog_product_id, catalog_products(name, description, price, currency, images, in_stock, supplier_id, supplier_product_id, supplier_parent_id)')
       .eq('site_id', (site as any).id)
       .eq('catalog_product_id', catalogProductId)
       .eq('merchant_approved', true)
@@ -53,6 +110,9 @@ export async function fetchProduct(slug: string, rawId: string): Promise<Product
       currency: cp.currency || 'CAD',
       images: Array.isArray(cp.images) ? cp.images : [],
       inStock: cp.in_stock !== false,
+      // Catalogue fournisseur : `for_sale` n'existe pas sur `catalog_products`.
+      // Comportement rigoureusement inchange par la dette 6c.
+      forSale: true,
       siteName: (site as any).name,
       siteSlug: (site as any).slug,
       siteCustomDomain: (site as any).custom_domain ?? null,
@@ -61,18 +121,34 @@ export async function fetchProduct(slug: string, rawId: string): Promise<Product
       lang: (site as any).lang || 'fr',
       mode: (site as any).mode,
       shippingFlat: (site as any).shipping_flat ?? null,
+      // LOT 4 / R4-01 -- la fiche produit d'un produit catalogue emettait un
+      // identifiant de panier SANS variante, alors que la modale de la
+      // vitrine en EXIGE une pour le meme produit. Deux surfaces d'achat du
+      // meme article, deux contrats differents : mesure en production, deux
+      // commandes sont parties sans variante et le fulfillment a retenu
+      // `variants[0]`, c'est-a-dire une variante arbitraire.
+      supplierId: cp.supplier_id ?? null,
+      supplierProductId: cp.supplier_product_id ?? null,
+      requiresVariant: !cp.supplier_parent_id,
+      requiresDesign: (site as any).dropship_type === 'pod_custom',
     }
   }
 
   const { data: p } = await supabase
     .from('shop_products')
-    .select('id, site_id, name, description, price, currency, images, stock, published')
+    .select('id, site_id, name, description, price, currency, images, stock, published, for_sale')
     .eq('id', rawId)
     .eq('site_id', (site as any).id)
     .eq('published', true)
     .maybeSingle()
   if (!p) return null
   return {
+    // Produit du marchand : aucune variante fournisseur, comportement inchange.
+    supplierId: null,
+    supplierProductId: null,
+    requiresVariant: false,
+    // Produit du marchand : jamais de design visiteur.
+    requiresDesign: false,
     id: (p as any).id,
     name: (p as any).name,
     description: (p as any).description || '',
@@ -80,6 +156,11 @@ export async function fetchProduct(slug: string, rawId: string): Promise<Product
     currency: (p as any).currency || 'CAD',
     images: Array.isArray((p as any).images) ? (p as any).images : [],
     inStock: ((p as any).stock ?? 0) > 0,
+    // `!== false` : meme raisonnement que la vitrine (shared.tsx). La barriere
+    // stricte est au checkout, pas ici -- cette page ne fait qu'afficher.
+    // `published` reste filtre par la requete : un produit non publie n'a
+    // toujours pas de page, quelle que soit son achetabilite.
+    forSale: (p as any).for_sale !== false,
     siteName: (site as any).name,
     siteSlug: (site as any).slug,
     siteCustomDomain: (site as any).custom_domain ?? null,

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { supabase as supabaseAnon } from '@/lib/supabase';
+import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { logAiUsage } from '@/lib/ai-usage';
+import { sanitizeAreaServedForPrompt } from '@/lib/site-profile/areaServed';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -44,7 +45,26 @@ async function generateSocialImage(site: any, brief: any): Promise<string | null
       return "Les personnes représentées reflètent fidèlement la population locale de la zone desservie, avec une diversité naturelle et réaliste.";
     })();
 
-    const prompt = `Visuel premium pour un post de réseau social d'une marque nommée "${site.name}" (secteur : ${site.type || 'business'}), zone : ${site.area_served || 'locale'}. \
+    // ============================================================
+    // CHANTIER 5 -- POINT D'ENTREE 1 SUR 3 : LE PROMPT IMAGE.
+    //
+    // `area_served` est du texte controle par le marchand, interpole tel quel
+    // dans trois prompts LLM. La protection est posee ICI, au point d'entree,
+    // et non a l'ecriture -- parce qu'elle doit couvrir aussi les valeurs
+    // DEJA EN BASE, produites par le generateur avant ce chantier, qu'aucune
+    // borne n'a jamais filtrees. Valider a l'ecriture seule laisserait ces
+    // lignes historiques passer intactes dans les prompts.
+    //
+    // `geoNuance` ci-dessus lit VOLONTAIREMENT la valeur BRUTE : il ne
+    // l'interpole pas, il la classe (minuscules + expressions de noms de
+    // lieux) pour rendre une phrase fixe. Le nettoyer la n'apporterait
+    // aucune securite et sa troncature pourrait effacer le nom de lieu qui
+    // declenche la bonne branche -- ce serait perdre le comportement existant
+    // pour rien.
+    // ============================================================
+    const zonePrompt = sanitizeAreaServedForPrompt(site.area_served);
+
+    const prompt = `Visuel premium pour un post de réseau social d'une marque nommée "${site.name}" (secteur : ${site.type || 'business'}), zone : ${zonePrompt || 'locale'}. \
 ${sectorScene} \
 ${geoNuance} \
 Style photographique professionnel, esthétique éditoriale haut de gamme, lumière soignée et naturelle. \
@@ -125,7 +145,7 @@ DONNÉES DU BUSINESS :
 - Produits : ${JSON.stringify(site.products || [])}
 - Mission : ${site.mission || ''}
 - Vision : ${site.vision || ''}
-- Zone desservie : ${site.area_served || ''}
+- Zone desservie : ${sanitizeAreaServedForPrompt(site.area_served)}
 
 Réponds UNIQUEMENT en JSON (sans markdown), dans la MÊME LANGUE que les données :
 
@@ -158,7 +178,7 @@ tu parles à la persona, tu ancres dans la zone géographique réelle.
 BRIEF STRATÉGIQUE :
 ${JSON.stringify(brief)}
 
-BUSINESS : ${site.name || ''} — ${site.slogan || ''} | ${site.type || ''} | ${site.area_served || ''}
+BUSINESS : ${site.name || ''} — ${site.slogan || ''} | ${site.type || ''} | ${sanitizeAreaServedForPrompt(site.area_served)}
 
 Écris dans la MÊME LANGUE que le brief. Réponds UNIQUEMENT en JSON, sans markdown.
 Aucun placeholder type [Marque] : utilise le vrai nom. Pas de texte générique.`;
@@ -217,20 +237,6 @@ function parseJson(raw: string): any {
 
 export async function POST(req: Request) {
   try {
-    // ============ SÉCURITÉ : validation du Bearer token ============
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized: missing Bearer token' }, { status: 401 });
-    }
-
-    const { data: authData, error: authError } = await supabaseAnon.auth.getUser(token);
-    if (authError || !authData.user || !authData.user.email) {
-      return NextResponse.json({ error: 'Unauthorized: invalid token' }, { status: 401 });
-    }
-    const owner_email = authData.user.email;
-    // ===============================================================
-
     const body = await req.json();
     const slug: string | undefined = body.slug;
     const format: string | undefined = body.format;
@@ -245,26 +251,49 @@ export async function POST(req: Request) {
       );
     }
 
-    // ============ GATING : le site doit appartenir à l'utilisateur ET être publié ============
-    const { data: site, error: siteError } = await supabaseAdmin
-      .from('sites')
-      .select('*')
-      .eq('slug', slug)
-      .eq('owner_email', owner_email)
-      .eq('published', true)
-      .maybeSingle();
+    // ============================================================
+    // DETTE 6a, EXTENSION -- DEUX QUESTIONS QUI N'EN FAISAIENT QU'UNE.
+    //
+    // La requete d'origine melait TROIS clauses dans un seul `maybeSingle` :
+    // le slug, `owner_email` (l'autorisation) et `published` (le gating
+    // commercial). Un seul `null` en sortie, un seul message pour trois
+    // causes -- et surtout `owner_email` en guise d'identite.
+    //
+    // POURQUOI C'ETAIT EXPLOITABLE. `sites.owner_email` est ecrite UNE SEULE
+    // FOIS, a la creation du site, et aucun update ne la touche jamais. Un
+    // proprietaire qui change d'adresse laisse la colonne figee : quiconque
+    // obtient ensuite cette adresse pouvait lire le site ENTIER d'autrui --
+    // et cette route le passe a trois fournisseurs externes (Anthropic,
+    // OpenAI, Pexels) puis ecrit dans deux tables.
+    //
+    // LES DEUX QUESTIONS SONT DESORMAIS SEPAREES, ET DANS CET ORDRE :
+    //   1. « ce site est-il le sien ? »  -> primitive canonique, 401/404/403 ;
+    //   2. « est-il publie ? »           -> regle METIER, message metier.
+    // Le message « Publiez un site... » reste donc reserve au cas ou le
+    // proprietaire est correctement identifie mais n'a pas publie -- il ne
+    // peut plus masquer un refus de propriete, ni l'inverse.
+    //
+    // `select('*')` EST CONSERVE TEL QUEL, hors perimetre de cette passe : la
+    // suite de la route lit une quinzaine de colonnes du site pour construire
+    // ses prompts. La primitive ajoute d'office `owner_id` et `owner_email`.
+    // ============================================================
+    const auth = await requireSiteOwner(req, slug, '*');
+    if (!auth.ok) return auth.response;
+    const site = auth.site as any;
 
-    if (siteError) {
-      console.error('SITE FETCH ERROR:', siteError);
-      return NextResponse.json({ error: siteError.message }, { status: 500 });
-    }
-    if (!site) {
+    // GATING METIER, distinct de l'autorisation.
+    if (site.published !== true) {
       return NextResponse.json(
         { error: 'Publiez un site pour débloquer le marketing.' },
         { status: 403 }
       );
     }
-    // =========================================================================================
+
+    // DONNEE TRANSPORTEE, JAMAIS UNE GARDE. `owner_email` alimente encore
+    // `marketing_briefs` et `marketing_assets` (colonnes historiques de ces
+    // deux tables) : cette passe ne migre pas ces donnees, elle retire
+    // l'adresse du role d'IDENTITE. Elle vient du JETON, pas de la colonne.
+    const owner_email = auth.email ?? '';
 
     // ============ ÉTAPE 1 : BRIEF (lecture du cache, sinon génération) ============
     let brief: any = null;
@@ -316,6 +345,11 @@ export async function POST(req: Request) {
     }
     // Couverture Pexels pour l'article (photo de stock, gratuite)
     if (format === 'article') {
+      // CHANTIER 5 -- QUATRIEME INTERPOLATION, VERIFIEE ET LAISSEE INTACTE.
+      // Ce n'est pas un prompt : la chaine part en parametre de recherche
+      // Pexels, et `fetchPexelsCover` l'encode par `encodeURIComponent`
+      // (l. 97). Rien a restructurer, donc rien a nettoyer -- la modifier
+      // serait elargir le perimetre sans motif mesure.
       const coverQuery = `${site.type || 'business'} ${site.area_served || ''}`.trim();
       const cover = await fetchPexelsCover(coverQuery, site.primary_color);
       if (cover) content.cover = cover;

@@ -179,6 +179,23 @@ export async function fulfillPodOrder(orderId: string): Promise<string[]> {
   function buildOrderParams(catProd: CatalogProductRow) {
     const cartItem = catalogItems.find((i: any) => stripVariant(i.product_id) === catProd.id);
     if (!cartItem) return null;
+    // ============================================================
+    // LOT 5 / P5-02 -- SECONDE BARRIERE : AUCUN BLANC `pod_custom`.
+    //
+    // Le checkout refuse desormais une ligne sans design, mais une commande
+    // ANTERIEURE a ce lot, un rejeu, ou tout chemin qui n'y passerait pas
+    // aboutirait ici avec `designList` vide -- et l'adaptateur enverrait
+    // `files: []`, donc un produit nu fabrique aux frais de la plateforme.
+    //
+    // PORTEE STRICTEMENT `pod_custom`. `pod_brand` n'est PAS concerne : le
+    // LOT 3 a decide que, face a un design etranger, sa vente aboutit SANS
+    // design plutot qu'avec un design vole -- decision fermee, non rouverte
+    // ici. Le sous-type est relu sur la COMMANDE (`orderSite`), jamais sur un
+    // parametre d'appelant.
+    // ============================================================
+    if (orderSite?.dropship_type === 'pod_custom' && (designsByItemId.get(cartItem.id) || []).length === 0) {
+      return null;
+    }
     const pickedVariant =
       String(cartItem.product_id).replace(/^catalog-/, '').split('::')[1] || catProd.supplier_product_id;
     const designList = designsByItemId.get(cartItem.id) || [];

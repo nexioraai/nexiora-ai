@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { usesCatalogSelections } from '@/lib/dropship/catalogAdmission';
 import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { logAiUsage } from '@/lib/ai-usage';
@@ -36,7 +37,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
     }
 
-    if (site.mode !== 3) {
+    // ETAPE 2 -- l'admission au catalogue fournisseur passe par la primitive
+    // unique `hasSupplierCatalog`. La comparaison brute `site.mode !== 3`
+    // qui vivait ici etait la meme question, ecrite une troisieme fois dans
+    // le depot avec une reponse differente a chaque endroit. La garde reste
+    // AVANT tout appel externe facture, et le contrat de reponse est
+    // rigoureusement inchange.
+    // LOT 2 -- CETTE ROUTE ECRIT DANS `site_catalog_selections`. Elle doit
+    // donc interroger l'admission au MECANISME, pas seulement au mode.
+    // `pod_brand` y etait admis et curait des blancs POD qu'il n'a ni les
+    // outils de gerer ni la vitrine d'afficher -- des lignes orphelines.
+    // Son pipeline legitime (`pod_designs` -> mockups) ne passe pas ici.
+    if (!usesCatalogSelections(site.mode, (site as { dropship_type?: unknown }).dropship_type)) {
       return NextResponse.json({ error: 'Site non-dropshipping' }, { status: 400 });
     }
 

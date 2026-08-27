@@ -4,6 +4,13 @@ import { useCart } from './CartContext';
 import { X, ShoppingBag, Plus, Minus, Trash2 } from 'lucide-react';
 import type { CartLabels } from './cartLabels';
 import { getBuyerNonce } from '@/lib/shop/buyerNonce';
+// ETAPE C -- le modele de facturation de la livraison est une FRONTIERE, pas
+// un detail d'affichage. Il etait ecrit ici en trois comparaisons brutes
+// (`mode === 2` deux fois, `mode !== 2` une fois), si bien qu'un mode inconnu
+// tombait silencieusement dans la branche fournisseur : pays exige, devis
+// declenche. Les deux capacites sont desormais des allowlists positives, dans
+// le module dont c'est l'objet. Voir modeCapabilities.ts.
+import { getModeCapabilities } from './modeCapabilities';
 
 type Labels = CartLabels;
 
@@ -169,6 +176,10 @@ export default function CartDrawer({
   variant?: Variant;
 }) {
   const { items, isOpen, total, currency, count, setQuantity, removeItem, closeCart } = useCart();
+  // Seules les deux capacites de LIVRAISON sont lues ici. `hasShop` ne l'est
+  // deliberement pas : il depend des produits, que ce composant ne recoit pas,
+  // et la decision de monter le panier appartient a CartShell, en amont.
+  const { billsFlatShipping, requiresShippingQuote } = getModeCapabilities({ mode });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [country, setCountry] = useState('');
@@ -469,12 +480,21 @@ export default function CartDrawer({
         {/* Footer */}
         {items.length > 0 && (
           <div className={`border-t ${s.footerBorder} px-6 py-5 space-y-4`}>
-            {mode === 2 ? (
+            {/* M2-03 -- ces deux libelles sont EXCLUSIVEMENT Mode 2 :
+                `billsFlatShipping` vient de `FLAT_SHIPPING_MODES`, qui vaut
+                {2}. Ils etaient ecrits en dur en francais a deux lignes de
+                `labels.promoPlaceholder`, traduit. Le chantier 8 avait aligne
+                le panier sur la page, sans couvrir ce pied.
+                NOTE DE PERIMETRE : `Pays de livraison`, quelques lignes plus
+                bas, est sous `requiresShippingQuote` -- donc Mode 3 seul. Il
+                est CONSIGNE, pas corrige ici. */}
+            {billsFlatShipping && (
               <div className="flex items-center justify-between text-sm">
-                <span className={s.labelMutedText}>Livraison</span>
-                <span className={s.valueText}>{shippingFlat > 0 ? `${shippingFlat.toFixed(2)} ${currency}` : 'Gratuite'}</span>
+                <span className={s.labelMutedText}>{labels.shipping}</span>
+                <span className={s.valueText}>{shippingFlat > 0 ? `${shippingFlat.toFixed(2)} ${currency}` : labels.shippingFree}</span>
               </div>
-            ) : (
+            )}
+            {requiresShippingQuote && (
               <>
               <div>
                 <label className={`block text-sm ${s.labelMutedText} mb-1.5`}>Pays de livraison</label>
@@ -550,25 +570,32 @@ export default function CartDrawer({
                 className="px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-40"
                 style={{ background: `${primary}15`, color: primary, border: `1px solid ${primary}30` }}
               >
-                {promoBusy ? '…' : 'Appliquer'}
+                {promoBusy ? '…' : labels.promoApply}
               </button>
             </div>
             {promoMsg && (
               <p className={`text-xs ${promoValid ? 'text-green-600' : 'text-red-500'}`}>
-                {promoValid ? `✓ Code appliqué : ${promoMsg}` : promoMsg}
+                {promoValid ? `✓ ${labels.promoApplied} : ${promoMsg}` : promoMsg}
               </p>
             )}
             <div className="flex items-center justify-between">
               <span className={s.totalLabelText}>{labels.total}</span>
               <span className={`text-xl font-semibold ${s.totalValueText}`}>
-                {(total + (mode === 2 ? shippingFlat : (shipping ?? 0)) - promoDiscount).toFixed(2)} {currency}
+                {(total + (billsFlatShipping ? shippingFlat : (shipping ?? 0)) - promoDiscount).toFixed(2)} {currency}
               </span>
             </div>
             <button
               className="w-full py-4 rounded-2xl font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
               style={{ background: primary }}
               onClick={handleCheckout}
-              disabled={busy || (mode !== 2 && (!country || calcBusy || shipping === -1))}
+              disabled={
+                busy ||
+                (requiresShippingQuote && (!country || calcBusy || shipping === -1)) ||
+                // Fail-closed : un mode inscrit dans AUCUNE des deux listes
+                // n'ouvre aucun chemin d'achat, au lieu de tomber par defaut
+                // dans la branche fournisseur comme le faisait `mode !== 2`.
+                (!billsFlatShipping && !requiresShippingQuote)
+              }
             >
               {busy ? '…' : labels.checkout}
             </button>

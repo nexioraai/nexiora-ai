@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { usesCatalogSelections } from '@/lib/dropship/catalogAdmission';
+import { suppliersForDropshipType, type DropshipType } from '@/lib/dropship/suppliers';
+import { consommerJeton } from '@/lib/rate-limit/rateLimit';
 
 export const maxDuration = 30;
 
@@ -49,26 +52,95 @@ function classify(p: string): { side: Side; prefer: number } | null {
 /** GET /api/pod/printfile-info?variant_id=Y[&product_id=X]
  *  Returns, for every printable side, the official Printful template image and
  *  the exact print area on it (as fractions), so the canvas never guesses. */
+// ============================================================
+// LOT 6 / P5-05 -- ROUTE JUMELLE DE `catalog/variants`, MEME DEFAUT.
+//
+// Etat d'origine : aucun slug, aucune authentification, aucune admission,
+// aucune limite -- et `product_id` ACCEPTE DIRECTEMENT depuis l'URL, ce qui
+// permettait d'interroger le mockup-generator de Printful AVEC NOTRE TOKEN
+// pour n'importe quel produit de leur catalogue, sans meme toucher notre base.
+//
+// TROIS CHANGEMENTS, ET LE PREMIER EST LE PLUS IMPORTANT :
+//
+//   1. `product_id` N'EST PLUS ACCEPTE DEPUIS L'URL. C'etait le contournement
+//      total : il court-circuitait la seule requete qui nous liait a notre
+//      propre catalogue. Le parent est DESORMAIS TOUJOURS resolu depuis
+//      `catalog_products`. Mesure faite avant de retirer : `DesignCanvas`,
+//      unique appelant, n'envoie que `variant_id` -- aucun parcours reel ne
+//      dependait de ce parametre.
+//
+//   2. Admission derivee de la donnee, memes autorites que la route jumelle :
+//      `usesCatalogSelections` (LOT 2) puis `suppliersForDropshipType` (LOT 4)
+//      restreinte a `printful`. Cette seconde question n'est pas redondante :
+//      `usesCatalogSelections` admet aussi `reseller`, dont les fournisseurs
+//      sont CJ -- un site reseller n'a rien a demander au POD de Printful.
+//
+//   3. Limite de debit par site, AVANT la depense. Le cache module-scope
+//      reste consulte AVANT la limite : une consultation deja payee ne coute
+//      aucun credential, la penaliser n'aurait protege personne.
+//
+// `requireSiteOwner` serait FAUX ici aussi : `DesignCanvas` s'affiche a un
+// VISITEUR qui personnalise son produit avant achat.
+// ============================================================
+
+const PLAFOND_PAR_MINUTE = 20;
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    let productId = searchParams.get('product_id');
+    const slug = searchParams.get('slug') || '';
     const variantId = searchParams.get('variant_id');
 
-    // Storefront only knows the variant id — resolve the parent product from catalog
-    if (!productId && variantId) {
-      const { data: cp } = await supabaseAdmin
-        .from('catalog_products')
-        .select('supplier_parent_id')
-        .eq('supplier_id', 'printful')
-        .eq('supplier_product_id', String(variantId))
-        .single();
-      productId = cp?.supplier_parent_id || null;
+    if (!slug || !variantId) {
+      return NextResponse.json({ error: 'slug et variant_id requis' }, { status: 400 });
     }
-    if (!productId) return NextResponse.json({ error: 'Missing product_id' }, { status: 400 });
+
+    const { data: site, error: erreurSite } = await supabaseAdmin
+      .from('sites')
+      .select('id, mode, dropship_type')
+      .eq('slug', slug)
+      .is('archived_at', null)
+      .maybeSingle();
+
+    if (erreurSite) {
+      return NextResponse.json({ error: 'Service momentanement indisponible.' }, { status: 503 });
+    }
+    if (!site) return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
+
+    if (!usesCatalogSelections(site.mode, (site as { dropship_type?: unknown }).dropship_type)) {
+      return NextResponse.json({ error: 'Site sans catalogue fournisseur' }, { status: 403 });
+    }
+    if (!suppliersForDropshipType((site as { dropship_type?: DropshipType }).dropship_type).includes('printful')) {
+      return NextResponse.json({ error: 'Fournisseur hors sous-mode de cette boutique' }, { status: 403 });
+    }
+
+    // GARDE ANTI-PROXY : le parent vient de NOTRE catalogue, jamais de l'URL.
+    const { data: cp, error: erreurProduit } = await supabaseAdmin
+      .from('catalog_products')
+      .select('supplier_parent_id')
+      .eq('supplier_id', 'printful')
+      .eq('supplier_product_id', String(variantId))
+      .maybeSingle();
+
+    if (erreurProduit) {
+      return NextResponse.json({ error: 'Service momentanement indisponible.' }, { status: 503 });
+    }
+    const productId = cp?.supplier_parent_id || null;
+    if (!productId) return NextResponse.json({ error: 'Produit hors catalogue' }, { status: 404 });
 
     const cacheKey = `${productId}:${variantId || ''}`;
     if (cache.has(cacheKey)) return NextResponse.json(cache.get(cacheKey));
+
+    // Limite de debit APRES le cache, AVANT le credential Printful.
+    const jeton = await consommerJeton({
+      type: 'pod_printfile_request',
+      siteId: site.id,
+      fenetreMs: 60_000,
+      plafond: PLAFOND_PAR_MINUTE,
+      message: 'Trop de requetes, reessayez dans une minute.',
+      details: { slug, variant_id: String(variantId) },
+    });
+    if (!jeton.ok) return NextResponse.json({ error: jeton.erreur }, { status: jeton.statut });
 
     const tpl = await pfFetch(`/mockup-generator/templates/${productId}`);
     const templatesById = new Map<number, any>(

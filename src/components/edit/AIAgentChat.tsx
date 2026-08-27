@@ -437,7 +437,7 @@ function ToolProposalCard({
       case 'propose_remove_service':
         return (
           <>
-            Remove service at index <strong className="text-[#FA5D1E]">{input.index}</strong>
+            Remove offering: <strong className="text-[#FA5D1E]">{input.title}</strong>
           </>
         );
       case 'propose_update_social':
@@ -457,7 +457,7 @@ function ToolProposalCard({
       case 'propose_service_update':
         return (
           <>
-            Update service #{input.index} <strong className="text-[#FA5D1E]">{input.field}</strong>:{' '}
+            Update offering <strong className="text-[#FA5D1E]">{input.title}</strong> — {input.field}:{' '}
             <span className="text-white">"{input.value}"</span>
           </>
         );
@@ -488,17 +488,37 @@ function ToolProposalCard({
             )}
           </>
         );
+      // ETAPE 8, VOLET B -- le NOM, plus jamais un numero. La carte affichait
+      // « Remove product #2 » : le marchand approuvait un geste destructeur
+      // sans pouvoir verifier sur quoi il portait. L'approbation ne compensait
+      // donc pas le ciblage aveugle, elle relayait le meme jeton opaque.
       case 'propose_product_remove':
-        return <>Remove product #{input.index}</>;
+        return (
+          <>
+            Remove product: <strong className="text-[#FA5D1E]">{input.product_name}</strong>
+          </>
+        );
       case 'propose_product_update':
         return (
           <>
-            Update product #{input.index} <strong className="text-[#FA5D1E]">{input.field}</strong>:{' '}
+            Update <strong className="text-[#FA5D1E]">{input.product_name}</strong> —{' '}
+            <strong className="text-[#FA5D1E]">{input.field}</strong>:{' '}
             <span className="text-white">"{input.value}"</span>
           </>
         );
+      // DETTE 4 (gallery) -- l'URL, plus jamais un numero. La carte affichait
+      // « Remove gallery image #2 » : le marchand approuvait une suppression
+      // sans pouvoir verifier sur quoi elle portait.
+      // CHANTIER 7 -- sans ce cas, le marchand lisait le nom technique brut.
+      case 'propose_gallery_add':
+        return <>Add this image to the gallery: <strong className="text-[#FA5D1E]">{input.image_url}</strong></>;
       case 'propose_gallery_remove':
-        return <>Remove gallery image #{input.index}</>;
+        return (
+          <>
+            Remove gallery image:{' '}
+            <span className="text-white break-all text-xs">{input.image_url}</span>
+          </>
+        );
       case 'propose_gallery_clear':
         return <>Clear the entire gallery (remove all images)</>;
       case 'catalog_set_margin':
@@ -520,6 +540,20 @@ function ToolProposalCard({
         return <>{t('approveAll')}</>;
       case 'catalog_enhance':
         return <>{t('enhance')}</>;
+      // CHANTIER 4 -- sans ces cas, le marchand lisait le nom technique brut
+      // (`propose_faq_remove`) rendu par le `default` ci-dessous.
+      case 'propose_faq_add':
+        return <>Add FAQ question: <strong className="text-[#FA5D1E]">{input.question}</strong></>;
+      case 'propose_faq_remove':
+        return <>Remove FAQ question: <strong className="text-[#FA5D1E]">{input.question}</strong></>;
+      case 'propose_faq_update':
+        return <>Rewrite the {input.field} of FAQ question <strong className="text-[#FA5D1E]">{input.question}</strong></>;
+      case 'propose_whyus_add':
+        return <>Add reason to choose you: <strong className="text-[#FA5D1E]">{input.title}</strong></>;
+      case 'propose_whyus_remove':
+        return <>Remove reason: <strong className="text-[#FA5D1E]">{input.title}</strong></>;
+      case 'propose_whyus_update':
+        return <>Rewrite the {input.field} of reason <strong className="text-[#FA5D1E]">{input.title}</strong></>;
       default:
         return <>{block.name}</>;
     }

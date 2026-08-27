@@ -5,6 +5,8 @@ import { supabase as supabaseAnon } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { computeAiScore } from '@/app/lib/aiScore';
 import { logGenerationFailure } from '@/lib/generationFailures';
+import { isKnownDropshipSubtype, resolvePersistedSubtype } from '@/lib/dropship/subtypeAdmission';
+import { usesCatalogSelections } from '@/lib/dropship/catalogAdmission';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -294,8 +296,15 @@ export function resolveFinalMode(siteMode: number | null, parsedMode: unknown): 
 // curation catalogue lies au sous-mode (getToolsForSite compare par egalite
 // stricte). null reste une valeur legitime (site Mode 3 sans sous-type
 // encore choisi -- 3 sites reels en production dans cet etat).
+//
+// LOT 1 / L1-01 -- CETTE FONCTION NE CONNAIT PAS LE MODE, ET C'EST VOULU.
+// Elle repond a « cette VALEUR est-elle ecrivable ? », pas a « ce SITE
+// peut-il l'ecrire ? ». La seconde question est celle qui manquait : elle
+// vit desormais dans `resolvePersistedSubtype`, appliquee plus bas au seul
+// point d'ecriture. La liste des sous-types, elle, n'est plus recopiee ici :
+// deux listes finissent toujours par diverger.
 export function isValidDropshipType(value: unknown): value is 'reseller' | 'pod_brand' | 'pod_custom' | null {
-  return value === null || value === 'reseller' || value === 'pod_brand' || value === 'pod_custom';
+  return value === null || isKnownDropshipSubtype(value);
 }
 
 // Garantie deterministe (incident reel "boutique en ligne mode 2", genere
@@ -707,6 +716,34 @@ Return ONLY valid JSON, no markdown:
     // que enforceModeProducts() s'applique avant tout appel Pexels inutile
     // sur des produits Mode 2/3 qui seront de toute facon jetes.
     const finalMode = resolveFinalMode(siteMode, parsed.mode);
+    // ============================================================
+    // LOT 1 / L1-01 -- L'INVARIANT « MODE 3 => SOUS-TYPE ».
+    //
+    // POURQUOI ICI ET NULLE PART AILLEURS. C'est le PREMIER point du depot
+    // ou les deux valeurs sont connues ensemble : `dropshipType` vient du
+    // corps de requete (valide en forme ligne ~360), `finalMode` de
+    // `resolveFinalMode`, qui depend de la reponse du modele. La validation
+    // d'entree ne pouvait donc pas poser cette regle -- elle ne savait pas
+    // encore quel mode serait ecrit. Et c'est le SEUL point d'ecriture de
+    // `sites.dropship_type` du depot : ni PostgREST (colonne hors du GRANT
+    // UPDATE), ni `supabase-owned-site` (denylist) ne l'atteignent. Le poser
+    // ici, c'est le rendre incontournable par le chemin d'ecriture mesure.
+    //
+    // REFUS, JAMAIS RETROGRADATION. Basculer le site en Mode 1 « pour le
+    // sauver » serait exactement le repli silencieux que ce lot supprime :
+    // le marchand a demande une boutique dropshipping, il doit obtenir une
+    // erreur explicite, pas un autre produit. Le flux legitime ne rencontre
+    // plus ce refus -- `api/onboarding` reclame desormais le sous-type
+    // AVANT de declencher la generation (`need_dropship_type`).
+    // ============================================================
+    const subtype = resolvePersistedSubtype(finalMode, dropshipType);
+    if (!subtype.ok) {
+      return NextResponse.json(
+        { error: 'Un site dropshipping doit avoir un sous-type (reseller, pod_brand ou pod_custom).', reason: subtype.reason },
+        { status: 400 }
+      );
+    }
+    const persistedDropshipType = subtype.value;
     // Image Pexels par produit (recherche par nom + type), en parallèle
     const rawProducts = enforceModeProducts(
       finalMode,
@@ -790,7 +827,7 @@ Return ONLY valid JSON, no markdown:
       geo_lng,
       area_served: parsed.areaServed || null,
       price_range: parsed.priceRange || null,
-      dropship_type: dropshipType,
+      dropship_type: persistedDropshipType,
       niche_keywords: Array.isArray(parsed.niche_keywords) ? parsed.niche_keywords : [],
     });
 
@@ -830,9 +867,24 @@ Return ONLY valid JSON, no markdown:
       console.error('score_history insert failed:', e);
     }
 
-    // Auto-curation pour sites reseller (mode 3) — non-bloquant
-    // (finalMode deja resolu plus haut, source unique -- voir resolveFinalMode)
-    if (finalMode === 3 && dropshipType) {
+    // ============================================================
+    // LOT 3 / DEBT-055 -- L'AUTO-CURATION DEMANDE A L'AUTORITE.
+    //
+    // La condition etait `finalMode === 3 && persistedDropshipType` : une
+    // regle ecrite ici, plus large que la realite. Elle declenchait la
+    // curation pour `pod_brand`, a qui `CATALOG_SUBTYPES` refuse les outils
+    // de curation et dont la guidance dit « NO CATALOG CURATION: Products
+    // come from the merchant's uploaded designs ». Ses produits viennent de
+    // `pod_designs`, jamais de `site_catalog_selections`.
+    //
+    // Le LOT 2 avait deja rendu l'effet inoffensif -- `catalog/curate` refuse
+    // desormais en 400, et ces appels sont non bloquants. Restait la FORME :
+    // une route transversale portant sa propre interpretation du sous-type.
+    // Elle interroge maintenant `usesCatalogSelections`, l'autorite deja
+    // etablie au LOT 2 et deja consommee par les sept couches du mecanisme.
+    // Aucune autorite nouvelle, aucun doublon.
+    // ============================================================
+    if (usesCatalogSelections(finalMode, persistedDropshipType)) {
       try {
         const { data: newSite } = await supabaseAdmin
           .from('sites')

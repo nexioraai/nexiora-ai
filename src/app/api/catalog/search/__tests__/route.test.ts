@@ -32,7 +32,11 @@ vi.mock('@/lib/supabase-admin', () => ({
 
 import { GET } from '../route';
 
-const SITE = { id: 'site-1', type: 'fashion store', mode: 2, dropship_type: 'reseller', cj_margin_percent: 30, cj_round_mode: null };
+// ETAPE 2 -- le fixture decrivait un site Mode 2, c'est-a-dire un site qui
+// n'a AUCUN catalogue fournisseur a fouiller. Il decrivait donc un appel qui
+// n'aurait jamais du aboutir. Correction de fixture seule : aucune assertion
+// de ce fichier ne change de sens.
+const SITE = { id: 'site-1', type: 'fashion store', mode: 3, dropship_type: 'reseller', cj_margin_percent: 30, cj_round_mode: null };
 
 const GLOBAL_PRODUCT = {
   id: 'cp-1',
@@ -138,5 +142,106 @@ describe('GET /api/catalog/search — validation d\'entrée', () => {
     setupTables({ sites: { data: null, error: null } });
     const res = await GET(req({ slug: 'inconnu' }));
     expect(res.status).toBe(404);
+  });
+});
+
+// ============================================================
+// LOT 2 -- LE CABLAGE DE L'ADMISSION, ENFIN COUVERT.
+//
+// LA MUTATION QUI SURVIVAIT. Retirer purement et simplement la garde
+// d'admission de cette route ne cassait AUCUN test : la primitive etait
+// testee comme FONCTION (`catalogAdmission.test.ts`), jamais comme CABLAGE.
+// Une garde non cablee est une garde absente.
+//
+// `pod_brand` est le cas qui compte : il A un catalogue fournisseur
+// (`hasSupplierCatalog(3)` est vrai, ses produits SONT des Printful), mais il
+// n'utilise PAS `site_catalog_selections`. Une garde de mode seule le laissait
+// donc passer.
+// ============================================================
+
+describe("GET /api/catalog/search — LOT 2 : l'admission au mecanisme de selection", () => {
+  const VIDE = { products: [], total: 0, page: 1, page_size: 24, has_more: false };
+
+  it.each([
+    ['Mode 1 vitrine', { ...SITE, mode: 1, dropship_type: null }],
+    ['Mode 2 boutique', { ...SITE, mode: 2, dropship_type: null }],
+    ['Mode 3 pod_brand', { ...SITE, dropship_type: 'pod_brand' }],
+    ['Mode 3 sans sous-type', { ...SITE, dropship_type: null }],
+    ['Mode 3 sous-type inconnu', { ...SITE, dropship_type: 'legacy_mode_x' }],
+  ])('%s -> reponse VIDE, et catalog_products n\'est jamais interrogee', async (_l, site) => {
+    setupTables({ sites: { data: site, error: null } });
+    const res = await GET(req({ slug: 'x', q: 'bracelet' }));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual(VIDE);
+    // Le contrat de reponse est identique au succes : un 403 apprendrait a un
+    // rodeur que le slug existe.
+    expect(fromMock).not.toHaveBeenCalledWith('catalog_products');
+  });
+
+  it.each(['reseller', 'pod_custom'])('Mode 3 %s -> la recherche fonctionne (chemin legitime)', async (t) => {
+    setupTables({ sites: { data: { ...SITE, dropship_type: t }, error: null } });
+    const json = await (await GET(req({ slug: 'x', q: 'bracelet' }))).json();
+    expect(json.products).toHaveLength(1);
+    expect(fromMock).toHaveBeenCalledWith('catalog_products');
+  });
+});
+
+// ============================================================
+// LOT 4 / R4-02 -- LA RECHERCHE DOIT TRANSPORTER L'EXIGENCE DE VARIANTE.
+//
+// `ProductModal` s'en sert pour decider si le bouton d'achat est actif. Sans
+// ce champ, il retombe sur le proxy `variants.length > 0` -- qui s'effondre
+// quand la liste revient vide et laisse ajouter au panier un article que le
+// checkout refuse (garde `catalogStock`).
+//
+// La valeur est DERIVEE DE LA DONNEE : une ligne sans `supplier_parent_id`
+// designe un PRODUIT (CJ : 25 006 lignes, 100 %), une ligne avec parent EST
+// deja une variante (Printful 8 392, Gelato 182 : 0 %).
+// ============================================================
+describe('GET /api/catalog/search — LOT 4 : `requires_variant` derive de `supplier_parent_id`', () => {
+  it('produit du catalogue GLOBAL sans parent (CJ) -> requires_variant = true', async () => {
+    setupTables({ catalog_products: { data: [{ ...GLOBAL_PRODUCT, supplier_parent_id: null }], error: null, count: 1 } });
+    const json = await (await GET(req({ slug: 'x', q: 'bracelet' }))).json();
+    expect(json.products[0].requires_variant).toBe(true);
+  });
+
+  it('produit du catalogue GLOBAL avec parent (POD) -> requires_variant = false', async () => {
+    setupTables({ catalog_products: { data: [{ ...GLOBAL_PRODUCT, supplier_id: 'printful', supplier_parent_id: 'parent-1' }], error: null, count: 1 } });
+    const json = await (await GET(req({ slug: 'x', q: 'bracelet' }))).json();
+    expect(json.products[0].requires_variant).toBe(false);
+  });
+
+  it('produit CURATED sans parent -> requires_variant = true', async () => {
+    setupTables({
+      site_catalog_selections: { data: [{
+        id: 'sel-1', sell_price: null, custom_name: null, custom_description: null, catalog_product_id: 'cp-1',
+        catalog_products: { ...GLOBAL_PRODUCT, supplier_parent_id: null },
+      }], error: null },
+      catalog_products: { data: [], error: null, count: 0 },
+    });
+    const json = await (await GET(req({ slug: 'x', q: 'bracelet' }))).json();
+    const curated = json.products.find((p: { id: string }) => p.id === 'catalog-cp-1');
+    expect(curated?.requires_variant).toBe(true);
+  });
+
+  it('produit CURATED avec parent -> requires_variant = false', async () => {
+    setupTables({
+      site_catalog_selections: { data: [{
+        id: 'sel-1', sell_price: null, custom_name: null, custom_description: null, catalog_product_id: 'cp-1',
+        catalog_products: { ...GLOBAL_PRODUCT, supplier_id: 'printful', supplier_parent_id: 'parent-1' },
+      }], error: null },
+      catalog_products: { data: [], error: null, count: 0 },
+    });
+    setupTables({
+      sites: { data: { ...SITE, dropship_type: 'pod_custom' }, error: null },
+      site_catalog_selections: { data: [{
+        id: 'sel-1', sell_price: null, custom_name: null, custom_description: null, catalog_product_id: 'cp-1',
+        catalog_products: { ...GLOBAL_PRODUCT, supplier_id: 'printful', supplier_parent_id: 'parent-1' },
+      }], error: null },
+      catalog_products: { data: [], error: null, count: 0 },
+    });
+    const json = await (await GET(req({ slug: 'x', q: 'bracelet' }))).json();
+    const curated = json.products.find((p: { id: string }) => p.id === 'catalog-cp-1');
+    expect(curated?.requires_variant).toBe(false);
   });
 });

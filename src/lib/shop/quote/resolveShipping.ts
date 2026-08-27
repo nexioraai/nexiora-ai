@@ -234,10 +234,17 @@ async function resolveCjBasket(
   // creneaux CJ par minute ; en plafonner 20 laisse la majorite a la creation
   // des commandes, qui est le chemin critique du revenu.
   try {
-    const { count } = await supabaseAdmin
+    // LOT 6 -- LE CODE CONTREDISAIT SON PROPRE COMMENTAIRE. Le `catch` plus
+    // bas dit « on ne suppose pas qu'il reste du budget » -- mais PostgREST ne
+    // LEVE PAS sur erreur : il rend `{ count: null, error }`. Le `catch`
+    // n'attrapait donc rien, `(null ?? 0) >= QUOTE_BUDGET` valait false, et
+    // l'appel CJ live partait quand meme. L'intention etait juste, la lecture
+    // de `error` manquait pour la rendre effective.
+    const { count, error: erreurBudget } = await supabaseAdmin
       .from('shipping_quote_cache')
       .select('id', { count: 'exact', head: true })
       .gte('updated_at', new Date(Date.now() - QUOTE_BUDGET_WINDOW_MS).toISOString());
+    if (erreurBudget) return null;
     if ((count ?? 0) >= QUOTE_BUDGET) {
       console.warn('[resolveShipping] budget de devis panier atteint (%d/min) -- repli par produit', QUOTE_BUDGET);
       return null;

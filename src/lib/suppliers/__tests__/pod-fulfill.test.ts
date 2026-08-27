@@ -18,7 +18,21 @@ function tableChain(response: { data: unknown; error: unknown }) {
   const self = () => chain;
   chain.select = vi.fn(self);
   chain.eq = vi.fn(self);
-  chain.in = vi.fn(self);
+  // LOT 3 / L3-06 -- `.in('supplier_id', ...)` FILTRE REELLEMENT.
+  //
+  // Le harnais renvoyait les lignes quel que soit le filtre : la restriction
+  // `.in('supplier_id', ['printful','printify','gelato'])` de `pod-fulfill`
+  // etait donc invisible aux tests, et la retirer ne cassait rien (mutation
+  // P9). Or c'est la SEULE garde de cette couche : une ligne d'un autre
+  // fournisseur tombe dans `legacyItems` et part chez PRINTIFY. Le harnais
+  // simule desormais ce filtre, ce qui rend la garde observable.
+  chain.in = vi.fn((col: string, vals: unknown[]) => {
+    if (col === 'supplier_id' && Array.isArray(response.data)) {
+      response = { ...response, data: (response.data as any[]).filter((r) => vals.includes(r?.supplier_id)) };
+      chain.then = (resolve: (v: unknown) => void) => resolve(response);
+    }
+    return chain;
+  });
   chain.update = vi.fn(self);
   chain.maybeSingle = vi.fn(async () => response);
   // Rend la chaîne elle-même "thenable" pour les requêtes awaited sans
@@ -82,7 +96,23 @@ function setupBaseTables(
   catProds: { id: string; supplier_id: string; supplier_product_id: string }[],
   options: { dropshipType?: string | null; designs?: { order_item_id: string; design_url: string; placement?: string; position?: unknown }[] } = {}
 ) {
-  const { dropshipType = 'pod_custom', designs = [] } = options;
+  const { dropshipType = 'pod_custom' } = options;
+  // ============================================================
+  // LOT 5 / P5-02 -- LA FIXTURE DECRIT DESORMAIS UNE VRAIE COMMANDE.
+  //
+  // Ces tests portent sur l'ORCHESTRATION des soumissions fournisseur, pas
+  // sur la politique de design -- mais leur defaut `pod_custom` SANS aucun
+  // design decrivait un etat qui ne peut plus exister : un support
+  // `pod_custom` n'est plus vendable nu (refus au checkout, seconde barriere
+  // au fulfillment). Chaque ligne catalogue recoit donc un design par defaut,
+  // comme en production. Les tests qui visent l'ABSENCE de design l'ecrivent
+  // explicitement (`designs: []`).
+  // ============================================================
+  const designs =
+    options.designs ??
+    (dropshipType === 'pod_custom'
+      ? catalogItems.map((i) => ({ order_item_id: i.id, design_url: `https://x.test/design-${i.id}.png` }))
+      : []);
   fromMock.mockImplementation((table: string) => {
     if (table === 'shop_orders') {
       return tableChain({ data: { id: ORDER_ID, site_id: 's1', fulfillment_domain: 'supplier', shipping_address: {}, customer_name: 'C', customer_email: 'c@x.com' }, error: null });
@@ -543,7 +573,10 @@ describe('PHASE 3 — seul un domaine « supplier » entre dans le fulfillment P
       if (table === 'sites') return tableChain({ data: { dropship_type: 'pod_custom' }, error: null });
       if (table === 'shop_order_items') return tableChain({ data: [{ id: 'i1', product_id: 'catalog-cp1', quantity: 1 }], error: null });
       if (table === 'catalog_products') return tableChain({ data: [{ id: 'cp1', supplier_id: 'printful', supplier_product_id: 'PF-9' }], error: null });
-      if (table === 'order_item_designs') return tableChain({ data: [], error: null });
+      // LOT 5 / P5-02 -- un support `pod_custom` n'est plus vendable nu : cette
+      // fixture porte donc un design, comme toute commande reelle. Les cas de
+      // ce bloc portent sur la FRONTIERE DE DOMAINE, pas sur le design.
+      if (table === 'order_item_designs') return tableChain({ data: [{ order_item_id: 'i1', design_url: 'https://x.test/d.png' }], error: null });
       return tableChain({ data: null, error: null });
     });
   }
@@ -594,5 +627,110 @@ describe('PHASE 3 — seul un domaine « supplier » entre dans le fulfillment P
     createOrderPrintfulMock.mockResolvedValue({ success: true, supplier_order_id: 'PF-ORDER-1' });
     await fulfillPodOrder(ORDER_ID);
     expect(createOrderPrintfulMock).toHaveBeenCalled();
+  });
+});
+
+// ============================================================
+// LOT 3 / L3-06 -- LE CLOISONNEMENT FOURNISSEUR DU MOTEUR POD.
+//
+// `pod-fulfill` ne va chercher que des lignes `catalog_products` dont le
+// `supplier_id` est POD. Ce n'est PAS un doublon de `suppliersForDropshipType`
+// (qui repond « quels fournisseurs pour ce SOUS-TYPE ») : c'est la question
+// « quels fournisseurs ce MOTEUR sait executer » -- d'ou `printify`, present
+// ici et absent de l'autre. Deux questions, deux listes, aucune concurrence.
+//
+// SANS CE FILTRE, une ligne CJ tombe dans `legacyItems` et part chez PRINTIFY.
+// Mutation P9, survivante avant ce lot faute d'un harnais qui filtre.
+// ============================================================
+describe('LOT 3 / L3-06 — seuls les fournisseurs POD atteignent ce moteur', () => {
+  it('une ligne catalogue CJ n\'atteint AUCUN adaptateur POD', async () => {
+    setupBaseTables(
+      [{ id: 'it-1', product_id: 'catalog-cp-cj', quantity: 1 }],
+      [{ id: 'cp-cj', supplier_id: 'cj', supplier_product_id: 'vid-1' }],
+      { dropshipType: 'pod_brand' }
+    );
+    const res = await fulfillPodOrder(ORDER_ID);
+    expect(res).toEqual([]);
+    expect(createOrderPrintfulMock).not.toHaveBeenCalled();
+    expect(createOrderGelatoMock).not.toHaveBeenCalled();
+    expect(createOrderPrintifyMock).not.toHaveBeenCalled();
+  });
+
+  it('un fournisseur inconnu n\'atteint AUCUN adaptateur non plus', async () => {
+    setupBaseTables(
+      [{ id: 'it-1', product_id: 'catalog-cp-x', quantity: 1 }],
+      [{ id: 'cp-x', supplier_id: 'fournisseur_inconnu', supplier_product_id: 'x-1' }],
+      { dropshipType: 'pod_brand' }
+    );
+    expect(await fulfillPodOrder(ORDER_ID)).toEqual([]);
+    expect(createOrderPrintifyMock).not.toHaveBeenCalled();
+  });
+
+  it('INVARIANT B — un pod_brand Printful passe bien, lui', async () => {
+    setupBaseTables(
+      [{ id: 'it-1', product_id: 'catalog-cp-pf', quantity: 1 }],
+      [{ id: 'cp-pf', supplier_id: 'printful', supplier_product_id: 'sp-1' }],
+      { dropshipType: 'pod_brand', designs: [{ order_item_id: 'it-1', design_url: 'https://x.test/d.png' }] }
+    );
+    createProviderSubmissionMock.mockResolvedValue({ success: true, submission_id: 'sub-lot3' });
+    createOrderPrintfulMock.mockResolvedValue({ success: true, supplier_order_id: 'pf-1' });
+    await fulfillPodOrder(ORDER_ID);
+    expect(createOrderPrintfulMock).toHaveBeenCalled();
+    const params = createOrderPrintfulMock.mock.calls[0][0];
+    expect(params.design_url).toBe('https://x.test/d.png');
+    // La variante envoyee est celle de la LIGNE CATALOGUE, jamais un suffixe
+    // d'identifiant : c'est ce que consomme reellement printful-adapter.
+    expect(params.supplier_product_id).toBe('sp-1');
+  });
+});
+
+// ============================================================
+// LOT 5 / P5-02 -- SECONDE BARRIERE : AUCUN BLANC `pod_custom`.
+//
+// Le checkout refuse desormais une ligne sans design, mais une commande
+// ANTERIEURE a ce lot, un rejeu, ou tout chemin qui ne passerait pas par le
+// checkout aboutirait ici avec une liste de designs vide -- et l'adaptateur
+// enverrait `files: []`, donc un produit NU fabrique aux frais de la
+// plateforme. Mutation V8, survivante avant ce lot.
+// ============================================================
+describe('LOT 5 / P5-02 — un item pod_custom sans design n\'atteint aucun fournisseur', () => {
+  it('pod_custom + AUCUN design -> aucun adaptateur appele, rien fabrique', async () => {
+    setupBaseTables(
+      [{ id: 'it-1', product_id: 'catalog-cp-pf', quantity: 1 }],
+      [{ id: 'cp-pf', supplier_id: 'printful', supplier_product_id: 'sp-1' }],
+      { dropshipType: 'pod_custom', designs: [] }
+    );
+    const res = await fulfillPodOrder(ORDER_ID);
+    expect(res).toEqual([]);
+    expect(createOrderPrintfulMock).not.toHaveBeenCalled();
+    expect(createOrderGelatoMock).not.toHaveBeenCalled();
+  });
+
+  it('pod_custom + design present -> la fabrication a lieu, AVEC le design', async () => {
+    setupBaseTables(
+      [{ id: 'it-1', product_id: 'catalog-cp-pf', quantity: 1 }],
+      [{ id: 'cp-pf', supplier_id: 'printful', supplier_product_id: 'sp-1' }],
+      { dropshipType: 'pod_custom', designs: [{ order_item_id: 'it-1', design_url: 'https://x.test/mien.png' }] }
+    );
+    createProviderSubmissionMock.mockResolvedValue({ success: true, submission_id: 'sub-p5' });
+    createOrderPrintfulMock.mockResolvedValue({ success: true, supplier_order_id: 'pf-1' });
+    await fulfillPodOrder(ORDER_ID);
+    expect(createOrderPrintfulMock).toHaveBeenCalled();
+    expect(createOrderPrintfulMock.mock.calls[0][0].design_url).toBe('https://x.test/mien.png');
+  });
+
+  it('PERIMETRE — `pod_brand` sans design n\'est PAS bloque : decision fermee au LOT 3', async () => {
+    // Le LOT 3 a decide que, face a un design etranger, une vente `pod_brand`
+    // aboutit SANS design plutot qu'avec un design vole. Non rouvert ici.
+    setupBaseTables(
+      [{ id: 'it-1', product_id: 'catalog-cp-pf', quantity: 1 }],
+      [{ id: 'cp-pf', supplier_id: 'printful', supplier_product_id: 'sp-1' }],
+      { dropshipType: 'pod_brand', designs: [] }
+    );
+    createProviderSubmissionMock.mockResolvedValue({ success: true, submission_id: 'sub-pb' });
+    createOrderPrintfulMock.mockResolvedValue({ success: true, supplier_order_id: 'pf-2' });
+    await fulfillPodOrder(ORDER_ID);
+    expect(createOrderPrintfulMock).toHaveBeenCalled();
+    expect(createOrderPrintfulMock.mock.calls[0][0].design_url).toBeUndefined();
   });
 });

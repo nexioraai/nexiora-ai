@@ -1,26 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase as supabaseAnon } from '@/lib/supabase';
+import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getVercelDomainStatus } from '@/lib/domains/vercel';
 
 /** Etat du domaine d'un site, pour affichage au marchand. */
 export async function GET(req: NextRequest) {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) return NextResponse.json({ error: 'Non authentifie' }, { status: 401 });
-  const { data: { user }, error: authErr } = await supabaseAnon.auth.getUser(token);
-  if (authErr || !user?.email) return NextResponse.json({ error: 'Non authentifie' }, { status: 401 });
-
   const slug = req.nextUrl.searchParams.get('slug');
   if (!slug) return NextResponse.json({ error: 'Slug manquant' }, { status: 400 });
 
-  const { data: site } = await supabaseAdmin
-    .from('sites')
-    .select('id, owner_email, custom_domain, custom_domain_google_status, custom_domain_google_token, custom_domain_google_attempts, custom_domain_google_last_attempt_at, custom_domain_google_last_error')
-    .eq('slug', slug)
-    .maybeSingle();
-  if (!site || site.owner_email !== user.email) {
-    return NextResponse.json({ error: 'Site introuvable' }, { status: 403 });
-  }
+  // ============================================================
+  // DETTE 6a, EXTENSION -- `owner_email` N'EST PLUS L'IDENTITE.
+  //
+  // La garde s'ecrivait `site.owner_email !== user.email` : une comparaison
+  // en JavaScript plutot qu'un `.eq()`, mais exactement la meme cle, et donc
+  // exactement le meme defaut. `sites.owner_email` est ecrite UNE SEULE
+  // FOIS, a la creation du site, et aucun update ne la touche jamais -- un
+  // proprietaire qui change d'adresse laisse la colonne figee sur
+  // l'ancienne, et quiconque obtient ensuite cette adresse devenait
+  // proprietaire aux yeux de cette route.
+  //
+  // AUCUN MECANISME NOUVEAU : `requireSiteOwner`, primitive canonique --
+  // `owner_id` prioritaire, repli sur `owner_email` UNIQUEMENT quand
+  // `owner_id` est encore null cote base. Les codes deviennent ceux de la
+  // primitive : 401 non authentifie, 404 site inexistant, 403 non
+  // proprietaire (la route confondait les deux derniers dans un seul 403).
+  // ============================================================
+  const auth = await requireSiteOwner(
+    req,
+    slug,
+    'id, custom_domain, custom_domain_google_status, custom_domain_google_token, custom_domain_google_attempts, custom_domain_google_last_attempt_at, custom_domain_google_last_error'
+  );
+  if (!auth.ok) return auth.response;
+  const site = auth.site as any;
 
   const { data: domain } = await supabaseAdmin
     .from('site_domains')

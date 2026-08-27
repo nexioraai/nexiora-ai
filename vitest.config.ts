@@ -93,12 +93,21 @@ export default defineConfig({
       'src/app/api/domains/**/*.test.ts',
       'src/app/api/catalog/**/*.test.ts',
       'src/lib/architecture/**/*.test.ts',
+      // M1-1 — frontiere d'admission Mode 1 / Mode 2. Sans cette ligne le test
+      // passe en isolation mais n'est JAMAIS collecte par `vitest run` : le
+      // piege deja rencontre en phase 1 du chantier Mode 2 / Mode 3.
+      'src/lib/commerce-admission/**/*.test.ts',
       'src/lib/systemHealth/**/*.test.ts',
       'src/app/api/webhooks/**/*.test.ts',
       'src/app/api/shop/**/*.test.ts',
       'src/app/api/stripe/**/*.test.ts',
       'src/app/api/cron/**/*.test.ts',
       'src/app/api/chat/**/*.test.ts',
+      // LOT 1 / L1-01 -- prefixe AJOUTE. `src/app/api/onboarding/` n'etait
+      // pas collecte : la route qui produit le mode et le sous-type d'un
+      // site n'avait aucune couverture, et un test ecrit la n'aurait ete
+      // execute par personne. Meme piege qu'au LOT 0, meme correction.
+      'src/app/api/onboarding/**/*.test.ts',
       'src/app/api/account/**/*.test.ts',
       'src/app/sites/**/*.test.ts',
       'src/app/sites/**/*.test.tsx',
@@ -113,12 +122,94 @@ export default defineConfig({
       // un test ecrit sans cette ligne passe en isolation mais n'est JAMAIS
       // collecte par `vitest run` (donc jamais en CI), silencieusement.
       'src/app/api/admin/**/*.test.ts',
+      // LOT 6 -- prefixe AJOUTE. `src/app/api/blog/` n'etait pas collecte :
+      // la route de generation du blog central n'avait aucune couverture, et
+      // un test ecrit la n'aurait ete execute par personne. Meme piege qu'au
+      // LOT 0 et qu'au LOT 1 (`api/onboarding`), meme correction.
+      'src/app/api/blog/**/*.test.ts',
       // Separation Mode 2 / Mode 3, PHASE 1 (docs/PLAN-SEPARATION-MODE2-MODE3.md) :
       // src/lib/order-domain/ porte le point de decision unique de la frontiere.
       // Sans cette ligne, son test passe en isolation mais n'est JAMAIS collecte
       // -- exactement le piege documente ci-dessus. Verifie par le delta de
       // comptage de tests apres ajout.
       'src/lib/order-domain/**/*.test.ts',
+      // M2-07/M2-08 -- `src/lib/mode2/` n'etait PAS collecte : un test y aurait
+      // passe en isolation sans jamais entrer dans `vitest run`. C'est le piege
+      // que ce fichier documente deja pour `commerce-admission`.
+      'src/lib/mode2/**/*.test.ts',
+      // LOT 0 (Mode 3) -- meme manque, ferme ici avant tout audit de sous-mode.
+      //
+      // MESURE DU 2026-08-25 : le manque etait LATENT, pas actif. Les 181
+      // fichiers de test presents sur disque etaient tous collectes ; aucun
+      // test n'etait perdu. Mais `src/lib/mode3/` porte les quatre modules du
+      // domaine fournisseur (`checkoutPolicy`, `catalogStock`,
+      // `supplierShipping`, `cancelSupplierOrder`) et n'avait AUCUN test :
+      // le premier qu'on y aurait ecrit serait passe en isolation sans jamais
+      // entrer dans `vitest run`. Un audit ne peut rien verrouiller dans un
+      // repertoire qu'il ne peut pas exercer en CI -- d'ou ce prealable.
+      //
+      // PORTEE VOLONTAIREMENT ETROITE. La meme mesure a recense 37 repertoires
+      // source dans le meme cas (UI, pages, `src/lib/email`, `src/lib/supabase`,
+      // `src/lib/translations`...). Les elargir tous serait un chantier de
+      // couverture, pas un prealable d'audit : consigne, non traite ici.
+      'src/lib/mode3/**/*.test.ts',
+      // ETAPE 7 du chantier catalogue canonique -- DEUX prefixes ajoutes, tous
+      // deux absents jusqu'ici :
+      //   * src/lib/agent-tools/ porte la resolution nom -> produit (N7) ;
+      //   * src/app/api/agent/ n'avait AUCUNE couverture, alors que
+      //     `agent/[slug]/apply` est la seule route par laquelle un outil IA
+      //     ecrit reellement (22 outils).
+      // Sans ces lignes, leurs tests passent en isolation mais ne sont JAMAIS
+      // collectes par `vitest run` -- donc jamais en CI, silencieusement.
+      // C'est le piege deja documente six fois plus haut dans ce fichier ;
+      // verifie ici par le delta de comptage de tests apres ajout.
+      // CHANTIER 3 (MODE 1) -- src/lib/i18n/ porte le contrat des langues
+      // reellement servies. Prefixe absent : sans cette ligne son test
+      // passe en isolation mais n'est JAMAIS collecte par `vitest run`.
+      'src/lib/i18n/**/*.test.ts',
+      // CHANTIER 5 -- src/lib/site-profile/ porte la borne de `area_served`
+      // et l'allowlist de `price_range`. Prefixe absent : sans cette ligne,
+      // leurs tests passent en isolation mais ne sont JAMAIS collectes.
+      'src/lib/site-profile/**/*.test.ts',
+      // CHANTIER 8 -- src/app/api/internal/ n'avait AUCUNE couverture et
+      // son prefixe etait absent : le sitemap par site (seul fichier qui
+      // y vit) n'etait teste nulle part. Sans cette ligne, son test passe
+      // en isolation mais n'est JAMAIS collecte par `vitest run`.
+      'src/app/api/internal/**/*.test.ts',
+      'src/lib/agent-tools/**/*.test.ts',
+      'src/app/api/agent/**/*.test.ts',
+      // CHANTIER 4 -- variante `.tsx` AJOUTEE. Le prefixe ci-dessus ne
+      // collecte que `.test.ts` : le test des outils faq/whyus rend du JSX
+      // (il prouve que `JsonLdScript` neutralise une question hostile) et
+      // n'etait donc JAMAIS collecte -- rencontre reellement, pas suppose.
+      // C'est le piege deja documente sept fois dans ce fichier.
+      'src/app/api/agent/**/*.test.tsx',
+      // DETTE 6a, EXTENSION -- DEUX prefixes ajoutes, tous deux absents
+      // jusqu'ici, alors que ces deux routes portaient chacune une garde de
+      // propriete defaillante et AUCUN test :
+      //   * src/app/api/sites/  -- le PATCH de `sites/[slug]` ecrit 19
+      //     colonnes de contenu en service_role ;
+      //   * src/app/api/marketing/ -- `generate` lit le site entier et le
+      //     transmet a trois fournisseurs externes.
+      // Sans ces lignes, leurs tests passent en isolation mais ne sont JAMAIS
+      // collectes par `vitest run` -- donc jamais en CI, silencieusement.
+      // C'est le piege deja documente huit fois plus haut dans ce fichier ;
+      // verifie ici par le delta de comptage de tests apres ajout.
+      'src/app/api/sites/**/*.test.ts',
+      'src/app/api/marketing/**/*.test.ts',
+      // ETAPE 2 du chantier des frontieres -- `src/lib/dropship/` n'etait pas
+      // collecte, alors qu'il porte la « source UNIQUE » de la regle
+      // fournisseur et desormais l'admission au catalogue. Sans cette ligne,
+      // leurs tests passent en isolation mais ne sont JAMAIS collectes par
+      // `vitest run` -- le piege deja documente neuf fois dans ce fichier.
+      // Verifie ici par le delta de comptage apres ajout.
+      'src/lib/dropship/**/*.test.ts',
+      // LOT 6 -- LE PIEGE DE COLLECTE, DEUXIEME FOIS. Un fichier de test hors
+      // de cette liste n'est jamais execute et ne signale rien : il ressemble
+      // a une preuve, il n'en est pas une. `rate-limit` et `welcome` sont
+      // ajoutes AVANT que leurs tests soient ecrits, pas apres.
+      'src/lib/rate-limit/**/*.test.ts',
+      'src/app/api/welcome/**/*.test.ts',
     ],
     environment: 'node',
   },

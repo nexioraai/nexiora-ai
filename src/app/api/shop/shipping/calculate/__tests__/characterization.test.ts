@@ -65,7 +65,7 @@ const CACHE_TIERS = [
 
 function setup(opts: { tiers?: unknown; catalog?: boolean } = {}) {
   return setupTables({
-    sites: { data: { id: 'site-1', shipping_flat: 5 } },
+    sites: { data: { id: 'site-1', mode: 2, shipping_flat: 5 } },
     catalog_products: {
       data: opts.catalog === false
         ? []
@@ -163,7 +163,7 @@ describe('CARACTERISATION -- route d\'affichage du panier', () => {
   it("C7 -- aucune source exploitable (pas de cache, live en echec) -> `unavailable`", async () => {
     calculateShippingMock.mockRejectedValue(new Error('CJ down'));
     setupTables({
-      sites: { data: { id: 'site-1', shipping_flat: 5 } },
+      sites: { data: { id: 'site-1', mode: 2, shipping_flat: 5 } },
       catalog_products: { data: [{ id: 'cat-1', supplier_id: 'cj', supplier_product_id: 'VID1' }] },
       shop_products: { data: [] },
       shipping_cache: { data: [] },

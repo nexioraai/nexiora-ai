@@ -263,6 +263,40 @@ export default function OnboardingChat() {
     }
   };
 
+  // LOT 1 / L1-01 -- LE SELECTEUR DEVIENT ATTEIGNABLE HORS ECRAN D'ACCUEIL.
+  //
+  // CE QUI MANQUAIT. La branche `need_dropship_type` existait deja ici et
+  // appelait `setShowDropshipPicker(true)` -- mais le selecteur n'etait rendu
+  // qu'a l'INTERIEUR du bloc d'accueil (`messages.length === 1`). Aucune route
+  // n'emettant cette reponse, la branche etait morte et l'impasse invisible.
+  // Maintenant que `api/onboarding` reclame le sous-type EN COURS D'ENTRETIEN
+  // -- donc avec plusieurs messages a l'ecran -- le selecteur doit s'afficher
+  // la aussi, sans quoi la correction du chemin d'ecriture produirait un
+  // cul-de-sac silencieux. Une seule definition, deux emplacements de rendu.
+  const dropshipPicker = (
+    <>
+    <p className="w-full text-center text-sm text-slate-400 mb-2">{t('home.dropshipping.question')}</p>
+    {[
+      { label: 'Revente de catalogue', type: 'reseller' },
+      { label: 'Votre marque', type: 'pod_brand' },
+      { label: 'Personnalisation client', type: 'pod_custom' },
+    ].map(({ label, type }) => (
+      <button
+        key={type}
+        onClick={() => {
+          setSiteMode(3);
+          setDropshipType(type);
+          setShowDropshipPicker(false);
+          sendText(`Dropshipping — ${label}`);
+        }}
+        className="px-5 py-2.5 rounded-full bg-white/[0.04] border border-white/12 text-sm text-slate-200 hover:border-[#FA5D1E] hover:text-white hover:bg-white/[0.07] transition"
+      >
+        {label}
+      </button>
+    ))}
+    </>
+  );
+
   return (
     <section className={`max-w-2xl mx-auto px-4 sm:px-6 pb-10 flex flex-col h-[calc(100vh-120px)] ${messages.length === 1 && !loading && !generating ? 'justify-center' : ''}`}>
       <div className="flex items-center gap-2 justify-center mb-6 text-white/60">
@@ -306,25 +340,7 @@ export default function OnboardingChat() {
               </>
             ) : (
               <>
-              <p className="w-full text-center text-sm text-slate-400 mb-2">{t('home.dropshipping.question')}</p>
-              {[
-                { label: 'Revente de catalogue', type: 'reseller' },
-                { label: 'Votre marque', type: 'pod_brand' },
-                { label: 'Personnalisation client', type: 'pod_custom' },
-              ].map(({ label, type }) => (
-                <button
-                  key={type}
-                  onClick={() => {
-                    setSiteMode(3);
-                    setDropshipType(type);
-                    setShowDropshipPicker(false);
-                    sendText(`Dropshipping — ${label}`);
-                  }}
-                  className="px-5 py-2.5 rounded-full bg-white/[0.04] border border-white/12 text-sm text-slate-200 hover:border-[#FA5D1E] hover:text-white hover:bg-white/[0.07] transition"
-                >
-                  {label}
-                </button>
-              ))}
+              {dropshipPicker}
               <button
                 onClick={() => setShowDropshipPicker(false)}
                 className="px-4 py-2 text-xs text-slate-500 hover:text-slate-300 transition"
@@ -394,6 +410,12 @@ export default function OnboardingChat() {
       )}
 
       {error && <p className="text-sm text-red-400 mt-3 text-center">{error}</p>}
+
+      {showDropshipPicker && messages.length > 1 && !loading && !generating && (
+        <div className="flex flex-wrap gap-3 justify-center mt-4">
+          {dropshipPicker}
+        </div>
+      )}
 
       {modeOptions && !loading && !generating && (
         <div className="flex flex-col gap-3 mt-4">

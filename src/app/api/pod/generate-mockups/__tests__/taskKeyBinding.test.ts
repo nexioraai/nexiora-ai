@@ -1,3 +1,10 @@
+// LOT 3 / L3-04 -- LES URL DE DESIGN DEVIENNENT REALISTES.
+// `generate-mockups` exige desormais que le design appartienne au site :
+// prefixe `pod-designs/<slug>/`, seule definition du format
+// (`lib/mode3/podBrandMockups.ts`), deja consommee par le checkout. Une
+// fixture hors prefixe ne decrivait plus un design legitime -- c'est une
+// correction de FIXTURE, aucune assertion de ces fichiers ne change de sens.
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Audit Mode 3/POD BRAND, perfectionnement -- requireSiteOwner() protège QUI
@@ -73,7 +80,7 @@ beforeEach(() => {
 describe('POST /api/pod/generate-mockups — liaison task_key ↔ site (pending_task_keys)', () => {
   it("poll avec un task_key JAMAIS créé pour ce site (absent de pending_task_keys) -> filtré, aucun appel Printful, aucun résultat", async () => {
     siteSelectMock.mockResolvedValue({
-      data: { id: 'my-site-id', owner_id: 'owner-id', dropship_type: 'pod_brand', pod_designs: [{ url: 'https://x.test/d.png', pending_task_keys: ['tk-legitimate'] }] },
+      data: { id: 'my-site-id', owner_id: 'owner-id', dropship_type: 'pod_brand', pod_designs: [{ url: 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png', pending_task_keys: ['tk-legitimate'] }] },
       error: null,
     });
 
@@ -89,7 +96,7 @@ describe('POST /api/pod/generate-mockups — liaison task_key ↔ site (pending_
 
   it("poll avec un task_key réellement présent dans pending_task_keys -> autorisé, appel Printful effectué", async () => {
     siteSelectMock.mockResolvedValue({
-      data: { id: 'my-site-id', owner_id: 'owner-id', dropship_type: 'pod_brand', pod_designs: [{ url: 'https://x.test/d.png', pending_task_keys: ['tk-legitimate'] }] },
+      data: { id: 'my-site-id', owner_id: 'owner-id', dropship_type: 'pod_brand', pod_designs: [{ url: 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png', pending_task_keys: ['tk-legitimate'] }] },
       error: null,
     });
     global.fetch = vi.fn().mockResolvedValue(
@@ -106,7 +113,7 @@ describe('POST /api/pod/generate-mockups — liaison task_key ↔ site (pending_
 
   it("mode create : un task_key lancé avec succès est persisté dans pending_task_keys AVANT d'être renvoyé au client", async () => {
     siteSelectMock.mockResolvedValue({
-      data: { id: 'my-site-id', owner_id: 'owner-id', dropship_type: 'pod_brand', pod_designs: [{ url: 'https://x.test/d.png', selected_products: {} }] },
+      data: { id: 'my-site-id', owner_id: 'owner-id', dropship_type: 'pod_brand', pod_designs: [{ url: 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png', selected_products: {} }] },
       error: null,
     });
     // catalog_products (resolution des blanks) puis printfiles puis create-task
@@ -143,7 +150,7 @@ describe('POST /api/pod/generate-mockups — liaison task_key ↔ site (pending_
     // un résultat rendu avec un design depuis abandonné.
     expect(siteUpdate.payload.pod_designs[0].pending_task_keys).toContainEqual({
       task_key: 'tk-nouvellement-cree',
-      design_url: 'https://x.test/d.png',
+      design_url: 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png',
     });
   });
 
@@ -152,14 +159,14 @@ describe('POST /api/pod/generate-mockups — liaison task_key ↔ site (pending_
       data: {
         id: 'my-site-id', owner_id: 'owner-id', dropship_type: 'pod_brand',
         pod_designs: [{
-          url: 'https://x.test/d.png', mockups: [],
+          url: 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png', mockups: [],
           // Format {task_key, design_url} : design_url correspond au design
-          // ACTUELLEMENT actif ('https://x.test/d.png') -- ce test vérifie
+          // ACTUELLEMENT actif ('https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png') -- ce test vérifie
           // le nettoyage de pending_task_keys, pas le rejet DEBT-017 (couvert
           // par un test dédié plus bas).
           pending_task_keys: [
-            { task_key: 'tk-done', design_url: 'https://x.test/d.png' },
-            { task_key: 'tk-still-running', design_url: 'https://x.test/d.png' },
+            { task_key: 'tk-done', design_url: 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png' },
+            { task_key: 'tk-still-running', design_url: 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png' },
           ],
         }],
       },
@@ -195,5 +202,100 @@ describe('POST /api/pod/generate-mockups — liaison task_key ↔ site (pending_
     // sauvegardé normalement, pas écarté (contrôle négatif du test DEBT-017).
     const mockups = siteUpdate.payload.pod_designs[0].mockups;
     expect(mockups.some((m: any) => m.product_id === 1)).toBe(true);
+  });
+});
+
+// ============================================================
+// LOT 3 / ANOMALIE B -- LE DESIGN DOIT APPARTENIR AU SITE, AVANT TOUTE DEPENSE.
+//
+// La liaison locataire n'existait qu'au CHECKOUT. Or c'est ici que la
+// PREMIERE depense a lieu : `designUrl` part dans `image_url` d'un
+// `create-task` Printful reel et facture. Et sa valeur vient de
+// `sites.pod_designs`, colonne du GRANT UPDATE des 41 -- ecrite directement
+// par le marchand en PostgREST.
+//
+// ON MESURE L'ABSENCE D'APPEL FOURNISSEUR, pas seulement le code de statut :
+// c'est la depense qu'il fallait empecher.
+// ============================================================
+describe('POST /api/pod/generate-mockups — LOT 3 : le design doit appartenir a cette boutique', () => {
+  const PREFIXE_OK = 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/d.png';
+
+  function siteAvecDesign(url: string) {
+    siteSelectMock.mockResolvedValue({
+      data: { id: 'my-site-id', owner_id: 'owner-id', dropship_type: 'pod_brand', pod_designs: [{ url, selected_products: {}, pending_task_keys: [] }] },
+      error: null,
+    });
+  }
+
+  it.each([
+    ['le design d\'une AUTRE boutique', 'https://sb.test/storage/v1/object/public/pod-designs/autre-boutique/vole.png'],
+    ['une URL totalement exterieure', 'https://evil.example/x.png'],
+    ['une URL sans prefixe de bucket', 'https://sb.test/storage/v1/object/public/autre-bucket/my-shop/d.png'],
+    ['un slug qui n\'est qu\'un prefixe du notre', 'https://sb.test/storage/v1/object/public/pod-designs/my-shop-bis/d.png'],
+  ])('%s -> 403, et AUCUN appel fournisseur n\'est emis', async (_l, url) => {
+    siteAvecDesign(url);
+    const fetchMock = vi.fn();
+    global.fetch = fetchMock as never;
+    const res = await (await import('../route')).POST(req({ slug: 'my-shop', index: 0 }));
+    expect(res.status).toBe(403);
+    // La preuve qui compte : aucune depense engagee.
+    expect(fetchMock).not.toHaveBeenCalled();
+    // Et rien n'a ete ecrit dans pod_designs.
+    expect(updateCalls).toHaveLength(0);
+  });
+
+  it('le design legitime du site passe la garde (le chemin nominal n\'est pas casse)', async () => {
+    siteAvecDesign(PREFIXE_OK);
+    const fetchMock = vi.fn(() => Promise.resolve(new Response(JSON.stringify({ result: [] }))));
+    global.fetch = fetchMock as never;
+    const res = await (await import('../route')).POST(req({ slug: 'my-shop', index: 0 }));
+    // La garde ne refuse pas : la route poursuit et echoue plus loin, faute
+    // de produits catalogue dans ce harnais -- jamais en 403.
+    expect(res.status).not.toBe(403);
+  });
+});
+
+// ============================================================
+// LOT 3 / L3-02 -- QUEL DESIGN CETTE ROUTE GENERE-T-ELLE ?
+//
+// Mutation R11 (`designs[0]` -> dernier design) SURVIVAIT : rien ne
+// verifiait le contrat. C'est pourtant exactement le defaut que L3-02 a
+// ferme -- le marchand televersait un second design et obtenait les
+// maquettes du premier. Sans ce test, la correction pouvait etre annulee
+// sans un signal.
+//
+// OBSERVABLE REELLE : la garde locataire. On place les deux designs sous des
+// prefixes DIFFERENTS et on lit lequel des deux la route a soumis a la
+// garde. Aucune assertion de facade : c'est le comportement de la route qui
+// repond.
+// ============================================================
+describe('POST /api/pod/generate-mockups — LOT 3 : la generation porte sur le design ACTIF', () => {
+  const OK = 'https://sb.test/storage/v1/object/public/pod-designs/my-shop/actif.png';
+  const ETRANGER = 'https://sb.test/storage/v1/object/public/pod-designs/autre-boutique/second.png';
+
+  function siteAvecDeuxDesigns(premier: string, second: string) {
+    siteSelectMock.mockResolvedValue({
+      data: { id: 'my-site-id', owner_id: 'owner-id', dropship_type: 'pod_brand', pod_designs: [
+        { url: premier, selected_products: {}, pending_task_keys: [] },
+        { url: second, selected_products: {}, pending_task_keys: [] },
+      ] },
+      error: null,
+    });
+  }
+
+  it('design ACTIF legitime + second design etranger -> la route poursuit : c\'est bien le PREMIER qui est utilise', async () => {
+    siteAvecDeuxDesigns(OK, ETRANGER);
+    global.fetch = vi.fn(() => Promise.resolve(new Response(JSON.stringify({ result: [] })))) as never;
+    const res = await (await import('../route')).POST(req({ slug: 'my-shop', index: 0 }));
+    expect(res.status).not.toBe(403);
+  });
+
+  it('design ACTIF etranger + second design legitime -> 403 : la route ne se rabat JAMAIS sur un autre design', async () => {
+    siteAvecDeuxDesigns(ETRANGER, OK);
+    const fetchMock = vi.fn();
+    global.fetch = fetchMock as never;
+    const res = await (await import('../route')).POST(req({ slug: 'my-shop', index: 0 }));
+    expect(res.status).toBe(403);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

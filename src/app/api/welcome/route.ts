@@ -1,14 +1,66 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { requireAuthenticatedUser } from '@/lib/auth/require-authenticated-user';
+import { consommerJeton } from '@/lib/rate-limit/rateLimit';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// ============================================================
+// LOT 6 -- CETTE ROUTE ETAIT UN RELAIS D'E-MAIL LIBRE.
+//
+// Etat d'origine : `POST { email }`, aucune authentification, aucune limite.
+// N'importe qui pouvait faire partir, depuis `no-reply@deribfy.com`, un
+// courrier signe Deribfy vers UNE ADRESSE DE SON CHOIX, en boucle. Deux
+// dommages distincts : le bombardement d'une victime, et l'usure de la
+// reputation d'expedition du domaine -- celle-la ne se repare pas vite.
+//
+// LA LIMITE DE DEBIT SEULE N'AURAIT PAS SUFFI. Elle aurait borne le volume
+// sans toucher au fond : l'appelant designait toujours sa victime. La
+// correction retire L'ENTREE elle-meme.
+//
+//   1. IDENTITE — `requireAuthenticatedUser`. Le parcours reel n'est pas
+//      casse : `login/page.tsx` appelle cette route JUSTE APRES un
+//      `signInWithPassword` reussi ; la session est deja en main, il ne
+//      manquait que l'en-tete. Ce n'est donc pas une authentification
+//      arbitraire ajoutee a un parcours visiteur, c'est la reconnaissance
+//      d'une session qui existait deja.
+//
+//   2. DESTINATAIRE DERIVE DU JETON. `email` n'est plus lu depuis le corps.
+//      Le courrier ne peut plus partir que vers le proprietaire du compte
+//      appelant : viser un tiers est devenu impossible, pas seulement limite.
+//
+//   3. LIMITE PAR COMPTE. Le perimetre naturel est l'utilisateur, pas le
+//      site (il n'y en a pas) ni le monde entier -- un compteur global
+//      laisserait un seul abuseur priver tous les nouveaux inscrits de leur
+//      e-mail. Trois par heure : le parcours legitime n'en declenche qu'UN
+//      par compte dans toute sa vie (`profiles.welcomed`).
+//
+//   4. LA PANNE FERME. `consommerJeton` rend 503 si le compteur ne repond
+//      pas ; aucun e-mail ne part alors. C'est l'inverse exact du defaut
+//      demontre sur `blog/generate`.
+// ============================================================
+
+const PLAFOND_PAR_HEURE = 3;
+
 export async function POST(req: Request) {
   try {
-    const { email } = await req.json();
-    if (!email) {
-      return NextResponse.json({ success: false, error: 'Email manquant' }, { status: 400 });
+    const auth = await requireAuthenticatedUser(req);
+    if (!auth.ok) return auth.response;
+
+    const jeton = await consommerJeton({
+      type: 'welcome_email_sent',
+      siteId: null,
+      perimetreSupplementaire: { colonne: 'details->>user_id', valeur: auth.userId },
+      fenetreMs: 60 * 60 * 1000,
+      plafond: PLAFOND_PAR_HEURE,
+      message: 'Trop de demandes, reessayez plus tard.',
+      details: { user_id: auth.userId },
+    });
+    if (!jeton.ok) {
+      return NextResponse.json({ success: false, error: jeton.erreur }, { status: jeton.statut });
     }
+
+    const email = auth.email;
 
     await resend.emails.send({
       from: 'Deribfy <no-reply@deribfy.com>',

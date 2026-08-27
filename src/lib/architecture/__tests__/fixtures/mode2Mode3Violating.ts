@@ -89,3 +89,12 @@ export const ALIAS_DU_SITE_ENTIER = `const s = site;`
  *  forme exacte trouvee dans cancel-order : une arete de dependance
  *  reconstituee par la CONFIGURATION, sans aucun import a detecter. */
 export const IDENTIFIANTS_FOURNISSEUR = `const CJ_EMAIL = process.env.CJ_EMAIL || ''`
+
+
+// ---- M1-2 : l'admission ne doit ni router, ni faillir en fail-open ----
+
+/** Le point d'admission parle du domaine d'execution : confusion des frontieres. */
+export const ADMISSION_PARLE_DE_ROUTAGE = `if (order.fulfillment_domain === 'merchant') {}`
+
+/** Fail-OPEN : tout mode inconnu deviendrait commercant sans decision. */
+export const ADMISSION_FAIL_OPEN = `if (siteMode !== 1) { autoriser() }`

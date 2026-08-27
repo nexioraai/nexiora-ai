@@ -11,7 +11,7 @@ import ClickableProductCard from './ClickableProductCard'
 import AddToCartButton from './AddToCartButton'
 import ShippingEstimate from './ShippingEstimate'
 import { getCartLabels } from './cartLabels'
-import { type Site, normalizeProduct, mockupsToProducts } from './shared'
+import { type Site, normalizeProduct, mockupsToProducts, canAddToCart } from './shared'
 import { getDict } from './i18n'
 
 export default function EditorialShopSection({ site, primary }: { site: Site; primary: string }) {
@@ -87,7 +87,7 @@ export default function EditorialShopSection({ site, primary }: { site: Site; pr
                   ) : (
                     <span className="text-sm text-neutral-400">{t.labels.onQuote}</span>
                   )}
-                  {p.id && p.priceNumber != null ? (
+                  {canAddToCart(p) ? (
                     <AddToCartButton
                       id={p.id}
                       name={p.name}

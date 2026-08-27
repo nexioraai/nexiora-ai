@@ -24,7 +24,7 @@ import ClickableProductCard from './ClickableProductCard'
 import AddToCartButton from './AddToCartButton'
 import ShippingEstimate from './ShippingEstimate'
 import { getCartLabels } from './cartLabels'
-import { type Site, normalizeProduct, mockupsToProducts } from './shared'
+import { type Site, normalizeProduct, mockupsToProducts, canAddToCart } from './shared'
 import { getDict } from './i18n'
 import { gold, goldBright, LINE, STAGE, GradedImage } from './NoirTheme'
 import SectionKicker from './SectionKicker'
@@ -114,7 +114,7 @@ export default function NoirShopSection({ site }: { site: Site }) {
                           {p.name}
                         </h3>
                         <div className="flex items-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity duration-300">
-                          {p.id && p.priceNumber != null ? (
+                          {canAddToCart(p) ? (
                             <AddToCartButton
                               id={p.id}
                               name={p.name}

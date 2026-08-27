@@ -1,3 +1,4 @@
+import { projeter } from '@/lib/testing/postgrest';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Audit timeouts/CAS (lot prioritaire) : le PATCH "marquer expédié" écrivait
@@ -28,11 +29,19 @@ const orderUpdateMock = vi.fn();
 function makeFrom() {
   return vi.fn((table: string) => {
     if (table === 'sites') {
+      // LOT 6 / CHAINE D -- projection honoree. La route garde sur
+      // `payment_provider` : un double qui rend le fixture entier ne peut pas
+      // signaler que cette colonne a quitte la projection.
       const b: any = {};
-      b.select = () => b;
+      let colonnes = '';
+      b.select = (cols?: string) => { colonnes = typeof cols === 'string' ? cols : ''; return b; };
       b.eq = () => b;
-      b.single = async () => siteSelectMock();
-      b.maybeSingle = async () => siteSelectMock();
+      const rendre = async () => {
+        const r = await siteSelectMock();
+        return { ...r, data: projeter(r?.data, colonnes) };
+      };
+      b.single = rendre;
+      b.maybeSingle = rendre;
       return b;
     }
     if (table === 'shop_orders') {

@@ -12,6 +12,8 @@ import { logAnomaly } from '@/lib/anomaly';
 // PHASES 2 et 4 (docs/PLAN-SEPARATION-MODE2-MODE3.md) : point de decision
 // unique de la frontiere, puis politique d'admission par domaine. La route
 // selectionne la politique -- elle n'en implemente aucune.
+import { canTransact } from '@/lib/commerce-admission/canTransact';
+import { findSellablePodBrandMockup, isOwnPodDesignUrl } from '@/lib/mode3/podBrandMockups';
 import { resolveFulfillmentDomain, isRecognisedSiteMode } from '@/lib/order-domain/resolve';
 import type { CheckoutPolicy } from '@/lib/order-domain/checkoutPolicy';
 import { MODE2_CHECKOUT_POLICY } from '@/lib/mode2/checkoutPolicy';
@@ -51,6 +53,23 @@ export async function POST(req: Request) {
       .is('archived_at', null)
       .single();
     if (siteError || !site) return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
+
+    // ---- M1-5 : ADMISSION AU COMMERCE, avant toute autre consideration ----
+    // Placee DELIBEREMENT avant le controle `payment_account_id` : une vitrine
+    // dont le compte de paiement serait connecte doit etre refusee quand meme.
+    // L'absence d'un compte est une donnee incidente, jamais une frontiere.
+    // Aucune commande, aucune ligne, aucune session Stripe n'existe encore a
+    // ce point : le refus ne laisse aucun artefact derriere lui.
+    //
+    // Distincte de la conversion mode -> domaine qui suit : celle-ci demande
+    // QUI executera la vente, celle-la demandait si la vente a le droit
+    // d'exister.
+    if (!canTransact(site.mode)) {
+      return NextResponse.json(
+        { error: 'Ce site est une vitrine : il ne peut pas exercer d’activité commerciale.' },
+        { status: 403 }
+      );
+    }
     if (!site.payment_account_id) return NextResponse.json({ error: 'Paiements non configurés pour ce site' }, { status: 400 });
 
     // ---- PHASE 2 + 4 : conversion unique mode -> domaine, puis politique ----
@@ -191,9 +210,27 @@ export async function POST(req: Request) {
     // CJ limite a 1 req/s : on laisse retomber le quota apres la verif de stock.
     // Sans cette verification (mode apercu), il n'y a aucun quota a laisser
     // retomber : la temporisation n'aurait plus d'objet.
-    if (!previewOnly) await new Promise((r) => setTimeout(r, 1100));
+    //
+    // M2-07 -- ET SANS FOURNISSEUR NON PLUS. Cette attente n'etait conditionnee
+    // qu'a `previewOnly` : une boutique locale, qui n'appelle JAMAIS CJ, payait
+    // donc 1,1 s sur chaque commande pour un quota qui ne la concerne pas. La
+    // politique du domaine dit desormais s'il y a un fournisseur a menager.
+    if (policy.consultsSupplierShipping && !previewOnly) {
+      await new Promise((r) => setTimeout(r, 1100));
+    }
 
-    if (countryCode && (STRIPE_SHIPPING_COUNTRIES as readonly string[]).includes(countryCode)) {
+    // M2-08 -- LE DEVIS FOURNISSEUR N'EST PLUS TENTE HORS DE SON DOMAINE.
+    //
+    // `buildSupplierGroups` interroge `shop_products` a la recherche d'un
+    // `cj_vid` : une notion fournisseur, sur un chemin marchand. Le resultat
+    // etait inerte -- et c'est MESURE, pas suppose : un article `catalog-` est
+    // deja refuse en 409 par `admitsCatalogSupplier` bien avant ce point, et
+    // aucun `shop_products` d'un site Mode 2 ne peut porter de `cj_vid`
+    // (exclu des allowlists POST et PATCH, aucun GRANT PostgREST, 0 ligne en
+    // production). Le devis retombait donc toujours sur `flat`, valeur que
+    // `shippingAmount` porte deja : sauter le bloc laisse le Mode 2
+    // rigoureusement identique, et lui epargne une requete inutile.
+    if (policy.consultsSupplierShipping && countryCode && (STRIPE_SHIPPING_COUNTRIES as readonly string[]).includes(countryCode)) {
       try {
         // LOT 2 -- le calcul du devis vit desormais dans resolveShipping(),
         // partage a l'identique avec shop/shipping/calculate (l'affichage du
@@ -335,11 +372,76 @@ export async function POST(req: Request) {
         // revalide dropship_type separement, pour ne jamais dependre d'un
         // seul point de controle.
         if (site.dropship_type === 'pod_brand') {
-          const podDesignsArr = Array.isArray(site.pod_designs) ? site.pod_designs : [];
-          const mockups = Array.isArray(podDesignsArr[0]?.mockups) ? podDesignsArr[0].mockups : [];
-          const match = mockups.find((m: any) => String(m.catalog_product_id) === realId);
+          // LOT 3 / L3-03 -- LA VITRINE VENDAIT CE QUE LE CHECKOUT NE VOYAIT PAS.
+          //
+          // Cette ligne ne lisait que `pod_designs[0].mockups`, alors que
+          // `mockupsToProducts` (themes/shared) parcourt TOUS les designs :
+          // une maquette portee par un design d'index >= 1 s'affichait, se
+          // vendait, et `match` restait `undefined` -- donc
+          // `customDesignUrl = undefined`, donc un produit FABRIQUE SANS
+          // DESIGN, aux frais de la plateforme qui avance le cout fournisseur.
+          //
+          // L'index 0 n'a jamais ete une intention produit : `mockups` et
+          // `selected_products` sont stockes SUR CHAQUE design, et chaque
+          // maquette porte deja son propre `design_url` -- l'identite de
+          // design existe et circule jusqu'au fournisseur. Seules la
+          // generation et cette lecture s'etaient repliees sur `[0]`.
+          //
+          // MEME ORDRE DE PARCOURS QUE LA VITRINE (designs dans l'ordre,
+          // premiere maquette rencontree pour un produit donne) : les deux
+          // couches ne peuvent pas designer deux maquettes differentes.
+          // LOT 3 -- LA MEME REGLE QUE LA VITRINE, PAR CONSTRUCTION.
+          //
+          // Cette ligne avait sa PROPRE selection : un `flatMap(...).find(...)`
+          // sans filtre. La contre-verification l'a executee face au module
+          // reel de la vitrine et prouve qu'elles designaient des maquettes
+          // differentes -- une maquette PERIMEE de `designs[0]` etait retenue
+          // alors que la vitrine affichait celle, fraiche, de `designs[1]`.
+          // Le visiteur voyait un design, le fournisseur en recevait un autre.
+          //
+          // Aligner l'ORDRE de parcours ne suffisait pas : ce sont les FILTRES
+          // qui divergeaient (peremption, `catalog_product_id` absent,
+          // deduplication). Les deux couches interrogent desormais la meme
+          // fonction : elles ne peuvent plus diverger, quelle que soit
+          // l'evolution de la regle.
+          const match = findSellablePodBrandMockup(site.pod_designs, realId)?.mockup as
+            | { design_url?: unknown }
+            | undefined;
           item.customDesigns = undefined;
-          item.customDesignUrl = match?.design_url || undefined;
+          // LOT 3 / L3-04 -- LE DESIGN DOIT APPARTENIR A CE SITE.
+          //
+          // `sites.pod_designs` figure dans le `GRANT UPDATE` des 41 colonnes :
+          // le marchand ecrit `mockups[].design_url` DIRECTEMENT en PostgREST,
+          // sans passer par `generate-mockups`. Rien ne verifiait ensuite que
+          // cette URL lui appartenait -- et c'est la plateforme qui AVANCE le
+          // cout fournisseur. N'importe quelle image publique, y compris le
+          // design d'une autre boutique (`pod-designs/<autre-slug>/…`),
+          // partait en fabrication.
+          //
+          // `pod_custom` a `design_uploads` : table dediee, `site_id`, usage
+          // unique, RLS. `pod_brand` n'avait rien. Cette garde en pose
+          // l'equivalent minimal SANS schema nouveau : le prefixe de stockage
+          // est deja `pod-designs/<slug>/` aux deux points d'ecriture reels
+          // (televersement editeur, upload des maquettes) -- la regle est donc
+          // LUE du code, pas inventee.
+          //
+          // FAIL-CLOSED : une URL hors prefixe n'attache aucun design plutot
+          // que d'en attacher un etranger. Une table equivalente a
+          // `design_uploads` (liaison forte, usage unique) reste une decision
+          // d'architecture distincte -- elle exige du DDL.
+          const designUrl =
+            typeof match?.design_url === 'string' && match.design_url ? match.design_url : undefined;
+          if (designUrl && !isOwnPodDesignUrl(designUrl, slug)) {
+            await logAnomaly({
+              type: 'pod_brand_design_foreign_url',
+              siteId: site.id,
+              slug,
+              details: { itemId: item.id, catalogProductId: realId },
+            });
+            item.customDesignUrl = undefined;
+          } else {
+            item.customDesignUrl = designUrl;
+          }
         } else if (site.dropship_type === 'pod_custom') {
           // LOT J (F-CUSTOM-01/04) -- cause racine : cette branche laissait
           // jusqu'ici passer customDesignUrl/customDesigns TELS QUELS,
@@ -358,6 +460,32 @@ export async function POST(req: Request) {
           const urls = Array.isArray(item.customDesigns) && item.customDesigns.length > 0
             ? item.customDesigns.map((d: any) => d?.url).filter((u: unknown): u is string => typeof u === 'string' && u.length > 0)
             : (typeof item.customDesignUrl === 'string' && item.customDesignUrl ? [item.customDesignUrl] : []);
+          // ============================================================
+          // LOT 5 / P5-02 -- UN SUPPORT `pod_custom` N'EST PAS VENDABLE NU.
+          //
+          // Cette branche ne validait que les URL PRESENTES : un panier sans
+          // design traversait la boucle vide, la commande etait creee, et
+          // `pod-fulfill` envoyait `files: []` -- le fournisseur fabriquait un
+          // BLANC, aux frais de la plateforme qui avance le cout. Ni l'UI ni
+          // le serveur ne l'interdisaient ; ils ne l'exigeaient simplement
+          // pas. La guidance du sous-mode dit pourtant « uploads their own
+          // image BEFORE adding to cart ».
+          //
+          // DECISION PRODUIT ACTEE : le design est OBLIGATOIRE. La garde est
+          // posee ICI, cote serveur, donc incontournable -- un panier forge,
+          // un appel direct a cette route ou une UI contournee y echouent
+          // tous. Le miroir client (`achatPossible`) ne fait qu'eviter
+          // d'offrir un bouton que ce refus sanctionnerait.
+          // ============================================================
+          if (urls.length === 0) {
+            await logAnomaly({
+              type: 'custom_design_missing',
+              siteId: site.id,
+              slug,
+              details: { itemId: item.id },
+            });
+            return NextResponse.json({ error: 'Un design est requis pour ce produit.' }, { status: 409 });
+          }
           for (const designUrl of urls) {
             const { data: design } = await supabaseAdmin
               .from('design_uploads')
@@ -418,9 +546,12 @@ export async function POST(req: Request) {
         // acheter un item Mode 3 a cout fournisseur inconnu) est conserve,
         // mais desormais base sur un signal reel (cj_vid), pas sur une
         // colonne qui n'a jamais existe.
+        // ETAPE 8, VOLET A -- `for_sale` ajoute a la lecture. La VISIBILITE
+        // (`published`) et l'ACHETABILITE (`for_sale`) sont desormais deux
+        // faits distincts, et l'achat exige LES DEUX.
         const { data: sp, error: spError } = await supabaseAdmin
           .from('shop_products')
-          .select('price, currency, published, cj_vid')
+          .select('price, currency, published, for_sale, cj_vid')
           .eq('id', item.id)
           .eq('site_id', site.id)
           .maybeSingle();
@@ -428,7 +559,21 @@ export async function POST(req: Request) {
           await logAnomaly({ type: 'shop_product_query_failed', siteId: site.id, slug, details: { itemId: item.id, error: spError.message } });
           return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
         }
-        if (!sp || sp.published !== true) {
+        // CONJONCTION, et non substitution. Remplacer `published` par
+        // `for_sale` OUVRIRAIT une capacite que personne n'a demandee : un
+        // produit `published = false, for_sale = true` deviendrait achetable
+        // -- cas reel, un client ayant deja l'article au panier au moment ou
+        // le marchand le depublie. Aujourd'hui cet achat est refuse ; il doit
+        // le rester. La conjonction est STRICTEMENT plus restrictive que la
+        // regle anterieure : elle n'ouvre rien, elle n'ajoute que la faculte
+        // de refuser.
+        //
+        // `!== true` sur les DEUX, et non `=== false`. Si l'une des colonnes
+        // venait a manquer de la lecture -- projection modifiee, colonne
+        // renommee, ligne heritee d'un chemin d'ecriture inconnu -- son
+        // absence doit rendre ce controle PLUS STRICT, jamais plus permissif.
+        // Un produit dont on ne sait pas s'il est vendable ne se vend pas.
+        if (!sp || sp.published !== true || sp.for_sale !== true) {
           await logAnomaly({ type: 'shop_product_not_purchasable', siteId: site.id, slug, details: { itemId: item.id } });
           return NextResponse.json({ error: 'Produit indisponible' }, { status: 409 });
         }

@@ -4,6 +4,8 @@ import { useState, useMemo, type ReactNode } from 'react'
 import Image from 'next/image'
 import { ArrowRight, Truck, Grid3x3, Sparkles, ShieldCheck, RefreshCw, Headphones } from 'lucide-react'
 import type { Product } from './shared'
+// DETTE 6c — garde d'ajout au panier : point de decision unique (shared.tsx).
+import { canAddToCart } from './shared'
 import ClickableProductCard from './ClickableProductCard'
 import AddToCartButton from './AddToCartButton'
 import ShippingEstimate from './ShippingEstimate'
@@ -225,7 +227,7 @@ export default function StorefrontDense({
                     ) : (
                       <div className="text-sm text-neutral-400 mb-2.5">{labels.onQuote}</div>
                     )}
-                    {p.id && p.priceNumber != null ? (
+                    {canAddToCart(p) ? (
                       <div
                         className="w-full flex items-center justify-center py-2.5 rounded-xl text-white transition hover:opacity-90 [&_button]:text-white"
                         style={{ backgroundColor: primary }}

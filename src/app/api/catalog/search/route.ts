@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { usesCatalogSelections } from '@/lib/dropship/catalogAdmission';
 import { suppliersForDropshipType } from '@/lib/dropship/suppliers';
 import { calcSellPrice, sitePricing, resolveDisplayPrice } from '@/lib/pricing';
 
@@ -35,6 +36,48 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
   }
 
+  // ============================================================
+  // ETAPE 2 -- CETTE GARDE N'EXISTAIT PAS, ET C'ETAIT UN TROU.
+  //
+  // Cette route selectionnait `mode` puis ne le lisait JAMAIS : elle s'en
+  // remettait entierement a `suppliersForDropshipType(dropship_type)`. Or ce
+  // dernier retombe sur `['cj']` quand le sous-type est absent -- « par
+  // securite, aucun melange », dit son commentaire, ce qui est juste POUR UN
+  // SITE MODE 3. Consequence mesuree : un site Mode 1 ou Mode 2, dont le
+  // sous-type est null, obtenait le catalogue CJ complet des lors qu'on
+  // connaissait son slug.
+  //
+  // AUCUN CLIENT LEGITIME N'EST TOUCHE : `CatalogSearch` n'est rendu que
+  // lorsque `site.mode === 3` (sites/[slug]/page.tsx). Seuls les appelants
+  // directs voient la difference -- et c'est precisement le point.
+  //
+  // FORME DE REPONSE INCHANGEE : meme objet que le succes, simplement vide.
+  // Un 403 aurait appris a un rodeur que le slug existe ; ce silence
+  // n'apprend rien de plus qu'une boutique sans resultat.
+  // ============================================================
+  // LOT 2 -- LA GARDE DESCEND DU MODE AU MECANISME.
+  //
+  // Elle ne regardait que le mode, donc `pod_brand` obtenait ici la recherche
+  // visiteur du catalogue Printful -- alors que ses produits viennent de ses
+  // mockups, que sa vitrine ne monte aucune barre de recherche
+  // (`showsVisitorCatalogSearch`) et que son agent n'a aucun outil de
+  // curation (`CATALOG_SUBTYPES`). Trois couches disaient deja non ; cette
+  // route repondait oui. AUCUN APPELANT LEGITIME N'EST TOUCHE : la barre
+  // n'est jamais montee pour lui.
+  //
+  // FORME DE REPONSE RIGOUREUSEMENT INCHANGEE (voir ci-dessus) : meme objet
+  // que le succes, simplement vide. Un 403 apprendrait a un rodeur que le
+  // slug existe.
+  if (!usesCatalogSelections((site as { mode?: unknown }).mode, (site as { dropship_type?: unknown }).dropship_type)) {
+    return NextResponse.json({
+      products: [],
+      total: 0,
+      page,
+      page_size: pageSize,
+      has_more: false,
+    });
+  }
+
   const { margin, roundMode } = sitePricing(site);
   const calcPrice = (cost: number) => calcSellPrice(cost, margin, roundMode);
 
@@ -46,7 +89,7 @@ export async function GET(req: NextRequest) {
   if (words.length > 0) {
     let cQuery = supabaseAdmin
       .from('site_catalog_selections')
-      .select('id, sell_price, custom_name, custom_description, catalog_product_id, catalog_products(id, name, description, price, currency, images, supplier_id, supplier_product_id, shipping_days_min, shipping_days_max, warehouse_country, in_stock)')
+      .select('id, sell_price, custom_name, custom_description, catalog_product_id, catalog_products(id, name, description, price, currency, images, supplier_id, supplier_product_id, supplier_parent_id, shipping_days_min, shipping_days_max, warehouse_country, in_stock)')
       .eq('site_id', site.id)
       .eq('merchant_approved', true);
 
@@ -70,6 +113,9 @@ export async function GET(req: NextRequest) {
             id: `catalog-${cp.id}`,
             supplier_id: cp.supplier_id,
             supplier_product_id: cp.supplier_product_id,
+            // LOT 4 / R4-02 -- voir themes/shared.tsx : une ligne sans parent
+            // designe un PRODUIT, donc la variante doit etre choisie.
+            requires_variant: !cp.supplier_parent_id,
             name: s.custom_name || cp.name,
             description: s.custom_description || cp.description || '',
             price: resolveDisplayPrice(cost, s.sell_price, margin, roundMode),
@@ -96,7 +142,7 @@ export async function GET(req: NextRequest) {
   // reellement necessaires a l'affichage storefront quittent la DB.
   let query2 = supabaseAdmin
     .from('catalog_products')
-    .select('id, supplier_id, supplier_product_id, name, description, category, images, variants, price, currency, shipping_days_min, shipping_days_max, warehouse_country', { count: 'exact' })
+    .select('id, supplier_id, supplier_product_id, supplier_parent_id, name, description, category, images, variants, price, currency, shipping_days_min, shipping_days_max, warehouse_country', { count: 'exact' })
     // Meme regle qu'ailleurs : seul un false explicite masque le produit.
     .not('in_stock', 'is', false);
 
@@ -160,6 +206,7 @@ export async function GET(req: NextRequest) {
         id: `catalog-${p.id}`,
         supplier_id: p.supplier_id,
         supplier_product_id: p.supplier_product_id,
+        requires_variant: !p.supplier_parent_id,
         name: p.name,
         description: p.description || '',
         category: p.category,

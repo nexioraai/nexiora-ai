@@ -126,4 +126,20 @@ describe('M1-02 — borne de débit', () => {
     expect(res.status).toBe(429);
     expect(sendMock).not.toHaveBeenCalled();
   });
+
+  it('LOT 6 — compteur en PANNE -> 503, AUCUN e-mail (la borne ne s’ouvre plus)', async () => {
+    // `error` n'etait pas lu. PostgREST rend `count: null` quand la requete
+    // echoue, `(null ?? 0) >= 20` vaut false, et l'e-mail partait quand meme --
+    // au moment precis ou la base flanchait. Sans ce test, retirer la lecture
+    // de `error` ne casserait rien : la correction serait non prouvee.
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'sites') return tableChain({ data: SITE, error: null });
+      if (table === 'checkout_anomalies') return tableChain({ count: null as never, error: { message: 'db down' } });
+      if (table === 'messages') return tableChain({});
+      throw new Error('table inattendue: ' + table);
+    });
+    const res = await POST(req(OK));
+    expect(res.status).toBe(503);
+    expect(sendMock).not.toHaveBeenCalled();
+  });
 });

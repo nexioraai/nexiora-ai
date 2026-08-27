@@ -25,6 +25,7 @@ import { getCartLabels } from './cartLabels'
 import { socialUrl } from '@/lib/social'
 import StorefrontDense from './StorefrontDense'
 import CatalogSearch from './CatalogSearch'
+import { showsVisitorCatalogSearch } from './catalogSearchVisibility'
 import { getModeCapabilities } from './modeCapabilities'
 
 export default function AuroraTheme({ site }: { site: Site }) {
@@ -56,7 +57,31 @@ export default function AuroraTheme({ site }: { site: Site }) {
 
   const deliveryTag = L('Livraison suivie', 'Tracked delivery', 'Envío con seguimiento', 'شحن متتبع', 'Entrega rastreada', 'Verfolgte Lieferung', 'Spedizione tracciata')
 
-  const showCatalogSearch = isShop && site.dropship_type !== 'pod_brand'
+  // LOT 1 / L1-02 -- la NEGATION `!== 'pod_brand'` laissait passer un
+  // sous-type ABSENT. Regle unique et positive, partagee avec la page
+  // publique et l'apercu.
+  //
+  // LOT 2 / DEBT-048 -- LA GARDE DE MODE MANQUANTE EST POSEE.
+  //
+  // Ce theme etait le seul des trois montages a ne pas la porter :
+  // `sites/[slug]/page.tsx` et `preview/[slug]/page.tsx` ecrivent tous deux
+  // `site.mode === 3 && showsVisitorCatalogSearch(...)`. Ici, `isShop`
+  // (`getModeCapabilities`) admet aussi le Mode 2 des qu'il a un produit --
+  // si bien qu'un site NON-Mode-3 portant un sous-type aurait monte la barre
+  // de recherche catalogue. La meme expression, aux trois endroits.
+  //
+  // ATTEIGNABILITE MESUREE avant correction : aucun site `mode != 3` ne porte
+  // de sous-type en production, le LOT 1 rend ce couple improducible a la
+  // creation, et `mode` comme `dropship_type` sont exclus du GRANT UPDATE de
+  // `authenticated` (verifie dans lot_g_final_field_level_authorization.sql).
+  // La protection ne reposait donc plus que sur DEUX invariants d'AUTRES
+  // couches -- exactement la classe de defaut que l'audit Mode 2 a nommee.
+  // Elle repose desormais sur sa propre garde.
+  //
+  // `showsVisitorCatalogSearch` reste volontairement AVEUGLE AU MODE : c'est
+  // une regle de sous-type, et la garde de mode appartient a l'appelant. Y
+  // fusionner le mode ferait decider deux frontieres a une seule autorite.
+  const showCatalogSearch = isShop && site.mode === 3 && showsVisitorCatalogSearch(site.dropship_type)
 
   return (
     <div
@@ -98,6 +123,7 @@ export default function AuroraTheme({ site }: { site: Site }) {
             {!hidden('About') && <a href="#about" className="hover:text-neutral-900 transition-colors">{t.nav.about}</a>}
             {isShop && <a href="#shop" className="hover:text-neutral-900 transition-colors">{t.nav.shop}</a>}
             {testimonials.length > 0 && !hidden('Reviews') && <a href="#testimonials" className="hover:text-neutral-900 transition-colors">{t.nav.reviews}</a>}
+            {site.faq && site.faq.length > 0 && !hidden('FAQ') && <a href="#faq" className="hover:text-neutral-900 transition-colors">{t.nav.faq}</a>}
             {!hidden('Contact') && <a href="#contact" className="hover:text-neutral-900 transition-colors">{t.nav.contact}</a>}
           </nav>
           <a
@@ -126,7 +152,7 @@ export default function AuroraTheme({ site }: { site: Site }) {
             heroImage={site.hero_image}
             slogan={site.slogan}
             searchSlot={showCatalogSearch ? (
-              <CatalogSearch slug={site.slug} primary={primary} lang={site.lang} dropshipType={site.dropship_type || 'reseller'} />
+              <CatalogSearch slug={site.slug} primary={primary} lang={site.lang} dropshipType={site.dropship_type} />
             ) : undefined}
             labels={{
               all: L('Tout', 'All', 'Todo', 'الكل', 'Tudo', 'Alle', 'Tutti'),
@@ -264,6 +290,43 @@ export default function AuroraTheme({ site }: { site: Site }) {
             </div>
           </section>
         ))}
+
+        {/* FAQ
+            CHANTIER 2 (MODE 1) -- la FAQ etait rendue par le seul theme
+            Editorial, alors que `JsonLd` emet `FAQPage` pour les QUATRE
+            themes et que `llms.txt` la publie. Mesure sur
+            yiaglobalcommodities.com (theme Vif) : six questions completes
+            servies a Google et aux crawlers LLM, et AUCUNE section FAQ dans
+            le HTML. Les regles Google Rich Results exigent que le contenu
+            balise soit visible sur la page.
+            Meme motif qu'Editorial : accordeon <details> autonome, aucune
+            dependance ajoutee. Place entre les avis et le contact, comme
+            chez Editorial. */}
+        {site.faq && site.faq.length > 0 && !hidden('FAQ') && (
+          <section id="faq" className="py-20 md:py-28">
+            <div className="max-w-3xl mx-auto px-6">
+              <div className="text-center mb-12">
+                <div className="text-xs font-medium tracking-[0.2em] uppercase mb-3" style={{ color: primary }}>
+                  {t.sections.faqKicker}
+                </div>
+                <h2 className="text-3xl md:text-4xl font-semibold leading-tight text-neutral-900">
+                  {t.sections.faqTitle}
+                </h2>
+              </div>
+              <div className="space-y-3">
+                {site.faq.map((item, i) => (
+                  <details key={i} className="group rounded-2xl bg-white border border-neutral-200 p-5 md:p-6">
+                    <summary className="cursor-pointer list-none font-medium flex justify-between items-center text-neutral-900">
+                      {item.question}
+                      <span className="ml-4 transition-transform group-open:rotate-45" style={{ color: primary }}>+</span>
+                    </summary>
+                    <p className="mt-3 text-neutral-600 leading-relaxed">{item.answer}</p>
+                  </details>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* CONTACT */}
         {!hidden('Contact') && (

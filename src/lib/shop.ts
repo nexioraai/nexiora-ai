@@ -15,7 +15,33 @@ export type ShopProduct = {
   currency: string;
   images: string[];
   stock: number;
+  /**
+   * ÉTAPE 5 — politique d'inventaire (colonne `shop_products.track_inventory`,
+   * `NOT NULL DEFAULT true`, introduite à l'étape 1).
+   *
+   * `false` = vente sans compteur : `stock` devient inerte et ne doit être
+   * ni lu, ni comparé, ni décrémenté. Exposée ici parce que `checkStock()`
+   * en a besoin ; volontairement ABSENTE de `ShopProductInput` — la
+   * réactivation du suivi passe par `enable_stock_tracking()` (étape 3),
+   * jamais par un patch générique.
+   */
+  track_inventory: boolean;
   published: boolean;
+  /**
+   * ÉTAPE 8, VOLET A — ACHETABILITÉ (colonne `shop_products.for_sale`,
+   * `NOT NULL DEFAULT true`).
+   *
+   * Distincte de `published`, qui ne porte plus que la VISIBILITÉ. Jusqu'à ce
+   * volet, `published` faisait les deux : un marchand ne pouvait ni exposer
+   * un produit sans le vendre, ni le retirer de la vente sans le faire
+   * disparaître de sa vitrine, de sa fiche produit ET du sitemap.
+   *
+   * Le défaut vit en base, PAS ici. `ShopProductInput.for_sale` est optionnel
+   * et `createProduct` n'envoie que les champs fournis : un appelant qui omet
+   * le champ obtient `true` du DEFAULT PostgreSQL. Redéclarer cette valeur en
+   * TypeScript créerait une seconde source de vérité pour une même règle.
+   */
+  for_sale: boolean;
   position: number;
   created_at: string;
 };
@@ -29,6 +55,15 @@ export type ShopProductInput = {
   images?: string[];
   stock?: number;
   published?: boolean;
+  /**
+   * ÉTAPE 8, VOLET A — OPTIONNEL, et il doit le rester. Omettre ce champ
+   * laisse PostgreSQL appliquer `DEFAULT true` ; lui donner une valeur de
+   * repli ici ferait du TypeScript une seconde autorité sur le défaut.
+   * Contrairement à `track_inventory`, `for_sale` est admis dans les
+   * allowlists génériques : il ne déclare rien sur un état antérieur, donc
+   * n'exige ni preuve, ni horodatage, ni acte dédié.
+   */
+  for_sale?: boolean;
   position?: number;
 };
 
@@ -92,6 +127,81 @@ export async function updateProduct(
   return data as ShopProduct;
 }
 
+/**
+ * ETAPE 7 du chantier catalogue canonique -- LES DEUX SEULES ECRITURES DE
+ * `track_inventory` DE TOUT LE TYPESCRIPT.
+ *
+ * Elles sont ici, et non dans la route, parce que `shop.ts` est le module
+ * unique d'acces a `shop_products` : une route qui importerait
+ * `supabaseAdmin` directement pour ecrire dans cette table serait la
+ * divergence, pas la regle.
+ */
+
+export type EnableStockTrackingResult =
+  | { ok: true; stock: number; stock_counted_at: string | null }
+  | { ok: false; reason: string; transport?: true };
+
+/**
+ * Active le suivi de stock EN AFFIRMANT UN COMPTAGE.
+ *
+ * Passe OBLIGATOIREMENT par `enable_stock_tracking()` (etape 3), jamais par un
+ * `update({ track_inventory: true })`. La raison n'est pas stylistique : la
+ * barriere `trg_enforce_stock_tracking_requires_count` (etape 2) refuse toute
+ * transition false -> true qui ne fait pas AVANCER STRICTEMENT
+ * `stock_counted_at`. Seule la RPC pose les trois colonnes dans la meme
+ * instruction, avec `clock_timestamp()` -- `now()` est fige par transaction et
+ * ne pourrait donc pas avancer deux fois dans une meme transaction.
+ *
+ * La RPC ne leve jamais : elle rend `{ success: false, reason }`. Ce wrapper
+ * RELAIE ce resultat sans le reinterpreter -- il ne rejoue aucune regle
+ * metier, ne devine aucune cause, n'inspecte pas `track_inventory` avant
+ * l'appel. La base est l'autorite ; le TypeScript n'est qu'un transport.
+ */
+export async function enableStockTracking(
+  productId: string,
+  units: number
+): Promise<EnableStockTrackingResult> {
+  const { data, error } = await supabaseAdmin.rpc('enable_stock_tracking', {
+    p_product_id: productId,
+    p_stock: units,
+  });
+
+  // Erreur de TRANSPORT (reseau, droits, fonction absente) -- distincte d'un
+  // refus metier : elle ne dit rien de la legitimite de la demande.
+  if (error) {
+    console.error('enableStockTracking RPC error:', error.message);
+    return { ok: false, reason: error.message, transport: true };
+  }
+  if (!data || data.success !== true) {
+    return { ok: false, reason: data?.reason || 'unknown' };
+  }
+  return { ok: true, stock: data.stock, stock_counted_at: data.stock_counted_at ?? null };
+}
+
+/**
+ * Cesse de suivre le stock d'un produit.
+ *
+ * `track_inventory` SEUL. `stock_counted_at` n'est jamais efface ni modifie :
+ * c'est la trace du dernier comptage reellement affirme par un humain, et
+ * l'effacer detruirait la seule preuve dont la barriere de reactivation se
+ * sert. Le compteur `stock` n'est pas remis a zero non plus -- il devient
+ * inerte (`checkStock` cesse de le lire), il ne devient pas faux.
+ *
+ * Aucune RPC ici : la transition true -> false est LIBRE cote base (la
+ * barriere ne s'oppose qu'a la reactivation). Lui inventer un garde-fou
+ * applicatif reviendrait a dupliquer une decision que la base a deja prise.
+ */
+export async function disableStockTracking(productId: string): Promise<ShopProduct> {
+  const { data, error } = await supabaseAdmin
+    .from('shop_products')
+    .update({ track_inventory: false })
+    .eq('id', productId)
+    .select('*')
+    .single();
+  if (error) throw new Error(`disableStockTracking: ${error.message}`);
+  return data as ShopProduct;
+}
+
 /** Supprime un produit. */
 export async function deleteProduct(id: string): Promise<void> {
   const { error } = await supabaseAdmin
@@ -122,7 +232,21 @@ export async function checkStock(
     if (line.id.startsWith("catalog-")) continue;
     const product = await getProduct(line.id);
     if (!product) return { ok: false, reason: `Produit introuvable` };
-    if (product.stock < line.quantity) {
+    // ÉTAPE 5 — le compteur ne fait autorité que sur un produit SUIVI.
+    // Un produit `track_inventory = false` est vendu sans compteur : son
+    // `stock` est inerte (souvent 0) et le refuser ici rendrait la vente sans
+    // inventaire impossible. La base applique déjà cette sémantique depuis
+    // l'étape 4 (`decrement_shop_stock_batch` ignore ces lignes, sans erreur
+    // ni marquage) ; cette pré-vérification s'aligne dessus.
+    //
+    // `!== false` ET NON `=== true`, délibérément. Si `track_inventory`
+    // venait à manquer de la lecture (select restreint, donnée partielle),
+    // son absence doit rendre ce contrôle PLUS STRICT, jamais plus permissif :
+    // une pré-vérification plus permissive que le décrément ferait encaisser
+    // l'acheteur puis déclencher un remboursement automatique intégral
+    // (handlePaidCheckout). Trop strict = vente perdue ; trop permissif =
+    // argent encaissé puis rendu. Les deux directions ne se valent pas.
+    if (product.track_inventory !== false && product.stock < line.quantity) {
       return { ok: false, reason: `Stock insuffisant pour "${product.name}" (${product.stock} disponible)` };
     }
   }

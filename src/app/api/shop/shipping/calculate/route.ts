@@ -1,3 +1,4 @@
+import { canTransact } from '@/lib/commerce-admission/canTransact';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { STRIPE_SHIPPING_COUNTRIES } from '@/lib/payments/countries';
@@ -39,10 +40,21 @@ export async function POST(req: Request) {
 
     const { data: site } = await supabaseAdmin
       .from('sites')
-      .select('id, shipping_flat')
+      .select('id, shipping_flat, mode')
       .eq('slug', slug)
       .single();
     if (!site) return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
+
+    // M1-5 — le devis de livraison est une etape de VENTE : il alimente le
+    // panier puis le checkout, et peut declencher un appel fournisseur. Une
+    // vitrine n'a pas de panier a chiffrer. Garde posee AVANT
+    // `buildSupplierGroups`, donc avant toute lecture ou appel commercial.
+    if (!canTransact((site as { mode?: unknown }).mode)) {
+      return NextResponse.json(
+        { error: 'Ce site est une vitrine : il ne peut pas exercer d’activité commerciale.' },
+        { status: 403 }
+      );
+    }
 
     const groups = await buildSupplierGroups(items);
     const quote = await resolveShipping({

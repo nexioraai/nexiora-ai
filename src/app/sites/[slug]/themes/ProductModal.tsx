@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { achatPossible } from './variantRequirement';
 import { X, ChevronLeft, ChevronRight, Truck } from 'lucide-react';
 import AddToCartButton from './AddToCartButton';
 import DesignCanvas from './DesignCanvas';
@@ -10,6 +11,8 @@ interface CatalogProduct {
   id: string;
   supplier_id: string;
   supplier_product_id?: string;
+  /** LOT 4 / R4-02 -- voir la condition `disabled` plus bas. */
+  requires_variant?: boolean;
   name: string;
   description?: string;
   price: number;
@@ -73,6 +76,8 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
     if (!p.supplier_id || !p.supplier_product_id) return;
     setLoadingVariants(true);
     const params = new URLSearchParams({
+      // LOT 6 / DEBT-057 -- slug requis par l'admission de la route.
+      slug,
       supplier_id: p.supplier_id,
       supplier_product_id: p.supplier_product_id,
     });
@@ -93,6 +98,15 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
   }, [p.supplier_id, p.supplier_product_id]);
 
   const variants = cachedVariants.length > 0 ? cachedVariants : liveVariants;
+  // LOT 5 / P5-02 -- un support `pod_custom` n'est pas achetable sans design.
+  const achetable = achatPossible({
+    requiresVariant: p.requires_variant,
+    variantesConnues: variants.length,
+    varianteChoisie: selectedVariant,
+    chargementEnCours: loadingVariants,
+    designRequis: isPodCustom,
+    designsFournis: customDesigns.length,
+  });
 
   const prevImg = () => setImgIndex(i => (i > 0 ? i - 1 : imgs.length - 1));
   const nextImg = () => setImgIndex(i => (i < imgs.length - 1 ? i + 1 : 0));
@@ -230,8 +244,25 @@ export default function ProductModal({ product: p, primary, lang = 'en', theme =
               customDesignUrl={customDesigns[0]?.url}
               variantId={selectedVariant || undefined}
               primary={primary}
-              label={loadingVariants ? t.loadingVariants : (variants.length > 0 && !selectedVariant ? t.chooseOption : t.addToCart)}
-              disabled={loadingVariants || (variants.length > 0 && !selectedVariant)}
+            // ============================================================
+            // LOT 4 / R4-02 -- LA CONDITION N'EST PLUS UN PROXY.
+            //
+            // C'etait `variants.length > 0 && !selectedVariant` : « il y a des
+            // options, donc il faut en choisir une ». Le proxy s'effondre quand
+            // la liste revient VIDE -- rupture totale de stock, ou erreur
+            // avalee par `/api/catalog/variants`, qui rend `{variants: []}`
+            // dans les deux cas. Le bouton s'activait alors pour un produit
+            // dont l'identifiant de panier n'aurait AUCUNE variante, et que le
+            // checkout refuse (garde `catalogStock`, LOT 4). Bouton actif,
+            // refus garanti : exactement la divergence « ce que l'UI permet
+            // n'est pas ce que le checkout vend » que ce lot ferme.
+            //
+            // `requiresVariant` vient de la donnee (`supplier_parent_id`), pas
+            // d'une heuristique. `undefined` pour un produit sans fournisseur
+            // (Mode 2, maquettes POD) : comportement rigoureusement inchange.
+            // ============================================================
+              label={loadingVariants ? t.loadingVariants : (achetable ? t.addToCart : t.chooseOption)}
+              disabled={!achetable}
               onAdded={onClose}
             />
 

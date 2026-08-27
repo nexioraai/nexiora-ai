@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase as supabaseAnon } from '@/lib/supabase';
+import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { listAllDomains } from '@/lib/domains/porkbun';
 import { provisionDomain } from '@/lib/domains/provision';
@@ -20,12 +20,6 @@ export async function POST(req: NextRequest) {
   // Deux voies d'appel : le marchand via son token Supabase, ou l'operateur
   // Nexiora via CRON_SECRET (reprise manuelle, domaine transfere).
   const isOperator = !!process.env.CRON_SECRET && token === process.env.CRON_SECRET;
-  let userEmail: string | null = null;
-  if (!isOperator) {
-    const { data: { user }, error: authErr } = await supabaseAnon.auth.getUser(token);
-    if (authErr || !user?.email) return NextResponse.json({ error: 'Non authentifie' }, { status: 401 });
-    userEmail = user.email;
-  }
 
   const { slug, domain } = await req.json().catch(() => ({}));
   const clean = String(domain || '').trim().toLowerCase();
@@ -33,13 +27,37 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Domaine invalide' }, { status: 400 });
   }
 
-  const { data: site } = await supabaseAdmin
-    .from('sites')
-    .select('id, owner_email')
-    .eq('slug', slug)
-    .maybeSingle();
-  if (!site || (!isOperator && site.owner_email !== userEmail)) {
-    return NextResponse.json({ error: 'Site introuvable' }, { status: 403 });
+  // ============================================================
+  // DETTE 6a, EXTENSION -- `owner_email` N'EST PLUS L'IDENTITE.
+  //
+  // La garde s'ecrivait `site.owner_email !== userEmail` : une comparaison en
+  // JavaScript plutot qu'un `.eq()`, mais exactement la meme cle, donc
+  // exactement le meme defaut. `sites.owner_email` est ecrite UNE SEULE FOIS,
+  // a la creation du site, et aucun update ne la touche jamais -- un
+  // proprietaire qui change d'adresse laisse la colonne figee sur l'ancienne,
+  // et quiconque obtient ensuite cette adresse devenait proprietaire aux yeux
+  // de cette route, qui provisionne un domaine REEL (DNS, Vercel, Google).
+  //
+  // LA VOIE OPERATEUR EST PRESERVEE TELLE QUELLE. `CRON_SECRET` n'est pas une
+  // identite d'utilisateur : aucune primitive de propriete ne s'y applique, et
+  // lui en imposer une casserait la reprise manuelle. Les deux voies restent
+  // donc distinctes -- l'operateur resout le site sans controle de propriete
+  // (c'est le sens de ce secret), le marchand passe par la primitive
+  // canonique. Aucune regle de propriete n'est reecrite ici.
+  // ============================================================
+  let site: { id: string };
+  if (isOperator) {
+    const { data } = await supabaseAdmin
+      .from('sites')
+      .select('id')
+      .eq('slug', slug)
+      .maybeSingle();
+    if (!data) return NextResponse.json({ error: 'Site introuvable' }, { status: 404 });
+    site = data as { id: string };
+  } else {
+    const auth = await requireSiteOwner(req, slug, 'id');
+    if (!auth.ok) return auth.response;
+    site = auth.site as { id: string };
   }
 
   // Le domaine doit reellement etre dans le compte Porkbun, sinon l'ecriture

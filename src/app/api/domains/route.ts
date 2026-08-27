@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase as supabaseAnon } from '@/lib/supabase'
+import { requireSiteOwner } from '@/lib/auth/require-site-owner'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { addDomainToVercel } from '@/lib/domains/vercel'
 
@@ -9,15 +9,6 @@ function isValidDomain(d: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    // Sans authentification, n'importe qui pouvait rattacher n'importe quel
-    // domaine a n'importe quel site.
-    const token = req.headers.get('authorization')?.replace('Bearer ', '')
-    if (!token) return NextResponse.json({ error: 'Non authentifie.' }, { status: 401 })
-    const { data: { user }, error: authErr } = await supabaseAnon.auth.getUser(token)
-    if (authErr || !user?.email) {
-      return NextResponse.json({ error: 'Non authentifie.' }, { status: 401 })
-    }
-
     const { slug, domain } = await req.json()
     const clean = String(domain || '').trim().toLowerCase()
 
@@ -25,15 +16,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Domaine ou site invalide.' }, { status: 400 })
     }
 
-    // Le site doit appartenir a l'utilisateur authentifie.
-    const { data: site } = await supabaseAdmin
-      .from('sites')
-      .select('id, owner_email, custom_domain')
-      .eq('slug', slug)
-      .maybeSingle()
-    if (!site || site.owner_email !== user.email) {
-      return NextResponse.json({ error: 'Site introuvable.' }, { status: 403 })
-    }
+    // ============================================================
+    // DETTE 6a, EXTENSION -- `owner_email` N'EST PLUS L'IDENTITE.
+    //
+    // La garde s'ecrivait `site.owner_email !== user.email` : une comparaison
+    // en JavaScript plutot qu'un `.eq()`, mais exactement la meme cle, et donc
+    // exactement le meme defaut. `sites.owner_email` est ecrite UNE SEULE
+    // FOIS, a la creation du site, et aucun update ne la touche jamais -- un
+    // proprietaire qui change d'adresse laisse la colonne figee sur
+    // l'ancienne, et quiconque obtient ensuite cette adresse devenait
+    // proprietaire aux yeux de cette route.
+    //
+    // AUCUN MECANISME NOUVEAU : `requireSiteOwner`, primitive canonique --
+    // `owner_id` prioritaire, repli sur `owner_email` UNIQUEMENT quand
+    // `owner_id` est encore null cote base. Les codes deviennent ceux de la
+    // primitive : 401 non authentifie, 404 site inexistant, 403 non
+    // proprietaire (la route confondait les deux derniers dans un seul 403).
+    // ============================================================
+    const auth = await requireSiteOwner(req, slug, 'id, custom_domain')
+    if (!auth.ok) return auth.response
+    const site = auth.site as { id: string; custom_domain: string | null }
 
     // Un domaine ne peut pas etre rattache a deux sites.
     const { data: alreadyUsed } = await supabaseAdmin

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isKnownDropshipSubtype, requiresDropshipSubtype } from '@/lib/dropship/subtypeAdmission';
 import Anthropic from '@anthropic-ai/sdk';
 import { supabase as supabaseAnon } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabase-admin';
@@ -115,6 +116,15 @@ export async function POST(req: Request) {
     const body = await req.json();
     const rawHistory = Array.isArray(body.history) ? body.history : [];
     const chosenMode: number | null = [1, 2, 3].includes(body.chosenMode) ? body.chosenMode : null;
+    // LOT 1 / L1-01 -- LE SOUS-TYPE CHOISI PAR L'HUMAIN ETAIT IGNORE.
+    // `OnboardingChat` envoie deja `dropshipType` dans ce corps de requete
+    // (le selecteur de sous-type le pose des le clic sur « Dropshipping »),
+    // mais cette route ne le lisait pas : seule la detection du modele
+    // comptait. Meme forme que `chosenMode` juste au-dessus, et meme raison
+    // -- un choix explicite prime toujours sur une inference. Sans cela, la
+    // relance ci-dessous pourrait redemander indefiniment un sous-type que
+    // l'utilisateur vient de designer.
+    const chosenDsType = isKnownDropshipSubtype(body.dropshipType) ? body.dropshipType : null;
     const language = typeof body.language === 'string' ? body.language : 'auto';
 
     // Validation stricte de l'historique reçu
@@ -184,15 +194,38 @@ export async function POST(req: Request) {
     // Mode final : bouton explicite prioritaire, sinon detection agent
     const detectedMode = [1, 2, 3].includes(intent.detectedMode) ? intent.detectedMode : null;
     const finalMode = chosenMode ?? detectedMode;
-    const detectedDsType = ['reseller', 'pod_brand', 'pod_custom'].includes(intent.detectedDropshipType) ? intent.detectedDropshipType : null;
+    // LOT 1 / L1-01 -- le vocabulaire des sous-types n'est plus recopie ici.
+    const detectedDsType = isKnownDropshipSubtype(intent.detectedDropshipType) ? intent.detectedDropshipType : null;
+    const finalDsType = chosenDsType ?? detectedDsType;
 
     if (intent.type === 'done' && typeof intent.summary === 'string') {
+      // ============================================================
+      // LOT 1 / L1-01 -- LA SOURCE DES SITES SANS SOUS-TYPE, TARIE ICI.
+      //
+      // CE QUI SE PASSAIT. L'entretien concluait `done` avec mode 3 et un
+      // `detectedDropshipType` que le modele n'avait pas su remplir : la
+      // generation partait quand meme, et `sites.dropship_type` recevait
+      // `null` -- de facon DEFINITIVE, la colonne n'etant jamais modifiable
+      // ensuite. Trois sites de production sont dans cet etat.
+      //
+      // LA REPONSE `need_dropship_type` N'EST PAS NOUVELLE : `OnboardingChat`
+      // l'implemente deja (elle ouvre le selecteur de sous-type), mais
+      // AUCUNE route ne l'emettait -- une branche client morte. On la
+      // branche, on n'en invente pas une. L'utilisateur choisit, le choix
+      // revient par `body.dropshipType`, et l'entretien reprend son cours.
+      //
+      // FAIL-CLOSED : tant que le sous-type manque, la generation n'a pas
+      // lieu. Aucune valeur n'est devinee, aucun `reseller` par defaut.
+      // ============================================================
+      if (requiresDropshipSubtype(finalMode) && !isKnownDropshipSubtype(finalDsType)) {
+        return NextResponse.json({ type: 'need_dropship_type' });
+      }
       return NextResponse.json({
         type: 'ready_to_generate',
         summary: intent.summary,
         detectedLang: intent.detectedLang || null,
         mode: finalMode,
-        dropshipType: detectedDsType,
+        dropshipType: finalDsType,
       });
     }
 

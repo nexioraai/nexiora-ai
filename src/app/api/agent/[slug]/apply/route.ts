@@ -1,7 +1,36 @@
 import { NextResponse } from 'next/server';
+import { isSupportedLanguage, SUPPORTED_LANGUAGE_CODES } from '@/lib/i18n/supportedLanguages';
+import { isSupportedPriceRange, PRICE_RANGE_VALUES } from '@/lib/site-profile/priceRange';
+import { validateAreaServed } from '@/lib/site-profile/areaServed';
+import {
+  resolveFaqEntry,
+  resolveWhyUsEntry,
+  faqResolutionMessage,
+  whyUsResolutionMessage,
+  validateEntryText,
+} from '@/lib/agent-tools/faqWhyUsResolution';
 import { MIN_MARGIN_PERCENT } from '@/lib/pricing';
-import { supabase as supabaseAnon } from '@/lib/supabase';
+import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
+import {
+  resolveSectionItem,
+  resolveTargetSection,
+  sectionItemMessage,
+} from '@/lib/agent-tools/sectionItemResolution';
+import { resolveProductByName, resolutionMessage } from '@/lib/agent-tools/productResolution';
+import { toolNamesForSite } from '@/lib/agent-tools/toolCapabilities';
+import { resolveGalleryImage, galleryResolutionMessage, validateGalleryUrl } from '@/lib/agent-tools/galleryResolution';
+
+/**
+ * Ce que `/apply` lit reellement d'un produit de `shop_products` : son
+ * identifiant, pour cibler la route metier, et son nom, pour la resolution.
+ * `res.json()` rend `any` ; sans ce type l'inference generique retomberait sur
+ * le minimum structurel et perdrait `id`.
+ */
+type ResolvableShopProduct = { id: string; name?: string | null };
+
+/** Un produit du catalogue Mode 1 (`sites.products`, jsonb). Aucun identifiant. */
+type JsonbProduct = { name?: string | null; price?: string; description?: string };
 
 // Whitelist of tool names that can actually mutate data.
 // If a tool name isn't here, we refuse — defense in depth against any model misbehavior.
@@ -20,17 +49,39 @@ const ALLOWED_TOOLS = new Set([
   'propose_product_add',
   'propose_product_remove',
   'propose_product_update',
+  // CHANTIER 7 -- l'ajout, seul verbe galerie qui manquait.
+  'propose_gallery_add',
   'propose_gallery_remove',
   'propose_gallery_clear',
+  // CHANTIER 4 -- six outils, adresses par contenu, jamais par index.
+  'propose_faq_add',
+  'propose_faq_remove',
+  'propose_faq_update',
+  'propose_whyus_add',
+  'propose_whyus_remove',
+  'propose_whyus_update',
   'catalog_curate',
   'catalog_enhance',
   'catalog_approve_all',
   'catalog_set_margin',
   'create_promo_code',
   'deactivate_promo_code',
+  // ETAPE 7 du chantier catalogue canonique. Seul outil IA de la politique
+  // d'inventaire : il DECLARE un comptage, il ne modifie aucun autre champ.
+  'count_product_stock',
+  // ETAPE 8, VOLET D. Trois champs produit, un outil chacun -- et non un
+  // `set_product_field(field, value)` generique : un outil parametre par un
+  // nom de champ deplacerait l'allowlist depuis le code vers le modele, et
+  // rien ne distinguerait plus une demande legitime d'une demande inventee.
+  'set_price',
+  'set_currency',
+  'set_for_sale',
 ]);
 
 const ALLOWED_FIELDS = new Set([
+  // CHANTIER 3 -- `lang` ajoute. Il est borne par `isSupportedLanguage` dans
+  // le `case` correspondant, JAMAIS par cette seule appartenance.
+  'lang',
   'name',
   'slogan',
   'about',
@@ -38,6 +89,12 @@ const ALLOWED_FIELDS = new Set([
   'hero_subtitle',
   'cta',
   'type',
+  // CHANTIER 5 -- deux champs de profil, chacun borne dans le `case`
+  // correspondant. Leur presence ICI ne vaut PAS validation : `price_range`
+  // n'accepte que quatre valeurs, `area_served` est borne en longueur et en
+  // caracteres. L'allowlist dit QUELS champs sont ouverts, jamais AVEC QUOI.
+  'area_served',
+  'price_range',
 ]);
 
 const ALLOWED_CONTACT_FIELDS = new Set(['phone', 'email', 'address']);
@@ -58,27 +115,37 @@ export async function POST(
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { data: { user }, error: userError } = await supabaseAnon.auth.getUser(token);
-    if (userError || !user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const { slug } = await params;
 
-    // CRITICAL: re-verify ownership at apply time (defense in depth)
-    const { data: site, error: siteError } = await supabase
-      .from('sites')
-      .select('*')
-      .eq('slug', slug)
-      .eq('owner_email', user.email)
-      .maybeSingle();
-
-    if (siteError || !site) {
-      return NextResponse.json(
-        { error: 'Site not found or you are not the owner' },
-        { status: 404 }
-      );
-    }
+    // ============================================================
+    // DETTE 6a -- `owner_id` EST L'IDENTITE CANONIQUE, PAS `owner_email`.
+    //
+    // LE DEFAUT CORRIGE, ET CE N'ETAIT PAS UNE SIMPLE INCOHERENCE.
+    // Cette garde filtrait sur `.eq('owner_email', user.email)`. Or
+    // `sites.owner_email` est ecrite UNE SEULE FOIS, a la creation du site, et
+    // n'est JAMAIS mise a jour ensuite -- recherche exhaustive : aucun
+    // `update` sur cette colonne dans tout le depot.
+    //
+    // Consequence mesurable : si B change son adresse, `sites.owner_email`
+    // garde l'ancienne. Qu'un tiers s'inscrive ensuite avec cette adresse
+    // liberee, et son `user.email` apparie la ligne de B -- il LISAIT et
+    // MODIFIAIT le site de B. Ce n'est pas une faille d'implementation, c'est
+    // l'usage d'un identifiant INSTABLE comme cle d'identite.
+    //
+    // `requireSiteOwner` (primitive canonique M2-02, deja utilisee par 18
+    // autres appels) compare `owner_id` en priorite -- identite stable,
+    // insensible a tout changement d'adresse -- et ne se replie sur
+    // `owner_email` que si `owner_id` est encore null. Mesure du 2026-08-21 :
+    // 0 site sur 14 dans ce cas, le repli ne s'exerce plus en pratique.
+    //
+    // Le miroir etait vrai aussi : un proprietaire ayant change d'adresse
+    // perdait l'acces a SON site par ces deux routes, alors que les six
+    // autres continuaient de le reconnaitre.
+    // ============================================================
+    const auth = await requireSiteOwner(req, slug, '*');
+    if (!auth.ok) return auth.response;
+    const site = auth.site as any;
 
     const body = await req.json();
     const tool_name: string = body.tool_name;
@@ -91,6 +158,52 @@ export async function POST(
       );
     }
 
+    // ============================================================
+    // FERMETURE MODE 1, VOLET 1 -- LA FRONTIERE DE MODE S'APPLIQUE ENFIN A
+    // L'ECRITURE.
+    //
+    // LE DEFAUT CORRIGE (DEBT-030 / rapport M1-01), mesure par test
+    // adversarial sur un site `mode: 1, products: [], dropship_type: null`.
+    // `toolNamesForSite` gardait la PROPOSITION des outils (chat/route.ts) ;
+    // l'APPLICATION n'avait aucun equivalent. `ALLOWED_TOOLS` est PLATE :
+    // elle dit quels outils EXISTENT dans le produit, jamais lesquels sont
+    // permis A CE SITE. Une vitrine obtenait donc 200 sur `create_promo_code`,
+    // `catalog_set_margin` et `catalog_approve_all`.
+    //
+    // POURQUOI CE DEFAUT A SURVECU A HUIT CHANTIERS. Les autres outils
+    // commerciaux sont proteges INDIRECTEMENT : `catalog_curate` et
+    // `catalog_enhance` relaient vers des routes gardees par
+    // `hasSupplierCatalog` (chantier 6) ; `set_price`, `set_currency`,
+    // `set_for_sale` et `count_product_stock` relaient vers
+    // `requireProductOwner` (+ `canTransact`). Cette protection empruntee a
+    // masque l'absence totale de protection des QUATRE ECRIVAINS DIRECTS --
+    // ceux qui appellent `supabaseAdmin` sans route metier intermediaire. La
+    // distinction relais / ecriture directe n'avait jamais ete faite.
+    //
+    // MEME AUTORITE QUE LA PROPOSITION, DELIBEREMENT. Ecrire ici une seconde
+    // regle « quel outil pour quel mode » recreerait exactement la divergence
+    // que l'etape 3 a defaite en extrayant `toolCapabilities`. Les deux
+    // surfaces posent la meme question : elles doivent la poser au meme
+    // module, sans quoi elles rederiveront.
+    //
+    // 403 ET NON 400. L'outil EXISTE, il n'est simplement pas permis a ce
+    // site ; le 400 ci-dessus garde son sens propre -- outil inconnu du
+    // produit. `ALLOWED_TOOLS` devient une defense en profondeur, elle n'est
+    // plus l'autorite.
+    //
+    // LA ROUTE NE DECIDE PAS, ELLE TRANSMET. `site.mode` est lu puis passe ;
+    // aucune comparaison de mode n'est ecrite ici. Meme patron que
+    // `shop/products/route.ts` et `require-product-owner.ts` -- d'ou
+    // l'inscription dans LECTEURS_TRANSITIFS du cliquet d'exhaustivite, et
+    // jamais dans un domaine.
+    // ============================================================
+    if (!toolNamesForSite(site.mode, site.dropship_type).includes(tool_name)) {
+      return NextResponse.json(
+        { error: `Tool "${tool_name}" is not available for this site` },
+        { status: 403 }
+      );
+    }
+
     let updates: Record<string, any> = {};
 
     switch (tool_name) {
@@ -98,6 +211,40 @@ export async function POST(
         const { field, value } = tool_input;
         if (!ALLOWED_FIELDS.has(field) || typeof value !== 'string') {
           return NextResponse.json({ error: 'Invalid field or value' }, { status: 400 });
+        }
+        // CHANTIER 3 -- LA BORNE REELLE DE `lang`, ET LE SEUL ENDROIT OU ELLE
+        // TIENNE. Les six autres champs de `ALLOWED_FIELDS` acceptent du
+        // texte libre : `lang` est le premier a n'accepter qu'un enum. Sans
+        // ce test, `ALLOWED_FIELDS.has('lang')` suffisait a ecrire
+        // `lang: 'english'` ou `lang: 'de'` -- valeurs qu'aucun dictionnaire
+        // ne sert, et qui rendraient le site en anglais de repli sans que
+        // rien ne le signale. Le refus precede toute ecriture.
+        // CHANTIER 5 -- `price_range` : le contrat « $ | $$ | $$$ | $$$$ »
+        // n'existait que comme phrase du prompt de generation, jamais comme
+        // regle (zod dit `z.string()`). Il tenait par l'ABSENCE de tout
+        // chemin d'ecriture ; ouvrir l'agent supprime cette protection-la.
+        if (field === 'price_range' && !isSupportedPriceRange(value)) {
+          return NextResponse.json(
+            { error: `Gamme de prix invalide "${value}". Valeurs acceptees : ${PRICE_RANGE_VALUES.join(', ')}.` },
+            { status: 400 }
+          );
+        }
+        // CHANTIER 5 -- `area_served` : texte geographique libre, mais BORNE.
+        // La forme libre est necessaire a `geoNuance`, qui confronte cette
+        // valeur a des noms de lieux ; la borne ferme la porte au paragraphe
+        // injecte. On REFUSE, on ne tronque pas : une valeur silencieusement
+        // raccourcie ferait croire au marchand qu'il a ecrit sa demande.
+        if (field === 'area_served') {
+          const zone = validateAreaServed(value);
+          if (!zone.ok) return NextResponse.json({ error: zone.message }, { status: 400 });
+          updates.area_served = zone.value;
+          break;
+        }
+        if (field === 'lang' && !isSupportedLanguage(value)) {
+          return NextResponse.json(
+            { error: `Unsupported language "${value}". Supported: ${SUPPORTED_LANGUAGE_CODES.join(', ')}` },
+            { status: 400 }
+          );
         }
         updates[field] = value;
         break;
@@ -118,22 +265,52 @@ export async function POST(
         updates.theme = theme;
         break;
       }
+      // ===== CHANTIER 1 -- LES TROIS OUTILS ECRIVENT DESORMAIS `sections` =====
+      //
+      // Ils ecrivaient `site.services`, colonne qu'AUCUN theme ne rend et que
+      // le generateur ne produit pas. L'ecriture reussissait, le site ne
+      // changeait jamais. Ils visent la source canonique, et adressent par
+      // TITRE -- l'adressage par index qui subsistait ici etait la troisieme
+      // liste que la dette 4 n'avait pas atteinte.
       case 'propose_add_service': {
-        const { title, description } = tool_input;
-        if (typeof title !== 'string' || typeof description !== 'string') {
+        const { title, description, section } = tool_input;
+        if (typeof title !== 'string' || title.trim() === '' || typeof description !== 'string') {
           return NextResponse.json({ error: 'Invalid title/description' }, { status: 400 });
         }
-        const currentServices = Array.isArray(site.services) ? site.services : [];
-        updates.services = [...currentServices, { title, description }];
+        const sections: any[] = Array.isArray(site.sections) ? site.sections : [];
+        const cible = resolveTargetSection(sections, section);
+        if (!cible.ok) {
+          // AUCUN REPLI. Zero ou plusieurs sections sans nom fourni : on
+          // demande, on ne devine pas.
+          return NextResponse.json(
+            { error: sectionItemMessage(cible) },
+            { status: cible.reason === 'not_found' ? 404 : 409 }
+          );
+        }
+        updates.sections = sections.map((sec: any, i: number) =>
+          i === cible.sectionIndex
+            ? { ...sec, items: [...(Array.isArray(sec.items) ? sec.items : []), { title, description }] }
+            : sec
+        );
         break;
       }
       case 'propose_remove_service': {
-        const { index } = tool_input;
-        const currentServices = Array.isArray(site.services) ? site.services : [];
-        if (typeof index !== 'number' || index < 0 || index >= currentServices.length) {
-          return NextResponse.json({ error: 'Invalid service index' }, { status: 400 });
+        const { title } = tool_input;
+        const sections: any[] = Array.isArray(site.sections) ? site.sections : [];
+        const trouve = resolveSectionItem(sections, title);
+        if (!trouve.ok) {
+          // AUCUNE ECRITURE. 404 = introuvable, 409 = plusieurs offres portent
+          // ce titre -- supprimer « la premiere » serait le defaut d'origine.
+          return NextResponse.json(
+            { error: sectionItemMessage(trouve) },
+            { status: trouve.reason === 'not_found' ? 404 : 409 }
+          );
         }
-        updates.services = currentServices.filter((_: any, i: number) => i !== index);
+        updates.sections = sections.map((sec: any, i: number) =>
+          i === trouve.sectionIndex
+            ? { ...sec, items: (sec.items as any[]).filter((_: any, j: number) => j !== trouve.itemIndex) }
+            : sec
+        );
         break;
       }
       case 'propose_update_social': {
@@ -157,16 +334,28 @@ export async function POST(
         break;
       }
       case 'propose_service_update': {
-        const { index, field, value } = tool_input;
-        const services = Array.isArray(site.services) ? site.services : [];
-        if (typeof index !== 'number' || index < 0 || index >= services.length) {
-          return NextResponse.json({ error: 'Invalid service index' }, { status: 400 });
-        }
+        const { title, field, value } = tool_input;
         if (!ALLOWED_SERVICE_FIELDS.has(field) || typeof value !== 'string') {
           return NextResponse.json({ error: 'Invalid service field/value' }, { status: 400 });
         }
-        const next = services.map((s: any, i: number) => (i === index ? { ...s, [field]: value } : s));
-        updates.services = next;
+        const sections: any[] = Array.isArray(site.sections) ? site.sections : [];
+        const trouve = resolveSectionItem(sections, title);
+        if (!trouve.ok) {
+          return NextResponse.json(
+            { error: sectionItemMessage(trouve) },
+            { status: trouve.reason === 'not_found' ? 404 : 409 }
+          );
+        }
+        updates.sections = sections.map((sec: any, i: number) =>
+          i === trouve.sectionIndex
+            ? {
+                ...sec,
+                items: (sec.items as any[]).map((it: any, j: number) =>
+                  j === trouve.itemIndex ? { ...it, [field]: value } : it
+                ),
+              }
+            : sec
+        );
         break;
       }
       case 'propose_testimonial_add': {
@@ -226,34 +415,230 @@ export async function POST(
         ];
         break;
       }
+      // ===== ETAPE 8, VOLET B -- CATALOGUE MODE 1, CIBLAGE PAR NOM =====
+      //
+      // LE DEFAUT CORRIGE. Ces deux outils adressaient par INDEX de tableau,
+      // alors que `products` est ABSENT de CURRENT SITE STATE (16 champs, 0
+      // occurrence). Le modele n'avait donc aucun moyen de connaitre un index
+      // valide : toute valeur qu'il produisait etait DEVINEE. Et une devinette
+      // dans les bornes etait ACCEPTEE -- la seule validation portait sur
+      // l'intervalle, jamais sur l'identite de la cible. Un `index: 2`
+      // hallucine supprimait le troisieme produit, sans erreur.
+      //
+      // Le garde-fou humain ne compensait rien : la carte d'approbation
+      // affichait « Remove product #2 », sans nom. Le marchand approuvait un
+      // jeton opaque qu'il ne pouvait pas verifier.
+      //
+      // MEME REGLE QUE PARTOUT AILLEURS. `resolveProductByName` est le helper
+      // partage des etapes 7 et 8D, elargi au minimum structurel qu'il lit
+      // (`{ name }`) : egalite stricte apres trim + minuscules, aucune
+      // sous-chaine, aucun accent replie, et REFUS sur ambiguite. Ecrire une
+      // seconde resolution ici aurait duplique la regle.
+      //
+      // LE CATALOGUE M1 RESTE `sites.products`. Aucune migration vers
+      // `shop_products` : trois gardes independantes l'interdisent a une
+      // vitrine (canTransact sur POST, requireProductOwner sur PATCH/DELETE,
+      // ProductManager monte pour les seuls modes 2 et 3).
       case 'propose_product_remove': {
-        const { index } = tool_input;
-        const current = Array.isArray(site.products) ? site.products : [];
-        if (typeof index !== 'number' || index < 0 || index >= current.length) {
-          return NextResponse.json({ error: 'Invalid product index' }, { status: 400 });
+        const { product_name } = tool_input;
+        const current: JsonbProduct[] = Array.isArray(site.products) ? site.products : [];
+        const resolved = resolveProductByName(current, product_name);
+        if (!resolved.ok) {
+          // AUCUNE ECRITURE. 404 = introuvable, 409 = ambigu.
+          return NextResponse.json(
+            { error: resolutionMessage(resolved) },
+            { status: resolved.reason === 'not_found' ? 404 : 409 }
+          );
         }
-        updates.products = current.filter((_: any, i: number) => i !== index);
+        const position = current.indexOf(resolved.product);
+        if (position < 0) {
+          // Inatteignable par construction -- `resolved.product` vient d'un
+          // `filter` sur ce meme tableau, donc la reference y est. Le controle
+          // existe parce que l'alternative serait pire que bruyante : un -1
+          // ferait de `filter((_, i) => i !== -1)` une suppression qui ne
+          // supprime rien, en repondant « fait ».
+          return NextResponse.json({ error: 'Resolution incoherente' }, { status: 500 });
+        }
+        updates.products = current.filter((_: unknown, i: number) => i !== position);
         break;
       }
       case 'propose_product_update': {
-        const { index, field, value } = tool_input;
-        const current = Array.isArray(site.products) ? site.products : [];
-        if (typeof index !== 'number' || index < 0 || index >= current.length) {
-          return NextResponse.json({ error: 'Invalid product index' }, { status: 400 });
-        }
+        const { product_name, field, value } = tool_input;
         if (!ALLOWED_PRODUCT_FIELDS.has(field) || typeof value !== 'string') {
           return NextResponse.json({ error: 'Invalid product field/value' }, { status: 400 });
         }
-        updates.products = current.map((p: any, i: number) => (i === index ? { ...p, [field]: value } : p));
+        const current: JsonbProduct[] = Array.isArray(site.products) ? site.products : [];
+        const resolved = resolveProductByName(current, product_name);
+        if (!resolved.ok) {
+          return NextResponse.json(
+            { error: resolutionMessage(resolved) },
+            { status: resolved.reason === 'not_found' ? 404 : 409 }
+          );
+        }
+        const position = current.indexOf(resolved.product);
+        if (position < 0) {
+          return NextResponse.json({ error: 'Resolution incoherente' }, { status: 500 });
+        }
+        updates.products = current.map((p: JsonbProduct, i: number) => (i === position ? { ...p, [field]: value } : p));
+        break;
+      }
+      // ===== DETTE 4 (volet gallery) -- CIBLAGE PAR URL =====
+      //
+      // Meme correction que le volet B pour les produits Mode 1, meme raison :
+      // `gallery` est ABSENT de CURRENT SITE STATE, donc tout index fourni par
+      // le modele etait devine, et une devinette dans les bornes etait
+      // ACCEPTEE -- la seule validation portait sur l'intervalle, jamais sur
+      // l'identite de la cible. La carte d'approbation affichait « Remove
+      // gallery image #2 », un numero nu : le marchand ne pouvait pas verifier
+      // ce qu'il approuvait, la ou l'editeur lui montre l'image elle-meme.
+      //
+      // DEUX FORMES D'ELEMENT sont adressables, `string` et `{ url }` -- la
+      // seconde parce que le schema Zod l'autorise, que `Navbar.tsx` la
+      // reconnait deja, et que `gallerySchema.test.ts` documente un incident
+      // reel ou le modele en a produit. Toute autre forme est NON ADRESSABLE :
+      // on ne devine pas une URL dans un objet de convention inconnue.
+      // ===== CHANTIER 4 -- FAQ ET « POURQUOI NOUS » =====
+      //
+      // La forme ecrite est EXACTEMENT celle du generateur ({question,answer}
+      // et {title,text}) et celle que les quatre themes rendent. Aucune cle
+      // supplementaire n'est acceptee : `tool_input` n'est jamais recopie tel
+      // quel dans la base, chaque champ est extrait et valide un a un.
+      //
+      // L'appartenance a `ALLOWED_TOOLS` ne vaut JAMAIS validation : chaque
+      // cas revalide son entree, et refuse AVANT toute ecriture.
+      case 'propose_faq_add': {
+        const q = validateEntryText(tool_input.question, 'question');
+        if (!q.ok) return NextResponse.json({ error: q.message }, { status: 400 });
+        const a = validateEntryText(tool_input.answer, 'answer');
+        if (!a.ok) return NextResponse.json({ error: a.message }, { status: 400 });
+        const current: Record<string, unknown>[] = Array.isArray(site.faq) ? site.faq : [];
+        // REFUS DU DOUBLON. Deux questions identiques rendraient l'entree
+        // ambigue -- donc ni modifiable ni supprimable par l'agent ensuite.
+        // On refuse de creer l'impasse plutot que d'avoir a la denouer.
+        if (resolveFaqEntry(current, q.value).ok) {
+          return NextResponse.json(
+            { error: `La question "${q.value}" existe deja dans la FAQ. Aucun changement n'a ete fait : modifie-la plutot que d'en ajouter une seconde.` },
+            { status: 409 }
+          );
+        }
+        updates.faq = [...current, { question: q.value, answer: a.value }];
+        break;
+      }
+      case 'propose_faq_remove': {
+        const current: Record<string, unknown>[] = Array.isArray(site.faq) ? site.faq : [];
+        const cible = resolveFaqEntry(current, tool_input.question);
+        if (!cible.ok) {
+          return NextResponse.json(
+            { error: faqResolutionMessage(cible) },
+            { status: cible.reason === 'not_found' ? 404 : 409 }
+          );
+        }
+        updates.faq = current.filter((_, i) => i !== cible.index);
+        break;
+      }
+      case 'propose_faq_update': {
+        const { field } = tool_input;
+        if (field !== 'question' && field !== 'answer') {
+          return NextResponse.json({ error: 'Invalid field (question or answer)' }, { status: 400 });
+        }
+        const v = validateEntryText(tool_input.value, field);
+        if (!v.ok) return NextResponse.json({ error: v.message }, { status: 400 });
+        const current: Record<string, unknown>[] = Array.isArray(site.faq) ? site.faq : [];
+        const cible = resolveFaqEntry(current, tool_input.question);
+        if (!cible.ok) {
+          return NextResponse.json(
+            { error: faqResolutionMessage(cible) },
+            { status: cible.reason === 'not_found' ? 404 : 409 }
+          );
+        }
+        updates.faq = current.map((e, i) => (i === cible.index ? { ...e, [field]: v.value } : e));
+        break;
+      }
+      case 'propose_whyus_add': {
+        const ti = validateEntryText(tool_input.title, 'title');
+        if (!ti.ok) return NextResponse.json({ error: ti.message }, { status: 400 });
+        const tx = validateEntryText(tool_input.text, 'text');
+        if (!tx.ok) return NextResponse.json({ error: tx.message }, { status: 400 });
+        const current: Record<string, unknown>[] = Array.isArray(site.whyus) ? site.whyus : [];
+        if (resolveWhyUsEntry(current, ti.value).ok) {
+          return NextResponse.json(
+            { error: `L'argument "${ti.value}" existe deja. Aucun changement n'a ete fait : modifie-le plutot que d'en ajouter un second.` },
+            { status: 409 }
+          );
+        }
+        updates.whyus = [...current, { title: ti.value, text: tx.value }];
+        break;
+      }
+      case 'propose_whyus_remove': {
+        const current: Record<string, unknown>[] = Array.isArray(site.whyus) ? site.whyus : [];
+        const cible = resolveWhyUsEntry(current, tool_input.title);
+        if (!cible.ok) {
+          return NextResponse.json(
+            { error: whyUsResolutionMessage(cible) },
+            { status: cible.reason === 'not_found' ? 404 : 409 }
+          );
+        }
+        updates.whyus = current.filter((_, i) => i !== cible.index);
+        break;
+      }
+      case 'propose_whyus_update': {
+        const { field } = tool_input;
+        if (field !== 'title' && field !== 'text') {
+          return NextResponse.json({ error: 'Invalid field (title or text)' }, { status: 400 });
+        }
+        const v = validateEntryText(tool_input.value, field);
+        if (!v.ok) return NextResponse.json({ error: v.message }, { status: 400 });
+        const current: Record<string, unknown>[] = Array.isArray(site.whyus) ? site.whyus : [];
+        const cible = resolveWhyUsEntry(current, tool_input.title);
+        if (!cible.ok) {
+          return NextResponse.json(
+            { error: whyUsResolutionMessage(cible) },
+            { status: cible.reason === 'not_found' ? 404 : 409 }
+          );
+        }
+        updates.whyus = current.map((e, i) => (i === cible.index ? { ...e, [field]: v.value } : e));
+        break;
+      }
+      // ===== CHANTIER 7 -- AJOUT D'UNE IMAGE A LA GALERIE =====
+      //
+      // `tool_input` n'est jamais recopie : l'URL est extraite, validee, et
+      // c'est la valeur VALIDEE qui est ecrite -- jamais l'objet recu.
+      //
+      // LA FORME ECRITE EST UNE CHAINE, et c'est la mesure qui l'impose : les
+      // quatre themes filtrent `typeof u === 'string' && u.startsWith('http')`
+      // avant de rendre. Ecrire `{ url }` reussirait en base et n'afficherait
+      // rien -- une ecriture muette, exactement ce que le chantier 1 a corrige
+      // pour `services`.
+      case 'propose_gallery_add': {
+        const url = validateGalleryUrl(tool_input.image_url);
+        if (!url.ok) return NextResponse.json({ error: url.message }, { status: 400 });
+        const current = Array.isArray(site.gallery) ? site.gallery : [];
+        // REFUS DU DOUBLON. `propose_gallery_remove` refuse deja d'agir sur une
+        // URL presente deux fois -- il ne peut pas choisir a la place du
+        // marchand. Autoriser l'ajout d'un doublon fabriquerait donc une image
+        // que l'agent ne saurait plus jamais retirer. On refuse de creer
+        // l'impasse plutot que d'avoir a la denouer.
+        if (resolveGalleryImage(current, url.value).ok) {
+          return NextResponse.json(
+            { error: `Cette image est deja dans la galerie. Aucun changement n'a ete fait.` },
+            { status: 409 }
+          );
+        }
+        updates.gallery = [...current, url.value];
         break;
       }
       case 'propose_gallery_remove': {
-        const { index } = tool_input;
+        const { image_url } = tool_input;
         const current = Array.isArray(site.gallery) ? site.gallery : [];
-        if (typeof index !== 'number' || index < 0 || index >= current.length) {
-          return NextResponse.json({ error: 'Invalid gallery index' }, { status: 400 });
+        const resolved = resolveGalleryImage(current, image_url);
+        if (!resolved.ok) {
+          // AUCUNE ECRITURE. 404 = introuvable, 409 = ambigu.
+          return NextResponse.json(
+            { error: galleryResolutionMessage(resolved) },
+            { status: resolved.reason === 'not_found' ? 404 : 409 }
+          );
         }
-        updates.gallery = current.filter((_: any, i: number) => i !== index);
+        updates.gallery = current.filter((_: unknown, i: number) => i !== resolved.index);
         break;
       }
       case 'propose_gallery_clear': {
@@ -338,6 +723,174 @@ export async function POST(
       return NextResponse.json({ success: true, message: `Code "${code}" désactivé` });
     }
 
+    // ===== ETAPE 7 -- politique d'inventaire (patron A : re-appel HTTP) =====
+    //
+    // POURQUOI CE DETOUR PAR LA ROUTE METIER PLUTOT QU'UN `supabase.update()`
+    // INLINE ICI. `/apply` verifie la propriete du SITE via `owner_email`
+    // seul ; la route d'inventaire, elle, passe par `requireProductOwner`
+    // (propriete par `owner_id` prioritaire + admission `canTransact`). Ecrire
+    // directement ici contournerait donc l'admission Mode 1 et la barriere de
+    // comptage, et ferait de l'agent une seconde autorite sur l'inventaire.
+    // Meme patron que `catalog_curate` : le jeton du marchand est relaye, la
+    // route metier reste le seul point de decision.
+    if (tool_name === 'count_product_stock') {
+      const { product_name, units } = tool_input;
+
+      if (!Number.isInteger(units) || units < 0) {
+        return NextResponse.json(
+          { error: 'units doit etre un entier superieur ou egal a 0' },
+          { status: 400 }
+        );
+      }
+
+      // Lecture par la route GET EXISTANTE, gardee par `requireSiteOwner` : la
+      // liste rendue ne peut donc contenir que des produits de CE site, et le
+      // modele n'a aucun moyen d'en atteindre un autre -- meme en fournissant
+      // le nom exact d'un produit appartenant a quelqu'un d'autre.
+      const listRes = await fetch(
+        new URL(`/api/shop/products?slug=${encodeURIComponent(slug)}`, req.url).toString(),
+        { headers: { 'Authorization': 'Bearer ' + token } }
+      );
+      const listData = await listRes.json().catch(() => ({}));
+      if (!listRes.ok) {
+        return NextResponse.json({ error: listData.error || 'Lecture des produits impossible' }, { status: listRes.status });
+      }
+
+      const resolved = resolveProductByName<ResolvableShopProduct>(listData.products ?? [], product_name);
+      if (!resolved.ok) {
+        // AUCUNE ECRITURE. Le message part au modele comme resultat d'outil ;
+        // il redemande le nom exact au marchand. 404 = introuvable,
+        // 409 = ambigu (refus metier), conformement aux codes deja en usage.
+        return NextResponse.json(
+          { error: resolutionMessage(resolved) },
+          { status: resolved.reason === 'not_found' ? 404 : 409 }
+        );
+      }
+
+      const invRes = await fetch(
+        new URL(`/api/shop/products/${resolved.product.id}/inventory`, req.url).toString(),
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ units }),
+        }
+      );
+      const invData = await invRes.json().catch(() => ({}));
+      if (!invRes.ok) {
+        // Le code et le message de la route metier sont relayes tels quels :
+        // les reinterpreter ici recreerait la seconde autorite qu'on evite.
+        return NextResponse.json({ error: invData.error || 'Comptage refuse' }, { status: invRes.status });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `Stock de "${resolved.product.name}" compte a ${units} unite(s). Le suivi de stock est actif pour ce produit.`,
+      });
+    }
+
+    // ===== ETAPE 8, VOLET D -- champs produit par nom (patron A) =====
+    //
+    // MEME MECANIQUE QUE L'ETAPE 7, ET AUCUNE ROUTE NOUVELLE. `price`,
+    // `currency` et `for_sale` sont deja dans l'allowlist de
+    // `PATCH /api/shop/products/[id]` : la route metier existe, elle est
+    // gardee par requireProductOwner (propriete par owner_id prioritaire +
+    // admission canTransact), et lui ajouter une soeur dediee ne ferait que
+    // dupliquer une garde.
+    //
+    // POURQUOI UN SEUL BLOC POUR TROIS OUTILS. La difference entre eux tient
+    // en une ligne : le champ ecrit et sa validation. Tout le reste -- lire
+    // la liste possedee, resoudre le nom, refuser toute ambiguite, relayer le
+    // code de la route metier -- est identique. Le tripler inviterait la
+    // divergence, exactement ce que requireProductOwner a servi a defaire.
+    if (tool_name === 'set_price' || tool_name === 'set_currency' || tool_name === 'set_for_sale') {
+      const { product_name } = tool_input;
+      const patch: Record<string, unknown> = {};
+      let libelle = '';
+
+      if (tool_name === 'set_price') {
+        const { price } = tool_input;
+        // FAIL-CLOSED : ni coercition, ni `Number(...)` complaisant. `'25'`,
+        // `null`, `NaN`, `Infinity` et les negatifs sont refuses. `0` reste
+        // legal -- un produit gratuit existe (ProductManager accepte deja 0).
+        if (typeof price !== 'number' || !Number.isFinite(price) || price < 0) {
+          return NextResponse.json({ error: 'price doit etre un nombre superieur ou egal a 0' }, { status: 400 });
+        }
+        patch.price = price;
+        libelle = `prix fixe a ${price}`;
+      }
+
+      if (tool_name === 'set_currency') {
+        const { currency } = tool_input;
+        // Forme ISO 4217 uniquement -- PAS une liste blanche de devises : ce
+        // depot n'en a aucune, et en inventer une ici deciderait a la place
+        // du produit quelles monnaies existent.
+        if (typeof currency !== 'string' || !/^[A-Za-z]{3}$/.test(currency.trim())) {
+          return NextResponse.json({ error: 'currency doit etre un code a 3 lettres (EUR, USD, CAD...)' }, { status: 400 });
+        }
+        // MAJUSCULES, comme ProductManager. Ce n'est pas cosmetique : le
+        // checkout compare les devises du panier en egalite STRICTE de chaine
+        // (`i.currency !== resolvedCurrency` -> 409 « Panier incoherent »).
+        // Ecrire 'cad' a cote d'un 'CAD' pose par l'interface rendrait le
+        // panier invendable sans qu'aucun champ paraisse faux.
+        patch.currency = currency.trim().toUpperCase();
+        libelle = `devise fixee a ${patch.currency}`;
+      }
+
+      if (tool_name === 'set_for_sale') {
+        const { for_sale } = tool_input;
+        if (typeof for_sale !== 'boolean') {
+          return NextResponse.json({ error: 'for_sale doit etre un booleen' }, { status: 400 });
+        }
+        patch.for_sale = for_sale;
+        libelle = for_sale
+          ? 'remis en vente (il reste visible, et redevient payable)'
+          : 'retire de la vente (il reste VISIBLE sur la vitrine, mais n\'est plus payable)';
+      }
+
+      // Lecture par la route GET EXISTANTE, gardee par `requireSiteOwner` :
+      // la liste rendue ne contient que des produits de CE site, et elle ne
+      // contient QUE `shop_products` -- les produits de catalogue fournisseur
+      // (ids prefixes `catalog-`) n'y figurent pas et sont donc hors
+      // d'atteinte de ces outils, par construction.
+      const listRes = await fetch(
+        new URL(`/api/shop/products?slug=${encodeURIComponent(slug)}`, req.url).toString(),
+        { headers: { 'Authorization': 'Bearer ' + token } }
+      );
+      const listData = await listRes.json().catch(() => ({}));
+      if (!listRes.ok) {
+        return NextResponse.json({ error: listData.error || 'Lecture des produits impossible' }, { status: listRes.status });
+      }
+
+      const resolved = resolveProductByName<ResolvableShopProduct>(listData.products ?? [], product_name);
+      if (!resolved.ok) {
+        // AUCUNE ECRITURE. 404 = introuvable, 409 = ambigu.
+        return NextResponse.json(
+          { error: resolutionMessage(resolved) },
+          { status: resolved.reason === 'not_found' ? 404 : 409 }
+        );
+      }
+
+      const patchRes = await fetch(
+        new URL(`/api/shop/products/${resolved.product.id}`, req.url).toString(),
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify(patch),
+        }
+      );
+      const patchData = await patchRes.json().catch(() => ({}));
+      if (!patchRes.ok) {
+        // Code et message relayes tels quels : les reinterpreter ici
+        // recreerait la seconde autorite qu'on evite.
+        return NextResponse.json({ error: patchData.error || 'Modification refusee' }, { status: patchRes.status });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `"${resolved.product.name}" : ${libelle}.`,
+      });
+    }
+
     if (tool_name === 'create_promo_code') {
       const { code, discount_type, discount_value, min_order, max_uses } = tool_input;
       if (!code || !discount_type || !discount_value) {
@@ -388,12 +941,20 @@ export async function POST(
       return NextResponse.json({ error: 'No updates produced' }, { status: 400 });
     }
 
-    // Apply with double safety: slug AND owner_email
+    // DETTE 6a -- l'ecriture cible l'ID de la ligne DEJA VERIFIEE, plus
+    // `owner_email`. Le « double safety » d'origine reposait sur la meme cle
+    // instable que la lecture : il rejouait le defaut au lieu de le couvrir.
+    //
+    // POURQUOI `id` ET NON `.eq('owner_id', ...)`. `requireSiteOwner` autorise
+    // encore un repli sur `owner_email` quand `owner_id` est null. Filtrer sur
+    // `owner_id` ici casserait ce cas : PostgREST traduit `.eq(col, null)` en
+    // `col=eq.null`, qui n'apparie AUCUNE ligne NULL. Ancrer sur l'`id` de la
+    // ligne dont la propriete vient d'etre etablie porte la meme garantie sans
+    // ce piege.
     const { data: updated, error: updateError } = await supabase
       .from('sites')
       .update(updates)
-      .eq('slug', slug)
-      .eq('owner_email', user.email)
+      .eq('id', site.id)
       .select()
       .single();
 
