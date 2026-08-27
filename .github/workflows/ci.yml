@@ -86,6 +86,30 @@ jobs:
         run: npx eslint .
         continue-on-error: true
 
+      # Paquets du moteur (packages/*) : contrairement au lint de apps/web,
+      # le lint des paquets est BLOQUANT dès le premier commit (règle
+      # packages/README.md — la dette lint existante ne s'hérite pas).
+      # continue-on-error + id comme les étapes web : le vrai gate est
+      # l'étape "Gate" finale, pour que "Report system health" tourne
+      # toujours.
+      - name: Packages — typecheck
+        id: pkg_typecheck
+        continue-on-error: true
+        working-directory: .
+        run: npm run packages:typecheck
+
+      - name: Packages — lint (bloquant)
+        id: pkg_lint
+        continue-on-error: true
+        working-directory: .
+        run: npm run packages:lint -- --max-warnings 0
+
+      - name: Packages — test
+        id: pkg_test
+        continue-on-error: true
+        working-directory: .
+        run: npm run packages:test
+
       # Remonte le résultat de ce run vers l'Admin Deribfy (/admin/system-health).
       # Purement informatif : n'affecte jamais l'issue du job (voir le script
       # lui-même — il ne sort jamais en erreur). SUPABASE_SERVICE_ROLE_KEY doit
@@ -108,8 +132,8 @@ jobs:
       - name: Gate — échoue si une étape bloquante a échoué
         if: always()
         run: |
-          if [ "${{ steps.typecheck.outcome }}" != "success" ] || [ "${{ steps.test.outcome }}" != "success" ] || [ "${{ steps.build.outcome }}" != "success" ] || [ "${{ steps.apidocs.outcome }}" != "success" ]; then
-            echo "Étape(s) en échec — typecheck=${{ steps.typecheck.outcome }} test=${{ steps.test.outcome }} build=${{ steps.build.outcome }} apidocs=${{ steps.apidocs.outcome }}"
+          if [ "${{ steps.typecheck.outcome }}" != "success" ] || [ "${{ steps.test.outcome }}" != "success" ] || [ "${{ steps.build.outcome }}" != "success" ] || [ "${{ steps.apidocs.outcome }}" != "success" ] || [ "${{ steps.pkg_typecheck.outcome }}" != "success" ] || [ "${{ steps.pkg_lint.outcome }}" != "success" ] || [ "${{ steps.pkg_test.outcome }}" != "success" ]; then
+            echo "Étape(s) en échec — typecheck=${{ steps.typecheck.outcome }} test=${{ steps.test.outcome }} build=${{ steps.build.outcome }} apidocs=${{ steps.apidocs.outcome }} pkg_typecheck=${{ steps.pkg_typecheck.outcome }} pkg_lint=${{ steps.pkg_lint.outcome }} pkg_test=${{ steps.pkg_test.outcome }}"
             exit 1
           fi
           echo "Toutes les étapes bloquantes ont réussi."

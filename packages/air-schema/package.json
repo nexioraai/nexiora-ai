@@ -1,0 +1,25 @@
+{
+  "name": "@deribfy/air-schema",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AIR v1 — Application Intermediate Representation : schémas zod (air/lock/deployment state), identités stables, validateur sémantique, projection JSON Schema",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "eslint": "^9.39.0",
+    "typescript": "^5",
+    "typescript-eslint": "^8.60.0",
+    "vitest": "^4.1.10"
+  }
+}

@@ -1,5 +1,25 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — PHASE 2 OUVERTE · étape 2.1 : paquet `@deribfy/air-schema`
+
+- Ouverture autorisée par le propriétaire ; dépendances ROADMAP satisfaites
+  (Phase 0 close, « Phase 1 non bloquante »).
+- **Premier paquet du moteur** : `packages/air-schema` — schémas zod AIR v1
+  (identités stables préfixées `scr_/ent_/act_/…`, effets d'actions FERMÉS
+  — capability/slot/navigate/mutation, jamais de code arbitraire —, réseau
+  `deny_by_default`, quatre réalités de locales, classe commerce),
+  `project.lock` volontairement SANS horodatage (même AIR + même train ⇒
+  même lock), `deployment state` (état observé, horodaté) ; **validateur
+  sémantique déterministe** (unicité globale des ids, cohérence
+  référentielle complète, capability = allowlist positive, clés de config
+  à l'allure de secret REFUSÉES, digital ⇒ PSP interdit, couverture de la
+  locale par défaut, sortie triée) ; JSON canonique + SHA-256 ; projection
+  JSON Schema draft 2020-12 stricte pour structured outputs.
+- **Preuves** : tsc EXIT=0 · lint BLOQUANT 0 écart (strictTypeChecked) ·
+  42/42 tests · scripts racine `packages:*` · **CI étendue** : 3 étapes
+  paquets ajoutées au Gate bloquant · non-régression web après changement
+  de lockfile : tsc EXIT=0, 221 fichiers / 4071 tests verts.
+
 ## 2026-08-27 — D-017 complétée : pilotage opérationnel
 
 - Complément propriétaire à D-017 : Claude Code est responsable du

@@ -1,0 +1,299 @@
+import { z } from "zod";
+import {
+  actionIdSchema,
+  blockIdSchema,
+  capabilityRefSchema,
+  datasetIdSchema,
+  entityIdSchema,
+  fieldIdSchema,
+  integrationIdSchema,
+  projectIdSchema,
+  relationIdSchema,
+  routeIdSchema,
+  ruleIdSchema,
+  screenIdSchema,
+  slotIdSchema,
+  testIdSchema,
+} from "./ids";
+
+export const AIR_SCHEMA_VERSION = "1.0.0";
+
+export const semverSchema = z.string().regex(/^\d+\.\d+\.\d+$/);
+export const sha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
+
+// BCP 47 restreint : langue[-Script][-RÉGION]. Le support RTL est un flag
+// explicite (non-négociable #16), pas une déduction depuis la locale.
+export const localeSchema = z
+  .string()
+  .regex(/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|\d{3}))?$/);
+
+// Texte localisé : locale → texte. La couverture de la locale par défaut est
+// vérifiée par le validateur sémantique, pas par le schéma.
+export const localizedTextSchema = z.record(localeSchema, z.string().min(1));
+
+// Valeurs de configuration plates (primitives, listes, un niveau d'objet) :
+// l'AIR ne contient pas de comportement arbitraire, et l'absence de récursion
+// garde la projection JSON Schema compatible structured outputs.
+const jsonPrimitiveSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  z.null(),
+]);
+const jsonLeafSchema = z.union([jsonPrimitiveSchema, z.array(jsonPrimitiveSchema)]);
+export const flatConfigSchema = z.record(
+  z.string(),
+  z.union([jsonLeafSchema, z.record(z.string(), jsonLeafSchema)]),
+);
+
+const appLocalesSchema = z.strictObject({
+  // Quatre réalités distinctes (non-négociable #16) : langue du demandeur ≠
+  // langues de l'app ≠ langues du contenu.
+  userLanguage: localeSchema,
+  appLocales: z.array(localeSchema).min(1),
+  defaultAppLocale: localeSchema,
+  contentLocales: z.array(localeSchema).min(1),
+  rtlSupported: z.boolean(),
+});
+
+const appSchema = z.strictObject({
+  name: z.string().min(1).max(80),
+  slug: z.string().regex(/^[a-z0-9][a-z0-9-]{1,62}$/),
+  description: localizedTextSchema.optional(),
+  locales: appLocalesSchema,
+});
+
+const blockInstanceSchema = z.strictObject({
+  id: blockIdSchema,
+  // Clé du registre de Smart Blocks — la version exacte est résolue dans le
+  // lock, jamais choisie par le LLM.
+  blockType: z.string().regex(/^[a-z][a-z0-9_]*$/),
+  props: flatConfigSchema.optional(),
+  entityId: entityIdSchema.optional(),
+});
+
+const screenSchema = z.strictObject({
+  id: screenIdSchema,
+  title: localizedTextSchema,
+  blocks: z.array(blockInstanceSchema).min(1),
+});
+
+const navigationSchema = z.strictObject({
+  entryScreenId: screenIdSchema,
+  routes: z
+    .array(
+      z.strictObject({
+        id: routeIdSchema,
+        screenId: screenIdSchema,
+        title: localizedTextSchema.optional(),
+      }),
+    )
+    .min(1),
+});
+
+export const fieldTypeSchema = z.enum([
+  "string",
+  "text",
+  "number",
+  "decimal",
+  "boolean",
+  "date",
+  "datetime",
+  "enum",
+  "reference",
+  "asset",
+  "json",
+]);
+
+const fieldSchema = z.strictObject({
+  id: fieldIdSchema,
+  name: z.string().regex(/^[a-z][a-z0-9_]*$/),
+  type: fieldTypeSchema,
+  required: z.boolean(),
+  unique: z.boolean().optional(),
+  // Exigé ssi type=enum / type=reference — cohérence vérifiée par le
+  // validateur sémantique (un schéma zod ne voit pas les autres champs).
+  enumValues: z.array(z.string().min(1)).min(1).optional(),
+  referencesEntityId: entityIdSchema.optional(),
+});
+
+const entitySchema = z.strictObject({
+  id: entityIdSchema,
+  name: z.string().regex(/^[a-z][a-z0-9_]*$/),
+  fields: z.array(fieldSchema).min(1),
+});
+
+const relationSchema = z.strictObject({
+  id: relationIdSchema,
+  fromEntityId: entityIdSchema,
+  toEntityId: entityIdSchema,
+  kind: z.enum(["one_to_one", "one_to_many", "many_to_many"]),
+});
+
+// Le contenu initial est généré AVANT compilation et stocké hors AIR, adressé
+// par hash — la compilation reste pure (ARCHITECTURE §1).
+const datasetSchema = z.strictObject({
+  id: datasetIdSchema,
+  entityId: entityIdSchema,
+  contentHash: sha256Schema,
+  rowCount: z.number().int().min(0),
+});
+
+const actionTriggerSchema = z.discriminatedUnion("kind", [
+  z.strictObject({ kind: z.literal("ui"), blockId: blockIdSchema }),
+  z.strictObject({
+    kind: z.literal("lifecycle"),
+    event: z.enum(["app_start", "screen_open", "screen_close"]),
+    screenId: screenIdSchema.optional(),
+  }),
+  z.strictObject({
+    kind: z.literal("data"),
+    entityId: entityIdSchema,
+    event: z.enum(["created", "updated", "deleted"]),
+  }),
+]);
+
+// Fermé par construction : pas de comportement arbitraire dans l'AIR — le
+// spécifique-domaine passe par une capability ou un Code Slot (§1/§4).
+const actionEffectSchema = z.discriminatedUnion("kind", [
+  z.strictObject({
+    kind: z.literal("capability"),
+    capability: capabilityRefSchema,
+    method: z.string().regex(/^[a-z][a-zA-Z0-9]*$/),
+    params: flatConfigSchema.optional(),
+  }),
+  z.strictObject({ kind: z.literal("slot"), slotId: slotIdSchema }),
+  z.strictObject({ kind: z.literal("navigate"), screenId: screenIdSchema }),
+  z.strictObject({
+    kind: z.literal("mutation"),
+    entityId: entityIdSchema,
+    operation: z.enum(["create", "update", "delete"]),
+  }),
+]);
+
+const actionSchema = z.strictObject({
+  id: actionIdSchema,
+  name: z.string().min(1),
+  trigger: actionTriggerSchema,
+  effect: actionEffectSchema,
+});
+
+const ruleAssertionSchema = z.strictObject({
+  fieldId: fieldIdSchema,
+  operator: z.enum(["eq", "neq", "gt", "gte", "lt", "lte", "in", "matches", "required"]),
+  value: jsonLeafSchema.optional(),
+});
+
+const ruleSchema = z.strictObject({
+  id: ruleIdSchema,
+  description: z.string().min(1),
+  kind: z.enum(["validation", "authorization"]),
+  entityId: entityIdSchema,
+  assertions: z.array(ruleAssertionSchema).min(1),
+});
+
+// Un slot est du code écrit par LLM sous influence potentielle du prompt
+// utilisateur (injection indirecte) : signature typée + imports en allowlist
+// ici ; gardes AST et sandbox sans secrets côté compilateur (§4).
+const slotPortSchema = z.strictObject({
+  name: z.string().regex(/^[a-z][a-zA-Z0-9]*$/),
+  type: fieldTypeSchema,
+});
+
+const slotSchema = z.strictObject({
+  id: slotIdSchema,
+  description: z.string().min(1),
+  inputs: z.array(slotPortSchema),
+  outputs: z.array(slotPortSchema),
+  allowedImports: z.array(z.string()),
+});
+
+const capabilityRequestSchema = z.strictObject({
+  capability: capabilityRefSchema,
+  config: flatConfigSchema.optional(),
+});
+
+const permissionSchema = z.strictObject({
+  platform: z.enum(["ios", "android", "both"]),
+  permission: z.string().regex(/^[A-Za-z][A-Za-z0-9_.]*$/),
+  reason: localizedTextSchema,
+  requiredByCapability: capabilityRefSchema,
+});
+
+const designSchema = z.strictObject({
+  theme: z.string().regex(/^[a-z][a-z0-9_]*$/),
+  tokensVersion: semverSchema.optional(),
+  overrides: flatConfigSchema.optional(),
+});
+
+const integrationSchema = z.strictObject({
+  id: integrationIdSchema,
+  // Classe neutre ("psp", "email"…) — le provider concret est résolu dans le
+  // lock (multi-provider, non-négociable #12).
+  providerClass: z.string().regex(/^[a-z][a-z0-9_]*$/),
+  capability: capabilityRefSchema.optional(),
+  // JAMAIS de secret ici (non-négociable #13) — vérifié par le validateur.
+  config: flatConfigSchema.optional(),
+});
+
+const networkPolicySchema = z.strictObject({
+  policy: z.literal("deny_by_default"),
+  allowedDomains: z.array(z.string().regex(/^([a-z0-9-]+\.)+[a-z]{2,}$/)),
+});
+
+const nativeRequirementsSchema = z.strictObject({
+  minIosVersion: z.string().regex(/^\d+(\.\d+)?$/),
+  minAndroidSdk: z.number().int().min(21),
+});
+
+const complianceSchema = z.strictObject({
+  // digital ⇒ IAP obligatoire ; physical_or_offapp ⇒ PSP autorisé (§2).
+  commerceClass: z.enum(["none", "digital", "physical_or_offapp"]),
+  accountDeletionRequired: z.boolean(),
+  dataCollected: z.array(
+    z.enum([
+      "contact_info",
+      "identifiers",
+      "usage_data",
+      "location",
+      "user_content",
+      "purchases",
+      "diagnostics",
+    ]),
+  ),
+});
+
+const expectedTestSchema = z.strictObject({
+  id: testIdSchema,
+  description: z.string().min(1),
+  kind: z.enum(["deterministic", "e2e", "contract"]),
+  // Id d'écran, d'action ou d'entité — existence vérifiée par le validateur.
+  targetId: z.string().min(1),
+});
+
+export const projectAirSchema = z.strictObject({
+  airSchemaVersion: z.literal(AIR_SCHEMA_VERSION),
+  projectId: projectIdSchema,
+  app: appSchema,
+  screens: z.array(screenSchema).min(1),
+  navigation: navigationSchema,
+  entities: z.array(entitySchema),
+  relations: z.array(relationSchema),
+  datasets: z.array(datasetSchema),
+  actions: z.array(actionSchema),
+  rules: z.array(ruleSchema),
+  slots: z.array(slotSchema),
+  capabilities: z.array(capabilityRequestSchema),
+  permissions: z.array(permissionSchema),
+  design: designSchema,
+  integrations: z.array(integrationSchema),
+  network: networkPolicySchema,
+  native: nativeRequirementsSchema,
+  compliance: complianceSchema,
+  expectedTests: z.array(expectedTestSchema),
+});
+
+export type ProjectAir = z.infer<typeof projectAirSchema>;
+export type AirScreen = ProjectAir["screens"][number];
+export type AirEntity = ProjectAir["entities"][number];
+export type AirAction = ProjectAir["actions"][number];

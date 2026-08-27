@@ -1,7 +1,8 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-08-27** (Phase 0 TERMINÉE — CI distante verte ; ouverture Phase 1).
+> **2026-08-27** (Phase 2 OUVERTE — étape 2.1 livrée : paquet
+> `@deribfy/air-schema` ; bancs Phase 1 restants en attente de prérequis).
 
 ## ÉTAT GLOBAL
 
@@ -9,9 +10,9 @@
 |---|---|
 | Plan v0.1 | 🟢 **VALIDÉ ET FIGÉ** (propriétaire, 2026-08-27) — toute évolution passe par `DECISIONS.md` |
 | Phase 0 — Fondations | 🟢 **TERMINÉE** (2026-08-27) — tous les critères de sortie vérifiés, dont **CI GitHub réelle verte : run #32, commit `54ef2a1`, `success`** (capture propriétaire + confirmation API Actions indépendante) |
-| Phase actuelle | **PHASE 1 — BANCS DE MESURE** : 🔵 EN COURS (ouverte le 2026-08-27) |
-| Générateur mobile | 🔴 **PAS ENCORE EN IMPLÉMENTATION** — interdit avant les prérequis de la roadmap |
-| Progression globale | 1/15 phases terminées (Phase 0) · Phase 1 en cours |
+| Phase actuelle | **PHASE 2 — AIR v1 + CAPABILITY REGISTRY v1** : 🔵 EN COURS (ouverte le 2026-08-27 sur autorisation propriétaire ; dépendances ROADMAP satisfaites — « Phase 1 non bloquante ») · **PHASE 1** : 🔵 bancs restants bloqués sur prérequis propriétaire |
+| Générateur mobile | 🔵 **EN IMPLÉMENTATION** — premier paquet du moteur : `packages/air-schema` (AIR v1) |
+| Progression globale | 1/15 phases terminées (Phase 0) · Phases 1 et 2 en cours |
 
 ## PHASE 0 — DÉTAIL DES SOUS-ÉTAPES
 
@@ -36,22 +37,34 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
 ## PROGRESSION GLOBALE (bloc de référence — règle D-017)
 
 - **Terminé** : Phase 0 🟢 (fondations, CI #32 verte) · Phase 1 partiel :
-  banc coûts LLM 🟢 · P-001 🟢 tranché → **D-016 Trigger.dev v4**.
-- **En cours** : Phase 1 — bancs de mesure.
-- **Bloqué, prérequis propriétaire** : P-002 (comptes E2B/Modal/Fly/Vercel
-  Sandbox + budget ~10-20 $) · P-003 & E2E (Xcode complet + simulateurs et
-  Android Studio, OU 2 appareils physiques + compte EAS) · coûts EAS
-  (compte Expo/EAS) · coût projet Supabase (token Management API, org de
-  test).
-- **Prochaine étape EXACTEMENT autorisée** : **ouvrir la Phase 2 (AIR v1 +
-  Capability Registry v1)** — ses dépendances ROADMAP sont satisfaites :
-  Phase 0 close, et la ROADMAP déclare explicitement « Phase 1 non
-  bloquante » pour la Phase 2. Les bancs Phase 1 restants s'exécutent en
-  parallèle dès qu'un prérequis propriétaire arrive.
+  banc coûts LLM 🟢, P-001 🟢 tranché → **D-016 Trigger.dev v4** ·
+  Phase 2 partiel : **étape 2.1 🟢 — paquet `@deribfy/air-schema`**
+  (schémas AIR/lock/state, validateur sémantique, 42 tests, lint bloquant
+  câblé en CI).
+- **En cours** : Phase 2 — AIR v1 + Capability Registry v1.
+- **Bloqué, prérequis propriétaire (Phase 1)** : P-002 (comptes
+  E2B/Modal/Fly/Vercel Sandbox + budget ~10-20 $) · P-003 & E2E (Xcode
+  complet + simulateurs et Android Studio, OU 2 appareils physiques +
+  compte EAS) · coûts EAS (compte Expo/EAS) · coût projet Supabase (token
+  Management API, org de test). Chaque banc reprend dès l'arrivée de son
+  prérequis.
+- **Prochaine étape EXACTEMENT autorisée** : **étape 2.2 — migrations
+  d'AIR testées** (mécanisme de migration versionné, expand/contract,
+  fail-closed), puis 2.3 registre des ~15 capabilities cœur.
 - **INTERDIT à ce stade** : toute phase dont les dépendances ROADMAP ne
   sont pas satisfaites (Phase 3 exige P-003 ; Phases 4+ dépendent de 2/3),
   tout push sans accord explicite, toute décision P-00x sans les mesures
   prévues.
+
+## PHASE 2 — DÉTAIL (ouverte le 2026-08-27)
+
+| Étape | Contenu | Statut |
+|---|---|---|
+| 2.1 | Paquet `@deribfy/air-schema` : schémas zod AIR v1 (identités stables préfixées, effets d'actions fermés, réseau deny-by-default, classe commerce) + `project.lock` (sans horodatage — déterminisme) + `deployment state` ; validateur sémantique déterministe (18 familles de diagnostics triés) ; JSON canonique + hash SHA-256 ; projection JSON Schema draft 2020-12 (objets stricts partout) | 🟢 TERMINÉ (2026-08-27) — tsc EXIT=0 · **lint bloquant 0 écart** · **42/42 tests** · CI étendue (3 étapes paquets dans le Gate) · web intact : tsc EXIT=0 + **4071/4071 tests** après changement de lockfile |
+| 2.2 | Migrations d'AIR testées (mécanisme versionné, fail-closed) | ⏭️ SUIVANT |
+| 2.3 | Registre des ~15 capabilities cœur (classe commerce, impact natif, permissions) + cliquets de registre | ⏳ |
+| 2.4 | Émission LLM structured outputs + round-trip + golden corpus ≥ 10 domaines | ⏳ |
+| 2.5 | Gel registre v1 + revue propriétaire des capabilities (décision produit) | ⏳ |
 
 ## PHASE 1 — DÉTAIL (ouverte le 2026-08-27)
 
@@ -79,8 +92,8 @@ prouve l'existence, pas le taux). Voir `DECISIONS.md` D-015.
 | — | Centre de contrôle créé (`e8530fe`) | 🟢 TERMINÉ (2026-08-27) |
 | — | Validation du plan par le propriétaire | 🟢 TERMINÉ (2026-08-27) |
 | 0 | Fondations (workspaces, CI, SDK) | 🟢 TERMINÉ (2026-08-27) |
-| 1 | Bancs de mesure (P-001→P-003, coûts, E2E) | 🔵 EN COURS |
-| 2 | AIR v1 + Capability Registry v1 | ⏳ |
+| 1 | Bancs de mesure (P-001→P-003, coûts, E2E) | 🔵 EN COURS (bancs restants sur prérequis) |
+| 2 | AIR v1 + Capability Registry v1 | 🔵 EN COURS (2.1 🟢) |
 | 3 | Design System + Primitives + Blocks | ⏳ |
 | 4 | Compilateur déterministe v1 | ⏳ |
 | 5 | Backend Provisioner v1 | ⏳ |
