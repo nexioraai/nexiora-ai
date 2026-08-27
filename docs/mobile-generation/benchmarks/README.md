@@ -17,7 +17,7 @@ ne sont jamais ajustés après coup pour faire passer un candidat.
 | Banc | Protocole | Exécution | Blocage |
 |---|---|---|---|
 | Coûts LLM (avec/sans caching) | ✅ `couts-unitaires.md` | ✅ **exécuté** — résultats dans `benchmarks/llm-cost/` | — |
-| P-001 Orchestration | ✅ `P-001-orchestration.md` | 🟢 **(a) 5/5 ET (b) Inngest 5/5 en campagnes officielles** (2026-08-27) — décision OUVERTE : (c) Trigger.dev à comparer, ou arbitrage explicite | Compte d'essai Trigger.dev pour compléter la comparaison |
+| P-001 Orchestration | ✅ `P-001-orchestration.md` | 🟢 **COMPARAISON COMPLÈTE : (a) pgmq 5/5 · (b) Inngest 5/5 · (c) Trigger.dev 5/5** en campagnes officielles (2026-08-27) + coûts estimés aux grilles publiques du jour — **décision = arbitrage propriétaire sur mesures** | — |
 | P-002 Sandbox | ✅ `P-002-sandbox.md` | ⏳ | Comptes + clés API E2B / Modal / Fly / Vercel Sandbox + petit budget |
 | P-003 Styling RN | ✅ `P-003-styling.md` | ⏳ | Xcode complet + simulateurs OU appareils physiques ([mesuré] : absents de la machine) |
 | E2E mobile | ✅ `E2E-mobile.md` | ⏳ | Mêmes prérequis que P-003 |

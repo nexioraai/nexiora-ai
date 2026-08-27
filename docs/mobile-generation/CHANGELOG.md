@@ -1,5 +1,24 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — P-001 : campagne (c) Trigger.dev 5/5 — comparaison COMPLÈTE
+
+- Candidat (c) exécuté sur le **cloud managé** Trigger.dev (v4, version
+  déployée `20260827.1`, projet de test ; clés hors dépôt). Péripéties
+  consignées : plateforme v4 (CLI v3 aveugle), coquille de ref détectée via
+  l'API et corrigée localement.
+- **5/5 épreuves officielles** : E1 redélivrance **2 s** après mort du
+  processus (backoff 1 s) · E2 **101 s** (dédup 6 démarrages/12 envois) ·
+  E3 annulation propre · E4 exactement 2 tentatives · E5 fenêtre différée
+  prouvée vide (équivalence documentée — runtime managée).
+- **Les trois candidats sont à 5/5.** Coûts estimés au volume protocole
+  (1 000 générations/mois) sur les grilles publiques du 2026-08-27 :
+  (a) ≈ 10-45 $/mois d'infra fixe à notre charge · (b) 0 $ en Hobby mais
+  **5 steps concurrents** — réalistement 99 $/mois Pro + workers ·
+  (c) ≈ 0-10 $/mois à ce volume (compute à la seconde, attentes > 5 s
+  checkpointées non facturées). Modèle proxy = pipeline du banc, qualifié.
+- **Décision P-001 : arbitrage propriétaire sur dossier complet** — à
+  consigner dans `DECISIONS.md` avec les mesures.
+
 ## 2026-08-27 — P-001 : campagne officielle du candidat (b) Inngest — 5/5
 
 - Compte Inngest de test fourni ; clés **hors dépôt**
