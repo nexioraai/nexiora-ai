@@ -21,6 +21,11 @@ import { resolveSiteFreshness } from '../siteFreshness';
 // ============================================================
 
 let siteRow: Record<string, unknown> | null;
+// LOT BLOG 8 -- ces surfaces annoncent desormais le blog : elles importent
+// `fetchBlogEntries`, qui charge le client anon au chargement du module.
+vi.mock('@/lib/supabase', () => ({ supabase: { from: () => ({}) } }));
+vi.mock('@/app/sites/[slug]/blog/fetchPosts', () => ({ fetchBlogEntries: async () => [] }));
+
 vi.mock('../shared', () => ({
   fetchSite: async () => siteRow,
   resolveSiteBaseUrl: () => 'https://cafeducoin.ca',

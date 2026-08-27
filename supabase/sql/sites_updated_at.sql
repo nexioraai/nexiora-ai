@@ -165,6 +165,24 @@ AS SELECT
 FROM public.sites
 WHERE published = true AND archived_at IS NULL;
 
+-- ============================================================
+-- DEBT-073 -- REVOKE AVANT GRANT, ET C'EST OBLIGATOIRE SUR UNE VUE.
+--
+-- Supabase pose `ALTER DEFAULT PRIVILEGES ... GRANT ALL ON TABLES`, et
+-- `ON TABLES` couvre AUSSI les vues : cette vue est nee avec
+-- INSERT/UPDATE/DELETE pour `anon` et `authenticated`. Un `GRANT SELECT`
+-- n'annule rien -- il AJOUTE. Il faut donc REVOQUER d'abord.
+--
+-- Ce n'etait pas theorique : `sites_public` est AUTO-MODIFIABLE (une seule
+-- relation dans son FROM) et en `security_invoker = false`. Les ecritures
+-- s'executaient donc avec les droits du proprietaire, contournant la RLS de
+-- `sites` et les grants de colonnes du LOT G -- un visiteur ANONYME pouvait
+-- modifier ou supprimer les trois vitrines publiees. Ferme le 2026-08-26.
+--
+-- La CAUSE est traitee par `views_privileges_hardening.sql`. Ces deux lignes
+-- rendent ce fichier-ci autonome et rejouable : ne jamais les separer.
+-- ============================================================
+REVOKE ALL ON public.sites_public FROM anon, authenticated;
 GRANT SELECT ON public.sites_public TO anon, authenticated;
 
 -- `updated_at` n'est PAS accordee en UPDATE a `authenticated` : elle est
