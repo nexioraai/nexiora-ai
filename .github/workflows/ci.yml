@@ -9,6 +9,14 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    # D-014 (monorepo) : l'app vit dans apps/web. `npm ci` s'execute a la
+    # RACINE (lockfile workspace unique) ; toutes les autres commandes
+    # s'executent dans apps/web -- y compris les 4 cliquets qui dependent de
+    # process.cwd(), et le rapport de sante qui lit vitest-results.json
+    # depuis le cwd.
+    defaults:
+      run:
+        working-directory: apps/web
     # `next build` instancie certains clients (Supabase, Stripe, OpenAI, Resend) au
     # chargement de module pour quelques routes API. Ces valeurs ne sont jamais
     # utilisées pour un vrai appel réseau pendant le build — elles servent
@@ -29,6 +37,7 @@ jobs:
           cache: npm
 
       - run: npm ci
+        working-directory: .
 
       # continue-on-error + id sur les 3 étapes bloquantes : on a besoin que
       # l'étape "Report system health" tourne même si l'une d'elles échoue
