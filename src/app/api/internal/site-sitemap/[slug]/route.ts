@@ -24,6 +24,7 @@
 // ont leur propre route.
 import { fetchSite, resolveSiteBaseUrl } from '@/app/sites/[slug]/themes/shared'
 import { resolveSiteFreshness } from '@/app/sites/[slug]/themes/siteFreshness'
+import { fetchBlogEntries } from '@/app/sites/[slug]/blog/fetchPosts'
 import { logAnomaly } from '@/lib/anomaly'
 
 function escapeXml(value: string): string {
@@ -74,6 +75,33 @@ export async function GET(
   const urls: { loc: string; lastmod: string; changefreq: string; priority: string }[] = [
     { loc: base, lastmod, changefreq: 'daily', priority: '1.0' },
   ]
+
+  // ============================================================
+  // LOT BLOG 8 -- LE BLOG ENTRE DANS LE SITEMAP DU SITE.
+  //
+  // MEME SOURCE QUE LA PAGE PUBLIQUE : la vue `site_blog_posts_public`. Le
+  // sitemap ne peut donc pas annoncer une URL que la page refuserait de
+  // servir -- un brouillon, un article d'un site archive. C'est le defaut
+  // ferme au LOT 2 du chantier catalogue (« le sitemap publiait ce que la
+  // vitrine refuse d'afficher »), qu'on ne rouvre pas ici.
+  //
+  // `<lastmod>` SUIT `updated_at`, jamais `created_at` : c'est la lecon
+  // DEBT-034, ou un lastmod fige contredisait le `changefreq` annonce.
+  //
+  // L'INDEX N'EST ANNONCE QUE S'IL A DU CONTENU. Une page de blog vide
+  // declaree aux moteurs est une promesse que le site ne tient pas.
+  const articles = await fetchBlogEntries((site as { id: string }).id)
+  if (articles.length > 0) {
+    urls.push({ loc: `${base}/blog`, lastmod, changefreq: 'weekly', priority: '0.6' })
+    for (const a of articles) {
+      urls.push({
+        loc: `${base}/blog/${encodeURIComponent(a.slug)}`,
+        lastmod: a.updated_at ? new Date(a.updated_at).toISOString() : lastmod,
+        changefreq: 'monthly',
+        priority: '0.6',
+      })
+    }
+  }
 
   for (const product of site.products ?? []) {
     if (!product.id) continue

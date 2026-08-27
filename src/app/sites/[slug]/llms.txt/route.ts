@@ -3,6 +3,7 @@ import { fetchSite, resolveSiteBaseUrl, WOORRI_SITE_URL } from '../themes/shared
 import { resolveSiteFreshness } from '../themes/siteFreshness'
 import { logAnomaly } from '@/lib/anomaly'
 import { getLlmsTxtLabels } from '@/lib/i18n/llmsTxtLabels'
+import { fetchBlogEntries } from '../blog/fetchPosts'
 
 export async function GET(
   req: Request,
@@ -165,6 +166,28 @@ export async function GET(
     if (phone) lines.push('- ' + t.phone + ' : ' + phone)
     if (email) lines.push('- ' + t.email + ' : ' + email)
     if (address) lines.push('- ' + t.address + ' : ' + address)
+    lines.push('')
+  }
+
+  // ============================================================
+  // LOT BLOG 8 -- LES ARTICLES SONT DECLARES AUX CRAWLERS LLM.
+  //
+  // Meme source que la page publique et que le sitemap : la vue. Un brouillon
+  // ne peut donc pas fuir ici.
+  //
+  // L'INTITULE SUIT LA LANGUE DU SITE, comme les onze autres (CHANTIER 8) --
+  // ce fichier existe pour etre lu par des machines qui en tirent une
+  // comprehension du commerce ; lui faire annoncer une langue que le contenu
+  // ne parle pas est une erreur de fond. `t.articles` n'existant pas dans
+  // `llmsTxtLabels`, l'intitule est derive de la langue ICI plutot que
+  // d'elargir un dictionnaire partage hors perimetre.
+  const articles = await fetchBlogEntries((site as { id: string }).id)
+  if (articles.length > 0) {
+    const TITRE: Record<string, string> = { fr: 'Articles', en: 'Articles', es: 'Artículos', ar: 'مقالات' }
+    lines.push('## ' + (TITRE[(site.lang || 'fr').slice(0, 2)] ?? TITRE.fr))
+    for (const a of articles) {
+      lines.push('- ' + a.title + ' : ' + url + '/blog/' + encodeURIComponent(a.slug))
+    }
     lines.push('')
   }
 

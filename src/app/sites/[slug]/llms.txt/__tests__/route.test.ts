@@ -21,6 +21,14 @@ vi.mock('../../themes/shared', () => ({
   resolveSiteBaseUrl: () => 'https://yiaglobalcommodities.com',
   WOORRI_SITE_URL: 'https://www.deribfy.com',
 }));
+
+// LOT BLOG 8 -- le blog est desormais annonce par cette surface. Elle importe
+// donc `fetchBlogEntries`, qui charge le client anon au chargement du module.
+// Ce double le neutralise ET permet d'asserter ce qui est annonce.
+let articlesBlog: { slug: string; title: string; published_at: string | null; updated_at: string | null }[] = [];
+vi.mock('@/lib/supabase', () => ({ supabase: { from: () => ({}) } }));
+vi.mock('@/app/sites/[slug]/blog/fetchPosts', () => ({ fetchBlogEntries: async () => articlesBlog }));
+
 vi.mock('@/lib/anomaly', () => ({ logAnomaly: vi.fn() }));
 
 /** Les offres réelles de YIA, réduites à ce que la route lit. */
@@ -302,5 +310,39 @@ describe('DEBT-035 — `price_range` est publie, comme `area_served`', () => {
         expect(t, `${lang} / ${interdit}`).not.toContain(interdit);
       }
     }
+  });
+});
+
+const ARTICLES_BLOG = [
+  { slug: 'nos-horaires', title: 'Nos horaires', published_at: '2026-08-01T10:00:00Z', updated_at: '2026-08-05T09:00:00Z' },
+  { slug: 'notre-histoire', title: 'Notre histoire', published_at: '2026-07-01T10:00:00Z', updated_at: '2026-07-02T09:00:00Z' },
+];
+
+describe('LOT BLOG 8 — les articles sont déclarés aux crawlers LLM', () => {
+  beforeEach(() => { articlesBlog = []; });
+
+  it('aucun article -> AUCUNE section vide n’est fabriquée', async () => {
+    const texte = await corps();
+    expect(texte).not.toMatch(/^## Articles$/m);
+  });
+
+  it('des articles -> une section, un titre et une URL par article', async () => {
+    articlesBlog = ARTICLES_BLOG;
+    const texte = await corps();
+    expect(texte).toMatch(/^## Articles$/m);
+    expect(texte).toContain('- Nos horaires : https://yiaglobalcommodities.com/blog/nos-horaires');
+    expect(texte).toContain('- Notre histoire : https://yiaglobalcommodities.com/blog/notre-histoire');
+  });
+
+  it('les URL suivent l’origine RÉELLEMENT servie, jamais l’origine plateforme', async () => {
+    articlesBlog = ARTICLES_BLOG;
+    const texte = await corps();
+    expect(texte).not.toMatch(/deribfy\.com\/sites\/[^\s]*\/blog/);
+  });
+
+  it('un slug d’article est encodé — jamais injecté brut dans le fichier', async () => {
+    articlesBlog = [{ slug: 'a b', title: 'T', published_at: null, updated_at: null }];
+    const texte = await corps();
+    expect(texte).toContain('/blog/a%20b');
   });
 });

@@ -214,6 +214,21 @@ END $$;
 --                                   .from() anon : un REVOKE naif aurait casse
 --                                   toutes les fiches produit.
 --       blog_posts               -- sitemap
+-- ============================================================
+--     DEBT-073 (2026-08-26) -- CE CONSTAT ETAIT JUSTE ET INCOMPLET.
+--
+--     Les CINQ boucles de revocation de ce fichier ET ses CINQ requetes de
+--     verification filtrent `relkind = 'r'` : les vues sont hors de portee du
+--     correctif ET de sa preuve. Le raisonnement ci-dessous ne porte que sur
+--     le SELECT ; il ne dit rien des privileges d'ECRITURE, qui etaient bel et
+--     bien accordes a `anon` sur `sites_public` -- vue AUTO-MODIFIABLE en
+--     `security_invoker = false`, donc ecrivant avec les droits de son
+--     proprietaire, RLS de `sites` contournee.
+--
+--     CE FICHIER N'EST PAS MODIFIE : il documente l'etat deploye a SA date.
+--     La correction et sa cause vivent dans `views_privileges_hardening.sql`.
+--     Le rejouer reste sans danger -- mais il ne suffit PAS.
+-- ============================================================
 --     `sites_public` est une VUE (relkind='v') : hors de portee de la boucle,
 --     mais elle depend de `sites`, conservee. Aucun usage realtime dans le
 --     depot (verifie) -- aucune souscription ne depend d'un SELECT revoque.
