@@ -1,5 +1,33 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — 2.4-H : audit gratuit exhaustif — CAUSE RACINE NON DÉMONTRÉE,
+## faits décisifs établis, confusion densité×présentation identifiée
+
+- **Correction d'une affirmation antérieure (D-018 §7)** : « les préfixes
+  v1 étaient verbatim » ne tenait qu'au niveau des IDS — au niveau
+  canonique complet, les blocs conservés par v1 sont EUX AUSSI dégradés
+  (1/2 à 3/4 intacts) : props supprimées dès le 2ᵉ bloc.
+- **Faits établis (artefacts versionnés)** : (F1) les 4 sections rendues
+  en JSON inline (base/données/comportement/câblage) passent **48/48 au
+  premier essai** en v2, sorties jusqu'à 4 856 tokens — sous le même
+  système structured outputs ; (F2) seuls les BLOCS D'ÉCRANS — uniques
+  éléments du rendu décomposés en prose (`type`/`entité`/props JSON
+  imbriqué) — se dégradent : props supprimées, clôtures précoces, champs
+  optionnels INVENTÉS avec chaînes corrompues ; (F3) sans grammaire, la
+  reconstruction prose→JSON est complète et fidèle (champ nommé `type`) ;
+  (F4) les chaînes corrompues contiennent des fragments du vocabulaire
+  d'instruction (« placeholder_removed », « corrig ») — artefacts de
+  déraillement, pas du contenu ; (F5) les params d'actions sont LÉGERS
+  (max 3-7 pairs) — la comparaison actions/blocs ne peut PAS départager
+  densité et présentation ; (F6) densité et présentation-prose sont
+  CONFONDUES dans toutes les données existantes : tous les tableaux de
+  pairs denses vivent dans des blocs, seuls éléments en prose.
+- **Conséquence** : aucune donnée gratuite ne peut séparer « densité »
+  de « présentation prose » — batterie discriminante C1-C3 spécifiée
+  (rendu des blocs en JSON inline à densité CONSTANTE = isolation causale
+  propre ; labels alignés ; ordre du schéma), ~$0,40-0,60, EN ATTENTE
+  d'autorisation. Verdict au standard 100 % : CAUSE RACINE NON DÉMONTRÉE.
+
 ## 2026-08-27 — 2.4-H : campagne réelle v2 (12 rejeux) — 5/12 identiques,
 ## 7 refus fail-closed reproductibles, causes candidates éliminées
 
