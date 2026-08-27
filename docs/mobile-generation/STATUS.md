@@ -38,22 +38,22 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
 
 - **Terminé** : Phase 0 🟢 (fondations, CI #32 verte) · Phase 1 partiel :
   banc coûts LLM 🟢, P-001 🟢 tranché → **D-016 Trigger.dev v4** ·
-  Phase 2 partiel : **2.1 🟢 `@deribfy/air-schema`** (schémas AIR/lock/
-  state, validateur sémantique, 51 tests avec 2.2) · **2.2 🟢 migrations
-  d'AIR** (fail-closed, testées) · **2.3 🟢 `@deribfy/capability-registry`**
-  (15 capabilities cœur, cliquets de registre, 25 tests).
+  Phase 2 : **2.1 🟢 `@deribfy/air-schema`** · **2.2 🟢 migrations d'AIR** ·
+  **2.3 🟢 `@deribfy/capability-registry`** (15 capabilities, cliquets) ·
+  **2.4 🟢 émission structured outputs + corpus** (12/12 AIR valides,
+  round-trip 12/12 conforme au schéma, 5/12 identiques [mesuré], corpus de
+  12 domaines validé en CI — 121 tests paquets verts).
 - **En cours** : Phase 2 — AIR v1 + Capability Registry v1.
-- **Bloqué, prérequis propriétaire** : **2.4 — CRÉDITS API ANTHROPIC**
-  (compte de la clé `apps/web/.env.local` à recharger ; estimation
-  campagne complète ~10-20 $) · Phase 1 : P-002 (comptes
-  E2B/Modal/Fly/Vercel Sandbox + budget ~10-20 $) · P-003 & E2E (Xcode
-  complet + simulateurs et Android Studio, OU 2 appareils physiques +
-  compte EAS) · coûts EAS (compte Expo/EAS) · coût projet Supabase (token
-  Management API, org de test). Chaque chantier reprend dès l'arrivée de
-  son prérequis.
-- **Prochaine étape EXACTEMENT autorisée** : **reprendre la campagne 2.4**
-  (`node benchmarks/air-emission/emit.mjs`) dès recharge des crédits API —
-  harnais prouvé de bout en bout, corpus et round-trip restants.
+- **Bloqué, prérequis propriétaire** : **2.5 — revue propriétaire des 15
+  capabilities v1** (décision produit exigée par la ROADMAP avant gel du
+  registre) · Phase 1 : P-002 (comptes E2B/Modal/Fly/Vercel Sandbox +
+  budget ~10-20 $) · P-003 & E2E (Xcode complet + simulateurs et Android
+  Studio, OU 2 appareils physiques + compte EAS) · coûts EAS (compte
+  Expo/EAS) · coût projet Supabase (token Management API, org de test).
+- **Prochaine étape EXACTEMENT autorisée** : **2.5 — gel du registre v1**
+  après revue propriétaire des capabilities (dernière étape de la
+  Phase 2). Non bloquant : diagnostic des 7 round-trips non identiques
+  (`replay-roundtrip.mjs`, ~$0,5-1/rejeu — budget API à prévoir).
 - **INTERDIT à ce stade** : toute phase dont les dépendances ROADMAP ne
   sont pas satisfaites (Phase 3 exige P-003 ; Phases 4+ dépendent de 2/3),
   tout push sans accord explicite, toute décision P-00x sans les mesures
@@ -66,8 +66,8 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
 | 2.1 | Paquet `@deribfy/air-schema` : schémas zod AIR v1 (identités stables préfixées, effets d'actions fermés, réseau deny-by-default, classe commerce) + `project.lock` (sans horodatage — déterminisme) + `deployment state` ; validateur sémantique déterministe (18 familles de diagnostics triés) ; JSON canonique + hash SHA-256 ; projection JSON Schema draft 2020-12 (objets stricts partout) | 🟢 TERMINÉ (2026-08-27) — tsc EXIT=0 · **lint bloquant 0 écart** · **42/42 tests** · CI étendue (3 étapes paquets dans le Gate) · web intact : tsc EXIT=0 + **4071/4071 tests** après changement de lockfile |
 | 2.2 | Migrations d'AIR testées : chaînage versionné pas à pas, le runner fixe la version cible (une migration ne saute pas de version), détection de cycle, fail-closed (le document migré repasse schéma + validateur sémantique) ; registre réel vide par construction (v1.0.0 = première version publiée), mécanisme prouvé par migrations synthétiques | 🟢 TERMINÉ (2026-08-27) — tsc EXIT=0 · lint 0 écart · **51/51 tests** (9 nouveaux) |
 | 2.3 | Paquet `@deribfy/capability-registry` : **15 capabilities cœur** (analytics, auth, barcode_scan, biometrics, calendar, camera, deep_links, geolocation, maps, media_upload, offline_storage, payments.iap, payments.psp, push_notifications, share) avec les 17 champs d'ARCHITECTURE §2 ; API allowlist positive (référence inconnue = refus net), fermeture transitive des dépendances, **empreinte native CALCULÉE** (autorité Router), permissions induites agrégées, conflits (PSP ↔ IAP), contrainte de classe commerce ; pont `validateAirCapabilities` (AIR ↔ registre, permissions induites à déclarer) ; **cliquets de registre** : liste v1 exacte verrouillée, invariants OTA⇔impact⇔rebuild⇔profils, dépendances acycliques, conflits symétriques, permissions ⊆ config native, contrainte commerce ⇔ paiement | 🟢 TERMINÉ (2026-08-27) — tsc EXIT=0 · lint bloquant 0 écart · **25/25 tests** · registre v0.1.0 NON GELÉ (gel = 2.5, revue propriétaire) · web intact : tsc EXIT=0 + 4071/4071 |
-| 2.4 | Émission LLM structured outputs + round-trip + golden corpus ≥ 10 domaines. **Livré** : rendu texte déterministe sans perte (`renderAirToText`) ; paquet `@deribfy/golden-corpus` (validation CI sans réseau, garde bootstrap) ; harnais complet `benchmarks/air-emission/` (12 intentions fixes, 3 classes commerce ; **émission par sections** — 5 groupes sondés acceptés par la grammaire ; réparation bornée ciblée ; round-trip par hash canonique). **Contraintes API [mesuré]** : objets fermés uniquement (`additionalProperties: false`, pas de `patternProperties`/`oneOf`/bornes numériques, ≤ 24 optionnels, grammaire du document entier trop large) → **évolution AIR v1** : textes localisés `[{locale,text}]` et configs `[{key,value}]` en paires fermées. **Preuve de bout en bout** : intention 1 = 21 diagnostics 1ʳᵉ passe → **0 après réparation** (AIR valide, classe commerce correcte) | 🟠 **EN COURS — BLOQUÉE : crédits API Anthropic épuisés** (~$1.15 consommés sur l'intention 1, round-trip interrompu). Reprise : `node benchmarks/air-emission/emit.mjs` dès recharge |
-| 2.5 | Gel registre v1 + revue propriétaire des capabilities (décision produit) | ⏳ |
+| 2.4 | Émission LLM structured outputs + round-trip + golden corpus. **Campagne complète exécutée** (12 intentions fixes, 3 classes commerce, ~$19,71 sur le budget de 20 $) : **12/12 AIR valides** (émission par sections + réparation bornée ≤ 1 passe : 14-32 diagnostics 1ʳᵉ passe → **0** partout) · **round-trip 12/12 conforme au schéma** (critère de sortie phase ✓) · **identité stricte au hash canonique : 5/12** [mesuré] · **corpus : 12 AIR de 12 domaines distincts** versionnés (`packages/golden-corpus/corpus/`), validés en CI sans réseau (39 tests). Contraintes API [mesuré] consignées (objets fermés, pas de oneOf/patternProperties/bornes, ≤ 24 optionnels, grammaire bornée → émission par sections) → évolution AIR v1 en paires fermées. **Limitation consignée** : 7/12 transcriptions round-trip sémantiquement cassées (motif binaire : 0 ou 14-37 diagnostics, sans corrélation de taille) — diagnostic instrumenté prêt (`replay-roundtrip.mjs`, dump complet) mais NON exécuté (budget épuisé, ~$0,5-1/rejeu) ; amélioration NON bloquante pour 2.5 | 🟢 **TERMINÉE** (2026-08-27) — critères ROADMAP satisfaits : émission structured outputs ✓ · round-trip 100 % conforme au schéma sur le corpus ✓ · corpus ≥ 10 domaines ✓ |
+| 2.5 | Gel registre v1 + revue propriétaire des capabilities (décision produit) | ⏭️ SUIVANT — dernière étape de la Phase 2 |
 
 ## PHASE 1 — DÉTAIL (ouverte le 2026-08-27)
 

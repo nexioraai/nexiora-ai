@@ -1,0 +1,1482 @@
+{
+  "actions": [
+    {
+      "effect": {
+        "capability": "auth",
+        "kind": "capability",
+        "method": "restoreSession",
+        "params": [
+          {
+            "key": "redirectScreenId",
+            "value": "scr_accueil"
+          }
+        ]
+      },
+      "id": "act_demarrer_session",
+      "name": "Restaurer la session au lancement",
+      "trigger": {
+        "event": "app_start",
+        "kind": "lifecycle"
+      }
+    },
+    {
+      "effect": {
+        "capability": "offline_storage",
+        "kind": "capability",
+        "method": "sync",
+        "params": [
+          {
+            "key": "entities",
+            "value": [
+              "ent_animal",
+              "ent_rendez_vous",
+              "ent_visite"
+            ]
+          },
+          {
+            "key": "strategy",
+            "value": "last_write_wins"
+          }
+        ]
+      },
+      "id": "act_sync_hors_ligne",
+      "name": "Synchroniser les données hors-ligne",
+      "trigger": {
+        "event": "app_start",
+        "kind": "lifecycle"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_prochain_rappel_vaccination"
+      },
+      "id": "act_accueil_alertes_vaccin",
+      "name": "Calculer les alertes de rappel de vaccination",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_accueil"
+      }
+    },
+    {
+      "effect": {
+        "capability": "analytics",
+        "kind": "capability",
+        "method": "trackEvent",
+        "params": [
+          {
+            "key": "name",
+            "value": "ouverture_fiche_animal"
+          },
+          {
+            "key": "screen",
+            "value": "scr_accueil"
+          }
+        ]
+      },
+      "id": "act_ouvrir_fiche_depuis_alerte",
+      "name": "Journaliser l'ouverture de la fiche animal depuis l'alerte vaccin",
+      "trigger": {
+        "blockId": "blk_accueil_alerte_vaccin",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_creneaux_disponibles"
+      },
+      "id": "act_ouvrir_rdv_depuis_carte",
+      "name": "Proposer les créneaux depuis la carte du prochain rendez-vous",
+      "trigger": {
+        "blockId": "blk_accueil_prochain_rdv",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "analytics",
+        "kind": "capability",
+        "method": "trackEvent",
+        "params": [
+          {
+            "key": "name",
+            "value": "ouverture_profil"
+          },
+          {
+            "key": "screen",
+            "value": "scr_accueil"
+          }
+        ]
+      },
+      "id": "act_journaliser_ouverture_profil",
+      "name": "Journaliser l'ouverture du profil depuis l'en-tête",
+      "trigger": {
+        "blockId": "blk_accueil_entete",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "media_upload",
+        "kind": "capability",
+        "method": "pickImage",
+        "params": [
+          {
+            "key": "targetFieldId",
+            "value": "fld_animal_photo"
+          },
+          {
+            "key": "maxSizeMb",
+            "value": 8
+          },
+          {
+            "key": "allowedTypes",
+            "value": [
+              "image/jpeg",
+              "image/png"
+            ]
+          }
+        ]
+      },
+      "id": "act_importer_photo_animal",
+      "name": "Importer la photo de l'animal",
+      "trigger": {
+        "entityId": "ent_animal",
+        "event": "created",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_resume_historique"
+      },
+      "id": "act_resume_historique",
+      "name": "Résumer l'historique des visites",
+      "trigger": {
+        "entityId": "ent_visite",
+        "event": "created",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_creneaux_disponibles"
+      },
+      "id": "act_calculer_creneaux",
+      "name": "Proposer les créneaux disponibles à l'ouverture de l'accueil",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_accueil"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_tarif_estime"
+      },
+      "id": "act_estimer_tarif",
+      "name": "Estimer le tarif indicatif à régler sur place",
+      "trigger": {
+        "entityId": "ent_rendez_vous",
+        "event": "created",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "capability": "calendar",
+        "kind": "capability",
+        "method": "createEvent",
+        "params": [
+          {
+            "key": "titleTemplate",
+            "value": "Toilettage - {animal.nom}"
+          },
+          {
+            "key": "startFieldId",
+            "value": "fld_rdv_debut"
+          },
+          {
+            "key": "durationFieldId",
+            "value": "fld_rdv_duree_minutes"
+          },
+          {
+            "key": "alarmMinutesBefore",
+            "value": 120
+          }
+        ]
+      },
+      "id": "act_ajouter_rdv_calendrier",
+      "name": "Ajouter le rendez-vous au calendrier de l'appareil",
+      "trigger": {
+        "entityId": "ent_rendez_vous",
+        "event": "created",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "capability": "push_notifications",
+        "kind": "capability",
+        "method": "scheduleReminder",
+        "params": [
+          {
+            "key": "dateFieldId",
+            "value": "fld_animal_vaccin_rappel"
+          },
+          {
+            "key": "daysBefore",
+            "value": 14
+          },
+          {
+            "key": "messageTemplate",
+            "value": "Le rappel de vaccination de {animal.nom} approche."
+          }
+        ]
+      },
+      "id": "act_programmer_rappel_vaccin",
+      "name": "Programmer la notification de rappel de vaccination",
+      "trigger": {
+        "entityId": "ent_animal",
+        "event": "updated",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_visite",
+        "kind": "mutation",
+        "operation": "create"
+      },
+      "id": "act_enregistrer_visite",
+      "name": "Créer la visite après un rendez-vous honoré",
+      "trigger": {
+        "entityId": "ent_rendez_vous",
+        "event": "updated",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "capability": "analytics",
+        "kind": "capability",
+        "method": "trackEvent",
+        "params": [
+          {
+            "key": "name",
+            "value": "fermeture_prise_rdv"
+          },
+          {
+            "key": "screen",
+            "value": "scr_accueil"
+          }
+        ]
+      },
+      "id": "act_cloturer_ecran_rdv",
+      "name": "Journaliser la fermeture de l'accueil",
+      "trigger": {
+        "event": "screen_close",
+        "kind": "lifecycle",
+        "screenId": "scr_accueil"
+      }
+    }
+  ],
+  "airSchemaVersion": "1.0.0",
+  "app": {
+    "description": [
+      {
+        "locale": "fr",
+        "text": "Application du salon de toilettage : fiche complète de chaque chien avec photo, prise de rendez-vous, rappels de vaccination et historique des visites. Le paiement se fait sur place au salon."
+      }
+    ],
+    "locales": {
+      "appLocales": [
+        "fr"
+      ],
+      "contentLocales": [
+        "fr"
+      ],
+      "defaultAppLocale": "fr",
+      "rtlSupported": false,
+      "userLanguage": "fr"
+    },
+    "name": "Toilettage Canin",
+    "slug": "toilettage-canin"
+  },
+  "capabilities": [
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "methods",
+          "value": [
+            "email_otp",
+            "password"
+          ]
+        },
+        {
+          "key": "accountDeletionEnabled",
+          "value": true
+        },
+        {
+          "key": "sessionTtlDays",
+          "value": 30
+        }
+      ]
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "encrypted",
+          "value": true
+        },
+        {
+          "key": "maxCacheMb",
+          "value": 80
+        },
+        {
+          "key": "retentionDays",
+          "value": 365
+        }
+      ]
+    },
+    {
+      "capability": "media_upload",
+      "config": [
+        {
+          "key": "maxSizeMb",
+          "value": 8
+        },
+        {
+          "key": "allowedTypes",
+          "value": [
+            "image/jpeg",
+            "image/png"
+          ]
+        },
+        {
+          "key": "compressQuality",
+          "value": 0.8
+        }
+      ]
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "channels",
+          "value": [
+            "rappel_vaccination",
+            "rappel_rendez_vous"
+          ]
+        },
+        {
+          "key": "defaultChannel",
+          "value": "rappel_vaccination"
+        },
+        {
+          "key": "quietHours",
+          "value": "21:00-08:00"
+        }
+      ]
+    },
+    {
+      "capability": "calendar",
+      "config": [
+        {
+          "key": "writeMode",
+          "value": "user_confirmed"
+        },
+        {
+          "key": "calendarName",
+          "value": "Toilettage Canin"
+        }
+      ]
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "anonymizeIp",
+          "value": true
+        },
+        {
+          "key": "consentRequired",
+          "value": true
+        },
+        {
+          "key": "sampleRate",
+          "value": 1
+        }
+      ]
+    }
+  ],
+  "compliance": {
+    "accountDeletionRequired": true,
+    "commerceClass": "none",
+    "dataCollected": [
+      "contact_info",
+      "identifiers",
+      "user_content",
+      "usage_data"
+    ]
+  },
+  "datasets": [
+    {
+      "contentHash": "3f9c1a7be42d05d8c6b91af0e7524dcb18a35f6072e9bd4c1a08fe37c95b62d1",
+      "entityId": "ent_animal",
+      "id": "data_animaux_demo",
+      "rowCount": 3
+    },
+    {
+      "contentHash": "a81b4e6f2c07d95341fbe0827c6a5d19b3f74e0c8d2a61597be34cf08d1725ea",
+      "entityId": "ent_visite",
+      "id": "data_visites_demo",
+      "rowCount": 6
+    }
+  ],
+  "design": {
+    "overrides": [
+      {
+        "key": "color.primary",
+        "value": "#4C9A8F"
+      },
+      {
+        "key": "color.accent",
+        "value": "#F2B14C"
+      },
+      {
+        "key": "radius.card",
+        "value": 16
+      },
+      {
+        "key": "font.family.base",
+        "value": "Inter"
+      }
+    ],
+    "theme": "soft_pastel",
+    "tokensVersion": "1.0.0"
+  },
+  "entities": [
+    {
+      "fields": [
+        {
+          "id": "fld_animal_nom",
+          "name": "nom",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_animal_photo",
+          "name": "photo",
+          "required": false,
+          "type": "asset"
+        },
+        {
+          "id": "fld_animal_race",
+          "name": "race",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "id": "fld_animal_date_naissance",
+          "name": "date_naissance",
+          "required": false,
+          "type": "date"
+        },
+        {
+          "enumValues": [
+            "male",
+            "femelle"
+          ],
+          "id": "fld_animal_sexe",
+          "name": "sexe",
+          "required": false,
+          "type": "enum"
+        },
+        {
+          "enumValues": [
+            "petit",
+            "moyen",
+            "grand",
+            "tres_grand"
+          ],
+          "id": "fld_animal_taille",
+          "name": "taille",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_animal_poids_kg",
+          "name": "poids_kg",
+          "required": false,
+          "type": "decimal"
+        },
+        {
+          "enumValues": [
+            "court",
+            "mi_long",
+            "long",
+            "frise",
+            "dur"
+          ],
+          "id": "fld_animal_type_poil",
+          "name": "type_poil",
+          "required": false,
+          "type": "enum"
+        },
+        {
+          "id": "fld_animal_notes_comportement",
+          "name": "notes_comportement",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "id": "fld_animal_proprietaire_nom",
+          "name": "proprietaire_nom",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_animal_proprietaire_telephone",
+          "name": "proprietaire_telephone",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_animal_proprietaire_email",
+          "name": "proprietaire_email",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "id": "fld_animal_vaccin_date",
+          "name": "vaccination_derniere_date",
+          "required": false,
+          "type": "date"
+        },
+        {
+          "id": "fld_animal_vaccin_rappel",
+          "name": "vaccination_rappel_date",
+          "required": false,
+          "type": "date"
+        },
+        {
+          "id": "fld_animal_vaccin_a_jour",
+          "name": "vaccination_a_jour",
+          "required": true,
+          "type": "boolean"
+        },
+        {
+          "id": "fld_animal_actif",
+          "name": "actif",
+          "required": true,
+          "type": "boolean"
+        },
+        {
+          "id": "fld_animal_cree_le",
+          "name": "cree_le",
+          "required": true,
+          "type": "datetime"
+        }
+      ],
+      "id": "ent_animal",
+      "name": "animal"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_rdv_animal",
+          "name": "animal",
+          "referencesEntityId": "ent_animal",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "id": "fld_rdv_debut",
+          "name": "debut",
+          "required": true,
+          "type": "datetime"
+        },
+        {
+          "id": "fld_rdv_duree_minutes",
+          "name": "duree_minutes",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "enumValues": [
+            "bain",
+            "tonte",
+            "coupe_ciseaux",
+            "demelage",
+            "griffes",
+            "forfait_complet"
+          ],
+          "id": "fld_rdv_prestation",
+          "name": "prestation",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "enumValues": [
+            "demande",
+            "confirme",
+            "annule",
+            "honore"
+          ],
+          "id": "fld_rdv_statut",
+          "name": "statut",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_rdv_tarif_estime",
+          "name": "tarif_estime",
+          "required": false,
+          "type": "decimal"
+        },
+        {
+          "id": "fld_rdv_commentaire",
+          "name": "commentaire",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "id": "fld_rdv_rappel_envoye",
+          "name": "rappel_envoye",
+          "required": true,
+          "type": "boolean"
+        },
+        {
+          "id": "fld_rdv_cree_le",
+          "name": "cree_le",
+          "required": true,
+          "type": "datetime"
+        }
+      ],
+      "id": "ent_rendez_vous",
+      "name": "rendez_vous"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_visite_animal",
+          "name": "animal",
+          "referencesEntityId": "ent_animal",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "id": "fld_visite_rendez_vous",
+          "name": "rendez_vous",
+          "referencesEntityId": "ent_rendez_vous",
+          "required": false,
+          "type": "reference"
+        },
+        {
+          "id": "fld_visite_date",
+          "name": "date_visite",
+          "required": true,
+          "type": "date"
+        },
+        {
+          "id": "fld_visite_prestations",
+          "name": "prestations_realisees",
+          "required": true,
+          "type": "json"
+        },
+        {
+          "id": "fld_visite_montant",
+          "name": "montant_regle",
+          "required": true,
+          "type": "decimal"
+        },
+        {
+          "enumValues": [
+            "especes",
+            "carte_sur_place",
+            "cheque"
+          ],
+          "id": "fld_visite_mode_paiement",
+          "name": "mode_paiement",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_visite_toiletteur",
+          "name": "toiletteur",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "id": "fld_visite_photo_avant",
+          "name": "photo_avant",
+          "required": false,
+          "type": "asset"
+        },
+        {
+          "id": "fld_visite_photo_apres",
+          "name": "photo_apres",
+          "required": false,
+          "type": "asset"
+        },
+        {
+          "id": "fld_visite_observations",
+          "name": "observations",
+          "required": false,
+          "type": "text"
+        }
+      ],
+      "id": "ent_visite",
+      "name": "visite"
+    }
+  ],
+  "expectedTests": [
+    {
+      "description": "Vérifie qu'un animal sans nom, sans taille valide ou avec un téléphone propriétaire mal formé est rejeté par la validation de l'entité animal.",
+      "id": "test_rule_animal_identite",
+      "kind": "deterministic",
+      "targetId": "ent_animal"
+    },
+    {
+      "description": "Vérifie qu'une fiche animal déclarée vaccination à jour exige une date de rappel renseignée.",
+      "id": "test_rule_vaccination_rappel",
+      "kind": "deterministic",
+      "targetId": "ent_animal"
+    },
+    {
+      "description": "Vérifie qu'un rendez-vous de moins de 30 minutes ou de plus de 240 minutes, ou sans date de début, est refusé.",
+      "id": "test_rule_creneau_valide",
+      "kind": "deterministic",
+      "targetId": "ent_rendez_vous"
+    },
+    {
+      "description": "Vérifie qu'une visite n'accepte que les modes de paiement sur place (espèces, carte sur place, chèque) et un montant non négatif.",
+      "id": "test_rule_paiement_sur_place",
+      "kind": "deterministic",
+      "targetId": "ent_visite"
+    },
+    {
+      "description": "Vérifie qu'un utilisateur non propriétaire ou une fiche animal inactive ne donne pas accès à la fiche.",
+      "id": "test_rule_acces_fiche",
+      "kind": "deterministic",
+      "targetId": "ent_animal"
+    },
+    {
+      "description": "Vérifie que l'historique d'une visite n'est lisible que pour les animaux rattachés à l'utilisateur connecté.",
+      "id": "test_rule_acces_historique",
+      "kind": "deterministic",
+      "targetId": "ent_visite"
+    },
+    {
+      "description": "Vérifie que le calcul des créneaux déclenché à l'ouverture de l'accueil exclut les rendez-vous existants et adapte la durée estimée à la prestation et à la taille du chien.",
+      "id": "test_slot_creneaux",
+      "kind": "deterministic",
+      "targetId": "act_calculer_creneaux"
+    },
+    {
+      "description": "Vérifie le calcul du prochain rappel de vaccination, des jours restants et le déclenchement de l'alerte à moins de 14 jours.",
+      "id": "test_slot_rappel_vaccin",
+      "kind": "deterministic",
+      "targetId": "act_accueil_alertes_vaccin"
+    },
+    {
+      "description": "Vérifie l'agrégation de l'historique après création d'une visite : nombre de visites, montant total et intervalle moyen entre deux toilettages.",
+      "id": "test_slot_resume_historique",
+      "kind": "deterministic",
+      "targetId": "act_resume_historique"
+    },
+    {
+      "description": "Vérifie que le tarif indicatif calculé à la création du rendez-vous varie selon la taille, le type de poil et le démêlage requis, et reste positif.",
+      "id": "test_slot_tarif_estime",
+      "kind": "deterministic",
+      "targetId": "act_estimer_tarif"
+    },
+    {
+      "description": "Parcours : ouverture de l'accueil, affichage de l'alerte de rappel de vaccination puis navigation vers la fiche animal.",
+      "id": "test_e2e_accueil_alerte",
+      "kind": "e2e",
+      "targetId": "scr_accueil"
+    },
+    {
+      "description": "Parcours : depuis la carte du prochain rendez-vous, affichage des créneaux disponibles, création du rendez-vous et tarif estimé à régler sur place.",
+      "id": "test_e2e_prise_rdv",
+      "kind": "e2e",
+      "targetId": "act_ouvrir_rdv_depuis_carte"
+    },
+    {
+      "description": "Parcours : création d'une fiche animal avec import d'une photo depuis la bibliothèque après consentement à la permission.",
+      "id": "test_e2e_photo_animal",
+      "kind": "e2e",
+      "targetId": "act_importer_photo_animal"
+    },
+    {
+      "description": "Parcours : consultation de l'historique des visites d'un chien avec résumé (nombre de passages, montant total, dernière visite).",
+      "id": "test_e2e_historique",
+      "kind": "e2e",
+      "targetId": "ent_visite"
+    },
+    {
+      "description": "Contrat du fournisseur d'identité au lancement : restauration de session, expiration à 30 jours et disponibilité de l'endpoint de suppression de compte.",
+      "id": "test_contract_auth",
+      "kind": "contract",
+      "targetId": "act_demarrer_session"
+    },
+    {
+      "description": "Contrat de synchronisation hors-ligne : chiffrement local, résolution last_write_wins et rejeu des mutations en file d'attente.",
+      "id": "test_contract_sync_offline",
+      "kind": "contract",
+      "targetId": "act_sync_hors_ligne"
+    },
+    {
+      "description": "Contrat d'import de médias : refus des types non autorisés, limite de 8 Mo et suppression des métadonnées GPS.",
+      "id": "test_contract_medias",
+      "kind": "contract",
+      "targetId": "act_importer_photo_animal"
+    },
+    {
+      "description": "Contrat de notifications : enregistrement de l'appareil, respect des heures calmes et planification du rappel 14 jours avant.",
+      "id": "test_contract_push",
+      "kind": "contract",
+      "targetId": "act_programmer_rappel_vaccin"
+    },
+    {
+      "description": "Contrat calendrier : création d'événement uniquement après confirmation utilisateur, avec titre, durée et alarme corrects.",
+      "id": "test_contract_calendrier",
+      "kind": "contract",
+      "targetId": "act_ajouter_rdv_calendrier"
+    },
+    {
+      "description": "Contrat analytics : aucun événement envoyé sans consentement et respect de l'allowlist d'événements.",
+      "id": "test_contract_analytics",
+      "kind": "contract",
+      "targetId": "act_journaliser_ouverture_profil"
+    },
+    {
+      "description": "Contrat réseau : seul le domaine api.toilettage-canin.app est joignable lors de la synchronisation, toute autre requête est bloquée par défaut.",
+      "id": "test_contract_backend",
+      "kind": "contract",
+      "targetId": "act_sync_hors_ligne"
+    }
+  ],
+  "integrations": [
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.toilettage-canin.app"
+        },
+        {
+          "key": "methods",
+          "value": [
+            "email_otp",
+            "password"
+          ]
+        },
+        {
+          "key": "accountDeletionEndpoint",
+          "value": "/v1/compte/suppression"
+        },
+        {
+          "key": "sessionTtlDays",
+          "value": 30
+        }
+      ],
+      "id": "intg_auth_identite",
+      "providerClass": "identity_provider"
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "engine",
+          "value": "sqlite"
+        },
+        {
+          "key": "encrypted",
+          "value": true
+        },
+        {
+          "key": "maxCacheMb",
+          "value": 80
+        },
+        {
+          "key": "syncEndpoint",
+          "value": "https://api.toilettage-canin.app/v1/sync"
+        },
+        {
+          "key": "conflictStrategy",
+          "value": "last_write_wins"
+        }
+      ],
+      "id": "intg_stockage_local",
+      "providerClass": "local_database"
+    },
+    {
+      "capability": "media_upload",
+      "config": [
+        {
+          "key": "uploadEndpoint",
+          "value": "https://api.toilettage-canin.app/v1/medias"
+        },
+        {
+          "key": "allowedTypes",
+          "value": [
+            "image/jpeg",
+            "image/png"
+          ]
+        },
+        {
+          "key": "maxSizeMb",
+          "value": 8
+        },
+        {
+          "key": "compressQuality",
+          "value": 0.8
+        },
+        {
+          "key": "stripExifGps",
+          "value": true
+        }
+      ],
+      "id": "intg_photos_animaux",
+      "providerClass": "media_pipeline"
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "registrationEndpoint",
+          "value": "https://api.toilettage-canin.app/v1/appareils"
+        },
+        {
+          "key": "channels",
+          "value": [
+            "rappel_vaccination",
+            "rappel_rendez_vous"
+          ]
+        },
+        {
+          "key": "defaultChannel",
+          "value": "rappel_vaccination"
+        },
+        {
+          "key": "quietHours",
+          "value": "21:00-08:00"
+        }
+      ],
+      "id": "intg_notifications_rappels",
+      "providerClass": "push_gateway"
+    },
+    {
+      "capability": "calendar",
+      "config": [
+        {
+          "key": "writeMode",
+          "value": "user_confirmed"
+        },
+        {
+          "key": "calendarName",
+          "value": "Toilettage Canin"
+        },
+        {
+          "key": "defaultAlarmMinutesBefore",
+          "value": 120
+        },
+        {
+          "key": "timezoneMode",
+          "value": "device"
+        }
+      ],
+      "id": "intg_calendrier_appareil",
+      "providerClass": "device_calendar"
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "ingestEndpoint",
+          "value": "https://api.toilettage-canin.app/v1/analytics"
+        },
+        {
+          "key": "anonymizeIp",
+          "value": true
+        },
+        {
+          "key": "consentRequired",
+          "value": true
+        },
+        {
+          "key": "sampleRate",
+          "value": 1
+        },
+        {
+          "key": "eventAllowlist",
+          "value": [
+            "ouverture_profil",
+            "fermeture_prise_rdv",
+            "ouverture_fiche_animal"
+          ]
+        }
+      ],
+      "id": "intg_analytics_produit",
+      "providerClass": "analytics_sink"
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.toilettage-canin.app"
+        },
+        {
+          "key": "timeoutMs",
+          "value": 10000
+        },
+        {
+          "key": "retryPolicy",
+          "value": "exponential_backoff"
+        },
+        {
+          "key": "resources",
+          "value": [
+            "animaux",
+            "rendez-vous",
+            "visites"
+          ]
+        }
+      ],
+      "id": "intg_api_backend",
+      "providerClass": "rest_backend"
+    }
+  ],
+  "native": {
+    "minAndroidSdk": 26,
+    "minIosVersion": "16.0"
+  },
+  "navigation": {
+    "entryScreenId": "scr_accueil",
+    "routes": [
+      {
+        "id": "nav_accueil",
+        "screenId": "scr_accueil",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Accueil"
+          }
+        ]
+      }
+    ]
+  },
+  "network": {
+    "allowedDomains": [
+      "api.toilettage-canin.app"
+    ],
+    "policy": "deny_by_default"
+  },
+  "permissions": [
+    {
+      "permission": "NSPhotoLibraryUsageDescription",
+      "platform": "ios",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "L'accès à vos photos permet d'ajouter la photo de votre chien à sa fiche de toilettage."
+        }
+      ],
+      "requiredByCapability": "media_upload"
+    },
+    {
+      "permission": "android.permission.READ_MEDIA_IMAGES",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "L'accès à vos images permet de choisir la photo de votre chien pour sa fiche de toilettage."
+        }
+      ],
+      "requiredByCapability": "media_upload"
+    },
+    {
+      "permission": "android.permission.POST_NOTIFICATIONS",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "Les notifications servent à vous rappeler les rendez-vous de toilettage et les rappels de vaccination."
+        }
+      ],
+      "requiredByCapability": "push_notifications"
+    },
+    {
+      "permission": "NSCalendarsFullAccessUsageDescription",
+      "platform": "ios",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "L'accès au calendrier permet d'ajouter vos rendez-vous de toilettage à l'agenda de votre appareil."
+        }
+      ],
+      "requiredByCapability": "calendar"
+    },
+    {
+      "permission": "android.permission.READ_CALENDAR",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "La lecture du calendrier permet de vérifier vos disponibilités avant de proposer un créneau de toilettage."
+        }
+      ],
+      "requiredByCapability": "calendar"
+    },
+    {
+      "permission": "android.permission.WRITE_CALENDAR",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "L'écriture dans le calendrier permet d'enregistrer vos rendez-vous de toilettage dans votre agenda."
+        }
+      ],
+      "requiredByCapability": "calendar"
+    }
+  ],
+  "projectId": "prj_toilettage_canin",
+  "relations": [
+    {
+      "fromEntityId": "ent_animal",
+      "id": "rel_animal_rendez_vous",
+      "kind": "one_to_many",
+      "toEntityId": "ent_rendez_vous"
+    },
+    {
+      "fromEntityId": "ent_animal",
+      "id": "rel_animal_visites",
+      "kind": "one_to_many",
+      "toEntityId": "ent_visite"
+    },
+    {
+      "fromEntityId": "ent_rendez_vous",
+      "id": "rel_rendez_vous_visite",
+      "kind": "one_to_one",
+      "toEntityId": "ent_visite"
+    }
+  ],
+  "rules": [
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_animal_nom",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_animal_taille",
+          "operator": "in",
+          "value": [
+            "petit",
+            "moyen",
+            "grand",
+            "tres_grand"
+          ]
+        },
+        {
+          "fieldId": "fld_animal_proprietaire_telephone",
+          "operator": "matches",
+          "value": "^[+0-9][0-9 .-]{6,19}$"
+        }
+      ],
+      "description": "Un animal doit avoir un nom, une taille et les coordonnées téléphoniques de son propriétaire.",
+      "entityId": "ent_animal",
+      "id": "rule_animal_identite_complete",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_animal_vaccin_a_jour",
+          "operator": "eq",
+          "value": true
+        },
+        {
+          "fieldId": "fld_animal_vaccin_rappel",
+          "operator": "required"
+        }
+      ],
+      "description": "Si la vaccination est déclarée à jour, la date de rappel doit être renseignée pour permettre l'envoi du rappel.",
+      "entityId": "ent_animal",
+      "id": "rule_animal_vaccination",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_rdv_debut",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_rdv_duree_minutes",
+          "operator": "gte",
+          "value": 30
+        },
+        {
+          "fieldId": "fld_rdv_duree_minutes",
+          "operator": "lte",
+          "value": 240
+        },
+        {
+          "fieldId": "fld_rdv_statut",
+          "operator": "in",
+          "value": [
+            "demande",
+            "confirme",
+            "annule",
+            "honore"
+          ]
+        }
+      ],
+      "description": "Un rendez-vous dure entre 30 et 240 minutes et possède un statut connu ainsi qu'une date de début.",
+      "entityId": "ent_rendez_vous",
+      "id": "rule_rdv_creneau_valide",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_visite_montant",
+          "operator": "gte",
+          "value": 0
+        },
+        {
+          "fieldId": "fld_visite_mode_paiement",
+          "operator": "in",
+          "value": [
+            "especes",
+            "carte_sur_place",
+            "cheque"
+          ]
+        },
+        {
+          "fieldId": "fld_visite_date",
+          "operator": "required"
+        }
+      ],
+      "description": "Une visite enregistre un montant positif réglé sur place (aucun paiement en ligne).",
+      "entityId": "ent_visite",
+      "id": "rule_visite_paiement_sur_place",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_animal_proprietaire_email",
+          "operator": "eq",
+          "value": "current_user.email"
+        },
+        {
+          "fieldId": "fld_animal_actif",
+          "operator": "eq",
+          "value": true
+        }
+      ],
+      "description": "Seul le propriétaire authentifié rattaché à l'animal peut consulter et modifier sa fiche.",
+      "entityId": "ent_animal",
+      "id": "rule_acces_fiche_proprietaire",
+      "kind": "authorization"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_visite_animal",
+          "operator": "in",
+          "value": [
+            "current_user.animaux"
+          ]
+        }
+      ],
+      "description": "L'historique d'une visite n'est lisible que pour l'animal appartenant à l'utilisateur connecté.",
+      "entityId": "ent_visite",
+      "id": "rule_acces_historique_proprietaire",
+      "kind": "authorization"
+    }
+  ],
+  "screens": [
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_accueil_entete",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mon salon de toilettage"
+            },
+            {
+              "key": "subtitle",
+              "value": "Rendez-vous, vaccins et suivi de vos chiens"
+            },
+            {
+              "key": "showAvatar",
+              "value": true
+            }
+          ]
+        },
+        {
+          "blockType": "alert_banner",
+          "entityId": "ent_animal",
+          "id": "blk_accueil_alerte_vaccin"
+        },
+        {
+          "blockType": "card",
+          "id": "blk_accueil_prochain_rdv"
+        }
+      ],
+      "id": "scr_accueil",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Accueil"
+        }
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "allowedImports": [],
+      "description": "Calcule les créneaux de rendez-vous disponibles pour une journée donnée en fonction des horaires du salon, de la prestation demandée et de la taille du chien.",
+      "id": "slot_creneaux_disponibles",
+      "inputs": [
+        {
+          "name": "jour",
+          "type": "date"
+        },
+        {
+          "name": "prestation",
+          "type": "enum"
+        },
+        {
+          "name": "tailleAnimal",
+          "type": "enum"
+        },
+        {
+          "name": "rendezVousExistants",
+          "type": "json"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "creneaux",
+          "type": "json"
+        },
+        {
+          "name": "dureeEstimeeMinutes",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "allowedImports": [],
+      "description": "Détermine la date du prochain rappel de vaccination et si une alerte doit être affichée sur la fiche de l'animal.",
+      "id": "slot_prochain_rappel_vaccination",
+      "inputs": [
+        {
+          "name": "derniereVaccination",
+          "type": "date"
+        },
+        {
+          "name": "rappelDeclare",
+          "type": "date"
+        },
+        {
+          "name": "dateReference",
+          "type": "date"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prochainRappel",
+          "type": "date"
+        },
+        {
+          "name": "alerteRequise",
+          "type": "boolean"
+        },
+        {
+          "name": "joursRestants",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "allowedImports": [],
+      "description": "Agrège l'historique des visites d'un animal : nombre de passages, montant total réglé sur place et fréquence moyenne entre deux toilettages.",
+      "id": "slot_resume_historique",
+      "inputs": [
+        {
+          "name": "visites",
+          "type": "json"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "nombreVisites",
+          "type": "number"
+        },
+        {
+          "name": "montantTotal",
+          "type": "decimal"
+        },
+        {
+          "name": "intervalleMoyenJours",
+          "type": "number"
+        },
+        {
+          "name": "derniereVisite",
+          "type": "date"
+        }
+      ]
+    },
+    {
+      "allowedImports": [],
+      "description": "Estime le tarif indicatif d'une prestation selon la taille, le type de poil et l'état du pelage, à régler sur place.",
+      "id": "slot_tarif_estime",
+      "inputs": [
+        {
+          "name": "prestation",
+          "type": "enum"
+        },
+        {
+          "name": "tailleAnimal",
+          "type": "enum"
+        },
+        {
+          "name": "typePoil",
+          "type": "enum"
+        },
+        {
+          "name": "demelageRequis",
+          "type": "boolean"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "tarifEstime",
+          "type": "decimal"
+        },
+        {
+          "name": "detailCalcul",
+          "type": "text"
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,33 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — étape 2.4 TERMINÉE : campagne d'émission complète + corpus
+
+- **Campagne complète** (12 intentions, 3 classes commerce, ~$19,71 sur le
+  budget propriétaire de 20 $, journal JSONL versionné) :
+  - **12/12 AIR valides** — émission par sections + réparation bornée
+    (≤ 1 passe) : 14-32 diagnostics en 1ʳᵉ passe → **0 partout** ; classes
+    commerce toutes correctement émises (digital ⇒ IAP, physique ⇒ PSP) ;
+    0 refus classifieur sur 12 intentions (D-015 : signal rassurant,
+    corpus non représentatif du taux réel).
+  - **Round-trip** (AIR → rendu texte → re-transcription) : **12/12
+    conformes au schéma strict** — le critère de sortie de phase
+    « 100 % conforme au schéma sur le corpus » est SATISFAIT ; **identité
+    stricte au hash canonique : 5/12** [mesuré]. Motif binaire : 0
+    diagnostic (et alors hash identique) ou cassure franche (14-37
+    diagnostics), sans corrélation avec la taille du document.
+  - **Golden corpus démarré : 12 AIR de 12 domaines distincts** versionnés
+    dans `packages/golden-corpus/corpus/`, validés en CI SANS réseau
+    (39 tests : schéma + sémantique + registre + unicité + 3 classes
+    commerce). Total paquets : **121 tests verts**, lint 0, tsc 0.
+- **Limitation consignée (non bloquante pour 2.5)** : 7/12 transcriptions
+  sémantiquement cassées ; outil de diagnostic instrumenté prêt
+  (`replay-roundtrip.mjs`, dump du transcrit + diagnostics) mais non
+  exécuté — budget épuisé ($0,29 restants ; ~$0,5-1/rejeu).
+- Critères ROADMAP de l'étape : émission structured outputs ✓ ·
+  round-trip 100 % conforme ✓ · corpus ≥ 10 domaines variés ✓ →
+  **2.4 close**. Reste 2.5 (gel v1 + revue propriétaire) pour clore la
+  Phase 2.
+
 ## 2026-08-27 — étape 2.4 (EN COURS) : harnais d'émission structured outputs
 ## + contraintes API mesurées → évolution AIR v1
 
