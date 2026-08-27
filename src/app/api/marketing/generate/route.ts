@@ -319,7 +319,7 @@ export async function POST(req: Request) {
       try {
         await supabaseAdmin
           .from('marketing_briefs')
-          .upsert({ slug, owner_email, brief }, { onConflict: 'slug' });
+          .upsert({ slug, site_id: site.id, owner_email, brief }, { onConflict: 'slug' });
       } catch (e) {
         console.error('brief cache insert failed:', e);
       }
@@ -361,6 +361,7 @@ export async function POST(req: Request) {
     try {
       await supabaseAdmin.from('marketing_assets').insert({
         slug,
+        site_id: site.id,
         owner_email,
         type: format,
         platform,
