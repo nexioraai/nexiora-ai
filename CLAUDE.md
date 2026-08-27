@@ -263,3 +263,32 @@ Les zones non demandées doivent rester inchangées.
   - vérifications exécutées ;
   - résultat ;
   - éventuels risques ou éléments non vérifiés.
+
+---
+
+## Chantier Mobile Generation — RÈGLE PERMANENTE
+
+Le chantier de génération d'applications mobiles natives possède une
+SOURCE DE VÉRITÉ PERMANENTE, versionnée dans le repository :
+
+`docs/mobile-generation/`
+(MASTER_PLAN.md · ARCHITECTURE.md · ROADMAP.md · STATUS.md · DECISIONS.md · CHANGELOG.md)
+
+Règles obligatoires :
+
+1. Toute session consacrée à ce chantier COMMENCE par lire, dans l'ordre :
+   MASTER_PLAN.md, ARCHITECTURE.md, ROADMAP.md, STATUS.md — puis
+   DECISIONS.md si nécessaire. Ensuite seulement, travailler.
+2. STATUS.md doit refléter l'état RÉEL du chantier : le mettre à jour après
+   chaque étape significative et avant la fin de toute session de travail.
+3. Le plan est FIGÉ. Aucune décision architecturale figée ne se modifie
+   silencieusement. Toute proposition d'évolution est soumise explicitement
+   (problème · solution actuelle · alternative · démonstration technique ·
+   conséquences), attend une validation explicite, puis est consignée dans
+   DECISIONS.md avant toute modification du plan.
+4. Aucune étape de ROADMAP.md n'est marquée TERMINÉE sans vérification
+   objective de ses critères de sortie. Aucun saut de phase silencieux :
+   une étape jugée inutile est signalée, argumentée, et attend validation.
+5. La mémoire d'une conversation ne constitue JAMAIS la source de vérité du
+   projet — seul le repository fait foi. Une nouvelle session doit pouvoir
+   reprendre le chantier en lisant uniquement `docs/mobile-generation/`.
