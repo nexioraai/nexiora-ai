@@ -1,0 +1,25 @@
+{
+  "arm": "X3p-ordre-naturel",
+  "stop": "end_turn",
+  "usage": {
+    "input_tokens": 120,
+    "cache_creation_input_tokens": 15092,
+    "cache_read_input_tokens": 0,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 15092,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "output_tokens": 930,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "service_tier": "standard",
+    "inference_geo": "global"
+  },
+  "coutUSD": 0.1182,
+  "raw": "{\"screen\":{\"id\":\"scr_article\",\"title\":[{\"locale\":\"fr\",\"text\":\"Fiche article\"}],\"blocks\":[{\"id\":\"blk_article_galerie\",\"blockType\":\"image_gallery\",\"entityId\":\"ent_article\",\"props\":[{\"key\":\"champPrincipal\",\"value\":\"fld_article_photo_principale\"},{\"key\":\"champSupplementaires\",\"value\":\"fld_article_photos\"},{\"key\":\"zoomActif\",\"value\":true},{\"key\":\"ratio\",\"value\":\"3:4\"}]},{\"id\":\"blk_article_entete\",\"blockType\":\"detail_header\",\"entityId\":\"ent_article\",\"props\":[{\"key\":\"champTitre\",\"value\":\"fld_article_nom\"},{\"key\":\"champPrix\",\"value\":\"fld_article_prix\"},{\"key\":\"champDevise\",\"value\":\"fld_article_devise\"},{\"key\":\"champReference\",\"value\":\"fld_article_reference\"},{\"key\":\"champCouleur\",\"value\":\"fld_article_couleur\"}]},{\"id\":\"blk_article_description\",\"blockType\":\"rich_text\",\"entityId\":\"ent_article\",\"props\":[{\"key\":\"champTexte\",\"value\":\"fld_article_description\"},{\"key\":\"replierApresLignes\",\"value\":4},{\"key\":\"libelleDeplier\",\"value\":\"Voir la description complète\"}]},{\"id\":\"blk_article_tailles\",\"blockType\":\"option_selector\",\"entityId\":\"ent_article\",\"props\":[{\"key\":\"libelle\",\"value\":\"Taille\"},{\"key\":\"champOptions\",\"value\":\"fld_article_tailles\"},{\"key\":\"champStock\",\"value\":\"fld_article_stock\"},{\"key\":\"slotDisponibilite\",\"value\":\"slot_disponibilite_taille\"},{\"key\":\"obligatoire\",\"value\":true},{\"key\":\"messageRupture\",\"value\":\"Cette taille est momentanément indisponible.\"}]},{\"id\":\"blk_article_disponibilite\",\"blockType\":\"status_badge\",\"entityId\":\"ent_article\",\"props\":[{\"key\":\"champStatut\",\"value\":\"fld_article_disponible\"},{\"key\":\"libelleVrai\",\"value\":\"En stock\"},{\"key\":\"libelleFaux\",\"value\":\"Épuisé\"},{\"key\":\"champMiseAJour\",\"value\":\"fld_article_mise_a_jour\"}]},{\"id\":\"blk_article_ajout_panier\",\"blockType\":\"button\",\"props\":[{\"key\":\"libelle\",\"value\":\"Ajouter au panier\"},{\"key\":\"style\",\"value\":\"primary\"},{\"key\":\"ancrageBas\",\"value\":true},{\"key\":\"ecranCible\",\"value\":\"scr_panier\"},{\"key\":\"desactiveSiIndisponible\",\"value\":true}]},{\"id\":\"blk_article_partage\",\"blockType\":\"button\",\"props\":[{\"key\":\"libelle\",\"value\":\"Partager cet article\"},{\"key\":\"style\",\"value\":\"ghost\"},{\"key\":\"icone\",\"value\":\"share\"}]}]}}",
+  "blocsEmis": 7,
+  "propsPresentes": 7,
+  "blocsVerbatim": 7,
+  "ecranIdentique": true
+}
