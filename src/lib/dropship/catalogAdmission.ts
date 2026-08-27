@@ -1,4 +1,34 @@
-import 'server-only';
+// ============================================================
+// DEBT-081 -- `import 'server-only'` RETIRE ICI. NE PAS LE REMETTRE.
+//
+// CE QU'IL CASSAIT. `src/app/sites/[slug]/themes/shared.tsx` est
+// BI-ENVIRONNEMENT -- quatre composants 'use client' l'importent -- et il
+// importe `selectionServable` depuis `catalogAdmission`. `server-only` entrait
+// donc dans un graphe CLIENT, et `next build` echouait avec quatre erreurs.
+// Le fichier `shared.tsx` enonce d'ailleurs lui-meme cette contrainte
+// (« il ne peut donc pas importer une autorite `server-only` ») quelques
+// lignes plus bas : c'est sa propre regle qui etait violee, par son import.
+//
+// DATE ET CAUSE, MESUREES. Au commit `11b3b52`, `shared.tsx` n'importait pas
+// ce module et le build passait. C'est `f5f17ec` -- qui a fait verifier
+// l'eligibilite fournisseur a la LECTURE, un correctif juste -- qui a
+// introduit l'import et casse le build.
+//
+// POURQUOI LE RETRAIT EST SANS CONSEQUENCE. Ce module est PUR : aucune E/S,
+// aucun `process.env`, aucun secret -- des listes constantes et des
+// comparaisons. Le depot expose deja exactement cette classe d'autorite au
+// client : `canTransact` (`lib/commerce-admission`), qui repond « ce site
+// a-t-il le droit de vendre ? », n'a PAS de `server-only` et est importee par
+// `PromoBanner` ('use client'). Et les identifiants fournisseur ne sont pas
+// des secrets : `catalog_products.supplier_id` est lisible sous la cle anon
+// (verifie : rend « cj »).
+//
+// L'INTENTION EST CONSERVEE AUTREMENT. Ce module reste l'autorite unique de
+// l'admission au catalogue ; ce qui ne devait pas atteindre le client, ce
+// sont les SECRETS et les ACCES, pas un predicat. Un cliquet structurel
+// (`src/lib/architecture/__tests__/serverOnlyClientGraph.test.ts`) echoue
+// desormais si un module du graphe client reprend un `server-only`.
+// ============================================================
 import { suppliersForDropshipType, type DropshipType } from '@/lib/dropship/suppliers';
 
 // ============================================================
