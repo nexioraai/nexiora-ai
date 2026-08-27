@@ -1,0 +1,5 @@
+# Poids APK release universel (du -sk), mesure du 2026-08-27
+stylesheet: 66960 Ko (référence)
+unistyles:  75916 Ko (delta +8956 Ko)
+tamagui:    71704 Ko (delta +4744 Ko)
+nativewind: 78100 Ko (delta +11140 Ko)

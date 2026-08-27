@@ -1,0 +1,5 @@
+# Poids .app Release-iphonesimulator (du -sk), mesure du 2026-08-27
+stylesheet: 53092 Ko (référence)
+unistyles:  58172 Ko (delta +5080 Ko)
+tamagui:    59144 Ko (delta +6052 Ko)
+nativewind: 62868 Ko (delta +9776 Ko)
