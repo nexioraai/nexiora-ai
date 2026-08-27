@@ -38,9 +38,10 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
 
 - **Terminé** : Phase 0 🟢 (fondations, CI #32 verte) · Phase 1 partiel :
   banc coûts LLM 🟢, P-001 🟢 tranché → **D-016 Trigger.dev v4** ·
-  Phase 2 partiel : **étape 2.1 🟢 — paquet `@deribfy/air-schema`**
-  (schémas AIR/lock/state, validateur sémantique, 42 tests, lint bloquant
-  câblé en CI).
+  Phase 2 partiel : **2.1 🟢 `@deribfy/air-schema`** (schémas AIR/lock/
+  state, validateur sémantique, 51 tests avec 2.2) · **2.2 🟢 migrations
+  d'AIR** (fail-closed, testées) · **2.3 🟢 `@deribfy/capability-registry`**
+  (15 capabilities cœur, cliquets de registre, 25 tests).
 - **En cours** : Phase 2 — AIR v1 + Capability Registry v1.
 - **Bloqué, prérequis propriétaire (Phase 1)** : P-002 (comptes
   E2B/Modal/Fly/Vercel Sandbox + budget ~10-20 $) · P-003 & E2E (Xcode
@@ -48,10 +49,10 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
   compte EAS) · coûts EAS (compte Expo/EAS) · coût projet Supabase (token
   Management API, org de test). Chaque banc reprend dès l'arrivée de son
   prérequis.
-- **Prochaine étape EXACTEMENT autorisée** : **étape 2.3 — registre des
-  ~15 capabilities cœur** (paquet `capability-registry` : classe commerce,
-  impact d'empreinte native, permissions induites, compat OTA/rebuild) +
-  cliquets de registre.
+- **Prochaine étape EXACTEMENT autorisée** : **étape 2.4 — émission LLM
+  par structured outputs** (round-trip : intention → AIR → rendu texte →
+  même AIR) + **début du golden corpus** (≥ 10 AIR de domaines variés).
+  Prérequis : clé API Anthropic (déjà disponible — utilisée au banc LLM).
 - **INTERDIT à ce stade** : toute phase dont les dépendances ROADMAP ne
   sont pas satisfaites (Phase 3 exige P-003 ; Phases 4+ dépendent de 2/3),
   tout push sans accord explicite, toute décision P-00x sans les mesures
@@ -63,8 +64,8 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
 |---|---|---|
 | 2.1 | Paquet `@deribfy/air-schema` : schémas zod AIR v1 (identités stables préfixées, effets d'actions fermés, réseau deny-by-default, classe commerce) + `project.lock` (sans horodatage — déterminisme) + `deployment state` ; validateur sémantique déterministe (18 familles de diagnostics triés) ; JSON canonique + hash SHA-256 ; projection JSON Schema draft 2020-12 (objets stricts partout) | 🟢 TERMINÉ (2026-08-27) — tsc EXIT=0 · **lint bloquant 0 écart** · **42/42 tests** · CI étendue (3 étapes paquets dans le Gate) · web intact : tsc EXIT=0 + **4071/4071 tests** après changement de lockfile |
 | 2.2 | Migrations d'AIR testées : chaînage versionné pas à pas, le runner fixe la version cible (une migration ne saute pas de version), détection de cycle, fail-closed (le document migré repasse schéma + validateur sémantique) ; registre réel vide par construction (v1.0.0 = première version publiée), mécanisme prouvé par migrations synthétiques | 🟢 TERMINÉ (2026-08-27) — tsc EXIT=0 · lint 0 écart · **51/51 tests** (9 nouveaux) |
-| 2.3 | Registre des ~15 capabilities cœur (classe commerce, impact natif, permissions) + cliquets de registre | ⏭️ SUIVANT |
-| 2.4 | Émission LLM structured outputs + round-trip + golden corpus ≥ 10 domaines | ⏳ |
+| 2.3 | Paquet `@deribfy/capability-registry` : **15 capabilities cœur** (analytics, auth, barcode_scan, biometrics, calendar, camera, deep_links, geolocation, maps, media_upload, offline_storage, payments.iap, payments.psp, push_notifications, share) avec les 17 champs d'ARCHITECTURE §2 ; API allowlist positive (référence inconnue = refus net), fermeture transitive des dépendances, **empreinte native CALCULÉE** (autorité Router), permissions induites agrégées, conflits (PSP ↔ IAP), contrainte de classe commerce ; pont `validateAirCapabilities` (AIR ↔ registre, permissions induites à déclarer) ; **cliquets de registre** : liste v1 exacte verrouillée, invariants OTA⇔impact⇔rebuild⇔profils, dépendances acycliques, conflits symétriques, permissions ⊆ config native, contrainte commerce ⇔ paiement | 🟢 TERMINÉ (2026-08-27) — tsc EXIT=0 · lint bloquant 0 écart · **25/25 tests** · registre v0.1.0 NON GELÉ (gel = 2.5, revue propriétaire) · web intact : tsc EXIT=0 + 4071/4071 |
+| 2.4 | Émission LLM structured outputs + round-trip + golden corpus ≥ 10 domaines | ⏭️ SUIVANT |
 | 2.5 | Gel registre v1 + revue propriétaire des capabilities (décision produit) | ⏳ |
 
 ## PHASE 1 — DÉTAIL (ouverte le 2026-08-27)

@@ -1,5 +1,35 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — étape 2.3 : paquet `@deribfy/capability-registry`
+
+- **Registre fermé des 15 capabilities cœur v1** (analytics, auth,
+  barcode_scan, biometrics, calendar, camera, deep_links, geolocation,
+  maps, media_upload, offline_storage, payments.iap, payments.psp,
+  push_notifications, share) — chaque entrée porte les 17 champs
+  d'ARCHITECTURE §2 (implémentation, dépendances, plateformes, profils de
+  runtime, config native, permissions induites avec clé i18n, coût,
+  empreinte native, OTA/rebuild, classe commerce, contraintes, conflits,
+  provenance, empreinte de build). Registre **v0.1.0 NON GELÉ** — le gel
+  en 1.0.0 intervient à l'étape 2.5 (revue propriétaire, décision
+  produit).
+- **API allowlist positive** : référence inconnue = refus net ; fermeture
+  transitive des dépendances ; **empreinte native CALCULÉE sur la
+  fermeture** (autorité du futur Capability Router — barcode_scan seul ⇒
+  heavy via camera, prouvé) ; permissions induites agrégées avec
+  provenance ; conflits (PSP ↔ IAP mutuellement exclusifs) ; contrainte
+  de classe commerce (digital ⇒ IAP, physical_or_offapp ⇒ PSP).
+- **Pont AIR ↔ registre** (`validateAirCapabilities`) : capability
+  inconnue, conflit, classe commerce incompatible, permission induite non
+  déclarée dans l'AIR — diagnostics déterministes triés.
+- **Cliquets de registre** : liste v1 EXACTE verrouillée (toute évolution
+  = édition consciente du cliquet), invariants OTA ⇔ impact ⇔ rebuild ⇔
+  profils, dépendances existantes et acycliques, conflits symétriques,
+  permissions induites ⊆ config native, contrainte commerce ⇔ capability
+  de paiement.
+- **Preuves** : tsc EXIT=0 · lint BLOQUANT 0 écart · 25/25 tests ·
+  scripts racine et CI couvrent les deux paquets · web intact après
+  changement de lockfile : tsc EXIT=0, 221 fichiers / 4071 tests verts.
+
 ## 2026-08-27 — PHASE 2 OUVERTE · étape 2.1 : paquet `@deribfy/air-schema`
 
 - Ouverture autorisée par le propriétaire ; dépendances ROADMAP satisfaites
