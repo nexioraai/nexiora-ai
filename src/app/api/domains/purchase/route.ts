@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getStripe } from '@/lib/stripe';
+import { estDomaineReserve } from '@/lib/domains/reserved';
+import { consignerEvenementDomaine } from '@/lib/domains/history';
 import { checkDomain, getRegistrationRequirements, NEXIORA_DOMAIN_MARGIN_USD } from '@/lib/domains/porkbun';
 
 /**
@@ -15,6 +17,12 @@ export async function POST(req: NextRequest) {
   const clean = String(domain || '').trim().toLowerCase();
   if (!slug || !/^[a-z0-9-]+\.[a-z]{2,}$/i.test(clean)) {
     return NextResponse.json({ error: 'Domaine invalide' }, { status: 400 });
+  }
+
+  // D-07 -- meme garde, meme autorite, avant toute reservation et tout appel
+  // au registraire.
+  if (estDomaineReserve(clean)) {
+    return NextResponse.json({ error: 'Ce domaine est reserve' }, { status: 403 });
   }
 
   // 1. Le site appartient bien au demandeur
@@ -41,11 +49,15 @@ export async function POST(req: NextRequest) {
   const userEmail = auth.email ?? '';
 
   // 2. Domaine pas deja reserve dans Nexiora
-  const { data: existing } = await supabaseAdmin
+  const { data: existing, error: erreurExisting } = await supabaseAdmin
     .from('site_domains')
     .select('id, status')
     .eq('domain', clean)
     .maybeSingle();
+  // AUDIT AGRESSIF / TOUR 1 -- ne pas savoir, c'est refuser.
+  if (erreurExisting) {
+    return NextResponse.json({ error: 'Service momentanement indisponible.' }, { status: 503 });
+  }
   if (existing && existing.status !== 'failed') {
     return NextResponse.json({ error: 'Ce domaine est deja reserve' }, { status: 409 });
   }
@@ -55,11 +67,16 @@ export async function POST(req: NextRequest) {
   // apporte par un marchand). Sans ceci, un domaine deja rattache en BYOD a
   // un site pouvait etre "achete" via Porkbun par un autre marchand pour le
   // meme nom -- les deux mecanismes ne se recoupaient jamais.
-  const { data: byodConflict } = await supabaseAdmin
+  const { data: byodConflict, error: erreurByod } = await supabaseAdmin
     .from('sites')
     .select('id')
     .eq('custom_domain', clean)
     .maybeSingle();
+  // AUDIT AGRESSIF / TOUR 1 -- controle INTER-TABLES sans filet : en panne,
+  // un domaine deja connecte en BYOD pouvait etre achete par un autre.
+  if (erreurByod) {
+    return NextResponse.json({ error: 'Service momentanement indisponible.' }, { status: 503 });
+  }
   if (byodConflict) {
     return NextResponse.json({ error: 'Ce domaine est deja utilise' }, { status: 409 });
   }
@@ -112,6 +129,19 @@ export async function POST(req: NextRequest) {
       }
       return NextResponse.json({ error: 'Enregistrement impossible' }, { status: 500 });
     }
+
+    // P1 -- `achat_demande` etait declare, jamais cable. La reservation
+    // existe (ligne `pending`), le paiement n'a pas encore eu lieu : c'est
+    // exactement le fait a consigner. `achat_confirme` viendra du webhook,
+    // et l'ecart entre les deux est ce qui rend un abandon de panier
+    // distinguable d'un echec de provisionnement.
+    await consignerEvenementDomaine({
+      siteId: site.id,
+      domain: clean,
+      evenement: 'achat_demande',
+      origine: 'marchand',
+      details: { domainId: row.id, tld },
+    });
 
     // 6. Abonnement annuel. Facture sur le prix de RENOUVELLEMENT : un TLD
     //    en promo la premiere annee (.store a 2,57$ puis 43,77$) ferait

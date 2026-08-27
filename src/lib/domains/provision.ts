@@ -10,6 +10,7 @@ import {
 import { getDnsVerificationToken } from '@/lib/domains/searchconsole';
 import { checkExistingMail } from '@/lib/domains/mail-guard';
 import { logAnomaly } from '@/lib/anomaly';
+import { consignerEvenementDomaine } from '@/lib/domains/history';
 
 /**
  * Chaine complete apres encaissement : achat Porkbun, DNS, Vercel.
@@ -122,6 +123,31 @@ export async function provisionDomain(domainId: string): Promise<{ ok: boolean; 
       .update({ status: 'failed', last_error: msg.slice(0, 500), updated_at: new Date().toISOString() })
       .eq('id', domainId);
     console.error('[provision]', row.domain, msg);
+    // ============================================================
+    // R7 -- UN ECHEC DE PROVISIONNEMENT ETAIT SILENCIEUX.
+    //
+    // Cette voie ne posait qu'un `console.error`. Or elle couvre les echecs
+    // les plus couteux : solde insuffisant chez le registraire, API
+    // indisponible, extension refusee. Le client a DEJA PAYE via Stripe, et
+    // personne n'etait prevenu -- ni lui, ni nous. Un journal de fonction
+    // serverless n'est pas une alerte.
+    //
+    // `blocked` et non `warning` : une commande payee qui n'aboutit pas
+    // exige une intervention humaine, pas une statistique.
+    // ============================================================
+    await logAnomaly({
+      type: 'domain_provision_failed',
+      severity: 'blocked',
+      siteId: row.site_id ?? null,
+      details: { domainId, domain: row.domain, status: row.status, error: msg.slice(0, 500) },
+    });
+    await consignerEvenementDomaine({
+      siteId: (row.site_id as string) ?? null,
+      domain: row.domain,
+      evenement: 'provisionnement',
+      origine: 'cron',
+      details: { domainId, resultat: 'echec', error: msg.slice(0, 300) },
+    });
     return { ok: false, status: 'failed' };
   };
 
@@ -341,6 +367,26 @@ export async function provisionDomain(domainId: string): Promise<{ ok: boolean; 
   // par sites.custom_domain, jamais site_domains). Domaine entierement
   // provisionne cote Porkbun/Vercel/DNS mais invisible cote application, sans
   // aucune trace. Desormais detecte et signale.
+  // ============================================================
+  // AUDIT AGRESSIF #2 -- CETTE ECRITURE ECRASAIT L'ANCIEN DOMAINE SANS TRACE.
+  //
+  // Scenario reel et atteignable : un marchand connecte `ancien.com` en BYOD,
+  // puis achete `nouveau.com` via Deribfy. Le provisionnement ecrit
+  // `custom_domain = nouveau.com` -- et `ancien.com` DISPARAIT, sans aucun
+  // evenement. C'est exactement le defaut que P1 existe pour fermer, sur un
+  // chemin que P1 n'avait pas couvert : seule la route de rattachement etait
+  // journalisee, pas celle du provisionnement.
+  //
+  // On lit donc l'etat ANTERIEUR avant de l'ecraser : une valeur ecrasee ne
+  // se reconstruit pas apres coup.
+  // ============================================================
+  const { data: siteAvant } = await supabaseAdmin
+    .from('sites')
+    .select('custom_domain')
+    .eq('id', row.site_id)
+    .maybeSingle();
+  const domainePrecedent = (siteAvant as { custom_domain?: string | null } | null)?.custom_domain ?? null;
+
   const { error: linkErr } = await supabaseAdmin
     .from('sites')
     .update({ custom_domain: row.domain })
@@ -356,6 +402,34 @@ export async function provisionDomain(domainId: string): Promise<{ ok: boolean; 
       details: { domainId, domain: row.domain, error: linkErr.message, code: (linkErr as any).code },
     });
     return { ok: false, status: 'link_failed' };
+  }
+
+  // P1 -- LE SUCCES N'ETAIT PAS CONSIGNE, SEUL L'ECHEC L'ETAIT.
+  //
+  // Un journal qui ne garde que les echecs ne permet pas de repondre « quand
+  // ce domaine est-il devenu operationnel ». Les horodatages d'etape vivent
+  // dans `site_domains`, mais ils sont ECRASABLES ; l'evenement, lui, est en
+  // ajout seul. C'est la difference entre l'etat courant et l'historique --
+  // la distinction meme sur laquelle P1 repose.
+  await consignerEvenementDomaine({
+    siteId: (row.site_id as string) ?? null,
+    domain: row.domain,
+    evenement: 'provisionnement',
+    origine: 'cron',
+    details: { domainId, resultat: 'succes' },
+  });
+
+  // DEUX FAITS DISTINCTS, DEUX EVENEMENTS. Le provisionnement dit « ce
+  // domaine est operationnel » ; le changement dit « ce site a cesse de
+  // servir l'ancien ». Les confondre reperdrait la valeur que P1 protege.
+  if (domainePrecedent && domainePrecedent !== row.domain) {
+    await consignerEvenementDomaine({
+      siteId: (row.site_id as string) ?? null,
+      domain: row.domain,
+      evenement: 'changement',
+      origine: 'cron',
+      details: { domainePrecedent, domainId },
+    });
   }
 
   return { ok: true, status: 'dns_configured' };

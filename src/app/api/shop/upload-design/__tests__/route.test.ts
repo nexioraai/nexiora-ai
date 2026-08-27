@@ -8,6 +8,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // checkout/route.ts).
 
 const siteSelectMock = vi.fn();
+/** AUDIT GLOBAL -- ce que rend le compteur de la borne de debit. */
+let compteur: { count: number | null; error: unknown } = { count: 0, error: null };
 /** LOT 5 -- la projection reellement demandee, et les filtres reellement poses. */
 let colonnesDemandees = '';
 const filtres: [string, unknown][] = [];
@@ -44,6 +46,17 @@ function makeFrom() {
         }
         return { data: projete, error };
       };
+      return b;
+    }
+    if (table === 'checkout_anomalies') {
+      // AUDIT GLOBAL -- le compteur de la borne. `count` via le thenable,
+      // comme PostgREST le rend avec `head: true`.
+      const b: any = {};
+      const self = () => b;
+      b.select = self; b.eq = (c: string, v: unknown) => { filtres.push([c, v]); return b; };
+      b.is = (c: string, v: unknown) => { filtres.push([c, v]); return b; };
+      b.gte = (c: string, v: unknown) => { filtres.push([c, v]); return b; };
+      b.then = (r: (x: unknown) => unknown) => Promise.resolve(compteur).then(r);
       return b;
     }
     if (table === 'design_uploads') {
@@ -83,7 +96,10 @@ function makeRequest(fields: { file?: { name: string; type: string; size: number
   return new Request('https://woorri.test/api/shop/upload-design', { method: 'POST', body: fd });
 }
 
+vi.mock('@/lib/anomaly', () => ({ logAnomaly: vi.fn() }));
+
 beforeEach(() => {
+  compteur = { count: 0, error: null };
   colonnesDemandees = '';
   filtres.length = 0;
   fromMock = makeFrom();
@@ -190,5 +206,51 @@ describe('POST /api/shop/upload-design — LOT 5 : la garde lit une colonne REEL
     await POST(reqAvecFichier('ma-boutique'));
     expect(filtres).toContainEqual(['slug', 'ma-boutique']);
     expect(filtres).toContainEqual(['archived_at', null]);
+  });
+});
+
+// ============================================================
+// AUDIT GLOBAL — LA SEULE ECRITURE NON AUTHENTIFIEE ET NON BORNEE.
+//
+// Deux ecritures par appel : une ligne `design_uploads` ET un objet de 10 Mo
+// dans le bucket. Ce qui est prouve ici n'est pas le code de statut, c'est
+// que RIEN N'EST ECRIT quand la borne refuse.
+// ============================================================
+describe('POST /api/shop/upload-design — AUDIT GLOBAL : borne de debit', () => {
+  it('sous la borne -> televersement accepte', async () => {
+    compteur = { count: 9, error: null };
+    const res = await POST(reqAvecFichier());
+    expect(res.status).toBe(200);
+    expect(storageUploadMock).toHaveBeenCalled();
+  });
+
+  it('borne atteinte -> 429, AUCUN objet stocke, AUCUNE ligne creee', async () => {
+    compteur = { count: 10, error: null };
+    const res = await POST(reqAvecFichier());
+    expect(res.status).toBe(429);
+    expect(storageUploadMock).not.toHaveBeenCalled();
+    expect(designInsertMock).not.toHaveBeenCalled();
+  });
+
+  it('compteur en PANNE -> 503, AUCUN objet stocke (jamais fail-open)', async () => {
+    compteur = { count: null, error: { message: 'db down' } };
+    const res = await POST(reqAvecFichier());
+    expect(res.status).toBe(503);
+    expect(storageUploadMock).not.toHaveBeenCalled();
+    expect(designInsertMock).not.toHaveBeenCalled();
+  });
+
+  it('la borne porte sur CE site — un abuseur ne coupe pas tout le parc', async () => {
+    await POST(reqAvecFichier());
+    expect(filtres).toContainEqual(['site_id', 'site-1']);
+    expect(filtres).toContainEqual(['type', 'design_upload_request']);
+  });
+
+  it('un fichier refuse pour son TYPE ne consomme aucun jeton', async () => {
+    // La borne se pose apres les controles gratuits : sinon un attaquant
+    // viderait le seau d'un marchand avec des fichiers invalides.
+    const res = await POST(makeRequest({ file: { name: 'a.svg', type: 'image/svg+xml', size: 10 }, slug: 'ma-boutique' }));
+    expect(res.status).toBe(400);
+    expect(filtres).not.toContainEqual(['type', 'design_upload_request']);
   });
 });

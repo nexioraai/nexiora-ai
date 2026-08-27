@@ -799,3 +799,80 @@ describe('LOT 3 / L3-05 — le prix des maquettes est relu en base, jamais cru s
     expect(fromCalls).not.toContain('catalog_products');
   });
 });
+
+// ============================================================
+// AUDIT GLOBAL — L'ELIGIBILITE FOURNISSEUR EST REVERIFIEE A LA LECTURE.
+//
+// L'INVARIANT. Une selection deja stockee n'est affichee que si son
+// fournisseur appartient TOUJOURS au sous-type du site.
+//
+// POURQUOI IL MANQUAIT. La regle etait appliquee a l'ECRITURE
+// (`POST /catalog/selections`, `curate`, branche globale de `search`) et
+// jamais a la LECTURE. Le checkout, lui, refuse ces lignes
+// (`catalog_supplier_not_eligible`) : la vitrine affichait donc, et rendait
+// ajoutable au panier, un produit que le paiement rejette apres saisie de
+// l'adresse.
+//
+// CE TEST EXISTE PARCE QU'UNE MUTATION A SURVECU. Retirer le filtre de
+// `loadCatalogSelections` ne faisait rougir AUCUN test : la correction
+// n'etait pas prouvee.
+// ============================================================
+const selectionChez = (supplier: string) => ({
+  ...SELECTION,
+  catalog_products: { ...SELECTION.catalog_products, supplier_id: supplier },
+});
+
+describe('AUDIT GLOBAL — la vitrine n’affiche jamais une selection hors sous-mode', () => {
+  it.each([
+    ['reseller', 'printful'],
+    ['reseller', 'gelato'],
+    ['pod_custom', 'cj'],
+  ])('site %s + selection %s -> le produit N’APPARAIT PAS', async (sousType, supplier) => {
+    siteResult = { data: site({ mode: 3, dropship_type: sousType }), error: null };
+    catalogSelectionsResult = { data: [selectionChez(supplier)], error: null };
+    shopProductsResult = { data: [], error: null };
+    const { fetchSite } = await import('../shared');
+    const s = await fetchSite('ma-boutique');
+    expect((s!.products as any[]).some((p) => String(p.id).startsWith('catalog-'))).toBe(false);
+  });
+
+  it.each([
+    ['reseller', 'cj'],
+    ['pod_custom', 'printful'],
+    ['pod_custom', 'gelato'],
+  ])('site %s + selection %s -> le produit APPARAIT (chemin legitime intact)', async (sousType, supplier) => {
+    siteResult = { data: site({ mode: 3, dropship_type: sousType }), error: null };
+    catalogSelectionsResult = { data: [selectionChez(supplier)], error: null };
+    shopProductsResult = { data: [], error: null };
+    const { fetchSite } = await import('../shared');
+    const s = await fetchSite('ma-boutique');
+    expect((s!.products as any[]).some((p) => p.id === 'catalog-cat-9')).toBe(true);
+  });
+
+  it('une selection sans fournisseur connu n’est jamais affichee', async () => {
+    siteResult = { data: site({ mode: 3, dropship_type: 'reseller' }), error: null };
+    catalogSelectionsResult = {
+      data: [{ ...SELECTION, catalog_products: { ...SELECTION.catalog_products, supplier_id: null } }],
+      error: null,
+    };
+    shopProductsResult = { data: [], error: null };
+    const { fetchSite } = await import('../shared');
+    const s = await fetchSite('ma-boutique');
+    expect((s!.products as any[]).some((p) => String(p.id).startsWith('catalog-'))).toBe(false);
+  });
+
+  it('la vitrine et le sitemap tranchent PAR LA MEME AUTORITE', async () => {
+    // Les deux surfaces ont diverge par le passe (DEBT-049). Ce test lie leur
+    // decision a la meme fonction plutot qu'a deux copies de la regle.
+    const { selectionServable } = await import('@/lib/dropship/catalogAdmission');
+    siteResult = { data: site({ mode: 3, dropship_type: 'reseller' }), error: null };
+    for (const supplier of ['cj', 'printful', 'gelato']) {
+      catalogSelectionsResult = { data: [selectionChez(supplier)], error: null };
+      shopProductsResult = { data: [], error: null };
+      const { fetchSite } = await import('../shared');
+      const s = await fetchSite('ma-boutique');
+      const affiche = (s!.products as any[]).some((p) => p.id === 'catalog-cat-9');
+      expect(affiche, supplier).toBe(selectionServable(3, 'reseller', supplier));
+    }
+  });
+});

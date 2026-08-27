@@ -155,3 +155,63 @@ describe('LOT 3 / DEBT-055 -- la creation de site delegue, elle ne decide plus',
     expect(usesCatalogSelections(2, null)).toBe(false);
   });
 });
+
+// ============================================================
+// AUDIT GLOBAL — `selectionServable` : la question posee A LA LECTURE.
+//
+// Les trois surfaces de lecture (vitrine, sitemap, branche curated de la
+// recherche) faisaient confiance a une eligibilite verifiee UNIQUEMENT au
+// moment de l'ecriture. Le checkout, lui, refuse ces lignes. Ces tests
+// verrouillent la composition des deux autorites.
+// ============================================================
+import { selectionServable } from '../catalogAdmission';
+
+describe('selectionServable — composition des deux autorites', () => {
+  it('reseller + cj -> servable', () => {
+    expect(selectionServable(3, 'reseller', 'cj')).toBe(true);
+  });
+
+  it.each(['printful', 'gelato'])('reseller + %s -> JAMAIS servable', (s) => {
+    expect(selectionServable(3, 'reseller', s)).toBe(false);
+  });
+
+  it.each(['printful', 'gelato'])('pod_custom + %s -> servable', (s) => {
+    expect(selectionServable(3, 'pod_custom', s)).toBe(true);
+  });
+
+  it('pod_custom + cj -> JAMAIS servable', () => {
+    expect(selectionServable(3, 'pod_custom', 'cj')).toBe(false);
+  });
+
+  it('pod_brand -> jamais servable, quel que soit le fournisseur (LOT 2)', () => {
+    for (const s of ['cj', 'printful', 'gelato']) {
+      expect(selectionServable(3, 'pod_brand', s), s).toBe(false);
+    }
+  });
+
+  it.each([1, 2, 0, null, undefined, '3', 4])('mode %s -> jamais servable', (m) => {
+    expect(selectionServable(m, 'reseller', 'cj')).toBe(false);
+  });
+
+  it.each([null, undefined, '', 0, {}, [], 'inconnu'])(
+    'fournisseur %s -> jamais servable (fail-closed sur la donnee absente)',
+    (s) => {
+      expect(selectionServable(3, 'reseller', s)).toBe(false);
+    }
+  );
+
+  it('sous-type absent -> jamais servable (repli du LOT 1 : aucun fournisseur)', () => {
+    expect(selectionServable(3, null, 'cj')).toBe(false);
+    expect(selectionServable(3, undefined, 'cj')).toBe(false);
+  });
+
+  it('ne se contredit JAMAIS avec usesCatalogSelections — servable implique admis', () => {
+    for (const m of [1, 2, 3, null, undefined, 0])
+      for (const d of ['reseller', 'pod_brand', 'pod_custom', null, 'inconnu'])
+        for (const s of ['cj', 'printful', 'gelato', null]) {
+          if (selectionServable(m, d, s)) {
+            expect(usesCatalogSelections(m, d), `${m}/${d}/${s}`).toBe(true);
+          }
+        }
+  });
+});

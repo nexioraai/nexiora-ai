@@ -1,4 +1,35 @@
-import 'server-only';
+// ============================================================
+// DEBT-081 -- `import 'server-only'` RETIRE ICI. NE PAS LE REMETTRE.
+//
+// CE QU'IL CASSAIT. `src/app/sites/[slug]/themes/shared.tsx` est
+// BI-ENVIRONNEMENT -- quatre composants 'use client' l'importent -- et il
+// importe `selectionServable` depuis `catalogAdmission`. `server-only` entrait
+// donc dans un graphe CLIENT, et `next build` echouait avec quatre erreurs.
+// Le fichier `shared.tsx` enonce d'ailleurs lui-meme cette contrainte
+// (« il ne peut donc pas importer une autorite `server-only` ») quelques
+// lignes plus bas : c'est sa propre regle qui etait violee, par son import.
+//
+// DATE ET CAUSE, MESUREES. Au commit `11b3b52`, `shared.tsx` n'importait pas
+// ce module et le build passait. C'est `f5f17ec` -- qui a fait verifier
+// l'eligibilite fournisseur a la LECTURE, un correctif juste -- qui a
+// introduit l'import et casse le build.
+//
+// POURQUOI LE RETRAIT EST SANS CONSEQUENCE. Ce module est PUR : aucune E/S,
+// aucun `process.env`, aucun secret -- des listes constantes et des
+// comparaisons. Le depot expose deja exactement cette classe d'autorite au
+// client : `canTransact` (`lib/commerce-admission`), qui repond « ce site
+// a-t-il le droit de vendre ? », n'a PAS de `server-only` et est importee par
+// `PromoBanner` ('use client'). Et les identifiants fournisseur ne sont pas
+// des secrets : `catalog_products.supplier_id` est lisible sous la cle anon
+// (verifie : rend « cj »).
+//
+// L'INTENTION EST CONSERVEE AUTREMENT. Ce module reste l'autorite unique de
+// l'admission au catalogue ; ce qui ne devait pas atteindre le client, ce
+// sont les SECRETS et les ACCES, pas un predicat. Un cliquet structurel
+// (`src/lib/architecture/__tests__/serverOnlyClientGraph.test.ts`) echoue
+// desormais si un module du graphe client reprend un `server-only`.
+// ============================================================
+import { suppliersForDropshipType, type DropshipType } from '@/lib/dropship/suppliers';
 
 // ============================================================
 // ETAPE 2 -- L'ADMISSION AU CATALOGUE FOURNISSEUR.
@@ -120,4 +151,46 @@ const CATALOG_SELECTION_SUBTYPES = new Set<unknown>(['reseller', 'pod_custom']);
  */
 export function usesCatalogSelections(siteMode: unknown, dropshipType: unknown): boolean {
   return hasSupplierCatalog(siteMode) && CATALOG_SELECTION_SUBTYPES.has(dropshipType);
+}
+
+// ============================================================
+// AUDIT GLOBAL — « CETTE SELECTION EST-ELLE SERVABLE PAR CE SITE ? »
+//
+// QUESTION NOUVELLE, PAS AUTORITE NOUVELLE. `usesCatalogSelections` repond
+// « ce site utilise-t-il le mecanisme » et `suppliersForDropshipType` repond
+// « quels fournisseurs pour ce sous-type ». Aucune des deux ne repondait a la
+// troisieme, qui les compose : une LIGNE DEJA STOCKEE reste-t-elle servable
+// aujourd'hui ?
+//
+// LA REGLE ETAIT APPLIQUEE A L'ECRITURE, JAMAIS A LA LECTURE. Mesure faite
+// surface par surface :
+//   POST /catalog/selections   -> suppliersForDropshipType  ✅
+//   POST /catalog/curate       -> suppliersForDropshipType  ✅
+//   /catalog/search branche 2  -> .in('supplier_id', ...)   ✅
+//   /catalog/search branche 1 (curated)  -> AUCUN FILTRE    ❌
+//   shared.tsx loadCatalogSelections     -> AUCUN FILTRE    ❌
+//   sitemap.ts                           -> AUCUN FILTRE    ❌
+//   checkout                   -> REFUSE (catalog_supplier_not_eligible)
+//
+// Les trois surfaces de LECTURE faisaient donc confiance a une eligibilite
+// verifiee au moment de l'ecriture. Cette confiance ne tient que tant que le
+// sous-type ne bouge jamais. Consequence si elle cesse : un produit affiche,
+// indexe par les moteurs, ajoutable au panier -- et REFUSE au paiement. Le
+// visiteur decouvre le refus apres avoir saisi son adresse.
+//
+// ETAT MESURE EN PRODUCTION (lecture seule, 14 sites / 73 selections) :
+// ZERO incoherence, et aucun chemin applicatif ne mute `sites.mode` ni
+// `sites.dropship_type` -- verifie sur les 22 ecritures de la table `sites`.
+// C'est donc une DEFENSE EN PROFONDEUR, pas un incident : elle ferme l'ecart
+// AVANT que le produit n'autorise un changement de sous-type, moment ou il
+// deviendrait un defaut de production sans qu'une ligne de code ait change.
+// ============================================================
+export function selectionServable(
+  siteMode: unknown,
+  dropshipType: unknown,
+  supplierId: unknown
+): boolean {
+  if (!usesCatalogSelections(siteMode, dropshipType)) return false;
+  if (typeof supplierId !== 'string' || supplierId.length === 0) return false;
+  return suppliersForDropshipType(dropshipType as DropshipType).includes(supplierId);
 }

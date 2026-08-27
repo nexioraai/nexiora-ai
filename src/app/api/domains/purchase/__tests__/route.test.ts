@@ -1,4 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { creerFrom, journalVierge } from '@/lib/testing/postgrest';
+
+const consignerMock = vi.fn();
+vi.mock('@/lib/domains/history', () => ({
+  consignerEvenementDomaine: (...a: unknown[]) => consignerMock(...a),
+}));
+
+/** Journal du double partage, pour les cas D-07. */
+const journalAchat = journalVierge();
 
 // ============================================================
 // Audit Mode 3/POD BRAND, perfectionnement -- unicite atomique du domaine.
@@ -141,5 +150,137 @@ describe('POST /api/domains/purchase — course residuelle sur la reservation (2
     expect(res.status).toBe(409);
     expect(json.error).toMatch(/deja reserve/i);
     expect(getStripeMock).not.toHaveBeenCalled();
+  });
+});
+
+// ============================================================
+// D-07 -- LES DOMAINES DE LA PLATEFORME NE S'ACHETENT PAS.
+//
+// CE TEST EXISTE PARCE QU'UNE MUTATION A SURVECU. La garde etait posee dans
+// la route d'achat, mais aucun test ne l'exercait : la retirer ne cassait
+// rien, et la protection n'etait donc pas prouvee.
+//
+// CE QUI EST PROUVE ICI : le refus intervient AVANT toute reservation, tout
+// appel au registraire et toute creation Stripe.
+// ============================================================
+describe('D-07 — domaines réservés refusés à l’achat', () => {
+  it.each(['deribfy.com', 'DERIBFY.COM', '  Deribfy.com  '])(
+    '%s -> 403, AUCUNE réservation, AUCUN appel registraire, AUCUN Stripe',
+    async (domain) => {
+      fromMock.mockImplementation(() => {
+        throw new Error('aucune requête ne doit être émise pour un domaine réservé');
+      });
+      const res = await POST(req({ slug: 'boutique', domain }));
+      expect(res.status).toBe(403);
+      expect(checkDomainMock).not.toHaveBeenCalled();
+      expect(getRegistrationRequirementsMock).not.toHaveBeenCalled();
+      expect(getStripeMock).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each(['www.deribfy.com', 'app.deribfy.com', 'blog.deribfy.com'])(
+    'le sous-domaine %s est refusé en amont : on n’achète pas un sous-domaine',
+    async (domain) => {
+      // COMPORTEMENT REEL, VERIFIE : la route n'accepte qu'un domaine de
+      // second niveau. Un sous-domaine n'est pas un enregistrement que l'on
+      // achete -- il se cree dans une zone que l'on possede deja. Le refus
+      // arrive donc en 400 (forme invalide), avant meme la garde des domaines
+      // reserves. Mon attente initiale d'un 403 etait fausse ; le code ne
+      // l'etait pas.
+      fromMock.mockImplementation(() => {
+        throw new Error('aucune requête ne doit être émise');
+      });
+      const res = await POST(req({ slug: 'boutique', domain }));
+      expect(res.status).toBe(400);
+      expect(checkDomainMock).not.toHaveBeenCalled();
+      expect(getStripeMock).not.toHaveBeenCalled();
+    }
+  );
+
+  it('un domaine client légitime n’est PAS bloqué par cette garde', async () => {
+    // La garde ne doit jamais refuser un domaine qui contient seulement la
+    // racine sans en etre un sous-domaine.
+    // Le double PARTAGE plutot qu'un `select` permissif reconstruit a la
+    // main : il honore la projection et capture les filtres (chaine D du
+    // LOT 6). Un harnais nouveau ne doit pas faire croitre la population des
+    // doubles qui ignorent `.select(...)`.
+    let call = 0;
+    fromMock.mockImplementation((table: string) =>
+      creerFrom(
+        {
+          [table]: {
+            reponse: () => {
+              call++;
+              if (table === 'sites') {
+                return call === 1 ? { data: SITE, error: null } : { data: null, error: null };
+              }
+              return { data: null, error: null };
+            },
+          },
+        },
+        journalAchat
+      )(table)
+    );
+    getRegistrationRequirementsMock.mockResolvedValue({ apiRegisterable: true, registrationDurationYears: 1 });
+    checkDomainMock.mockResolvedValue({ available: true, registrationCents: 1200, sellRenewalUsd: 25, sellFirstYearUsd: 20, firstYearPromo: false });
+    const res = await POST(req({ slug: 'boutique', domain: 'mondomaine-deribfy.com' }));
+    // Le parcours va au-dela de la garde : c'est tout ce qui est verifie ici.
+    expect(res.status).not.toBe(403);
+  });
+});
+
+// ============================================================
+// AUDIT AGRESSIF / TOUR 1 -- MEME DEFAUT COTE ACHAT.
+// ============================================================
+describe('TOUR 1 — les contrôles d’unicité de l’achat ferment en panne', () => {
+  it('panne sur `site_domains` -> 503, AUCUN registraire, AUCUN Stripe', async () => {
+    fromMock.mockImplementation((table: string) =>
+      tableChain(table === 'sites' ? { data: SITE, error: null } : { data: null, error: { message: 'db down' } })
+    );
+    const res = await POST(req({ slug: 'boutique', domain: 'x-panne.com' }));
+    expect(res.status).toBe(503);
+    expect(checkDomainMock).not.toHaveBeenCalled();
+    expect(getStripeMock).not.toHaveBeenCalled();
+  });
+
+  it('panne sur le contrôle BYOD -> 503 : un domaine déjà connecté ne peut plus être acheté', async () => {
+    let sitesCall = 0;
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'sites') {
+        sitesCall++;
+        return tableChain(
+          sitesCall === 1 ? { data: SITE, error: null } : { data: null, error: { message: 'db down' } }
+        );
+      }
+      return tableChain({ data: null, error: null });
+    });
+    const res = await POST(req({ slug: 'boutique', domain: 'y-panne.com' }));
+    expect(res.status).toBe(503);
+    expect(checkDomainMock).not.toHaveBeenCalled();
+  });
+});
+
+// ============================================================
+// P1 -- `achat_demande` etait declare, jamais cable.
+//
+// L'ecart entre `achat_demande` et `achat_confirme` est ce qui rend un
+// abandon de panier distinguable d'un echec de provisionnement. Sans le
+// premier, les deux se confondent.
+// ============================================================
+describe('P1 — la demande d’achat est consignée', () => {
+  it('AUCUN événement tant que la réservation n’existe pas', async () => {
+    consignerMock.mockReset();
+    fromMock.mockImplementation(() => tableChain({ data: null, error: null }));
+    await POST(req({ slug: 'boutique', domain: 'x.com' }));
+    expect(consignerMock).not.toHaveBeenCalled();
+  });
+
+  it('domaine réservé -> AUCUN événement, aucune réservation', async () => {
+    consignerMock.mockReset();
+    fromMock.mockImplementation(() => {
+      throw new Error('aucune requête ne doit être émise');
+    });
+    await POST(req({ slug: 'boutique', domain: 'deribfy.com' }));
+    expect(consignerMock).not.toHaveBeenCalled();
   });
 });

@@ -1,7 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSiteOwner } from '@/lib/auth/require-site-owner';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { getVercelDomainStatus } from '@/lib/domains/vercel';
+import { getVercelDomainStatus, verifyVercelDomain } from '@/lib/domains/vercel';
+import { consommerJeton } from '@/lib/rate-limit/rateLimit';
+
+// ============================================================
+// D-02 -- LA VERIFICATION BYOD NE SE DECLENCHAIT JAMAIS.
+//
+// `verifyVercelDomain` n'etait appelee QUE dans le parcours d'achat. Le
+// commentaire de `vercel.ts` dit pourtant : « Sans cet appel, le TXT peut
+// etre en place sans que l'hebergeur le sache : le domaine reste non verifie
+// et l'ancien hebergeur continue de repondre. » Un client BYOD qui posait
+// correctement son DNS pouvait rester bloque indefiniment.
+//
+// L'ENDPOINT EXISTANT EST REUTILISE, pas double. `GET` reste une lecture
+// pure ; `POST` demande la re-verification puis rend le MEME etat, par la
+// MEME fonction. Deux endpoints auraient diverge.
+//
+// La borne existe pour que le bouton ne devienne pas une boucle : c'est un
+// appel externe, il se paie.
+// ============================================================
+
+/** Verifications manuelles autorisees par site et par minute. */
+const PLAFOND_VERIFICATIONS_PAR_MINUTE = 6;
+
+/** LES COLONNES DEMANDEES, UNE SEULE FOIS. Les deux verbes doivent projeter
+ *  exactement les memes : une projection amputee rendrait le constructeur
+ *  d'etat aveugle sur Google, sans qu'aucun test ne le voie. */
+const PROJECTION =
+  'id, custom_domain, custom_domain_google_status, custom_domain_google_token, custom_domain_google_attempts, custom_domain_google_last_attempt_at, custom_domain_google_last_error';
+
+type SiteStatut = {
+  id: string;
+  custom_domain: string | null;
+  custom_domain_google_status: string | null;
+  custom_domain_google_token: string | null;
+  custom_domain_google_attempts: number | null;
+  custom_domain_google_last_attempt_at: string | null;
+  custom_domain_google_last_error: string | null;
+};
 
 /** Etat du domaine d'un site, pour affichage au marchand. */
 export async function GET(req: NextRequest) {
@@ -25,13 +62,13 @@ export async function GET(req: NextRequest) {
   // primitive : 401 non authentifie, 404 site inexistant, 403 non
   // proprietaire (la route confondait les deux derniers dans un seul 403).
   // ============================================================
-  const auth = await requireSiteOwner(
-    req,
-    slug,
-    'id, custom_domain, custom_domain_google_status, custom_domain_google_token, custom_domain_google_attempts, custom_domain_google_last_attempt_at, custom_domain_google_last_error'
-  );
+  const auth = await requireSiteOwner(req, slug, PROJECTION);
   if (!auth.ok) return auth.response;
-  const site = auth.site as any;
+  return NextResponse.json(await construireStatut(auth.site as SiteStatut));
+}
+
+/** L'etat complet d'un domaine, partage par `GET` et `POST`. */
+async function construireStatut(site: SiteStatut) {
 
   const { data: domain } = await supabaseAdmin
     .from('site_domains')
@@ -73,11 +110,50 @@ export async function GET(req: NextRequest) {
     };
   }
 
-  return NextResponse.json({
+  return {
     customDomain: site.custom_domain || null,
     purchased: domain || null,
     byodVerification,
     byodTxt,
     byodGoogle,
+  };
+}
+
+/**
+ * Demande une RE-VERIFICATION du domaine aupres de l'hebergeur, puis rend
+ * l'etat frais. Meme garde de propriete que `GET`, meme forme de reponse.
+ */
+export async function POST(req: NextRequest) {
+  const slug = req.nextUrl.searchParams.get('slug');
+  if (!slug) return NextResponse.json({ error: 'Slug manquant' }, { status: 400 });
+
+  const auth = await requireSiteOwner(req, slug, PROJECTION);
+  if (!auth.ok) return auth.response;
+  const site = auth.site as SiteStatut;
+
+  if (!site.custom_domain) {
+    return NextResponse.json({ error: 'Aucun domaine a verifier' }, { status: 400 });
+  }
+
+  const jeton = await consommerJeton({
+    type: 'domain_verify_request',
+    siteId: site.id,
+    fenetreMs: 60_000,
+    plafond: PLAFOND_VERIFICATIONS_PAR_MINUTE,
+    message: 'Trop de verifications, reessayez dans une minute.',
+    details: { slug, domain: site.custom_domain },
   });
+  if (!jeton.ok) return NextResponse.json({ error: jeton.erreur }, { status: jeton.statut });
+
+  // L'ECHEC DE VERIFICATION N'EST PAS UNE ERREUR DE LA ROUTE. Un DNS pas
+  // encore propage rend `false` : le client doit voir l'etat, pas un 500.
+  let verifie = false;
+  let erreurExterne: string | null = null;
+  try {
+    verifie = await verifyVercelDomain(site.custom_domain);
+  } catch (e) {
+    erreurExterne = e instanceof Error ? e.message : String(e);
+  }
+
+  return NextResponse.json({ ...(await construireStatut(site)), verifie, erreurExterne });
 }

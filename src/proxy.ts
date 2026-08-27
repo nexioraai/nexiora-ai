@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fetchSiteByDomain } from './app/sites/[slug]/themes/shared'
+import { varianteHote, cibleCanonique } from './lib/domains/canonicalHost'
 
 const INTERNAL_HOSTS = ['nexiora.ca', 'www.nexiora.ca', 'woorri.com', 'www.woorri.com', 'deribfy.com', 'www.deribfy.com', 'localhost']
 
@@ -33,7 +34,37 @@ export async function proxy(req: NextRequest) {
 
   // Domaine perso d'un client → on cherche le site lié
   const slug = await fetchSiteByDomain(host)
-  if (!slug) return NextResponse.next()
+
+  // ============================================================
+  // D-08 -- LA FORME NON STOCKEE REPONDAIT 404.
+  //
+  // Les instructions DNS demandent au marchand DEUX enregistrements, racine
+  // et `www`. Il les pose tous les deux. Mais `custom_domain` ne stocke qu'UNE
+  // valeur, et la resolution est une egalite stricte : l'autre forme ne
+  // correspondait a aucun site. Le marchand suivait les instructions a la
+  // lettre et la moitie de son trafic tombait.
+  //
+  // 308 PLUTOT QUE 302 : la relation apex/www d'un domaine ne change pas au
+  // gre des requetes, et la methode doit etre preservee. Chemin et parametres
+  // sont conserves -- une redirection qui perd la page demandee perd le
+  // visiteur.
+  //
+  // AUCUNE BOUCLE : on ne redirige que depuis un hote qui ne resout PAS vers
+  // un hote qui resout. Le tour suivant sert directement.
+  // ============================================================
+  if (!slug) {
+    const variante = varianteHote(host)
+    if (variante) {
+      const slugVariante = await fetchSiteByDomain(variante)
+      if (slugVariante) {
+        return NextResponse.redirect(
+          cibleCanonique(variante, req.nextUrl.pathname, req.nextUrl.search),
+          308
+        )
+      }
+    }
+    return NextResponse.next()
+  }
 
   // Sitemap du domaine personnalise (ex. mondomaine.com/sitemap.xml)
   if (pathname === '/sitemap.xml') {

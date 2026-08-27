@@ -103,3 +103,25 @@ export async function verifyVercelDomain(domain: string): Promise<boolean> {
   const data = await res.json().catch(() => null);
   return res.ok && data?.verified === true;
 }
+
+/**
+ * Detache un domaine du projet d'hebergement.
+ *
+ * IDEMPOTENT PAR CONSTRUCTION : un domaine deja absent (404) n'est pas une
+ * erreur -- le resultat vise est « ce domaine n'est plus rattache », et il est
+ * atteint. Sans cela, un second detachement ou une reprise apres panne
+ * echouerait sur un etat pourtant correct.
+ */
+export async function removeDomainFromVercel(domain: string): Promise<{ ok: true; dejaAbsent: boolean }> {
+  const { token, projectId } = vercelCreds();
+  const res = await fetch(
+    VERCEL_API + '/v9/projects/' + projectId + '/domains/' + encodeURIComponent(domain),
+    { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } }
+  );
+  if (res.status === 404) return { ok: true, dejaAbsent: true };
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error?.message || 'Erreur Vercel ' + res.status);
+  }
+  return { ok: true, dejaAbsent: false };
+}

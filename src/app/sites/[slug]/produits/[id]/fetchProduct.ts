@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { sitePricing, resolveDisplayPrice } from '@/lib/pricing'
-import { usesCatalogSelections } from '@/lib/dropship/catalogAdmission'
+import { selectionServable, usesCatalogSelections } from '@/lib/dropship/catalogAdmission'
 
 export type ProductPage = {
   id: string
@@ -99,6 +99,25 @@ export async function fetchProduct(slug: string, rawId: string): Promise<Product
       .maybeSingle()
     if (!sel || !(sel as any).catalog_products) return null
     const cp = (sel as any).catalog_products
+    // ============================================================
+    // AUDIT GLOBAL / PASSE 2 -- LA QUATRIEME SURFACE, ET LA PLUS EXPOSEE.
+    //
+    // La passe 1 avait ferme la vitrine, le sitemap et la branche curated de
+    // la recherche, en tenant pour acquis que la fiche produit suivait. Elle
+    // ne suivait pas. C'est pourtant ELLE que le sitemap annonce aux moteurs
+    // et ELLE qui porte le bouton d'achat : la seule surface ou un visiteur
+    // decide vraiment. `usesCatalogSelections` ci-dessus repond « ce site
+    // utilise-t-il le mecanisme », jamais « ce fournisseur appartient-il
+    // encore au sous-type ».
+    //
+    // Sans cette ligne, l'ecart etait pire qu'avant la passe 1 : le produit
+    // devenait invisible en vitrine ET dans la recherche, mais sa fiche
+    // restait servie a qui connaissait son URL -- une page orpheline,
+    // achetable, que le checkout refuse (`catalog_supplier_not_eligible`).
+    //
+    // MEME AUTORITE que les trois autres surfaces. Aucune regle nouvelle.
+    // ============================================================
+    if (!selectionServable((site as any).mode, (site as any).dropship_type, cp.supplier_id)) return null
     const { margin, roundMode } = sitePricing(site as any)
     const cost = cp.price ? Number(cp.price) : 0
     const pr = resolveDisplayPrice(cost, (sel as any).sell_price, margin, roundMode)
