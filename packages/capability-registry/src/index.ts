@@ -2,10 +2,10 @@ export {
   capabilityDefinitionSchema,
   nativeImpactSchema,
   runtimeProfileSchema,
-} from "./schema";
-export type { CapabilityDefinition, NativeImpact, RuntimeProfile } from "./schema";
+} from "./schema.ts";
+export type { CapabilityDefinition, NativeImpact, RuntimeProfile } from "./schema.ts";
 
-export { CAPABILITIES, CAPABILITY_REGISTRY_VERSION } from "./definitions";
+export { CAPABILITIES, CAPABILITY_REGISTRY_VERSION } from "./definitions.ts";
 
 export {
   UnknownCapabilityError,
@@ -17,11 +17,11 @@ export {
   nativeFootprintOf,
   findConflicts,
   validateAirCapabilities,
-} from "./registry";
+} from "./registry.ts";
 export type {
   ResolvedPermission,
   NativeFootprint,
   CommerceClass,
   CapabilityDiagnostic,
   AirCapabilitySlice,
-} from "./registry";
+} from "./registry.ts";

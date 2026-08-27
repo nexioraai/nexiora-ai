@@ -24,30 +24,30 @@ export function buildValidAir(): ProjectAir {
     screens: [
       {
         id: "scr_menu",
-        title: { fr: "Menu", en: "Menu" },
+        title: [{ locale: "fr", text: "Menu" }, { locale: "en", text: "Menu" }],
         blocks: [
           {
             id: "blk_menu_list",
             blockType: "list",
             entityId: "ent_menu_item",
-            props: { pageSize: 20 },
+            props: [{ key: "pageSize", value: 20 }],
           },
         ],
       },
       {
         id: "scr_commande",
-        title: { fr: "Commande", en: "Order" },
+        title: [{ locale: "fr", text: "Commande" }, { locale: "en", text: "Order" }],
         blocks: [
           { id: "blk_panier", blockType: "cart", entityId: "ent_order" },
-          { id: "blk_payer", blockType: "button", props: { variant: "primary" } },
+          { id: "blk_payer", blockType: "button", props: [{ key: "variant", value: "primary" }] },
         ],
       },
     ],
     navigation: {
       entryScreenId: "scr_menu",
       routes: [
-        { id: "nav_menu", screenId: "scr_menu", title: { fr: "Menu" } },
-        { id: "nav_commande", screenId: "scr_commande", title: { fr: "Commande" } },
+        { id: "nav_menu", screenId: "scr_menu", title: [{ locale: "fr", text: "Menu" }] },
+        { id: "nav_commande", screenId: "scr_commande", title: [{ locale: "fr", text: "Commande" }] },
       ],
     },
     entities: [
@@ -135,13 +135,13 @@ export function buildValidAir(): ProjectAir {
       {
         platform: "ios",
         permission: "ios.notifications",
-        reason: { fr: "Recevoir l'état de votre commande" },
+        reason: [{ locale: "fr", text: "Recevoir l'état de votre commande" }],
         requiredByCapability: "push_notifications",
       },
     ],
     design: { theme: "deribfy_default" },
     integrations: [
-      { id: "intg_psp", providerClass: "psp", capability: "payments", config: { mode: "test" } },
+      { id: "intg_psp", providerClass: "psp", capability: "payments", config: [{ key: "mode", value: "test" }] },
     ],
     network: { policy: "deny_by_default", allowedDomains: ["api.example.com"] },
     native: { minIosVersion: "15.1", minAndroidSdk: 24 },

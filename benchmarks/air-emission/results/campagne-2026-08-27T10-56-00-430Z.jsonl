@@ -1,0 +1,1 @@
+{"intention":"resto-quartier","commerce":"physical_or_offapp","erreur":"400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"output_config.format.schema: For 'object' type, property 'patternProperties' is not supported\"},\"request_id\":\"req_011CeT8bYDySw1xqat7eQ3Qe\"}","valid":false,"dureeMs":559}

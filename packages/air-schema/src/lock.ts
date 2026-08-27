@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { capabilityRefSchema } from "./ids";
-import { semverSchema, sha256Schema } from "./air";
+import { capabilityRefSchema } from "./ids.ts";
+import { semverSchema, sha256Schema } from "./air.ts";
 
 export const LOCK_SCHEMA_VERSION = "1.0.0";
 

@@ -1,5 +1,5 @@
-import type { ProjectAir } from "./air";
-import { projectAirSchema } from "./air";
+import type { ProjectAir } from "./air.ts";
+import { projectAirSchema } from "./air.ts";
 
 // Validateur sémantique DÉTERMINISTE (ARCHITECTURE §1) : un AIR émis par LLM
 // est syntaxiquement valide par construction (structured outputs) ; la
@@ -85,17 +85,61 @@ export function validateAir(air: ProjectAir): AirDiagnostic[] {
     );
   }
   const checkLocalized = (
-    text: Record<string, string> | undefined,
+    text: { locale: string; text: string }[] | undefined,
     path: string,
   ): void => {
-    if (text !== undefined && !(defaultLocale in text)) {
+    if (text === undefined) {
+      return;
+    }
+    if (!text.some((t) => t.locale === defaultLocale)) {
       push(
         "AIR_L10N_MISSING_DEFAULT",
         path,
         `texte localisé sans la locale par défaut "${defaultLocale}"`,
       );
     }
+    const locales = new Set<string>();
+    for (const t of text) {
+      if (locales.has(t.locale)) {
+        push("AIR_L10N_DUP_LOCALE", path, `locale "${t.locale}" présente deux fois`);
+      }
+      locales.add(t.locale);
+    }
   };
+
+  // Configurations plates : unicité des clés.
+  const checkConfig = (
+    config: { key: string; value: unknown }[] | undefined,
+    path: string,
+  ): void => {
+    if (config === undefined) {
+      return;
+    }
+    const keys = new Set<string>();
+    config.forEach((pair, i) => {
+      if (keys.has(pair.key)) {
+        push("AIR_CONFIG_DUP_KEY", `${path}[${i}]`, `clé "${pair.key}" présente deux fois`);
+      }
+      keys.add(pair.key);
+    });
+  };
+  air.screens.forEach((s, i) => {
+    s.blocks.forEach((b, j) => {
+      checkConfig(b.props, `screens[${i}].blocks[${j}].props`);
+    });
+  });
+  air.actions.forEach((a, i) => {
+    if (a.effect.kind === "capability") {
+      checkConfig(a.effect.params, `actions[${i}].effect.params`);
+    }
+  });
+  air.capabilities.forEach((c, i) => {
+    checkConfig(c.config, `capabilities[${i}].config`);
+  });
+  checkConfig(air.design.overrides, "design.overrides");
+  air.integrations.forEach((x, i) => {
+    checkConfig(x.config, `integrations[${i}].config`);
+  });
   air.screens.forEach((s, i) => {
     checkLocalized(s.title, `screens[${i}].title`);
   });
@@ -246,26 +290,15 @@ export function validateAir(air: ProjectAir): AirDiagnostic[] {
       );
     }
     if (x.config !== undefined) {
-      for (const [key, value] of Object.entries(x.config)) {
-        if (SECRET_LIKE_KEY.test(key)) {
+      x.config.forEach((pair, j) => {
+        if (SECRET_LIKE_KEY.test(pair.key)) {
           push(
             "AIR_INTEGRATION_SECRET_LIKE_KEY",
-            `integrations[${i}].config.${key}`,
-            "clé de configuration à l'allure de secret — les secrets ne vivent JAMAIS dans l'AIR",
+            `integrations[${i}].config[${j}]`,
+            `clé "${pair.key}" à l'allure de secret — les secrets ne vivent JAMAIS dans l'AIR`,
           );
         }
-        if (value !== null && typeof value === "object" && !Array.isArray(value)) {
-          for (const nested of Object.keys(value)) {
-            if (SECRET_LIKE_KEY.test(nested)) {
-              push(
-                "AIR_INTEGRATION_SECRET_LIKE_KEY",
-                `integrations[${i}].config.${key}.${nested}`,
-                "clé de configuration à l'allure de secret — les secrets ne vivent JAMAIS dans l'AIR",
-              );
-            }
-          }
-        }
-      }
+      });
     }
   });
 

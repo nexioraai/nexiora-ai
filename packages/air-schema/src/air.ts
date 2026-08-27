@@ -14,7 +14,7 @@ import {
   screenIdSchema,
   slotIdSchema,
   testIdSchema,
-} from "./ids";
+} from "./ids.ts";
 
 export const AIR_SCHEMA_VERSION = "1.0.0";
 
@@ -27,13 +27,23 @@ export const localeSchema = z
   .string()
   .regex(/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|\d{3}))?$/);
 
-// Texte localisé : locale → texte. La couverture de la locale par défaut est
-// vérifiée par le validateur sémantique, pas par le schéma.
-export const localizedTextSchema = z.record(localeSchema, z.string().min(1));
+// Texte localisé : liste {locale, text} — représentation FERMÉE. L'API
+// structured outputs REFUSE les objets à clés libres (additionalProperties
+// doit être false, patternProperties non supporté) [mesuré 2026-08-27,
+// campagne 2.4] : tout ce qui doit être émis par LLM est donc modélisé en
+// tableaux de paires. Unicité des locales et couverture de la locale par
+// défaut vérifiées par le validateur sémantique.
+export const localizedTextSchema = z
+  .array(z.strictObject({ locale: localeSchema, text: z.string().min(1) }))
+  .min(1);
 
-// Valeurs de configuration plates (primitives, listes, un niveau d'objet) :
-// l'AIR ne contient pas de comportement arbitraire, et l'absence de récursion
-// garde la projection JSON Schema compatible structured outputs.
+// Valeurs de configuration STRICTEMENT plates : liste {key, value} avec value
+// obligatoire (primitive ou liste de primitives). L'AIR ne contient pas de
+// comportement arbitraire ; la platitude est aussi une contrainte MESURÉE de
+// l'API structured outputs (≤ 24 paramètres optionnels par schéma — les
+// formes imbriquées optionnelles inlinées à chaque site dépassaient la
+// limite). Unicité des clés vérifiée par le validateur sémantique ; un
+// groupement se exprime par des clés pointées ("options.mode").
 const jsonPrimitiveSchema = z.union([
   z.string(),
   z.number(),
@@ -41,10 +51,15 @@ const jsonPrimitiveSchema = z.union([
   z.null(),
 ]);
 const jsonLeafSchema = z.union([jsonPrimitiveSchema, z.array(jsonPrimitiveSchema)]);
-export const flatConfigSchema = z.record(
-  z.string(),
-  z.union([jsonLeafSchema, z.record(z.string(), jsonLeafSchema)]),
+const configKeySchema = z.string().regex(/^[a-zA-Z][a-zA-Z0-9_.-]*$/);
+export const flatConfigSchema = z.array(
+  z.strictObject({
+    key: configKeySchema,
+    value: jsonLeafSchema,
+  }),
 );
+export type LocalizedText = z.infer<typeof localizedTextSchema>;
+export type FlatConfig = z.infer<typeof flatConfigSchema>;
 
 const appLocalesSchema = z.strictObject({
   // Quatre réalités distinctes (non-négociable #16) : langue du demandeur ≠

@@ -12,8 +12,8 @@
     "test": "npm run test --workspace=nexiora-ai",
     "lint": "npm run lint --workspace=nexiora-ai",
     "check:api-docs": "npm run check:api-docs --workspace=nexiora-ai",
-    "packages:typecheck": "npm run typecheck --workspace=@deribfy/air-schema --workspace=@deribfy/capability-registry",
-    "packages:lint": "npm run lint --workspace=@deribfy/air-schema --workspace=@deribfy/capability-registry",
-    "packages:test": "npm run test --workspace=@deribfy/air-schema --workspace=@deribfy/capability-registry"
+    "packages:typecheck": "npm run typecheck --workspace=@deribfy/air-schema --workspace=@deribfy/capability-registry --workspace=@deribfy/golden-corpus",
+    "packages:lint": "npm run lint --workspace=@deribfy/air-schema --workspace=@deribfy/capability-registry --workspace=@deribfy/golden-corpus",
+    "packages:test": "npm run test --workspace=@deribfy/air-schema --workspace=@deribfy/capability-registry --workspace=@deribfy/golden-corpus"
   }
 }

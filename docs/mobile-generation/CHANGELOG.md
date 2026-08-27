@@ -1,5 +1,36 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — étape 2.4 (EN COURS) : harnais d'émission structured outputs
+## + contraintes API mesurées → évolution AIR v1
+
+- **Contraintes structured outputs [mesuré]** (sondes versionnées,
+  `benchmarks/air-emission/`) : objets FERMÉS uniquement
+  (`additionalProperties: false` exigé, `patternProperties` refusé),
+  `oneOf` refusé, bornes numériques refusées, ≤ 24 paramètres optionnels
+  par schéma, grammaire compilée du document AIR ENTIER trop large (même
+  avec `$defs` ; chaque section seule passe).
+- **Évolution AIR v1 en conséquence** (arbitrage technique, critère de
+  sortie Phase 2 = émission structured outputs) : textes localisés
+  `[{locale, text}]` et configurations `[{key, value}]` en TABLEAUX DE
+  PAIRES FERMÉS (fini les records à clés libres) ; nouveaux diagnostics
+  AIR_L10N_DUP_LOCALE, AIR_CONFIG_DUP_KEY. 57 tests air-schema verts.
+- **Rendu texte déterministe sans perte** (`renderAirToText`) : chaque
+  champ de l'AIR rendu avec sa valeur exacte — maillon du round-trip.
+- **Harnais complet** `benchmarks/air-emission/` : 12 intentions fixes
+  (3 classes commerce), **émission par sections** (5 groupes sondés
+  acceptés : base → données → écrans → comportement → câblage, assemblage
+  déterministe), validation locale fail-closed (schéma + sémantique +
+  registre), réparation BORNÉE ciblée, round-trip par hash canonique,
+  journal JSONL, prompt-cache sur le système.
+- **Preuve de bout en bout** (journal versionné) : intention 1
+  (`resto-quartier`) — 21 diagnostics en 1ʳᵉ passe → **0 après la
+  réparation bornée** ; AIR complet valide, classe commerce correcte.
+- **CAMPAGNE INTERROMPUE : crédits API Anthropic épuisés** (~$1.15
+  consommés). Prérequis propriétaire : recharger le compte de la clé
+  `apps/web/.env.local` (~10-20 $ estimés pour la campagne complète).
+  Paquet `@deribfy/golden-corpus` prêt (garde bootstrap : la suite CI
+  s'active au premier AIR versionné).
+
 ## 2026-08-27 — étape 2.3 : paquet `@deribfy/capability-registry`
 
 - **Registre fermé des 15 capabilities cœur v1** (analytics, auth,

@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { CapabilityDefinition } from "./schema";
-import { capabilityDefinitionSchema } from "./schema";
+import type { CapabilityDefinition } from "./schema.ts";
+import { capabilityDefinitionSchema } from "./schema.ts";
 
 // Registre v1 (0.1.0) — 15 capabilities cœur. NON GELÉ : le gel en 1.0.0
 // intervient à l'étape 2.5 après revue propriétaire (décision produit).

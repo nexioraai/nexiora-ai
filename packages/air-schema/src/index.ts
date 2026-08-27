@@ -7,30 +7,32 @@ export {
   flatConfigSchema,
   semverSchema,
   sha256Schema,
-} from "./air";
-export type { ProjectAir, AirScreen, AirEntity, AirAction } from "./air";
+} from "./air.ts";
+export type { ProjectAir, AirScreen, AirEntity, AirAction } from "./air.ts";
 
-export { LOCK_SCHEMA_VERSION, projectLockSchema } from "./lock";
-export type { ProjectLock } from "./lock";
+export { LOCK_SCHEMA_VERSION, projectLockSchema } from "./lock.ts";
+export type { ProjectLock } from "./lock.ts";
 
 export {
   DEPLOYMENT_STATE_SCHEMA_VERSION,
   deploymentStateSchema,
-} from "./deployment-state";
-export type { DeploymentState } from "./deployment-state";
+} from "./deployment-state.ts";
+export type { DeploymentState } from "./deployment-state.ts";
 
-export { canonicalJson, sha256Hex, hashCanonical } from "./canonical";
+export { canonicalJson, sha256Hex, hashCanonical } from "./canonical.ts";
 
-export { validateAir, assertValidAir, AirSemanticError } from "./validate";
-export type { AirDiagnostic } from "./validate";
+export { renderAirToText } from "./render-text.ts";
 
-export { AIR_MIGRATIONS, AirMigrationError, migrateAirDocument } from "./migrations";
-export type { AirMigration } from "./migrations";
+export { validateAir, assertValidAir, AirSemanticError } from "./validate.ts";
+export type { AirDiagnostic } from "./validate.ts";
+
+export { AIR_MIGRATIONS, AirMigrationError, migrateAirDocument } from "./migrations.ts";
+export type { AirMigration } from "./migrations.ts";
 
 export {
   projectAirJsonSchema,
   projectLockJsonSchema,
   deploymentStateJsonSchema,
-} from "./json-schema";
+} from "./json-schema.ts";
 
-export * from "./ids";
+export * from "./ids.ts";

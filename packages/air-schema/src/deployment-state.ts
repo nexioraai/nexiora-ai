@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { projectIdSchema } from "./ids";
-import { semverSchema, sha256Schema } from "./air";
+import { projectIdSchema } from "./ids.ts";
+import { semverSchema, sha256Schema } from "./air.ts";
 
 export const DEPLOYMENT_STATE_SCHEMA_VERSION = "1.0.0";
 

@@ -1,0 +1,1 @@
+{"intention":"resto-quartier","commerce":"physical_or_offapp","erreur":"400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"output_config.format.schema: For 'integer' type, properties maximum, minimum are not supported\"},\"request_id\":\"req_011CeT8ns94tGx9TvBiidw2U\"}","valid":false,"dureeMs":673}

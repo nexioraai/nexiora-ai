@@ -102,11 +102,11 @@ describe("validateAir — cohérence référentielle", () => {
 
   it("détecte une clé de configuration à l'allure de secret (fail-closed)", () => {
     const air = buildValidAir();
-    at(air.integrations, 0).config = { stripe_api_key: "sk_test_x" };
+    at(air.integrations, 0).config = [{ key: "stripe_api_key", value: "sk_test_x" }];
     expect(codes(air)).toContain("AIR_INTEGRATION_SECRET_LIKE_KEY");
 
     const air2 = buildValidAir();
-    at(air2.integrations, 0).config = { options: { accessToken: "x" } };
+    at(air2.integrations, 0).config = [{ key: "options.accessToken", value: "x" }];
     expect(codes(air2)).toContain("AIR_INTEGRATION_SECRET_LIKE_KEY");
   });
 
@@ -118,8 +118,26 @@ describe("validateAir — cohérence référentielle", () => {
 
   it("détecte un texte localisé sans la locale par défaut", () => {
     const air = buildValidAir();
-    at(air.screens, 0).title = { en: "Menu" };
+    at(air.screens, 0).title = [{ locale: "en", text: "Menu" }];
     expect(codes(air)).toContain("AIR_L10N_MISSING_DEFAULT");
+  });
+
+  it("détecte une locale dupliquée dans un texte localisé", () => {
+    const air = buildValidAir();
+    at(air.screens, 0).title = [
+      { locale: "fr", text: "Menu" },
+      { locale: "fr", text: "Carte" },
+    ];
+    expect(codes(air)).toContain("AIR_L10N_DUP_LOCALE");
+  });
+
+  it("détecte une clé de configuration dupliquée", () => {
+    const air = buildValidAir();
+    at(at(air.screens, 0).blocks, 0).props = [
+      { key: "pageSize", value: 20 },
+      { key: "pageSize", value: 40 },
+    ];
+    expect(codes(air)).toContain("AIR_CONFIG_DUP_KEY");
   });
 
   it("détecte une locale par défaut absente des locales de l'app", () => {

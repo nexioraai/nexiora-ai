@@ -1,6 +1,6 @@
-import type { ProjectAir } from "./air";
-import { AIR_SCHEMA_VERSION } from "./air";
-import { assertValidAir } from "./validate";
+import type { ProjectAir } from "./air.ts";
+import { AIR_SCHEMA_VERSION } from "./air.ts";
+import { assertValidAir } from "./validate.ts";
 
 // Migrations d'AIR (ARCHITECTURE §1) : testées comme les migrations SQL du
 // dépôt — chaque étape est pure, totale, versionnée. Un AIR d'une version

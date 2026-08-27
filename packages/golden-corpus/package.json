@@ -1,0 +1,23 @@
+{
+  "name": "@deribfy/golden-corpus",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Golden corpus — AIR de domaines variés, émis par LLM (structured outputs), validés schéma + sémantique + registre en CI, sans réseau",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@deribfy/air-schema": "*",
+    "@deribfy/capability-registry": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "eslint": "^9.39.0",
+    "typescript": "^5",
+    "typescript-eslint": "^8.60.0",
+    "vitest": "^4.1.10"
+  }
+}

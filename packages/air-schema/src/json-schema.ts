@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { projectAirSchema } from "./air";
-import { projectLockSchema } from "./lock";
-import { deploymentStateSchema } from "./deployment-state";
+import { projectAirSchema } from "./air.ts";
+import { projectLockSchema } from "./lock.ts";
+import { deploymentStateSchema } from "./deployment-state.ts";
 
 // Projection JSON Schema (draft 2020-12) : autorité = schémas zod, la
 // projection sert l'émission LLM par structured outputs (ARCHITECTURE §1).
