@@ -24,6 +24,9 @@ export { canonicalJson, sha256Hex, hashCanonical } from "./canonical";
 export { validateAir, assertValidAir, AirSemanticError } from "./validate";
 export type { AirDiagnostic } from "./validate";
 
+export { AIR_MIGRATIONS, AirMigrationError, migrateAirDocument } from "./migrations";
+export type { AirMigration } from "./migrations";
+
 export {
   projectAirJsonSchema,
   projectLockJsonSchema,

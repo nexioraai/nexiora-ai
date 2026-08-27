@@ -48,9 +48,10 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
   compte EAS) · coûts EAS (compte Expo/EAS) · coût projet Supabase (token
   Management API, org de test). Chaque banc reprend dès l'arrivée de son
   prérequis.
-- **Prochaine étape EXACTEMENT autorisée** : **étape 2.2 — migrations
-  d'AIR testées** (mécanisme de migration versionné, expand/contract,
-  fail-closed), puis 2.3 registre des ~15 capabilities cœur.
+- **Prochaine étape EXACTEMENT autorisée** : **étape 2.3 — registre des
+  ~15 capabilities cœur** (paquet `capability-registry` : classe commerce,
+  impact d'empreinte native, permissions induites, compat OTA/rebuild) +
+  cliquets de registre.
 - **INTERDIT à ce stade** : toute phase dont les dépendances ROADMAP ne
   sont pas satisfaites (Phase 3 exige P-003 ; Phases 4+ dépendent de 2/3),
   tout push sans accord explicite, toute décision P-00x sans les mesures
@@ -61,8 +62,8 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
 | Étape | Contenu | Statut |
 |---|---|---|
 | 2.1 | Paquet `@deribfy/air-schema` : schémas zod AIR v1 (identités stables préfixées, effets d'actions fermés, réseau deny-by-default, classe commerce) + `project.lock` (sans horodatage — déterminisme) + `deployment state` ; validateur sémantique déterministe (18 familles de diagnostics triés) ; JSON canonique + hash SHA-256 ; projection JSON Schema draft 2020-12 (objets stricts partout) | 🟢 TERMINÉ (2026-08-27) — tsc EXIT=0 · **lint bloquant 0 écart** · **42/42 tests** · CI étendue (3 étapes paquets dans le Gate) · web intact : tsc EXIT=0 + **4071/4071 tests** après changement de lockfile |
-| 2.2 | Migrations d'AIR testées (mécanisme versionné, fail-closed) | ⏭️ SUIVANT |
-| 2.3 | Registre des ~15 capabilities cœur (classe commerce, impact natif, permissions) + cliquets de registre | ⏳ |
+| 2.2 | Migrations d'AIR testées : chaînage versionné pas à pas, le runner fixe la version cible (une migration ne saute pas de version), détection de cycle, fail-closed (le document migré repasse schéma + validateur sémantique) ; registre réel vide par construction (v1.0.0 = première version publiée), mécanisme prouvé par migrations synthétiques | 🟢 TERMINÉ (2026-08-27) — tsc EXIT=0 · lint 0 écart · **51/51 tests** (9 nouveaux) |
+| 2.3 | Registre des ~15 capabilities cœur (classe commerce, impact natif, permissions) + cliquets de registre | ⏭️ SUIVANT |
 | 2.4 | Émission LLM structured outputs + round-trip + golden corpus ≥ 10 domaines | ⏳ |
 | 2.5 | Gel registre v1 + revue propriétaire des capabilities (décision produit) | ⏳ |
 
