@@ -302,3 +302,13 @@ Règles obligatoires :
    moment), vérifié contre l'état réel du dépôt ; chaque fin d'étape
    énonce : terminé / où / prochaine étape exacte / prérequis /
    exécutable ou bloquée. Détail : MASTER_PLAN.md §5.
+7. **Pilotage opérationnel (complément D-017)** : Claude Code pilote
+   l'exécution du plan — croiser ROADMAP/MASTER_PLAN/STATUS/DECISIONS et
+   l'état réel, déterminer soi-même la prochaine étape autorisée et
+   l'EXÉCUTER si elle est exécutable ; jamais d'attente passive ni de
+   demande de choix que la ROADMAP détermine déjà. Solliciter le
+   propriétaire UNIQUEMENT pour un vrai prérequis externe (étape bloquée
+   précisée, après vérification qu'aucune autre action autorisée n'est
+   disponible) ou une vraie décision propriétaire. Plusieurs chemins
+   autorisés → brève présentation + recommandation technique. Détail :
+   MASTER_PLAN.md §5.

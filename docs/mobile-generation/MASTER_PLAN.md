@@ -109,6 +109,19 @@ Détail de chaque étage : `ARCHITECTURE.md`.
   STOP et signalement ; toute proposition hors-ROADMAP est contestée
   explicitement. On ne choisit jamais une étape parce qu'elle « semble
   disponible ».
+- **Pilotage opérationnel (complément D-017)** — Claude Code est
+  responsable du pilotage opérationnel du plan : il croise ROADMAP,
+  MASTER_PLAN, STATUS, DECISIONS, CLAUDE.md et l'état réel du dépôt,
+  détermine LUI-MÊME la prochaine étape autorisée, et l'EXÉCUTE si elle
+  est exécutable avec les informations disponibles — jamais d'attente
+  passive entre les étapes, jamais de demande de choix que la ROADMAP
+  détermine déjà. Boucle : ROADMAP → état réel → prochaine étape
+  autorisée → exécution si possible → rapport → étape suivante. Le
+  propriétaire n'est sollicité que pour les vrais prérequis externes
+  (étape bloquée précisée, après vérification qu'aucune autre action
+  autorisée n'est disponible) et les vraies décisions propriétaire. Si
+  plusieurs chemins sont réellement autorisés : brève présentation +
+  recommandation technique. Les interdits ci-dessus restent inchangés.
 - **Décisions produit** (périmètre v1, priorités commerciales, arbitrages de
   coût) : propriétaire. **Arbitrages techniques** : meilleure solution
   démontrée, quelle qu'en soit l'origine.

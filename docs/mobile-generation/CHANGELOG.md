@@ -1,5 +1,21 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — D-017 complétée : pilotage opérationnel
+
+- Complément propriétaire à D-017 : Claude Code est responsable du
+  pilotage opérationnel du plan (ROADMAP → état réel → prochaine étape
+  autorisée → exécution si possible → rapport → étape suivante) ; jamais
+  d'attente passive ni de demande de choix que la ROADMAP détermine déjà ;
+  sollicitations réservées aux vrais prérequis externes et aux vraies
+  décisions propriétaire. Consigné dans DECISIONS.md (D-017), MASTER_PLAN
+  §5, CLAUDE.md (règle 7).
+- Application immédiate du croisement ROADMAP ↔ état réel : la Phase 2
+  déclare « Phase 1 non bloquante » et ne dépend que de la Phase 0
+  (close) → **prochaine étape autorisée = ouverture de la Phase 2**, les
+  bancs Phase 1 restants continuant en parallèle sur arrivée des
+  prérequis. Le bloc PROGRESSION GLOBALE de STATUS est rectifié (l'ancien
+  « aucune étape exécutable » était inexact).
+
 ## 2026-08-27 — D-017 : règle permanente de progression
 
 - Décision propriétaire consignée (D-017) : ROADMAP = référence d'ordre

@@ -43,12 +43,15 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
   Android Studio, OU 2 appareils physiques + compte EAS) · coûts EAS
   (compte Expo/EAS) · coût projet Supabase (token Management API, org de
   test).
-- **Prochaine étape EXACTEMENT autorisée** : exécuter le premier banc de
-  Phase 1 dont le prérequis est fourni — **aucun n'est exécutable à cet
-  instant**.
-- **INTERDIT à ce stade** : implémentation du générateur (`packages/` reste
-  vide), toute phase ≥ 2, tout push sans accord explicite, toute décision
-  sans les mesures prévues.
+- **Prochaine étape EXACTEMENT autorisée** : **ouvrir la Phase 2 (AIR v1 +
+  Capability Registry v1)** — ses dépendances ROADMAP sont satisfaites :
+  Phase 0 close, et la ROADMAP déclare explicitement « Phase 1 non
+  bloquante » pour la Phase 2. Les bancs Phase 1 restants s'exécutent en
+  parallèle dès qu'un prérequis propriétaire arrive.
+- **INTERDIT à ce stade** : toute phase dont les dépendances ROADMAP ne
+  sont pas satisfaites (Phase 3 exige P-003 ; Phases 4+ dépendent de 2/3),
+  tout push sans accord explicite, toute décision P-00x sans les mesures
+  prévues.
 
 ## PHASE 1 — DÉTAIL (ouverte le 2026-08-27)
 

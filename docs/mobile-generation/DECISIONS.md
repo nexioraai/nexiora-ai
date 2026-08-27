@@ -182,6 +182,26 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   vivante du bloc dans `STATUS.md`.
 - **Conséquences** : aucune — sinon documentaires ; aucun code, aucune
   installation, aucune étape nouvelle n'accompagne cette décision.
+- **Complément (propriétaire, 2026-08-27) — pilotage opérationnel** :
+  Claude Code est **responsable du pilotage opérationnel du plan**. Il
+  croise ROADMAP, MASTER_PLAN, STATUS, DECISIONS, CLAUDE.md et l'état réel
+  du dépôt, détermine LUI-MÊME la prochaine étape autorisée et l'EXÉCUTE
+  si elle est exécutable avec les informations disponibles — sans attente
+  passive entre les étapes, sans demander au propriétaire de choisir ce
+  que la ROADMAP détermine déjà, sans « veux-tu que je continue ? » quand
+  le plan autorise la continuation. Boucle : **ROADMAP → état réel →
+  prochaine étape autorisée → exécution si possible → rapport → étape
+  suivante**. Sollicitations du propriétaire réservées : (i) aux VRAIS
+  prérequis externes — en précisant l'étape exactement bloquée, et
+  seulement après avoir vérifié qu'aucune autre action autorisée et non
+  bloquée n'existe ; (ii) aux VRAIES décisions propriétaire. Si plusieurs
+  chemins sont réellement autorisés : brève présentation + recommandation
+  technique fondée sur les objectifs. Chaque rapport contient :
+  PROGRESSION GLOBALE · « PROCHAINE ÉTAPE AUTORISÉE : … » avec
+  justification ROADMAP en une phrase · action exécutée ou prérequis
+  exact · gouvernance. Les interdits de D-017 restent inchangés (ni
+  inventer, ni sauter, ni anticiper, ni modifier un protocole en silence,
+  ni décider à la place du propriétaire).
 
 ---
 
