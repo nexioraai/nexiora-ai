@@ -1,5 +1,15 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — D-017 : règle permanente de progression
+
+- Décision propriétaire consignée (D-017) : ROADMAP = référence d'ordre
+  stricte pour tous les participants ; bloc PROGRESSION GLOBALE obligatoire
+  à chaque rapport important et fin d'étape, vérifié contre l'état réel ;
+  règle de décision de fin d'étape en 5 points ; contestation explicite de
+  toute proposition hors-ROADMAP. Inscrite dans MASTER_PLAN §5 (canonique),
+  relayée dans CLAUDE.md (règle 6), instanciée dans STATUS. Mise à jour
+  documentaire uniquement — aucun code, aucune installation, aucun push.
+
 ## 2026-08-27 — D-016 : P-001 TRANCHÉ → Trigger.dev v4
 
 - Arbitrage propriétaire sur le dossier comparatif complet (trois candidats

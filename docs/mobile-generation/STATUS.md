@@ -33,6 +33,23 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
 ✅ **Root Directory Vercel réglé sur `apps/web` par le propriétaire**
 (2026-08-27, avant le push) — le risque consigné dans D-014 est levé.
 
+## PROGRESSION GLOBALE (bloc de référence — règle D-017)
+
+- **Terminé** : Phase 0 🟢 (fondations, CI #32 verte) · Phase 1 partiel :
+  banc coûts LLM 🟢 · P-001 🟢 tranché → **D-016 Trigger.dev v4**.
+- **En cours** : Phase 1 — bancs de mesure.
+- **Bloqué, prérequis propriétaire** : P-002 (comptes E2B/Modal/Fly/Vercel
+  Sandbox + budget ~10-20 $) · P-003 & E2E (Xcode complet + simulateurs et
+  Android Studio, OU 2 appareils physiques + compte EAS) · coûts EAS
+  (compte Expo/EAS) · coût projet Supabase (token Management API, org de
+  test).
+- **Prochaine étape EXACTEMENT autorisée** : exécuter le premier banc de
+  Phase 1 dont le prérequis est fourni — **aucun n'est exécutable à cet
+  instant**.
+- **INTERDIT à ce stade** : implémentation du générateur (`packages/` reste
+  vide), toute phase ≥ 2, tout push sans accord explicite, toute décision
+  sans les mesures prévues.
+
 ## PHASE 1 — DÉTAIL (ouverte le 2026-08-27)
 
 | Banc | Protocole | Exécution |

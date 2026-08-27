@@ -97,6 +97,18 @@ Détail de chaque étage : `ARCHITECTURE.md`.
   `CHANGELOG.md` pour les changements importants.
 - **Aucun saut de phase silencieux** — une étape qui paraît inutile est
   signalée, argumentée, avec alternative proposée, et attend validation.
+- **Règle permanente de progression (D-017)** — `ROADMAP.md` est la
+  référence d'ordre STRICTE : personne (propriétaire, Claude Code,
+  assistants tiers) n'anticipe, n'invente, ne saute ni ne commence une
+  étape non autorisée. Tout rapport important et toute fin d'étape
+  affichent le bloc **PROGRESSION GLOBALE** (phases · terminé · en cours ·
+  prérequis des étapes bloquées · prochaine étape EXACTEMENT autorisée ·
+  interdits du moment), vérifié contre l'état réel du dépôt. Chaque fin
+  d'étape énonce : terminé / où nous sommes / prochaine étape exacte /
+  prérequis / exécutable ou bloquée. Ambiguïté ROADMAP ↔ état réel =
+  STOP et signalement ; toute proposition hors-ROADMAP est contestée
+  explicitement. On ne choisit jamais une étape parce qu'elle « semble
+  disponible ».
 - **Décisions produit** (périmètre v1, priorités commerciales, arbitrages de
   coût) : propriétaire. **Arbitrages techniques** : meilleure solution
   démontrée, quelle qu'en soit l'origine.

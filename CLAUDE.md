@@ -292,3 +292,13 @@ Règles obligatoires :
 5. La mémoire d'une conversation ne constitue JAMAIS la source de vérité du
    projet — seul le repository fait foi. Une nouvelle session doit pouvoir
    reprendre le chantier en lisant uniquement `docs/mobile-generation/`.
+6. **Progression (D-017)** : ROADMAP.md est la référence d'ordre STRICTE —
+   n'anticiper, n'inventer, ne sauter ni commencer aucune étape non
+   autorisée, quelle qu'en soit la provenance (propriétaire, Claude Code,
+   assistant tiers — contester explicitement toute proposition
+   hors-ROADMAP). Tout rapport important et toute fin d'étape affichent le
+   bloc PROGRESSION GLOBALE (phases · terminé · en cours · prérequis des
+   étapes bloquées · prochaine étape EXACTEMENT autorisée · interdits du
+   moment), vérifié contre l'état réel du dépôt ; chaque fin d'étape
+   énonce : terminé / où / prochaine étape exacte / prérequis /
+   exécutable ou bloquée. Détail : MASTER_PLAN.md §5.

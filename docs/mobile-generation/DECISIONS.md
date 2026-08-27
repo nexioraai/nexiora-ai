@@ -157,6 +157,32 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   l'observabilité pipeline ; aucun autre choix architectural modifié,
   aucune phase ajoutée.
 
+## D-017 — Règle permanente de progression et de non-anticipation (2026-08-27)
+
+- **Problème** : risque de dérive d'ordre — une étape entamée parce qu'elle
+  « semble disponible », par l'un quelconque des participants (propriétaire,
+  Claude Code, assistants tiers), et perte de visibilité de l'avancement
+  entre sessions.
+- **Décision (propriétaire)** :
+  1. **ROADMAP.md est la référence d'ordre STRICTE** — personne n'anticipe,
+     n'invente, ne saute ni ne commence une étape non autorisée ;
+  2. **Obligation de progression** : tout rapport important et toute fin
+     d'étape affichent un bloc **PROGRESSION GLOBALE** (phases · étapes
+     terminées avec statut · étape en cours · prérequis des étapes
+     bloquées · prochaine étape EXACTEMENT autorisée · interdits du
+     moment), vérifié contre l'état réel du dépôt avant affichage ;
+  3. **Règle de décision de fin d'étape** : chaque fin d'étape énonce —
+     ce qui vient d'être terminé · où nous sommes · la prochaine étape
+     exacte de la ROADMAP · ses prérequis · exécutable ou bloquée ;
+  4. Ambiguïté ou contradiction ROADMAP ↔ état réel = **STOP et
+     signalement** avant toute action ; une proposition hors-ROADMAP,
+     y compris du propriétaire, est **contestée explicitement**.
+- **Consignation** : règle inscrite dans `MASTER_PLAN.md` §5 (gouvernance
+  canonique) et relayée dans le bloc permanent de `CLAUDE.md` ; instance
+  vivante du bloc dans `STATUS.md`.
+- **Conséquences** : aucune — sinon documentaires ; aucun code, aucune
+  installation, aucune étape nouvelle n'accompagne cette décision.
+
 ---
 
 # EN ATTENTE
