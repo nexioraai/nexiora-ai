@@ -1,0 +1,1498 @@
+{
+  "actions": [
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_services"
+      },
+      "id": "act_open_services",
+      "name": "Ouvrir le catalogue des prestations",
+      "trigger": {
+        "blockId": "blk_appointments_empty",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "offline_storage",
+        "kind": "capability",
+        "method": "syncEntity",
+        "params": [
+          {
+            "key": "entityId",
+            "value": "ent_service"
+          },
+          {
+            "key": "staleAfterMinutes",
+            "value": 60
+          },
+          {
+            "key": "fallbackToCache",
+            "value": true
+          }
+        ]
+      },
+      "id": "act_load_services",
+      "name": "Charger les prestations en cache local",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_services"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_booking"
+      },
+      "id": "act_open_booking",
+      "name": "Ouvrir le choix du créneau",
+      "trigger": {
+        "blockId": "blk_service_detail_book_cta",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_duration_label"
+      },
+      "id": "act_format_duration",
+      "name": "Formater la durée de la prestation",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_service_detail"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_available_slots"
+      },
+      "id": "act_refresh_slots",
+      "name": "Actualiser les créneaux disponibles",
+      "trigger": {
+        "blockId": "blk_booking_slots_empty",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_booking_reference"
+      },
+      "id": "act_generate_reference",
+      "name": "Générer la référence de réservation",
+      "trigger": {
+        "blockId": "blk_booking_form",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_appointment",
+        "kind": "mutation",
+        "operation": "create"
+      },
+      "id": "act_confirm_booking",
+      "name": "Confirmer le rendez-vous",
+      "trigger": {
+        "blockId": "blk_booking_confirm_cta",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_reminder_schedule"
+      },
+      "id": "act_compute_reminder_at",
+      "name": "Calculer l'heure du rappel de la veille",
+      "trigger": {
+        "entityId": "ent_appointment",
+        "event": "created",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "capability": "push_notifications",
+        "kind": "capability",
+        "method": "scheduleLocal",
+        "params": [
+          {
+            "key": "channel",
+            "value": "appointment_reminder"
+          },
+          {
+            "key": "titleFr",
+            "value": "Rendez-vous demain au salon"
+          },
+          {
+            "key": "titleEn",
+            "value": "Salon appointment tomorrow"
+          },
+          {
+            "key": "bodyFr",
+            "value": "Rappel : votre rendez-vous est prévu demain. Règlement sur place."
+          },
+          {
+            "key": "bodyEn",
+            "value": "Reminder: your appointment is tomorrow. Payment on site."
+          },
+          {
+            "key": "scheduleFieldId",
+            "value": "fld_appt_reminder_at"
+          }
+        ]
+      },
+      "id": "act_schedule_reminder",
+      "name": "Programmer le rappel local la veille",
+      "trigger": {
+        "entityId": "ent_appointment",
+        "event": "updated",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_appointment",
+        "kind": "mutation",
+        "operation": "update"
+      },
+      "id": "act_cancel_appointment",
+      "name": "Annuler le rendez-vous",
+      "trigger": {
+        "blockId": "blk_appointments_cancel_cta",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "push_notifications",
+        "kind": "capability",
+        "method": "cancelScheduled",
+        "params": [
+          {
+            "key": "channel",
+            "value": "appointment_reminder"
+          },
+          {
+            "key": "matchFieldId",
+            "value": "fld_appt_reference"
+          }
+        ]
+      },
+      "id": "act_cancel_reminder",
+      "name": "Annuler le rappel programmé",
+      "trigger": {
+        "entityId": "ent_appointment",
+        "event": "deleted",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "capability": "analytics",
+        "kind": "capability",
+        "method": "trackEvent",
+        "params": [
+          {
+            "key": "eventName",
+            "value": "app_opened"
+          },
+          {
+            "key": "surface",
+            "value": "salon_booking"
+          }
+        ]
+      },
+      "id": "act_track_app_start",
+      "name": "Mesurer l'ouverture de l'application",
+      "trigger": {
+        "event": "app_start",
+        "kind": "lifecycle"
+      }
+    },
+    {
+      "effect": {
+        "capability": "analytics",
+        "kind": "capability",
+        "method": "trackEvent",
+        "params": [
+          {
+            "key": "eventName",
+            "value": "appointment_created"
+          },
+          {
+            "key": "paymentMode",
+            "value": "on_site"
+          }
+        ]
+      },
+      "id": "act_track_booking",
+      "name": "Mesurer une réservation créée",
+      "trigger": {
+        "entityId": "ent_appointment",
+        "event": "created",
+        "kind": "data"
+      }
+    }
+  ],
+  "airSchemaVersion": "1.0.0",
+  "app": {
+    "description": [
+      {
+        "locale": "fr",
+        "text": "Application de prise de rendez-vous pour salon de coiffure : consultation des prestations et de leur durée, choix d'un créneau disponible et rappel automatique la veille. Le paiement s'effectue sur place, au salon."
+      },
+      {
+        "locale": "en",
+        "text": "Hair salon booking app: browse services and their duration, pick an available time slot and get an automatic reminder the day before. Payment is made on site at the salon."
+      }
+    ],
+    "locales": {
+      "appLocales": [
+        "fr",
+        "en"
+      ],
+      "contentLocales": [
+        "fr",
+        "en"
+      ],
+      "defaultAppLocale": "fr",
+      "rtlSupported": false,
+      "userLanguage": "fr"
+    },
+    "name": "Salon Rendez-vous",
+    "slug": "salon-rendez-vous"
+  },
+  "capabilities": [
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "channels",
+          "value": [
+            "appointment_reminder"
+          ]
+        },
+        {
+          "key": "defaultReminderHourLocal",
+          "value": 18
+        },
+        {
+          "key": "allowLocalSchedule",
+          "value": true
+        },
+        {
+          "key": "requestPermissionOnFirstBooking",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "cachedEntities",
+          "value": [
+            "ent_service",
+            "ent_time_slot",
+            "ent_appointment"
+          ]
+        },
+        {
+          "key": "maxCacheAgeMinutes",
+          "value": 1440
+        },
+        {
+          "key": "encryptAtRest",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "anonymizeIp",
+          "value": true
+        },
+        {
+          "key": "collectDeviceIdentifiers",
+          "value": false
+        },
+        {
+          "key": "defaultLocale",
+          "value": "fr"
+        }
+      ]
+    }
+  ],
+  "compliance": {
+    "accountDeletionRequired": true,
+    "commerceClass": "none",
+    "dataCollected": [
+      "contact_info",
+      "identifiers",
+      "usage_data",
+      "diagnostics"
+    ]
+  },
+  "datasets": [
+    {
+      "contentHash": "3f8c1a94b27de650cb0f4a7d2e19b8635c40af71d9e2c8b5460137ea9d2f8cb1",
+      "entityId": "ent_service",
+      "id": "data_services_seed",
+      "rowCount": 12
+    },
+    {
+      "contentHash": "a71d0e93c5b48f2610da37c9e84b25f70c6913adf248e5b0917cd36a4f8e2b5d",
+      "entityId": "ent_time_slot",
+      "id": "data_time_slots_seed",
+      "rowCount": 96
+    }
+  ],
+  "design": {
+    "theme": "salon_soft",
+    "tokensVersion": "1.0.0"
+  },
+  "entities": [
+    {
+      "fields": [
+        {
+          "id": "fld_service_name",
+          "name": "name",
+          "required": true,
+          "type": "string",
+          "unique": true
+        },
+        {
+          "id": "fld_service_description",
+          "name": "description",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "id": "fld_service_duration_minutes",
+          "name": "duration_minutes",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "id": "fld_service_price",
+          "name": "price",
+          "required": true,
+          "type": "decimal"
+        },
+        {
+          "enumValues": [
+            "coupe",
+            "couleur",
+            "coiffage",
+            "soin",
+            "barbe"
+          ],
+          "id": "fld_service_category",
+          "name": "category",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_service_is_active",
+          "name": "is_active",
+          "required": true,
+          "type": "boolean"
+        },
+        {
+          "id": "fld_service_photo",
+          "name": "photo",
+          "required": false,
+          "type": "asset"
+        }
+      ],
+      "id": "ent_service",
+      "name": "service"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_slot_starts_at",
+          "name": "starts_at",
+          "required": true,
+          "type": "datetime"
+        },
+        {
+          "id": "fld_slot_ends_at",
+          "name": "ends_at",
+          "required": true,
+          "type": "datetime"
+        },
+        {
+          "id": "fld_slot_day",
+          "name": "day",
+          "required": true,
+          "type": "date"
+        },
+        {
+          "id": "fld_slot_stylist_name",
+          "name": "stylist_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "enumValues": [
+            "available",
+            "held",
+            "booked",
+            "closed"
+          ],
+          "id": "fld_slot_status",
+          "name": "status",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_slot_service",
+          "name": "service",
+          "referencesEntityId": "ent_service",
+          "required": false,
+          "type": "reference"
+        },
+        {
+          "id": "fld_slot_label",
+          "name": "label",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "id": "ent_time_slot",
+      "name": "time_slot"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_appt_reference",
+          "name": "reference",
+          "required": true,
+          "type": "string",
+          "unique": true
+        },
+        {
+          "id": "fld_appt_service",
+          "name": "service",
+          "referencesEntityId": "ent_service",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "id": "fld_appt_slot",
+          "name": "slot",
+          "referencesEntityId": "ent_time_slot",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "id": "fld_appt_customer_name",
+          "name": "customer_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_appt_customer_phone",
+          "name": "customer_phone",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_appt_starts_at",
+          "name": "starts_at",
+          "required": true,
+          "type": "datetime"
+        },
+        {
+          "enumValues": [
+            "pending",
+            "confirmed",
+            "cancelled",
+            "completed"
+          ],
+          "id": "fld_appt_status",
+          "name": "status",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_appt_notes",
+          "name": "notes",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "id": "fld_appt_reminder_enabled",
+          "name": "reminder_enabled",
+          "required": true,
+          "type": "boolean"
+        },
+        {
+          "id": "fld_appt_reminder_at",
+          "name": "reminder_at",
+          "required": false,
+          "type": "datetime"
+        },
+        {
+          "id": "fld_appt_created_at",
+          "name": "created_at",
+          "required": true,
+          "type": "datetime"
+        }
+      ],
+      "id": "ent_appointment",
+      "name": "appointment"
+    }
+  ],
+  "expectedTests": [
+    {
+      "description": "Via act_refresh_slots, vérifie que le calcul des créneaux (slot_available_slots) ne retourne que les créneaux au statut disponible, compatibles avec la durée de la prestation, et exclut les chevauchements avec les créneaux déjà réservés.",
+      "id": "test_slot_available_slots",
+      "kind": "deterministic",
+      "targetId": "act_refresh_slots"
+    },
+    {
+      "description": "Via act_compute_reminder_at, vérifie que le calcul du rappel (slot_reminder_schedule) place le rappel la veille à 18h00 heure locale du salon et renvoie shouldSchedule=false lorsque le rappel est désactivé ou que la veille est déjà passée.",
+      "id": "test_slot_reminder_schedule",
+      "kind": "deterministic",
+      "targetId": "act_compute_reminder_at"
+    },
+    {
+      "description": "Via act_generate_reference, vérifie que la référence de réservation (slot_booking_reference) est courte, lisible, stable pour une même entrée et distincte pour deux rendez-vous différents.",
+      "id": "test_slot_booking_reference",
+      "kind": "deterministic",
+      "targetId": "act_generate_reference"
+    },
+    {
+      "description": "Via act_format_duration, vérifie que le libellé de durée (slot_duration_label) est correctement formaté en français (« 1 h 15 ») et en anglais (« 1 hr 15 min »), y compris pour les durées inférieures à une heure.",
+      "id": "test_slot_duration_label",
+      "kind": "deterministic",
+      "targetId": "act_format_duration"
+    },
+    {
+      "description": "Sur ent_service, vérifie que rule_service_duration_positive rejette une durée inférieure à 5 minutes ou supérieure à 300 minutes et accepte les valeurs intermédiaires, et que rule_service_price_valid exige un prix positif.",
+      "id": "test_rule_service_duration",
+      "kind": "deterministic",
+      "targetId": "ent_service"
+    },
+    {
+      "description": "Sur ent_appointment, vérifie que rule_appointment_contact_valid exige un nom et n'accepte qu'un numéro de téléphone de 9 à 20 caractères au format autorisé.",
+      "id": "test_rule_appointment_contact",
+      "kind": "deterministic",
+      "targetId": "ent_appointment"
+    },
+    {
+      "description": "Sur ent_time_slot, vérifie que rule_slot_bookable refuse un créneau sans date de début ou de fin et n'autorise que les statuts du cycle de vie défini.",
+      "id": "test_rule_slot_bookable",
+      "kind": "deterministic",
+      "targetId": "ent_time_slot"
+    },
+    {
+      "description": "Sur ent_appointment, vérifie que rule_appointment_status_flow n'autorise que les statuts pending, confirmed, cancelled, completed et exige un créneau et une prestation, et que rule_appointment_owner_access empêche l'accès aux rendez-vous d'un autre numéro de téléphone.",
+      "id": "test_rule_appointment_status_flow",
+      "kind": "deterministic",
+      "targetId": "ent_appointment"
+    },
+    {
+      "description": "Parcours complet : ouverture des prestations, sélection d'une prestation, choix d'un créneau disponible, saisie des coordonnées et confirmation créant un rendez-vous au statut pending avec sa référence.",
+      "id": "test_e2e_booking_flow",
+      "kind": "e2e",
+      "targetId": "scr_booking"
+    },
+    {
+      "description": "Après confirmation d'un rendez-vous avec rappel activé, une notification locale est programmée sur le canal appointment_reminder à la date calculée dans fld_appt_reminder_at.",
+      "id": "test_e2e_reminder_scheduled",
+      "kind": "e2e",
+      "targetId": "act_schedule_reminder"
+    },
+    {
+      "description": "Depuis Mes rendez-vous, l'annulation passe le statut à cancelled, libère le créneau et supprime le rappel programmé associé.",
+      "id": "test_e2e_cancel_appointment",
+      "kind": "e2e",
+      "targetId": "act_cancel_appointment"
+    },
+    {
+      "description": "Sans réseau, l'écran des prestations affiche le catalogue mis en cache et l'état vide propose de recharger les prestations.",
+      "id": "test_e2e_offline_services",
+      "kind": "e2e",
+      "targetId": "scr_services"
+    },
+    {
+      "description": "Contrat de l'API backend (intg_salon_backend) exercé à la confirmation : schémas et codes de réponse pour la création/mise à jour d'un rendez-vous et la lecture des prestations et créneaux, sur api.salon-rendez-vous.app uniquement.",
+      "id": "test_contract_backend_api",
+      "kind": "contract",
+      "targetId": "act_confirm_booking"
+    },
+    {
+      "description": "Contrat du fournisseur de notifications (intg_push_local_scheduler) : programmation et annulation d'un rappel local sur le canal appointment_reminder, y compris le refus de la permission POST_NOTIFICATIONS.",
+      "id": "test_contract_push_scheduler",
+      "kind": "contract",
+      "targetId": "act_schedule_reminder"
+    },
+    {
+      "description": "Contrat analytics (intg_analytics_product) : l'événement app_opened est envoyé sans identifiant d'appareil ni donnée personnelle, avec IP anonymisée et respect du lot de 20 événements.",
+      "id": "test_contract_analytics",
+      "kind": "contract",
+      "targetId": "act_track_app_start"
+    },
+    {
+      "description": "Contrat du stockage local (intg_offline_cache) lors de la synchronisation des prestations : chiffrement au repos, expiration du cache après 1440 minutes et résolution des conflits en faveur du serveur.",
+      "id": "test_contract_offline_cache",
+      "kind": "contract",
+      "targetId": "act_load_services"
+    }
+  ],
+  "integrations": [
+    {
+      "config": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.salon-rendez-vous.app"
+        },
+        {
+          "key": "apiVersion",
+          "value": "v1"
+        },
+        {
+          "key": "timeoutMs",
+          "value": 8000
+        },
+        {
+          "key": "retryCount",
+          "value": 2
+        },
+        {
+          "key": "authMode",
+          "value": "device_token_from_secure_store"
+        },
+        {
+          "key": "resources",
+          "value": [
+            "services",
+            "time_slots",
+            "appointments"
+          ]
+        }
+      ],
+      "id": "intg_salon_backend",
+      "providerClass": "rest_api"
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "transport",
+          "value": "os_native"
+        },
+        {
+          "key": "channels",
+          "value": [
+            "appointment_reminder"
+          ]
+        },
+        {
+          "key": "channelImportance",
+          "value": "high"
+        },
+        {
+          "key": "localScheduleOnly",
+          "value": true
+        },
+        {
+          "key": "reminderOffsetHours",
+          "value": -14
+        },
+        {
+          "key": "timezoneSource",
+          "value": "salon_local"
+        },
+        {
+          "key": "registrationEndpointPath",
+          "value": "/v1/devices"
+        }
+      ],
+      "id": "intg_push_local_scheduler",
+      "providerClass": "push_provider"
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "ingestPath",
+          "value": "/v1/analytics/events"
+        },
+        {
+          "key": "anonymizeIp",
+          "value": true
+        },
+        {
+          "key": "collectDeviceIdentifiers",
+          "value": false
+        },
+        {
+          "key": "batchSize",
+          "value": 20
+        },
+        {
+          "key": "flushIntervalSeconds",
+          "value": 60
+        },
+        {
+          "key": "trackedEvents",
+          "value": [
+            "app_opened",
+            "appointment_created"
+          ]
+        }
+      ],
+      "id": "intg_analytics_product",
+      "providerClass": "analytics_provider"
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "engine",
+          "value": "sqlite"
+        },
+        {
+          "key": "encryptAtRest",
+          "value": true
+        },
+        {
+          "key": "cachedEntities",
+          "value": [
+            "ent_service",
+            "ent_time_slot",
+            "ent_appointment"
+          ]
+        },
+        {
+          "key": "maxCacheAgeMinutes",
+          "value": 1440
+        },
+        {
+          "key": "conflictStrategy",
+          "value": "server_wins"
+        }
+      ],
+      "id": "intg_offline_cache",
+      "providerClass": "local_database"
+    }
+  ],
+  "native": {
+    "minAndroidSdk": 26,
+    "minIosVersion": "16.0"
+  },
+  "navigation": {
+    "entryScreenId": "scr_services",
+    "routes": [
+      {
+        "id": "nav_services",
+        "screenId": "scr_services",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Prestations"
+          },
+          {
+            "locale": "en",
+            "text": "Services"
+          }
+        ]
+      },
+      {
+        "id": "nav_service_detail",
+        "screenId": "scr_service_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Détail de la prestation"
+          },
+          {
+            "locale": "en",
+            "text": "Service details"
+          }
+        ]
+      },
+      {
+        "id": "nav_booking",
+        "screenId": "scr_booking",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Choix du créneau"
+          },
+          {
+            "locale": "en",
+            "text": "Pick a time slot"
+          }
+        ]
+      },
+      {
+        "id": "nav_appointments",
+        "screenId": "scr_appointments",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Mes rendez-vous"
+          },
+          {
+            "locale": "en",
+            "text": "My appointments"
+          }
+        ]
+      }
+    ]
+  },
+  "network": {
+    "allowedDomains": [
+      "api.salon-rendez-vous.app"
+    ],
+    "policy": "deny_by_default"
+  },
+  "permissions": [
+    {
+      "permission": "android.permission.POST_NOTIFICATIONS",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "Pour vous envoyer le rappel de votre rendez-vous la veille à 18h00."
+        },
+        {
+          "locale": "en",
+          "text": "To send you the reminder for your appointment the day before at 6:00 PM."
+        }
+      ],
+      "requiredByCapability": "push_notifications"
+    }
+  ],
+  "projectId": "prj_salon_rdv",
+  "relations": [
+    {
+      "fromEntityId": "ent_service",
+      "id": "rel_service_time_slots",
+      "kind": "one_to_many",
+      "toEntityId": "ent_time_slot"
+    },
+    {
+      "fromEntityId": "ent_service",
+      "id": "rel_service_appointments",
+      "kind": "one_to_many",
+      "toEntityId": "ent_appointment"
+    },
+    {
+      "fromEntityId": "ent_time_slot",
+      "id": "rel_slot_appointment",
+      "kind": "one_to_one",
+      "toEntityId": "ent_appointment"
+    }
+  ],
+  "rules": [
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_service_duration_minutes",
+          "operator": "gte",
+          "value": 5
+        },
+        {
+          "fieldId": "fld_service_duration_minutes",
+          "operator": "lte",
+          "value": 300
+        }
+      ],
+      "description": "La durée d'une prestation doit être d'au moins 5 minutes et ne pas dépasser 300 minutes.",
+      "entityId": "ent_service",
+      "id": "rule_service_duration_positive",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_service_price",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_service_price",
+          "operator": "gte",
+          "value": 0
+        }
+      ],
+      "description": "Le prix affiché doit être renseigné et positif (paiement sur place, à titre indicatif).",
+      "entityId": "ent_service",
+      "id": "rule_service_price_valid",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_slot_status",
+          "operator": "in",
+          "value": [
+            "available",
+            "held",
+            "booked",
+            "closed"
+          ]
+        },
+        {
+          "fieldId": "fld_slot_starts_at",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_slot_ends_at",
+          "operator": "required"
+        }
+      ],
+      "description": "Seul un créneau au statut disponible peut être proposé à la réservation.",
+      "entityId": "ent_time_slot",
+      "id": "rule_slot_bookable",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_appt_customer_name",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_appt_customer_phone",
+          "operator": "matches",
+          "value": "^\\+?[0-9 .-]{9,20}$"
+        }
+      ],
+      "description": "Un rendez-vous exige un nom et un numéro de téléphone français ou international valide.",
+      "entityId": "ent_appointment",
+      "id": "rule_appointment_contact_valid",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_appt_status",
+          "operator": "in",
+          "value": [
+            "pending",
+            "confirmed",
+            "cancelled",
+            "completed"
+          ]
+        },
+        {
+          "fieldId": "fld_appt_slot",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_appt_service",
+          "operator": "required"
+        }
+      ],
+      "description": "Le statut d'un rendez-vous doit appartenir au cycle de vie autorisé et le créneau doit être renseigné.",
+      "entityId": "ent_appointment",
+      "id": "rule_appointment_status_flow",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_appt_customer_phone",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_appt_status",
+          "operator": "neq",
+          "value": "completed"
+        }
+      ],
+      "description": "Un client ne peut consulter, modifier ou annuler que les rendez-vous associés à son propre numéro de téléphone.",
+      "entityId": "ent_appointment",
+      "id": "rule_appointment_owner_access",
+      "kind": "authorization"
+    }
+  ],
+  "screens": [
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_services_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Nos prestations"
+            },
+            {
+              "key": "subtitle",
+              "value": "Durée et tarif indicatif — paiement sur place au salon"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_service",
+          "id": "blk_services_list",
+          "props": [
+            {
+              "key": "title",
+              "value": "Choisissez une prestation"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_service_name"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_service_description"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_service_duration_minutes"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_service_category"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune prestation disponible"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Le catalogue du salon sera bientôt mis à jour."
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_services_empty",
+          "props": [
+            {
+              "key": "title",
+              "value": "Catalogue indisponible"
+            },
+            {
+              "key": "message",
+              "value": "Impossible de charger les prestations pour le moment. Réessayez dans un instant."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Recharger les prestations"
+            },
+            {
+              "key": "actionId",
+              "value": "act_open_services"
+            }
+          ]
+        }
+      ],
+      "id": "scr_services",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Prestations"
+        },
+        {
+          "locale": "en",
+          "text": "Services"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "detail_header",
+          "entityId": "ent_service",
+          "id": "blk_service_detail_header",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_service_name"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_service_description"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_service_price"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_service_category",
+                "fld_service_duration_minutes"
+              ]
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_service_detail_book_cta",
+          "props": [
+            {
+              "key": "label",
+              "value": "Choisir un créneau"
+            },
+            {
+              "key": "actionId",
+              "value": "act_open_booking"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ],
+      "id": "scr_service_detail",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Détail de la prestation"
+        },
+        {
+          "locale": "en",
+          "text": "Service details"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_booking_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Créneaux disponibles"
+            },
+            {
+              "key": "subtitle",
+              "value": "Sélectionnez une heure, puis renseignez vos coordonnées"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_time_slot",
+          "id": "blk_booking_slots_list",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_slot_starts_at"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_slot_stylist_name"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_slot_ends_at"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_slot_status"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun créneau ce jour-là"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Essayez une autre journée pour cette prestation."
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_booking_slots_empty",
+          "props": [
+            {
+              "key": "title",
+              "value": "Plus aucune disponibilité"
+            },
+            {
+              "key": "message",
+              "value": "Tous les créneaux de cette journée sont réservés. Actualisez ou choisissez une autre date."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Actualiser les créneaux"
+            },
+            {
+              "key": "actionId",
+              "value": "act_refresh_slots"
+            }
+          ]
+        },
+        {
+          "blockType": "form",
+          "entityId": "ent_appointment",
+          "id": "blk_booking_form",
+          "props": [
+            {
+              "key": "title",
+              "value": "Vos coordonnées"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_appt_customer_name",
+                "fld_appt_customer_phone",
+                "fld_appt_notes",
+                "fld_appt_reminder_enabled"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Confirmer le rendez-vous"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_booking_confirm_cta",
+          "props": [
+            {
+              "key": "label",
+              "value": "Réserver et programmer le rappel"
+            },
+            {
+              "key": "actionId",
+              "value": "act_confirm_booking"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ],
+      "id": "scr_booking",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Choix du créneau"
+        },
+        {
+          "locale": "en",
+          "text": "Pick a time slot"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_appointments_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes rendez-vous"
+            },
+            {
+              "key": "subtitle",
+              "value": "Rappel envoyé la veille à 18h00 — règlement sur place"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_appointment",
+          "id": "blk_appointments_list",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_appt_starts_at"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_appt_customer_name"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_appt_reference"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_appt_status"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun rendez-vous"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Vos futurs rendez-vous apparaîtront ici."
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_appointments_cancel_cta",
+          "props": [
+            {
+              "key": "label",
+              "value": "Annuler ce rendez-vous"
+            },
+            {
+              "key": "actionId",
+              "value": "act_cancel_appointment"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_appointments_empty",
+          "props": [
+            {
+              "key": "title",
+              "value": "Pas encore de rendez-vous"
+            },
+            {
+              "key": "message",
+              "value": "Parcourez les prestations du salon pour réserver votre prochain passage."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Voir les prestations"
+            },
+            {
+              "key": "actionId",
+              "value": "act_open_services"
+            }
+          ]
+        }
+      ],
+      "id": "scr_appointments",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Mes rendez-vous"
+        },
+        {
+          "locale": "en",
+          "text": "My appointments"
+        }
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "allowedImports": [
+        "date-fns"
+      ],
+      "description": "Calcule la liste des créneaux disponibles pour une prestation et une journée données, en tenant compte de la durée de la prestation et des créneaux déjà réservés.",
+      "id": "slot_available_slots",
+      "inputs": [
+        {
+          "name": "serviceId",
+          "type": "reference"
+        },
+        {
+          "name": "day",
+          "type": "date"
+        },
+        {
+          "name": "durationMinutes",
+          "type": "number"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "availableSlots",
+          "type": "json"
+        },
+        {
+          "name": "slotCount",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "allowedImports": [
+        "date-fns",
+        "date-fns-tz"
+      ],
+      "description": "Détermine la date et l'heure du rappel local à programmer la veille du rendez-vous (18h00 heure locale du salon).",
+      "id": "slot_reminder_schedule",
+      "inputs": [
+        {
+          "name": "appointmentStartsAt",
+          "type": "datetime"
+        },
+        {
+          "name": "reminderEnabled",
+          "type": "boolean"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "reminderAt",
+          "type": "datetime"
+        },
+        {
+          "name": "shouldSchedule",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "allowedImports": [],
+      "description": "Génère une référence de réservation courte, lisible et unique pour un nouveau rendez-vous.",
+      "id": "slot_booking_reference",
+      "inputs": [
+        {
+          "name": "serviceName",
+          "type": "string"
+        },
+        {
+          "name": "startsAt",
+          "type": "datetime"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "reference",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "allowedImports": [],
+      "description": "Formate la durée d'une prestation en libellé localisé (fr/en), par exemple « 1 h 15 » ou « 1 hr 15 min ».",
+      "id": "slot_duration_label",
+      "inputs": [
+        {
+          "name": "durationMinutes",
+          "type": "number"
+        },
+        {
+          "name": "locale",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "label",
+          "type": "string"
+        }
+      ]
+    }
+  ]
+}

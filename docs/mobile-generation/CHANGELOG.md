@@ -1,5 +1,35 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-28 — ARBITRAGE C RÉSOLU (D-025) : golden corpus v2, 12/12, 7,42 $
+
+- **D-025 consignée puis exécutée** : ré-émission LLM du corpus (Option A)
+  après démonstration par la mesure que toute alternative gratuite échoue
+  (12/12 documents v1 refusés par l'allowlist, MÊME après mapping des
+  synonymes ; 153 occurrences hors registre).
+- **Campagne réelle** (`emit-v2.mjs`, pipeline 2.4 réutilisé — `emit.mjs`
+  INTOUCHÉ) : mêmes 12 intentions, digest du registre de SMART BLOCKS
+  (schémas de props, liaisons d'entité, appariements F1/F2) ajouté au
+  prompt, `design.overrides` interdit, round-trip supprimé (garantie D-019
+  structurelle au schéma inchangé), PLAFOND DUR 25 $ codé. Résultat :
+  **12/12 valides**, 1 passe de réparation bornée/document (11-22
+  diagnostics → 0), **0 refus**, **7,42 $** (~0,62 $/doc, sous l'estimation
+  8-14 $). Incident consigné : ~0,5 $ perdus par un préchargement de module
+  qui a démarré la boucle (leçon : jamais d'import à sec d'un module à
+  effets).
+- **Contre-vérification INDÉPENDANTE** (D-018) : 12/12 à **0 diagnostic aux
+  4 validateurs** (schéma strict, sémantique, capabilities, **blocs** —
+  premier câblage réel de `validateAirBlocks`) ; **vocabulaire émis =
+  EXACTEMENT les 6 blocs du registre** (le remède digest prouvé une 2ᵉ
+  fois) ; overrides vides 12/12 ; ids/slugs uniques ; 3 classes commerce ;
+  **corpus v1 byte-identique** (scellés SHA-256 avant/après identiques).
+- **CI sans réseau** : `tests/corpus-v2.test.ts` (63 tests) — import du
+  module PUR du registre de blocs par chemin direct (le paquet gelé reste
+  intouché ; un sous-chemin d'export serait une évolution consciente).
+  Packages **246/246**. Corpus v1 et son test : INTOUCHÉS.
+- **Conséquence** : le prérequis corpus de la Phase 4 est LEVÉ — le critère
+  dur s'exerce sur le corpus ACTIF v2. Ouverture de la Phase 4 = décision
+  propriétaire.
+
 ## 2026-08-28 — 3.4 TERMINÉE : harnais de rendu VERT sur iOS ET Android
 
 - **Harnais `harness/render/`** (H1+M1+V2 validés propriétaire) : app Expo

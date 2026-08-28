@@ -599,6 +599,49 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   lui-même ne change que des chaînes de version) ; zones gelées :
   0 modification.
 
+## D-025 — ARBITRAGE C : golden corpus v2 par ré-émission (TRANCHÉ, 2026-08-28)
+
+- **Contexte** : le critère dur de la Phase 4 (« sur tout le golden corpus,
+  10 compilations → hash identique 10/10 ») est **insatisfiable avec le
+  corpus v1** face au compilateur fail-closed (D-023/D-024) : **12/12
+  documents refusés** par l'allowlist (mesuré), et **12/12 encore refusés
+  après mapping optimiste des synonymes** — l'option « transformation
+  déterministe sans LLM » est réfutée par la mesure, pas par principe.
+  Alternatives écartées avec démonstration : sous-ensemble compilable
+  (vide : 0/12), élargissement du registre (anti-D-020/D-023), corpus
+  manuel (perd la provenance-modèle, non-négociable 14), refus comptés
+  comme compilations (réinterprétation d'un critère dur).
+- **Décision (propriétaire, 2026-08-28)** : **ré-émission LLM → corpus-v2**,
+  avec les principes suivants :
+  1. `corpus-v2/` créé **À CÔTÉ** du corpus v1 — **v1 absolument intouché,
+     byte-identique** (témoin gelé de la Phase 2, L2) ;
+  2. le **corpus ACTIF** (v2) porte le critère de Phase 4 — lecture
+     consignée de « tout le golden corpus » ;
+  3. mêmes **12 intentions fixes** (comparabilité v1↔v2, 12 domaines,
+     3 classes commerce), même pipeline d'émission par sections, même
+     modèle (`claude-opus-5`, ARCHITECTURE §28 — témoin du chemin de
+     production) ;
+  4. prompt enrichi des **digests du registre de Smart Blocks** (allowlist,
+     schémas de props, liaisons d'entité, appariements F1/F2) — remède
+     prouvé 12/12 sur les capabilities ;
+  5. **`design.overrides` ABSENT/VIDE en v2** : le vocabulaire d'overrides
+     n'a pas encore de pont validateur (différé D-021) — on n'émet pas ce
+     qu'on ne sait pas valider ; évolution future par porte consciente ;
+  6. **round-trip NON exigé pour v2** : sa garantie (D-019) est structurelle
+     au schéma, inchangé (`AIR_SCHEMA_VERSION 1.0.0`) ; aucun critère de
+     Phase 4 ne l'exige ;
+  7. validation locale fail-closed aux **4 validateurs** (schéma strict,
+     sémantique, capabilities, **blocs**) — 0 diagnostic exigé 12/12 ;
+     réparation **bornée** (1 passe ciblée) ; échec → cause démontrée et
+     STOP, jamais de boucle aveugle ;
+  8. **priorité propriétaire : la réussite prime sur l'économie marginale**
+     — estimation 8-14 $, enveloppe 20-30 $ acceptée, **plafond dur codé
+     25 $** ; dépassement anormal → STOP et rapport.
+- **Critères de réussite (déclaratifs, vérifiés au rapport)** : 12/12 émis
+  et valides aux 4 validateurs · 12 domaines/3 classes commerce ·
+  ids/slugs uniques · overrides vides · CI sans réseau verte · **v1
+  byte-identique prouvé** · bruts journalisés · coût ≤ enveloppe.
+
 ## ~~P-003~~ → D-021 — Lib de styling RN : **StyleSheet + tokens maison** (TRANCHÉ, 2026-08-27)
 
 - **Contexte** : décision prise par le propriétaire le 2026-08-27 sur dossier

@@ -1,13 +1,10 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-08-28** (**3.4 TERMINÉE — HARNAIS DE RENDU VERT sur iOS ET
-> Android** : 5 écrans, 6 blocs gelés, 4 compositions, light/dark, RTL en
-> rejeu inchangé, états loading/empty/error, tap réel List→Detail [réserve
-> D-024 levée] ; défaut de composition démontré et corrigé dans le harnais
-> [ScreenShell obligatoire — note d'architecture Phase 4]. **Les 4 critères
-> de sortie de la Phase 3 sont satisfaits — clôture = constat
-> propriétaire**).
+> **2026-08-28** (**PHASE 3 CLOSE · ARBITRAGE C RÉSOLU (D-025)** : golden
+> corpus v2 émis et validé **12/12 aux 4 validateurs**, vocabulaire =
+> exactement les 6 blocs gelés, v1 byte-identique, 7,42 $ ; Phase 4
+> ouvrable sur décision propriétaire).
 
 ## ÉTAT GLOBAL
 
@@ -60,15 +57,22 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
   Sandbox + budget ~10-20 $) · coûts EAS (compte Expo/EAS) · coût projet
   Supabase (token Management API, org de test). **Phase 3 n'est plus
   bloquée** : ses deux dépendances ROADMAP sont satisfaites.
-- **Prochaine étape EXACTEMENT autorisée** : **CLÔTURE DE LA PHASE 3 par
-  constat propriétaire** — les 4 critères de sortie sont satisfaits :
-  blocs = contrat+tests+version au registre (D-024) ✓ · harnais de rendu
-  vert (3.4) ✓ · tokens web+RN depuis la source unique (3.1) ✓ · registre
-  gelé + revue propriétaire ✓. Après constat : **Phase 4 — Compilateur
-  déterministe v1** (dépendances Phases 2-3), qui exigera l'arbitrage C
-  (corpus) consigné en D-021/D-023. Les bancs de Phase 1 restants (P-002,
-  coûts EAS, coût projet Supabase) demeurent bloqués sur prérequis
-  propriétaire.
+- **ARBITRAGE C RÉSOLU (D-025, 2026-08-28)** : **golden corpus v2 ÉMIS ET
+  VALIDÉ 12/12** — campagne LLM réelle (mêmes 12 intentions, digests
+  capabilities + SMART BLOCKS au prompt), 1 passe de réparation bornée par
+  document (11-22 diagnostics → 0), 0 refus, **coût 7,42 $** (+ ~0,5 $
+  d'incident de préchargement consigné) ; contre-vérification indépendante :
+  **0 diagnostic aux 4 validateurs** (schéma, sémantique, capabilities,
+  blocs) 12/12 · vocabulaire émis = EXACTEMENT les 6 blocs du registre
+  (contre 115 types sauvages en v1) · overrides vides · ids/slugs uniques ·
+  3 classes commerce · **v1 byte-identique prouvé par scellés SHA-256** ·
+  63 tests CI sans réseau (`corpus-v2.test.ts`), packages 246/246.
+- **Prochaine étape EXACTEMENT autorisée** : **ouverture de la PHASE 4 —
+  Compilateur déterministe v1** (décision propriétaire) : AIR+lock → projet
+  Expo byte-reproductible ; critère dur : 10 compilations → hash identique
+  10/10 sur le **corpus ACTIF (v2)** ; app témoin sur émulateurs ; zéro
+  appel LLM prouvé. Les bancs de Phase 1 restants (P-002, coûts EAS, coût
+  projet Supabase) demeurent bloqués sur prérequis propriétaire.
 - **INTERDIT à ce stade** : toute phase dont les dépendances ROADMAP ne
   sont pas satisfaites (Phases 4+ dépendent de 2/3), tout push sans accord
   explicite, toute décision P-00x sans les mesures prévues, toute

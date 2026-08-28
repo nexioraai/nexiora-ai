@@ -1,0 +1,1720 @@
+{
+  "actions": [
+    {
+      "effect": {
+        "capability": "auth",
+        "kind": "capability",
+        "method": "signIn",
+        "params": [
+          {
+            "key": "mode",
+            "value": "email_password"
+          },
+          {
+            "key": "allowOfflineSession",
+            "value": true
+          }
+        ]
+      },
+      "id": "act_authentifier_utilisateur",
+      "name": "Authentifier le compagnon ou le client au lancement",
+      "trigger": {
+        "event": "app_start",
+        "kind": "lifecycle"
+      }
+    },
+    {
+      "effect": {
+        "capability": "offline_storage",
+        "kind": "capability",
+        "method": "prefetch",
+        "params": [
+          {
+            "key": "entities",
+            "value": [
+              "ent_chantier",
+              "ent_releve",
+              "ent_incident"
+            ]
+          },
+          {
+            "key": "maxAgeHours",
+            "value": 72
+          }
+        ]
+      },
+      "id": "act_precharger_donnees_hors_ligne",
+      "name": "Précharger les chantiers pour consultation hors ligne",
+      "trigger": {
+        "event": "app_start",
+        "kind": "lifecycle"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_sync_hors_ligne"
+      },
+      "id": "act_synchroniser_hors_ligne",
+      "name": "Synchroniser la file locale des relevés et incidents",
+      "trigger": {
+        "blockId": "blk_chantiers_sync",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_chantier_detail"
+      },
+      "id": "act_ouvrir_chantier",
+      "name": "Ouvrir le détail d'avancement d'un chantier",
+      "trigger": {
+        "blockId": "blk_chantiers_liste",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_calcul_avancement"
+      },
+      "id": "act_calculer_avancement_consolide",
+      "name": "Calculer l'avancement consolidé à l'ouverture du chantier",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_chantier_detail"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_rapport_nouveau"
+      },
+      "id": "act_ouvrir_nouveau_releve",
+      "name": "Ouvrir le formulaire de nouveau relevé",
+      "trigger": {
+        "blockId": "blk_chantier_cta_releve",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_incident_nouveau"
+      },
+      "id": "act_ouvrir_nouvel_incident",
+      "name": "Ouvrir le formulaire de déclaration d'incident",
+      "trigger": {
+        "blockId": "blk_chantier_cta_incident",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "camera",
+        "kind": "capability",
+        "method": "capturePhoto",
+        "params": [
+          {
+            "key": "quality",
+            "value": "high"
+          },
+          {
+            "key": "saveToLibrary",
+            "value": false
+          },
+          {
+            "key": "allowFlash",
+            "value": true
+          }
+        ]
+      },
+      "id": "act_capturer_photo_chantier",
+      "name": "Prendre une photo d'avancement du chantier",
+      "trigger": {
+        "blockId": "blk_releve_photo_cta",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "geolocation",
+        "kind": "capability",
+        "method": "getCurrentPosition",
+        "params": [
+          {
+            "key": "accuracy",
+            "value": "balanced"
+          },
+          {
+            "key": "timeoutMs",
+            "value": 8000
+          }
+        ]
+      },
+      "id": "act_horodater_position_releve",
+      "name": "Relever la position GPS du chantier à l'ouverture du formulaire",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_rapport_nouveau"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_releve",
+        "kind": "mutation",
+        "operation": "create"
+      },
+      "id": "act_enregistrer_releve",
+      "name": "Enregistrer le relevé d'avancement",
+      "trigger": {
+        "blockId": "blk_releve_formulaire",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_preparation_photo"
+      },
+      "id": "act_optimiser_photo_releve",
+      "name": "Compresser et horodater la photo avant envoi différé",
+      "trigger": {
+        "event": "screen_close",
+        "kind": "lifecycle",
+        "screenId": "scr_rapport_nouveau"
+      }
+    },
+    {
+      "effect": {
+        "capability": "media_upload",
+        "kind": "capability",
+        "method": "pickImage",
+        "params": [
+          {
+            "key": "maxItems",
+            "value": 3
+          },
+          {
+            "key": "mimeTypes",
+            "value": [
+              "image/jpeg",
+              "image/png"
+            ]
+          }
+        ]
+      },
+      "id": "act_importer_photo_existante",
+      "name": "Importer une photo depuis la galerie de l'appareil",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_incident_nouveau"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_incident",
+        "kind": "mutation",
+        "operation": "create"
+      },
+      "id": "act_enregistrer_incident",
+      "name": "Consigner l'incident constaté",
+      "trigger": {
+        "blockId": "blk_incident_formulaire",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "push_notifications",
+        "kind": "capability",
+        "method": "sendLocalNotification",
+        "params": [
+          {
+            "key": "titleKey",
+            "value": "notification.incident.titre"
+          },
+          {
+            "key": "bodyKey",
+            "value": "notification.incident.corps"
+          },
+          {
+            "key": "channel",
+            "value": "incidents_chantier"
+          }
+        ]
+      },
+      "id": "act_notifier_incident",
+      "name": "Notifier le conducteur de travaux d'un nouvel incident",
+      "trigger": {
+        "entityId": "ent_incident",
+        "event": "created",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "capability": "analytics",
+        "kind": "capability",
+        "method": "trackEvent",
+        "params": [
+          {
+            "key": "eventName",
+            "value": "releve_avancement_cree"
+          },
+          {
+            "key": "source",
+            "value": "application_terrain"
+          }
+        ]
+      },
+      "id": "act_journaliser_releve_publie",
+      "name": "Journaliser la publication d'un relevé d'avancement",
+      "trigger": {
+        "entityId": "ent_releve",
+        "event": "created",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "capability": "analytics",
+        "kind": "capability",
+        "method": "trackEvent",
+        "params": [
+          {
+            "key": "eventName",
+            "value": "chantier_avancement_maj"
+          }
+        ]
+      },
+      "id": "act_journaliser_avancement_chantier",
+      "name": "Journaliser la mise à jour de l'avancement d'un chantier",
+      "trigger": {
+        "entityId": "ent_chantier",
+        "event": "updated",
+        "kind": "data"
+      }
+    }
+  ],
+  "airSchemaVersion": "1.0.0",
+  "app": {
+    "description": [
+      {
+        "locale": "fr-FR",
+        "text": "Application interne BTP : les chefs de chantier photographient l'avancement des travaux et consignent les incidents ; les clients consultent l'avancement de leur chantier, y compris hors ligne."
+      }
+    ],
+    "locales": {
+      "appLocales": [
+        "fr-FR"
+      ],
+      "contentLocales": [
+        "fr-FR"
+      ],
+      "defaultAppLocale": "fr-FR",
+      "rtlSupported": false,
+      "userLanguage": "fr-FR"
+    },
+    "name": "Suivi Chantier BTP",
+    "slug": "suivi-chantier-btp"
+  },
+  "capabilities": [
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "providers",
+          "value": [
+            "email_password"
+          ]
+        },
+        {
+          "key": "sessionDurationDays",
+          "value": 30
+        },
+        {
+          "key": "accountDeletionEnabled",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "camera",
+      "config": [
+        {
+          "key": "defaultFacing",
+          "value": "back"
+        },
+        {
+          "key": "videoEnabled",
+          "value": false
+        },
+        {
+          "key": "maxPhotoWidth",
+          "value": 2048
+        }
+      ]
+    },
+    {
+      "capability": "media_upload",
+      "config": [
+        {
+          "key": "maxFileSizeMb",
+          "value": 10
+        },
+        {
+          "key": "acceptedMimeTypes",
+          "value": [
+            "image/jpeg",
+            "image/png"
+          ]
+        }
+      ]
+    },
+    {
+      "capability": "geolocation",
+      "config": [
+        {
+          "key": "backgroundUpdates",
+          "value": false
+        },
+        {
+          "key": "accuracy",
+          "value": "balanced"
+        }
+      ]
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "encrypted",
+          "value": true
+        },
+        {
+          "key": "maxCacheMb",
+          "value": 250
+        },
+        {
+          "key": "conflictStrategy",
+          "value": "server_wins_with_local_queue"
+        }
+      ]
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "channels",
+          "value": [
+            "incidents_chantier",
+            "synchronisation"
+          ]
+        },
+        {
+          "key": "scheduledLocalEnabled",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "collectDiagnostics",
+          "value": true
+        },
+        {
+          "key": "anonymizeUserId",
+          "value": true
+        }
+      ]
+    }
+  ],
+  "compliance": {
+    "accountDeletionRequired": true,
+    "commerceClass": "none",
+    "dataCollected": [
+      "contact_info",
+      "identifiers",
+      "usage_data",
+      "location",
+      "user_content",
+      "diagnostics"
+    ]
+  },
+  "datasets": [
+    {
+      "contentHash": "3f9c1b7ae5d284016c7b0f4d9a2e83bb51cd67a4e0f92b3c8d14576ae9b0c2d7",
+      "entityId": "ent_chantier",
+      "id": "data_chantiers_demo",
+      "rowCount": 4
+    },
+    {
+      "contentHash": "a1d84f60b93c27e5081fa4d6c3b7902ee5148ab7cf03d926b481e7205cfa93d1",
+      "entityId": "ent_releve",
+      "id": "data_releves_demo",
+      "rowCount": 9
+    },
+    {
+      "contentHash": "7b25e0c9438da6f1502cb87e3d9046af1c6b52903ed7418aa2f5c0361be94d88",
+      "entityId": "ent_incident",
+      "id": "data_incidents_demo",
+      "rowCount": 5
+    }
+  ],
+  "design": {
+    "theme": "chantier_industriel",
+    "tokensVersion": "1.0.0"
+  },
+  "entities": [
+    {
+      "fields": [
+        {
+          "id": "fld_chantier_reference",
+          "name": "reference",
+          "required": true,
+          "type": "string",
+          "unique": true
+        },
+        {
+          "id": "fld_chantier_nom",
+          "name": "nom",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_chantier_client",
+          "name": "client_nom",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_chantier_adresse",
+          "name": "adresse",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "enumValues": [
+            "planifie",
+            "en_cours",
+            "suspendu",
+            "receptionne"
+          ],
+          "id": "fld_chantier_statut",
+          "name": "statut",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_chantier_avancement",
+          "name": "avancement_pct",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "id": "fld_chantier_date_debut",
+          "name": "date_debut",
+          "required": true,
+          "type": "date"
+        },
+        {
+          "id": "fld_chantier_date_fin_prevue",
+          "name": "date_fin_prevue",
+          "required": false,
+          "type": "date"
+        },
+        {
+          "id": "fld_chantier_chef",
+          "name": "chef_de_chantier",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_chantier_photo_couverture",
+          "name": "photo_couverture",
+          "required": false,
+          "type": "asset"
+        },
+        {
+          "id": "fld_chantier_derniere_sync",
+          "name": "derniere_synchronisation",
+          "required": false,
+          "type": "datetime"
+        }
+      ],
+      "id": "ent_chantier",
+      "name": "chantier"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_releve_titre",
+          "name": "titre",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_releve_chantier",
+          "name": "chantier",
+          "referencesEntityId": "ent_chantier",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "id": "fld_releve_date",
+          "name": "date_releve",
+          "required": true,
+          "type": "datetime"
+        },
+        {
+          "id": "fld_releve_avancement",
+          "name": "avancement_pct",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "id": "fld_releve_commentaire",
+          "name": "commentaire",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "id": "fld_releve_photo",
+          "name": "photo",
+          "required": true,
+          "type": "asset"
+        },
+        {
+          "id": "fld_releve_auteur",
+          "name": "auteur",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_releve_latitude",
+          "name": "latitude",
+          "required": false,
+          "type": "decimal"
+        },
+        {
+          "id": "fld_releve_longitude",
+          "name": "longitude",
+          "required": false,
+          "type": "decimal"
+        },
+        {
+          "id": "fld_releve_synchronise",
+          "name": "synchronise",
+          "required": true,
+          "type": "boolean"
+        }
+      ],
+      "id": "ent_releve",
+      "name": "releve_avancement"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_incident_titre",
+          "name": "titre",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_incident_chantier",
+          "name": "chantier",
+          "referencesEntityId": "ent_chantier",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "id": "fld_incident_date",
+          "name": "date_constat",
+          "required": true,
+          "type": "datetime"
+        },
+        {
+          "enumValues": [
+            "mineur",
+            "majeur",
+            "critique"
+          ],
+          "id": "fld_incident_gravite",
+          "name": "gravite",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "enumValues": [
+            "ouvert",
+            "en_traitement",
+            "resolu"
+          ],
+          "id": "fld_incident_statut",
+          "name": "statut",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_incident_description",
+          "name": "description",
+          "required": true,
+          "type": "text"
+        },
+        {
+          "id": "fld_incident_photo",
+          "name": "photo",
+          "required": false,
+          "type": "asset"
+        },
+        {
+          "id": "fld_incident_declarant",
+          "name": "declarant",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_incident_synchronise",
+          "name": "synchronise",
+          "required": true,
+          "type": "boolean"
+        }
+      ],
+      "id": "ent_incident",
+      "name": "incident"
+    }
+  ],
+  "expectedTests": [
+    {
+      "description": "Au lancement, l'écran d'entrée affiché est la liste des chantiers avec son en-tête et sa liste rattachée à l'entité chantier.",
+      "id": "test_navigation_entree_chantiers",
+      "kind": "deterministic",
+      "targetId": "scr_chantiers"
+    },
+    {
+      "description": "Règle rule_chantier_avancement_borne : un chantier dont l'avancement vaut -5 ou 120 est rejeté, alors que 0, 50 et 100 sont acceptés.",
+      "id": "test_regle_avancement_borne",
+      "kind": "deterministic",
+      "targetId": "ent_chantier"
+    },
+    {
+      "description": "Règle rule_releve_photo_obligatoire : la création d'un relevé sans photo ou sans date de relevé est refusée par la validation.",
+      "id": "test_regle_releve_photo_obligatoire",
+      "kind": "deterministic",
+      "targetId": "ent_releve"
+    },
+    {
+      "description": "Règle rule_incident_description_complete : un incident sans description ou avec une gravité hors liste (par exemple « bloquant ») est rejeté.",
+      "id": "test_regle_incident_description_complete",
+      "kind": "deterministic",
+      "targetId": "ent_incident"
+    },
+    {
+      "description": "Règle rule_client_releves_synchronises : un client ne reçoit que les relevés dont le champ synchronise vaut true ; les brouillons locaux sont exclus.",
+      "id": "test_autorisation_client_releves",
+      "kind": "deterministic",
+      "targetId": "ent_releve"
+    },
+    {
+      "description": "Règle rule_client_incidents_visibles : un client ne voit que les incidents synchronisés et non au statut « ouvert ».",
+      "id": "test_autorisation_client_incidents",
+      "kind": "deterministic",
+      "targetId": "ent_incident"
+    },
+    {
+      "description": "Contrat du slot slot_sync_hors_ligne déclenché par l'action de synchronisation : la file locale de relevés et d'incidents est traitée et elementsRestants, synchroniseLe et conflits sont retournés.",
+      "id": "test_slot_sync_hors_ligne",
+      "kind": "contract",
+      "targetId": "act_synchroniser_hors_ligne"
+    },
+    {
+      "description": "Contrat du slot slot_calcul_avancement : l'action d'ouverture du chantier renvoie un avancement consolidé entre 0 et 100 et une tendance à partir de l'historique des relevés.",
+      "id": "test_slot_calcul_avancement",
+      "kind": "contract",
+      "targetId": "act_calculer_avancement_consolide"
+    },
+    {
+      "description": "Contrat du slot slot_preparation_photo : l'action d'optimisation retourne une image horodatée et une taille en kilo-octets inférieure à l'original.",
+      "id": "test_slot_preparation_photo",
+      "kind": "contract",
+      "targetId": "act_optimiser_photo_releve"
+    },
+    {
+      "description": "Contrat de l'intégration intg_offline_store via le préchargement : chantiers, relevés et incidents sont écrits puis relus sans réseau en respectant la stratégie de conflit.",
+      "id": "test_integration_offline_store",
+      "kind": "contract",
+      "targetId": "act_precharger_donnees_hors_ligne"
+    },
+    {
+      "description": "Contrat de l'intégration intg_auth_backend via l'action d'authentification : une session hors ligne reste valide pendant la durée configurée et l'endpoint de suppression de compte est exposé.",
+      "id": "test_integration_auth_offline",
+      "kind": "contract",
+      "targetId": "act_authentifier_utilisateur"
+    },
+    {
+      "description": "Parcours complet : le chef de chantier ouvre un chantier, prend une photo, enregistre un relevé sans réseau, puis la synchronisation l'envoie au retour de la connexion.",
+      "id": "test_e2e_releve_photo_hors_ligne",
+      "kind": "e2e",
+      "targetId": "act_enregistrer_releve"
+    },
+    {
+      "description": "Parcours complet : consignation d'un incident depuis le formulaire puis émission de la notification locale au conducteur de travaux.",
+      "id": "test_e2e_declaration_incident",
+      "kind": "e2e",
+      "targetId": "act_enregistrer_incident"
+    },
+    {
+      "description": "Parcours complet : un client sans réseau consulte l'avancement de son chantier et l'historique des relevés préchargés.",
+      "id": "test_e2e_consultation_client_hors_ligne",
+      "kind": "e2e",
+      "targetId": "act_precharger_donnees_hors_ligne"
+    },
+    {
+      "description": "Parcours complet : l'appui sur le bouton de synchronisation vide la file locale et met à jour la date de dernière synchronisation affichée.",
+      "id": "test_e2e_synchronisation_manuelle",
+      "kind": "e2e",
+      "targetId": "act_synchroniser_hors_ligne"
+    }
+  ],
+  "integrations": [
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.suivi-chantier-btp.app/auth"
+        },
+        {
+          "key": "providers",
+          "value": [
+            "email_password"
+          ]
+        },
+        {
+          "key": "offlineSessionCacheHours",
+          "value": 72
+        },
+        {
+          "key": "accountDeletionEndpoint",
+          "value": "/v1/compte/suppression"
+        }
+      ],
+      "id": "intg_auth_backend",
+      "providerClass": "managed_auth"
+    },
+    {
+      "capability": "camera",
+      "config": [
+        {
+          "key": "defaultFacing",
+          "value": "back"
+        },
+        {
+          "key": "videoEnabled",
+          "value": false
+        },
+        {
+          "key": "maxPhotoWidth",
+          "value": 2048
+        },
+        {
+          "key": "embedTimestampMetadata",
+          "value": true
+        }
+      ],
+      "id": "intg_camera_native",
+      "providerClass": "native_camera"
+    },
+    {
+      "capability": "media_upload",
+      "config": [
+        {
+          "key": "maxFileSizeMb",
+          "value": 10
+        },
+        {
+          "key": "acceptedMimeTypes",
+          "value": [
+            "image/jpeg",
+            "image/png"
+          ]
+        },
+        {
+          "key": "uploadEndpoint",
+          "value": "https://api.suivi-chantier-btp.app/v1/medias"
+        },
+        {
+          "key": "deferredUploadEnabled",
+          "value": true
+        }
+      ],
+      "id": "intg_media_picker",
+      "providerClass": "native_media_picker"
+    },
+    {
+      "capability": "geolocation",
+      "config": [
+        {
+          "key": "accuracy",
+          "value": "balanced"
+        },
+        {
+          "key": "backgroundUpdates",
+          "value": false
+        },
+        {
+          "key": "timeoutMs",
+          "value": 8000
+        }
+      ],
+      "id": "intg_geolocation_native",
+      "providerClass": "native_location"
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "engine",
+          "value": "sqlite"
+        },
+        {
+          "key": "encrypted",
+          "value": true
+        },
+        {
+          "key": "maxCacheMb",
+          "value": 250
+        },
+        {
+          "key": "conflictStrategy",
+          "value": "server_wins_with_local_queue"
+        },
+        {
+          "key": "syncEndpoint",
+          "value": "https://api.suivi-chantier-btp.app/v1/synchronisation"
+        }
+      ],
+      "id": "intg_offline_store",
+      "providerClass": "encrypted_local_store"
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "channels",
+          "value": [
+            "incidents_chantier",
+            "synchronisation"
+          ]
+        },
+        {
+          "key": "scheduledLocalEnabled",
+          "value": true
+        },
+        {
+          "key": "deviceRegistrationEndpoint",
+          "value": "https://api.suivi-chantier-btp.app/v1/appareils"
+        }
+      ],
+      "id": "intg_push_notifications",
+      "providerClass": "managed_push"
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "ingestEndpoint",
+          "value": "https://api.suivi-chantier-btp.app/v1/analytics"
+        },
+        {
+          "key": "anonymizeUserId",
+          "value": true
+        },
+        {
+          "key": "collectDiagnostics",
+          "value": true
+        },
+        {
+          "key": "offlineEventBuffer",
+          "value": true
+        }
+      ],
+      "id": "intg_analytics_produit",
+      "providerClass": "managed_analytics"
+    }
+  ],
+  "native": {
+    "minAndroidSdk": 26,
+    "minIosVersion": "16.0"
+  },
+  "navigation": {
+    "entryScreenId": "scr_chantiers",
+    "routes": [
+      {
+        "id": "nav_chantiers",
+        "screenId": "scr_chantiers",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Mes chantiers"
+          }
+        ]
+      },
+      {
+        "id": "nav_chantier_detail",
+        "screenId": "scr_chantier_detail",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Avancement du chantier"
+          }
+        ]
+      },
+      {
+        "id": "nav_rapport_nouveau",
+        "screenId": "scr_rapport_nouveau",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Nouveau relevé"
+          }
+        ]
+      },
+      {
+        "id": "nav_incident_nouveau",
+        "screenId": "scr_incident_nouveau",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Consigner un incident"
+          }
+        ]
+      }
+    ]
+  },
+  "network": {
+    "allowedDomains": [
+      "api.suivi-chantier-btp.app"
+    ],
+    "policy": "deny_by_default"
+  },
+  "permissions": [
+    {
+      "permission": "NSCameraUsageDescription",
+      "platform": "ios",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "L'appareil photo permet aux chefs de chantier de photographier l'avancement des travaux et les incidents constatés."
+        }
+      ],
+      "requiredByCapability": "camera"
+    },
+    {
+      "permission": "NSMicrophoneUsageDescription",
+      "platform": "ios",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "Le microphone est utilisé par le module de capture lors de l'enregistrement d'un constat sonorisé sur le chantier."
+        }
+      ],
+      "requiredByCapability": "camera"
+    },
+    {
+      "permission": "android.permission.CAMERA",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "L'appareil photo permet aux chefs de chantier de photographier l'avancement des travaux et les incidents constatés."
+        }
+      ],
+      "requiredByCapability": "camera"
+    },
+    {
+      "permission": "android.permission.RECORD_AUDIO",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "Le microphone est utilisé par le module de capture lors de l'enregistrement d'un constat sonorisé sur le chantier."
+        }
+      ],
+      "requiredByCapability": "camera"
+    },
+    {
+      "permission": "NSPhotoLibraryUsageDescription",
+      "platform": "ios",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "L'accès à la photothèque permet de joindre à un relevé ou un incident une photo déjà prise sur le chantier."
+        }
+      ],
+      "requiredByCapability": "media_upload"
+    },
+    {
+      "permission": "android.permission.READ_MEDIA_IMAGES",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "L'accès aux images de l'appareil permet de joindre à un relevé ou un incident une photo déjà prise sur le chantier."
+        }
+      ],
+      "requiredByCapability": "media_upload"
+    },
+    {
+      "permission": "NSLocationWhenInUseUsageDescription",
+      "platform": "ios",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "La position sert à rattacher automatiquement chaque relevé photo au bon chantier."
+        }
+      ],
+      "requiredByCapability": "geolocation"
+    },
+    {
+      "permission": "android.permission.ACCESS_FINE_LOCATION",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "La position sert à rattacher automatiquement chaque relevé photo au bon chantier."
+        }
+      ],
+      "requiredByCapability": "geolocation"
+    },
+    {
+      "permission": "android.permission.POST_NOTIFICATIONS",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "Les notifications signalent les nouveaux incidents et la fin des synchronisations hors ligne."
+        }
+      ],
+      "requiredByCapability": "push_notifications"
+    }
+  ],
+  "projectId": "prj_btp_suivi_chantier",
+  "relations": [
+    {
+      "fromEntityId": "ent_chantier",
+      "id": "rel_chantier_releves",
+      "kind": "one_to_many",
+      "toEntityId": "ent_releve"
+    },
+    {
+      "fromEntityId": "ent_chantier",
+      "id": "rel_chantier_incidents",
+      "kind": "one_to_many",
+      "toEntityId": "ent_incident"
+    }
+  ],
+  "rules": [
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_chantier_avancement",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_chantier_avancement",
+          "operator": "gte",
+          "value": 0
+        },
+        {
+          "fieldId": "fld_chantier_avancement",
+          "operator": "lte",
+          "value": 100
+        }
+      ],
+      "description": "L'avancement d'un chantier est un pourcentage compris entre 0 et 100.",
+      "entityId": "ent_chantier",
+      "id": "rule_chantier_avancement_borne",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_chantier_statut",
+          "operator": "in",
+          "value": [
+            "planifie",
+            "en_cours",
+            "suspendu",
+            "receptionne"
+          ]
+        }
+      ],
+      "description": "Le statut du chantier doit appartenir à la liste autorisée.",
+      "entityId": "ent_chantier",
+      "id": "rule_chantier_statut_valide",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_releve_photo",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_releve_date",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_releve_avancement",
+          "operator": "gte",
+          "value": 0
+        },
+        {
+          "fieldId": "fld_releve_avancement",
+          "operator": "lte",
+          "value": 100
+        }
+      ],
+      "description": "Chaque relevé d'avancement doit comporter une photo, une date et un pourcentage valide.",
+      "entityId": "ent_releve",
+      "id": "rule_releve_photo_obligatoire",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_incident_gravite",
+          "operator": "in",
+          "value": [
+            "mineur",
+            "majeur",
+            "critique"
+          ]
+        },
+        {
+          "fieldId": "fld_incident_statut",
+          "operator": "in",
+          "value": [
+            "ouvert",
+            "en_traitement",
+            "resolu"
+          ]
+        },
+        {
+          "fieldId": "fld_incident_description",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_incident_declarant",
+          "operator": "required"
+        }
+      ],
+      "description": "Un incident doit préciser sa gravité, son statut et une description détaillée.",
+      "entityId": "ent_incident",
+      "id": "rule_incident_description_complete",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_releve_synchronise",
+          "operator": "eq",
+          "value": true
+        }
+      ],
+      "description": "Le client ne peut consulter que les relevés d'avancement validés et synchronisés avec le serveur.",
+      "entityId": "ent_releve",
+      "id": "rule_client_releves_synchronises",
+      "kind": "authorization"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_incident_synchronise",
+          "operator": "eq",
+          "value": true
+        },
+        {
+          "fieldId": "fld_incident_statut",
+          "operator": "neq",
+          "value": "ouvert"
+        }
+      ],
+      "description": "Le client ne voit que les incidents synchronisés qui ne sont pas des brouillons locaux.",
+      "entityId": "ent_incident",
+      "id": "rule_client_incidents_visibles",
+      "kind": "authorization"
+    }
+  ],
+  "screens": [
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_chantiers_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes chantiers"
+            },
+            {
+              "key": "subtitle",
+              "value": "Avancement consultable même hors connexion"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_chantier",
+          "id": "blk_chantiers_liste",
+          "props": [
+            {
+              "key": "title",
+              "value": "Chantiers suivis"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_chantier_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_chantier_client"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_chantier_avancement"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_chantier_statut"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun chantier disponible"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Les chantiers qui vous sont affectés apparaîtront ici après la première synchronisation."
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_chantiers_sync",
+          "props": [
+            {
+              "key": "label",
+              "value": "Synchroniser les données hors ligne"
+            },
+            {
+              "key": "actionId",
+              "value": "act_synchroniser_hors_ligne"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ],
+      "id": "scr_chantiers",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Mes chantiers"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "detail_header",
+          "entityId": "ent_chantier",
+          "id": "blk_chantier_entete",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_chantier_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_chantier_adresse"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_chantier_avancement"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_chantier_statut",
+                "fld_chantier_derniere_sync"
+              ]
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_releve",
+          "id": "blk_chantier_releves",
+          "props": [
+            {
+              "key": "title",
+              "value": "Relevés d'avancement"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_releve_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_releve_date"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_releve_avancement"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_releve_synchronise"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun relevé enregistré"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Le chef de chantier n'a pas encore publié de photo d'avancement pour ce chantier."
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_incident",
+          "id": "blk_chantier_incidents",
+          "props": [
+            {
+              "key": "title",
+              "value": "Incidents consignés"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_incident_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_incident_date"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_incident_statut"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_incident_gravite"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun incident"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Aucun incident n'a été déclaré sur ce chantier à ce jour."
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_chantier_cta_releve",
+          "props": [
+            {
+              "key": "label",
+              "value": "Ajouter un relevé photo"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_nouveau_releve"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_chantier_cta_incident",
+          "props": [
+            {
+              "key": "label",
+              "value": "Consigner un incident"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_nouvel_incident"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ],
+      "id": "scr_chantier_detail",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Avancement du chantier"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_releve_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Nouveau relevé d'avancement"
+            },
+            {
+              "key": "subtitle",
+              "value": "Photo horodatée, enregistrée localement puis envoyée dès le retour du réseau"
+            }
+          ]
+        },
+        {
+          "blockType": "form",
+          "entityId": "ent_releve",
+          "id": "blk_releve_formulaire",
+          "props": [
+            {
+              "key": "title",
+              "value": "Détail du relevé"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_releve_titre",
+                "fld_releve_chantier",
+                "fld_releve_date",
+                "fld_releve_avancement",
+                "fld_releve_photo",
+                "fld_releve_commentaire",
+                "fld_releve_auteur"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Enregistrer le relevé"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_releve_photo_cta",
+          "props": [
+            {
+              "key": "label",
+              "value": "Prendre une photo du chantier"
+            },
+            {
+              "key": "actionId",
+              "value": "act_capturer_photo_chantier"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ],
+      "id": "scr_rapport_nouveau",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Nouveau relevé"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_incident_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Déclaration d'incident"
+            },
+            {
+              "key": "subtitle",
+              "value": "Décrivez précisément le fait constaté sur le chantier"
+            }
+          ]
+        },
+        {
+          "blockType": "form",
+          "entityId": "ent_incident",
+          "id": "blk_incident_formulaire",
+          "props": [
+            {
+              "key": "title",
+              "value": "Détail de l'incident"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_incident_titre",
+                "fld_incident_chantier",
+                "fld_incident_date",
+                "fld_incident_gravite",
+                "fld_incident_statut",
+                "fld_incident_description",
+                "fld_incident_photo",
+                "fld_incident_declarant"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Consigner l'incident"
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_incident_file_attente",
+          "props": [
+            {
+              "key": "title",
+              "value": "Aucun incident en attente d'envoi"
+            },
+            {
+              "key": "message",
+              "value": "Les incidents saisis hors ligne restent stockés sur l'appareil jusqu'à la prochaine synchronisation."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Synchroniser maintenant"
+            },
+            {
+              "key": "actionId",
+              "value": "act_synchroniser_hors_ligne"
+            }
+          ]
+        }
+      ],
+      "id": "scr_incident_nouveau",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Consigner un incident"
+        }
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "allowedImports": [
+        "air/std/json",
+        "air/std/date",
+        "air/std/storage"
+      ],
+      "description": "Réconcilie la file locale des relevés et incidents créés hors ligne avec le backend, et renvoie le nombre d'éléments restants et l'horodatage de synchronisation.",
+      "id": "slot_sync_hors_ligne",
+      "inputs": [
+        {
+          "name": "chantierId",
+          "type": "reference"
+        },
+        {
+          "name": "derniereSync",
+          "type": "datetime"
+        },
+        {
+          "name": "fileLocale",
+          "type": "json"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "elementsRestants",
+          "type": "number"
+        },
+        {
+          "name": "synchroniseLe",
+          "type": "datetime"
+        },
+        {
+          "name": "conflits",
+          "type": "json"
+        }
+      ]
+    },
+    {
+      "allowedImports": [
+        "air/std/media",
+        "air/std/date"
+      ],
+      "description": "Compresse et horodate la photo de chantier avant stockage local puis envoi différé.",
+      "id": "slot_preparation_photo",
+      "inputs": [
+        {
+          "name": "photoSource",
+          "type": "asset"
+        },
+        {
+          "name": "priseLe",
+          "type": "datetime"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "photoOptimisee",
+          "type": "asset"
+        },
+        {
+          "name": "tailleKo",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "allowedImports": [
+        "air/std/math",
+        "air/std/date"
+      ],
+      "description": "Calcule le pourcentage d'avancement consolidé d'un chantier à partir de l'historique des relevés.",
+      "id": "slot_calcul_avancement",
+      "inputs": [
+        {
+          "name": "chantierId",
+          "type": "reference"
+        },
+        {
+          "name": "releves",
+          "type": "json"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "avancementConsolide",
+          "type": "decimal"
+        },
+        {
+          "name": "tendance",
+          "type": "string"
+        }
+      ]
+    }
+  ]
+}
