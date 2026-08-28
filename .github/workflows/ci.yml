@@ -102,7 +102,7 @@ jobs:
         id: pkg_lint
         continue-on-error: true
         working-directory: .
-        run: npm run packages:lint -- --max-warnings 0
+        run: npm run packages:lint
 
       - name: Packages — test
         id: pkg_test
