@@ -1,0 +1,17 @@
+# EXTENSION P-003 (2 candidats ajoutés) — mêmes méthodes que les 4 premiers.
+# Bundle JS : expo export --platform ios, taille du .hbc (du -sk).
+#   MÉTHODE VALIDÉE : ré-export du candidat de référence => 1436 Ko,
+#   identique à la valeur versionnée du 2026-08-27 (poids-bundles-js.txt).
+stylesheet: 1436 (référence, re-mesuré 2026-08-27 : identique)
+restyle:    1456 (+20)
+uniwind:    1728 (+292)
+
+# Poids .app Release-iphonesimulator (du -sk)
+stylesheet: 53092 Ko (référence, valeur versionnée)
+restyle:    53108 Ko (delta +16 Ko)
+uniwind:    53380 Ko (delta +288 Ko)
+
+# Poids APK release universel (du -sk)
+stylesheet: 66960 Ko (référence, valeur versionnée)
+restyle:    66972 Ko (delta +12 Ko)
+uniwind:    67188 Ko (delta +228 Ko)
