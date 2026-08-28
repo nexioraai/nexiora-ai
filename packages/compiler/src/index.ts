@@ -20,6 +20,8 @@ export {
 } from "./artifact-store.ts";
 export type { ArtifactStore, StoredProject } from "./artifact-store.ts";
 export { EMBEDDED_TEMPLATE } from "./embedded-template.generated.ts";
+export { buildDemoFixtures } from "./demo-fixtures.ts";
+export type { DemoInstance } from "./demo-fixtures.ts";
 export { EMBEDDED_SOURCES, buildEmbeddedAssets, rewriteEmbeddedSource } from "./embed-lib.ts";
 export {
   EMBEDDED_ASSETS,

@@ -1,0 +1,27 @@
+{
+  "name": "@deribfy/provisioner",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Backend Provisioner v1 (Phase 5, D-032) — générateur SQL déterministe AIR→Supabase + interface de provisioning (§15) + implémentation Supabase Management API",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@deribfy/air-schema": "*",
+    "@deribfy/compiler": "*",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "eslint": "^9.39.0",
+    "typescript": "^5",
+    "typescript-eslint": "^8.60.0",
+    "vitest": "^4.1.10"
+  }
+}

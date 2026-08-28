@@ -111,8 +111,22 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
   2026-08-28). **PHASE 5 OUVERTE** (dépendances : Phase 2 ✅ · P-004 ✅),
   découpage 5.1→5.5 consigné D-032, exécution sans nouvel arrêt sauf
   décision/manuel/dépense. Budget : 0 $.
-- **Prochaine étape EXACTEMENT autorisée** : 5.1 (générateur SQL
-  déterministe) → … → 5.5, dans l'ordre D-032. Critère dur
+- **Phase 5 — état** : **5.1 🟢** générateur SQL déterministe
+  (`@deribfy/provisioner`, 16 tests : 12/12 corpus, déterminisme
+  rejeux+permutation, fail-closed, patron §7) · **5.2 🟢** interface §15 +
+  impl Supabase (plan free exigé avant création, refs possédés seuls
+  supprimables) · **5.3 🟢** cycles RÉELS prouvés séquentiellement sur 2
+  apps (resto, agence-immo) : provision ~9,5 s, SQL appliqué ~1,5 s,
+  barrières, vérifs indépendantes (tables/RLS partout/seeds exacts),
+  **rejouabilité**, teardown prouvé, **SQL archivé au store SHA-256** ·
+  **5.4 🟠 PARTIEL** : app↛cœur ✅ (401), cœur↛app ✅, deny-by-default
+  anon ✅ (200/0 ligne vs seeds côté service) — **le croisé strict A↔B
+  (2 apps générées SIMULTANÉES) est BLOQUÉ : limite de 2 projets free
+  actifs PAR COMPTE [démontrée par l'API], nexiora-ai occupant 1 place
+  en permanence** · packages 350/350, web intact (tsc 0 + 4071/4071).
+- **Prochaine étape** : intervention propriétaire pour débloquer le
+  croisé A↔B de 5.4 (2ᵉ compte de test gratuit OU upgrade payant —
+  arbitrage), puis 5.5 clôture. Critère dur
   inchangé : 10 compilations → hash identique 10/10 sur le **corpus ACTIF
   (v2)** ; app témoin sur émulateurs iOS et Android ; zéro appel LLM prouvé
   par instrumentation. Les bancs de Phase 1 restants (P-002, coûts EAS,

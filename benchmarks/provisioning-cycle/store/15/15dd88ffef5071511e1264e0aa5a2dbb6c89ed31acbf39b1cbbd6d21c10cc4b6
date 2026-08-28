@@ -1,0 +1,131 @@
+-- GÉNÉRÉ PAR @deribfy/provisioner (D-032) — NE PAS ÉDITER.
+-- projectId: prj_resto_quartier_abidjan
+-- airHash: f9f5894172b852380e9e2ca6641048d45fa55bcee9ab0c7c2fa67a0a4dbfaf34
+-- releaseTrain: rt-2026.08@1.0.0
+-- Idempotent-rejouable ; barrières fail-closed par section.
+
+-- ===== SECTION 1 : TABLES =====
+CREATE TABLE IF NOT EXISTS "ent_commande" (
+  "id" text PRIMARY KEY,
+  "fld_cmd_reference" text,
+  "fld_cmd_nom_client" text,
+  "fld_cmd_telephone" text,
+  "fld_cmd_statut" text,
+  "fld_cmd_statut_libelle" text,
+  "fld_cmd_total" numeric(12,2),
+  "fld_cmd_total_affiche" text,
+  "fld_cmd_creee_le" timestamptz,
+  "fld_cmd_heure_retrait" timestamptz,
+  "fld_cmd_note" text,
+  "fld_cmd_paiement_statut" text
+);
+CREATE TABLE IF NOT EXISTS "ent_ligne_commande" (
+  "id" text PRIMARY KEY,
+  "fld_lig_commande" text,
+  "fld_lig_plat" text,
+  "fld_lig_libelle" text,
+  "fld_lig_quantite" bigint,
+  "fld_lig_prix_unitaire" numeric(12,2),
+  "fld_lig_sous_total" numeric(12,2),
+  "fld_lig_sous_total_affiche" text
+);
+CREATE TABLE IF NOT EXISTS "ent_plat" (
+  "id" text PRIMARY KEY,
+  "fld_plat_nom" text,
+  "fld_plat_description" text,
+  "fld_plat_photo" text,
+  "fld_plat_prix" numeric(12,2),
+  "fld_plat_prix_affiche" text,
+  "fld_plat_categorie" text,
+  "fld_plat_disponible" boolean,
+  "fld_plat_statut_stock" text,
+  "fld_plat_temps_preparation" bigint,
+  "fld_plat_ordre_affichage" bigint
+);
+DO $$ BEGIN
+  IF NOT (to_regclass('public.ent_commande') IS NOT NULL AND to_regclass('public.ent_ligne_commande') IS NOT NULL AND to_regclass('public.ent_plat') IS NOT NULL) THEN
+    RAISE EXCEPTION 'BARRIER:tables: table manquante';
+  END IF;
+END $$;
+
+-- ===== SECTION 2 : CONTRAINTES (CHECK énums, FK) =====
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_ent_commande_fld_cmd_statut') THEN
+    ALTER TABLE "ent_commande" ADD CONSTRAINT "chk_ent_commande_fld_cmd_statut" CHECK ("fld_cmd_statut" IS NULL OR "fld_cmd_statut" IN ('en_attente_paiement', 'payee', 'en_preparation', 'prete', 'retiree', 'annulee'));
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_ent_commande_fld_cmd_paiement_statut') THEN
+    ALTER TABLE "ent_commande" ADD CONSTRAINT "chk_ent_commande_fld_cmd_paiement_statut" CHECK ("fld_cmd_paiement_statut" IS NULL OR "fld_cmd_paiement_statut" IN ('non_paye', 'autorise', 'capture', 'rembourse', 'echoue'));
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_ent_ligne_commande_fld_lig_commande') THEN
+    ALTER TABLE "ent_ligne_commande" ADD CONSTRAINT "fk_ent_ligne_commande_fld_lig_commande" FOREIGN KEY ("fld_lig_commande") REFERENCES "ent_commande"("id");
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_ent_ligne_commande_fld_lig_plat') THEN
+    ALTER TABLE "ent_ligne_commande" ADD CONSTRAINT "fk_ent_ligne_commande_fld_lig_plat" FOREIGN KEY ("fld_lig_plat") REFERENCES "ent_plat"("id");
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_ent_plat_fld_plat_categorie') THEN
+    ALTER TABLE "ent_plat" ADD CONSTRAINT "chk_ent_plat_fld_plat_categorie" CHECK ("fld_plat_categorie" IS NULL OR "fld_plat_categorie" IN ('entrees', 'plats', 'grillades', 'accompagnements', 'boissons', 'desserts'));
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_ent_plat_fld_plat_statut_stock') THEN
+    ALTER TABLE "ent_plat" ADD CONSTRAINT "chk_ent_plat_fld_plat_statut_stock" CHECK ("fld_plat_statut_stock" IS NULL OR "fld_plat_statut_stock" IN ('disponible', 'bientot_epuise', 'epuise'));
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT ((SELECT count(*) FROM pg_constraint WHERE conname LIKE 'fk\_%' OR conname LIKE 'chk\_%') >= 6) THEN
+    RAISE EXCEPTION 'BARRIER:constraints: contraintes manquantes';
+  END IF;
+END $$;
+
+-- ===== SECTION 3 : INDEX (colonnes FK) =====
+CREATE INDEX IF NOT EXISTS "ix_ent_ligne_commande_fld_lig_commande" ON "ent_ligne_commande" ("fld_lig_commande");
+CREATE INDEX IF NOT EXISTS "ix_ent_ligne_commande_fld_lig_plat" ON "ent_ligne_commande" ("fld_lig_plat");
+
+-- ===== SECTION 4 : RLS deny-by-default (D-032) =====
+ALTER TABLE "ent_commande" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "ent_ligne_commande" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "ent_plat" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  IF NOT ((SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'public' AND c.relkind = 'r' AND c.relrowsecurity) >= 3) THEN
+    RAISE EXCEPTION 'BARRIER:rls: RLS inactif sur au moins une table';
+  END IF;
+END $$;
+
+-- ===== SECTION 5 : SEED (fixtures déterministes D-030) =====
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_1', 'nom 1', 'description 1', NULL, '159.96', 'prix_affiche 1', 'accompagnements', 'true', 'epuise', '859', '825') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_2', 'nom 2', 'description 2', NULL, '443.98', 'prix_affiche 2', 'accompagnements', 'true', 'bientot_epuise', '607', '250') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_3', 'nom 3', 'description 3', NULL, '511.02', 'prix_affiche 3', 'plats', 'true', 'epuise', '781', '307') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_4', 'nom 4', 'description 4', NULL, '730.04', 'prix_affiche 4', 'plats', 'false', 'disponible', '15', '553') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_5', 'nom 5', 'description 5', NULL, '287.64', 'prix_affiche 5', 'accompagnements', 'false', 'epuise', '533', '593') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_6', 'nom 6', 'description 6', NULL, '768.21', 'prix_affiche 6', 'grillades', 'true', 'disponible', '689', '635') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_7', 'nom 7', 'description 7', NULL, '296.54', 'prix_affiche 7', 'plats', 'true', 'epuise', '935', '271') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_8', 'nom 8', 'description 8', NULL, '145.50', 'prix_affiche 8', 'accompagnements', 'true', 'epuise', '45', '860') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_9', 'nom 9', 'description 9', NULL, '196.13', 'prix_affiche 9', 'entrees', 'true', 'disponible', '315', '139') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_10', 'nom 10', 'description 10', NULL, '525.97', 'prix_affiche 10', 'grillades', 'false', 'epuise', '586', '61') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_11', 'nom 11', 'description 11', NULL, '717.60', 'prix_affiche 11', 'desserts', 'false', 'disponible', '813', '596') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_12', 'nom 12', 'description 12', NULL, '451.49', 'prix_affiche 12', 'grillades', 'true', 'disponible', '300', '288') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_13', 'nom 13', 'description 13', NULL, '784.78', 'prix_affiche 13', 'boissons', 'false', 'epuise', '726', '637') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_14', 'nom 14', 'description 14', NULL, '238.78', 'prix_affiche 14', 'boissons', 'false', 'epuise', '747', '461') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_15', 'nom 15', 'description 15', NULL, '445.07', 'prix_affiche 15', 'entrees', 'true', 'bientot_epuise', '78', '206') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_16', 'nom 16', 'description 16', NULL, '438.76', 'prix_affiche 16', 'accompagnements', 'false', 'disponible', '52', '890') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_17', 'nom 17', 'description 17', NULL, '318.82', 'prix_affiche 17', 'boissons', 'false', 'disponible', '104', '870') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_18', 'nom 18', 'description 18', NULL, '435.88', 'prix_affiche 18', 'boissons', 'false', 'disponible', '579', '95') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_19', 'nom 19', 'description 19', NULL, '566.65', 'prix_affiche 19', 'grillades', 'false', 'epuise', '449', '860') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_20', 'nom 20', 'description 20', NULL, '864.49', 'prix_affiche 20', 'desserts', 'false', 'epuise', '920', '594') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_21', 'nom 21', 'description 21', NULL, '436.22', 'prix_affiche 21', 'plats', 'true', 'bientot_epuise', '708', '812') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_22', 'nom 22', 'description 22', NULL, '678.82', 'prix_affiche 22', 'entrees', 'false', 'disponible', '15', '594') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_23', 'nom 23', 'description 23', NULL, '345.40', 'prix_affiche 23', 'boissons', 'false', 'epuise', '981', '383') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_plat" ("id", "fld_plat_nom", "fld_plat_description", "fld_plat_photo", "fld_plat_prix", "fld_plat_prix_affiche", "fld_plat_categorie", "fld_plat_disponible", "fld_plat_statut_stock", "fld_plat_temps_preparation", "fld_plat_ordre_affichage") VALUES ('ent_plat_row_24', 'nom 24', 'description 24', NULL, '76.38', 'prix_affiche 24', 'grillades', 'true', 'bientot_epuise', '125', '719') ON CONFLICT ("id") DO NOTHING;
+DO $$ BEGIN
+  IF NOT ((SELECT count(*) FROM "ent_plat") >= 24) THEN
+    RAISE EXCEPTION 'BARRIER:seed_ent_plat: seed incomplet pour ent_plat';
+  END IF;
+END $$;
