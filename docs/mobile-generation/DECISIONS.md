@@ -642,6 +642,82 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   ids/slugs uniques · overrides vides · CI sans réseau verte · **v1
   byte-identique prouvé** · bruts journalisés · coût ≤ enveloppe.
 
+## D-026 — ARBITRAGE PHASE 4 : architecture du compilateur déterministe v1 (TRANCHÉ, 2026-08-28)
+
+- **Contexte** : dossier d'options complet présenté avant toute
+  implémentation (D-017), instruit sur l'état réel vérifié : corpus ACTIF
+  v2 (D-025), paquets gelés (D-020/D-024, tokens 1.0.0 scellés), schéma
+  `project.lock` 1.0.0 existant SANS résolveur ni release train, contrainte
+  3.4 consignée (écran généré = ScreenShell + blocs), builds émulateur
+  locaux prouvés à 0 $.
+- **Décision (propriétaire, 2026-08-28) — FEU VERT Phase 4** avec priorité
+  robustesse/déterminisme/preuve sur l'économie artificielle :
+  1. **A1 — OPTION C : hybride canonique** — code structurel généré
+     (écrans TSX composant ScreenShell + blocs, points de slots) + TOUTE la
+     matière variable (props, libellés, fixtures, config) extraite en
+     **modules de données générés par le sérialiseur JSON canonique de
+     `air-schema`** (prouvé depuis la Phase 2) ; aucun contenu libre
+     interpolé dans les templates de code (seuls des identifiants validés
+     par les regex du schéma). Écartées : A (templates intégraux — surface
+     d'échappement = risque de déterminisme) ; B (interpréteur embarqué —
+     contre §6 diff/debug/audit, complique les Code Slots Phase 9, tension
+     D-002).
+  2. **S1 navigation — NON TRANCHÉ SUR PAPIER** : micro-banc **V4 (B-NAV)**
+     d'abord (`@react-navigation/native-stack` vs `expo-router`), la
+     solution démontrée meilleure est retenue ; critères : byte-stabilité
+     ×10 de la sortie générée, poids ajouté, New Architecture, LOC du
+     générateur, comportement back réel sur device.
+  3. **S2** : données de démo = **fixtures déterministes** (PRNG seedé par
+     le `contentHash` du dataset, `rowCount` lignes dérivées du schéma
+     d'entité — fonction pure, zéro LLM), derrière l'**interface
+     data-provider** (§15) avec implémentation locale `demo` (Supabase =
+     Phase 5).
+  4. **S3** : hash de sortie = **manifeste Merkle** (SHA-256 par fichier +
+     manifeste canonique trié + hash racine, pas d'archive tar) ; Artifact
+     Store v1 = interface + implémentation locale content-addressed.
+  5. **S4** : release train v1 embarque un **gabarit Expo versionné avec
+     `package-lock.json` pré-résolu** ; AUCUN `npm install` dans le chemin
+     de compilation ; l'installation ne sert qu'au lancement de l'app
+     témoin (hors périmètre du hash).
+  6. **S5** : pas de formateur externe dans le chemin de compilation —
+     règles d'émission canoniques maison (indentation fixe, ordre trié,
+     LF, UTF-8 sans BOM) — patron D-021.
+  7. **S6** : slots de l'AIR → **stubs typés déterministes** honorant la
+     signature (implémentation réelle = Phase 9) — lecture consignée.
+  8. **S7** : le compilateur v1 lie les **tokens scellés 1.0.0** ;
+     `design.theme` transporté SANS effet (pont de variance différé,
+     porte consciente — patron D-025/overrides) ; libellés résolus depuis
+     l'AIR (`defaultAppLocale`), cliquet linguistique F3 étendu aux
+     sorties du compilateur.
+  9. **A3 — lecture consignée du critère** : la Phase 4 génère
+     **manifestes/permissions/config native** depuis le registre
+     (agrégation 2.3), PAS les implémentations de capabilities
+     (Phases 5+).
+  10. **A4** : release train v1 défini sur les **pins déjà démontrés**
+      (harnais 3.4 / banc P-003) : Expo ~57.0, RN 0.86.3, React 19.2.3 —
+      consigné comme décision consciente à la création (4.1).
+- **Méthode imposée** : validations **V2–V5 AVANT construction** du
+  compilateur complet (V2 micro-preuve d'empaquetage Merkle ×10 ×2
+  environnements · V3 reproductibilité `npm ci` du gabarit · V4 micro-banc
+  navigation · V5 protocole de preuve zéro-LLM/zéro-réseau défini avant le
+  code) ; échec de validation → cause démontrée avant toute correction
+  (D-018) ; aucun critère dur assoupli.
+- **Dépenses** : **0 $ autorisé par défaut** — analyse préalable du dossier :
+  aucun appel API ni compte externe nécessaire en Phase 4 (LLM interdit par
+  le critère lui-même ; données de démo déterministes ; builds locaux ;
+  store local). Toute dépense qui apparaîtrait = méthode arbitrage C
+  (simulation préalable, alternatives à coût nul, démonstration de
+  nécessité, STOP avant accord propriétaire).
+- **Découpage de référence** : 4.0 validations V2–V5 → 4.1 release train
+  v1 + résolveur AIR→lock → 4.2 gabarit Expo versionné → 4.3 émission
+  écrans/navigation/thème → 4.4 manifestes/permissions → 4.5 fixtures
+  déterministes + data-provider demo → 4.6 store SHA-256 + hash Merkle +
+  preuve 12 docs × 10 compilations + preuve zéro-réseau → 4.7 app témoin
+  iOS/Android. Aucun saut, aucune Phase 5+.
+- **P0 exécuté** : clôture Phase 3 / D-025 commitée localement
+  (`3955ebb`, vérifications au commit : packages tsc EXIT=0, lint 0 écart,
+  246/246 tests) ; push uniquement sur accord explicite.
+
 ## ~~P-003~~ → D-021 — Lib de styling RN : **StyleSheet + tokens maison** (TRANCHÉ, 2026-08-27)
 
 - **Contexte** : décision prise par le propriétaire le 2026-08-27 sur dossier

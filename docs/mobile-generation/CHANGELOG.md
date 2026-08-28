@@ -1,5 +1,26 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-28 — PHASE 4 OUVERTE (D-026) : architecture du compilateur v1
+
+- **P0 exécuté** : clôture Phase 3 / D-025 commitée localement (`3955ebb` —
+  corpus-v2, tests CI, campagne, consignations) ; vérifications au commit :
+  packages tsc EXIT=0, lint 0 écart, **246/246 tests**. Aucun push.
+- **D-026 consignée** (feu vert propriétaire sur dossier d'options complet,
+  présenté AVANT toute implémentation) : **Option C hybride canonique**
+  (code structurel généré + matière variable en modules canoniques via le
+  sérialiseur prouvé d'`air-schema`) ; S2 fixtures déterministes seedées
+  `contentHash` derrière interface data-provider ; S3 manifeste Merkle +
+  store local content-addressed ; S4 gabarit à lockfile pré-résolu, zéro
+  install en compilation ; S5 émission canonique maison sans formateur
+  externe ; S6 slots → stubs typés (Phase 9) ; S7 tokens scellés 1.0.0,
+  `design.theme` sans effet (porte consciente) ; **S1 navigation tranché
+  par micro-banc V4**, pas sur papier ; lecture A3 (manifestes/permissions
+  générés, implémentations de capabilities = Phases 5+) ; release train v1
+  sur pins démontrés. **Dépenses : 0 $ par défaut**, méthode arbitrage C
+  pour toute exception.
+- **Étape en cours : 4.0 — validations V2-V5** avant construction du
+  compilateur.
+
 ## 2026-08-28 — ARBITRAGE C RÉSOLU (D-025) : golden corpus v2, 12/12, 7,42 $
 
 - **D-025 consignée puis exécutée** : ré-émission LLM du corpus (Option A)

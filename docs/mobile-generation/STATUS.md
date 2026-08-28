@@ -1,10 +1,11 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-08-28** (**PHASE 3 CLOSE · ARBITRAGE C RÉSOLU (D-025)** : golden
-> corpus v2 émis et validé **12/12 aux 4 validateurs**, vocabulaire =
-> exactement les 6 blocs gelés, v1 byte-identique, 7,42 $ ; Phase 4
-> ouvrable sur décision propriétaire).
+> **2026-08-28** (**PHASE 4 OUVERTE — D-026** : feu vert propriétaire sur
+> dossier d'options complet — Option C hybride canonique, S2-S7 validés,
+> S1 navigation tranché par micro-banc V4, lecture A3 consignée, release
+> train v1 sur pins démontrés ; P0 exécuté : clôture Phase 3 commitée
+> `3955ebb` ; étape en cours : **4.0 — validations V2-V5**).
 
 ## ÉTAT GLOBAL
 
@@ -12,9 +13,9 @@
 |---|---|
 | Plan v0.1 | 🟢 **VALIDÉ ET FIGÉ** (propriétaire, 2026-08-27) — toute évolution passe par `DECISIONS.md` |
 | Phase 0 — Fondations | 🟢 **TERMINÉE** (2026-08-27) — tous les critères de sortie vérifiés, dont **CI GitHub réelle verte : run #32, commit `54ef2a1`, `success`** (capture propriétaire + confirmation API Actions indépendante) |
-| Phase actuelle | **PHASE 2 : 🟢 TERMINÉE** (2026-08-27 — critères de sortie tous satisfaits, registre v1 gelé D-020) · **PHASE 1** : 🔵 bancs restants bloqués sur prérequis propriétaire · **PHASE 3** : 🔵 **EN COURS** (ouverte 2026-08-28) — **3.1 🟢** (tokens double cible + scellement) · **3.2 🟢** (primitives) · **3.3 🟢 GELÉE** · **3.4 🟢 VERTE (iOS+Android)** — **critères de Phase 3 tous satisfaits, clôture = constat propriétaire** |
-| Générateur mobile | 🔵 **EN IMPLÉMENTATION** — premier paquet du moteur : `packages/air-schema` (AIR v1) |
-| Progression globale | **2/15 phases terminées (0, 2)** · Phase 1 en cours (bancs exécutables tous faits) · **Phase 3 : 3.1 🟢 3.2 🟢 3.3 🟢 3.4 🟢 — clôture en attente de constat propriétaire** |
+| Phase actuelle | **PHASE 4 : 🔵 OUVERTE** (2026-08-28, feu vert propriétaire D-026) — étape en cours : **4.0 validations V2-V5** · **PHASE 3 : 🟢 TERMINÉE** (2026-08-28, clôture constatée par le propriétaire avec l'arbitrage C/D-025) · **PHASE 1** : 🔵 bancs restants bloqués sur prérequis propriétaire |
+| Générateur mobile | 🔵 **EN IMPLÉMENTATION** — chantier courant : compilateur déterministe v1 (Phase 4, architecture D-026) |
+| Progression globale | **3/15 phases terminées (0, 2, 3)** · Phase 4 en cours (4.0) · Phase 1 en cours (bancs exécutables tous faits) |
 
 ## PHASE 0 — DÉTAIL DES SOUS-ÉTAPES
 
@@ -67,16 +68,40 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
   (contre 115 types sauvages en v1) · overrides vides · ids/slugs uniques ·
   3 classes commerce · **v1 byte-identique prouvé par scellés SHA-256** ·
   63 tests CI sans réseau (`corpus-v2.test.ts`), packages 246/246.
-- **Prochaine étape EXACTEMENT autorisée** : **ouverture de la PHASE 4 —
-  Compilateur déterministe v1** (décision propriétaire) : AIR+lock → projet
-  Expo byte-reproductible ; critère dur : 10 compilations → hash identique
-  10/10 sur le **corpus ACTIF (v2)** ; app témoin sur émulateurs ; zéro
-  appel LLM prouvé. Les bancs de Phase 1 restants (P-002, coûts EAS, coût
+- **PHASE 4 OUVERTE (D-026, 2026-08-28)** : feu vert propriétaire sur
+  dossier d'options — **Option C hybride canonique** ; S2-S7 validés tels
+  que recommandés ; **S1 navigation tranché par le micro-banc V4**, jamais
+  sur papier ; lecture A3 consignée (manifestes/permissions oui,
+  implémentations de capabilities non) ; release train v1 sur pins
+  démontrés (Expo ~57.0 / RN 0.86.3 / React 19.2.3) ; **0 $ autorisé par
+  défaut** (toute dépense = méthode arbitrage C).
+- **Prochaine étape EXACTEMENT autorisée** : **4.0 — validations V2-V5**
+  (V2 micro-preuve d'empaquetage Merkle → V5 protocole zéro-réseau → V3
+  reproductibilité `npm ci` du gabarit → V4 micro-banc navigation), puis
+  4.1 → 4.7 dans l'ordre du découpage D-026. Critère dur inchangé : 10
+  compilations → hash identique 10/10 sur le **corpus ACTIF (v2)** ; app
+  témoin sur émulateurs iOS et Android ; zéro appel LLM prouvé par
+  instrumentation. Les bancs de Phase 1 restants (P-002, coûts EAS, coût
   projet Supabase) demeurent bloqués sur prérequis propriétaire.
-- **INTERDIT à ce stade** : toute phase dont les dépendances ROADMAP ne
-  sont pas satisfaites (Phases 4+ dépendent de 2/3), tout push sans accord
-  explicite, toute décision P-00x sans les mesures prévues, toute
-  réouverture de P-003 hors seuil de réexamen consigné (D-021).
+- **INTERDIT à ce stade** : toute Phase 5+ (dépendances non satisfaites),
+  tout saut d'étape 4.x, tout push sans accord explicite, toute
+  modification des zones gelées (D-020/D-024/tokens scellés/corpus v1 et
+  v2) sans décision consignée, toute décision P-00x sans les mesures
+  prévues, toute réouverture de P-003 hors seuil de réexamen consigné
+  (D-021).
+
+## PHASE 4 — DÉTAIL (ouverte le 2026-08-28, D-026)
+
+| Étape | Contenu | Statut |
+|---|---|---|
+| 4.0 | **Validations préalables V2-V5** — V2 : micro-preuve d'empaquetage (émission maquette 1 doc, manifeste Merkle, ×10 runs ×2 environnements → hash racine identique) · V5 : protocole de preuve zéro-LLM/zéro-réseau (cliquet statique d'imports + harnais dynamique faisant échouer tout accès réseau, contrôle positif exigé) · V3 : reproductibilité `npm ci` du gabarit (lockfile pré-résolu versionné) · V4 : micro-banc navigation B-NAV (`@react-navigation/native-stack` vs `expo-router` — byte-stabilité ×10, poids, New Arch, LOC générateur, back réel sur device) → tranche S1 | 🔵 **EN COURS** |
+| 4.1 | Release train v1 (pins démontrés, décision consignée) + résolveur AIR→lock déterministe testé | ⏳ |
+| 4.2 | Gabarit Expo versionné (package-lock pré-résolu, zéro install dans le chemin de compilation) | ⏳ |
+| 4.3 | Émission écrans/navigation/thème (Option C : code structurel + modules canoniques ; ScreenShell obligatoire — contrainte 3.4) + copie blocs/primitives/tokens | ⏳ |
+| 4.4 | Manifestes/permissions/config native depuis le registre (lecture A3) | ⏳ |
+| 4.5 | Fixtures déterministes (PRNG seedé `contentHash`) + interface data-provider, impl `demo` | ⏳ |
+| 4.6 | Artifact Store v1 (local, SHA-256) + hash Merkle + **preuve 12 docs × 10 compilations → 10/10 identiques** + preuve zéro-réseau/zéro-LLM | ⏳ |
+| 4.7 | App témoin : build + lancement émulateurs iOS ET Android (protocole type 3.4, captures versionnées) | ⏳ |
 
 ## PHASE 3 — DÉTAIL (ouverte le 2026-08-28)
 
@@ -126,8 +151,8 @@ prouve l'existence, pas le taux). Voir `DECISIONS.md` D-015.
 | 0 | Fondations (workspaces, CI, SDK) | 🟢 TERMINÉ (2026-08-27) |
 | 1 | Bancs de mesure (P-001→P-003, coûts, E2E) | 🔵 EN COURS (bancs restants sur prérequis) |
 | 2 | AIR v1 + Capability Registry v1 | 🟢 TERMINÉ (2026-08-27) |
-| 3 | Design System + Primitives + Blocks | ⏳ |
-| 4 | Compilateur déterministe v1 | ⏳ |
+| 3 | Design System + Primitives + Blocks | 🟢 TERMINÉ (2026-08-28) |
+| 4 | Compilateur déterministe v1 | 🔵 EN COURS (D-026, 4.0) |
 | 5 | Backend Provisioner v1 | ⏳ |
 | 6 | Sandbox + Oracle v1 | ⏳ |
 | 7 | Workflow asynchrone durable | ⏳ |
