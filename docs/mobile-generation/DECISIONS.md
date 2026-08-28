@@ -501,6 +501,104 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   est ouvrable** : ses deux dépendances (Phase 2 ✓, P-003 tranché ✓) sont
   satisfaites.
 
+## D-023 — Registre de Smart Blocks v1 : granularité et périmètre (TRANCHÉ, 2026-08-28)
+
+- **Contexte** : arbitrage B annoncé en Phase 3. Dossier d'options instruit
+  sur mesures fraîches du golden corpus : 12 AIR · 41 écrans · **255
+  instances** · **115 blockType distincts** (fragmentation ~2,2
+  instances/type, synonymes prouvés — button/primary_button/submit_button —
+  et clés de props en français dans un document) ; couverture cumulée :
+  top 6 = 32 % des instances, top 30 = 63 %, 0/41 écran entièrement couvert
+  par 6 types. Tension structurante signalée : la lecture littérale de la
+  ROADMAP (« 4-6 blocs : AuthFlow, List/Detail… ») est incompatible avec
+  l'AIR v1 GELÉ (`screens[].blocks[]` : un bloc est une SECTION d'écran ;
+  AuthFlow/List-Detail sont des motifs multi-écrans).
+- **Décision (propriétaire, 2026-08-28)** :
+  1. **Le registre v1 est un registre de BLOCS COMPOSITES DE PRIMITIVES**
+     (Smart Blocks, granularité section d'écran — la seule compatible avec
+     l'AIR gelé) — PAS un registre de primitives : les 9 primitives de
+     `@deribfy/primitives` restent HORS registre.
+  2. **Allowlist positive** : blockType inconnu = refus net (patron D-020).
+  3. Registre **versionné, déterministe, indépendant de tout moteur E2E**
+     (Maestro/Detox) — indépendance MÉCANISÉE par cliquet sur les sources.
+  4. **Pas d'élargissement « au cas où »** : ajout = décision consignée +
+     édition consciente du cliquet + version mineure (règle D-020).
+  5. **Les 4 motifs nommés par la ROADMAP** (AuthFlow, List/Detail, Form,
+     Profile) sont livrés comme **COMPOSITIONS DE RÉFÉRENCE TESTÉES**
+     (tests d'intégration assemblant les blocs du registre), pas comme des
+     blocs eux-mêmes — c'est la lecture consignée du critère de sortie.
+  6. **L2 — corpus** : le corpus historique **reste GELÉ, non régénéré** ;
+     le registre v1 couvre uniquement le périmètre requis par la Phase 3 ;
+     la couverture du corpus complet reste un sujet **Phase 4** (arbitrage
+     C, critères existants inchangés). Le pont `validateAirBlocks` n'est
+     **PAS câblé** aux tests du corpus.
+- **Périmètre v1 (6 blocs, liste EXACTE, cliquet)** : `button` ·
+  `detail_header` · `empty_state` · `form` · `header` · `list` — chacun
+  exigé par ≥ 1 motif ROADMAP ou par le harnais 3.4, dans le top 8 mesuré
+  du corpus, implémentable avec les 9 primitives sans ajout. `list` et
+  `form` portent contractuellement les états loading/empty/error (états
+  EXPLICITES, jamais déduits des données — déterminisme).
+- **Options écartées** : G1 composite multi-écrans (exige de rouvrir l'AIR
+  gelé — dominée) ; G3 deux granularités au registre (ambiguïté de choix
+  pour le LLM, inflation anti-D-020) ; G4 pas de registre en Phase 3
+  (reproduit la cause mesurée des 115 types ; contredit §3).
+- **Conséquences** : paquet `@deribfy/blocks` (registre + pont + composants
+  + compositions de référence) ; schémas de props STRICTS par bloc (clé
+  inconnue = refus — leçon des clés en français) ; liaison d'entité
+  explicite (`required`/`forbidden`, jamais ambiguë) ; références de champs
+  et d'actions validées contre l'AIR ; **gel du registre v1 = revue
+  propriétaire en fin de 3.3** (patron 2.5/D-020) ; ré-émission du corpus
+  avec digest du registre = arbitrage C, entrée de Phase 4.
+
+## D-024 — GEL DU REGISTRE DE SMART BLOCKS v1 (2026-08-28)
+
+- **Contexte** : revue propriétaire exhaustive de fin de 3.3 (lecture seule,
+  format en 13 sections) : verdict initial 🟠 — 3 défauts démontrés, corrigés
+  sur autorisation avant gel, plus deux résolutions préalables factuelles.
+- **Corrections pré-gel appliquées et prouvées** :
+  - **F1** : `button.actionId` REQUIS (un AIR valide pouvait déclarer un CTA
+    non câblable — bouton mort, divergence silencieuse AIR ↔ app ; démontré
+    par notre propre sonde de test) + test négatif ;
+  - **F2** : `empty_state` — appariement BIDIRECTIONNEL `actionLabel` ⟺
+    `actionId` par superRefine (label sans action = silencieusement ignoré
+    au rendu [3 usages réels au corpus] ; action sans label = non rendable) ;
+    `actionId` validé contre les actions de l'AIR ; tests dans les 3 sens ;
+  - **F3** : suppression des 3 défauts français codés en dur de `ListBlock`
+    (« Aucun élément », « Une erreur est survenue », « Chargement… ») —
+    violation du non-négociable 16 (i18n) ; `ListBlockState` devient un état
+    DISCRIMINÉ (les libellés sont requis par le type exactement quand l'état
+    les rend, fournis par le compilateur depuis l'AIR/les locales) ;
+    **cliquet linguistique** ajouté (extraction des littéraux réels, refus de
+    toute signature de texte naturel — espace/diacritique/points de
+    suspension ; stratégie de classe, pas de liste de mots ; résidu assumé :
+    mot ASCII isolé).
+- **Résolutions préalables** :
+  - **Anomalie « catalogue non interactif » sur simulateur** : l'app observée
+    est la FIXTURE DE BANC P-003 (seules apps installées, `simctl listapps`),
+    dont les cartes n'ont PAS de onPress PAR PROTOCOLE (contrat
+    `CardProps{item,index}`) — `packages/blocks` n'a jamais été déployé sur
+    device. Classification : hors 3.3 ; les tests 3.3 prouvent le câblage
+    LOGIQUE du handler (stub), la preuve du toucher réel et du rendu revient
+    au HARNAIS 3.4 (ordre prévu par la ROADMAP). Aucune correction.
+  - **`detail_header.badgeFieldIds.max(4)`** : borne inventée à
+    l'implémentation, sans source normative (corpus max observé : 3) —
+    SUPPRIMÉE ; `min(1)` CONSERVÉE avec justification (forme canonique
+    unique de l'absence — déterminisme).
+- **Décision (propriétaire, 2026-08-28)** : **GEL** — `BLOCK_REGISTRY_VERSION`
+  **0.1.0 → 1.0.0**, les 6 contrats (`button`, `detail_header`,
+  `empty_state`, `form`, `header`, `list`) passés en **1.0.0**, cliquet
+  verrouillé (version + liste exacte + versions de contrats — patron D-020).
+- **Règle d'évolution post-gel** (identique à D-020) : AJOUT compatible =
+  décision consignée + édition consciente du cliquet + version MINEURE ;
+  retrait/renommage/changement de contrat = RUPTURE (décision + version
+  MAJEURE).
+- **Réserve consignée sans impact sur le gel des contrats** : la preuve
+  device (toucher réel, rendu light/dark/RTL/états) relève du harnais 3.4.
+- **Preuves au gel** : packages 6/6 — tsc/lint 0 écart, **183/183 tests** ;
+  web intact (tsc EXIT=0 + 4071/4071 après les corrections ; le gel
+  lui-même ne change que des chaînes de version) ; zones gelées :
+  0 modification.
+
 ## ~~P-003~~ → D-021 — Lib de styling RN : **StyleSheet + tokens maison** (TRANCHÉ, 2026-08-27)
 
 - **Contexte** : décision prise par le propriétaire le 2026-08-27 sur dossier

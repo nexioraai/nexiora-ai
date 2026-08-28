@@ -1,5 +1,129 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-28 — 3.4 TERMINÉE : harnais de rendu VERT sur iOS ET Android
+
+- **Harnais `harness/render/`** (H1+M1+V2 validés propriétaire) : app Expo
+  autonome hors workspaces (patron banc, zéro risque web), substitut du
+  compilateur — ScreenShell + les 6 Smart Blocks GELÉS (D-024), libellés/
+  données/callbacks fournis par l'appelant (F3).
+- **Protocole V2 exécuté INTÉGRALEMENT sur les deux plateformes** :
+  préparation → parcours light (assertions + captures) → bascule dark
+  assertée + 5 écrans re-assertés → bascule RTL réelle (forceRTL + relance,
+  `RTL : ACTIF` asserté) → **REJEU INCHANGÉ du parcours complet** → retour
+  LTR. **VERT iOS · VERT Android** — 44 captures versionnées + journaux.
+- **Réserve D-024 LEVÉE** : tap RÉEL sur une ligne de ListBlock (toucher
+  natif Maestro) → écran Detail asserté — sur les deux plateformes.
+- **États loading/empty/error** réellement rendus et assertés (ListBlock +
+  empty_state), actions retry/parcourir déclenchées et vérifiées.
+- **Défaut de composition DÉMONTRÉ sur device puis corrigé (harnais seul)** :
+  écrans de blocs sans ScreenShell → fond non thémé en dark (textes clairs
+  sur fond clair). Correction : chaque écran enveloppé dans ScreenShell ;
+  rebuilds + **protocole intégralement rejoué** (aucun PASS antérieur
+  conservé). **NOTE D'ARCHITECTURE consignée pour la Phase 4 : un écran
+  généré = ScreenShell(titre) + blocs.**
+- Anomalies d'outillage traitées sur preuve : dialogue deep-link post-build
+  (flow préparateur HORS critères — protocole V2 inchangé) ; sandbox
+  takeScreenshot de Maestro 2.9 (chemins relatifs + rapatriement runner).
+- **Conséquence ROADMAP : les 4 critères de sortie de la Phase 3 sont
+  satisfaits** — clôture de phase = constat propriétaire. Zones gelées :
+  0 modification. Coût : 0 $.
+
+## 2026-08-28 — GEL DU REGISTRE DE SMART BLOCKS v1 (D-024)
+
+- **Revue propriétaire exhaustive** (13 sections, lecture seule) : D-023+L2
+  revérifiés sur artefacts, compatibilité AIR prouvée mécaniquement, audit
+  bloc par bloc, pont, composants, compositions, cliquets, anomalies.
+  Verdict initial 🟠 : 3 défauts démontrés.
+- **Corrections pré-gel autorisées et appliquées** : F1 `button.actionId`
+  REQUIS (CTA non câblable interdit) · F2 appariement bidirectionnel
+  `empty_state.actionLabel` ⟺ `actionId` (superRefine, diagnostics ciblés,
+  action validée contre l'AIR) · F3 `ListBlockState` DISCRIMINÉ — zéro
+  chaîne linguistique dans le moteur (non-négociable 16), libellés fournis
+  par le compilateur, cliquet linguistique de classe (littéraux réels,
+  signature espace/diacritique/ellipse).
+- **Résolutions factuelles** : anomalie « catalogue non interactif » =
+  fixture de banc P-003 (cartes sans onPress PAR PROTOCOLE ; blocks jamais
+  déployé sur device ; preuve du toucher réel = harnais 3.4) ·
+  `badgeFieldIds.max(4)` supprimée (borne inventée, corpus max = 3),
+  `min(1)` conservée et justifiée (forme canonique de l'absence).
+- **GEL (D-024)** : `BLOCK_REGISTRY_VERSION` 1.0.0, les 6 contrats 1.0.0,
+  cliquet verrouillé (version + liste exacte + versions — patron D-020),
+  règle d'évolution post-gel identique à D-020.
+- **Preuves** : packages 6/6 — tsc/lint 0, **183/183 tests** (57+26+39+15+
+  19+27) ; web intact (tsc EXIT=0 + 4071/4071 après corrections) ; zones
+  gelées : 0 modification. Coût : 0 $.
+
+## 2026-08-28 — 3.3 TERMINÉE : Smart Blocks v1 (@deribfy/blocks, D-023)
+
+- **D-023 consignée** (arbitrage propriétaire sur dossier d'options B) :
+  registre de **blocs COMPOSITES DE PRIMITIVES** (granularité section — la
+  seule compatible avec l'AIR v1 gelé), primitives HORS registre, allowlist
+  positive, E2E-agnostique **par cliquet**, pas d'élargissement au cas où ;
+  les 4 motifs ROADMAP (AuthFlow, List/Detail, Form, Profile) livrés comme
+  **compositions de référence testées** ; **corpus GELÉ non régénéré** (L2),
+  couverture corpus = Phase 4 (arbitrage C inchangé).
+- **Registre v1 (6 blocs, v0.1.0 NON GELÉ — gel = revue propriétaire)** :
+  `button`, `detail_header`, `empty_state`, `form`, `header`, `list` —
+  schémas de props **STRICTS** (clé inconnue = refus ; leçon mesurée du
+  corpus : dérive jusque dans les clés), liaison d'entité explicite
+  (`required`/`forbidden`), états contractuels EXPLICITES (jamais déduits
+  des données — déterminisme).
+- **Pont `validateAirBlocks`** (patron D-020) : refus net des types hors
+  allowlist, entités/champs/actions validés contre la tranche d'AIR,
+  diagnostics déterministes triés. **NON câblé aux tests du corpus** —
+  porte du compilateur (Phase 4) et outil de la ré-émission (arbitrage C).
+- **6 composants** composant EXCLUSIVEMENT les primitives 3.2 — cliquets :
+  contrats = types react seuls ; `FlatList` = seul import react-native ;
+  **zéro StyleSheet, zéro style en dur, zéro token direct** dans les blocs ;
+  aucune trace maestro/detox dans les sources (cliquet d'indépendance E2E).
+- **4 compositions de référence testées en intégration** (D-023) : AuthFlow
+  (saisie masquée + soumission + action secondaire), List/Detail (liste →
+  sélection → détail), Form (fieldErrors + erreur globale + submitting),
+  Profile (identité + réglages + déconnexion) ; + états loading/empty/error
+  du harnais sur ListBlock — l'écart consigné en D-022 se résorbe comme
+  prévu.
+- **Preuves** : packages 6/6 — tsc/lint 0 écart, **178/178 tests**
+  (57+26+39+15+19+22) ; **web intact** : tsc EXIT=0 + **4071/4071** ;
+  zones gelées (AIR, corpus, capability-registry, protocoles, bancs) :
+  0 modification. Coût : 0 $.
+
+## 2026-08-28 — 3.2 TERMINÉE : primitives contractuelles (@deribfy/primitives)
+
+- **Dossier d'options présenté et validé par le propriétaire** (A1 un paquet ·
+  B2 jeu de 9 primitives · C2 contrats + surface a11y minimale · D1 liaison
+  statique aux tokens + patron 2 feuilles · E1/E3 tests structurels vitest,
+  vérité de rendu au harnais 3.4).
+- **Contrats v1** (`contracts.ts`) : types `react` UNIQUEMENT — étanchéité §22
+  (prouvée 6/6 au banc P-003) désormais **mécanisée par cliquet** (test qui
+  échoue sur tout import non-react, valeurs comprises). Surface a11y :
+  `testID` partout, `accessibilityLabel` sur l'interactif ; rôles posés par
+  l'implémentation.
+- **9 primitives** (chacune exigée par un bloc 3.3 ou le harnais 3.4) :
+  ScreenShell, Section, AppText (4 variantes = 4 tokens de police), AppButton
+  (disabled/loading), TextField (error/loading/secure — AuthFlow), ListRow
+  (généralisation de la Card du banc : leading/trailing/badge), Badge,
+  StateView (loading/empty/error — exigences du harnais), Spinner.
+- **Pont de thème** : patron GAGNANT du banc P-003 (2 feuilles StyleSheet
+  pré-calculées + SchemeContext — bascule 2 frames mesurée) ; liaison
+  STATIQUE à `@deribfy/design-tokens` (la variance par app est un acte de
+  COMPILATION, modèle copie-régénérable §3) ; **cliquet RTL** : propriétés
+  logiques exclusivement (test sur les sources).
+- **19 tests structurels** (react-test-renderer sur stub react-native ;
+  typage contre les VRAIS types RN 0.86.3 en devDependency). Exception lint
+  CONSIGNÉE, limitée aux tests : react-test-renderer est déprécié par
+  React 19 — choix E1 assumé, à réexaminer ; vérité de rendu = harnais 3.4.
+- **Refus consignés** (anti sur-conception) : passe-plat `style`, registre de
+  primitives (hors ROADMAP — registre = blocs), thème runtime injectable,
+  primitives de navigation (territoire arbitrage B), breakpoints responsive,
+  système de variants générique (seuil de réexamen D-021 inchangé).
+- **Preuves** : packages 5/5 — tsc/lint 0 écart, **156/156 tests**
+  (57+26+39+15+19) ; **web intact** après entrée de react-native 0.86.3 au
+  lockfile racine (+2159 lignes) : tsc EXIT=0 + **4071/4071 tests**.
+  Coût : 0 $.
+- **Écarts §22 consignés (non improvisés)** : elevation/animations (aucun
+  token d'ombre dans la source — extension consciente le jour venu),
+  responsive/adaptive (hors critères Phase 3), idiomes iOS/Android (minimal).
+
 ## 2026-08-28 — PHASE 3 OUVERTE : 3.1 TERMINÉE ET SCELLÉE (tokens double cible)
 
 - **`@deribfy/design-tokens` créé** (Phase 3.1a) : `tokens.json` = SOURCE

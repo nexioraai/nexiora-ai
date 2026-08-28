@@ -1,10 +1,13 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-08-28** (**PHASE 3 OUVERTE — étape 3.1 TERMINÉE et SCELLÉE** :
-> source de tokens JSON unique + codegen double cible RN/web,
-> équivalence web prouvée octet à octet, autorité verrouillée par cliquet ;
-> D-022 Maestro ; bug CI latent corrigé).
+> **2026-08-28** (**3.4 TERMINÉE — HARNAIS DE RENDU VERT sur iOS ET
+> Android** : 5 écrans, 6 blocs gelés, 4 compositions, light/dark, RTL en
+> rejeu inchangé, états loading/empty/error, tap réel List→Detail [réserve
+> D-024 levée] ; défaut de composition démontré et corrigé dans le harnais
+> [ScreenShell obligatoire — note d'architecture Phase 4]. **Les 4 critères
+> de sortie de la Phase 3 sont satisfaits — clôture = constat
+> propriétaire**).
 
 ## ÉTAT GLOBAL
 
@@ -12,9 +15,9 @@
 |---|---|
 | Plan v0.1 | 🟢 **VALIDÉ ET FIGÉ** (propriétaire, 2026-08-27) — toute évolution passe par `DECISIONS.md` |
 | Phase 0 — Fondations | 🟢 **TERMINÉE** (2026-08-27) — tous les critères de sortie vérifiés, dont **CI GitHub réelle verte : run #32, commit `54ef2a1`, `success`** (capture propriétaire + confirmation API Actions indépendante) |
-| Phase actuelle | **PHASE 2 : 🟢 TERMINÉE** (2026-08-27 — critères de sortie tous satisfaits, registre v1 gelé D-020) · **PHASE 1** : 🔵 bancs restants bloqués sur prérequis propriétaire · **PHASE 3** : 🔵 **EN COURS** (ouverte 2026-08-28) — **3.1 🟢 TERMINÉE** (tokens double cible + scellement) ; 3.2 primitives à suivre |
+| Phase actuelle | **PHASE 2 : 🟢 TERMINÉE** (2026-08-27 — critères de sortie tous satisfaits, registre v1 gelé D-020) · **PHASE 1** : 🔵 bancs restants bloqués sur prérequis propriétaire · **PHASE 3** : 🔵 **EN COURS** (ouverte 2026-08-28) — **3.1 🟢** (tokens double cible + scellement) · **3.2 🟢** (primitives) · **3.3 🟢 GELÉE** · **3.4 🟢 VERTE (iOS+Android)** — **critères de Phase 3 tous satisfaits, clôture = constat propriétaire** |
 | Générateur mobile | 🔵 **EN IMPLÉMENTATION** — premier paquet du moteur : `packages/air-schema` (AIR v1) |
-| Progression globale | **2/15 phases terminées (0, 2)** · Phase 1 en cours (bancs exécutables tous faits) · **Phase 3 EN COURS (3.1 🟢)** |
+| Progression globale | **2/15 phases terminées (0, 2)** · Phase 1 en cours (bancs exécutables tous faits) · **Phase 3 : 3.1 🟢 3.2 🟢 3.3 🟢 3.4 🟢 — clôture en attente de constat propriétaire** |
 
 ## PHASE 0 — DÉTAIL DES SOUS-ÉTAPES
 
@@ -57,14 +60,15 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
   Sandbox + budget ~10-20 $) · coûts EAS (compte Expo/EAS) · coût projet
   Supabase (token Management API, org de test). **Phase 3 n'est plus
   bloquée** : ses deux dépendances ROADMAP sont satisfaites.
-- **Prochaine étape EXACTEMENT autorisée** : **3.2 — primitives
-  contractuelles** en `StyleSheet` + tokens (D-021) : contrats SANS aucun
-  type de bibliothèque (§22, patron prouvé 6/6 au banc P-003), implémentation
-  consommant `@deribfy/design-tokens`, tests. Puis 3.3 — registre de blocs +
-  4-6 Smart Blocks (arbitrage propriétaire B sur la granularité attendu
-  AVANT 3.3). Les bancs de Phase 1 restants (P-002, coûts EAS, coût projet
-  Supabase) demeurent bloqués sur prérequis propriétaire, sans bloquer la
-  Phase 3.
+- **Prochaine étape EXACTEMENT autorisée** : **CLÔTURE DE LA PHASE 3 par
+  constat propriétaire** — les 4 critères de sortie sont satisfaits :
+  blocs = contrat+tests+version au registre (D-024) ✓ · harnais de rendu
+  vert (3.4) ✓ · tokens web+RN depuis la source unique (3.1) ✓ · registre
+  gelé + revue propriétaire ✓. Après constat : **Phase 4 — Compilateur
+  déterministe v1** (dépendances Phases 2-3), qui exigera l'arbitrage C
+  (corpus) consigné en D-021/D-023. Les bancs de Phase 1 restants (P-002,
+  coûts EAS, coût projet Supabase) demeurent bloqués sur prérequis
+  propriétaire.
 - **INTERDIT à ce stade** : toute phase dont les dépendances ROADMAP ne
   sont pas satisfaites (Phases 4+ dépendent de 2/3), tout push sans accord
   explicite, toute décision P-00x sans les mesures prévues, toute
@@ -75,9 +79,9 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
 | Étape | Contenu | Statut |
 |---|---|---|
 | 3.1 | **Source de tokens JSON unique + codegen double cible** — paquet `@deribfy/design-tokens` : `tokens.json` (valeurs importées VERBATIM : palette produit CLAUDE.md/globals.css + jeu sémantique RN éprouvé au banc P-003), schéma zod strict, codegen thème RN (`theme.generated.ts`, données pures sans dépendance) et codegen CSS web (`theme.web.generated.css`) ; **équivalence avec le segment de `globals.css` PROUVÉE octet à octet** (497 octets, SHA-256 identiques) ; **SCELLEMENT (arbitrage propriétaire Option A)** : cliquet d'autorité (packages:test échoue si le segment web diverge de la source) + marqueur dans `globals.css` ; 15 tests (cliquets de marque, non-dérive, déterminisme, autorité) ; CI câblée (4 paquets) | 🟢 **TERMINÉE** (2026-08-28) — tsc/lint 0, 135/135 tests paquets, web intact (tsc EXIT=0, 4071/4071) |
-| 3.2 | Primitives contractuelles (`StyleSheet` + tokens, D-021) | ⏳ |
-| 3.3 | Registre de blocs v1 + 4-6 Smart Blocks testés (AuthFlow, List/Detail, Form, Profile) — granularité = arbitrage propriétaire B | ⏳ |
-| 3.4 | Harnais de rendu device/émulateur : light/dark, RTL, états loading/empty/error | ⏳ |
+| 3.2 | **Primitives contractuelles** — paquet `@deribfy/primitives` (dossier d'options validé propriétaire : A1+B2+C2+D1+E1/E3) : contrats v1 SANS aucun type de bibliothèque (cliquet d'imports mécanisé — `contracts.ts` n'importe que des types `react`), **9 primitives** (ScreenShell, Section, AppText, AppButton, TextField, ListRow, Badge, StateView, Spinner — chacune exigée par un bloc 3.3 ou le harnais 3.4), pont de thème = patron GAGNANT du banc (2 feuilles pré-calculées + contexte, liaison statique aux tokens ; variance par app = compilation), surface a11y minimale (testID/accessibilityLabel aux contrats, rôles posés par l'implémentation), **cliquet RTL** (propriétés logiques exclusivement, aucune propriété physique), **19 tests structurels** (vitest + react-test-renderer sur stub RN — exception no-deprecated consignée, limitée aux tests ; vérité de rendu = harnais 3.4) ; react-native 0.86.3 en devDep (lockfile +2159 lignes) | 🟢 **TERMINÉE** (2026-08-28) — packages 5/5 : tsc/lint 0, 156/156 tests ; **web intact** : tsc EXIT=0 + 4071/4071 |
+| 3.3 | **Registre de Smart Blocks v1 + 6 blocs** — arbitrage B tranché → **D-023** (blocs COMPOSITES DE PRIMITIVES, granularité section — la seule compatible avec l'AIR gelé ; primitives HORS registre ; allowlist positive ; E2E-agnostique par cliquet ; pas d'élargissement au cas où). Paquet `@deribfy/blocks` : 6 définitions à **schémas de props STRICTS** (`button`, `detail_header`, `empty_state`, `form`, `header`, `list` — liste exacte sous cliquet), liaison d'entité explicite, pont **`validateAirBlocks`** (refus net, champs/actions validés contre l'AIR — **NON câblé au corpus GELÉ**, L2 : couverture corpus = Phase 4/arbitrage C), 6 composants composant EXCLUSIVEMENT les primitives (cliquet : FlatList seul import RN, zéro style, zéro token direct), **4 compositions de référence testées** (AuthFlow, List/Detail, Form, Profile — lecture consignée D-023 du critère ROADMAP) + états loading/empty/error du harnais sur `list`/`form` ; **27 tests** (dont F1/F2 négatifs et cliquet linguistique F3) | 🟢 **TERMINÉE ET GELÉE** (2026-08-28) — revue propriétaire complète puis corrections pré-gel F1 (`button.actionId` requis), F2 (appariement `actionLabel` ⟺ `actionId`), F3 (états discriminés, zéro chaîne linguistique dans le moteur) ; `max(4)` supprimée (sans source normative), `min(1)` justifiée ; **GEL D-024 : registre + 6 contrats en 1.0.0, cliquet verrouillé** ; packages 6/6 : tsc/lint 0, **183/183 tests** ; web intact : tsc EXIT=0 + 4071/4071 |
+| 3.4 | **Harnais de rendu device/émulateur** (H1+M1+V2 validés) — app autonome `harness/render/` (hors workspaces, patron banc) consommant les VRAIES sources des paquets gelés ; 5 écrans (AuthFlow, List/Detail, Form, Profile, États) ; protocole Maestro : parcours light→dark asserté + captures, bascule RTL réelle (`forceRTL`+relance) puis **REJEU INCHANGÉ du parcours**, retour LTR ; **tap RÉEL List→Detail** (réserve D-024 levée) ; 44 captures versionnées + journaux + `synthese-3.4.md`. Anomalies traitées sur preuve : dialogue deep-link post-build (préparateur hors critères), sandbox takeScreenshot (chemins relatifs), **défaut de composition démontré sur device : écrans sans ScreenShell = fond non thémé en dark → correction harnais + NOTE D'ARCHITECTURE Phase 4 (écran généré = ScreenShell + blocs) + protocole intégralement rejoué** | 🟢 **TERMINÉE** (2026-08-28) — **VERT iOS ET Android**, 0 $ |
 
 ## PHASE 2 — DÉTAIL (ouverte le 2026-08-27)
 
