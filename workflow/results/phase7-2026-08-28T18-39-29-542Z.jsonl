@@ -1,0 +1,16 @@
+{"epreuve":"P1-bout-en-bout","event":"debut"}
+{"epreuve":"P1-bout-en-bout","event":"mesures","status":"COMPLETED","dureeMs":44741,"etapes":["resolve","compile","verify","oracle","finalize"],"artefacts":["a25aec760cb5","343a94d994c4","0488fcb70db7","4e08782dbe8b","f9f5894172b8"]}
+{"epreuve":"P1-bout-en-bout","event":"REUSSIE"}
+{"epreuve":"P2-kill9-idempotence","event":"debut"}
+{"epreuve":"P2-kill9-idempotence","event":"mesures","status":"COMPLETED","dureeMs":62825,"tentatives_compile":2,"etapes":["resolve","compile","verify","oracle","finalize"],"artefacts_identiques_a_P1":true}
+{"epreuve":"P2-kill9-idempotence","event":"REUSSIE"}
+{"epreuve":"P3-annulation","event":"debut"}
+{"epreuve":"P3-annulation","event":"mesures","status":"CANCELED"}
+{"epreuve":"P3-annulation","event":"REUSSIE"}
+{"epreuve":"P4-timeout","event":"debut"}
+{"epreuve":"P4-timeout","event":"mesures","status":"COMPLETED","dureeMs":616066}
+{"epreuve":"P4-timeout","event":"ECHOUEE","detail":"le job aurait dû être borné par le timeout"}
+{"epreuve":"P5-etat-inspectable","event":"debut"}
+{"epreuve":"P5-etat-inspectable","event":"mesures","instantanes":[{"status":"QUEUED","hasOutput":false},{"status":"EXECUTING","hasOutput":false},{"status":"EXECUTING","hasOutput":false},{"status":"EXECUTING","hasOutput":false},{"status":"EXECUTING","hasOutput":false}],"statutFinal":"COMPLETED","etapesLisibles":["resolve:a25aec76","compile:343a94d9","verify:0488fcb7","oracle:4e08782d","finalize:f9f58941"]}
+{"epreuve":"P5-etat-inspectable","event":"REUSSIE"}
+{"RESUME":"4/5 épreuves réussies","journal":"/Users/yia/Documents/woorri/workflow/results/phase7-2026-08-28T18-39-29-542Z.jsonl"}

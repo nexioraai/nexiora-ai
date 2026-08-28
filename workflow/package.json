@@ -1,0 +1,13 @@
+{
+  "name": "deribfy-workflow-runtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ADAPTATEUR Trigger.dev (Phase 7, D-035) — HORS des workspaces : le monorepo n'a aucune dependance a un moteur d'orchestration (cliquet engine-agnostic). Execute le plan de @deribfy/workflow.",
+  "dependencies": {
+    "@trigger.dev/sdk": "^4",
+    "modal": "^0.10.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": { "@trigger.dev/build": "^4" }
+}

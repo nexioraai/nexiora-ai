@@ -1,0 +1,21 @@
+{
+  "name": "@deribfy/workflow",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Workflow v1 (Phase 7, D-035) — machine a etats PURE du pipeline de generation, AGNOSTIQUE du moteur d'orchestration (§14/#12). Les adaptateurs (Trigger.dev) sont hors du coeur.",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run"
+  },
+  "dependencies": { "@deribfy/air-schema": "*", "zod": "^4.4.3" },
+  "devDependencies": {
+    "@types/node": "^20",
+    "eslint": "^9.39.0",
+    "typescript": "^5",
+    "typescript-eslint": "^8.60.0",
+    "vitest": "^4.1.10"
+  }
+}

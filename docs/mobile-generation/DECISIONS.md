@@ -451,6 +451,78 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   et consignés ✅ · preuve « sandbox sans secrets » ✅. Packages 382/382,
   web intact (tsc 0 + 4071/4071). **Clôture = constat propriétaire.**
 
+## D-035 — OUVERTURE PHASE 7 : Workflow asynchrone durable (découpage, 2026-08-28)
+
+- **Contexte** : dépendances ROADMAP satisfaites (Phases 4-6 ✅, P-001 →
+  D-016 Trigger.dev v4 ✅). Feu vert de continuité propriétaire.
+- **Découpage** :
+  - **7.1** `@deribfy/workflow` — machine à états PURE et **agnostique du
+    moteur d'orchestration** (même discipline que D-033 pour le sandbox) :
+    étapes du pipeline de génération, transitions, **clés d'idempotence
+    déterministes**, état inspectable ; cliquet engine-agnostic. 0 $.
+  - **7.2** Adaptateur **Trigger.dev** HORS du cœur (`workflow/`, hors
+    workspaces — patron de l'adaptateur Modal) : tâches durables portant
+    les étapes réelles.
+  - **7.3** Génération **bout-en-bout pilotée par jobs** (réelle).
+  - **7.4** Critère dur : `kill -9` en plein milieu → reprise sans doublon
+    (idempotence prouvée) · annulation propre · timeouts · état inspectable.
+  - **7.5** Clôture.
+- **Lecture consignée (sécurité)** : l'orchestrateur managé (D-016) exécute
+  les étapes hors de notre machine ; les credentials nécessaires aux étapes
+  externes sont transmis par la **synchronisation chiffrée d'env de
+  Trigger.dev** (patron déjà employé au banc P-001 avec `DATABASE_URL`) —
+  jamais dans le dépôt, jamais journalisés. Conséquence assumée du choix
+  d'un orchestrateur managé.
+- **Lecture consignée (§14)** : ARCHITECTURE §14 évoquait « état durable +
+  file en Postgres » AVANT le banc ; **D-016 a tranché un moteur managé**
+  qui fournit file, état durable, retries, dédup et workers — l'état
+  durable vit donc dans le moteur, l'état MÉTIER dans notre machine à
+  états. Aucune modification de ROADMAP.
+
+### D-035-R7 — PHASE 7 CLOSE : Workflow asynchrone durable, critère dur PROUVÉ (2026-08-28)
+
+- **7.1** `@deribfy/workflow` — machine à états PURE et **agnostique du
+  moteur** : 5 étapes du pipeline, transitions fail-closed, **clés
+  d'idempotence déterministes** (jobId, étape, airHash — sans horodatage ni
+  aléa), détection de non-déterminisme, état inspectable ; **cliquet
+  engine-agnostic** (aucun SDK d'orchestrateur dans le cœur) — 13/13.
+- **7.2** Adaptateur **Trigger.dev** dans `workflow/` **HORS des
+  workspaces** (patron D-033) : le monorepo n'a **aucune dépendance à un
+  moteur d'orchestration**. Déployé : version `20260828.1`, 2 tâches.
+- **7.3/7.4 — CRITÈRE DUR : 5/5 ÉPREUVES RÉUSSIES** (journaux
+  `workflow/results/`) :
+  - **P1 bout-en-bout piloté par jobs** : 5 étapes RÉELLES du moteur
+    (resolve → compile → **verify = pipeline §8 dans la sandbox Modal via
+    le contrat provider-agnostic** → Oracle L1 → finalize), **44,7 s**,
+    5 artefacts (dont rootHash `343a94d994c4` = celui de la Phase 4) ;
+  - **P2 kill -9 → reprise SANS DOUBLON** : mort BRUTALE du processus en
+    pleine étape `compile` (`process.exit(1)`), **reprise automatique**
+    (2 tentatives), pipeline complété en 62,8 s, **5 étapes une seule
+    fois** et **artefacts IDENTIQUES à P1** — idempotence prouvée à
+    l'artefact près, pas seulement au compte ;
+  - **P3 annulation propre** : `runs.cancel` en cours → statut terminal
+    `CANCELED`, étapes suivantes jamais exécutées ;
+  - **P4 timeouts** : étape dépassant `maxDuration` → **step `TIMED_OUT`
+    (1 seule tentative)**, job borné à **620 s**, statut métier `failed`
+    sur `resolve`, **0 artefact produit** ;
+  - **P5 état inspectable** : instantanés successifs lisibles par API
+    (QUEUED → EXECUTING → COMPLETED), étapes et artefacts consultables.
+- **Anomalie traitée sur preuve** : P4 initialement rouge — **cause
+  démontrée par l'API** (le step était bien `TIMED_OUT` et la sortie métier
+  bien `failed/resolve/0 artefact`) : c'était l'**ASSERTION du test** qui
+  confondait statut du RUN d'orchestration (le parent se termine
+  normalement en RETOURNANT un verdict d'échec) et statut MÉTIER. Test
+  corrigé, épreuve REJOUÉE → réussie. Aucun défaut du système.
+- **Lecture consignée (sécurité)** : credentials des étapes externes
+  synchronisés vers l'environnement CHIFFRÉ du moteur managé (patron
+  P-001) — jamais dans le dépôt, jamais journalisés.
+- **CRITÈRES DE SORTIE ROADMAP — TOUS SATISFAITS** : génération
+  bout-en-bout pilotée par jobs ✅ · `kill -9` en plein milieu → reprise
+  correcte sans doublon (idempotence prouvée) ✅ · cancellation propre ✅ ·
+  timeouts ✅ · état inspectable ✅. Packages **395/395**, tsc/lint 0 ;
+  **web intact** (tsc 0 + 4071/4071). Coût : crédits (~0 $).
+  **Clôture = constat propriétaire.**
+
 ## ~~P-002~~ → D-033 — Provider de sandbox : **MODAL** (TRANCHÉ, 2026-08-28)
 
 - **Options bancées** : E2B ; Modal (finalistes du dossier) ; Fly / Vercel /

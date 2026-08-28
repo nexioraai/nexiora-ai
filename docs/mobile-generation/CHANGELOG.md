@@ -1,5 +1,17 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-28 — PHASE 7 : Workflow durable, CRITÈRE DUR PROUVÉ (D-035-R7)
+
+- **7.1** `@deribfy/workflow` (machine à états pure, agnostique du moteur,
+  clés d'idempotence déterministes, cliquet engine-agnostic — 13/13) ·
+  **7.2** adaptateur Trigger.dev hors workspaces (déployé `20260828.1`) ·
+  **7.3/7.4 CRITÈRE DUR 5/5** : bout-en-bout piloté par jobs (5 étapes
+  réelles dont sandbox §8, 44,7 s) · **kill -9 → reprise sans doublon,
+  artefacts IDENTIQUES** (62,8 s, 2 tentatives) · annulation CANCELED ·
+  timeout borné (620 s, métier `failed`, 0 artefact) · état inspectable.
+- Anomalie P4 : défaut d'ASSERTION du test (statut run vs métier), cause
+  démontrée par l'API, corrigée et rejouée. Packages 395/395 ; web intact.
+
 ## 2026-08-28 — PHASE 6 : Sandbox + Oracle v1, critères tous satisfaits (D-034-R6)
 
 - **6.1** `@deribfy/sandbox` (interface provider-agnostic §15 + runner §8 +
