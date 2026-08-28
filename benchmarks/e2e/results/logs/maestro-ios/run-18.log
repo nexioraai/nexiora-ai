@@ -1,0 +1,14 @@
+Running on iPhone 17 Pro - iOS 26.5 - 68B8F6A8-F2BC-42BC-9B7E-9431ABC82F77
+ > Flow flow-reference
+Launch app "com.deribfy.bench.e2e"... COMPLETED
+Assert that id: bench-result is visible... COMPLETED
+Tap on id: nav-form... COMPLETED
+Assert that "Format invalide" is visible... COMPLETED
+Assert that "IBAN inconnu" is visible... COMPLETED
+Assert that id: form-submit is visible... COMPLETED
+Tap on id: nav-theme... COMPLETED
+Assert that id: toggle-theme is visible... COMPLETED
+Tap on id: toggle-theme... COMPLETED
+Assert that id: toggle-rtl is visible... COMPLETED
+Tap on id: nav-list... COMPLETED
+Assert that id: bench-list is visible... COMPLETED

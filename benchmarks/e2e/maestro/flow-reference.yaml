@@ -1,0 +1,46 @@
+# BANC E2E — FLOW DE RÉFÉRENCE (Maestro). Sémantique STRICTEMENT identique au
+# test Detox : mêmes étapes, mêmes assertions, même point de synchronisation.
+appId: com.deribfy.bench.e2e
+---
+- launchApp:
+    clearState: false
+# 1. synchronisation : fin du scénario auto de la fixture P-003
+- extendedWaitUntil:
+    visible:
+      id: "bench-result"
+    timeout: 60000
+# 2. navigation vers le formulaire
+- tapOn:
+    id: "nav-form"
+# 3. assertions d'état error
+- extendedWaitUntil:
+    visible: "Format invalide"
+    timeout: 10000
+- extendedWaitUntil:
+    visible: "IBAN inconnu"
+    timeout: 10000
+# 4. bouton de soumission présent
+- extendedWaitUntil:
+    visible:
+      id: "form-submit"
+    timeout: 10000
+# 5. écran thème + bascule
+- tapOn:
+    id: "nav-theme"
+- extendedWaitUntil:
+    visible:
+      id: "toggle-theme"
+    timeout: 10000
+- tapOn:
+    id: "toggle-theme"
+- extendedWaitUntil:
+    visible:
+      id: "toggle-rtl"
+    timeout: 10000
+# 6. retour à la liste
+- tapOn:
+    id: "nav-list"
+- extendedWaitUntil:
+    visible:
+      id: "bench-list"
+    timeout: 10000

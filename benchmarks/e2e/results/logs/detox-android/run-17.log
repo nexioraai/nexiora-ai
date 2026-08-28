@@ -1,0 +1,16 @@
+00:11:20.897 detox[4419] B DETOX_IOS_APP="/Users/yia/Library/Developer/Xcode/DerivedData/e2ebench-bsrokrunbthgqrespubnoylixwsj/Build/Products/Release-iphonesimulator/e2ebench.app" jest --config e2e/jest.config.js e2e/flow.test.js
+00:11:20.898 detox[4419] i (node:4419) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+00:11:22.699 detox[4420] i flow.test.js is assigned to emulator-5554 (bench_pixel)
+00:11:31.308 detox[4420] i flow-reference: navigation + formulaire + états error
+00:11:33.279 detox[4420] i flow-reference: navigation + formulaire + états error [OK]
+
+PASS e2e/flow.test.js (12.104 s)
+  flow-reference
+    ✓ navigation + formulaire + états error (1970 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        12.15 s, estimated 13 s
+Ran all test suites matching /e2e\/flow.test.js/i.

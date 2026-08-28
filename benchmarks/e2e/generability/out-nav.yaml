@@ -1,0 +1,21 @@
+appId: ${APP_ID}
+---
+- launchApp
+- tapOn:
+    id: "nav-list"
+- extendedWaitUntil:
+    visible:
+      id: "bench-list"
+    timeout: 10000
+- tapOn:
+    id: "nav-form"
+- extendedWaitUntil:
+    visible:
+      id: "form-submit"
+    timeout: 10000
+- tapOn:
+    id: "nav-theme"
+- extendedWaitUntil:
+    visible:
+      id: "toggle-theme"
+    timeout: 10000

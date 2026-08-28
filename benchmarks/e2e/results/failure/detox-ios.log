@@ -1,0 +1,36 @@
+00:14:34.342 detox[5617] B DETOX_IOS_APP="/Users/yia/Library/Developer/Xcode/DerivedData/e2ebench-bsrokrunbthgqrespubnoylixwsj/Build/Products/Release-iphonesimulator/e2ebench.app" jest --config e2e/jest.config.js e2e/failure.test.js
+00:14:34.343 detox[5617] i (node:5617) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+00:14:37.994 detox[5618] i failure.test.js is assigned to 68B8F6A8-F2BC-42BC-9B7E-9431ABC82F77 (undefined)
+00:14:39.481 detox[5618] i com.deribfy.bench.e2e launched. To watch simulator logs, run:
+        /usr/bin/xcrun simctl spawn 68B8F6A8-F2BC-42BC-9B7E-9431ABC82F77 log stream --level debug --style compact --predicate 'process == "e2ebench"'
+00:14:49.927 detox[5618] i sonde-echec: assertion volontairement fausse
+00:14:58.161 detox[5618] i sonde-echec: assertion volontairement fausse [FAIL]
+
+FAIL e2e/failure.test.js (23.532 s)
+  sonde-echec
+    ✕ assertion volontairement fausse (8234 ms)
+
+  ● sonde-echec › assertion volontairement fausse
+
+    Test Failed: Timed out while waiting for expectation: TOBEVISIBLE WITH MATCHER(id == “element-inexistant”) TIMEOUT(8s)
+
+    HINT: To print view hierarchy on failed actions/matches, use log-level verbose or higher.
+
+      4 |   beforeAll(async () => { await device.launchApp({ newInstance: true }); });
+      5 |   it("assertion volontairement fausse", async () => {
+    > 6 |     await waitFor(element(by.id("element-inexistant"))).toBeVisible().withTimeout(8000);
+        |                                                                       ^
+      7 |   });
+      8 | });
+      9 |
+
+      at Object.withTimeout (e2e/failure.test.js:6:71)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 1 total
+Snapshots:   0 total
+Time:        23.573 s
+Ran all test suites matching /e2e\/failure.test.js/i.
+00:14:58.287 detox[5617] E Command failed with exit code = 1:
+DETOX_IOS_APP="/Users/yia/Library/Developer/Xcode/DerivedData/e2ebench-bsrokrunbthgqrespubnoylixwsj/Build/Products/Release-iphonesimulator/e2ebench.app" jest --config e2e/jest.config.js e2e/failure.test.js

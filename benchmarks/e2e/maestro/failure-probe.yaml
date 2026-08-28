@@ -1,0 +1,8 @@
+# SONDE DE DIAGNOSTIC D'ÉCHEC (Maestro) — assertion volontairement fausse.
+appId: com.deribfy.bench.e2e
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "element-inexistant"
+    timeout: 8000

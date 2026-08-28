@@ -1,0 +1,7 @@
+{
+  "navigation": { "entryScreenId": "scr_list", "routes": [
+    { "id": "rt_list", "screenId": "scr_list", "testID": "nav-list", "anchor": "bench-list" },
+    { "id": "rt_form", "screenId": "scr_form", "testID": "nav-form", "anchor": "form-submit" },
+    { "id": "rt_theme", "screenId": "scr_theme", "testID": "nav-theme", "anchor": "toggle-theme" }
+  ]}
+}

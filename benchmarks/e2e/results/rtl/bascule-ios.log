@@ -1,0 +1,11 @@
+Running on iPhone 17 Pro - iOS 26.5 - 68B8F6A8-F2BC-42BC-9B7E-9431ABC82F77
+ > Flow rtl-flow
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by com.oracle.truffle.api.dsl.InlineSupport$UnsafeField (file:/Users/yia/.maestro/lib/truffle-api-24.2.0.jar)
+WARNING: Please consider reporting this to the maintainers of class com.oracle.truffle.api.dsl.InlineSupport$UnsafeField
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+Launch app "${APP_ID}"... COMPLETED
+Tap on id: nav-theme... COMPLETED
+Tap on id: toggle-rtl... COMPLETED
+Stop ${APP_ID}... COMPLETED
+Launch app "${APP_ID}"... COMPLETED
