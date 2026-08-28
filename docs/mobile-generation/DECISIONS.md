@@ -415,6 +415,42 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   deviennent sans objet pour la sélection et seront relevées sur (c) seul
   en Phase 7 si utiles au dimensionnement.
 
+### D-034-R6 — PHASE 6 CLOSE : Sandbox + Oracle v1, critères tous satisfaits (2026-08-28)
+
+- **6.1** `@deribfy/sandbox` : interface `SandboxProvider` provider-agnostic
+  + runner de pipeline (§8, destruction garantie en finally) + **cliquet
+  provider-agnostic** + tests sur provider factice (5/5).
+- **6.2** `@deribfy/oracle` L1 déterministe (§9) : service SÉPARÉ qui
+  re-vérifie sans faire confiance au générateur — 4 contrôles
+  (re-validation fail-closed, déterminisme recompilé, diff
+  permissions/manifestes vs AIR, cohérence schéma backend) ; détecte hash
+  et AIR falsifiés (14/14).
+- **6.3** Adaptateur Modal (HORS du cœur — monorepo sans dépendance
+  `modal`) injecté dans le runner AGNOSTIQUE : **pipeline §8 réel sur l'app
+  témoin dans un sandbox Modal — VERT** (install→typecheck→bundle,
+  ~27,8-28,6 s ; npm_ci ~9,6 s, tsc ~1,9 s, bundle ~15 s), **teardown
+  prouvé** ; Oracle L1 4/4 sur l'AIR témoin.
+- **6.4** Oracle L2 : `generateMaestroFlows(air)` — flows E2E **générés
+  depuis l'AIR** (navigation via actions ui→navigate réelles, état peuplé =
+  fixtures, RTL), testID = identités stables, geste de retour par
+  plateforme ; 27/27 générateur (12/12 corpus) ; **DEVICE : 4/4 flows
+  générés VERTS sur les 2 émulateurs** (nav+RTL iOS+Android, 0 échec).
+- **6.5** « sandbox SANS SECRETS » prouvé par tentative (6.3 : env NONE,
+  metadata bloqué) ; temps/coût par pipeline consignés (crédits Modal,
+  ~0 $ réel).
+- **Anomalies traitées sur preuve** : workdir non-root (E2B), collision de
+  nom `run`, `getent` pendant, sonde secrets `MODAL_IMAGE_ID` faux positif
+  (métadonnée publique), déterminisme Oracle non enveloppé (fail-closed),
+  `- back` iOS sans bouton système → geste de bord. Aucune sur hypothèse.
+- **Garde-fous** : indépendance provider-agnostic PRÉSERVÉE (cliquet vert,
+  0 dépendance modal dans le monorepo) ; zones gelées intouchées ; secrets
+  hors dépôt jamais journalisés.
+- **CRITÈRES DE SORTIE ROADMAP — TOUS SATISFAITS** : pipeline complet vert
+  sur l'app témoin ✅ · flows E2E générés depuis l'AIR (navigation + états +
+  RTL) verts sur émulateurs iOS/Android ✅ · temps/coût par pipeline mesurés
+  et consignés ✅ · preuve « sandbox sans secrets » ✅. Packages 382/382,
+  web intact (tsc 0 + 4071/4071). **Clôture = constat propriétaire.**
+
 ## ~~P-002~~ → D-033 — Provider de sandbox : **MODAL** (TRANCHÉ, 2026-08-28)
 
 - **Options bancées** : E2B ; Modal (finalistes du dossier) ; Fly / Vercel /

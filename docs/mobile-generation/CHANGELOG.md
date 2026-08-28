@@ -1,5 +1,17 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-28 — PHASE 6 : Sandbox + Oracle v1, critères tous satisfaits (D-034-R6)
+
+- **6.1** `@deribfy/sandbox` (interface provider-agnostic §15 + runner §8 +
+  cliquet provider-agnostic) · **6.2** `@deribfy/oracle` L1 déterministe §9
+  (service séparé, 4 contrôles, détecte falsifications) · **6.3** adaptateur
+  Modal injecté (hors cœur) → pipeline §8 réel dans sandbox Modal VERT
+  (~28 s, teardown prouvé), Oracle L1 4/4 · **6.4** flows E2E générés depuis
+  l'AIR (nav+états+RTL) — 4/4 VERTS sur les 2 émulateurs · **6.5** sandbox
+  sans secrets prouvé, temps/coût consignés.
+- Indépendance MODAL/E2B préservée (cliquet vert, monorepo sans dep modal).
+  Packages 382/382 ; web intact (tsc 0 + 4071/4071). Crédits Modal (~0 $).
+
 ## 2026-08-28 — PHASE 5 : critères tous satisfaits (D-032/D-032-R55)
 
 - **@deribfy/provisioner** (5.1-5.2) : AIR→SQL pur (patron §7), interface
