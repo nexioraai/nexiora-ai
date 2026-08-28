@@ -420,12 +420,89 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
 - **Options** : E2B ; Modal ; Fly Machines ; Vercel Sandbox.
 - **Tranché par** : banc Phase 1 (cold start, cache npm, egress, prix).
 
-## P-003 — Lib de styling React Native
+## ~~P-003~~ → D-021 — Lib de styling RN : **StyleSheet + tokens maison** (TRANCHÉ, 2026-08-27)
 
-- **Options** : StyleSheet + tokens maison ; react-native-unistyles ;
-  Tamagui ; NativeWind.
-- **Contrainte** : zéro fuite du choix dans les contrats de primitives.
-- **Tranché par** : banc Phase 1 (perfs, poids, compat New Architecture).
+- **Contexte** : décision prise par le propriétaire le 2026-08-27 sur dossier
+  complet — banc P-003 exécuté sur **4 candidats** (protocole versionné,
+  2 plateformes, builds Release, New Architecture), puis **étendu à
+  6 candidats** après revue de paysage indépendante (sources primaires :
+  npm, GitHub, doc Expo, State of React Native 2025). **Aucune mesure
+  initiale rejouée, protocole NON modifié**, audit de conformité vert
+  avant extension. Mesures brutes versionnées : `benchmarks/styling/results/`
+  (`ios.jsonl`, `android.jsonl`, `ios-extension.jsonl`,
+  `android-extension.jsonl`, `poids-*.txt`, `rtl/`, `parite/`,
+  `synthese-P-003.md`, `synthese-P-003-extension.md`).
+- **Problème** : quelle couche de styling concrète implémente les primitives
+  du design system (ARCHITECTURE §22), sachant que le choix ne doit jamais
+  fuiter dans les CONTRATS de primitives (lib remplaçable).
+- **Options mesurées (6)** — égalité stricte sur RTL **6/6**, New Architecture
+  **6/6**, étanchéité contractuelle **6/6**, fluidité (0 frame > 34 ms partout) :
+
+  | Candidat | Bascule thème (iOS/Android) | Bundle JS | .app / APK | LOC |
+  |---|---|---|---|---|
+  | **StyleSheet + tokens** | **33,3 / 43,9 ms (2 frames)** | **réf 1 436 Ko** | **réf** | 153 |
+  | @shopify/restyle 2.4.5 | 66,7 / 66,9 ms | +20 Ko | +16 / +12 Ko | 170 |
+  | uniwind 1.11 (moteur libre) | 83,3 / 55,8 ms | +292 Ko | +288 / +228 Ko | 83 |
+  | react-native-unistyles 3.3 | 33,3 / 38,2 ms | +156 Ko | +5 080 / +8 956 Ko | 138 |
+  | nativewind 4.2.6 | 33,2 / 87,2 ms | +1 088 Ko | +9 776 / +11 140 Ko | 94 |
+  | tamagui 2.7.7 | 166,7 / 175,9 ms (10 frames) | +5 512 Ko | +6 052 / +4 744 Ko | 168 |
+
+- **Décision (propriétaire, 2026-08-27)** : **`StyleSheet` + tokens maison**,
+  finalistes écartés : Restyle (2ᵉ), Uniwind libre (3ᵉ).
+- **Raisons** :
+  1. Il gagne **les deux seuls axes que le banc discrimine réellement** —
+     poids (plancher absolu) et bascule de thème (2 frames sur les deux
+     plateformes) — et il est à égalité sur tout le reste. **Le TTI ne
+     discrimine pas** : dispersion inter-runs mesurée à **±37 %** (3
+     observations par nouveau candidat), du même ordre que les écarts.
+  2. **Zéro dépendance, zéro licence, zéro plugin, zéro étape de build** dans
+     le chemin qui doit produire, en Phase 4, **10 hash de sortie identiques
+     sur 10**.
+  3. **Détection des fautes à la compilation [démontré]** : une faute de token
+     produit une erreur `tsc` (avec suggestion), là où la famille
+     utility-first laisse passer `bg-surfacee p-mdd` **silencieusement**
+     (épreuve exécutée sur les trois finalistes ; `className` reste typé
+     `string`, l'option `dtsFile` d'Uniwind ne génère que l'union des noms
+     de thèmes — lecture du code amont).
+  4. Son unique défaut mesuré — la verbosité (153 LOC) — est **payé une fois**
+     : les primitives sont écrites, versionnées et testées une fois, puis
+     **émises par le compilateur** et jamais éditées sur place (§3).
+- **Risques consignés et mitigations** :
+  1. **Tout est à notre charge** (variants, responsive, propagation de thème,
+     cas limites) — aucune solution communautaire à réutiliser.
+     *Mitigation* : **seuil de réexamen** — si en Phase 3 la gestion des
+     variants dépasse ~250 LOC par primitive OU produit des divergences
+     token↔code non capturées par `tsc`, **Restyle est ré-évalué comme couche
+     de variants** ; le banc n'est pas à refaire, ses mesures sont versionnées.
+  2. **Repli documenté et déjà mesuré** : Restyle (coût d'adoption dans le
+     bruit : +20 Ko JS, 1 paquet, 0 dépendance transitive, variants typés dans
+     le thème ; freins : cadence gelée depuis 2025-03, conflit ouvert
+     Reanimated 4.4 × RN 0.86). Uniwind reste en **veille** (moteur rapide
+     payant + licence CI/CD, amont v1 jeune, coût de sortie élevé).
+  3. **Réversibilité** : garantie par l'étanchéité contractuelle prouvée 6/6 —
+     un changement futur n'affecte ni les contrats, ni les blocs, ni l'AIR,
+     seulement l'implémentation des primitives.
+- **Candidats non bancés, exclusions motivées** : `react-native-css` /
+  NativeWind v5 (v5 en *preview* — asymétrie de maturité, famille déjà
+  représentée deux fois) · React Strict DOM + StyleX (autre catégorie :
+  modèle de programmation, npm 0.0.55, réserves natives explicites du
+  mainteneur — **veille Phases 3-4**) · Dripsy (dernier commit 2024-10) ·
+  styled-components (maintenance mode déclaré 2025-03-17) · twrnc, Emotion,
+  Zephyr (dominés ou confidentiels).
+- **Réserves de cadrage consignées (non corrigées)** : Tamagui a été bancé
+  avec le paquet `tamagui` (**kit UI complet**) et non `@tamagui/core` — son
+  poids n'est pas concluant, sa signature de bascule à 10 frames l'est ;
+  NativeWind embarque `react-native-reanimated` ; Uniwind n'a été bancé qu'en
+  **moteur libre**.
+- **Conséquences ROADMAP** : la dépendance « P-003 tranché » de la **Phase 3**
+  est **satisfaite**. Le banc **E2E mobile** (Phase 1) devient exécutable sur
+  la même fixture. **Invariants à préserver en Phase 3** (déjà exigés par
+  §22 et les critères de sortie de la phase, rappelés ici comme conditions
+  d'acceptation) : (a) `tokens.json` = **source unique**, le CSS web et le
+  thème RN en sont des **sorties** de codegen, jamais des sources ; (b) aucun
+  type ni concept de la couche de styling dans les CONTRATS de primitives ;
+  (c) `design.overrides` de l'AIR contraint aux **clés de tokens** du schéma
+  versionné, jamais à des déclarations de style libres.
 
 ## P-004 — Palier preview mutualisé (tenancy)
 

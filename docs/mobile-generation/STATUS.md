@@ -1,8 +1,9 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-08-27** (environnement P-003/E2E PROVISIONNÉ et AUDITÉ 🟢 —
-> bancs exécutables sans dérogation ; Phase 2 close ; Phase 3 attend P-003).
+> **2026-08-27** (**P-003 TRANCHÉ → D-021 : StyleSheet + tokens maison** —
+> banc exécuté sur 4 puis 6 candidats ; Phase 2 close ; dépendances de la
+> Phase 3 désormais satisfaites ; banc E2E mobile exécutable).
 
 ## ÉTAT GLOBAL
 
@@ -10,7 +11,7 @@
 |---|---|
 | Plan v0.1 | 🟢 **VALIDÉ ET FIGÉ** (propriétaire, 2026-08-27) — toute évolution passe par `DECISIONS.md` |
 | Phase 0 — Fondations | 🟢 **TERMINÉE** (2026-08-27) — tous les critères de sortie vérifiés, dont **CI GitHub réelle verte : run #32, commit `54ef2a1`, `success`** (capture propriétaire + confirmation API Actions indépendante) |
-| Phase actuelle | **PHASE 2 : 🟢 TERMINÉE** (2026-08-27 — critères de sortie tous satisfaits, registre v1 gelé D-020) · **PHASE 1** : 🔵 bancs restants bloqués sur prérequis propriétaire · **PHASE 3** : ⏳ NON ouverte (dépend de P-003, bloqué sur prérequis) |
+| Phase actuelle | **PHASE 2 : 🟢 TERMINÉE** (2026-08-27 — critères de sortie tous satisfaits, registre v1 gelé D-020) · **PHASE 1** : 🔵 bancs restants bloqués sur prérequis propriétaire · **PHASE 3** : ⏳ non ouverte — **dépendances SATISFAITES** (Phase 2 ✓ + P-003 tranché D-021 ✓) ; s'ouvre après le banc E2E de la Phase 1 |
 | Générateur mobile | 🔵 **EN IMPLÉMENTATION** — premier paquet du moteur : `packages/air-schema` (AIR v1) |
 | Progression globale | **2/15 phases terminées (0, 2)** · Phase 1 en cours |
 
@@ -51,18 +52,19 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
   critère d'inclusion v2, candidates tier B consignées) — **PHASE 2
   TERMINÉE, critères de sortie tous satisfaits**.
 - **En cours** : Phase 1 uniquement (bancs sur prérequis).
-- **Bloqué, prérequis propriétaire** : **Phase 3** (exige P-003 tranché —
-  banc désormais exécutable) · P-002 (comptes E2B/Modal/Fly/Vercel
+- **Bloqué, prérequis propriétaire** : P-002 (comptes E2B/Modal/Fly/Vercel
   Sandbox + budget ~10-20 $) · coûts EAS (compte Expo/EAS) · coût projet
-  Supabase (token Management API, org de test).
-- **Prochaine étape EXACTEMENT autorisée** : **banc P-003** — fixture
-  commune (protocole versionné) puis 4 variantes et mesures ; **E2E
-  ensuite** sur la même fixture. Environnement 🟢 prouvé (option A,
-  audit du 2026-08-27).
+  Supabase (token Management API, org de test). **Phase 3 n'est plus
+  bloquée** : ses deux dépendances ROADMAP sont satisfaites.
+- **Prochaine étape EXACTEMENT autorisée** : **banc E2E mobile
+  (Maestro vs Detox)** — dernier banc de la Phase 1 exécutable sans
+  prérequis propriétaire, sur la MÊME fixture que P-003 (protocole
+  `benchmarks/E2E-mobile.md` : 20 exécutions par plateforme, vitesse, RTL,
+  générabilité depuis l'AIR, diagnostic d'échec). **Phase 3 ensuite.**
 - **INTERDIT à ce stade** : toute phase dont les dépendances ROADMAP ne
-  sont pas satisfaites (Phase 3 exige P-003 ; Phases 4+ dépendent de 2/3),
-  tout push sans accord explicite, toute décision P-00x sans les mesures
-  prévues.
+  sont pas satisfaites (Phases 4+ dépendent de 2/3), tout push sans accord
+  explicite, toute décision P-00x sans les mesures prévues, toute
+  réouverture de P-003 hors seuil de réexamen consigné (D-021).
 
 ## PHASE 2 — DÉTAIL (ouverte le 2026-08-27)
 
@@ -82,7 +84,7 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
 | Coûts LLM (caching) | ✅ | 🟢 **EXÉCUTÉ** — caching ×6,5 global / ×10 entrée confirmé ; **découverte : refus `cyber` 7/10 sur prompts de forme moteur** (détail : `benchmarks/couts-unitaires.md`) |
 | P-001 Orchestration | ✅ | 🟢 **CANDIDAT (a) pgmq+état : CAMPAGNE OFFICIELLE EXÉCUTÉE — 5/5 épreuves éliminatoires réussies** (2026-08-27, base de test `deribfy-mobile-test`, durées du protocole ; journaux versionnés `benchmarks/orchestration/results/`). Mesures : E1 kill -9 → redélivrance prouvée (2 exécutions étape 3), 0 artefact dupliqué · E2 ré-enfilage idempotent 6 jobs/30 artefacts/0 doublon en 342 s (budget calculé 471 s, 2 workers) · E3 annulation propre · E4 exactement 2 tentatives puis `failed` · E5 fenêtre sans worker **prouvée** vide puis reprise. LOC orchestrateur candidat : 158. Campagne 1 (4/5) conservée : faux négatif E2 + fuite worker = **défauts du harnais v1, corrigés en v2** — le candidat n'a montré aucun défaut. **Candidat (b) Inngest : CAMPAGNE OFFICIELLE 5/5 également** (2026-08-27, mode connect, journal `benchmarks/orchestration/inngest/results/`) — E1 redélivrance cloud 157 s avec mémoïsation prouvée (étape 1 : 1 seule exécution) · E2 déduplication par id d'événement : 6 démarrages/12 envois, 160 s (parallélisme natif vs 342 s pour (a)) · E3 `cancelOn` : étape 3 jamais exécutée · E4 `retries:1`+`onFailure` : exactement 2 tentatives · E5 fenêtre prouvée vide puis reprise. **Candidat (c) Trigger.dev v4 : CAMPAGNE OFFICIELLE 5/5 également** (2026-08-27, cloud managé, version `20260827.1`, journal `benchmarks/orchestration/triggerdev/results/`) — E1 redélivrance **2 s** (backoff 1 s configuré) · E2 **101 s**, dédup `idempotencyKey` 6/12 · E3 `runs.cancel` propre · E4 exactement 2 tentatives · E5 fenêtre différée prouvée vide. **DÉCISION PRISE → D-016 : Trigger.dev v4** (arbitrage propriétaire du 2026-08-27 sur dossier complet — les trois candidats à 5/5 ; mesures, coûts, risques et mitigations consignés dans `DECISIONS.md`) |
 | P-002 Sandbox | ✅ | 🔴 bloqué — comptes E2B/Modal/Fly/Vercel Sandbox + budget ~10-20 $ |
-| P-003 Styling RN | ✅ | 🟢 **BANC EXÉCUTÉ INTÉGRALEMENT** (2026-08-27) — 4 candidats × 2 plateformes, protocole suivi sans dérogation : perf liste (60 fps partout, 0 frame > 34 ms), bascule thème (**tamagui ×4-5 sur les 2 plateformes**), RTL 4/4 (captures authentifiées), poids (bundle JS : unistyles +156 Ko · nativewind +1 088 · **tamagui +5 512**), New Arch 4/4, étanchéité 4/4, LOC DX ; synthèse `benchmarks/styling/results/synthese-P-003.md` ; anomalies d'environnement toutes résolues sur preuve (iCloud, JDK 25/prefab→JDK 21, cmake Intel, preset Expo 57…). **DÉCISION P-003 = propriétaire — mesures livrées, aucun gagnant désigné** |
+| P-003 Styling RN | ✅ | 🟢 **BANC EXÉCUTÉ INTÉGRALEMENT** (2026-08-27) — 4 candidats × 2 plateformes, protocole suivi sans dérogation : perf liste (60 fps partout, 0 frame > 34 ms), bascule thème (**tamagui ×4-5 sur les 2 plateformes**), RTL 4/4 (captures authentifiées), poids (bundle JS : unistyles +156 Ko · nativewind +1 088 · **tamagui +5 512**), New Arch 4/4, étanchéité 4/4, LOC DX ; synthèse `benchmarks/styling/results/synthese-P-003.md` ; anomalies d'environnement toutes résolues sur preuve (iCloud, JDK 25/prefab→JDK 21, cmake Intel, preset Expo 57…). **DÉCISION P-003 = propriétaire — mesures livrées, aucun gagnant désigné**. **EXTENSION 2026-08-27 (soir) : banc porté à 6 candidats** — ajout de `@shopify/restyle` 2.4.5 et `uniwind` 1.11.0 (moteur LIBRE ; moteur C++ « Pro » payant NON bancé) après revue de paysage indépendante ; protocole NON modifié, 4 mesures initiales NON rejouées, audit de conformité vert (fixture/contrats/tokens/versions/étanchéité identiques, tsc 6/6). Résultats : RTL 6/6 · New Arch 6/6 · étanchéité 6/6 · poids les plus faibles du banc pour restyle (+20 Ko JS / +16 Ko .app / +12 Ko APK) · LOC les plus faibles pour uniwind (83). **Limite découverte : dispersion inter-runs du TTI ±37 % → le TTI ne discrimine pas sous ~30 ms.** Synthèse : `benchmarks/styling/results/synthese-P-003-extension.md`. **DÉCISION TOUJOURS EN ATTENTE DU PROPRIÉTAIRE** |
 | E2E mobile | ✅ | 🟢 **DÉBLOQUÉ — même environnement que P-003, audité** : Maestro 2.9.0 ✓ · applesimutils 0.9.12 ✓ (prérequis Detox iOS) · image émulateur google_apis sans Play Store (recommandation Detox) ✓ — s'exécute après P-003 (même fixture) |
 | Coûts EAS | ✅ | 🔴 bloqué — compte Expo/EAS |
 | Coût projet Supabase | ✅ | 🔴 bloqué — token Management API (org de test) |
@@ -123,7 +125,7 @@ prouve l'existence, pas le taux). Voir `DECISIONS.md` D-015.
 | ~~P-005~~ | Monorepo à workspaces | — | 🟢 tranché → D-014 (2026-08-27) |
 | ~~P-001~~ | Moteur d'orchestration | — | 🟢 tranché → **D-016 : Trigger.dev v4** (2026-08-27, sur dossier comparatif complet) |
 | P-002 | Provider de sandbox | Banc Phase 1 | ⏳ |
-| P-003 | Lib de styling RN | Banc Phase 1 | ⏳ |
+| ~~P-003~~ | Lib de styling RN | — | 🟢 tranché → **D-021 : StyleSheet + tokens maison** (2026-08-27, banc 6 candidats) |
 | P-004 | Palier preview mutualisé (tenancy) | Avant Phase 5 | ⏳ |
 | P-006 | Domaine du Vertical Slice 2 | Avant Phase 10 | ⏳ |
 

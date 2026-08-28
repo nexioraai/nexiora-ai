@@ -1,5 +1,62 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-27 — P-003 TRANCHÉ (D-021) : StyleSheet + tokens maison
+
+- **Arbitrage propriétaire** sur dossier complet (banc 4 candidats, revue de
+  paysage, extension à 6 candidats, arbitrage technique des 3 finalistes).
+- **Choix : `StyleSheet` + tokens maison.** 2ᵉ Restyle (repli documenté avec
+  seuil de réexamen), 3ᵉ Uniwind libre (veille). Consigné en **D-021** avec
+  mesures, raisons, risques, mitigations, exclusions motivées et invariants
+  d'architecture à préserver en Phase 3.
+- **Vérification de réversibilité exécutée** (aucune modification) : le moteur
+  versionné (`packages/air-schema`, `packages/capability-registry`) ne
+  contient **aucune occurrence** d'une bibliothèque de styling ; l'AIR ne
+  porte que des **références** (`design.theme` = nom, `tokensVersion` =
+  semver, blocs = `blockType` + props génériques), aucune valeur visuelle ni
+  concept de moteur ; étanchéité contractuelle prouvée 6/6 au banc.
+- **Point de vigilance consigné (non corrigé, Phase 3)** : la **source de
+  tokens JSON unique n'existe pas encore** hors fixture de banc — les tokens
+  web vivent aujourd'hui dans `apps/web/src/app/globals.css`. Le critère de
+  sortie de la Phase 3 l'exige déjà (« tokens compilés web+RN depuis la
+  source JSON unique ») : le sens du flux doit être JSON → codegen → CSS web
+  + thème RN, jamais l'inverse.
+- **Conséquence ROADMAP** : dépendances de la **Phase 3 satisfaites**.
+  Prochaine étape autorisée : **banc E2E mobile (Maestro vs Detox)**, dernier
+  banc de Phase 1 exécutable, sur la même fixture. Aucun push.
+
+## 2026-08-27 (soir) — P-003 ÉTENDU À 6 CANDIDATS (mesures, aucune décision)
+
+- **Revue de paysage indépendante** (sources primaires : npm, GitHub, docs
+  officielles, doc Expo, State of React Native 2025) → deux candidats
+  sérieux non bancés identifiés : **Shopify Restyle** (famille « styles typés
+  par tokens », absente du panel) et **Uniwind** (utility-first, 481 k dl/sem.,
+  cité par la doc Expo, concurrent direct de NativeWind).
+- **Écartés avec motif** : `react-native-css`/NativeWind v5 (v5 en *preview* —
+  asymétrie de maturité, famille déjà représentée 2×), React Strict DOM +
+  StyleX (autre catégorie : modèle de programmation, npm 0.0.55, réserves
+  natives du mainteneur), Dripsy (dernier commit 2024-10), styled-components
+  (maintenance mode déclaré 2025-03-17), twrnc/Emotion/Zephyr (dominés).
+- **Ajout au banc SANS modification du protocole** : mêmes fixture, contrats,
+  tokens (thème Uniwind **généré** depuis `tokens.json`), données, écrans,
+  runner, appareils, Release, New Arch, GPU host, métriques. Les 4 mesures
+  initiales n'ont pas été rejouées. Audit de conformité exécuté AVANT mesures :
+  vert (tsc symétrique 6/6, méthode de poids revalidée sur la référence à
+  l'unité près : 1436 Ko).
+- **Résultats** : RTL **6/6** · New Arch **6/6** · étanchéité **6/6** ·
+  0 frame > 34 ms partout · **restyle = plus faible coût d'adoption du banc**
+  (+20 Ko bundle JS, +16 Ko .app, +12 Ko APK, aucun module natif) ·
+  **uniwind = DX la plus concise** (83 LOC) et TTI/scroll de tête ·
+  bascules de thème : restyle 4 frames, uniwind 4-5 frames (vs 2 pour
+  stylesheet/unistyles/nativewind, 10 pour tamagui).
+- **Découverte de méthode consignée** : dispersion inter-runs du TTI de
+  ±37 % (3 observations par nouveau candidat) → **le TTI ne discrimine rien
+  sous ~30 ms d'écart** ; la bascule de thème est la mesure de perf stable.
+- **Réserves consignées, non corrigées** : Tamagui bancé avec le KIT
+  (`tamagui`) et non `@tamagui/core` → son poids n'est pas concluant ;
+  NativeWind embarque `reanimated` ; Uniwind bancé en moteur LIBRE seulement
+  (moteur C++ « Pro » payant, licence CI/CD requise en pipeline → non mesuré).
+- **Aucune décision P-003 prise. Aucun push. Protocole inchangé.**
+
 ## 2026-08-27 — Environnement P-003/E2E PROVISIONNÉ et AUDITÉ (option A, $0)
 
 - **Option A retenue après analyse comparative** (consignée en session) :
