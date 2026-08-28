@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* SEGMENT GÉNÉRÉ (les 3 blocs :root / @theme inline / @media dark ci-dessous)
+   — source de vérité : packages/design-tokens/tokens.json (Phase 3.1b, D-021).
+   Ne pas éditer à la main : modifier tokens.json, puis
+   `npm run generate:web -w @deribfy/design-tokens` et reporter le segment.
+   Un cliquet CI (packages:test) échoue si ce segment diverge de la source. */
 :root {
   --background: #ffffff;
   --foreground: #171717;
