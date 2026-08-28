@@ -995,6 +995,42 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   zones gelées 0 modification. Reste pour clore la Phase 4 : **4.7 — app
   témoin lancée sur émulateurs iOS et Android**.
 
+### D-031-R47 — App témoin + correction de composition ; PHASE 4 : CRITÈRES TOUS SATISFAITS (4.7, 2026-08-28)
+
+- **Défaut de composition DÉMONTRÉ sur device** (hiérarchie Maestro à
+  l'appui) : la FlatList du bloc `list` GELÉ (Section non-flex) s'étendait
+  sans borne dans le shell → blocs post-liste hors écran, inatteignables —
+  même famille que la leçon 3.4. **Correction compilateur (aucune zone
+  gelée touchée)** : l'écran généré est une **page défilante** (ScrollView
+  autour de la pile de blocs). **Réserve consignée** : virtualisation de
+  la FlatList interne neutralisée (négligeable en preview ; revisité au
+  scorecard qualité, Phase 8). **Preuve v46 REJOUÉE après correction**
+  (aucune preuve antérieure conservée) : 12×10 → 10/10 partout,
+  ATTEMPTS=0, nouveaux hashes journalisés.
+- **App témoin (resto-quartier / « maquis-express »)** : projet écrit
+  DEPUIS `compileProject` (rootHash `343a94d9…` ; le rootHash de la
+  campagne re-prouvé au passage), `npm ci`, **builds Release iOS et
+  Android EXIT=0**, **lancée sur les DEUX émulateurs** ; parcours Maestro
+  PASS ×2 : écran d'entrée → **fixtures compilées RENDUES** (ligne
+  `ent_plat_row_1`) → scroll de page → **action `navigate` réelle**
+  (bouton → scr_panier) → retour (back système Android / pop par geste
+  iOS) ; 4 captures versionnées (`results/v47-captures/`). Anomalie de
+  préparation corrigée : appId supposé au lieu du slug réel de l'AIR
+  (`maquis-express`) — défaut du protocole de test, pas du compilateur.
+- **CRITÈRES DE SORTIE PHASE 4 (ROADMAP) — TOUS SATISFAITS** :
+  1. ✅ corpus ACTIF (v2, lecture D-025) : 10 compilations → hash
+     identique 10/10 sur les 12 documents (processus séparés, env
+     alternés — `v46-critere-dur.jsonl`) ;
+  2. ✅ app témoin compilée LANCÉE sur émulateurs iOS ET Android
+     (parcours + captures — `v47-app-temoin.jsonl`) ;
+  3. ✅ artefacts au store SHA-256 (immuable, round-trip vérifié aux 120
+     runs) ;
+  4. ✅ aucun appel LLM dans le chemin de compilation, PROUVÉ PAR
+     INSTRUMENTATION (cliquet statique CI + harnais dynamique V5,
+     ATTEMPTS=0 aux 120 runs, contrôle positif 4.0).
+  Coût API total Phase 4 : **0 $** (conforme à l'analyse D-026).
+  **Clôture de la phase = constat propriétaire** (règle du chantier).
+
 ## ~~P-003~~ → D-021 — Lib de styling RN : **StyleSheet + tokens maison** (TRANCHÉ, 2026-08-27)
 
 - **Contexte** : décision prise par le propriétaire le 2026-08-27 sur dossier

@@ -1,5 +1,20 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-28 — 4.7 TERMINÉE : app témoin iOS+Android — PHASE 4 COMPLÈTE
+
+- **Défaut de composition démontré sur device** (hiérarchie Maestro) :
+  liste gelée non bornable → blocs hors écran. Correction compilateur :
+  écran généré = **page défilante** (zéro zone gelée touchée ; réserve
+  virtualisation → Phase 8). **v46 REJOUÉE** après correction : 12×10 →
+  10/10 partout, ATTEMPTS=0, nouveaux hashes.
+- **App témoin** (« maquis-express ») : écrite depuis compileProject
+  (rootHash de campagne re-prouvé), builds Release iOS+Android EXIT=0,
+  **lancée sur les 2 émulateurs**, parcours Maestro PASS ×2 (fixtures
+  rendues, navigate réel, back système/geste), 4 captures versionnées.
+- **PHASE 4 — critères ROADMAP tous satisfaits** : hash 10/10 sur corpus
+  actif ✅ · app témoin émulateurs ✅ · store SHA-256 ✅ · zéro LLM
+  instrumenté ✅ · coût API 0 $. Clôture = constat propriétaire.
+
 ## 2026-08-28 — 4.6 TERMINÉE : CRITÈRE DUR PROUVÉ (D-031)
 
 - **compileProject PUR** (gabarit scellé embarqué + émission → projet

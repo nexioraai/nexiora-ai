@@ -1,11 +1,12 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-08-28** (**4.6 TERMINÉE — D-031 : CRITÈRE DUR PROUVÉ** — 12 docs
-> × 10 compilations en processus séparés → hash identique 10/10 partout,
-> ATTEMPTS=0 sous harnais zéro-réseau aux 120 runs, store SHA-256
-> round-trip vérifié — compiler 88/88, packages 334/334, web intact ;
-> prochaine étape : **4.7 — app témoin émulateurs iOS et Android**).
+> **2026-08-28** (**4.7 TERMINÉE — PHASE 4 : CRITÈRES TOUS SATISFAITS**
+> (D-031-R47) : app témoin compilée LANCÉE sur émulateurs iOS ET Android,
+> parcours Maestro PASS ×2 (fixtures rendues, navigate réel, back), 4
+> captures ; correction composition « page défilante » démontrée sur
+> device, v46 REJOUÉE 12×10 verts ; **clôture Phase 4 = constat
+> propriétaire**).
 
 ## ÉTAT GLOBAL
 
@@ -13,9 +14,9 @@
 |---|---|
 | Plan v0.1 | 🟢 **VALIDÉ ET FIGÉ** (propriétaire, 2026-08-27) — toute évolution passe par `DECISIONS.md` |
 | Phase 0 — Fondations | 🟢 **TERMINÉE** (2026-08-27) — tous les critères de sortie vérifiés, dont **CI GitHub réelle verte : run #32, commit `54ef2a1`, `success`** (capture propriétaire + confirmation API Actions indépendante) |
-| Phase actuelle | **PHASE 4 : 🔵 EN COURS** (D-026) — 4.0 🟢 · 4.1 🟢 · 4.2 🟢 · 4.3 🟢 · 4.4 🟢 · 4.5 🟢 · 4.6 🟢 (D-031, critère dur PROUVÉ) · prochaine : **4.7** · **PHASE 3 : 🟢 TERMINÉE** (2026-08-28, clôture constatée par le propriétaire avec l'arbitrage C/D-025) · **PHASE 1** : 🔵 bancs restants bloqués sur prérequis propriétaire |
+| Phase actuelle | **PHASE 4 : 🔵 EN COURS** (D-026) — 4.0 🟢 · 4.1 🟢 · 4.2 🟢 · 4.3 🟢 · 4.4 🟢 · 4.5 🟢 · 4.6 🟢 · **4.7 🟢 — CRITÈRES DE PHASE TOUS SATISFAITS, clôture = constat propriétaire** · **PHASE 3 : 🟢 TERMINÉE** (2026-08-28, clôture constatée par le propriétaire avec l'arbitrage C/D-025) · **PHASE 1** : 🔵 bancs restants bloqués sur prérequis propriétaire |
 | Générateur mobile | 🔵 **EN IMPLÉMENTATION** — chantier courant : compilateur déterministe v1 (Phase 4, architecture D-026) |
-| Progression globale | **3/15 phases terminées (0, 2, 3)** · Phase 4 en cours (4.0-4.6 🟢 → 4.7, critère dur prouvé) · Phase 1 en cours (bancs exécutables tous faits) |
+| Progression globale | **3/15 phases terminées (0, 2, 3)** · **Phase 4 : 4.0-4.7 🟢 — critères satisfaits, constat propriétaire attendu** · Phase 1 en cours (bancs exécutables tous faits) |
 
 ## PHASE 0 — DÉTAIL DES SOUS-ÉTAPES
 
@@ -97,12 +98,17 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
   ré-scellé 3ᵉ fois, preuves rejouées ; 0 $.
 - **4.5 TERMINÉE (2026-08-28, D-030)** : fixtures compilées déterministes
   + provider demo, preuves rejouées ; 0 $.
-- **4.6 TERMINÉE (2026-08-28, D-031)** : **CRITÈRE DUR PROUVÉ** — 12×10
-  processus séparés, hash 10/10 partout, zéro-réseau instrumenté (120
-  runs ATTEMPTS=0), store SHA-256 ; 0 $.
-- **Prochaine étape EXACTEMENT autorisée** : **4.7 — app témoin : build et
-  lancement sur émulateurs iOS ET Android** (protocole type 3.4, captures
-  versionnées) — dernière étape de la Phase 4. Critère dur
+- **4.6 TERMINÉE (D-031)** : critère dur prouvé (12×10, zéro-réseau
+  instrumenté, store SHA-256) · **4.7 TERMINÉE (D-031-R47)** : app témoin
+  lancée sur les 2 émulateurs, parcours PASS, captures ; correction
+  composition démontrée + v46 rejouée. **PHASE 4 : critères de sortie
+  TOUS SATISFAITS — clôture = constat propriétaire.**
+- **Prochaine étape EXACTEMENT autorisée** : **constat propriétaire de
+  clôture de la Phase 4**, puis **Phase 5 — Backend Provisioner v1**
+  (dépendances ROADMAP : Phase 2 ✅ ; **P-004 à trancher AVANT la
+  Phase 5** — palier preview mutualisé, décision produit + mesure du coût
+  de provisioning par app dont le banc reste bloqué sur prérequis
+  propriétaire : token Management API Supabase, org de test). Critère dur
   inchangé : 10 compilations → hash identique 10/10 sur le **corpus ACTIF
   (v2)** ; app témoin sur émulateurs iOS et Android ; zéro appel LLM prouvé
   par instrumentation. Les bancs de Phase 1 restants (P-002, coûts EAS,
@@ -125,7 +131,7 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
 | 4.4 | **Manifestes/permissions/config native (D-029)** — app.json émis (identité preview déterministe, permissions induites agrégées transitives, infoPlist depuis raisons AIR — F3, plugin build-properties max(plancher,exigence), scheme ssi deep_links) + manifeste canonique de permissions (Oracle §9/Compliance §18) ; gabarit ré-scellé 3ᵉ fois (+expo-build-properties 57.0.15, nécessité démontrée 10/12 docs minSdk 26) | 🟢 **TERMINÉE** (2026-08-28) — **prebuild Android réel : minSdk 26 APPLIQUÉ, permissions dans le manifeste** · export avec app.json émis OK · 12/12 tests CI · compiler 67/67 · packages 313/313 |
 | 4.5 | **Fixtures demo déterministes (D-030)** — générées À LA COMPILATION (module canonique typé `demo.data.ts`, dans le périmètre du hash 4.6) : PRNG mulberry32 seedé `contentHash`, ids par entité, valeurs = données AIR (F3), dates base fixe, refs → lignes réelles ; provider demo copié (défaut = 1ʳᵉ ligne) | 🟢 **TERMINÉE** (2026-08-28) — 12/12 tests CI (rowCount, énums, refs, unicité) · v43 rejouée : tsc EXIT=0 ×3, exports OK · compiler 79/79 · packages 325/325 |
 | 4.6 | **Store SHA-256 + hash Merkle + CRITÈRE DUR (D-031)** — compileProject PUR (gabarit embarqué + émission, manifeste Merkle canonique, rootHash = SHA-256 du manifeste) ; store local content-addressed immuable (seul module fs, cliquet) ; preuve zéro-réseau 2 volets (cliquet statique imports/deps + campagne sous harnais V5 ATTEMPTS=0) | 🟢 **TERMINÉE** (2026-08-28) — **12×10 processus séparés : hash identique 10/10 aux 12 docs, ATTEMPTS=0 aux 120 runs, store round-trip OK** · critère aussi en CI continue · compiler 88/88 · packages 334/334 · web intact |
-| 4.7 | App témoin : build + lancement émulateurs iOS ET Android (protocole type 3.4, captures versionnées) | ⏳ |
+| 4.7 | **App témoin (D-031-R47)** — projet écrit depuis compileProject (rootHash de campagne re-prouvé), builds Release iOS+Android EXIT=0, **LANCÉE sur les 2 émulateurs**, parcours Maestro PASS ×2 (entrée, fixtures rendues, scroll, navigate réel, back), 4 captures versionnées ; correction composition « page défilante » (cause démontrée par hiérarchie, v46 rejouée, réserve virtualisation → Phase 8) | 🟢 **TERMINÉE** (2026-08-28) — **PHASE 4 : 4 critères ROADMAP ✅✅✅✅, 0 $** |
 
 ## PHASE 3 — DÉTAIL (ouverte le 2026-08-28)
 

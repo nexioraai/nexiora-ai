@@ -187,6 +187,11 @@ function emitScreen(slice: ScreenSlice): string {
   const lines = [
     "// GÉNÉRÉ — NE PAS ÉDITER (code structurel d'écran : ScreenShell + blocs,",
     "// contrainte 3.4 ; les points d'insertion de Code Slots arrivent en Phase 9).",
+    "// Page DÉFILANTE (lecture D-031-R47 : le bloc list gelé n'est pas",
+    "// bornable sans toucher au gel — défaut de composition DÉMONTRÉ sur",
+    "// device : blocs post-liste hors écran ; réserve : virtualisation",
+    "// interne neutralisée, revisité au scorecard Phase 8).",
+    'import { ScrollView } from "react-native";',
     'import { ScreenShell } from "../lib/primitives";',
     `import { ${wrappers.join(", ")} } from "../lib/runtime/air-runtime";`,
     ...(usesRoute ? ['import type { AirScreenProps } from "../lib/runtime/air-runtime";'] : []),
@@ -197,11 +202,13 @@ function emitScreen(slice: ScreenSlice): string {
       : `export default function ${pascal(screenId)}Screen() {`,
     "  return (",
     `    <ScreenShell testID="${screenId}" title={screenData.title}>`,
+    "      <ScrollView>",
     ...slice.screen.blocks.map((b) => {
       const wrapper = WRAPPER_BY_BLOCK_TYPE[b.blockType] ?? "";
       const itemId = b.blockType === "detail_header" ? " itemId={route?.params?.itemId}" : "";
-      return `      <${wrapper} screen={screenData} blockId="${assertId(b.id, screenId)}"${itemId} />`;
+      return `        <${wrapper} screen={screenData} blockId="${assertId(b.id, screenId)}"${itemId} />`;
     }),
+    "      </ScrollView>",
     "    </ScreenShell>",
     "  );",
     "}",
