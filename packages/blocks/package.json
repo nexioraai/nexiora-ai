@@ -5,7 +5,8 @@
   "description": "Smart Blocks v1 (ROADMAP Phase 3.3, D-023) — registre de blocs composites de primitives (allowlist positive, granularité section d'écran), 6 blocs contractuels + pont validateAirBlocks + compositions de référence testées",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./registry": "./src/registry.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

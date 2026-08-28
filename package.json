@@ -12,8 +12,8 @@
     "test": "npm run test --workspace=nexiora-ai",
     "lint": "npm run lint --workspace=nexiora-ai",
     "check:api-docs": "npm run check:api-docs --workspace=nexiora-ai",
-    "packages:typecheck": "npm run typecheck --workspace=@deribfy/air-schema --workspace=@deribfy/capability-registry --workspace=@deribfy/golden-corpus --workspace=@deribfy/design-tokens --workspace=@deribfy/primitives --workspace=@deribfy/blocks",
-    "packages:lint": "npm run lint --workspace=@deribfy/air-schema --workspace=@deribfy/capability-registry --workspace=@deribfy/golden-corpus --workspace=@deribfy/design-tokens --workspace=@deribfy/primitives --workspace=@deribfy/blocks",
-    "packages:test": "npm run test --workspace=@deribfy/air-schema --workspace=@deribfy/capability-registry --workspace=@deribfy/golden-corpus --workspace=@deribfy/design-tokens --workspace=@deribfy/primitives --workspace=@deribfy/blocks"
+    "packages:typecheck": "npm run typecheck --workspace=@deribfy/air-schema --workspace=@deribfy/capability-registry --workspace=@deribfy/golden-corpus --workspace=@deribfy/design-tokens --workspace=@deribfy/primitives --workspace=@deribfy/blocks --workspace=@deribfy/compiler",
+    "packages:lint": "npm run lint --workspace=@deribfy/air-schema --workspace=@deribfy/capability-registry --workspace=@deribfy/golden-corpus --workspace=@deribfy/design-tokens --workspace=@deribfy/primitives --workspace=@deribfy/blocks --workspace=@deribfy/compiler",
+    "packages:test": "npm run test --workspace=@deribfy/air-schema --workspace=@deribfy/capability-registry --workspace=@deribfy/golden-corpus --workspace=@deribfy/design-tokens --workspace=@deribfy/primitives --workspace=@deribfy/blocks --workspace=@deribfy/compiler"
   }
 }

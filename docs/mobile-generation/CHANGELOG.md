@@ -1,5 +1,32 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-28 — 4.1 TERMINÉE : release train v1 (D-027) + résolveur AIR→lock
+
+- **Paquet `@deribfy/compiler` créé** (7ᵉ paquet moteur, patron exact des
+  paquets existants : lint-bloquant strict type-checked dès le premier
+  commit, vitest, sources TS exportées, câblé aux scripts racine → CI).
+- **`release-train.ts`** : train `rt-2026.08`/1.0.0 — contrats gelés
+  (AIR/blocs/capabilities/tokens 1.0.0), **scellés Merkle des sources des
+  3 paquets gelés** (recalculés depuis les vraies sources par le test de
+  garde : zone gelée éditée ⇒ CI rouge), toolchain exacte (node 24.16.0,
+  expo 57.0.17, RN 0.86.3), dépendances du gabarit aux versions PROUVÉES
+  sur device au banc V4 (dont react-native-screens **4.26.2** — version
+  réellement installée, relevée et corrigée avant gel).
+- **`resolve-lock.ts`** : `resolveLock(air)` PUR (zéro fs/réseau/horloge),
+  fail-closed aux 4 validateurs (refus net, diagnostics sourcés triés,
+  jamais de lock partiel), sortie revalidée contre `projectLockSchema`
+  **1.0.0 INCHANGÉ**. 4 lectures consignées (D-027) : version de
+  capability = version du CONTRAT ; tokensVersion absent → train,
+  différent → refus ; providers [] jusqu'à 4.5 ; intégrité de bloc =
+  scellé du train. Sous-chemin pur `@deribfy/blocks/registry` ajouté
+  (évolution consciente anticipée par D-025 ; cliquet D-024 vert).
+- **Preuves** : compiler tsc/lint 0, **26/26 tests** — v2 12/12 résolus
+  (airHash contre-calculé, vocabulaire ⊆ registre, capabilities résolues),
+  déterminisme (3 rejeux + permutation de clés ⇒ byte-identique 12/12),
+  fail-closed (blockType/capability inconnus, tokens ≠, hors schéma),
+  **corpus v1 gelé 12/12 REFUSÉS** ; packages **272/272** ; **web intact**
+  après lockfile : tsc EXIT=0 + **221 fichiers / 4071/4071**. Coût : 0 $.
+
 ## 2026-08-28 — 4.0 TERMINÉE : validations V2-V5 vertes, S1 TRANCHÉ (0 $)
 
 - **Banc `benchmarks/compiler-determinism/`** (synthèse `synthese-4.0.md`) :

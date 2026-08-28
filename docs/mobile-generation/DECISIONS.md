@@ -737,6 +737,63 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   + `react-native-screens@4.26` + `react-native-safe-area-context@5.7`
   (versions exactes gelées au lockfile du gabarit).
 
+## D-027 — RELEASE TRAIN v1 + résolveur AIR→lock (4.1, 2026-08-28)
+
+- **Contexte** : Phase 4.1 (D-026, feu vert propriétaire — A4 pré-validé :
+  « pins démontrés, décision consciente »). Schéma `lock.ts` **1.0.0
+  INCHANGÉ** (exigence propriétaire) ; aucune zone gelée modifiée
+  (vérifié mécaniquement, voir scellés).
+- **RELEASE TRAIN v1 consigné** (`@deribfy/compiler`, `release-train.ts`) :
+  - identité : **`rt-2026.08` / 1.0.0** ;
+  - contrats embarqués : AIR 1.0.0 · registre blocs 1.0.0 (D-024) ·
+    registre capabilities 1.0.0 (D-020) · tokens 1.0.0 (scellés 3.1) ;
+  - **scellés Merkle des sources gelées** (fichiers triés par point de
+    code, SHA-256) : blocs `b488608b…`, capabilities `6c285992…`, tokens
+    (src + tokens.json) `e16ce4bf…` — **cliquet** : le test du train les
+    recalcule depuis les vraies sources, toute divergence = CI rouge ;
+  - toolchain (pins exacts démontrés 3.4/P-003/V3) : node 24.16.0 ·
+    expoSdk 57.0.17 · reactNative 0.86.3 ;
+  - dépendances du gabarit (versions INSTALLÉES ET PROUVÉES SUR DEVICE au
+    banc V4, consommées en 4.2) : expo 57.0.17 · expo-status-bar 3.0.9 ·
+    react 19.2.3 · react-native 0.86.3 · @react-navigation/native 7.3.18 ·
+    native-stack 7.18.10 · **react-native-screens 4.26.2** (version réelle
+    relevée dans l'app bancée — la plage `~4.26.0` résolvait 4.26.2) ·
+    safe-area-context 5.7.0.
+- **Résolveur `resolveLock(air) → ProjectLock`** : fonction PURE (zéro fs,
+  zéro réseau, zéro horloge) ; **fail-closed aux 4 validateurs** (schéma
+  strict zod, sémantique, capabilities, blocs — le moindre diagnostic ⇒
+  `LockResolutionError`, diagnostics sourcés, jamais de lock partiel) ;
+  sortie revalidée contre `projectLockSchema` (fail-closed en sortie).
+- **Lectures consignées** :
+  1. `resolved.capabilities[].version` = version du **CONTRAT** de
+     capability (1.0.0, exacte) — la version EXACTE du paquet
+     d'implémentation (plages `^x` du registre) sera figée à l'intégration
+     réelle des implémentations (Phases 5+), par porte consciente ;
+  2. `design.tokensVersion` ABSENT ⇒ résolu vers la version du train
+     (c'est le rôle du résolveur : l'AIR exprime l'intention, le lock
+     fige) ; présent et ≠ train ⇒ REFUS `TOKENS_VERSION_MISMATCH` ;
+  3. `resolved.providers` = **[]** en 4.1 — première abstraction provider
+     réelle (data/demo, S2) câblée en 4.5 par évolution consciente ;
+  4. `resolved.blocks[].integrity` = SHA-256 canonique de {blockType,
+     version du contrat, version du registre, scellé des sources du train}
+     — l'identité de l'artefact que le compilateur copiera (D-007) ; si
+     4.3 fait émerger un hash d'artefact copié par bloc, évolution
+     consciente consignée ;
+  5. sous-chemin d'export **`@deribfy/blocks/registry`** ajouté au paquet
+     blocs (évolution consciente ANTICIPÉE par D-025 : module PUR, l'index
+     tire react-native) — aucun contrat gelé touché, cliquet D-024 vert.
+- **Preuves (2026-08-28)** : paquet `@deribfy/compiler` — tsc EXIT=0, lint
+  bloquant 0 écart, **26/26 tests** : corpus ACTIF v2 **12/12 résolus**
+  (lock conforme au schéma 1.0.0, airHash contre-calculé, vocabulaire ⊆ 6
+  blocs, capabilities toutes résolues triées) · **déterminisme** : 3 rejeux
+  + permutation récursive des clés d'entrée ⇒ lock byte-identique 12/12
+  (l'inter-processus/environnements de la chaîne canonique est prouvé par
+  V2) · **fail-closed** : blockType inconnu, capability inconnue,
+  tokensVersion ≠ train, document hors schéma — refus nets sourcés ·
+  **corpus v1 GELÉ : 12/12 REFUSÉS** (la mesure D-025 rejouée au résolveur
+  réel) · scellés des 3 paquets gelés vérifiés. Packages **272/272** ; web
+  intact après changement de lockfile : tsc EXIT=0 + suite complète verte.
+
 ## ~~P-003~~ → D-021 — Lib de styling RN : **StyleSheet + tokens maison** (TRANCHÉ, 2026-08-27)
 
 - **Contexte** : décision prise par le propriétaire le 2026-08-27 sur dossier

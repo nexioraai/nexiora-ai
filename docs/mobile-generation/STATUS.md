@@ -1,11 +1,11 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-08-28** (**PHASE 4 OUVERTE — D-026** : feu vert propriétaire sur
-> dossier d'options complet — Option C hybride canonique, S2-S7 validés,
-> S1 navigation tranché par micro-banc V4, lecture A3 consignée, release
-> train v1 sur pins démontrés ; P0 exécuté : clôture Phase 3 commitée
-> `3955ebb` ; étape en cours : **4.0 — validations V2-V5**).
+> **2026-08-28** (**4.1 TERMINÉE — D-027** : release train v1 `rt-2026.08`
+> consigné avec scellés des sources gelées sous cliquet + résolveur
+> AIR→lock pur fail-closed dans `@deribfy/compiler` — 26/26, corpus v2
+> 12/12 résolus, corpus v1 12/12 refusés, packages 272/272, web intact ;
+> prochaine étape : **4.2 — gabarit Expo versionné**).
 
 ## ÉTAT GLOBAL
 
@@ -79,9 +79,16 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
   positifs et négatifs · V4 🟢 exécuté → **S1 TRANCHÉ :
   `@react-navigation/native-stack`** (consigné D-026 ; mesures dans
   `benchmarks/compiler-determinism/synthese-4.0.md`) · 0 $.
-- **Prochaine étape EXACTEMENT autorisée** : **4.1 — release train v1
-  (pins démontrés, décision consignée) + résolveur AIR→lock déterministe
-  testé**, puis 4.2 → 4.7 dans l'ordre du découpage D-026. Critère dur
+- **4.1 TERMINÉE (2026-08-28, D-027)** : release train v1 `rt-2026.08`
+  (contrats gelés + scellés Merkle sous cliquet, toolchain et dépendances
+  gabarit aux versions prouvées) + `resolveLock` pur fail-closed —
+  `@deribfy/compiler` 26/26, corpus v2 12/12 résolus, **corpus v1 12/12
+  refusés** (mesure D-025 rejouée), packages 272/272, web intact (tsc 0 +
+  4071/4071), 0 $.
+- **Prochaine étape EXACTEMENT autorisée** : **4.2 — gabarit Expo
+  versionné** (lockfile pré-résolu depuis les `templateDependencies` du
+  train, zéro install dans le chemin de compilation — mécanisme prouvé
+  V3), puis 4.3 → 4.7 dans l'ordre du découpage D-026. Critère dur
   inchangé : 10 compilations → hash identique 10/10 sur le **corpus ACTIF
   (v2)** ; app témoin sur émulateurs iOS et Android ; zéro appel LLM prouvé
   par instrumentation. Les bancs de Phase 1 restants (P-002, coûts EAS,
@@ -98,7 +105,7 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
 | Étape | Contenu | Statut |
 |---|---|---|
 | 4.0 | **Validations préalables V2-V5** (`benchmarks/compiler-determinism/`, synthèse `synthese-4.0.md`, **0 $**) — **V2 🟢** empaquetage Option C + Merkle : 20/20 hash identiques ×2 docs ×2 environnements hostiles, contrôle positif (poison détecté 20 hashes) · **V5 🟢** harnais zéro-réseau 2 couches : positif 5/5 canaux tués, négatif 12/12 docs v2 à 0 diagnostic sans déclenchement, spécificité 0/5 sans harnais, limite des instantanés d'exports MESURÉE et fermée · **V3 🟢** lockfile ×2 byte-identique, `npm ci --ignore-scripts` ×2 env → 19 666 fichiers, arbres identiques 2/2 · **V4 🟢 → S1 TRANCHÉ : `@react-navigation/native-stack`** (poids ×2,1–2,8 moindre, installation verte vs arbre npm invalide d'expo-router aux versions SDK — builds Release cassés 2/2 avant overrides manuels ; byte-stabilité 20/20 et back réel PASS pour les deux) — détail consigné dans D-026 | 🟢 **TERMINÉE** (2026-08-28) |
-| 4.1 | Release train v1 (pins démontrés, décision consignée) + résolveur AIR→lock déterministe testé | ⏳ |
+| 4.1 | **Release train v1 + résolveur AIR→lock** — paquet `@deribfy/compiler` (7ᵉ paquet moteur, lint-bloquant, CI) : **D-027** — train `rt-2026.08`/1.0.0 (contrats gelés 1.0.0 + **scellés Merkle des sources sous cliquet**, toolchain node 24.16.0/expo 57.0.17/RN 0.86.3, dépendances gabarit prouvées sur device au banc V4 dont screens 4.26.2) ; `resolveLock` PUR fail-closed aux 4 validateurs, sortie revalidée schéma lock 1.0.0 INCHANGÉ ; 4 lectures consignées (version capability = contrat ; tokensVersion absent→train, ≠→refus ; providers [] jusqu'à 4.5 ; intégrité bloc = scellé du train) + sous-chemin pur `@deribfy/blocks/registry` (anticipé D-025) | 🟢 **TERMINÉE** (2026-08-28) — **26/26** (v2 12/12 résolus · déterminisme rejeux+permutation · fail-closed · **v1 12/12 refusés** · scellés) ; packages 272/272 ; web intact (tsc 0 + 4071) |
 | 4.2 | Gabarit Expo versionné (package-lock pré-résolu, zéro install dans le chemin de compilation) | ⏳ |
 | 4.3 | Émission écrans/navigation/thème (Option C : code structurel + modules canoniques ; ScreenShell obligatoire — contrainte 3.4) + copie blocs/primitives/tokens | ⏳ |
 | 4.4 | Manifestes/permissions/config native depuis le registre (lecture A3) | ⏳ |
