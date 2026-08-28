@@ -1,0 +1,5 @@
+{"mode":"positif","results":[{"channel":"fetch","killed":true,"error":"NetworkForbiddenError: V5_NETWORK_FORBIDDEN: accès réseau interdit dans le chemin d"},{"channel":"https.get","killed":true,"error":"NetworkForbiddenError: V5_NETWORK_FORBIDDEN: module réseau interdit dans le chemin "},{"channel":"net.connect","killed":true,"error":"NetworkForbiddenError: V5_NETWORK_FORBIDDEN: module réseau interdit dans le chemin "},{"channel":"dns.lookup","killed":true,"error":"NetworkForbiddenError: V5_NETWORK_FORBIDDEN: module réseau interdit dans le chemin "},{"channel":"dgram.send","killed":true,"error":"NetworkForbiddenError: V5_NETWORK_FORBIDDEN: module réseau interdit dans le chemin "}],"verdict":"5/5 tués"}
+V5_NETWORK_FORBIDDEN_ATTEMPTS=5
+{"mode":"negatif","docs":12,"totalDiagnostics":0,"hashSample":"fa6e79feaa7524d1","verdict":"CHARGE UTILE INTACTE 12/12, 0 diagnostic"}
+V5_NETWORK_FORBIDDEN_ATTEMPTS=0
+{"specificite_sans_harnais":"0/5 tués (exécuté 2026-08-28, réseau réel non tué)"}

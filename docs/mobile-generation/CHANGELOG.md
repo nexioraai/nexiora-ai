@@ -1,5 +1,33 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-28 — 4.0 TERMINÉE : validations V2-V5 vertes, S1 TRANCHÉ (0 $)
+
+- **Banc `benchmarks/compiler-determinism/`** (synthèse `synthese-4.0.md`) :
+  - **V2 🟢** : chaîne « émission Option C → manifeste Merkle » prouvée —
+    20/20 hash identiques ×2 documents du corpus v2, 10 processus × 2
+    environnements hostiles (TZ Auckland, locale turque, cwd hors dépôt) ;
+    contrôle positif : poison horodaté → 20 hashes distincts détectés.
+  - **V5 🟢** : harnais zéro-réseau à 2 couches (`registerHooks` de
+    remplacement de modules + patchs d'appel) — positif 5/5 canaux tués,
+    négatif 12/12 docs (4 validateurs + hash canonique) à 0 diagnostic
+    sans déclenchement, spécificité 0/5 sans harnais ; limite des
+    instantanés d'exports nommés DÉMONTRÉE par la mesure et fermée
+    (harnais chargé en premier ; cliquet statique = 4.6).
+  - **V3 🟢** : mécanisme S4 — lockfile généré ×2 byte-identique ;
+    `npm ci --ignore-scripts` ×2 environnements → 19 666 fichiers,
+    arbres node_modules strictement identiques ; lockfile intact.
+  - **V4 🟢 → S1 TRANCHÉ : `@react-navigation/native-stack`** (D-026) —
+    fixture resto-quartier, Release, New Arch, devices réels : stabilité
+    20/20 les deux candidats · poids +440/+435 k-octets vs +924/+1 230
+    (expo-router ×2,1–2,8) · back réel PASS des deux (back système
+    Android, pop par geste iOS — tap texte remplacé car ambigu) · défaut
+    structurel expo-router MESURÉ : arbre npm invalide aux versions SDK
+    (worklets 0.12 vs ^0.7–0.10), builds Release cassés 2/2, `--fix` non
+    convergent, vert seulement après overrides matrice SDK.
+  - Anomalies d'environnement corrigées sur précédent P-003 (cmake Intel →
+    `cmake.dir` SDK ; pods ; `JAVA_HOME` pour Maestro) ; 1 flake driver
+    XCUITest rejoué (infra de test, pas l'app).
+
 ## 2026-08-28 — PHASE 4 OUVERTE (D-026) : architecture du compilateur v1
 
 - **P0 exécuté** : clôture Phase 3 / D-025 commitée localement (`3955ebb` —

@@ -1,0 +1,28 @@
+=== rn-nav Android (back système) ===
+Running on emulator-5554
+ > Flow android-back
+Launch app "${APP_ID}"... COMPLETED
+Assert that id: scr_menu is visible... COMPLETED
+Tap on id: nav_to_scr_plat_detail... COMPLETED
+Assert that id: scr_plat_detail is visible... COMPLETED
+Press back... COMPLETED
+Assert that id: scr_menu is visible... COMPLETED
+ANDROID_FLOW_EXIT=0
+=== rn-nav iOS (back en-tête, sim 68B8F6A8-F2BC-42BC-9B7E-9431ABC82F77) ===
+Running on iPhone 17 Pro - iOS 26.5 - 68B8F6A8-F2BC-42BC-9B7E-9431ABC82F77
+ > Flow ios-back
+Launch app "${APP_ID}"... COMPLETED
+Assert that id: scr_menu is visible... COMPLETED
+Tap on id: nav_to_scr_plat_detail... COMPLETED
+Assert that id: scr_plat_detail is visible... COMPLETED
+Tap on "Menu"... COMPLETED
+Assert that id: scr_menu is visible... COMPLETED
+IOS_FLOW_EXIT=0
+Running on iPhone 17 Pro - iOS 26.5 - 68B8F6A8-F2BC-42BC-9B7E-9431ABC82F77
+ > Flow ios-back
+Launch app "${APP_ID}"... COMPLETED
+Assert that id: scr_menu is visible... COMPLETED
+Tap on id: nav_to_scr_plat_detail... COMPLETED
+Assert that id: scr_plat_detail is visible... COMPLETED
+Swipe from (1%, 50%) to (90%, 50%) in 400 ms... COMPLETED
+Assert that id: scr_menu is visible... COMPLETED

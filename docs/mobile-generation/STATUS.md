@@ -75,14 +75,17 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
   implémentations de capabilities non) ; release train v1 sur pins
   démontrés (Expo ~57.0 / RN 0.86.3 / React 19.2.3) ; **0 $ autorisé par
   défaut** (toute dépense = méthode arbitrage C).
-- **Prochaine étape EXACTEMENT autorisée** : **4.0 — validations V2-V5**
-  (V2 micro-preuve d'empaquetage Merkle → V5 protocole zéro-réseau → V3
-  reproductibilité `npm ci` du gabarit → V4 micro-banc navigation), puis
-  4.1 → 4.7 dans l'ordre du découpage D-026. Critère dur inchangé : 10
-  compilations → hash identique 10/10 sur le **corpus ACTIF (v2)** ; app
-  témoin sur émulateurs iOS et Android ; zéro appel LLM prouvé par
-  instrumentation. Les bancs de Phase 1 restants (P-002, coûts EAS, coût
-  projet Supabase) demeurent bloqués sur prérequis propriétaire.
+- **4.0 TERMINÉE (2026-08-28)** : V2/V3/V5 🟢 prouvées avec contrôles
+  positifs et négatifs · V4 🟢 exécuté → **S1 TRANCHÉ :
+  `@react-navigation/native-stack`** (consigné D-026 ; mesures dans
+  `benchmarks/compiler-determinism/synthese-4.0.md`) · 0 $.
+- **Prochaine étape EXACTEMENT autorisée** : **4.1 — release train v1
+  (pins démontrés, décision consignée) + résolveur AIR→lock déterministe
+  testé**, puis 4.2 → 4.7 dans l'ordre du découpage D-026. Critère dur
+  inchangé : 10 compilations → hash identique 10/10 sur le **corpus ACTIF
+  (v2)** ; app témoin sur émulateurs iOS et Android ; zéro appel LLM prouvé
+  par instrumentation. Les bancs de Phase 1 restants (P-002, coûts EAS,
+  coût projet Supabase) demeurent bloqués sur prérequis propriétaire.
 - **INTERDIT à ce stade** : toute Phase 5+ (dépendances non satisfaites),
   tout saut d'étape 4.x, tout push sans accord explicite, toute
   modification des zones gelées (D-020/D-024/tokens scellés/corpus v1 et
@@ -94,7 +97,7 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
 
 | Étape | Contenu | Statut |
 |---|---|---|
-| 4.0 | **Validations préalables V2-V5** — V2 : micro-preuve d'empaquetage (émission maquette 1 doc, manifeste Merkle, ×10 runs ×2 environnements → hash racine identique) · V5 : protocole de preuve zéro-LLM/zéro-réseau (cliquet statique d'imports + harnais dynamique faisant échouer tout accès réseau, contrôle positif exigé) · V3 : reproductibilité `npm ci` du gabarit (lockfile pré-résolu versionné) · V4 : micro-banc navigation B-NAV (`@react-navigation/native-stack` vs `expo-router` — byte-stabilité ×10, poids, New Arch, LOC générateur, back réel sur device) → tranche S1 | 🔵 **EN COURS** |
+| 4.0 | **Validations préalables V2-V5** (`benchmarks/compiler-determinism/`, synthèse `synthese-4.0.md`, **0 $**) — **V2 🟢** empaquetage Option C + Merkle : 20/20 hash identiques ×2 docs ×2 environnements hostiles, contrôle positif (poison détecté 20 hashes) · **V5 🟢** harnais zéro-réseau 2 couches : positif 5/5 canaux tués, négatif 12/12 docs v2 à 0 diagnostic sans déclenchement, spécificité 0/5 sans harnais, limite des instantanés d'exports MESURÉE et fermée · **V3 🟢** lockfile ×2 byte-identique, `npm ci --ignore-scripts` ×2 env → 19 666 fichiers, arbres identiques 2/2 · **V4 🟢 → S1 TRANCHÉ : `@react-navigation/native-stack`** (poids ×2,1–2,8 moindre, installation verte vs arbre npm invalide d'expo-router aux versions SDK — builds Release cassés 2/2 avant overrides manuels ; byte-stabilité 20/20 et back réel PASS pour les deux) — détail consigné dans D-026 | 🟢 **TERMINÉE** (2026-08-28) |
 | 4.1 | Release train v1 (pins démontrés, décision consignée) + résolveur AIR→lock déterministe testé | ⏳ |
 | 4.2 | Gabarit Expo versionné (package-lock pré-résolu, zéro install dans le chemin de compilation) | ⏳ |
 | 4.3 | Émission écrans/navigation/thème (Option C : code structurel + modules canoniques ; ScreenShell obligatoire — contrainte 3.4) + copie blocs/primitives/tokens | ⏳ |

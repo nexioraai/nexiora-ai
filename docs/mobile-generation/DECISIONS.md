@@ -717,6 +717,25 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
 - **P0 exécuté** : clôture Phase 3 / D-025 commitée localement
   (`3955ebb`, vérifications au commit : packages tsc EXIT=0, lint 0 écart,
   246/246 tests) ; push uniquement sur accord explicite.
+- **RÉSOLUTION S1 (2026-08-28, application du point 2 — micro-banc V4
+  exécuté, 0 $)** : **`@react-navigation/native-stack`**, config générée
+  depuis l'AIR. Mesures (`benchmarks/compiler-determinism/synthese-4.0.md`,
+  fixture = navigation réelle de `resto-quartier`, apps Release, New Arch,
+  devices réels) : byte-stabilité **20/20 les deux candidats** · poids JS
+  ajouté (hbc) **+440/+435 k-octets** (react-navigation) contre
+  **+924/+1 230** (expo-router, ×2,1–2,8) · back réel PASS des deux côtés
+  (back système Android + pop par geste iOS) · LOC générateur 81 vs 65 ·
+  **défaut structurel mesuré d'expo-router** : à ses versions SDK 57
+  officielles, arbre npm INVALIDE (worklets 0.12.1 résolu contre ^0.7–0.10
+  exigé par expo-modules-core), builds Release cassés 2/2 plateformes,
+  `expo install --fix` non convergent — vert uniquement après `overrides`
+  manuels vers la matrice `bundledNativeModules` (reanimated 4.5.1,
+  worklets 0.10.1). Fondement du verdict : poids + robustesse de la chaîne
+  de dépendances (patron D-021/D-002) ; l'unique avantage d'expo-router
+  (−16 LOC de générateur) est un coût payé une fois. Conséquence 4.2 : le
+  gabarit intègre `@react-navigation/native@7.3.x` + `native-stack@7.18.x`
+  + `react-native-screens@4.26` + `react-native-safe-area-context@5.7`
+  (versions exactes gelées au lockfile du gabarit).
 
 ## ~~P-003~~ → D-021 — Lib de styling RN : **StyleSheet + tokens maison** (TRANCHÉ, 2026-08-27)
 
