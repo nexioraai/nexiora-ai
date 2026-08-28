@@ -1115,13 +1115,61 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   (c) `design.overrides` de l'AIR contraint aux **clés de tokens** du schéma
   versionné, jamais à des déclarations de style libres.
 
-## P-004 — Palier preview mutualisé (tenancy)
+## ~~P-004~~ → D-032 — Palier preview : **PROJET PAR APP (B)** (TRANCHÉ, 2026-08-28)
 
 - **Question** : les previews/free tier partagent-ils un projet Supabase
-  dédié-preview (coût ↓) ou chaque preview a-t-elle son projet (isolation
-  maximale, coût ↑) ?
-- **Tranché par** : décision produit (coût/risque) + mesure du coût réel de
-  provisioning par app (Phase 1) ; avant la Phase 5.
+  dédié-preview (A, coût ↓) ou chaque preview a-t-elle son projet (B,
+  isolation maximale) ?
+- **Décision (propriétaire, 2026-08-28)** : **B — projet Supabase par
+  app, y compris pour les previews**, sur dossier comparatif complet +
+  mesure réelle exigée par la méthode consignée (banc Volet 3 : création→
+  PostgREST **10,45-12,79 s**, teardown prouvé **~5 s**, 0 $ sur Free,
+  ~10 $/mois par projet actif sur org payante, 0 $ en pause).
+- **Raisons** : un SEUL mécanisme identique preview→production (cible
+  D-004) ; isolation physique, blast radius = 1 app (non-négociable 21) ;
+  teardown prouvé trivial (mesuré) ; leçon DEBT-073 (coût du durcissement
+  d'un projet partagé) ; l'économie de A est marginale au regard des
+  priorités consignées (réussite/sécurité/preuve avant coût).
+- **DOSSIER D'OUVERTURE PHASE 5 — découpage validé** (feu vert
+  propriétaire : « découpage proposé au dossier d'ouverture puis exécuté
+  sans nouvel arrêt ») :
+  - **5.1** Générateur SQL déterministe (`@deribfy/provisioner`, pur) :
+    AIR → SQL complet (tables/PK/FK/CHECK énums/index/RLS/seed) au patron
+    éprouvé du dépôt (idempotent-rejouable, barrières `RAISE EXCEPTION`
+    fail-closed, relevés avant/après) ; corpus v2 12/12, déterminisme ×N,
+    fail-closed aux validateurs ;
+  - **5.2** Interface de provisioning (§15) + implémentation Supabase
+    (Management API — seul module réseau du paquet, consigné) ;
+  - **5.3** Cycle RÉEL prouvé sur l'org de banc : provision → application
+    SQL → vérifications automatisées fail-closed (tables, RLS actif,
+    comptes de seed) → **SQL archivé au store SHA-256 (réutilise 4.6)** →
+    teardown prouvé ;
+  - **5.4** Test d'isolation PAR TENTATIVE : 2 apps provisionnées (A, B) —
+    clé de A contre B (échec attendu), clé de B contre A (échec), clé de A
+    contre le CŒUR en LECTURE SEULE (échec attendu — aucune modification
+    de `nexiora-ai`, une tentative de lecture non autorisée est exactement
+    ce que la ROADMAP exige) ; anon vs RLS deny-by-default dans son propre
+    projet (zéro ligne) ;
+  - **5.5** Clôture : critères ROADMAP vérifiés, consignation, rapport.
+- **Lectures consignées** :
+  1. **posture RLS v1** : RLS ACTIVÉ sur toutes les tables, deny-by-default
+     (zéro policy anon) — les policies applicatives arrivent avec
+     l'implémentation réelle des capabilities/auth (phases ultérieures,
+     porte consciente) ; le provisioning et ses vérifications passent par
+     le rôle de service ;
+  2. **seed = fixtures déterministes D-030** (mêmes lignes que l'app —
+     INSERT idempotents `ON CONFLICT DO NOTHING`) ;
+  3. nommage : table = `id` d'entité (préfixé, stable) ; types AIR→SQL
+     figés (string/text→text, number→bigint, decimal→numeric(12,2),
+     boolean, date, datetime→timestamptz, enum→text+CHECK,
+     reference→text+FK, asset→text, json→jsonb) ; relations
+     many_to_many → table de jonction déterministe ;
+  4. cycles réels sur l'**org de banc dédiée** (free, 0 $, 2 places —
+     suffisant pour 5.4), teardown systématique en fin d'épreuve ;
+  5. exécution SQL via l'endpoint query de la Management API si
+     disponible [à sonder en 5.3], sinon repli consigné.
+- **Budget Phase 5 : 0 $** (org free ; aucun LLM). Toute dépense
+  imprévue = STOP propriétaire (méthode arbitrage C).
 
 ## ~~P-005~~ → D-014 — Monorepo à workspaces (TRANCHÉ, 2026-08-27)
 

@@ -107,10 +107,12 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
   2026-08-28 ordonnant l'exécution jusqu'à la fin de la Phase 5). **Banc
   coût Supabase : EXÉCUTÉ** (mesure requise par la méthode de P-004 —
   10,45-12,79 s création→PostgREST, teardown prouvé ~5 s, 0 $).
-- **Prochaine étape EXACTEMENT autorisée** : **arbitrage propriétaire
-  P-004** (recommandation technique consignée : B — projet par app ; la
-  mesure de coût est acquise), puis **ouverture de la Phase 5 — Backend
-  Provisioner v1** (dépendances : Phase 2 ✅ · P-004 ⏳). Critère dur
+- **P-004 TRANCHÉ → D-032 : B — projet par app** (propriétaire,
+  2026-08-28). **PHASE 5 OUVERTE** (dépendances : Phase 2 ✅ · P-004 ✅),
+  découpage 5.1→5.5 consigné D-032, exécution sans nouvel arrêt sauf
+  décision/manuel/dépense. Budget : 0 $.
+- **Prochaine étape EXACTEMENT autorisée** : 5.1 (générateur SQL
+  déterministe) → … → 5.5, dans l'ordre D-032. Critère dur
   inchangé : 10 compilations → hash identique 10/10 sur le **corpus ACTIF
   (v2)** ; app témoin sur émulateurs iOS et Android ; zéro appel LLM prouvé
   par instrumentation. Les bancs de Phase 1 restants (P-002, coûts EAS,
@@ -185,7 +187,7 @@ prouve l'existence, pas le taux). Voir `DECISIONS.md` D-015.
 | 2 | AIR v1 + Capability Registry v1 | 🟢 TERMINÉ (2026-08-27) |
 | 3 | Design System + Primitives + Blocks | 🟢 TERMINÉ (2026-08-28) |
 | 4 | Compilateur déterministe v1 | 🔵 EN COURS (D-026, 4.0) |
-| 5 | Backend Provisioner v1 | ⏳ |
+| 5 | Backend Provisioner v1 | 🔵 EN COURS (D-032) |
 | 6 | Sandbox + Oracle v1 | ⏳ |
 | 7 | Workflow asynchrone durable | ⏳ |
 | 8 | Vertical Slice 1 (restaurant) | ⏳ |
