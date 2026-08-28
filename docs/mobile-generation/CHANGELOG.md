@@ -1,5 +1,36 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-28 — PHASE 3 OUVERTE : 3.1 TERMINÉE ET SCELLÉE (tokens double cible)
+
+- **`@deribfy/design-tokens` créé** (Phase 3.1a) : `tokens.json` = SOURCE
+  UNIQUE (ARCHITECTURE §22) — valeurs importées VERBATIM, aucune inventée :
+  palette produit (CLAUDE.md / bloc `@theme` de `globals.css`) + jeu
+  sémantique RN éprouvé au banc P-003 (D-021). Schéma zod strict ; codegen
+  thème RN (`theme.generated.ts`, données pures, zéro dépendance de styling,
+  zéro `node:fs` — consommable par les primitives) ; 10 tests dont cliquets
+  (palette de marque gelée, variables web, non-dérive octet à octet,
+  déterminisme du codegen). CI : paquet câblé aux 3 scripts `packages:*`.
+- **Codegen cible WEB** (Phase 3.1b) : `theme.web.generated.css` généré depuis
+  la même source ; **ÉQUIVALENCE PROUVÉE OCTET À OCTET** avec le segment de
+  tokens de `apps/web/src/app/globals.css` (497 octets, SHA-256 identiques)
+  — bascule = no-op par construction.
+- **SCELLEMENT (arbitrage propriétaire : Option A)** : cliquet d'autorité
+  (`packages:test` échoue si le segment web diverge de l'artefact généré) +
+  marqueur explicite dans `globals.css` (seul changement dans `apps/web` :
+  un commentaire CSS inerte). **Sens du flux verrouillé : JSON → codegen →
+  CSS web + thème RN** (vigilance D-021 close).
+- **Bug CI latent corrigé (1 ligne, préexistant)** : `ci.yml` exécutait
+  `npm run packages:lint -- --max-warnings 0` → à travers le double saut npm,
+  le flag était absorbé et le `0` résiduel devenait un motif de fichier →
+  exit 2. Introduit en Phase 2.1, jamais poussé (origin antérieur), reproduit
+  puis corrigé en `npm run packages:lint` — la politique « lint bloquant »
+  reste portée par le script de CHAQUE paquet (4 invocations vérifiées).
+- **Preuves** : packages tsc/lint/test = 0/0 écart, **137/137 tests**
+  (57+26+39+15) ; **web intact** : tsc EXIT=0 + **4071/4071 tests** (preuve
+  rejouée après lockfile ET après marqueur). Coût : 0 $.
+- **Arbitrages à venir consignés** : B (granularité du registre de blocs,
+  avant 3.3) · C (alignement du corpus + budget ré-émission, avant Phase 4).
+
 ## 2026-08-28 — BANC E2E EXÉCUTÉ → D-022 : Maestro retenu
 
 - **Banc `E2E-mobile.md` exécuté sans dérogation** : Maestro 2.9.0 vs Detox

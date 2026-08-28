@@ -1,9 +1,10 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-08-28** (**banc E2E exécuté → D-022 : Maestro** — 80/80 runs réussis ;
-> P-003 tranché D-021 ; Phase 2 close ; **Phase 3 ouvrable**, ses deux
-> dépendances étant satisfaites).
+> **2026-08-28** (**PHASE 3 OUVERTE — étape 3.1 TERMINÉE et SCELLÉE** :
+> source de tokens JSON unique + codegen double cible RN/web,
+> équivalence web prouvée octet à octet, autorité verrouillée par cliquet ;
+> D-022 Maestro ; bug CI latent corrigé).
 
 ## ÉTAT GLOBAL
 
@@ -11,9 +12,9 @@
 |---|---|
 | Plan v0.1 | 🟢 **VALIDÉ ET FIGÉ** (propriétaire, 2026-08-27) — toute évolution passe par `DECISIONS.md` |
 | Phase 0 — Fondations | 🟢 **TERMINÉE** (2026-08-27) — tous les critères de sortie vérifiés, dont **CI GitHub réelle verte : run #32, commit `54ef2a1`, `success`** (capture propriétaire + confirmation API Actions indépendante) |
-| Phase actuelle | **PHASE 2 : 🟢 TERMINÉE** (2026-08-27 — critères de sortie tous satisfaits, registre v1 gelé D-020) · **PHASE 1** : 🔵 bancs restants bloqués sur prérequis propriétaire · **PHASE 3** : ⏳ **OUVRABLE** — dépendances satisfaites (Phase 2 ✓ + P-003 tranché D-021 ✓) et dernier banc de Phase 1 exécutable **fait** (D-022) |
+| Phase actuelle | **PHASE 2 : 🟢 TERMINÉE** (2026-08-27 — critères de sortie tous satisfaits, registre v1 gelé D-020) · **PHASE 1** : 🔵 bancs restants bloqués sur prérequis propriétaire · **PHASE 3** : 🔵 **EN COURS** (ouverte 2026-08-28) — **3.1 🟢 TERMINÉE** (tokens double cible + scellement) ; 3.2 primitives à suivre |
 | Générateur mobile | 🔵 **EN IMPLÉMENTATION** — premier paquet du moteur : `packages/air-schema` (AIR v1) |
-| Progression globale | **2/15 phases terminées (0, 2)** · Phase 1 en cours (bancs exécutables tous faits) · **Phase 3 ouvrable** |
+| Progression globale | **2/15 phases terminées (0, 2)** · Phase 1 en cours (bancs exécutables tous faits) · **Phase 3 EN COURS (3.1 🟢)** |
 
 ## PHASE 0 — DÉTAIL DES SOUS-ÉTAPES
 
@@ -56,17 +57,27 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
   Sandbox + budget ~10-20 $) · coûts EAS (compte Expo/EAS) · coût projet
   Supabase (token Management API, org de test). **Phase 3 n'est plus
   bloquée** : ses deux dépendances ROADMAP sont satisfaites.
-- **Prochaine étape EXACTEMENT autorisée** : **ouverture de la PHASE 3 —
-  Design System + primitives + premiers Smart Blocks** (ROADMAP) : tokens
-  double cible depuis la source JSON unique, primitives contractuelles en
-  `StyleSheet` + tokens (D-021), 4-6 blocs testés, harnais de rendu
-  light/dark/RTL/états. Les bancs de Phase 1 restants (P-002, coûts EAS,
-  coût projet Supabase) demeurent bloqués sur prérequis propriétaire : la
-  Phase 1 ne peut pas être close, mais elle **ne bloque pas** la Phase 3.
+- **Prochaine étape EXACTEMENT autorisée** : **3.2 — primitives
+  contractuelles** en `StyleSheet` + tokens (D-021) : contrats SANS aucun
+  type de bibliothèque (§22, patron prouvé 6/6 au banc P-003), implémentation
+  consommant `@deribfy/design-tokens`, tests. Puis 3.3 — registre de blocs +
+  4-6 Smart Blocks (arbitrage propriétaire B sur la granularité attendu
+  AVANT 3.3). Les bancs de Phase 1 restants (P-002, coûts EAS, coût projet
+  Supabase) demeurent bloqués sur prérequis propriétaire, sans bloquer la
+  Phase 3.
 - **INTERDIT à ce stade** : toute phase dont les dépendances ROADMAP ne
   sont pas satisfaites (Phases 4+ dépendent de 2/3), tout push sans accord
   explicite, toute décision P-00x sans les mesures prévues, toute
   réouverture de P-003 hors seuil de réexamen consigné (D-021).
+
+## PHASE 3 — DÉTAIL (ouverte le 2026-08-28)
+
+| Étape | Contenu | Statut |
+|---|---|---|
+| 3.1 | **Source de tokens JSON unique + codegen double cible** — paquet `@deribfy/design-tokens` : `tokens.json` (valeurs importées VERBATIM : palette produit CLAUDE.md/globals.css + jeu sémantique RN éprouvé au banc P-003), schéma zod strict, codegen thème RN (`theme.generated.ts`, données pures sans dépendance) et codegen CSS web (`theme.web.generated.css`) ; **équivalence avec le segment de `globals.css` PROUVÉE octet à octet** (497 octets, SHA-256 identiques) ; **SCELLEMENT (arbitrage propriétaire Option A)** : cliquet d'autorité (packages:test échoue si le segment web diverge de la source) + marqueur dans `globals.css` ; 15 tests (cliquets de marque, non-dérive, déterminisme, autorité) ; CI câblée (4 paquets) | 🟢 **TERMINÉE** (2026-08-28) — tsc/lint 0, 135/135 tests paquets, web intact (tsc EXIT=0, 4071/4071) |
+| 3.2 | Primitives contractuelles (`StyleSheet` + tokens, D-021) | ⏳ |
+| 3.3 | Registre de blocs v1 + 4-6 Smart Blocks testés (AuthFlow, List/Detail, Form, Profile) — granularité = arbitrage propriétaire B | ⏳ |
+| 3.4 | Harnais de rendu device/émulateur : light/dark, RTL, états loading/empty/error | ⏳ |
 
 ## PHASE 2 — DÉTAIL (ouverte le 2026-08-27)
 
