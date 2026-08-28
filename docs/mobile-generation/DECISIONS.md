@@ -592,6 +592,34 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   physiques ». Requiert compte Expo/EAS + appareils. **Analyse Android
   physique remise au propriétaire, aucune dépense engagée.**
 
+### D-036-R8B — Phase 8 / Étape B : builds EAS réels + 1er relevé du banc coûts EAS (2026-08-28)
+
+- **Compte Expo créé par le propriétaire** (`deribfy-apps-team`, robot
+  `deribfy-builds`, token hors dépôt) — action manuelle signalée, faite.
+- **Projet EAS** `@deribfy-apps-team/maquis-express` créé et lié.
+- **BUILDS EAS RÉELS, 0 $ (palier Free), aucun compte Apple** :
+  **Android** profil `preview` (distribution interne, APK) — **FINISHED en
+  10 min 57 s**, artefact 77,2 Mo ; **iOS** profil `preview-simulator` —
+  **FINISHED en 4 min 07 s**. Soumissions : 49 s / 38 s.
+- **Artefact EAS VALIDÉ** : l'APK produit par EAS a été installé sur
+  l'émulateur et les **flows générés depuis l'AIR passent 2/2** (nav+RTL,
+  13 étapes, 0 échec) — ce n'est donc pas seulement un build qui compile,
+  c'est un artefact qui FONCTIONNE.
+- **Banc « coûts EAS » (Phase 1, volet 2) — PREMIER RELEVÉ RÉEL** consigné
+  (`slices/restaurant/results/eas-builds.jsonl`). Le protocole demande
+  « 5 builds par plateforme minimum » : le banc reste **partiellement
+  exécuté** (1+1), sans cache mesuré ni série — statut inchangé tant que
+  la série n'est pas faite. **Aucune réinterprétation du protocole.**
+- **DETTE DU GÉNÉRATEUR (garde-fou ROADMAP) — 3 écarts manuels** : le
+  gabarit ne porte ni `eas.json`, ni `owner`/`extra.eas` dans l'`app.json`
+  émis, ni `expo-dev-client`. Conséquence factuelle : **un « dev build »
+  au sens Expo est impossible sans modification manuelle** ; le slice a
+  utilisé la distribution interne. Consignés, non corrigés (zones scellées
+  intactes).
+- **Limite iOS constatée** : un build iOS **pour appareil physique** exige
+  des credentials Apple (compte Apple Developer) — le build simulateur ne
+  l'exige pas. Aucune dépense engagée.
+
 ## ~~P-002~~ → D-033 — Provider de sandbox : **MODAL** (TRANCHÉ, 2026-08-28)
 
 - **Options bancées** : E2B ; Modal (finalistes du dossier) ; Fly / Vercel /

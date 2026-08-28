@@ -24,6 +24,7 @@ bruts : `results/*.jsonl`, `results/metrics.json`.
 | Oracle L1 (4 contrôles) | ✅ 4/4 | `oracle-detail` |
 | Flows E2E générés (Oracle L2) | ✅ générés depuis l'AIR, 4 flows (nav+RTL × 2 plateformes) | `maestro/` |
 | **Dev build + validation ÉMULATEURS iOS et Android** | ✅ builds Release verts ×2, **4/4 flows générés PASS** (nav+RTL, 13 étapes chacun, 0 échec) | `results/slice-e2e.jsonl` |
+| **Build EAS (cloud, §13)** | ✅ **Android APK FINISHED (10 min 57 s)** + **iOS simulateur FINISHED (4 min 07 s)** — 0 $ (palier Free) ; **APK EAS installé sur émulateur : 2/2 flows générés PASS** | `results/eas-builds.jsonl`, `eas-artifact-e2e.jsonl` |
 | **Devices physiques (critère 1)** | ⏳ **OUVERT** — voir « Actions restantes » | — |
 
 **Taux de succès de la chaîne automatisée : 7/7 étages verts.**
@@ -116,3 +117,16 @@ la dette du générateur.
    le prévoit, jamais par contournement.
 3. **Provisioning à 169 s** (org Pro) contre ~9,5 s mesuré en Free
    (D-032-R55) : à surveiller pour le débit de flotte (Phase 14).
+4. **Le gabarit ne porte pas la configuration de build cloud** — écarts
+   ajoutés À LA MAIN pour faire passer le slice (garde-fou ROADMAP, donc
+   DETTE DU GÉNÉRATEUR, pas solution) :
+   a) `eas.json` absent du projet généré (profils de build) ;
+   b) `app.json` émis sans `owner` ni `extra.eas.projectId` (liaison au
+      projet EAS faite à la main) ;
+   c) `expo-dev-client` absent : le profil EAS `development` (dev build au
+      sens Expo) est donc **impossible sans modification manuelle** — le
+      slice a utilisé la **distribution interne** (APK release installable
+      par QR), qui satisfait « app installée et fonctionnelle » mais n'est
+      pas un « dev build » au sens strict du terme.
+   Ces trois manques sont des CONSTATS sur le générateur ; aucun n'a été
+   « corrigé » dans les zones scellées (le gabarit reste intact).
