@@ -1,0 +1,7 @@
+{"etape":"intention-air","projectId":"prj_resto_quartier_abidjan","slug":"maquis-express","ecrans":4,"entites":3,"capabilities":5}
+{"etape":"gates","dureeMs":2,"ok":true}
+{"etape":"compile","dureeMs":4,"ok":true}
+{"etape":"artefacts","rootHash":"343a94d994c44b2256750f824a40bf202f686063455771cb679ce3c64e07ec43","fichiers":31,"manifestHash":"343a94d994c44b22"}
+{"etape":"sql-genere","sqlHash":"15dd88ffef507151","tables":["ent_commande","ent_ligne_commande","ent_plat"],"seed":{"ent_plat":24}}
+{"etape":"backend-verif","ref":"dcpogyrnodqhkhgbhzsm","tables":["ent_commande","ent_ligne_commande","ent_plat"],"rls":3,"seeds":{"ent_commande":0,"ent_ligne_commande":0,"ent_plat":24},"conforme":true}
+{"etape":"backend","dureeMs":170146,"ok":true}

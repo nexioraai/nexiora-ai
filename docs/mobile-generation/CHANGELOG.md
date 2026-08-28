@@ -1,5 +1,17 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-28 — PHASE 8 / ÉTAPE A : slice restaurant, chaîne 7/7 verte (D-036-R8A)
+
+- Chaîne bout-en-bout RÉELLE : gates → compile (rootHash identique aux
+  Phases 4 et 7) → **backend Supabase réel** (RLS 3/3, seed, SQL archivé,
+  teardown prouvé) → sandbox §8 → Oracle L1 4/4 → **builds dev + 4/4 flows
+  générés PASS sur émulateurs iOS ET Android**. ≈ 3 min 20 s, 0 repair,
+  0 contournement manuel, ≈ 0 $.
+- **Cross-platform prouvé** : 0 branche de plateforme dans le code émis.
+- Scorecard v1 + rétrospective consignés. Anomalie : projet Supabase
+  orphelin après plantage du harnais → supprimé, teardown garanti en
+  `finally`. **Critère « 2 appareils physiques » OUVERT** (compte Expo/EAS).
+
 ## 2026-08-28 — PHASE 7 : Workflow durable, CRITÈRE DUR PROUVÉ (D-035-R7)
 
 - **7.1** `@deribfy/workflow` (machine à états pure, agnostique du moteur,

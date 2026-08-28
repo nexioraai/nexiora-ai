@@ -523,6 +523,75 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   **web intact** (tsc 0 + 4071/4071). Coût : crédits (~0 $).
   **Clôture = constat propriétaire.**
 
+## D-036 — OUVERTURE PHASE 8 : Vertical Slice 1 (restaurant), Étape A (2026-08-28)
+
+- **Contexte** : dépendances ROADMAP satisfaites (Phases 2-7 ✅). Feu vert
+  propriétaire pour l'**Étape A à 0 $** ; appareils : **iPhone 16 (iOS
+  26.5.2) disponible**, **aucun Android physique**.
+- **CROSS-PLATFORM — vérification sur le code réel (lecture seule)** : le
+  projet généré ne contient **AUCUNE branche de plateforme** (`Platform.OS`,
+  `.ios.`, `.android.` : 0 occurrence sur les 31 fichiers émis) — le MÊME
+  code sert iOS et Android ; `app.json` émis couvre les deux plateformes
+  (config native, permissions, planchers) ; les primitives sont en
+  propriétés logiques (cliquet RTL 3.2) et les blocs sont gelés sans code
+  spécifique. Continuité de preuve : 3.4 (harnais VERT iOS+Android), 4.7
+  (app témoin buildée et lancée sur les 2 émulateurs), 6.4 (4/4 flows
+  générés verts sur les 2). **Aucune implémentation iOS-only n'est
+  introduite** ; la validation Android continue sur émulateur.
+- **Découpage Étape A (0 $, sans action propriétaire)** :
+  - **8.A1** Slice restaurant : intention → AIR (document `resto-quartier`
+    du corpus ACTIF, émis par LLM en D-025) → compile → **backend RÉEL
+    provisionné** (Phase 5) → sandbox §8 → Oracle L1/L2 ;
+  - **8.A2** Validation **dev build sur émulateurs iOS ET Android** +
+    contrôles cross-platform explicites ;
+  - **8.A3** **Scorecard v1** (taux de succès, temps, coût, repairs,
+    qualité UI) + rétrospective ; garde-fou ROADMAP appliqué (tout écart
+    manuel = dette du GÉNÉRATEUR).
+- **Lectures consignées (aucune modification de ROADMAP)** :
+  1. **Preview = données de démonstration** (D-013) : l'app de preview
+     consomme les fixtures déterministes (D-030) ; le backend réel est
+     provisionné et vérifié **côté service** (patron Phase 5) — aucune
+     policy RLS applicative n'est ajoutée (D-032 les diffère
+     explicitement, décision NON touchée) ;
+  2. le **gate** cité dans l'objectif de la Phase 8 est construit en
+     **Phase 12** (ROADMAP) : la Phase 8 exerce les gates DÉJÀ existants
+     (4 validateurs fail-closed + Oracle L1) — constat, pas modification ;
+  3. **appareils physiques** : le critère de sortie 1 (« 2 appareils
+     physiques ») reste OUVERT à la fin de l'Étape A — il exige un compte
+     Expo/EAS et les appareils ; l'Android physique fait l'objet d'une
+     analyse de nécessité séparée présentée au propriétaire AVANT toute
+     dépense.
+
+### D-036-R8A — PHASE 8 / ÉTAPE A CLOSE : slice restaurant, chaîne verte (2026-08-28)
+
+- **Chaîne bout-en-bout RÉELLE, 7/7 étages verts** (`slices/restaurant/`) :
+  gates fail-closed (0 diagnostic) → compile (rootHash `343a94d994c44b22`,
+  **identique à la Phase 4 et à la Phase 7**) → **backend Supabase RÉEL**
+  (3 tables ⇔ 3 entités, RLS 3/3, seed 24, SQL archivé au store,
+  **teardown prouvé**) → sandbox §8 (28,7 s) → Oracle L1 4/4 → flows L2
+  générés → **builds dev Release + 4/4 flows PASS sur émulateurs iOS ET
+  Android**. Total chaîne ≈ 3 min 20 s. **0 repair · 0 contournement
+  manuel · ≈ 0 $**.
+- **CROSS-PLATFORM PROUVÉ** : 0 branche de plateforme dans les 31 fichiers
+  émis ; `app.json` symétrique ios/android ; l'unique différence vit dans
+  le GÉNÉRATEUR DE FLOWS (geste de retour), jamais dans l'app. L'absence
+  d'Android physique n'a eu aucun effet sur l'architecture.
+- **Scorecard v1** (`SCORECARD-v1.md`) et **rétrospective**
+  (`RETROSPECTIVE.md`) consignés — critères ROADMAP 2 et 3 satisfaits ;
+  critère 4 (garde-fou) satisfait : `manualWorkarounds: []`.
+- **Anomalie majeure traitée sur preuve** : un plantage du harnais a laissé
+  un **projet Supabase orphelin** ; supprimé immédiatement (preuve
+  d'absence) et cause corrigée — **teardown désormais garanti en
+  `finally`** dans le runner de slice. Défaut du harnais, pas des artefacts
+  générés ; consigné en rétrospective comme leçon générale.
+- **Dette du GÉNÉRATEUR consignée** (non corrigée, patron ROADMAP) : seed
+  partiel (entités sans dataset) · app non connectée au backend vivant en
+  preview (conforme D-013/D-032, à traiter là où la ROADMAP le prévoit) ·
+  provisioning 169 s sur org Pro.
+- **CRITÈRE 1 OUVERT** : « app installée et fonctionnelle sur 2 appareils
+  physiques ». Requiert compte Expo/EAS + appareils. **Analyse Android
+  physique remise au propriétaire, aucune dépense engagée.**
+
 ## ~~P-002~~ → D-033 — Provider de sandbox : **MODAL** (TRANCHÉ, 2026-08-28)
 
 - **Options bancées** : E2B ; Modal (finalistes du dossier) ; Fly / Vercel /

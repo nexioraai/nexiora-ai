@@ -16,7 +16,7 @@
 | Phase 0 — Fondations | 🟢 **TERMINÉE** (2026-08-27) — tous les critères de sortie vérifiés, dont **CI GitHub réelle verte : run #32, commit `54ef2a1`, `success`** (capture propriétaire + confirmation API Actions indépendante) |
 | Phase actuelle | **PHASE 4 : 🔵 EN COURS** (D-026) — 4.0 🟢 · 4.1 🟢 · 4.2 🟢 · 4.3 🟢 · 4.4 🟢 · 4.5 🟢 · 4.6 🟢 · **4.7 🟢 — CRITÈRES DE PHASE TOUS SATISFAITS, clôture = constat propriétaire** · **PHASE 3 : 🟢 TERMINÉE** (2026-08-28, clôture constatée par le propriétaire avec l'arbitrage C/D-025) · **PHASE 1** : 🔵 bancs restants bloqués sur prérequis propriétaire |
 | Générateur mobile | 🔵 **EN IMPLÉMENTATION** — chantier courant : compilateur déterministe v1 (Phase 4, architecture D-026) |
-| Progression globale | **Phases 0, 2, 3, 4, 5, 6 terminées · Phase 7 : critères satisfaits (constat attendu)** · **Phase 4 : 🟢 TERMINÉE (constat propriétaire 2026-08-28 — feu vert « jusqu'à la fin de la Phase 5 »)** · Phase 1 en cours (bancs exécutables tous faits) |
+| Progression globale | **Phases 0, 2, 3, 4, 5, 6, 7 terminées · Phase 8 : Étape A close, critère devices ouvert** · **Phase 4 : 🟢 TERMINÉE (constat propriétaire 2026-08-28 — feu vert « jusqu'à la fin de la Phase 5 »)** · Phase 1 en cours (bancs exécutables tous faits) |
 
 ## PHASE 0 — DÉTAIL DES SOUS-ÉTAPES
 
@@ -209,8 +209,8 @@ prouve l'existence, pas le taux). Voir `DECISIONS.md` D-015.
 | 4 | Compilateur déterministe v1 | 🔵 EN COURS (D-026, 4.0) |
 | 5 | Backend Provisioner v1 | 🟢 TERMINÉE (D-032-R55) |
 | 6 | Sandbox + Oracle v1 | 🟢 TERMINÉE (D-034-R6) |
-| 7 | Workflow asynchrone durable | 🟢 critères satisfaits (D-035-R7) — critère dur 5/5 · constat propriétaire |
-| 8 | Vertical Slice 1 (restaurant) | ⏳ |
+| 7 | Workflow asynchrone durable | 🟢 TERMINÉE (D-035-R7) |
+| 8 | Vertical Slice 1 (restaurant) | 🔵 EN COURS — **Étape A CLOSE** (D-036-R8A) : chaîne 7/7 verte, scorecard v1, rétrospective, émulateurs iOS+Android ; **critère 1 (2 appareils physiques) OUVERT** — compte Expo/EAS requis |
 | 9 | Repair Loop + Code Slots | ⏳ |
 | 10 | Vertical Slice 2 (hors-template) | ⏳ |
 | 11 | Router + Runtime Profiles + OTA | ⏳ |
