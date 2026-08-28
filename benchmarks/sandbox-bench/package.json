@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Banc P-002 (hors workspaces, patron banc) — SDK confiné à ce dossier : le SDK est lui-même une surface évaluée (critère 14 du dossier P-002)",
   "dependencies": {
-    "e2b": "^2"
+    "e2b": "^2",
+    "modal": "^0.10.0"
   }
 }
