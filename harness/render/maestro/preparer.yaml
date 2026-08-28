@@ -1,0 +1,15 @@
+# PRÉPARATION D'ENVIRONNEMENT (hors critères V2) — congédie la boîte de
+# dialogue de deep-link laissée par `expo run:ios` après le build (artefact
+# d'environnement déjà observé au banc P-003). Le protocole V2 lui-même
+# (parcours/rtl) reste inchangé.
+appId: ${APP_ID}
+---
+- launchApp:
+    stopApp: true
+- tapOn:
+    text: "Annuler"
+    optional: true
+- tapOn:
+    text: "Cancel"
+    optional: true
+- stopApp

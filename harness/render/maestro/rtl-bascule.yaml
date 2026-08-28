@@ -1,0 +1,10 @@
+# Bascule RTL réelle (I18nManager.forceRTL) — exige une relance (protocole
+# éprouvé au banc P-003).
+appId: ${APP_ID}
+---
+- launchApp
+- tapOn:
+    id: "toggle-rtl"
+- stopApp
+- launchApp
+- assertVisible: "RTL : ACTIF"
