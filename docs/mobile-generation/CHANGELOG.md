@@ -1,5 +1,42 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-28 — BANC E2E EXÉCUTÉ → D-022 : Maestro retenu
+
+- **Banc `E2E-mobile.md` exécuté sans dérogation** : Maestro 2.9.0 vs Detox
+  20.51.4, sur une copie de la coquille P-003 **retenue** (StyleSheet + tokens,
+  D-021), `fixture-core` non dérivée, **un seul binaire par plateforme partagé
+  par les deux outils** (Release, New Architecture), flows de sémantique
+  strictement identique, même horloge.
+- **Résultats : 80/80 runs réussis** — 20/20 par outil et par plateforme, iOS
+  et Android, **aucun flake**. Vitesse médiane (mur) : Maestro 30,4 s (iOS) /
+  24,8 s (Android) · Detox 24,0 s / 12,6 s. **RTL : PASS pour les deux, flow
+  inchangé.** Générabilité depuis l'AIR : générateur trivial de **7 LOC des
+  deux côtés** (Maestro émet des **données** YAML, Detox du **code** JS).
+  Diagnostic d'échec : Maestro produit **automatiquement** capture + hiérarchie
+  d'UI JSON + logs ; Detox donne la ligne fautive mais **aucun artefact par
+  défaut**.
+- **D-022 actée (propriétaire)** : **Maestro** retenu — décision fondée sur nos
+  contraintes d'architecture (émission de données et non de code ; **zéro
+  instrumentation** dans l'app livrée, là où Detox impose un APK `androidTest`
+  à chaque app générée ; diagnostic exploitable mécaniquement par l'Oracle et
+  la Repair Loop ; dette d'intégration Expo côté Detox, plugin en `peer
+  expo@^53` contre notre SDK 57). **Detox n'est pas disqualifié** : harnais
+  versionné et rejouable, seuil de réexamen consigné.
+- **Réversibilité préservée** : l'Oracle ne dépend que de l'interface
+  « générer un flow depuis l'AIR → exécuter → interpréter le verdict » ; aucun
+  couplage de l'AIR, des contrats, des blocs ou du compilateur à la syntaxe
+  d'un outil E2E ; les `testID` sont un attribut RN standard consommé
+  identiquement par les deux outils.
+- **Écart consigné, NON corrigé** : assertions `loading`/`empty` hors de portée
+  de la fixture (pas de `testID` sur l'indicateur de chargement, pas d'état
+  `empty`). Non bloquant : la couverture est déjà exigée par les critères de
+  sortie de la **Phase 3** sur les vrais blocs.
+- **Artefacts versionnés** : `benchmarks/e2e/` (flows, 80 journaux de run,
+  résultats JSONL, captures RTL, artefacts d'échec, générateurs, scripts,
+  `synthese-E2E.md`). **Coût : 0 $.**
+- **Conséquence ROADMAP** : tous les bancs de Phase 1 exécutables sans
+  prérequis propriétaire sont **faits** ; **la Phase 3 est ouvrable**.
+
 ## 2026-08-27 — P-003 TRANCHÉ (D-021) : StyleSheet + tokens maison
 
 - **Arbitrage propriétaire** sur dossier complet (banc 4 candidats, revue de

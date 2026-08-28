@@ -420,6 +420,87 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
 - **Options** : E2B ; Modal ; Fly Machines ; Vercel Sandbox.
 - **Tranché par** : banc Phase 1 (cold start, cache npm, egress, prix).
 
+## D-022 — Moteur E2E : **Maestro** (TRANCHÉ, 2026-08-28)
+
+- **Contexte** : banc `benchmarks/E2E-mobile.md` exécuté le 2026-08-28 sans
+  dérogation. App sous test = copie de la coquille P-003 **retenue**
+  (`stylesheet` + tokens, D-021), `fixture-core` non dérivée. **Un seul binaire
+  par plateforme, partagé par les deux outils** (build Release, New
+  Architecture) ; flows de **sémantique strictement identique** ; même horloge.
+  Artefacts versionnés : `benchmarks/e2e/` (flows, 80 journaux de run,
+  résultats JSONL, captures RTL, artefacts d'échec, générateurs,
+  `synthese-E2E.md`).
+- **Problème** : outil du niveau 2 de l'Oracle (ARCHITECTURE §9). Critère de
+  fond inscrit au protocole : **l'Oracle devra GÉNÉRER les flows depuis l'AIR**
+  — la générabilité du format compte autant que la fiabilité.
+- **Options mesurées** : Maestro 2.9.0 · Detox 20.51.4.
+
+  | Mesure | Maestro | Detox |
+  |---|---|---|
+  | Fiabilité iOS (20 runs) | **20/20** | **20/20** |
+  | Fiabilité Android (20 runs) | **20/20** | **20/20** |
+  | Vitesse iOS (médiane mur) | 30,4 s | **24,0 s** |
+  | Vitesse Android (médiane mur) | 24,8 s | **12,6 s** |
+  | RTL, flow inchangé | **PASS** | **PASS** |
+  | Générabilité depuis l'AIR | 7 LOC → **YAML (données)** | 7 LOC → **JS (code)** |
+  | Diagnostic d'échec | **capture + hiérarchie UI JSON + logs, automatiques** | trace jest (ligne exacte), **aucun artefact par défaut** |
+  | Instrumentation de l'app générée | **aucune** | **requise sur Android** (APK `androidTest` + config Gradle) |
+  | Intégration Expo | native | `@config-plugins/detox@11` en `peer expo@"^53"` → **4 SDK de retard** sur notre SDK 57 |
+
+  **Total : 80/80 runs réussis, 0 flake, sur les deux outils.** La fiabilité ne
+  départage pas ; la décision se joue sur les critères d'architecture.
+- **Décision (propriétaire, 2026-08-28)** : **Maestro** retenu comme moteur E2E.
+  **Detox n'est PAS disqualifié** — il reste rejouable, son harnais est
+  versionné.
+- **Raisons — spécifiques à NOTRE architecture, pas à une supériorité générale** :
+  1. **Le compilateur émet des DONNÉES, pas du code.** Le flow Maestro est un
+     YAML déclaratif inerte ; le test Detox est du JavaScript à exécuter.
+     Émettre du code exécutable élargirait la surface soumise aux gardes AST
+     et au déterminisme byte-identique (§6, non-négociable 2) sans bénéfice.
+  2. **Zéro instrumentation dans l'app livrée.** Detox impose à **chaque app
+     générée** un APK `androidTest` et une configuration Gradle : l'artefact
+     testé cesse d'être exactement l'artefact publié. Maestro pilote le binaire
+     **réel** (non-négociable 20, §13 EAS).
+  3. **Le diagnostic d'échec est la matière première de l'Oracle et de la
+     Repair Loop (§10).** Maestro produit **sans configuration** une capture à
+     l'étape fautive et la **hiérarchie d'UI complète en JSON** — exploitable
+     mécaniquement, par app, à l'échelle. Detox n'en produit aucun par défaut.
+  4. **La vitesse ne départage pas à notre échelle** : Detox gagne 6 s (iOS) et
+     12 s (Android) par exécution, négligeable devant le coût d'installation et
+     de build d'une génération (banc P-003 : plusieurs minutes par app).
+  5. **Dette d'intégration récurrente** : le plugin Expo officiel de Detox
+     accuse 4 versions de SDK de retard ; notre moteur suivra le release train
+     (§25) et paierait cette dette à chaque montée de SDK.
+- **Réversibilité (exigée et préservée)** : l'Oracle ne dépend que d'une
+  interface **« générer un flow depuis l'AIR → exécuter → interpréter le
+  verdict »**. Le générateur de flows est un **adaptateur remplaçable** :
+  la démonstration est faite des deux côtés (générateurs de 7 LOC, même
+  structure AIR source). Aucune dépendance Maestro ne descend dans l'AIR, les
+  contrats de primitives, les blocs ou le compilateur ; les `testID` sont un
+  attribut React Native standard, consommé **identiquement** par les deux
+  outils. **Interdit** : tout couplage du registre de blocs ou de l'AIR à la
+  syntaxe d'un outil E2E.
+- **Seuil de réexamen** : régression de support RN/Expo côté Maestro, OU besoin
+  avéré de synchronisation « boîte blanche » que Maestro ne fournit pas, OU
+  coût E2E devenant dominant dans le budget d'une génération → le harnais Detox
+  est rejouable en l'état (`benchmarks/e2e/detox/`).
+- **Écart au protocole CONSIGNÉ, non corrigé** : le protocole demande des
+  assertions sur les états `loading` / `error` / `empty`. La fixture P-003
+  expose deux états `error` (**assertés**), mais l'indicateur de chargement n'a
+  **pas de `testID`** et l'état `empty` **n'existe pas**. Ces deux assertions
+  sont hors de portée sans modifier la fixture — ce qui ferait dériver un
+  artefact de banc clos. **Statut : ouvert, non bloquant.** La couverture
+  `loading`/`empty` est déjà exigée par les **critères de sortie de la Phase 3**
+  (« harnais de rendu … états loading/empty/error vert ») sur les **vrais**
+  blocs : l'écart s'y résorbe par construction. Une modification de la fixture
+  de banc serait une décision propriétaire distincte, **non requise à ce jour**.
+- **Coût** : 0 $ (aucun service payant, aucun compte créé).
+- **Conséquence ROADMAP** : dernier banc de Phase 1 exécutable **fait**. Les
+  bancs restants (P-002, coûts EAS, coût projet Supabase) demeurent bloqués sur
+  prérequis propriétaire — la Phase 1 ne peut donc pas être close. **La Phase 3
+  est ouvrable** : ses deux dépendances (Phase 2 ✓, P-003 tranché ✓) sont
+  satisfaites.
+
 ## ~~P-003~~ → D-021 — Lib de styling RN : **StyleSheet + tokens maison** (TRANCHÉ, 2026-08-27)
 
 - **Contexte** : décision prise par le propriétaire le 2026-08-27 sur dossier
