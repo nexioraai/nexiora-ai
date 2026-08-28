@@ -1,5 +1,20 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-28 — 4.6 TERMINÉE : CRITÈRE DUR PROUVÉ (D-031)
+
+- **compileProject PUR** (gabarit scellé embarqué + émission → projet
+  complet, manifeste Merkle canonique, rootHash = SHA-256 du manifeste) ·
+  **Artifact Store v1** local content-addressed immuable (seul module fs
+  du paquet — cliquet) · preuve zéro-réseau/zéro-LLM à 2 volets (cliquet
+  statique imports/allowlist deps — a détecté une dépendance non déclarée,
+  corrigée ; campagne dynamique sous harnais V5).
+- **CRITÈRE DUR** (`v46-critere-dur.jsonl`, 0 $) : 12 documents × 10
+  compilations en PROCESSUS SÉPARÉS, environnements alternés → **hash
+  racine identique 10/10 pour chacun des 12** ; **ATTEMPTS=0 aux 120
+  runs** ; artefacts au store, round-trip vérifié. Critère aussi exercé en
+  CI continue (12×10 in-process). Compiler 88/88 · packages 334/334 · web
+  intact (tsc 0 + 4071/4071).
+
 ## 2026-08-28 — 4.5 TERMINÉE : fixtures demo déterministes (D-030)
 
 - Fixtures générées À LA COMPILATION (module canonique typé

@@ -961,6 +961,40 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   modification. Anomalie corrigée sur preuve : extraction JSON du TEST
   (marqueur trop lâche) — défaut de test, pas d’émetteur.
 
+## D-031 — Store SHA-256 + hash Merkle + CRITÈRE DUR PROUVÉ (4.6, 2026-08-28)
+
+- **`compileProject(air)` PUR** : gabarit scellé EMBARQUÉ (codegen
+  `embedded-template.generated.ts`, non-dérive testée + cohérence avec le
+  scellé du train) + émission 4.3-4.5 → projet COMPLET ; collision de
+  chemins gabarit⇋émission = refus net ; **manifeste Merkle canonique**
+  (entrées {path, sha256} triées, airHash, train) ; **hash racine =
+  SHA-256 du manifeste** = LE hash du critère dur.
+- **Artifact Store v1** (§24) : interface + implémentation LOCALE
+  content-addressed (`ab/abcdef…`) — SEUL module du paquet à toucher le
+  fs (cliquet) ; immuabilité (hash présent jamais réécrit ; divergence =
+  STORE_CORRUPTION ; get re-hashe et vérifie) ; `storeCompiledProject` :
+  fichiers + manifeste + lock canonique, contrôle croisé
+  manifestHash ≡ rootHash ; object storage distant = provider branchable,
+  aucun compte externe.
+- **Preuve zéro-réseau/zéro-LLM (« prouvé par instrumentation »)** — deux
+  volets : STATIQUE (cliquet CI : aucun import réseau/SDK LLM dans src/ ni
+  runtime/ ; dépendances = allowlist moteur exacte — l'audit a détecté et
+  corrigé une dépendance non déclarée `@deribfy/design-tokens`, consommée
+  par hoisting) ; DYNAMIQUE (campagne sous harnais V5 : chaque processus
+  vérifie `V5_NETWORK_FORBIDDEN_ATTEMPTS=0`, harnais absent = preuve
+  invalide ; contrôle positif du harnais prouvé en 4.0).
+- **CRITÈRE DUR DE LA ROADMAP : PROUVÉ (2026-08-28,
+  `results/v46-critere-dur.jsonl`, 0 $)** : **12 documents × 10
+  compilations en PROCESSUS SÉPARÉS** (environnements alternés :
+  standard / TZ Auckland + locale turque) → **hash racine IDENTIQUE 10/10
+  pour chacun des 12** · ATTEMPTS=0 aux 120 runs · artefacts au store
+  SHA-256, round-trip manifeste vérifié à chaque run · le critère est
+  AUSSI exercé en continu en CI (12×10 in-process,
+  `compile-project.test.ts`). Compiler **88/88** ; packages **334/334** ;
+  **web intact après lockfile** (tsc EXIT=0 + 221 fichiers / 4071/4071) ;
+  zones gelées 0 modification. Reste pour clore la Phase 4 : **4.7 — app
+  témoin lancée sur émulateurs iOS et Android**.
+
 ## ~~P-003~~ → D-021 — Lib de styling RN : **StyleSheet + tokens maison** (TRANCHÉ, 2026-08-27)
 
 - **Contexte** : décision prise par le propriétaire le 2026-08-27 sur dossier

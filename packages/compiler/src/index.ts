@@ -11,6 +11,15 @@ export {
   previewIdentity,
 } from "./emit-manifests.ts";
 export type { EmittedProject } from "./emit-project.ts";
+export { compileProject } from "./compile-project.ts";
+export type { CompiledProject } from "./compile-project.ts";
+export {
+  ArtifactStoreError,
+  LocalArtifactStore,
+  storeCompiledProject,
+} from "./artifact-store.ts";
+export type { ArtifactStore, StoredProject } from "./artifact-store.ts";
+export { EMBEDDED_TEMPLATE } from "./embedded-template.generated.ts";
 export { EMBEDDED_SOURCES, buildEmbeddedAssets, rewriteEmbeddedSource } from "./embed-lib.ts";
 export {
   EMBEDDED_ASSETS,
