@@ -1,5 +1,16 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-28 — PHASE 5 : critères tous satisfaits (D-032/D-032-R55)
+
+- **@deribfy/provisioner** (5.1-5.2) : AIR→SQL pur (patron §7), interface
+  §15 + impl Management API. **Cycles réels** (5.3) ×2 apps ×2 campagnes :
+  vérifs indépendantes, rejouabilité, teardown prouvé, SQL archivé au
+  store SHA-256. **Isolation stricte** (5.4, org de banc PRO — GO
+  propriétaire) : A↛B, B↛A, ↛cœur ×2, cœur↛app ×2, deny-by-default ×2 —
+  20/20. Mesure : provisioning Pro 164-206 s vs Free ~9,5 s. Garde-fous
+  intacts (nexiora-ai intouché, zéro secret journalisé, teardown finally).
+  Packages 350/350 ; web intact. Dépense chantier : 0 $.
+
 ## 2026-08-28 — Banc coût Supabase EXÉCUTÉ (Volet 3) + constat Phase 4
 
 - **Phase 4 : constat de clôture propriétaire acté** (feu vert « exécute

@@ -1171,6 +1171,37 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
 - **Budget Phase 5 : 0 $** (org free ; aucun LLM). Toute dépense
   imprévue = STOP propriétaire (méthode arbitrage C).
 
+### D-032-R55 — PHASE 5 CLOSE : critères tous satisfaits (2026-08-28)
+
+- **5.1-5.2** : `@deribfy/provisioner` (générateur SQL pur — 16 tests,
+  12/12 corpus, déterminisme rejeux+permutation, fail-closed ; interface
+  §15 + impl Management API).
+- **5.3** : cycles RÉELS prouvés ×2 apps ×2 campagnes — provision, SQL
+  appliqué (barrières internes), vérifs indépendantes (tables exactes,
+  RLS 100 %, seeds exacts), **rejouabilité**, teardown prouvé (critère
+  établi : DELETE accepté + absence du relisting), **SQL archivé au store
+  SHA-256** (hashes journalisés, artefacts versionnés).
+- **5.4 STRICT** : org de banc passée en **PRO par le propriétaire**
+  (GO 2026-08-28 — lève la limite démontrée de 2 projets free actifs par
+  compte) ; politique de plans du provider mise à jour en conséquence
+  (free|pro autorisés, autres = STOP). **A et B vivants simultanément** :
+  clé A→B **refusée**, clé B→A **refusée**, app↛cœur ×2 (lecture seule,
+  401), cœur↛app ×2, deny-by-default anon ×2 (200/0 ligne, seeds côté
+  service) — preuves journalisées.
+- **Mesure consignée** : provisioning sur org PRO = **164-206 s** (contre
+  ~9,5 s mesurés sur Free) — donnée Budget Governor / planification
+  Phase 8.
+- **Garde-fous vérifiés** : `nexiora-ai` jamais touché (refus par
+  construction) · aucun secret journalisé · suppression limitée aux refs
+  créés par le run · teardown en finally · aucun push.
+- **Coût réel Phase 5** : 0 $ de dépense engagée par le chantier
+  (projets éphémères couverts par le crédit compute de l'abonnement Pro
+  décidé et souscrit par le propriétaire).
+- **CRITÈRES DE SORTIE ROADMAP — TOUS SATISFAITS** : cycle
+  provision→vérification fail-closed→teardown prouvé ✅ · isolation par
+  tentative (A↛B, B↛A, ↛cœur) ✅ · SQL archivé comme artefact ✅.
+  **Clôture = constat propriétaire.**
+
 ## ~~P-005~~ → D-014 — Monorepo à workspaces (TRANCHÉ, 2026-08-27)
 
 - **Problème** : où faire vivre le moteur de génération (paquets AIR,

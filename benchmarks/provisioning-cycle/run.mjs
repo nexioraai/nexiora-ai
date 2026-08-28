@@ -163,21 +163,36 @@ try {
     const own = await attempt(`cle-${app.label}-dans-${app.label}`, `${project.restUrl}${table}?select=id`, anon);
     check(`isolation:deny-by-default-${app.label}`, own.status === 200 && own.rows === 0, own);
 
-    // TEARDOWN IMMÉDIAT (limite compte) — prouvé, puis app suivante.
-    await provider.deleteProject(project.ref);
-    check(`teardown:${app.label}`, await provider.isAbsent(project.ref), { ref: project.ref });
-    created.pop();
+    // Les apps restent VIVANTES pour le croisé strict (org Pro — GO
+    // propriétaire 2026-08-28) ; teardown des deux en finally.
+    app.anon = anon;
+    app.restUrl = project.restUrl;
+    app.firstTable = table;
+    app.ref = project.ref;
   }
 
-  log({
-    RESTE_5_4:
-      "tentatives croisées A↔B (2 apps GÉNÉRÉES simultanées) : BLOQUÉES par la limite de 2 projets free actifs par compte — intervention propriétaire requise (2e compte de test gratuit ou upgrade payant)",
-  });
+  // ===== 5.4 — CROISÉ STRICT A↔B (2 apps GÉNÉRÉES simultanées) =====
+  const [A, B] = APPS;
+  const attempt2 = async (nom, url, key) => {
+    const r = await fetch(url, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
+    let body;
+    try {
+      body = await r.json();
+    } catch {
+      body = undefined;
+    }
+    return { nom, status: r.status, rows: Array.isArray(body) ? body.length : undefined };
+  };
+  const aVsB = await attempt2("cle-A-contre-projet-B", `${B.restUrl}${B.firstTable}?select=id`, A.anon);
+  check("isolation:A-ne-lit-pas-B", aVsB.status === 401 || aVsB.status === 403, aVsB);
+  const bVsA = await attempt2("cle-B-contre-projet-A", `${A.restUrl}${A.firstTable}?select=id`, B.anon);
+  check("isolation:B-ne-lit-pas-A", bVsA.status === 401 || bVsA.status === 403, bVsA);
 
 } catch (e) {
   log({ ERREUR: String(e.message ?? e) });
   verdictOk = false;
 } finally {
+  // TEARDOWN SYSTÉMATIQUE des refs créés par CE run (et eux seuls).
   for (const p of created) {
     try {
       await provider.deleteProject(p.ref);

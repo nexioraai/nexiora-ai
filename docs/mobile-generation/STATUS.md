@@ -16,7 +16,7 @@
 | Phase 0 — Fondations | 🟢 **TERMINÉE** (2026-08-27) — tous les critères de sortie vérifiés, dont **CI GitHub réelle verte : run #32, commit `54ef2a1`, `success`** (capture propriétaire + confirmation API Actions indépendante) |
 | Phase actuelle | **PHASE 4 : 🔵 EN COURS** (D-026) — 4.0 🟢 · 4.1 🟢 · 4.2 🟢 · 4.3 🟢 · 4.4 🟢 · 4.5 🟢 · 4.6 🟢 · **4.7 🟢 — CRITÈRES DE PHASE TOUS SATISFAITS, clôture = constat propriétaire** · **PHASE 3 : 🟢 TERMINÉE** (2026-08-28, clôture constatée par le propriétaire avec l'arbitrage C/D-025) · **PHASE 1** : 🔵 bancs restants bloqués sur prérequis propriétaire |
 | Générateur mobile | 🔵 **EN IMPLÉMENTATION** — chantier courant : compilateur déterministe v1 (Phase 4, architecture D-026) |
-| Progression globale | **4/15 phases terminées (0, 2, 3, 4)** · **Phase 4 : 🟢 TERMINÉE (constat propriétaire 2026-08-28 — feu vert « jusqu'à la fin de la Phase 5 »)** · Phase 1 en cours (bancs exécutables tous faits) |
+| Progression globale | **Phases 0, 2, 3, 4 terminées · Phase 5 : critères satisfaits (constat attendu)** · **Phase 4 : 🟢 TERMINÉE (constat propriétaire 2026-08-28 — feu vert « jusqu'à la fin de la Phase 5 »)** · Phase 1 en cours (bancs exécutables tous faits) |
 
 ## PHASE 0 — DÉTAIL DES SOUS-ÉTAPES
 
@@ -124,9 +124,15 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
   (2 apps générées SIMULTANÉES) est BLOQUÉ : limite de 2 projets free
   actifs PAR COMPTE [démontrée par l'API], nexiora-ai occupant 1 place
   en permanence** · packages 350/350, web intact (tsc 0 + 4071/4071).
-- **Prochaine étape** : intervention propriétaire pour débloquer le
-  croisé A↔B de 5.4 (2ᵉ compte de test gratuit OU upgrade payant —
-  arbitrage), puis 5.5 clôture. Critère dur
+- **5.4 STRICT 🟢 (org de banc PRO, GO propriétaire)** : A↛B ✅, B↛A ✅,
+  ↛cœur ×2 ✅, cœur↛app ×2 ✅, deny-by-default ×2 ✅ — 20/20
+  vérifications, teardowns prouvés. **5.5 🟢 — PHASE 5 : critères de
+  sortie TOUS SATISFAITS (D-032-R55), clôture = constat propriétaire.**
+- **Prochaine étape EXACTEMENT autorisée** : constat propriétaire de
+  clôture Phase 5, puis **Phase 6 — Sandbox + Oracle v1** (dépendances
+  ROADMAP : Phase 4 ✅ · **P-002 NON TRANCHÉ** — banc bloqué sur
+  prérequis propriétaire : comptes E2B/Modal/Fly/Vercel Sandbox + budget
+  ~10-20 $ · outil E2E tranché ✅ D-022 Maestro). Critère dur
   inchangé : 10 compilations → hash identique 10/10 sur le **corpus ACTIF
   (v2)** ; app témoin sur émulateurs iOS et Android ; zéro appel LLM prouvé
   par instrumentation. Les bancs de Phase 1 restants (P-002, coûts EAS,
@@ -201,7 +207,7 @@ prouve l'existence, pas le taux). Voir `DECISIONS.md` D-015.
 | 2 | AIR v1 + Capability Registry v1 | 🟢 TERMINÉ (2026-08-27) |
 | 3 | Design System + Primitives + Blocks | 🟢 TERMINÉ (2026-08-28) |
 | 4 | Compilateur déterministe v1 | 🔵 EN COURS (D-026, 4.0) |
-| 5 | Backend Provisioner v1 | 🔵 EN COURS (D-032) |
+| 5 | Backend Provisioner v1 | 🟢 critères satisfaits (D-032-R55) — constat propriétaire |
 | 6 | Sandbox + Oracle v1 | ⏳ |
 | 7 | Workflow asynchrone durable | ⏳ |
 | 8 | Vertical Slice 1 (restaurant) | ⏳ |

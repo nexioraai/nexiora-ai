@@ -82,9 +82,11 @@ export class SupabaseProvider implements ProvisioningProvider {
     if (detail.status !== 200) {
       throw new ProvisioningError("PROV_ORG", `org introuvable (${detail.status})`);
     }
-    // Plafond 0 $ (D-032) : plan free EXIGÉ, vérifié avant toute création.
-    if (plan !== "free") {
-      throw new ProvisioningError("PROV_PLAN", `plan '${plan}' ≠ free — STOP avant création`);
+    // Politique de dépense (D-032, mise à jour GO propriétaire 2026-08-28 :
+    // org de banc passée en PRO pour le croisé 5.4) : plans autorisés =
+    // free | pro. Tout autre plan (team/enterprise) = STOP avant création.
+    if (plan !== "free" && plan !== "pro") {
+      throw new ProvisioningError("PROV_PLAN", `plan '${plan}' non autorisé — STOP avant création`);
     }
     const id = (detail.json as { id?: string }).id;
     if (typeof id !== "string") throw new ProvisioningError("PROV_ORG", "id d'org absent");
