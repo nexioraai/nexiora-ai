@@ -823,6 +823,72 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   modification (scellés verts) ; racine/web hors périmètre (aucun fichier
   partagé touché).
 
+## D-028 — Émetteur 4.3 : écrans/navigation/thème + copies embarquées (2026-08-28)
+
+- **Contexte** : 4.3 (D-026 : Option C, ScreenShell obligatoire — leçon
+  3.4, navigation = verdict S1). Implémenté dans `@deribfy/compiler` :
+  - **`emit-project.ts`** : `emitProject(air)` PUR — résolution du lock
+    (fail-closed 4 validateurs) PUIS émission : `App.tsx` (ThemeRoot +
+    DataRoot + Navigation), `navigation.tsx` + `nav.data.ts` (native-stack,
+    config explicite, patron prouvé V4), par écran `screens/<id>.tsx`
+    (code STRUCTUREL : ScreenShell + séquence de blocs lisible, zéro
+    contenu libre interpolé) + `screens/<id>.data.ts` (module canonique
+    TYPÉ `AirScreenData` — tsc valide la forme des données émises) ;
+  - **copies embarquées** (D-007) : `embed-lib.ts` (jeu EXACT de 11
+    fichiers + réécritures d'imports fail-closed — 1 occurrence exigée) +
+    `embedded-assets.generated.ts` (codegen patron 3.1, **non-dérive
+    testée** contre les vraies sources) — blocs (components/contracts),
+    primitives (5 fichiers), tokens (`theme.generated` + index pur),
+    runtime compilateur ;
+  - **runtime copié** (`runtime/`) : `air-runtime.tsx` — pont UNIQUE testé
+    données canoniques ⇄ contrats gelés (6 wrappers typés AirHeader/
+    AirButton/AirEmptyState/AirDetailHeader/AirList/AirForm, dispatch
+    d'actions, navigation liste→détail par `route.params.itemId`) ;
+    `data-provider.tsx` — interface §15 + `EMPTY_DATA_PROVIDER` (impl
+    `demo` = 4.5).
+- **Lectures consignées** :
+  1. **libellés de champs de formulaire = `field.name` de l'AIR** (l'AIR
+     v1 ne porte AUCUN libellé humain de champ — vérifié sur schéma et
+     corpus) : donnée AIR, jamais texte moteur (F3) ; libellés localisés =
+     évolution d'AIR future par porte consciente ;
+  2. effets d'actions **non-navigate** (capability/mutation/slot) =
+     **no-op structuré** en v1 compilateur (implémentations Phases 5+/9) ;
+     `navigate` intégralement câblé ;
+  3. **deux actions UI sur un même bloc = refus net**
+     `EMIT_UI_ACTION_AMBIGUOUS` (comportement non spécifié par l'AIR ;
+     corpus v2 mesuré : 0 cas ; testé par document construit) ;
+  4. `route.title` OPTIONNEL (fait du schéma) → **repli déterministe sur
+     le titre de l'écran cible** (requis) ;
+  5. liste vide SANS `emptyTitle` → état `ready` (le moteur n'invente
+     jamais de texte d'état — F3) ;
+  6. **syntaxe TS EFFAÇABLE uniquement** dans les sources moteur (pas de
+     parameter properties) : les bancs exécutent les sources sous le
+     strip-only de Node [démontré : ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX].
+- **Gabarit ré-scellé DEUX FOIS (évolutions conscientes, preuves
+  rejouées à chaque fois — aucune preuve antérieure conservée)** :
+  1. `allowImportingTsExtensions: true` au tsconfig — exigé par les copies
+     (`./contracts.ts`), démontré sur artefact (expo/tsconfig.base ne le
+     pose pas, règle TS5097) ;
+  2. devDependencies EXACTES `typescript@5.9.3` + `@types/react@19.2.15`
+     — l'Oracle §9 exécute `tsc` strict DANS la sandbox du projet généré
+     (§8 install→typecheck) ; démontré au banc : sans elles, `npx tsc`
+     résout le paquet-piège `tsc` puis TS7016 (react sans types ; RN 0.86
+     livre les siens). Champ `templateDevDependencies` ajouté au train ;
+     lockfile regénéré **×2 byte-identique** à chaque évolution ;
+     **preuves v42 REJOUÉES** sur le gabarit final : npm ci ×2 → **22 796
+     fichiers, arbres IDENTIQUES 2/2**, lockfile intact, fumée export OK.
+- **Preuves 4.3 (2026-08-28, `results/v43-emission.jsonl`, 0 $)** :
+  émission **déterministe 12/12** (3 rejeux + permutation récursive des
+  clés ⇒ projet byte-identique) · structure 12/12 (ScreenShell partout,
+  chaque bloc de l'AIR référencé, LF/UTF-8) · non-dérive des copies ·
+  fail-closed (document invalide → résolveur ; ambiguïté UI → EmitError) ·
+  **projets générés RÉELS : `tsc --noEmit` strict EXIT=0 sur 3 documents**
+  (resto-quartier, agence-immo, boutique-mode — émission + copies +
+  runtime + données typent ENSEMBLE) · **`expo export` ios+android OK**
+  (resto-quartier, 1 bundle Hermes/plateforme) · compiler **54/54** ·
+  packages **300/300**, tsc/lint 0 · zones gelées 0 modification (scellés
+  verts) · racine/web hors périmètre.
+
 ## ~~P-003~~ → D-021 — Lib de styling RN : **StyleSheet + tokens maison** (TRANCHÉ, 2026-08-27)
 
 - **Contexte** : décision prise par le propriétaire le 2026-08-27 sur dossier

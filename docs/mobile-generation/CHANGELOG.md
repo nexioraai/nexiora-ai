@@ -1,5 +1,32 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-28 — 4.3 TERMINÉE : émetteur écrans/navigation/thème (D-028)
+
+- **`emitProject` PUR** (Option C) : App.tsx (ThemeRoot+DataRoot+
+  Navigation), navigation native-stack en config EXPLICITE (patron V4),
+  écrans = code STRUCTUREL (ScreenShell obligatoire — leçon 3.4, séquence
+  de blocs lisible, zéro contenu libre interpolé) + modules de données
+  canoniques **TYPÉS `AirScreenData`** (tsc valide les données émises).
+- **Copies embarquées** (D-007, patron codegen 3.1) : 11 fichiers (blocs,
+  primitives, tokens, runtime), réécritures d'imports fail-closed,
+  **non-dérive testée** contre les vraies sources.
+- **Runtime copié** : `air-runtime.tsx` (6 wrappers typés, dispatch
+  navigate, liste→détail par route.params.itemId) + `data-provider.tsx`
+  (interface §15, EMPTY par défaut — impl demo = 4.5).
+- **6 lectures consignées** (libellés champs = name AIR ; non-navigate =
+  no-op structuré ; ambiguïté UI = refus testé ; route.title optionnel →
+  repli titre écran ; liste vide sans emptyTitle → ready ; syntaxe TS
+  effaçable). **Gabarit ré-scellé ×2** (tsconfig extensions TS5097 ;
+  devDeps typescript 5.9.3 + @types/react 19.2.15 — Oracle §9 exécute tsc
+  DANS le projet généré ; démontré : paquet-piège `tsc`, TS7016), lockfile
+  ×2 byte-identique à chaque fois, **preuves v42 REJOUÉES** (22 796
+  fichiers, arbres identiques 2/2, fumée export OK).
+- **Preuves** (`v43-emission.jsonl`, 0 $) : émission déterministe 12/12
+  (3 rejeux + permutation ⇒ byte-identique) · structure 12/12 ·
+  fail-closed · **tsc --noEmit strict EXIT=0 sur 3 projets générés réels**
+  · **expo export ios+android OK** (bundles Hermes) · compiler **54/54** ·
+  packages **300/300** · zones gelées 0 modification.
+
 ## 2026-08-28 — 4.2 TERMINÉE : gabarit Expo versionné (D-027-R42)
 
 - **`packages/compiler/template/`** : 5 fichiers sous liste exacte testée —

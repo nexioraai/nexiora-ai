@@ -34,8 +34,21 @@ export const RELEASE_TRAIN_V1 = {
   // `template/` (dont le package-lock.json pré-résolu, généré ×2
   // byte-identique). Le test de garde le recalcule — toute édition du
   // gabarit est une évolution consciente du train.
+  // Ré-scellé en 4.3 (D-028) : + allowImportingTsExtensions au tsconfig
+  // (exigé par les copies — imports `./contracts.ts`, patron 3.4 ;
+  // expo/tsconfig.base ne le pose pas, règle TS5097) ; + devDependency
+  // typescript 5.9.3 EXACTE (l Oracle §9 exécute tsc strict DANS la
+  // sandbox du projet généré — démontré au banc v43 : sans lui, npx
+  // résout le paquet-piège `tsc`). Lockfile regénéré ×2 byte-identique ;
+  // preuves v42 REJOUÉES après extension (jsonl, entrées 2026-08-28b).
+  // + @types/react 19.2.15 EXACTE (react ne livre pas ses types ; TS7016
+  // démontré au banc v43 — RN 0.86 livre les siens). Scellé recalculé.
   templateHash:
-    "1296e2465324e8e662d77c035fcaefa392c48f0fd5f1f6770fd717b4bbf4302c",
+    "2ddb69ab5bd45662d5f2b5845ecda56fe623b154ba0d4afb74e799eca172339f",
+  templateDevDependencies: {
+    "@types/react": "19.2.15",
+    typescript: "5.9.3",
+  },
 
   // Dépendances EXACTES du gabarit (consommées en 4.2 ; la navigation est
   // le verdict S1 du banc V4 — versions installées et prouvées sur device).

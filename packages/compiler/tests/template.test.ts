@@ -33,6 +33,7 @@ const pkg = JSON.parse(
   main: string;
   scripts?: Record<string, string>;
   dependencies: Record<string, string>;
+  devDependencies?: Record<string, string>;
 };
 const lock = JSON.parse(
   readFileSync(join(TEMPLATE, "package-lock.json"), "utf8"),
@@ -68,6 +69,13 @@ describe("gabarit — identité et hygiène", () => {
 
   it("aucun script d'installation ni de cycle de vie", () => {
     expect(pkg.scripts).toBeUndefined();
+  });
+
+  it("devDependencies = templateDevDependencies EXACTES du train (tsc pour l'Oracle §9)", () => {
+    expect(pkg.devDependencies).toEqual(RELEASE_TRAIN_V1.templateDevDependencies);
+    expect(lock.packages["node_modules/typescript"]?.version).toBe(
+      RELEASE_TRAIN_V1.templateDevDependencies.typescript,
+    );
   });
 
   it("fichiers du gabarit : liste exacte, aucun App/app.json (émis 4.3/4.4)", () => {

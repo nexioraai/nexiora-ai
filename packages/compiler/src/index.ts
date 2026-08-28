@@ -4,3 +4,10 @@ export { RELEASE_TRAIN_V1 } from "./release-train.ts";
 export type { ReleaseTrain } from "./release-train.ts";
 export { LockResolutionError, resolveLock } from "./resolve-lock.ts";
 export type { LockDiagnostic } from "./resolve-lock.ts";
+export { EmitError, emitProject } from "./emit-project.ts";
+export type { EmittedProject } from "./emit-project.ts";
+export { EMBEDDED_SOURCES, buildEmbeddedAssets, rewriteEmbeddedSource } from "./embed-lib.ts";
+export {
+  EMBEDDED_ASSETS,
+  EMBEDDED_ASSETS_FINGERPRINT,
+} from "./embedded-assets.generated.ts";

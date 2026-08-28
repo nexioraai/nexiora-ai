@@ -3,7 +3,7 @@
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["node_modules/**", "coverage/**", "template/**"] },
+  { ignores: ["node_modules/**", "coverage/**", "template/**", "runtime/**"] },
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
   {
