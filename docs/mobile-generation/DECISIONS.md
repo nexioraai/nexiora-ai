@@ -931,6 +931,36 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   EMIT_PERMISSION_REASON_MISSING testée · compiler **67/67** · packages
   **313/313**, tsc/lint 0 · zones gelées 0 modification.
 
+## D-030 — Fixtures demo déterministes + provider demo (4.5, 2026-08-28)
+
+- **Contexte** : 4.5 (D-026 S2 — alternative LLM analysée et écartée au
+  dossier : nécessité non démontrée, 0 $). Choix structurant : les lignes
+  de démo sont générées **À LA COMPILATION** (module canonique
+  `demo.data.ts`, TYPÉ `DemoData`) — elles entrent dans le périmètre du
+  hash 10/10 de 4.6 ; le runtime copié (`demo-provider.ts`) ne fait que
+  les servir derrière l’interface §15.
+- **Génération** (`demo-fixtures.ts`, fonction PURE) : PRNG mulberry32
+  seedé par `contentHash` (32 bits de tête) ; `rowCount` lignes par
+  dataset, cumulées par entité ; **ids de lignes PAR ENTITÉ**
+  (`<entityId>_row_<n>` — cohérence des champs `reference`, y compris à
+  datasets multiples) ; valeurs par type : string/text = `nom-de-champ n`
+  (DONNÉES AIR + numéro, jamais texte moteur — F3, patron D-028) ·
+  number/decimal/boolean = PRNG · date/datetime = arithmétique pure sur
+  base FIXE 2026-01-01 (zéro horloge) · enum ∈ `enumValues` (AIR) ·
+  reference = id de ligne réel de l’entité cible (vide si aucun dataset) ·
+  asset = vide (Content Pipeline §19, phases ultérieures) · json = `{}`.
+- **Provider demo** : `buildDemoProvider(demoData)` ; `getInstance` sans
+  paramètre = PREMIÈRE ligne (écran de détail sans param — déterministe) ;
+  `EMPTY_DATA_PROVIDER` reste exporté (contrat).
+- **Preuves (2026-08-28, 0 $)** : v43 REJOUÉE fixtures incluses — tsc
+  strict EXIT=0 ×3 projets générés (26 fichiers émis), export Hermes
+  ios+android OK · tests CI 12/12 : rowCount respecté par entité, énums ∈
+  enumValues, références → lignes réelles, ids uniques ; déterminisme
+  couvert par le hash de projet (rejeux + permutation) · compiler
+  **79/79** · packages **325/325**, tsc/lint 0 · zones gelées 0
+  modification. Anomalie corrigée sur preuve : extraction JSON du TEST
+  (marqueur trop lâche) — défaut de test, pas d’émetteur.
+
 ## ~~P-003~~ → D-021 — Lib de styling RN : **StyleSheet + tokens maison** (TRANCHÉ, 2026-08-27)
 
 - **Contexte** : décision prise par le propriétaire le 2026-08-27 sur dossier

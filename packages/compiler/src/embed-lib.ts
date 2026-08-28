@@ -67,6 +67,11 @@ export const EMBEDDED_SOURCES: readonly EmbeddedSourceSpec[] = [
     rewrites: {},
   },
   {
+    source: "compiler/runtime/demo-provider.ts",
+    target: "lib/runtime/demo-provider.ts",
+    rewrites: {},
+  },
+  {
     source: "compiler/runtime/air-runtime.tsx",
     target: "lib/runtime/air-runtime.tsx",
     rewrites: {},

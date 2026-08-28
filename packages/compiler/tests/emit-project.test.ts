@@ -186,6 +186,72 @@ describe("émetteur — manifestes/permissions/config native (4.4, D-029)", () =
   });
 });
 
+describe("émetteur — fixtures demo déterministes (4.5, D-030)", () => {
+  for (const file of v2Docs) {
+    it(`fixtures conformes au schéma et aux datasets : ${file}`, () => {
+      const doc = loadDoc(file) as {
+        datasets: { entityId: string; rowCount: number }[];
+        entities: {
+          id: string;
+          fields: { id: string; type: string; enumValues?: string[] }[];
+        }[];
+      };
+      const { files } = emitProject(doc);
+      const module = files.get("demo.data.ts") ?? "";
+      const marker = "DemoData = ";
+      const json = module.slice(
+        module.indexOf(marker) + marker.length,
+        module.lastIndexOf(";"),
+      );
+      const demo = JSON.parse(json) as Record<
+        string,
+        { id: string; values: Record<string, string> }[]
+      >;
+
+      // rowCount respecté par entité (datasets cumulés).
+      const expected = new Map<string, number>();
+      for (const d of doc.datasets) {
+        expected.set(d.entityId, (expected.get(d.entityId) ?? 0) + d.rowCount);
+      }
+      for (const [entityId, count] of expected) {
+        expect(demo[entityId]?.length, entityId).toBe(count);
+      }
+
+      // Énums ∈ enumValues ; références → ids de lignes réels ; ids uniques.
+      const entitiesById = new Map(doc.entities.map((e) => [e.id, e]));
+      for (const [entityId, rows] of Object.entries(demo)) {
+        const fields = entitiesById.get(entityId)?.fields ?? [];
+        const ids = new Set(rows.map((r) => r.id));
+        expect(ids.size).toBe(rows.length);
+        for (const row of rows) {
+          for (const field of fields) {
+            const value = row.values[field.id];
+            expect(value, `${entityId}.${field.id}`).toBeDefined();
+            if (field.type === "enum" && (field.enumValues ?? []).length > 0) {
+              expect(field.enumValues).toContain(value);
+            }
+          }
+        }
+      }
+      // Références croisées : chaque valeur non vide pointe une ligne réelle.
+      for (const entity of doc.entities) {
+        for (const field of entity.fields.filter((f) => f.type === "reference")) {
+          for (const row of demo[entity.id] ?? []) {
+            const v = row.values[field.id] ?? "";
+            if (v !== "") {
+              const target = (field as { referencesEntityId?: string }).referencesEntityId ?? "";
+              expect(
+                (demo[target] ?? []).some((r) => r.id === v),
+                `${entity.id}.${field.id} -> ${v}`,
+              ).toBe(true);
+            }
+          }
+        }
+      }
+    });
+  }
+});
+
 describe("émetteur — fail-closed", () => {
   it("document invalide ⇒ LockResolutionError AVANT toute émission", () => {
     const doc = loadDoc("resto-quartier.air.json") as {

@@ -1,5 +1,18 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-28 — 4.5 TERMINÉE : fixtures demo déterministes (D-030)
+
+- Fixtures générées À LA COMPILATION (module canonique typé
+  `demo.data.ts` — périmètre du hash 4.6) : PRNG mulberry32 seedé par le
+  `contentHash` de chaque dataset, ids de lignes PAR ENTITÉ (cohérence
+  des références), valeurs = données AIR + numéros (F3), dates en
+  arithmétique pure (base 2026-01-01), assets vides (§19), zéro LLM.
+- Provider `demo` copié (`buildDemoProvider`, défaut = première ligne) ;
+  App.tsx émis câble le provider demo (remplace EMPTY, D-028).
+- Preuves : 12/12 tests CI (rowCount/énums/références/unicité) · v43
+  rejouée fixtures incluses (tsc strict EXIT=0 ×3, exports OK) · compiler
+  79/79 · packages 325/325 · 0 $.
+
 ## 2026-08-28 — 4.4 TERMINÉE : manifestes/permissions/config native (D-029)
 
 - **app.json émis** depuis l'AIR + le registre : identité preview

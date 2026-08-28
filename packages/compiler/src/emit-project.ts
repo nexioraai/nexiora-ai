@@ -9,6 +9,7 @@
 // libre interpolé dans le code (identifiants validés par regex ; toute la
 // matière variable vit dans les modules .data canoniques).
 import { canonicalJson, type ProjectAir, type ProjectLock } from "@deribfy/air-schema";
+import { buildDemoFixtures } from "./demo-fixtures.ts";
 import { emitAppJson, emitPermissionsManifest } from "./emit-manifests.ts";
 import { EMBEDDED_ASSETS } from "./embedded-assets.generated.ts";
 import { resolveLock } from "./resolve-lock.ts";
@@ -274,20 +275,36 @@ function emitApp(): string {
   return [
     "// GÉNÉRÉ — NE PAS ÉDITER (racine d'app : thème + données + navigation).",
     "// S7 (D-026) : tokens scellés 1.0.0, design.theme transporté sans effet.",
-    "// 4.5 remplacera EMPTY_DATA_PROVIDER par le provider demo déterministe.",
+    "// Provider demo (D-030) : fixtures déterministes compilées (demo.data).",
     'import { ThemeRoot } from "./lib/primitives";',
-    'import { DataRoot, EMPTY_DATA_PROVIDER } from "./lib/runtime/data-provider";',
+    'import { DataRoot } from "./lib/runtime/data-provider";',
+    'import { buildDemoProvider } from "./lib/runtime/demo-provider";',
+    'import { demoData } from "./demo.data";',
     'import { Navigation } from "./navigation";',
+    "",
+    "const provider = buildDemoProvider(demoData);",
     "",
     "export default function App() {",
     "  return (",
     "    <ThemeRoot>",
-    "      <DataRoot provider={EMPTY_DATA_PROVIDER}>",
+    "      <DataRoot provider={provider}>",
     "        <Navigation />",
     "      </DataRoot>",
     "    </ThemeRoot>",
     "  );",
     "}",
+    "",
+  ].join("\n");
+}
+
+function emitDemoData(air: ProjectAir): string {
+  return [
+    "// GÉNÉRÉ — NE PAS ÉDITER (fixtures demo déterministes, D-030 :",
+    "// PRNG seedé par le contentHash de chaque dataset — preview = données",
+    "// de démo uniquement, D-013).",
+    'import type { DemoData } from "./lib/runtime/demo-provider";',
+    "",
+    `export const demoData: DemoData = ${canonicalJson(buildDemoFixtures(air))};`,
     "",
   ].join("\n");
 }
@@ -312,6 +329,7 @@ export function emitProject(
   }
   files.set("App.tsx", emitApp());
   files.set("app.json", emitAppJson(air, train));
+  files.set("demo.data.ts", emitDemoData(air));
   files.set("manifests/permissions.manifest.json", emitPermissionsManifest(air));
   files.set("nav.data.ts", emitNavData(air, locale));
   files.set("navigation.tsx", emitNavigation(air));

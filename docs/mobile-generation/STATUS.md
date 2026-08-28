@@ -1,11 +1,11 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-08-28** (**4.4 TERMINÉE — D-029** : app.json + manifeste canonique
-> de permissions émis depuis le registre — prebuild Android réel : minSdk
-> 26 appliqué, permissions dans l'AndroidManifest ; gabarit ré-scellé
-> (build-properties), preuves rejouées — compiler 67/67, packages 313/313 ;
-> prochaine étape : **4.5 — fixtures déterministes + data-provider demo**).
+> **2026-08-28** (**4.5 TERMINÉE — D-030** : fixtures demo compilées
+> (PRNG seedé contentHash, module canonique typé) + provider demo copié —
+> v43 rejouée fixtures incluses : tsc strict EXIT=0 ×3, exports OK —
+> compiler 79/79, packages 325/325 ; prochaine étape : **4.6 — store
+> SHA-256 + preuve 12×10 + zéro-réseau**).
 
 ## ÉTAT GLOBAL
 
@@ -13,9 +13,9 @@
 |---|---|
 | Plan v0.1 | 🟢 **VALIDÉ ET FIGÉ** (propriétaire, 2026-08-27) — toute évolution passe par `DECISIONS.md` |
 | Phase 0 — Fondations | 🟢 **TERMINÉE** (2026-08-27) — tous les critères de sortie vérifiés, dont **CI GitHub réelle verte : run #32, commit `54ef2a1`, `success`** (capture propriétaire + confirmation API Actions indépendante) |
-| Phase actuelle | **PHASE 4 : 🔵 EN COURS** (D-026) — 4.0 🟢 · 4.1 🟢 · 4.2 🟢 · 4.3 🟢 · 4.4 🟢 (D-029) · prochaine : **4.5** · **PHASE 3 : 🟢 TERMINÉE** (2026-08-28, clôture constatée par le propriétaire avec l'arbitrage C/D-025) · **PHASE 1** : 🔵 bancs restants bloqués sur prérequis propriétaire |
+| Phase actuelle | **PHASE 4 : 🔵 EN COURS** (D-026) — 4.0 🟢 · 4.1 🟢 · 4.2 🟢 · 4.3 🟢 · 4.4 🟢 · 4.5 🟢 (D-030) · prochaine : **4.6** · **PHASE 3 : 🟢 TERMINÉE** (2026-08-28, clôture constatée par le propriétaire avec l'arbitrage C/D-025) · **PHASE 1** : 🔵 bancs restants bloqués sur prérequis propriétaire |
 | Générateur mobile | 🔵 **EN IMPLÉMENTATION** — chantier courant : compilateur déterministe v1 (Phase 4, architecture D-026) |
-| Progression globale | **3/15 phases terminées (0, 2, 3)** · Phase 4 en cours (4.0-4.4 🟢 → 4.5) · Phase 1 en cours (bancs exécutables tous faits) |
+| Progression globale | **3/15 phases terminées (0, 2, 3)** · Phase 4 en cours (4.0-4.5 🟢 → 4.6) · Phase 1 en cours (bancs exécutables tous faits) |
 
 ## PHASE 0 — DÉTAIL DES SOUS-ÉTAPES
 
@@ -95,11 +95,13 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
 - **4.4 TERMINÉE (2026-08-28, D-029)** : manifestes émis et PROUVÉS au
   prebuild réel (minSdk appliqué, permissions présentes) ; gabarit
   ré-scellé 3ᵉ fois, preuves rejouées ; 0 $.
-- **Prochaine étape EXACTEMENT autorisée** : **4.5 — fixtures
-  déterministes + data-provider demo** (D-026 S2 : PRNG seedé par le
-  contentHash du dataset, rowCount lignes depuis le schéma d'entité,
-  fonction pure zéro LLM, derrière l'interface data-provider §15), puis
-  4.6 → 4.7 dans l'ordre du découpage D-026. Critère dur
+- **4.5 TERMINÉE (2026-08-28, D-030)** : fixtures compilées déterministes
+  + provider demo, preuves rejouées ; 0 $.
+- **Prochaine étape EXACTEMENT autorisée** : **4.6 — Artifact Store v1
+  (local, SHA-256) + hash Merkle + PREUVE DU CRITÈRE DUR : 12 documents ×
+  10 compilations → hash racine identique 10/10 + preuve zéro-réseau/
+  zéro-LLM par instrumentation** (harnais V5 + cliquet statique
+  d'imports), puis 4.7 (app témoin émulateurs). Critère dur
   inchangé : 10 compilations → hash identique 10/10 sur le **corpus ACTIF
   (v2)** ; app témoin sur émulateurs iOS et Android ; zéro appel LLM prouvé
   par instrumentation. Les bancs de Phase 1 restants (P-002, coûts EAS,
@@ -120,7 +122,7 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
 | 4.2 | **Gabarit Expo versionné** (`packages/compiler/template/`, D-027-R42) — 5 fichiers sous liste exacte : package.json (deps = train, EXACTES), **package-lock.json pré-résolu** (généré ×2 byte-identique), index.ts, tsconfig, .gitignore ; identité npm FIXE (identité d'app = app.json, émis 4.4) ; SANS App/app.json (émis 4.3/4.4) ; zéro script ; **scellé `templateHash` au train sous test de garde** ; zéro install dans le chemin de compilation (le compilateur copie) | 🟢 **TERMINÉE** (2026-08-28) — preuves : npm ci ×2 → **22 641 fichiers, arbres identiques 2/2**, lockfile intact · fumée `expo export` ios+android OK · pins résolus à l'identique (CI sans réseau) · compiler 34/34 · packages 280/280 |
 | 4.3 | **Émission écrans/navigation/thème (D-028)** — `emitProject` PUR : App/navigation (native-stack, config explicite)/écrans (code structurel ScreenShell+blocs, zéro contenu libre)/modules canoniques TYPÉS ; copies embarquées 11 fichiers (non-dérive testée) ; runtime copié (6 wrappers + data-provider §15) ; 6 lectures consignées ; gabarit ré-scellé ×2 (tsconfig extensions + devDeps typescript/@types/react pour Oracle §9), preuves v42 rejouées | 🟢 **TERMINÉE** (2026-08-28) — émission déterministe 12/12 (rejeux+permutation) · **tsc strict EXIT=0 sur 3 projets générés réels** · export Hermes ios+android OK · compiler 54/54 · packages 300/300 |
 | 4.4 | **Manifestes/permissions/config native (D-029)** — app.json émis (identité preview déterministe, permissions induites agrégées transitives, infoPlist depuis raisons AIR — F3, plugin build-properties max(plancher,exigence), scheme ssi deep_links) + manifeste canonique de permissions (Oracle §9/Compliance §18) ; gabarit ré-scellé 3ᵉ fois (+expo-build-properties 57.0.15, nécessité démontrée 10/12 docs minSdk 26) | 🟢 **TERMINÉE** (2026-08-28) — **prebuild Android réel : minSdk 26 APPLIQUÉ, permissions dans le manifeste** · export avec app.json émis OK · 12/12 tests CI · compiler 67/67 · packages 313/313 |
-| 4.5 | Fixtures déterministes (PRNG seedé `contentHash`) + interface data-provider, impl `demo` | ⏳ |
+| 4.5 | **Fixtures demo déterministes (D-030)** — générées À LA COMPILATION (module canonique typé `demo.data.ts`, dans le périmètre du hash 4.6) : PRNG mulberry32 seedé `contentHash`, ids par entité, valeurs = données AIR (F3), dates base fixe, refs → lignes réelles ; provider demo copié (défaut = 1ʳᵉ ligne) | 🟢 **TERMINÉE** (2026-08-28) — 12/12 tests CI (rowCount, énums, refs, unicité) · v43 rejouée : tsc EXIT=0 ×3, exports OK · compiler 79/79 · packages 325/325 |
 | 4.6 | Artifact Store v1 (local, SHA-256) + hash Merkle + **preuve 12 docs × 10 compilations → 10/10 identiques** + preuve zéro-réseau/zéro-LLM | ⏳ |
 | 4.7 | App témoin : build + lancement émulateurs iOS ET Android (protocole type 3.4, captures versionnées) | ⏳ |
 
