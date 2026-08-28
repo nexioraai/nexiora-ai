@@ -10,3 +10,7 @@
 {"etape":"ci-B","lockfileIntact":true,"fileCount":22796,"treeRoot":"8c6fc8ebcba95a9cf55601ef5bf80a0bf42d271aab7d311b9009ec006776af46"}
 {"etape":"verdict-npmci","verdict":"ARBRES IDENTIQUES 2/2"}
 {"etape":"fumee-export","bundles":[{"plat":"ios","count":1},{"plat":"android","count":1}],"verdict":"EXPORT OK ios+android"}
+{"etape":"ci-A","lockfileIntact":true,"fileCount":22828,"treeRoot":"f2e03df01e475f98a488507fe98a3bc0d4548fe992b58d1441ce500509697c95"}
+{"etape":"ci-B","lockfileIntact":true,"fileCount":22828,"treeRoot":"f2e03df01e475f98a488507fe98a3bc0d4548fe992b58d1441ce500509697c95"}
+{"etape":"verdict-npmci","verdict":"ARBRES IDENTIQUES 2/2"}
+{"etape":"fumee-export","bundles":[{"plat":"ios","count":1},{"plat":"android","count":1}],"verdict":"EXPORT OK ios+android"}

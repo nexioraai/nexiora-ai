@@ -5,6 +5,11 @@ export type { ReleaseTrain } from "./release-train.ts";
 export { LockResolutionError, resolveLock } from "./resolve-lock.ts";
 export type { LockDiagnostic } from "./resolve-lock.ts";
 export { EmitError, emitProject } from "./emit-project.ts";
+export {
+  emitAppJson,
+  emitPermissionsManifest,
+  previewIdentity,
+} from "./emit-manifests.ts";
 export type { EmittedProject } from "./emit-project.ts";
 export { EMBEDDED_SOURCES, buildEmbeddedAssets, rewriteEmbeddedSource } from "./embed-lib.ts";
 export {

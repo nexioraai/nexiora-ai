@@ -1,0 +1,3 @@
+{"doc":"resto-quartier.air.json","etape":"prebuild-android","wantedPerms":["android.permission.POST_NOTIFICATIONS"],"permsOk":true,"minSdkWanted":26,"minSdkOk":true,"packageOk":true}
+{"doc":"resto-quartier.air.json","etape":"expo-export","exportExit":0}
+{"verdict":"V44 VERTE"}

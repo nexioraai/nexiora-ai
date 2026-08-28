@@ -9,6 +9,7 @@
 // libre interpolé dans le code (identifiants validés par regex ; toute la
 // matière variable vit dans les modules .data canoniques).
 import { canonicalJson, type ProjectAir, type ProjectLock } from "@deribfy/air-schema";
+import { emitAppJson, emitPermissionsManifest } from "./emit-manifests.ts";
 import { EMBEDDED_ASSETS } from "./embedded-assets.generated.ts";
 import { resolveLock } from "./resolve-lock.ts";
 import { RELEASE_TRAIN_V1, type ReleaseTrain } from "./release-train.ts";
@@ -310,6 +311,8 @@ export function emitProject(
     files.set(target, content);
   }
   files.set("App.tsx", emitApp());
+  files.set("app.json", emitAppJson(air, train));
+  files.set("manifests/permissions.manifest.json", emitPermissionsManifest(air));
   files.set("nav.data.ts", emitNavData(air, locale));
   files.set("navigation.tsx", emitNavigation(air));
   for (const screen of [...air.screens].sort((a, b) => byCodeUnit(a.id, b.id))) {

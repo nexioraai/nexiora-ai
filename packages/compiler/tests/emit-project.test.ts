@@ -106,6 +106,86 @@ describe("émetteur — corpus ACTIF v2", () => {
   });
 });
 
+describe("émetteur — manifestes/permissions/config native (4.4, D-029)", () => {
+  const registryPromise = import("@deribfy/capability-registry");
+
+  for (const file of v2Docs) {
+    it(`app.json + manifeste de permissions conformes : ${file}`, async () => {
+      const { inducedPermissionsFor } = await registryPromise;
+      const doc = loadDoc(file) as {
+        app: { slug: string };
+        capabilities: { capability: string }[];
+        native: { minAndroidSdk?: number; minIosVersion?: string };
+      };
+      const { files } = emitProject(doc);
+      const appJson = JSON.parse(files.get("app.json") ?? "") as {
+        expo: {
+          slug: string;
+          newArchEnabled: boolean;
+          android: { package: string; permissions: string[] };
+          ios: { bundleIdentifier: string; infoPlist?: Record<string, string> };
+          plugins: [string, { android: { minSdkVersion: number }; ios: { deploymentTarget: string } }][];
+          scheme?: string;
+        };
+      };
+      const ids = doc.capabilities.map((c) => c.capability);
+      const induced = inducedPermissionsFor(ids);
+
+      expect(appJson.expo.slug).toBe(doc.app.slug);
+      expect(appJson.expo.newArchEnabled).toBe(true);
+      // Permissions Android = agrégation transitive du registre, à l'identique.
+      expect(appJson.expo.android.permissions).toEqual(
+        induced.filter((p) => p.platform === "android").map((p) => p.permission),
+      );
+      // Chaque permission iOS induite a son texte d'usage (raison AIR).
+      for (const p of induced.filter((x) => x.platform === "ios")) {
+        const text = appJson.expo.ios.infoPlist?.[p.permission];
+        expect(text, p.permission).toBeDefined();
+        expect((text ?? "").length).toBeGreaterThan(0);
+      }
+      // Config native : max(plancher du train, exigence AIR).
+      const bp = appJson.expo.plugins.find((x) => x[0] === "expo-build-properties");
+      expect(bp).toBeDefined();
+      expect(bp?.[1].android.minSdkVersion).toBe(
+        Math.max(24, doc.native.minAndroidSdk ?? 24),
+      );
+      // Schéma de deep link ssi la capability est déclarée.
+      expect("scheme" in appJson.expo).toBe(ids.includes("deep_links"));
+
+      const manifest = JSON.parse(
+        files.get("manifests/permissions.manifest.json") ?? "",
+      ) as { induced: unknown; declared: unknown[]; native: unknown };
+      expect(manifest.induced).toEqual(induced);
+      expect(manifest.native).toEqual(doc.native);
+    });
+  }
+
+  it("permission iOS induite sans raison déclarée ⇒ EMIT_PERMISSION_REASON_MISSING (défense)", async () => {
+    const { emitAppJson } = await import("../src/emit-manifests.ts");
+    const { projectAirSchema } = await import("@deribfy/air-schema");
+    const { RELEASE_TRAIN_V1 } = await import("../src/release-train.ts");
+    // Document réel AVEC permission iOS induite, raison retirée APRÈS
+    // validation (le validateur registre l'exige — défense en profondeur).
+    const withIos = v2Docs
+      .map((f) => loadDoc(f) as { permissions: { platform: string }[] })
+      .find((d) => d.permissions.some((p) => p.platform === "ios"));
+    if (withIos === undefined) throw new Error("fixture inattendue");
+    const air = projectAirSchema.parse(withIos);
+    const stripped = {
+      ...air,
+      permissions: air.permissions.filter((p) => p.platform !== "ios"),
+    };
+    let error: unknown;
+    try {
+      emitAppJson(stripped, RELEASE_TRAIN_V1);
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeInstanceOf(EmitError);
+    expect((error as EmitError).code).toBe("EMIT_PERMISSION_REASON_MISSING");
+  });
+});
+
 describe("émetteur — fail-closed", () => {
   it("document invalide ⇒ LockResolutionError AVANT toute émission", () => {
     const doc = loadDoc("resto-quartier.air.json") as {

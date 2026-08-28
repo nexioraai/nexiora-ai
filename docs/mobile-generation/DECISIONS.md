@@ -889,6 +889,48 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   packages **300/300**, tsc/lint 0 · zones gelées 0 modification (scellés
   verts) · racine/web hors périmètre.
 
+## D-029 — Manifestes/permissions/config native (4.4, 2026-08-28)
+
+- **Contexte** : 4.4 (lecture A3 de D-026 : manifestes OUI, implémentations
+  de capabilities NON). Implémenté : `emit-manifests.ts` câblé dans
+  `emitProject` — `app.json` + `manifests/permissions.manifest.json`
+  (artefact canonique d'audit pour l'Oracle §9 — diff permissions vs AIR —
+  et le Compliance Generator §18).
+- **Émission `app.json`** : identité de PREVIEW déterministe
+  `com.deribfy.preview.<slug>` (iOS tel quel ; Android tirets→underscores,
+  préfixe `x` si le slug commence par un chiffre — D-013, identité BYO =
+  Phase 12) · permissions Android = agrégation TRANSITIVE du registre
+  (`inducedPermissionsFor`, 2.3), à l'identique · textes iOS
+  NS*UsageDescription = raisons LOCALISÉES déclarées de l'AIR (données,
+  jamais texte moteur — F3 ; induite non déclarée = refus
+  `EMIT_PERMISSION_REASON_MISSING`, défense derrière le validateur) ·
+  **config native appliquée** : plugin `expo-build-properties` avec
+  `max(plancher du train, exigence air.native)` — champ `platformFloors`
+  ajouté au train (mesuré sur le prebuild du banc V4 : Android minSdk 24,
+  iOS deploymentTarget 16.4) · `scheme` émis ssi capability `deep_links` ·
+  `newArchEnabled` true, portrait, `userInterfaceStyle` light (S7),
+  `version` **1.0.0** (lecture : version initiale — le versionnement vit
+  au deployment state, Phases 11+).
+- **Gabarit ré-scellé (3ᵉ évolution consciente)** : + dépendance
+  `expo-build-properties@57.0.15` EXACTE (bundledNativeModules SDK 57) —
+  nécessité DÉMONTRÉE : 10/12 documents exigent minAndroidSdk 26 > plancher
+  24, seul mécanisme Expo officiel ; lockfile regénéré ×2 byte-identique ;
+  cliquet des pins édité consciemment ; **preuves v42/v43 REJOUÉES** sur le
+  gabarit final (npm ci ×2 → 22 828 fichiers, arbres identiques 2/2 ; tsc
+  strict EXIT=0 ×3 docs ; exports OK).
+- **Faits de schéma consignés** : `native.minAndroidSdk`/`minIosVersion`
+  REQUIS (pas de repli) ; `air.permissions` porte des raisons localisées
+  par plateforme — source des textes iOS.
+- **Preuves (2026-08-28, `results/v44-manifests.jsonl`, 0 $)** :
+  **prebuild Android réel sur resto-quartier** : POST_NOTIFICATIONS présent
+  dans l'AndroidManifest ✓ · **minSdk 26 réellement appliqué**
+  (gradle.properties) ✓ · package preview ✓ · `expo export` avec l'app.json
+  ÉMIS : EXIT=0 ✓ · tests CI sans réseau 12/12 (app.json conforme :
+  permissions = recompute indépendant, infoPlist couvert, plancher max,
+  scheme ssi deep_links ; manifeste canonique = recompute) + défense
+  EMIT_PERMISSION_REASON_MISSING testée · compiler **67/67** · packages
+  **313/313**, tsc/lint 0 · zones gelées 0 modification.
+
 ## ~~P-003~~ → D-021 — Lib de styling RN : **StyleSheet + tokens maison** (TRANCHÉ, 2026-08-27)
 
 - **Contexte** : décision prise par le propriétaire le 2026-08-27 sur dossier

@@ -24,6 +24,15 @@ export const RELEASE_TRAIN_V1 = {
     "e16ce4bf01a07ce005d394c6536331dc6073e411d72d90f47644afc102ac4727",
 
   // Toolchain du projet généré (pins exacts démontrés — lock.toolchain).
+  // Planchers RÉELS de plateforme du train (mesurés sur le prebuild du
+  // banc V4 : merged manifest minSdk 24 ; Podfile deploymentTarget 16.4).
+  // air.native est appliqué par max(plancher, exigence) via
+  // expo-build-properties (D-029).
+  platformFloors: {
+    androidMinSdk: 24,
+    iosDeploymentTarget: "16.4",
+  },
+
   toolchain: {
     node: "24.16.0",
     expoSdk: "57.0.17",
@@ -43,8 +52,12 @@ export const RELEASE_TRAIN_V1 = {
   // preuves v42 REJOUÉES après extension (jsonl, entrées 2026-08-28b).
   // + @types/react 19.2.15 EXACTE (react ne livre pas ses types ; TS7016
   // démontré au banc v43 — RN 0.86 livre les siens). Scellé recalculé.
+  // Ré-scellé en 4.4 (D-029) : + expo-build-properties 57.0.15 EXACTE
+  // (bundledNativeModules SDK 57) — SEUL mécanisme Expo officiel pour
+  // appliquer air.native (minSdk/deploymentTarget) au prebuild ; démontré
+  // nécessaire : 10/12 documents exigent minAndroidSdk 26 > plancher 24.
   templateHash:
-    "2ddb69ab5bd45662d5f2b5845ecda56fe623b154ba0d4afb74e799eca172339f",
+    "1985378e905e4b86af4ac272d6eb9a39e42b66c586ee98fdecbbd95d7c92244f",
   templateDevDependencies: {
     "@types/react": "19.2.15",
     typescript: "5.9.3",
@@ -54,6 +67,7 @@ export const RELEASE_TRAIN_V1 = {
   // le verdict S1 du banc V4 — versions installées et prouvées sur device).
   templateDependencies: {
     expo: "57.0.17",
+    "expo-build-properties": "57.0.15",
     "expo-status-bar": "3.0.9",
     react: "19.2.3",
     "react-native": "0.86.3",

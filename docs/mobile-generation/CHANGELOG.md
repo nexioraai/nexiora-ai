@@ -1,5 +1,24 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-28 — 4.4 TERMINÉE : manifestes/permissions/config native (D-029)
+
+- **app.json émis** depuis l'AIR + le registre : identité preview
+  déterministe `com.deribfy.preview.<slug>` · permissions Android =
+  agrégation transitive (`inducedPermissionsFor`) · textes iOS depuis les
+  raisons localisées de l'AIR (F3) · **config native APPLIQUÉE** (plugin
+  expo-build-properties, max(plancher train, air.native) — planchers
+  mesurés au train : minSdk 24 / iOS 16.4) · scheme ssi deep_links.
+- **Manifeste canonique de permissions** (declared + induced + native) —
+  artefact d'audit pour l'Oracle §9 et le Compliance Generator §18.
+- **Gabarit ré-scellé (3ᵉ)** : + expo-build-properties@57.0.15 (nécessité
+  démontrée : 10/12 docs minSdk 26 > 24), lockfile ×2 byte-identique,
+  cliquet des pins édité consciemment, **v42/v43 REJOUÉES** (22 828
+  fichiers identiques 2/2 ; tsc strict EXIT=0 ×3 ; exports OK).
+- **Preuves** (`v44-manifests.jsonl`, 0 $) : **prebuild Android réel** —
+  minSdk 26 dans gradle.properties ✓, POST_NOTIFICATIONS dans
+  l'AndroidManifest ✓, package preview ✓ ; export avec app.json émis
+  EXIT=0 ; compiler **67/67** ; packages **313/313**.
+
 ## 2026-08-28 — 4.3 TERMINÉE : émetteur écrans/navigation/thème (D-028)
 
 - **`emitProject` PUR** (Option C) : App.tsx (ThemeRoot+DataRoot+

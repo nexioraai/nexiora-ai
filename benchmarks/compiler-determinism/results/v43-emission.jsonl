@@ -11,3 +11,8 @@
 {"doc":"agence-immo.air.json","emittedFiles":22,"tscExit":0}
 {"doc":"boutique-mode.air.json","emittedFiles":22,"tscExit":0}
 {"verdict":"V43 VERTE"}
+{"doc":"resto-quartier.air.json","emittedFiles":24,"tscExit":0}
+{"doc":"resto-quartier.air.json","etape":"expo-export","exportExit":0,"bundles":[{"plat":"ios","hbc":1},{"plat":"android","hbc":1}],"verdict":"OK"}
+{"doc":"agence-immo.air.json","emittedFiles":24,"tscExit":0}
+{"doc":"boutique-mode.air.json","emittedFiles":24,"tscExit":0}
+{"verdict":"V43 VERTE"}

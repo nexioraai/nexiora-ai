@@ -30,6 +30,9 @@ describe("release train v1 — pins exacts (cliquet)", () => {
   it("dépendances du gabarit = versions prouvées sur device au banc V4", () => {
     expect(RELEASE_TRAIN_V1.templateDependencies).toEqual({
       expo: "57.0.17",
+      // D-029 (édition consciente du cliquet) : config native air.native
+      // appliquée au prebuild — bundledNativeModules SDK 57.
+      "expo-build-properties": "57.0.15",
       "expo-status-bar": "3.0.9",
       react: "19.2.3",
       "react-native": "0.86.3",
