@@ -1,5 +1,23 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-28 — 4.2 TERMINÉE : gabarit Expo versionné (D-027-R42)
+
+- **`packages/compiler/template/`** : 5 fichiers sous liste exacte testée —
+  package.json (deps = `templateDependencies` du train, EXACTES),
+  **package-lock.json PRÉ-RÉSOLU** (généré ×2 → byte-identique
+  `eb00f94a…`), index.ts, tsconfig (patron 3.4), .gitignore. **Sans
+  App.tsx ni app.json** (émis par le compilateur en 4.3/4.4) ; identité
+  npm FIXE (`deribfy-generated-app` — l'identité d'app vit dans app.json,
+  un nom npm par app invaliderait le lockfile partagé) ; zéro script (§8).
+- **Train étendu** : scellé `templateHash` (Merkle, test de garde) —
+  éditer le gabarit = évolution consciente du train.
+- **Preuves** (`v42-gabarit.jsonl`, 0 $) : npm ci ×2 environnements sur
+  copies du gabarit réel → **22 641 fichiers, arbres IDENTIQUES 2/2**,
+  lockfile intact · **fumée `expo export` ios+android EXIT=0** (1 bundle
+  Hermes/plateforme) · pins du train résolus à l'identique dans le
+  lockfile (CI sans réseau) · compiler **34/34** · packages **280/280** ·
+  zones gelées 0 modification (scellés verts) · racine/web hors périmètre.
+
 ## 2026-08-28 — 4.1 TERMINÉE : release train v1 (D-027) + résolveur AIR→lock
 
 - **Paquet `@deribfy/compiler` créé** (7ᵉ paquet moteur, patron exact des

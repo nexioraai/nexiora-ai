@@ -61,6 +61,12 @@ describe("release train v1 — pins exacts (cliquet)", () => {
     );
   });
 
+  it("scellé du gabarit versionné (D-027-R42) — édition = évolution consciente", () => {
+    expect(hashSourceTree(join(PACKAGES, "compiler", "template"))).toBe(
+      RELEASE_TRAIN_V1.templateHash,
+    );
+  });
+
   it("scellés des sources gelées : design tokens (src + tokens.json)", () => {
     expect(
       hashSourceTree(join(PACKAGES, "design-tokens", "src"), [

@@ -1,0 +1,4 @@
+{"etape":"ci-A","lockfileIntact":true,"fileCount":22641,"treeRoot":"325daddfdae3491070dae20cad9565e6296d90149076b12c53bf2b4a2aaab675"}
+{"etape":"ci-B","lockfileIntact":true,"fileCount":22641,"treeRoot":"325daddfdae3491070dae20cad9565e6296d90149076b12c53bf2b4a2aaab675"}
+{"etape":"verdict-npmci","verdict":"ARBRES IDENTIQUES 2/2"}
+{"etape":"fumee-export","bundles":[{"plat":"ios","count":1},{"plat":"android","count":1}],"verdict":"EXPORT OK ios+android"}

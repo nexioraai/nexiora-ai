@@ -794,6 +794,35 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   réel) · scellés des 3 paquets gelés vérifiés. Packages **272/272** ; web
   intact après changement de lockfile : tsc EXIT=0 + suite complète verte.
 
+### D-027-R42 — Gabarit versionné intégré au train (4.2, 2026-08-28)
+
+- **Gabarit `packages/compiler/template/`** (5 fichiers, liste exacte sous
+  test) : `package.json` (dépendances = `templateDependencies` du train,
+  EXACTES) · **`package-lock.json` PRÉ-RÉSOLU** (généré ×2 →
+  byte-identique `eb00f94a…`, adopté ; 237 Ko) · `index.ts` ·
+  `tsconfig.json` (patron harnais 3.4) · `.gitignore`.
+- **Lectures consignées** :
+  1. **identité npm FIXE** (`deribfy-generated-app`/0.0.0) — l'identité
+     d'une app générée vit dans `app.json` (émis depuis l'AIR en 4.4),
+     jamais dans le nom npm : un nom par app invaliderait le lockfile
+     partagé (`npm ci` exige la cohérence package ⇔ lock) ;
+  2. le gabarit ne contient **ni `App.tsx` ni `app.json`** — tous deux
+     émis par le compilateur (4.3/4.4) ; la fumée de preuve utilise des
+     fichiers jetables hors gabarit ;
+  3. **zéro script** npm dans le gabarit (politique §8 `--ignore-scripts`).
+- **Train étendu** : champ `templateHash` (Merkle des 5 fichiers,
+  `1296e246…`) — test de garde le recalcule ; éditer le gabarit sans
+  éditer consciemment le scellé = CI rouge (patron des scellés D-027).
+- **Preuves (2026-08-28, `results/v42-gabarit.jsonl`, 0 $)** :
+  `npm ci --ignore-scripts` ×2 environnements sur copies du gabarit réel →
+  **22 641 fichiers, arbres node_modules IDENTIQUES 2/2**, lockfile intact ;
+  **fumée `expo export` ios+android EXIT=0**, 1 bundle Hermes par
+  plateforme (le jeu de versions verrouillé bundle réellement) ; chaque pin
+  du train résolu à l'identique dans le lockfile (test CI sans réseau) ;
+  compiler **34/34**, packages **280/280**, tsc/lint 0 ; zones gelées 0
+  modification (scellés verts) ; racine/web hors périmètre (aucun fichier
+  partagé touché).
+
 ## ~~P-003~~ → D-021 — Lib de styling RN : **StyleSheet + tokens maison** (TRANCHÉ, 2026-08-27)
 
 - **Contexte** : décision prise par le propriétaire le 2026-08-27 sur dossier

@@ -30,6 +30,13 @@ export const RELEASE_TRAIN_V1 = {
     reactNative: "0.86.3",
   },
 
+  // Scellé du GABARIT versionné (4.2, D-027-R42) : Merkle des fichiers de
+  // `template/` (dont le package-lock.json pré-résolu, généré ×2
+  // byte-identique). Le test de garde le recalcule — toute édition du
+  // gabarit est une évolution consciente du train.
+  templateHash:
+    "1296e2465324e8e662d77c035fcaefa392c48f0fd5f1f6770fd717b4bbf4302c",
+
   // Dépendances EXACTES du gabarit (consommées en 4.2 ; la navigation est
   // le verdict S1 du banc V4 — versions installées et prouvées sur device).
   templateDependencies: {
