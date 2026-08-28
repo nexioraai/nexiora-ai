@@ -9,7 +9,11 @@
 // consciente du cliquet + version mineure (règle d'évolution D-020).
 import { z } from "zod";
 
-export const BLOCK_REGISTRY_VERSION = "0.1.0";
+// GELÉ (D-024, revue propriétaire du 2026-08-28). Règle d'évolution
+// post-gel (D-020) : AJOUT compatible = décision consignée + édition
+// consciente du cliquet + version MINEURE ; retrait/renommage/changement
+// de contrat = RUPTURE (décision + migration + version MAJEURE).
+export const BLOCK_REGISTRY_VERSION = "1.0.0";
 
 // Motifs d'identités stables — IDENTIQUES à @deribfy/air-schema (ids.ts) ;
 // redéclarés structurellement (patron AirCapabilitySlice : pas de couplage
@@ -41,13 +45,16 @@ export interface BlockDefinition {
 export const BLOCKS: readonly BlockDefinition[] = [
   {
     id: "button",
-    version: "0.1.0",
+    version: "1.0.0",
     description: "Action autonome (CTA) — rendue par la primitive AppButton.",
     entity: "forbidden",
+    // F1 (revue pré-gel 2026-08-28) : actionId REQUIS — un CTA sans action
+    // câblée serait un bouton mort dans l'app générée, divergence silencieuse
+    // AIR ↔ app (l'AIR est la source de vérité, non-négociable 1).
     propsSchema: z.strictObject({
       label: z.string().min(1),
       kind: z.enum(["primary", "ghost"]).optional(),
-      actionId: actionRef.optional(),
+      actionId: actionRef,
     }),
     fieldRefProps: [],
     actionRefProps: ["actionId"],
@@ -55,14 +62,20 @@ export const BLOCKS: readonly BlockDefinition[] = [
   },
   {
     id: "detail_header",
-    version: "0.1.0",
+    version: "1.0.0",
     description:
       "Tête d'écran de détail liée à une entité (titre, sous-titre, badges, valeur).",
     entity: "required",
     propsSchema: z.strictObject({
       titleFieldId: fieldRef,
       subtitleFieldId: fieldRef.optional(),
-      badgeFieldIds: z.array(fieldRef).min(1).max(4).optional(),
+      // min(1) est NORMATIF : interdit deux représentations de « aucun
+      // badge » ([] vs absence) — forme canonique unique (déterminisme,
+      // même esprit que la canonicalisation AIR). La borne max(4) initiale
+      // a été SUPPRIMÉE en revue pré-gel : aucune source (AIR/ROADMAP/
+      // décisions/corpus — max observé : 3), elle aurait rejeté des AIR
+      // légitimes sans protéger aucune propriété architecturale.
+      badgeFieldIds: z.array(fieldRef).min(1).optional(),
       trailingFieldId: fieldRef.optional(),
     }),
     fieldRefProps: ["titleFieldId", "subtitleFieldId", "badgeFieldIds", "trailingFieldId"],
@@ -71,21 +84,48 @@ export const BLOCKS: readonly BlockDefinition[] = [
   },
   {
     id: "empty_state",
-    version: "0.1.0",
+    version: "1.0.0",
     description: "État vide explicite d'un écran — rendu par la primitive StateView.",
     entity: "forbidden",
-    propsSchema: z.strictObject({
-      title: z.string().min(1),
-      message: z.string().min(1).optional(),
-      actionLabel: z.string().min(1).optional(),
-    }),
+    // F2 (revue pré-gel 2026-08-28) : APPARIEMENT OBLIGATOIRE, dans les
+    // deux sens — un actionLabel sans actionId serait silencieusement
+    // ignoré au rendu (divergence AIR ↔ app) ; un actionId sans libellé ne
+    // serait pas rendable. Forme choisie : superRefine sur l'objet strict —
+    // exprime l'invariant d'appariement directement et produit des
+    // diagnostics ciblés (path actionId / actionLabel), là où une union
+    // dégraderait les messages en « aucune branche ne correspond ».
+    propsSchema: z
+      .strictObject({
+        title: z.string().min(1),
+        message: z.string().min(1).optional(),
+        actionLabel: z.string().min(1).optional(),
+        actionId: actionRef.optional(),
+      })
+      .superRefine((value, ctx) => {
+        if (value.actionLabel !== undefined && value.actionId === undefined) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["actionId"],
+            message:
+              "actionLabel déclaré sans actionId — le libellé serait ignoré au rendu (appariement obligatoire)",
+          });
+        }
+        if (value.actionId !== undefined && value.actionLabel === undefined) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["actionLabel"],
+            message:
+              "actionId déclaré sans actionLabel — l'action ne serait pas rendable (appariement obligatoire)",
+          });
+        }
+      }),
     fieldRefProps: [],
-    actionRefProps: [],
+    actionRefProps: ["actionId"],
     states: ["empty"],
   },
   {
     id: "form",
-    version: "0.1.0",
+    version: "1.0.0",
     description:
       "Formulaire lié à une entité (champs, soumission, erreurs par champ).",
     entity: "required",
@@ -100,7 +140,7 @@ export const BLOCKS: readonly BlockDefinition[] = [
   },
   {
     id: "header",
-    version: "0.1.0",
+    version: "1.0.0",
     description: "Tête d'écran éditoriale (titre, sous-titre).",
     entity: "forbidden",
     propsSchema: z.strictObject({
@@ -113,7 +153,7 @@ export const BLOCKS: readonly BlockDefinition[] = [
   },
   {
     id: "list",
-    version: "0.1.0",
+    version: "1.0.0",
     description:
       "Liste d'instances d'une entité (liaisons de champs vers les lignes).",
     entity: "required",

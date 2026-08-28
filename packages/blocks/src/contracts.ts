@@ -28,19 +28,28 @@ export interface ListItemData {
   badge?: string;
 }
 
-export type ListBlockState = "ready" | "loading" | "empty" | "error";
+// F3 (revue pré-gel 2026-08-28) : état DISCRIMINÉ — les libellés d'état
+// sont REQUIS exactement quand l'état les rend, et FOURNIS par l'appelant
+// (le compilateur, depuis l'AIR/les locales). AUCUN texte par défaut dans
+// le moteur : une chaîne codée en dur fuiterait la langue du moteur dans
+// des apps de langue arbitraire (i18n structurel, non-négociable 16).
+export type ListBlockState =
+  | { kind: "ready" }
+  | { kind: "loading"; title: string }
+  | { kind: "empty"; title: string; message?: string }
+  | {
+      kind: "error";
+      title: string;
+      message?: string;
+      retryLabel?: string;
+      onRetry?: () => void;
+    };
 
 export interface ListBlockProps extends BlockA11yProps {
   title?: string;
   items: readonly ListItemData[];
-  /** État EXPLICITE (défaut "ready") — jamais déduit des données. */
+  /** État EXPLICITE (défaut { kind: "ready" }) — jamais déduit des données. */
   state?: ListBlockState;
-  emptyTitle?: string;
-  emptyMessage?: string;
-  errorTitle?: string;
-  errorMessage?: string;
-  retryLabel?: string;
-  onRetry?: () => void;
   onItemPress?: (itemId: string) => void;
 }
 

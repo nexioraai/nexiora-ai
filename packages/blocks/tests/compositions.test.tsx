@@ -176,11 +176,17 @@ describe("composition Profile (identité + réglages + déconnexion)", () => {
 
 describe("états du harnais sur ListBlock (loading/empty/error)", () => {
   it("chaque état explicite rend la StateView attendue", () => {
-    const loading = render(<ListBlock items={[]} state="loading" />);
+    const loading = render(
+      <ListBlock items={[]} state={{ kind: "loading", title: "Chargement des plats" }} />,
+    );
     expect(loading.root.findAllByType("ActivityIndicator" as never)).toHaveLength(1);
+    expect(allTexts(loading)).toContain("Chargement des plats");
 
     const empty = render(
-      <ListBlock items={[]} state="empty" emptyTitle="Aucun plat" emptyMessage="Revenez demain" />,
+      <ListBlock
+        items={[]}
+        state={{ kind: "empty", title: "Aucun plat", message: "Revenez demain" }}
+      />,
     );
     expect(allTexts(empty)).toEqual(expect.arrayContaining(["Aucun plat", "Revenez demain"]));
 
@@ -188,13 +194,18 @@ describe("états du harnais sur ListBlock (loading/empty/error)", () => {
     const error = render(
       <ListBlock
         items={[]}
-        state="error"
-        errorMessage="Réseau indisponible"
-        retryLabel="Réessayer"
-        onRetry={() => void retried++}
+        state={{
+          kind: "error",
+          title: "Échec du chargement",
+          message: "Réseau indisponible",
+          retryLabel: "Réessayer",
+          onRetry: () => void retried++,
+        }}
       />,
     );
-    expect(allTexts(error)).toEqual(expect.arrayContaining(["Réseau indisponible", "Réessayer"]));
+    expect(allTexts(error)).toEqual(
+      expect.arrayContaining(["Échec du chargement", "Réseau indisponible", "Réessayer"]),
+    );
     const retry = error.root.findAllByType("Pressable" as never);
     act(() => {
       (retry[0]?.props as { onPress?: () => void }).onPress?.();

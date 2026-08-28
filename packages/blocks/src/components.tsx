@@ -37,32 +37,26 @@ export function HeaderBlock({ title, subtitle, testID }: HeaderBlockProps) {
 export function ListBlock({
   title,
   items,
-  state = "ready",
-  emptyTitle = "Aucun élément",
-  emptyMessage,
-  errorTitle = "Une erreur est survenue",
-  errorMessage,
-  retryLabel,
-  onRetry,
+  state = { kind: "ready" },
   onItemPress,
   testID,
 }: ListBlockProps) {
-  if (state === "loading") {
-    return <StateView state="loading" title="Chargement…" testID={testID} />;
+  if (state.kind === "loading") {
+    return <StateView state="loading" title={state.title} testID={testID} />;
   }
-  if (state === "empty") {
+  if (state.kind === "empty") {
     return (
-      <StateView state="empty" title={emptyTitle} message={emptyMessage} testID={testID} />
+      <StateView state="empty" title={state.title} message={state.message} testID={testID} />
     );
   }
-  if (state === "error") {
+  if (state.kind === "error") {
     return (
       <StateView
         state="error"
-        title={errorTitle}
-        message={errorMessage}
-        actionLabel={retryLabel}
-        onAction={onRetry}
+        title={state.title}
+        message={state.message}
+        actionLabel={state.retryLabel}
+        onAction={state.onRetry}
         testID={testID}
       />
     );

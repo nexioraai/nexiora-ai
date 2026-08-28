@@ -166,7 +166,14 @@ describe("pont AIR ↔ registre de blocs", () => {
             { key: "submitLabel", value: "Enregistrer" },
           ],
         },
-        { id: "blk_5", blockType: "button", props: [{ key: "label", value: "Voir" }] },
+        {
+          id: "blk_5",
+          blockType: "button",
+          props: [
+            { key: "label", value: "Voir" },
+            { key: "actionId", value: "act_scanner" },
+          ],
+        },
         {
           id: "blk_6",
           blockType: "empty_state",
@@ -175,6 +182,69 @@ describe("pont AIR ↔ registre de blocs", () => {
       ]),
     );
     expect(diags).toEqual([]);
+  });
+
+  it("F1 — button SANS actionId → refus (un CTA non câblable est interdit)", () => {
+    const diags = validateAirBlocks(
+      screen([
+        { id: "blk_1", blockType: "button", props: [{ key: "label", value: "Voir" }] },
+      ]),
+    );
+    expect(diags.map((d) => d.code)).toEqual(["BLOCK_PROPS_INVALID"]);
+    expect(diags[0]?.path).toContain("actionId");
+  });
+
+  it("F2 — empty_state : actionLabel SANS actionId → refus (jamais de libellé ignoré)", () => {
+    const diags = validateAirBlocks(
+      screen([
+        {
+          id: "blk_1",
+          blockType: "empty_state",
+          props: [
+            { key: "title", value: "Aucun résultat" },
+            { key: "actionLabel", value: "Réinitialiser" },
+          ],
+        },
+      ]),
+    );
+    expect(diags.map((d) => d.code)).toEqual(["BLOCK_PROPS_INVALID"]);
+    expect(diags[0]?.path).toContain("actionId");
+  });
+
+  it("F2 — empty_state : actionId SANS actionLabel → refus (action non rendable)", () => {
+    const diags = validateAirBlocks(
+      screen([
+        {
+          id: "blk_1",
+          blockType: "empty_state",
+          props: [
+            { key: "title", value: "Aucun résultat" },
+            { key: "actionId", value: "act_scanner" },
+          ],
+        },
+      ]),
+    );
+    expect(diags.map((d) => d.code)).toEqual(["BLOCK_PROPS_INVALID"]);
+    expect(diags[0]?.path).toContain("actionLabel");
+  });
+
+  it("F2 — empty_state : paire complète et action EXISTANTE → accepté ; action fantôme → refus", () => {
+    const paire = (actionId: string): AirBlockSlice =>
+      screen([
+        {
+          id: "blk_1",
+          blockType: "empty_state",
+          props: [
+            { key: "title", value: "Aucun résultat" },
+            { key: "actionLabel", value: "Réinitialiser" },
+            { key: "actionId", value: actionId },
+          ],
+        },
+      ]);
+    expect(validateAirBlocks(paire("act_scanner"))).toEqual([]);
+    expect(validateAirBlocks(paire("act_fantome")).map((d) => d.code)).toEqual([
+      "BLOCK_ACTION_UNKNOWN",
+    ]);
   });
 
   it("déterminisme — deux exécutions produisent les mêmes diagnostics dans le même ordre", () => {

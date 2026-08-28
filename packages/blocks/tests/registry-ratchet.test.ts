@@ -10,7 +10,7 @@ import { BLOCK_REGISTRY_VERSION, BLOCKS, blocks } from "../src";
 // mineure), jamais un effet de bord (D-023 : pas d'élargissement au cas où).
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "src");
 
-// Liste v1 EXACTE (arbitrage propriétaire L2, 2026-08-28).
+// Liste v1 EXACTE — GELÉE (L2 + D-024, revue propriétaire du 2026-08-28).
 const V1_BLOCK_IDS = [
   "button",
   "detail_header",
@@ -25,9 +25,11 @@ describe("cliquets du registre de blocs", () => {
     expect(BLOCKS.map((b) => b.id)).toEqual(V1_BLOCK_IDS);
   });
 
-  it("CLIQUET — version du registre et des contrats (gel v1 = revue propriétaire)", () => {
-    expect(BLOCK_REGISTRY_VERSION).toBe("0.1.0");
-    for (const b of BLOCKS) expect(b.version).toBe("0.1.0");
+  it("CLIQUET — versions GELÉES (D-024) : registre 1.0.0, les 6 contrats 1.0.0", () => {
+    expect(BLOCK_REGISTRY_VERSION).toBe("1.0.0");
+    expect(BLOCKS.map((b) => [b.id, b.version])).toEqual(
+      V1_BLOCK_IDS.map((id) => [id, "1.0.0"]),
+    );
   });
 
   it("CLIQUET — chaque bloc du registre a son composant, et réciproquement", () => {
