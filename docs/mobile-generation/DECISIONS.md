@@ -415,10 +415,70 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   deviennent sans objet pour la sélection et seront relevées sur (c) seul
   en Phase 7 si utiles au dimensionnement.
 
-## P-002 — Provider de sandbox
+## ~~P-002~~ → D-033 — Provider de sandbox : **MODAL** (TRANCHÉ, 2026-08-28)
 
-- **Options** : E2B ; Modal ; Fly Machines ; Vercel Sandbox.
-- **Tranché par** : banc Phase 1 (cold start, cache npm, egress, prix).
+- **Options bancées** : E2B ; Modal (finalistes du dossier) ; Fly / Vercel /
+  Daytona / Cloudflare / AgentCore écartés au dossier (isolation faible,
+  maturité, lock-in, ou produit sandbox à reconstruire).
+- **Décision (propriétaire, 2026-08-28)** : **MODAL choix #1** ; **E2B repli
+  réel** issu du même banc. Fondée sur le banc comparatif E1-E5
+  (`benchmarks/sandbox-bench/synthese-P-002.md`, < 1 $/provider sur
+  crédits) : E1 pipeline réel `npm ci→tsc→expo export` sur l'app témoin —
+  les 2 verts 3/3, **Modal ~28 s vs E2B ~63 s** ; E2 cache npm — **Modal
+  propre ~16 %, E2B instable** (exit -1 reproduit en réutilisation, propre
+  en sandbox fraîche E1) ; E3 egress **tous bloqués des 2 côtés** (allowlist
+  domaine supportée par les 2) ; E4 aucun secret des 2 ; E5 0 orphelin/20
+  des 2. **Aucune barrière de sécurité perdue par Modal.** Débat isolation
+  Firecracker (E2B) vs gVisor (Modal) instruit : gVisor = isolation de
+  production éprouvée à l'hyperscale (GKE Sandbox/Cloud Run), toutes les
+  barrières §8 tenues ⇒ l'écart de primitive est une défense en profondeur
+  marginale pour notre charge (Phase 6-7 = outils de confiance sur sortie
+  déterministe), ne justifiant pas de renoncer au gain mesuré de Modal
+  (recommandation Claude révisée vers Modal sur preuves, arbitrage
+  propriétaire confirmé).
+- **EXIGENCE PROPRIÉTAIRE NON NÉGOCIABLE — indépendance provider** : le
+  moteur ne doit JAMAIS dépendre de Modal. Vérifié sur le code réel
+  (2026-08-28, lecture seule) : **aucun module de `packages/` ne référence
+  Modal ni E2B** (seuls faux positifs : couleur hex `#241E2B`, « la modale »
+  du web) ; tout le code provider-sandbox vit dans `benchmarks/sandbox-bench/`
+  (harnais de banc, hors workspaces). Garanties architecturales préexistantes :
+  non-négociable #12 (multi-provider), §15 (interfaces de provider
+  obligatoires dès le premier provider, le code ne dépend jamais d'un
+  provider concret), §8 (provider enfichable). Patron déjà appliqué en
+  Phase 5 (`ProvisioningProvider` + `SupabaseProvider`). **Remplacer Modal
+  par E2B = changement d'adaptateur + config, jamais le cœur.**
+- **Conséquence Phase 6** : la couche sandbox se construit derrière une
+  **interface `SandboxProvider` provider-agnostic** (6.1) ; l'adaptateur
+  Modal est un module injecté ; **cliquet provider-agnostic** garantit que le
+  cœur n'importe aucun SDK de provider.
+
+## D-034 — OUVERTURE PHASE 6 : Sandbox + Oracle v1 (découpage, 2026-08-28)
+
+- **Contexte** : dépendances ROADMAP satisfaites — Phase 4 ✅, **P-002 → D-033
+  Modal** ✅, outil E2E → D-022 Maestro ✅. Feu vert propriétaire de
+  continuité (2026-08-28). Budget : crédits Modal (0 $ réel attendu) ;
+  émulateurs locaux pour l'Oracle L2 (0 $).
+- **Découpage proposé (patron D-026/D-032)** :
+  - **6.1** `@deribfy/sandbox` — **interface `SandboxProvider`
+    provider-agnostic** (§15) + runner de pipeline (§8 : install→typecheck→
+    lint/AST→tests→bundle→destroy) + **cliquet provider-agnostic** (le cœur
+    n'importe aucun SDK de provider) + tests sur provider factice. **0 $**.
+  - **6.2** Oracle L1 déterministe — lit les artefacts du pipeline, produit
+    un verdict : tsc strict, contrats de blocs, politique AST, **diff
+    permissions/manifestes vs AIR**, schéma backend, gate §5 rejoué. Réutilise
+    les validateurs existants. **0 $** (sur artefacts).
+  - **6.3** Adaptateur **Modal** (implémente `SandboxProvider`, seul module à
+    dépendre du SDK `modal`) + **pipeline RÉEL sur l'app témoin dans le
+    sandbox** : temps et coût par étape mesurés. **DÉPENSE** (crédits Modal,
+    ~0 $) → point d'arrêt de continuité.
+  - **6.4** Oracle L2 device — flows Maestro **générés depuis l'AIR**
+    (navigation + états loading/empty/error + RTL) verts sur émulateurs
+    iOS/Android. **0 $** (émulateurs locaux).
+  - **6.5** Preuve « sandbox sans secrets » (par tentative) + temps/coût par
+    pipeline consignés + clôture.
+- **Lecture consignée** : l'Oracle est un service SÉPARÉ qui lit les
+  artefacts, pas la conversation (§9) ; le générateur ne peut pas déclarer
+  « réussi ».
 
 ## D-022 — Moteur E2E : **Maestro** (TRANCHÉ, 2026-08-28)
 

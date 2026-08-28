@@ -1,0 +1,21 @@
+{
+  "name": "@deribfy/sandbox",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sandbox layer v1 (Phase 6, D-034) — interface SandboxProvider provider-agnostic (§15) + runner de pipeline (§8). AUCUNE dependance a un provider concret (cliquet). Les adaptateurs (Modal, E2B) sont des modules injectes.",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run"
+  },
+  "dependencies": { "zod": "^4.4.3" },
+  "devDependencies": {
+    "@types/node": "^20",
+    "eslint": "^9.39.0",
+    "typescript": "^5",
+    "typescript-eslint": "^8.60.0",
+    "vitest": "^4.1.10"
+  }
+}
