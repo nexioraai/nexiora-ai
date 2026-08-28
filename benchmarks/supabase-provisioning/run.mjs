@@ -150,8 +150,11 @@ try {
     ? orgs.json.find((o) => o.slug === env.orgSlug)
     : undefined;
   if (org === undefined) throw new Error("STOP: slug d'org introuvable (allowlist)");
-  const plan = (org.plan ?? org.tier ?? "").toString().toLowerCase();
-  log({ etape: 1, orgTrouvee: true, plan });
+  // Le plan n'est PAS exposé par le listing [mesuré] — seul l'endpoint
+  // détail le porte : c'est lui qui fait foi pour le garde-fou Free.
+  const detail = await mgmt("GET", `/v1/organizations/${env.orgSlug}`);
+  const plan = (detail.json?.plan ?? "").toString().toLowerCase();
+  log({ etape: 1, orgTrouvee: true, plan, detailStatus: detail.status });
   if (plan !== "" && plan !== "free") {
     throw new Error(`STOP AVANT CRÉATION: plan '${plan}' ≠ free (plafond ${PLAFOND_USD} $)`);
   }
@@ -236,11 +239,15 @@ try {
       const listing = await mgmt("GET", "/v1/projects");
       const stillListed =
         Array.isArray(listing.json) && listing.json.some((p) => p.id === createdRef);
-      const proved = del.status < 300 && check.status === 404 && !stillListed;
+      // Sémantique MESURÉE de l'API (2026-08-28) : un ref supprimé ne rend
+      // JAMAIS 404 — 403 juste après suppression, 400 ensuite (idem ref
+      // inexistant). Preuve fiable = DELETE accepté + ABSENT du relisting ;
+      // le statut 4xx du GET est consigné à titre informatif.
+      const proved = del.status < 300 && check.status >= 400 && !stillListed;
       log({
         MESURE_2: "teardown",
         deleteStatus: del.status,
-        get404: check.status,
+        getApresDelete: check.status,
         relistingAbsent: !stillListed,
         dureeMs: Date.now() - t4a,
         teardownProuve: proved,

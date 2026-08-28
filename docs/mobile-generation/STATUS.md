@@ -16,7 +16,7 @@
 | Phase 0 — Fondations | 🟢 **TERMINÉE** (2026-08-27) — tous les critères de sortie vérifiés, dont **CI GitHub réelle verte : run #32, commit `54ef2a1`, `success`** (capture propriétaire + confirmation API Actions indépendante) |
 | Phase actuelle | **PHASE 4 : 🔵 EN COURS** (D-026) — 4.0 🟢 · 4.1 🟢 · 4.2 🟢 · 4.3 🟢 · 4.4 🟢 · 4.5 🟢 · 4.6 🟢 · **4.7 🟢 — CRITÈRES DE PHASE TOUS SATISFAITS, clôture = constat propriétaire** · **PHASE 3 : 🟢 TERMINÉE** (2026-08-28, clôture constatée par le propriétaire avec l'arbitrage C/D-025) · **PHASE 1** : 🔵 bancs restants bloqués sur prérequis propriétaire |
 | Générateur mobile | 🔵 **EN IMPLÉMENTATION** — chantier courant : compilateur déterministe v1 (Phase 4, architecture D-026) |
-| Progression globale | **3/15 phases terminées (0, 2, 3)** · **Phase 4 : 4.0-4.7 🟢 — critères satisfaits, constat propriétaire attendu** · Phase 1 en cours (bancs exécutables tous faits) |
+| Progression globale | **4/15 phases terminées (0, 2, 3, 4)** · **Phase 4 : 🟢 TERMINÉE (constat propriétaire 2026-08-28 — feu vert « jusqu'à la fin de la Phase 5 »)** · Phase 1 en cours (bancs exécutables tous faits) |
 
 ## PHASE 0 — DÉTAIL DES SOUS-ÉTAPES
 
@@ -103,12 +103,14 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
   lancée sur les 2 émulateurs, parcours PASS, captures ; correction
   composition démontrée + v46 rejouée. **PHASE 4 : critères de sortie
   TOUS SATISFAITS — clôture = constat propriétaire.**
-- **Prochaine étape EXACTEMENT autorisée** : **constat propriétaire de
-  clôture de la Phase 4**, puis **Phase 5 — Backend Provisioner v1**
-  (dépendances ROADMAP : Phase 2 ✅ ; **P-004 à trancher AVANT la
-  Phase 5** — palier preview mutualisé, décision produit + mesure du coût
-  de provisioning par app dont le banc reste bloqué sur prérequis
-  propriétaire : token Management API Supabase, org de test). Critère dur
+- **Phase 4 : constat de clôture ACTÉ** (feu vert propriétaire du
+  2026-08-28 ordonnant l'exécution jusqu'à la fin de la Phase 5). **Banc
+  coût Supabase : EXÉCUTÉ** (mesure requise par la méthode de P-004 —
+  10,45-12,79 s création→PostgREST, teardown prouvé ~5 s, 0 $).
+- **Prochaine étape EXACTEMENT autorisée** : **arbitrage propriétaire
+  P-004** (recommandation technique consignée : B — projet par app ; la
+  mesure de coût est acquise), puis **ouverture de la Phase 5 — Backend
+  Provisioner v1** (dépendances : Phase 2 ✅ · P-004 ⏳). Critère dur
   inchangé : 10 compilations → hash identique 10/10 sur le **corpus ACTIF
   (v2)** ; app témoin sur émulateurs iOS et Android ; zéro appel LLM prouvé
   par instrumentation. Les bancs de Phase 1 restants (P-002, coûts EAS,
@@ -163,7 +165,7 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
 | P-003 Styling RN | ✅ | 🟢 **BANC EXÉCUTÉ INTÉGRALEMENT** (2026-08-27) — 4 candidats × 2 plateformes, protocole suivi sans dérogation : perf liste (60 fps partout, 0 frame > 34 ms), bascule thème (**tamagui ×4-5 sur les 2 plateformes**), RTL 4/4 (captures authentifiées), poids (bundle JS : unistyles +156 Ko · nativewind +1 088 · **tamagui +5 512**), New Arch 4/4, étanchéité 4/4, LOC DX ; synthèse `benchmarks/styling/results/synthese-P-003.md` ; anomalies d'environnement toutes résolues sur preuve (iCloud, JDK 25/prefab→JDK 21, cmake Intel, preset Expo 57…). **DÉCISION P-003 = propriétaire — mesures livrées, aucun gagnant désigné**. **EXTENSION 2026-08-27 (soir) : banc porté à 6 candidats** — ajout de `@shopify/restyle` 2.4.5 et `uniwind` 1.11.0 (moteur LIBRE ; moteur C++ « Pro » payant NON bancé) après revue de paysage indépendante ; protocole NON modifié, 4 mesures initiales NON rejouées, audit de conformité vert (fixture/contrats/tokens/versions/étanchéité identiques, tsc 6/6). Résultats : RTL 6/6 · New Arch 6/6 · étanchéité 6/6 · poids les plus faibles du banc pour restyle (+20 Ko JS / +16 Ko .app / +12 Ko APK) · LOC les plus faibles pour uniwind (83). **Limite découverte : dispersion inter-runs du TTI ±37 % → le TTI ne discrimine pas sous ~30 ms.** Synthèse : `benchmarks/styling/results/synthese-P-003-extension.md`. **DÉCISION TOUJOURS EN ATTENTE DU PROPRIÉTAIRE** |
 | E2E mobile | ✅ | 🟢 **BANC EXÉCUTÉ (2026-08-28) → D-022 : Maestro retenu** — Maestro 2.9.0 vs Detox 20.51.4, même binaire partagé, flows de sémantique identique : **80/80 runs réussis (20/20 par outil et par plateforme, iOS + Android, 0 flake)** · vitesse médiane (mur) Maestro 30,4 s iOS / 24,8 s Android vs Detox 24,0 s / 12,6 s · **RTL PASS pour les deux, flow inchangé** · générabilité depuis l'AIR : 7 LOC des deux côtés (Maestro émet des **données**, Detox du **code**) · diagnostic d'échec : Maestro produit capture + hiérarchie UI JSON **automatiquement**, Detox aucun artefact par défaut · Detox exige une **instrumentation Android** dans chaque app générée · `@config-plugins/detox@11` en `peer expo@^53` (**4 SDK de retard**). Écart consigné non corrigé : assertions `loading`/`empty` hors de portée de la fixture (résorbé par les critères de sortie de la Phase 3). Synthèse : `benchmarks/e2e/synthese-E2E.md`. **Coût : 0 $** |
 | Coûts EAS | ✅ | 🔴 bloqué — compte Expo/EAS |
-| Coût projet Supabase | ✅ | 🔴 bloqué — token Management API (org de test) |
+| Coût projet Supabase | ✅ | 🟢 **EXÉCUTÉ** (2026-08-28, GO propriétaire) — org de test dédiée `supabase-bench-test` (free vérifié par API), projet éphémère créé/détruit PAR le script : **création→PostgREST 10,45-12,79 s · teardown prouvé ~5 s · 0 $** · rate limits relevés · détail `benchmarks/couts-unitaires.md` Volet 3 |
 
 **D-015 ACTÉE (2026-08-27)** : résilience aux refus LLM — gestion explicite
 de `refusal` sur tout chemin LLM, zéro panne silencieuse, fallbacks prévus

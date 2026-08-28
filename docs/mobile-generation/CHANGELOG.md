@@ -1,5 +1,21 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-28 — Banc coût Supabase EXÉCUTÉ (Volet 3) + constat Phase 4
+
+- **Phase 4 : constat de clôture propriétaire acté** (feu vert « exécute
+  jusqu'à la fin de la Phase 5 »). **4/15 phases terminées (0, 2, 3, 4).**
+- **Banc provisioning Supabase** (GO propriétaire, org de test DÉDIÉE
+  `supabase-bench-test`, plan free vérifié par API avant création) :
+  n=2 runs complets — **création→PostgREST servie : 10,45 s / 12,79 s ·
+  teardown PROUVÉ : 5,06 s / 4,84 s · coût : 0 $** · rate limits relevés
+  (120/min mesuré sur les endpoints utilisés). Anomalies traitées sur
+  preuve : slug≠nom d'org (config), plan absent du listing (endpoint
+  détail fait foi), sémantique de suppression sans 404 (critère de preuve
+  corrigé → DELETE accepté + absence du relisting ; banc REJOUÉ en
+  entier). `nexiora-ai` : jamais touché (hors d'atteinte par construction
+  du script). La mesure requise par la méthode consignée de P-004 est
+  ACQUISE — arbitrage propriétaire P-004 = prochaine étape.
+
 ## 2026-08-28 — 4.7 TERMINÉE : app témoin iOS+Android — PHASE 4 COMPLÈTE
 
 - **Défaut de composition démontré sur device** (hiérarchie Maestro) :

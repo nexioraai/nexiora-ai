@@ -75,11 +75,34 @@ adaptatif (défaut acté, ARCHITECTURE §28).
   palier. 5 builds par plateforme minimum.
 - Livrables : `benchmarks/eas/` (journaux + synthèse).
 
-## VOLET 3 — COÛT ET DURÉE DE PROVISIONING D'UN PROJET SUPABASE — ⏳
-(prérequis : token Management API sur une **org de test**)
+## VOLET 3 — COÛT ET DURÉE DE PROVISIONING D'UN PROJET SUPABASE — **EXÉCUTÉ**
 
-- Mesures : durée création projet → première requête PostgREST servie ;
-  durée teardown ; $ par projet/mois par palier [démontré, grille publique]
-  + vérification facturation réelle sur le projet de test ; quotas de
-  création (rate limits).
-- Livrables : `benchmarks/supabase-provisioning/`.
+Protocole et script : `benchmarks/supabase-provisioning/` (protocole écrit
+AVANT mesure ; garde-fous : plan Free vérifié par API avant création,
+allowlist d'org, DELETE limité au ref créé par le run, teardown en
+finally). Org de test DÉDIÉE `supabase-bench-test` (plan free vérifié par
+l'API), région `us-east-1` (= production), projet éphémère
+`supabase-provisioning-bench` créé et détruit PAR le script.
+
+### Résultats [mesuré] — campagnes du 2026-08-28 (n=2 runs complets, 0 $)
+
+- **Durée création → première réponse PostgREST servie** : **10,45 s** et
+  **12,79 s** (détail run 2 : acceptation API 9,97 s · ACTIVE_HEALTHY
+  10,49 s · PostgREST 12,79 s). Ordres de grandeur : ~10-13 s — bien sous
+  les minutes annoncées par la documentation générale.
+- **Durée teardown** : **5,06 s** et **4,84 s** — teardown PROUVÉ
+  (DELETE 200 + ref absent du relisting de l'org).
+- **Coût** : **0 $** par construction (plan `free` vérifié par l'endpoint
+  détail AVANT toute création ; grille payante documentaire : ~10 $/mois
+  par projet actif supplémentaire sur org Pro, projets en pause 0 $).
+- **Quotas/rate limits [mesuré]** : en-têtes `x-ratelimit-limit: 120/min`
+  (remaining 119) sur les endpoints Management utilisés, création incluse ;
+  la documentation publique annonce en outre ~10 créations/min, 1 req/s
+  max — non éprouvé en rafale (1 création par run, espacement 1,1 s).
+- **Sémantique API [mesuré]** : le plan n'est PAS exposé par
+  `GET /v1/organizations` (listing) — seul l'endpoint détail le porte ;
+  un ref supprimé ne rend JAMAIS 404 (403 juste après suppression, 400
+  ensuite, identique à un ref inexistant) → preuve de teardown fiable =
+  DELETE accepté + absence du relisting.
+- Bruts : `benchmarks/supabase-provisioning/results/*.jsonl` (aucun
+  secret journalisé).
