@@ -1,0 +1,5 @@
+{"etape":"create","sandboxId":"ifvqev355pss25r33mr5i","coldStartMs":439}
+{"etape":"exec","exitCode":0,"attendu":"deribfy-42","obtenu":"deribfy-42"}
+{"etape":"kill","sandboxId":"ifvqev355pss25r33mr5i"}
+{"etape":"preuve-absence","sandboxsActifs":0,"notreResiduel":false}
+{"VERDICT":"SMOKE E2B : VERT","journal":"/Users/yia/Documents/woorri/benchmarks/sandbox-bench/results/e2b-smoke-2026-08-28T15-56-29-172Z.jsonl"}
