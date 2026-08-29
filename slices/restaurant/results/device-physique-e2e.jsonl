@@ -1,0 +1,5 @@
+{"appareil":"Galaxy A17 SM-A175F (Android 16) PHYSIQUE","artefact":"APK EAS","flow":"nav-android","completed":3,"failed":1,"verdict":"FAIL"}
+{"appareil":"Galaxy A17 SM-A175F (Android 16) PHYSIQUE","artefact":"APK EAS","flow":"rtl-android","completed":3,"failed":1,"verdict":"FAIL"}
+{"appareil":"Galaxy A17 SM-A175F (Android 16) PHYSIQUE","preuve":"installation APK EAS: Success","app_lancee":true,"ecran_entree":"scr_menu visible","fixtures_rendues":"ent_plat_row_1..24 visibles"}
+{"appareil":"Galaxy A17 PHYSIQUE","test":"fonctionnalite directe","tap":"blk_menu_bouton_panier","resultat":"navigation vers scr_panier OK","retour_systeme":"retour a scr_menu OK","verdict":"APP FONCTIONNELLE"}
+{"DEFAUT_DEVICE":"blk_menu_bouton_commandes (dernier bloc de l'ecran) rendu en [0,2213]-[1080,2340] : bord inferieur = bas ABSOLU de l'ecran (fenetre app = 1080x2340, bord a bord) => bloc sous la barre de navigation gestuelle. Flows generes: 3 etapes OK puis scrollUntilVisible(100%) FAIL sur les 2 flows. NON reproduit sur emulateur.","classification":"DETTE DU GENERATEUR (garde-fou ROADMAP) - safe area insets bas non respectes par le code emis"}

@@ -25,7 +25,8 @@ bruts : `results/*.jsonl`, `results/metrics.json`.
 | Flows E2E générés (Oracle L2) | ✅ générés depuis l'AIR, 4 flows (nav+RTL × 2 plateformes) | `maestro/` |
 | **Dev build + validation ÉMULATEURS iOS et Android** | ✅ builds Release verts ×2, **4/4 flows générés PASS** (nav+RTL, 13 étapes chacun, 0 échec) | `results/slice-e2e.jsonl` |
 | **Build EAS (cloud, §13)** | ✅ **Android APK FINISHED (10 min 57 s)** + **iOS simulateur FINISHED (4 min 07 s)** — 0 $ (palier Free) ; **APK EAS installé sur émulateur : 2/2 flows générés PASS** | `results/eas-builds.jsonl`, `eas-artifact-e2e.jsonl` |
-| **Devices physiques (critère 1)** | ⏳ **OUVERT** — voir « Actions restantes » | — |
+| **Appareil physique ANDROID (Galaxy A17, SM-A175F, Android 16)** | ✅ **APK EAS installé · app lancée · fixtures rendues · navigation réelle OK** (tap → `scr_panier`, retour → `scr_menu`) — **1 défaut device consigné** (voir dette 5) | `results/device-physique-e2e.jsonl` |
+| **Appareil physique iOS (iPhone 16)** | ⏳ **OUVERT** — décision de méthode requise (§ Actions restantes) | — |
 
 **Taux de succès de la chaîne automatisée : 7/7 étages verts.**
 
@@ -130,3 +131,24 @@ la dette du générateur.
       pas un « dev build » au sens strict du terme.
    Ces trois manques sont des CONSTATS sur le générateur ; aucun n'a été
    « corrigé » dans les zones scellées (le gabarit reste intact).
+5. **DÉFAUT RÉVÉLÉ PAR L'APPAREIL PHYSIQUE — safe area du bas non
+   respectée** [démontré, Galaxy A17 / Android 16] : le **dernier bloc**
+   d'un écran est rendu en `[0,2213]→[1080,2340]`, son bord inférieur
+   coïncidant avec le **bas absolu de l'écran** (fenêtre applicative
+   `1080x2340`, bord à bord) — il se retrouve **sous la barre de
+   navigation gestuelle** et n'est pas pleinement atteignable. Preuve :
+   les flows générés passent 3 étapes (lancement, écran, fixtures) puis
+   échouent au `scrollUntilVisible` du dernier bouton, sur les DEUX flows.
+   **Non reproduit sur émulateur** (3 phases de validation émulateur
+   l'avaient manqué) — c'est exactement le type d'intégration que le
+   vertical slice existe pour forcer.
+   **Impact** : tout écran dont le dernier bloc atteint le bas ; contrôle
+   partiellement inaccessible sur appareil réel (iOS aurait l'équivalent
+   avec l'indicateur d'accueil).
+   **Non corrigé ici, volontairement** : le garde-fou ROADMAP impose de
+   consigner comme dette du générateur plutôt que de patcher pour faire
+   passer le slice ; et la correction (padding d'inset dans le code émis)
+   changerait tous les hash de sortie, invalidant les preuves de
+   déterminisme des Phases 4/6/7 — cela relève d'une décision propriétaire.
+   **L'app reste fonctionnelle** : navigation et retour vérifiés sur
+   l'appareil réel.
