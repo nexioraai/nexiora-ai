@@ -620,6 +620,34 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   des credentials Apple (compte Apple Developer) — le build simulateur ne
   l'exige pas. Aucune dépense engagée.
 
+## D-038 — Adhésion Apple Developer : dépense autorisée et engagée (2026-08-29)
+
+- **Décision propriétaire (2026-08-29)** : souscrire à l'**Apple Developer
+  Program**. Montant réellement débité : **135 $ CA** (99 $ US), statut
+  Apple « **en attente** » au moment de la consignation (traitement annoncé
+  ≤ 48 h). **Première dépense d'infrastructure du chantier mobile**
+  (jusqu'ici : LLM ≈ 17,4 $, tout le reste sur crédits gratuits).
+- **Raison consignée (propriétaire)** : l'adhésion est **inévitable en
+  Phase 12** — critère de sortie « *une app de slice soumise TestFlight
+  sous un compte BYO de test* » (ROADMAP l.168), impossible sans compte
+  Apple Developer. La souscrire maintenant **anticipe** une dépense
+  obligatoire à quatre phases d'échéance, au lieu de la gaspiller.
+- **Déclencheur immédiat** : toutes les voies gratuites vers l'iPhone 16
+  physique ont été **épuisées et démontrées fermées** — USB (DET-012 : port
+  de données muet, câble et port du Mac innocentés par test de contrôle
+  avec le Galaxy) ; Expo Go (DET-013 : SDK de l'App Store en retard sur le
+  release train, **non modifié** conformément au garde-fou).
+- **Ce que l'adhésion débloque** : enregistrement de l'appareil par
+  `eas device:create` (lien/QR ouvert **sur l'iPhone**, sans USB), puis
+  build iOS « appareil » et **installation par QR** — contourne
+  intégralement le port défaillant.
+- **Sécurité** : aucun mot de passe Apple ne sera communiqué ; l'accès
+  passera par une **clé API App Store Connect** (Key ID, Issuer ID,
+  fichier `.p8`) déposée **hors dépôt** en mode 600, patron des autres
+  credentials du chantier.
+- **Aucune tentative de paiement ne sera faite par Claude Code** ;
+  l'attente d'activation est passive.
+
 ## D-037 — CORRECTION SAFE AREA + REGISTRE DE DETTES (2026-08-29)
 
 - **Décision propriétaire (2026-08-29)** : corriger immédiatement le défaut
