@@ -250,6 +250,7 @@ prouve l'existence, pas le taux). Voir `DECISIONS.md` D-015.
 | **DET-008** | **App non connectée au backend vivant** en preview (conforme D-013 « données de démonstration » et D-032 « policies RLS différées ») — le chemin app ⇄ backend n'est donc pas encore prouvé | Phase 8, D-036-R8A | 🟠 moyenne | Phase où les capabilities/auth sont implémentées | 🔴 OUVERTE |
 | **DET-009** | **Provisioning Supabase à ~170 s** sur org Pro (contre ~9,5 s en Free) — impact sur le débit de flotte | Phase 5/8 | 🟡 basse | **Phase 14** (industrialisation) | 🔴 OUVERTE |
 | **DET-010** | **Build natif iOS local en échec** (`ExpoModulesJSI xcframework`, CocoaPods) — contourné par EAS cloud ; outillage local, pas le générateur | Phase 8, 2026-08-29 | 🟡 basse | Phase 12 (si builds locaux nécessaires) | 🔴 OUVERTE |
+| **DET-011** | **Build iOS pour APPAREIL physique impossible via EAS sans credentials Apple** [mesuré 2026-08-29] : « *EAS CLI couldn't find any credentials suitable for internal distribution* ». Le build simulateur (`iphonesimulator`, x86_64+arm64) ne s'installe PAS sur un iPhone | Phase 8, 2026-08-29 | 🔴 haute (bloque le critère 1 côté iOS) | **Décision propriétaire** (méthode iOS) | 🔴 OUVERTE |
 
 **Règle de tenue** (recommandation acceptée) : toute dette découverte est
 inscrite ici **immédiatement**, avec origine, gravité et **phase
