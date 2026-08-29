@@ -229,6 +229,33 @@ prouve l'existence, pas le taux). Voir `DECISIONS.md` D-015.
 | P-004 | Palier preview mutualisé (tenancy) | Avant Phase 5 | ⏳ |
 | P-006 | Domaine du Vertical Slice 2 | Avant Phase 10 | ⏳ |
 
+## DETTES OUVERTES (registre permanent — décision propriétaire 2026-08-29)
+
+> Mécanisme de suivi des dettes, défauts et écarts découverts pendant une
+> phase. Il vit ICI parce que `STATUS.md` est relu **obligatoirement au
+> début de chaque session** (règle de continuité, MASTER_PLAN §5) : une
+> dette inscrite ici ne peut plus disparaître du radar. Aucune ligne n'est
+> supprimée — elle passe à `🟢 RÉSOLUE` avec sa preuve.
+> **ROADMAP.md et MASTER_PLAN.md ne sont PAS modifiés.**
+
+| ID | Description | Origine | Gravité | Échéance | Statut |
+|---|---|---|---|---|---|
+| **DET-001** | **Safe area du bas non respectée** : le dernier bloc d'un écran était rendu sous la barre de navigation gestuelle (mesuré `[0,2213]→[1080,2340]`, bord = bas absolu), contrôle inatteignable | Phase 8, Galaxy A17 physique, commit `6e857df` | 🔴 haute (fonctionnalité) | — | 🟢 **RÉSOLUE 2026-08-29** (D-037) — correction dans le compilateur ; prouvée sur appareil réel (bouton `[2078→2205]`, tap → `scr_commandes`) ; Phases 4/6/7/8 rejouées |
+| **DET-002** | **Flows E2E générés non robustes sur appareil physique** : `scrollUntilVisible` (20 s/vitesse 40) expirait avant d'atteindre le bas d'une liste de 24 lignes — **faux négatif** (swipes directs : 1,8 s) | Phase 8, Galaxy A17 physique | 🟠 moyenne (fiabilité de l'Oracle L2) | — | 🟢 **RÉSOLUE 2026-08-29** (D-037) — timeout 60 s / vitesse 70 ; **seuil de visibilité 100 % INCHANGÉ** (pouvoir de détection préservé) ; 2/2 PASS device + 2/2 émulateur |
+| **DET-003** | Le gabarit ne produit pas d'**`eas.json`** (profils de build) — ajouté à la main pour le slice | Phase 8, D-036-R8B | 🟠 moyenne | **Phase 11** (canaux OTA) | 🔴 OUVERTE |
+| **DET-004** | L'`app.json` émis ne porte ni **`owner`** ni **`extra.eas.projectId`** — liaison au projet EAS faite à la main à chaque régénération | Phase 8, D-036-R8B | 🟠 moyenne | **Phase 11** | 🔴 OUVERTE |
+| **DET-005** | **`expo-dev-client` absent** du gabarit → un « dev build » au sens Expo est impossible sans modification manuelle (le slice a utilisé la distribution interne) | Phase 8, D-036-R8B | 🟠 moyenne | **Phase 12** (TestFlight) | 🔴 OUVERTE |
+| **DET-006** | **Virtualisation de la FlatList neutralisée** par la page défilante (ScrollView englobant) — négligeable en preview, à revoir sur listes longues | Phase 4.7, D-031-R47 | 🟡 basse | **Phase 10** (scorecard cross-domain) | 🔴 OUVERTE |
+| **DET-007** | **Seed partiel** : seules les entités portant un `dataset` reçoivent des lignes (ici 24 / 0 / 0) | Phase 8, D-036-R8A | 🟡 basse | Phase où le Content Pipeline (§19) produit les données | 🔴 OUVERTE |
+| **DET-008** | **App non connectée au backend vivant** en preview (conforme D-013 « données de démonstration » et D-032 « policies RLS différées ») — le chemin app ⇄ backend n'est donc pas encore prouvé | Phase 8, D-036-R8A | 🟠 moyenne | Phase où les capabilities/auth sont implémentées | 🔴 OUVERTE |
+| **DET-009** | **Provisioning Supabase à ~170 s** sur org Pro (contre ~9,5 s en Free) — impact sur le débit de flotte | Phase 5/8 | 🟡 basse | **Phase 14** (industrialisation) | 🔴 OUVERTE |
+| **DET-010** | **Build natif iOS local en échec** (`ExpoModulesJSI xcframework`, CocoaPods) — contourné par EAS cloud ; outillage local, pas le générateur | Phase 8, 2026-08-29 | 🟡 basse | Phase 12 (si builds locaux nécessaires) | 🔴 OUVERTE |
+
+**Règle de tenue** (recommandation acceptée) : toute dette découverte est
+inscrite ici **immédiatement**, avec origine, gravité et **phase
+d'échéance** ; le bloc PROGRESSION GLOBALE rappelle le nombre de dettes
+ouvertes à chaque rapport.
+
 ## RISQUES SUIVIS
 
 | Risque | Niveau | Mitigation |

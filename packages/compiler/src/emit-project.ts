@@ -191,7 +191,15 @@ function emitScreen(slice: ScreenSlice): string {
     "// bornable sans toucher au gel — défaut de composition DÉMONTRÉ sur",
     "// device : blocs post-liste hors écran ; réserve : virtualisation",
     "// interne neutralisée, revisité au scorecard Phase 8).",
+    "// SAFE AREA DU BAS (D-037) : défaut DÉMONTRÉ sur appareil physique",
+    "// (Galaxy A17 / Android 16) — la fenêtre est bord à bord, donc le",
+    "// DERNIER bloc était rendu sous la barre de navigation gestuelle et",
+    "// restait inatteignable. Le contenu défilant est décalé de l'inset bas",
+    "// réel. `useSafeAreaInsets` est disponible sans SafeAreaProvider ajouté :",
+    "// NativeStackView enveloppe déjà ses écrans dans SafeAreaProviderCompat",
+    "// [vérifié dans le paquet installé].",
     'import { ScrollView } from "react-native";',
+    'import { useSafeAreaInsets } from "react-native-safe-area-context";',
     'import { ScreenShell } from "../lib/primitives";',
     `import { ${wrappers.join(", ")} } from "../lib/runtime/air-runtime";`,
     ...(usesRoute ? ['import type { AirScreenProps } from "../lib/runtime/air-runtime";'] : []),
@@ -200,9 +208,10 @@ function emitScreen(slice: ScreenSlice): string {
     usesRoute
       ? `export default function ${pascal(screenId)}Screen({ route }: AirScreenProps) {`
       : `export default function ${pascal(screenId)}Screen() {`,
+    "  const insets = useSafeAreaInsets();",
     "  return (",
     `    <ScreenShell testID="${screenId}" title={screenData.title}>`,
-    "      <ScrollView>",
+    "      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }}>",
     ...slice.screen.blocks.map((b) => {
       const wrapper = WRAPPER_BY_BLOCK_TYPE[b.blockType] ?? "";
       const itemId = b.blockType === "detail_header" ? " itemId={route?.params?.itemId}" : "";

@@ -9,6 +9,8 @@ appId: com.deribfy.preview.maquis-express
 - scrollUntilVisible:
     element:
       id: "blk_menu_bouton_commandes"
+    timeout: 60000
+    speed: 70
 - tapOn:
     id: "blk_menu_bouton_commandes"
 - assertVisible:
@@ -22,6 +24,8 @@ appId: com.deribfy.preview.maquis-express
 - scrollUntilVisible:
     element:
       id: "blk_menu_bouton_panier"
+    timeout: 60000
+    speed: 70
 - tapOn:
     id: "blk_menu_bouton_panier"
 - assertVisible:

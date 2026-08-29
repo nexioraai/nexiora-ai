@@ -2,7 +2,13 @@
 // ARCHITECTURE §9 niveau 2). Fonction PURE : AIR → flows Maestro (YAML)
 // couvrant navigation (écran d'entrée + chaque écran atteint par une
 // action ui→navigate réelle de l'AIR), états (rendu peuplé = fixtures),
-// et RTL (rejeu du parcours sous RTL forcé). E2E-agnostique côté blocs :
+// et RTL (rejeu du parcours sous RTL forcé). Paramètres de défilement
+// calibrés pour APPAREIL PHYSIQUE (D-037) : sur un Galaxy A17 réel, le
+// défaut par défaut (20 s / vitesse 40) expirait avant d'atteindre le bas
+// d'une liste de 24 lignes — FAUX NÉGATIF démontré (les swipes directs y
+// parviennent en 1,8 s). Le seuil de visibilité reste à 100 % : le pouvoir
+// de détection d'un bloc masqué est INCHANGÉ, seule la patience augmente.
+// E2E-agnostique côté blocs :
 // les testID sont les identifiants stables de l'AIR (screenId, blockId,
 // `<listBlockId>-row-<rowId>`), jamais un texte de langue.
 import type { ProjectAir } from "@deribfy/air-schema";
@@ -87,7 +93,7 @@ export function generateMaestroFlows(
 
   // Un aller-retour par action de navigation de l'écran d'entrée.
   const navSteps = navs.flatMap((n) => [
-    `- scrollUntilVisible:\n    element:\n      id: "${n.blockId}"`,
+    `- scrollUntilVisible:\n    element:\n      id: "${n.blockId}"\n    timeout: 60000\n    speed: 70`,
     `- tapOn:\n    id: "${n.blockId}"`,
     `- assertVisible:\n    id: "${n.targetScreenId}"`,
     back,
@@ -106,7 +112,7 @@ export function generateMaestroFlows(
     `- assertVisible:\n    id: "${entry}"`,
     ...stateAssert,
     ...navs.flatMap((n) => [
-      `- scrollUntilVisible:\n    element:\n      id: "${n.blockId}"`,
+      `- scrollUntilVisible:\n    element:\n      id: "${n.blockId}"\n    timeout: 60000\n    speed: 70`,
       `- tapOn:\n    id: "${n.blockId}"`,
       `- assertVisible:\n    id: "${n.targetScreenId}"`,
       back,

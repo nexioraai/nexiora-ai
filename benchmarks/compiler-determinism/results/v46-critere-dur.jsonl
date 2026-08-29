@@ -1,13 +1,13 @@
-{"doc":"agence-immo.air.json","runs":10,"distinctHashes":1,"rootHash":"efd6929447a9929e52af02e74c4ff9e4e056229ac9ceed1b17177498fb4c6a41","attempts":0,"verdict":"10/10 IDENTIQUES"}
-{"doc":"billetterie-concerts.air.json","runs":10,"distinctHashes":1,"rootHash":"90eb5f44942751dd2d55e1571ab39821cfe9b8382d1394090063ebfab3fa4522","attempts":0,"verdict":"10/10 IDENTIQUES"}
-{"doc":"boutique-mode.air.json","runs":10,"distinctHashes":1,"rootHash":"a3810d0e6e495775fa0ae2d6ec659716de92559c2fdeeba24c811315bc251bc6","attempts":0,"verdict":"10/10 IDENTIQUES"}
-{"doc":"coach-fitness.air.json","runs":10,"distinctHashes":1,"rootHash":"372952fb7f2a92c9b98ef548c8380f029c39ed5365b96fab0e7c7feef21445c4","attempts":0,"verdict":"10/10 IDENTIQUES"}
-{"doc":"cours-cuisine.air.json","runs":10,"distinctHashes":1,"rootHash":"7f510ff788cecf1290dd50341fd1ffdaf8d906f53dfb011eed1144fc4ca21ff8","attempts":0,"verdict":"10/10 IDENTIQUES"}
-{"doc":"livraison-fruits.air.json","runs":10,"distinctHashes":1,"rootHash":"189a0f7b05cefef560b5978dc477aa2bfd4a40e6e76b821f34482436ae63d211","attempts":0,"verdict":"10/10 IDENTIQUES"}
-{"doc":"plombier-urgence.air.json","runs":10,"distinctHashes":1,"rootHash":"c4e94d7a0d650e2ddaec746cea41a8799c54548514251bad0ce44b31103b15d9","attempts":0,"verdict":"10/10 IDENTIQUES"}
-{"doc":"resto-quartier.air.json","runs":10,"distinctHashes":1,"rootHash":"343a94d994c44b2256750f824a40bf202f686063455771cb679ce3c64e07ec43","attempts":0,"verdict":"10/10 IDENTIQUES"}
-{"doc":"salon-coiffure.air.json","runs":10,"distinctHashes":1,"rootHash":"e0c516fab63c87c8c6d7655a15a46e1e9f789ca96dc26298ded5447957d83e50","attempts":0,"verdict":"10/10 IDENTIQUES"}
-{"doc":"suivi-chantier.air.json","runs":10,"distinctHashes":1,"rootHash":"b812070f8f5c773e5de0d4f2eedd3d9367228881ab615d3500b73042fd58ea44","attempts":0,"verdict":"10/10 IDENTIQUES"}
-{"doc":"toiletteur-chiens.air.json","runs":10,"distinctHashes":1,"rootHash":"ea9290f686914e1e3197628fc665f71ca094c117b3ebab1f17ab08e55950d761","attempts":0,"verdict":"10/10 IDENTIQUES"}
-{"doc":"tuteur-langues.air.json","runs":10,"distinctHashes":1,"rootHash":"26e8537401c24d4cb6b1f96488b46c6071d588f4769daf9592169201f6ecc0e9","attempts":0,"verdict":"10/10 IDENTIQUES"}
+{"doc":"agence-immo.air.json","runs":10,"distinctHashes":1,"rootHash":"dd5506a36df1e04b217ace31fb7514e4523ab47e2a98efbad0a32106e7760cb2","attempts":0,"verdict":"10/10 IDENTIQUES"}
+{"doc":"billetterie-concerts.air.json","runs":10,"distinctHashes":1,"rootHash":"410b6d33111d2462d52af3938dd4b1aff264809bb45dca19b63b845a37ff6006","attempts":0,"verdict":"10/10 IDENTIQUES"}
+{"doc":"boutique-mode.air.json","runs":10,"distinctHashes":1,"rootHash":"8a1982586c2f5faa958ea730b74ae674d96e11a3d4bf7a8a77e23213aa1f9f30","attempts":0,"verdict":"10/10 IDENTIQUES"}
+{"doc":"coach-fitness.air.json","runs":10,"distinctHashes":1,"rootHash":"857cf57ac050f0ed804b7071c6792d630375b2bc6465fbc708a5474af34ee6ac","attempts":0,"verdict":"10/10 IDENTIQUES"}
+{"doc":"cours-cuisine.air.json","runs":10,"distinctHashes":1,"rootHash":"5c4982d213b5a1642c5e1f9010d643730aeab11c8b71499888703b906a74bc0f","attempts":0,"verdict":"10/10 IDENTIQUES"}
+{"doc":"livraison-fruits.air.json","runs":10,"distinctHashes":1,"rootHash":"7d40127ff584c0e89eb20dfcb6bebb48ab8ec7c7615e5cbd8103398161d73aab","attempts":0,"verdict":"10/10 IDENTIQUES"}
+{"doc":"plombier-urgence.air.json","runs":10,"distinctHashes":1,"rootHash":"abc8e82c2ddb14a10237cfc3d80e3d654308a5661f4200ef37d2a186c79d3358","attempts":0,"verdict":"10/10 IDENTIQUES"}
+{"doc":"resto-quartier.air.json","runs":10,"distinctHashes":1,"rootHash":"29e0af787afe7d2d82e7e346f45b09213e776a501b7df3c27c8581a8f6c2bf5b","attempts":0,"verdict":"10/10 IDENTIQUES"}
+{"doc":"salon-coiffure.air.json","runs":10,"distinctHashes":1,"rootHash":"f1ce918bc91a563c86b8e76fd974322533adde5243fc4babccf6925be5a3e9a5","attempts":0,"verdict":"10/10 IDENTIQUES"}
+{"doc":"suivi-chantier.air.json","runs":10,"distinctHashes":1,"rootHash":"45c59c6977c079224ef6a885194ce0c836e284b044f4ba0a92b40942c95f8b9c","attempts":0,"verdict":"10/10 IDENTIQUES"}
+{"doc":"toiletteur-chiens.air.json","runs":10,"distinctHashes":1,"rootHash":"c1f340503d548c879195dd6c5a1920b6f0e33ac826ced3f5e2104d5cc5d34ece","attempts":0,"verdict":"10/10 IDENTIQUES"}
+{"doc":"tuteur-langues.air.json","runs":10,"distinctHashes":1,"rootHash":"6e4b566cc3f5810adcd3fc976be6403ebdcc2b36424522d831097dc4ada428c3","attempts":0,"verdict":"10/10 IDENTIQUES"}
 {"verdict":"CRITÈRE DUR : VERT 12/12"}

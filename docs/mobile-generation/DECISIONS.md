@@ -620,6 +620,55 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   des credentials Apple (compte Apple Developer) — le build simulateur ne
   l'exige pas. Aucune dépense engagée.
 
+## D-037 — CORRECTION SAFE AREA + REGISTRE DE DETTES (2026-08-29)
+
+- **Décision propriétaire (2026-08-29)** : corriger immédiatement le défaut
+  Safe Area **dans le générateur**, créer un registre de dettes permanent
+  dans `STATUS.md`, **sans modifier ROADMAP.md ni MASTER_PLAN.md**.
+- **CAUSE (démontrée avant correction, D-018)** : fenêtre applicative bord
+  à bord (`app=1080x2340`) ; le dernier bloc d'un écran était rendu en
+  `[0,2213]→[1080,2340]`, bord inférieur = bas ABSOLU de l'écran, donc
+  **sous la barre de navigation gestuelle** → contrôle inatteignable.
+  Non reproduit sur émulateur (3 phases l'avaient manqué).
+- **CORRECTION — dans le GÉNÉRATEUR, jamais dans l'artefact généré** :
+  `packages/compiler/src/emit-project.ts` — le contenu défilant de chaque
+  écran émis reçoit `contentContainerStyle={{ paddingBottom: insets.bottom }}`
+  via `useSafeAreaInsets()`. **Fait vérifié dans le paquet installé** :
+  `NativeStackView` enveloppe déjà ses écrans dans `SafeAreaProviderCompat`
+  → aucun `SafeAreaProvider` à ajouter, `App.tsx` inchangé.
+  `react-native-safe-area-context@5.7.0` était **déjà** au gabarit.
+  **Aucune zone scellée touchée** (primitives et blocs gelés intacts).
+- **PREUVE DE LA CORRECTION sur l'appareil qui a révélé le défaut**
+  (Galaxy A17, SM-A175F, Android 16) : le bouton passe de
+  `[2213→2340]` (bord d'écran) à **`[2078→2205]`** — 135 px au-dessus du
+  bas ; **tap → navigation vers `scr_commandes` ✅** ; flows générés
+  **2/2 PASS** (contre 0/2 avant).
+- **DÉFAUT SECONDAIRE DÉCOUVERT ET CORRIGÉ (DET-002)** : les flows générés
+  n'étaient pas robustes sur appareil physique (`scrollUntilVisible` 20 s /
+  vitesse 40 expirait ; swipes directs : 1,8 s) → **faux négatif** de
+  l'Oracle L2. Corrigé dans le générateur de flows (timeout 60 s, vitesse
+  70) ; **`visibilityPercentage` maintenu à 100 %** : le pouvoir de
+  détection d'un bloc masqué est inchangé — seule la patience augmente.
+  Ce correctif ne touche PAS le projet compilé (les flows n'en font pas
+  partie) : aucun hash de sortie n'en dépend.
+- **VALIDATIONS REJOUÉES** (aucune preuve antérieure conservée) : packages
+  **395/395** + tsc/lint 0 · **Phase 4 critère dur : 12 docs × 10
+  compilations, hash identique 10/10, ATTEMPTS=0** (nouveaux hashes) ·
+  émission réelle : `tsc --noEmit` strict EXIT=0 + export Hermes ios+android
+  · **Phase 6.3/6.5** : pipeline sandbox vert, Oracle L1 4/4, sans secrets ·
+  **Phase 7** : tâches **redéployées** + P1/P2 rejouées (bout-en-bout 5/5,
+  kill -9 → reprise, **artefacts identiques**) · **Phase 8** : chaîne du
+  slice verte, backend réel + teardown prouvé, build EAS refait
+  (7 min 00 s), **device physique 2/2**, **émulateur Android 2/2**.
+- **Nouveau rootHash du slice** : `29e0af787afe7d2d` (ancien
+  `343a94d994c44b22`) — cohérent partout (compilateur, Phase 7, slice).
+- **REGISTRE DE DETTES** créé dans `STATUS.md` § « DETTES OUVERTES » :
+  10 entrées (ID · Description · Origine · Gravité · Échéance · Statut),
+  dont **2 résolues** (DET-001 Safe Area, DET-002 flows) et **8 ouvertes**
+  avec échéance de phase. Emplacement choisi parce que `STATUS.md` est relu
+  obligatoirement à chaque session (règle de continuité) : **une dette
+  inscrite ne peut plus être oubliée**, sans créer de règle nouvelle.
+
 ## ~~P-002~~ → D-033 — Provider de sandbox : **MODAL** (TRANCHÉ, 2026-08-28)
 
 - **Options bancées** : E2B ; Modal (finalistes du dossier) ; Fly / Vercel /

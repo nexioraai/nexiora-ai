@@ -4,16 +4,25 @@
 // bornable sans toucher au gel — défaut de composition DÉMONTRÉ sur
 // device : blocs post-liste hors écran ; réserve : virtualisation
 // interne neutralisée, revisité au scorecard Phase 8).
+// SAFE AREA DU BAS (D-037) : défaut DÉMONTRÉ sur appareil physique
+// (Galaxy A17 / Android 16) — la fenêtre est bord à bord, donc le
+// DERNIER bloc était rendu sous la barre de navigation gestuelle et
+// restait inatteignable. Le contenu défilant est décalé de l'inset bas
+// réel. `useSafeAreaInsets` est disponible sans SafeAreaProvider ajouté :
+// NativeStackView enveloppe déjà ses écrans dans SafeAreaProviderCompat
+// [vérifié dans le paquet installé].
 import { ScrollView } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenShell } from "../lib/primitives";
 import { AirButton, AirDetailHeader } from "../lib/runtime/air-runtime";
 import type { AirScreenProps } from "../lib/runtime/air-runtime";
 import { screenData } from "./scr_plat_detail.data";
 
 export default function ScrPlatDetailScreen({ route }: AirScreenProps) {
+  const insets = useSafeAreaInsets();
   return (
     <ScreenShell testID="scr_plat_detail" title={screenData.title}>
-      <ScrollView>
+      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }}>
         <AirDetailHeader screen={screenData} blockId="blk_plat_detail_header" itemId={route?.params?.itemId} />
         <AirButton screen={screenData} blockId="blk_plat_bouton_ajouter" />
         <AirButton screen={screenData} blockId="blk_plat_bouton_retour_menu" />
