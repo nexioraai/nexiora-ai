@@ -74,13 +74,21 @@ describe("véracité de l'enveloppe — effets", () => {
 });
 
 describe("véracité de l'enveloppe — déclencheurs", () => {
-  it("seul le déclencheur `ui` atteint un composant", () => {
-    // L'émetteur ne construit une table de déclencheurs que pour `ui` ;
-    // aucun autre `trigger.kind` n'est lu par le chemin d'émission.
+  // ÉDITION CONSCIENTE (2026-08-31, D-068) : 62 actions du corpus étaient
+  // déclarées avec un déclencheur de CYCLE DE VIE et purement IGNORÉES — un pan
+  // entier du contrat d'action sans implémentation. Les trois événements sont
+  // désormais honorés. `data` reste absent : réagir à une création d'entité
+  // suppose une source qui NOTIFIE, et le contrat de données n'en a pas.
+  it("`ui` et `lifecycle` atteignent un composant ; `data` non (D-068)", () => {
     expect(EMIT_PROJECT).toContain('action.trigger.kind === "ui"');
-    expect(EMIT_PROJECT).not.toContain('action.trigger.kind === "lifecycle"');
-    expect(EMIT_PROJECT).not.toContain('action.trigger.kind === "data"');
-    expect(EXECUTION_ENVELOPE_V1.triggers).toEqual(["ui"]);
+    expect(EMIT_PROJECT).toContain('a.trigger.kind === "lifecycle"');
+    expect(EMIT_PROJECT).not.toContain('trigger.kind === "data"');
+    expect([...EXECUTION_ENVELOPE_V1.triggers].sort()).toEqual(["lifecycle", "ui"]);
+    // Les trois événements du schéma sont couverts, sans exception muette.
+    for (const e of ["screen_open", "screen_close", "app_start"]) {
+      expect(EMIT_PROJECT).toContain(e);
+    }
+    expect(RUNTIME).toContain("AirScreenLifecycle");
   });
 });
 

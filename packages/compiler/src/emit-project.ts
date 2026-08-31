@@ -147,6 +147,7 @@ interface ScreenSlice {
       }
     >;
     uiActionsByBlock: Record<string, string>;
+    lifecycle?: { onOpen?: readonly string[]; onClose?: readonly string[] };
     rules?: {
       entityId: string;
       assertions: readonly { fieldId: string; operator: string; value?: unknown }[];
@@ -192,8 +193,28 @@ function buildScreenSlice(air: ProjectAir, screen: ProjectAir["screens"][number]
     }
   }
 
+  // CYCLE DE VIE (D-068) — actions `lifecycle` visant CET écran. `screenId`
+  // absent = l'action vaut pour l'application entière : on ne l'attache alors
+  // qu'à l'écran d'entrée, pour qu'elle s'exécute UNE fois et non à chaque écran.
+  const entree = air.navigation.entryScreenId;
+  const cycleDe = (event: string): string[] =>
+    air.actions
+      .filter(
+        (a) =>
+          a.trigger.kind === "lifecycle" &&
+          a.trigger.event === event &&
+          (a.trigger.screenId === undefined ? screen.id === entree : a.trigger.screenId === screen.id),
+      )
+      .map((a) => a.id)
+      .sort(byCodeUnit);
+  const onOpen = [...cycleDe("screen_open"), ...cycleDe("app_start")];
+  const onClose = cycleDe("screen_close");
+
   // Actions référencées par l'écran : déclencheurs UI + actionId de props.
   const referenced = new Set(Object.values(uiActionsByBlock));
+  // D-068 : sans cela, le dispatcher ne trouverait pas l'effet d'une action de
+  // cycle de vie et l'appel serait silencieusement sans objet.
+  for (const id of [...onOpen, ...onClose]) referenced.add(id);
   for (const block of screen.blocks) {
     const props = flatToRecord(block.props);
     const actionId = props.actionId;
@@ -241,6 +262,7 @@ function buildScreenSlice(air: ProjectAir, screen: ProjectAir["screens"][number]
       outputs: outputs.map((o) => ({ port: o.port, blockId: o.blockId, prop: o.prop })),
     });
   }
+
 
   // RÈGLES applicables (D-062) : `air.rules` n'était lu par AUCUN étage
   // d'émission. On ne transporte que celles des entités qu'une action de cet
@@ -312,6 +334,14 @@ function buildScreenSlice(air: ProjectAir, screen: ProjectAir["screens"][number]
       // RÈGLES (D-062) : celles des entités que CET écran peut écrire. Omises
       // quand aucune ne s'applique — les documents sans règle sont inchangés.
       ...(reglesEcran.length === 0 ? {} : { rules: reglesEcran }),
+      ...(onOpen.length === 0 && onClose.length === 0
+        ? {}
+        : {
+            lifecycle: {
+              ...(onOpen.length === 0 ? {} : { onOpen }),
+              ...(onClose.length === 0 ? {} : { onClose }),
+            },
+          }),
     },
   };
 }
@@ -328,6 +358,8 @@ function emitScreenData(slice: ScreenSlice): string {
 
 function emitScreen(slice: ScreenSlice): string {
   const screenId = assertId(slice.screen.id, "screens");
+  // D-068 : cet écran porte-t-il des actions de cycle de vie ?
+  const aCycle = slice.data.lifecycle !== undefined;
   const wrappers = [
     ...new Set(
       slice.screen.blocks.map((b) => {
@@ -373,7 +405,7 @@ function emitScreen(slice: ScreenSlice): string {
     `import { ${containerImport} } from "react-native";`,
     'import { useSafeAreaInsets } from "react-native-safe-area-context";',
     'import { ScreenShell } from "../lib/primitives";',
-    `import { ${wrappers.join(", ")} } from "../lib/runtime/air-runtime";`,
+    `import { ${[...wrappers, ...(aCycle ? ["AirScreenLifecycle"] : [])].sort().join(", ")} } from "../lib/runtime/air-runtime";`,
     ...(usesRoute ? ['import type { AirScreenProps } from "../lib/runtime/air-runtime";'] : []),
     `import { screenData } from "./${screenId}.data";`,
     "",
@@ -383,6 +415,9 @@ function emitScreen(slice: ScreenSlice): string {
     "  const insets = useSafeAreaInsets();",
     "  return (",
     `    <ScreenShell testID="${screenId}" title={screenData.title}>`,
+    // D-068 : composant SANS RENDU, monté en tête d'écran. Il exécute les
+    // actions d'ouverture au montage et celles de sortie au démontage.
+    ...(aCycle ? ["      <AirScreenLifecycle screen={screenData} />"] : []),
     containerOpen,
     ...slice.screen.blocks.map((b) => {
       const wrapper = WRAPPER_BY_BLOCK_TYPE[b.blockType] ?? "";

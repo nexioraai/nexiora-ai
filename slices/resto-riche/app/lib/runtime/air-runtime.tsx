@@ -8,7 +8,7 @@
 // Effets d'actions en v1 compilateur : `navigate` est câblé ; les effets
 // `capability`/`mutation`/`slot` sont des non-opérations STRUCTURÉES
 // (implémentations : Phases 5+/9 — lecture consignée D-028).
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigation } from "@react-navigation/native";
 import {
   ButtonBlock,
@@ -91,6 +91,11 @@ export interface AirScreenData {
   slotInvocations?: readonly AirSlotInvocationData[];
   /** Règles de validation des entités écrites depuis cet écran (D-062). */
   rules?: readonly AirRuleData[];
+  /** Actions de CYCLE DE VIE de cet écran (D-068) — à l'ouverture, à la sortie. */
+  lifecycle?: {
+    onOpen?: readonly string[];
+    onClose?: readonly string[];
+  };
 }
 
 export interface AirScreenProps {
@@ -350,6 +355,29 @@ function useItemNavigate(screen: AirScreenData, blockId: string) {
       navigation.navigate as (name: string, params: { itemId: string }) => void
     )(cible, { itemId });
   };
+}
+
+/**
+ * CYCLE DE VIE D'UN ÉCRAN (D-068) — `triggers: ["ui"]` signifiait que le moteur
+ * n'exécutait QUE les actions déclenchées par un appui. **62 actions
+ * `lifecycle` du corpus étaient déclarées et purement ignorées** — un pan entier
+ * du contrat d'action sans aucune implémentation.
+ *
+ * Les actions d'ouverture sont exécutées au montage, celles de sortie au
+ * démontage. Le dispatcher décide ensuite, effet par effet, si quelque chose se
+ * produit : une action `lifecycle` dont l'effet reste hors enveloppe n'est PAS
+ * rendue vivante par ce câblage.
+ */
+export function AirScreenLifecycle({ screen }: { screen: AirScreenData }) {
+  const dispatch = useDispatch(screen);
+  const cycle = screen.lifecycle;
+  useEffect(() => {
+    for (const id of cycle?.onOpen ?? []) dispatch(id);
+    return () => {
+      for (const id of cycle?.onClose ?? []) dispatch(id);
+    };
+  }, [dispatch, cycle]);
+  return null;
 }
 
 export function AirHeader({ screen, blockId }: BlockRef) {

@@ -81,7 +81,10 @@ describe("atteignabilité", () => {
     expect(reachableScreens(document, ALL)).toEqual(["scr_a"]);
   });
 
-  it("l'enveloppe borne l'atteignabilité : un chemin `lifecycle` ne compte pas", () => {
+    // ÉDITION CONSCIENTE (2026-08-31, D-068) : un chemin `lifecycle` COMPTE
+  // désormais — le moteur exécute ces actions. Le bornage par l'enveloppe reste
+  // la propriété testée : c'est `data`, non honoré, qui ne compte pas.
+it("l'enveloppe borne l'atteignabilité : un chemin `data` ne compte pas", () => {
     const document = air({
       screens: [
         { id: "scr_a", title: L("A"), blocks: [{ id: "blk_a_h", blockType: "header", props: P({ title: "A" }) }] },
@@ -98,7 +101,7 @@ describe("atteignabilité", () => {
         {
           id: "act_auto",
           name: "auto",
-          trigger: { kind: "lifecycle", event: "screen_open", screenId: "scr_a" },
+          trigger: { kind: "data", entityId: "ent_a", event: "created" },
           effect: { kind: "navigate", screenId: "scr_b" },
         },
       ],

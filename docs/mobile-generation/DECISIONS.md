@@ -4059,3 +4059,40 @@ AUCUN écart de faisabilité.** Le contraste réalisable/dégradé se démontre 
 
 **659 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0.**
 **A++ : A·B·C·D·E·F·G·H toutes CONFORMES sur 2 domaines.**
+
+---
+
+## D-068 — Les déclencheurs de CYCLE DE VIE sont honorés — 2026-08-31
+
+`FACT` — `triggers: ["ui"]` : le moteur n'exécutait QUE les actions déclenchées
+par un appui. **62 actions du corpus déclaraient un déclencheur `lifecycle` et
+étaient purement IGNORÉES** — `screen_open` 40 · `app_start` 19 ·
+`screen_close` 3. Un pan entier du contrat d'action, sans implémentation.
+
+### La levée — les TROIS événements, sans exception muette
+
+`AirScreenLifecycle`, composant **sans rendu** monté en tête d'écran : actions
+d'ouverture au montage, de sortie au démontage. Une action `app_start` (sans
+`screenId`) n'est attachée qu'à **l'écran d'entrée** — sinon elle s'exécuterait à
+chaque écran, ce qui n'est pas ce que « démarrage de l'application » veut dire.
+
+**`data` reste ABSENT de l'enveloppe** : réagir à la création ou à la
+modification d'une entité suppose une source qui **NOTIFIE**, et le contrat de
+données n'en a pas. Le déclarer aurait été la surdéclaration la plus facile de la
+session.
+
+### 🔴 Le gain est PETIT, et le dire est le point
+
+`FACT` — effets exécutés : **48 → 49**. **Une seule** action de plus.
+
+`INFÉRENCE` — **honorer un déclencheur ne rend pas vivant ce que l'effet ne sait
+pas faire.** Les 61 autres actions `lifecycle` portent des effets `capability`
+ou des slots **sans liaison** : elles restent mortes, et la gate le dit.
+
+> Le réflexe aurait été de compter 62 promesses ressuscitées. Le cliquet du
+> corpus a mesuré **une**. C'est la bonne réponse.
+
+### Non-régression
+
+**659 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0.**
+**A++ : A·B·C·D·E·F·G·H toutes CONFORMES sur 2 domaines.**

@@ -60,7 +60,12 @@ describe("corpus gelé — mesures d'exécution (cliquets, état 2026-08-29)", (
   // gagne des capacités » vaut pour les ÉCARTS, pas pour les effets exécutés.
   it("effets déclarés vs exécutés", () => {
     expect(sum((m) => m.effectsDeclared)).toBe(180);
-    expect(sum((m) => m.effectsExecuted)).toBe(48);
+    // D-068 : 48 -> 49. Le déclencheur `lifecycle` est honoré ; l'action
+    // `mutation` déclenchée au cycle de vie s'exécute désormais. Les 61 autres
+    // actions lifecycle restent mortes — leur EFFET (`capability`, `slot` sans
+    // liaison) est encore hors enveloppe. Honorer le déclencheur ne rend pas
+    // vivant ce que l'effet ne sait pas faire.
+    expect(sum((m) => m.effectsExecuted)).toBe(49);
   });
 
   it("écrans déclarés, atteignables en théorie, atteignables en pratique", () => {

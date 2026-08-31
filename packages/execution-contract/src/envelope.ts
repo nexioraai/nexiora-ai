@@ -96,7 +96,14 @@ export const EXECUTION_ENVELOPE_V1: ExecutionEnvelope = {
   // Seul `trigger.kind === "ui"` atteint un composant (via `uiActionsByBlock`
   // et les props `actionId`). `lifecycle` (68 occurrences) et `data` (36) ne
   // sont câblés à aucun mécanisme d'activation.
-  triggers: ["ui"],
+  // `lifecycle` entre le 2026-08-31 (D-068) : **62 actions du corpus étaient
+  // déclarées avec un déclencheur de cycle de vie et purement IGNORÉES** — un
+  // pan entier du contrat d'action sans implémentation. Les trois événements
+  // sont honorés : `screen_open` au montage, `screen_close` au démontage,
+  // `app_start` une fois sur l'écran d'entrée.
+  // `data` reste absent : réagir à une création/modification d'entité suppose
+  // une source qui NOTIFIE, et le contrat de données n'en a pas.
+  triggers: ["ui", "lifecycle"],
 
   // `DataProvider` (runtime copié) n'expose que `listInstances` et
   // `getInstance`. Aucune méthode d'écriture, aucun modèle d'observation.
