@@ -14,7 +14,7 @@ import {
   sha256Hex,
 } from "@deribfy/air-schema";
 import { listBlockIds } from "@deribfy/blocks/registry";
-import { LockResolutionError, resolveLock } from "../src/resolve-lock.ts";
+import { LockResolutionError, normalizeAir, resolveLock } from "../src/resolve-lock.ts";
 import { RELEASE_TRAIN_V1 } from "../src/release-train.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -51,13 +51,17 @@ describe("résolveur — corpus ACTIF v2", () => {
   });
 
   for (const file of v2Docs) {
-    it(`résout ${file} en lock conforme au schéma 1.0.0`, () => {
+    it(`résout ${file} en lock conforme au schéma courant`, () => {
       const doc = loadDoc(CORPUS_V2, file);
       const lock = resolveLock(doc);
       // Conforme au schéma gelé (re-parse indépendant du resolver).
       expect(projectLockSchema.safeParse(lock).success).toBe(true);
-      // airHash = hash canonique du document (contre-calcul indépendant).
-      expect(lock.airHash).toBe(sha256Hex(canonicalJson(doc)));
+      // airHash = hash canonique du document NORMALISÉ (contre-calcul
+      // indépendant). ÉDITION CONSCIENTE (D-044) : depuis que le schéma est
+      // en 1.1.0, un document du corpus déclarant 1.0.0 est migré avant
+      // résolution — le hash porte donc sur le document migré. C'est la
+      // conséquence mesurée et assumée de l'évolution de contrat.
+      expect(lock.airHash).toBe(sha256Hex(canonicalJson(normalizeAir(doc))));
       // Vocabulaire ⊆ registre gelé (D-024/D-025), train du lock = train v1.
       const known = new Set(listBlockIds());
       expect(lock.resolved.blocks.length).toBeGreaterThan(0);
@@ -70,7 +74,16 @@ describe("résolveur — corpus ACTIF v2", () => {
         id: RELEASE_TRAIN_V1.id,
         version: RELEASE_TRAIN_V1.version,
       });
-      expect(lock.resolved.providers).toEqual([]);
+      // ÉDITION CONSCIENTE (Phase 10, §15) : `providers` n'est plus vide —
+      // il porte la sélection canonique dérivée des intégrations. Chaque
+      // entrée respecte le schéma du lock et est triée par classe.
+      expect(lock.resolved.providers.length).toBeGreaterThan(0);
+      const classes = lock.resolved.providers.map((p) => p.providerClass);
+      expect([...classes].sort()).toEqual(classes);
+      for (const p of lock.resolved.providers) {
+        expect(p.providerClass).toMatch(/^[a-z][a-z0-9_]*$/);
+        expect(p.provider.length).toBeGreaterThan(0);
+      }
       // Chaque capability du document est résolue, triée, avec
       // implémentation non vide.
       const declared = (doc as { capabilities: { capability: string }[] })
@@ -133,9 +146,14 @@ describe("résolveur — fail-closed", () => {
     expect(() => resolveLock(doc)).toThrow(LockResolutionError);
   });
 
-  it("tokensVersion ≠ train ⇒ refus TOKENS_VERSION_MISMATCH", () => {
+  // COMPATIBILITÉ TOKENS (D-039-R2) — fail-closed conservé aux DEUX bords.
+  // L'égalité stricte antérieure interdisait toute évolution des tokens (le
+  // corpus GELÉ épingle 1.0.0 et ne peut être retouché) ; elle est remplacée
+  // par une compatibilité semver BORNÉE, dont la validité est garantie
+  // MÉCANIQUEMENT par le cliquet de surface du paquet design-tokens.
+  const refuseWith = (version: string, code: string): void => {
     const doc = base() as { design: { tokensVersion?: string } };
-    doc.design.tokensVersion = "9.9.9";
+    doc.design.tokensVersion = version;
     let error: unknown;
     try {
       resolveLock(doc);
@@ -144,10 +162,35 @@ describe("résolveur — fail-closed", () => {
     }
     expect(error).toBeInstanceOf(LockResolutionError);
     expect(
-      (error as LockResolutionError).diagnostics.some(
-        (d) => d.code === "TOKENS_VERSION_MISMATCH",
-      ),
+      (error as LockResolutionError).diagnostics.some((d) => d.code === code),
     ).toBe(true);
+  };
+
+  it("majeure différente ⇒ REFUS TOKENS_MAJOR_MISMATCH (fail-closed)", () => {
+    refuseWith("9.9.9", "TOKENS_MAJOR_MISMATCH");
+    refuseWith("0.9.0", "TOKENS_MAJOR_MISMATCH");
+  });
+
+  it("train ANTÉRIEUR au document ⇒ REFUS TOKENS_TRAIN_OLDER (fail-closed)", () => {
+    const [maj = 1, min = 0] = RELEASE_TRAIN_V1.designTokensVersion
+      .split(".")
+      .map(Number);
+    refuseWith(`${maj}.${min + 1}.0`, "TOKENS_TRAIN_OLDER");
+    refuseWith(`${maj}.${min}.99`, "TOKENS_TRAIN_OLDER");
+  });
+
+  it("version non semver ⇒ REFUS en amont par le SCHÉMA (INVALID_FORMAT)", () => {
+    // Défense en profondeur : le schéma AIR intercepte les versions mal
+    // formées AVANT le résolveur — mesuré, elles ne peuvent donc jamais
+    // atteindre la branche TOKENS_VERSION_MALFORMED. Le refus reste net.
+    refuseWith("1.0", "INVALID_FORMAT");
+    refuseWith("1.x.0", "INVALID_FORMAT");
+  });
+
+  it("même majeure, train ≥ document ⇒ ACCEPTÉ (déverrouille l'évolution mineure)", () => {
+    const doc = base() as { design: { tokensVersion?: string } };
+    doc.design.tokensVersion = "1.0.0";
+    expect(() => resolveLock(doc)).not.toThrow();
   });
 
   it("tokensVersion ABSENT ⇒ résolu vers le train (lecture D-027)", () => {

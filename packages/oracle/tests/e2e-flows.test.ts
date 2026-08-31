@@ -7,11 +7,15 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { projectAirSchema } from "@deribfy/air-schema";
+import { normalizeAir } from "@deribfy/compiler";
 import { generateMaestroFlows } from "../src/index.ts";
 
 const CORPUS = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "golden-corpus", "corpus-v2");
 const docs = readdirSync(CORPUS).filter((f) => f.endsWith(".air.json")).sort();
-const load = (f: string) => projectAirSchema.parse(JSON.parse(readFileSync(join(CORPUS, f), "utf8")));
+// ÉDITION CONSCIENTE (D-044) : documents du corpus GELÉ en 1.0.0, migrés en
+// mémoire vers la version courante avant parse. Fichiers inchangés.
+const load = (f: string) =>
+  projectAirSchema.parse(normalizeAir(JSON.parse(readFileSync(join(CORPUS, f), "utf8"))));
 
 describe("générateur de flows E2E (Oracle L2)", () => {
   for (const file of docs) {

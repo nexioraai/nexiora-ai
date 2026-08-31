@@ -26,7 +26,8 @@ export { renderAirToText } from "./render-text.ts";
 export { validateAir, assertValidAir, AirSemanticError } from "./validate.ts";
 export type { AirDiagnostic } from "./validate.ts";
 
-export { AIR_MIGRATIONS, AirMigrationError, migrateAirDocument } from "./migrations.ts";
+export { AIR_MIGRATIONS, AirMigrationError, applyAirMigrations,
+  migrateAirDocument } from "./migrations.ts";
 export type { AirMigration } from "./migrations.ts";
 
 export {

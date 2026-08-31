@@ -26,10 +26,17 @@ export interface AirEffectData {
   screenId?: string;
 }
 
+export interface AirBlockVisibility {
+  kind: "entity_empty" | "entity_not_empty";
+  entityId: string;
+}
+
 export interface AirBlockInstanceData {
   id: string;
   blockType: string;
   entityId?: string;
+  /** Condition de rendu (AIR 1.1.0) — absente = bloc toujours visible. */
+  visibleWhen?: AirBlockVisibility;
   props: Readonly<Record<string, unknown>>;
 }
 
@@ -63,6 +70,23 @@ function block(screen: AirScreenData, blockId: string): AirBlockInstanceData {
   return found;
 }
 
+/**
+ * Visibilité conditionnelle d'un bloc (AIR 1.1.0, D-044).
+ *
+ * Défaut corrigé : un bloc `empty_state` était rendu SANS condition, donc un
+ * état vide s'affichait pendant que des données étaient présentes — observé
+ * sur appareil, mesuré sur 19 écrans. Le prédicat est évalué sur la MÊME
+ * source que la liste (le provider de données) : les deux ne peuvent donc
+ * pas se contredire.
+ */
+function useBlockVisible(screen: AirScreenData, blockId: string): boolean {
+  const provider = useDataProvider();
+  const condition = block(screen, blockId).visibleWhen;
+  if (condition === undefined) return true;
+  const vide = provider.listInstances(condition.entityId).length === 0;
+  return condition.kind === "entity_empty" ? vide : !vide;
+}
+
 function str(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
@@ -86,25 +110,36 @@ function useItemNavigate(screen: AirScreenData, blockId: string) {
   const navigation = useNavigation();
   const actionId = screen.uiActionsByBlock[blockId];
   const effect = actionId === undefined ? undefined : screen.actions[actionId];
+  // AFFORDANCE : sans effet `navigate`, l'AIR ne promet RIEN sur cette ligne —
+  // elle ne doit donc pas être pressable. Retourner une fonction inerte rendait
+  // chaque ligne appuyable et muette : 46 lignes sur les 2 slices [MESURÉ à
+  // l'exécution, APP-D002]. Le contrat de bloc sait déjà ne câbler aucun
+  // `onPress` quand `onItemPress` est absent (`components.tsx`) ; il fallait le
+  // lui dire ici. On ne FABRIQUE aucun comportement : on retire une promesse
+  // que rien ne fondait.
+  if (effect?.kind !== "navigate" || effect.screenId === undefined) return undefined;
+  const cible = effect.screenId;
   return (itemId: string) => {
-    if (effect?.kind === "navigate" && effect.screenId !== undefined) {
-      (
-        navigation.navigate as (name: string, params: { itemId: string }) => void
-      )(effect.screenId, { itemId });
-    }
+    (
+      navigation.navigate as (name: string, params: { itemId: string }) => void
+    )(cible, { itemId });
   };
 }
 
 export function AirHeader({ screen, blockId }: BlockRef) {
+  const visible = useBlockVisible(screen, blockId);
   const b = block(screen, blockId);
+  if (!visible) return null;
   const title = str(b.props.title);
   if (title === undefined) throw new Error(`AIR_RUNTIME_PROP_MISSING:${blockId}:title`);
   return <HeaderBlock testID={b.id} title={title} subtitle={str(b.props.subtitle)} />;
 }
 
 export function AirButton({ screen, blockId }: BlockRef) {
+  const visible = useBlockVisible(screen, blockId);
   const b = block(screen, blockId);
   const dispatch = useDispatch(screen);
+  if (!visible) return null;
   const label = str(b.props.label);
   const actionId = str(b.props.actionId);
   if (label === undefined || actionId === undefined) {
@@ -117,8 +152,10 @@ export function AirButton({ screen, blockId }: BlockRef) {
 }
 
 export function AirEmptyState({ screen, blockId }: BlockRef) {
+  const visible = useBlockVisible(screen, blockId);
   const b = block(screen, blockId);
   const dispatch = useDispatch(screen);
+  if (!visible) return null;
   const title = str(b.props.title);
   if (title === undefined) throw new Error(`AIR_RUNTIME_PROP_MISSING:${blockId}:title`);
   const actionId = str(b.props.actionId);
@@ -138,8 +175,10 @@ export function AirDetailHeader({
   blockId,
   itemId,
 }: BlockRef & { itemId?: string }) {
+  const visible = useBlockVisible(screen, blockId);
   const b = block(screen, blockId);
   const provider = useDataProvider();
+  if (!visible) return null;
   if (b.entityId === undefined) throw new Error(`AIR_RUNTIME_ENTITY_MISSING:${blockId}`);
   const instance = provider.getInstance(b.entityId, itemId);
   const value = (fieldId: unknown): string =>
@@ -161,9 +200,11 @@ export function AirDetailHeader({
 }
 
 export function AirList({ screen, blockId }: BlockRef) {
+  const visible = useBlockVisible(screen, blockId);
   const b = block(screen, blockId);
   const provider = useDataProvider();
   const onItemNavigate = useItemNavigate(screen, blockId);
+  if (!visible) return null;
   if (b.entityId === undefined) throw new Error(`AIR_RUNTIME_ENTITY_MISSING:${blockId}`);
   const titleFieldId = str(b.props.titleFieldId);
   if (titleFieldId === undefined) {
@@ -196,9 +237,11 @@ export function AirList({ screen, blockId }: BlockRef) {
 }
 
 export function AirForm({ screen, blockId }: BlockRef) {
+  const visible = useBlockVisible(screen, blockId);
   const b = block(screen, blockId);
   const dispatch = useDispatch(screen);
   const [values, setValues] = useState<Readonly<Record<string, string>>>({});
+  if (!visible) return null;
   if (b.entityId === undefined) throw new Error(`AIR_RUNTIME_ENTITY_MISSING:${blockId}`);
   const fieldsById = new Map(
     (screen.entities[b.entityId]?.fields ?? []).map((f) => [f.id, f]),

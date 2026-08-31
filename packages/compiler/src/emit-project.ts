@@ -11,8 +11,9 @@
 import { canonicalJson, type ProjectAir, type ProjectLock } from "@deribfy/air-schema";
 import { buildDemoFixtures } from "./demo-fixtures.ts";
 import { emitAppJson, emitPermissionsManifest } from "./emit-manifests.ts";
+import { applyThemeOverrides, emitThemeModule, hasThemeOverrides } from "./emit-theme.ts";
 import { EMBEDDED_ASSETS } from "./embedded-assets.generated.ts";
-import { resolveLock } from "./resolve-lock.ts";
+import { normalizeAir, resolveLock } from "./resolve-lock.ts";
 import { RELEASE_TRAIN_V1, type ReleaseTrain } from "./release-train.ts";
 
 // Syntaxe EFFAÇABLE uniquement (pas de parameter properties) : les bancs
@@ -73,6 +74,53 @@ const WRAPPER_BY_BLOCK_TYPE: Readonly<Record<string, string>> = {
   list: "AirList",
 };
 
+// CODE SLOTS (Phase 9 — ARCHITECTURE §4). Le compilateur reçoit un BUNDLE
+// d'implémentations et les émet comme modules du projet, plus un REGISTRE
+// typé. Le type est déclaré ici de façon STRUCTURELLE : le compilateur ne
+// dépend pas de `@deribfy/slots` (son allowlist de dépendances est un
+// cliquet, et la politique AST est l'affaire du gate et de l'Oracle, pas
+// du chemin de compilation qui doit rester pur et minimal).
+// La conformité de SIGNATURE, elle, est vérifiée par `tsc` sur le projet
+// émis (Oracle §9 niveau 1) : le registre importe chaque fonction par son
+// nom et conserve son type exact — aucune érasure, aucun `any`.
+export interface SlotSource {
+  readonly slotId: string;
+  readonly source: string;
+  readonly authorId: string;
+}
+
+export interface EmitOptions {
+  /** Implémentations de Code Slots à émettre (défaut : aucune). */
+  readonly slots?: readonly SlotSource[];
+  /**
+   * Substitution de provider par classe canonique (Phase 10, §15) —
+   * transportée telle quelle au résolveur. N'affecte QUE le lock : aucun
+   * fichier émis ne dépend d'un provider concret en v1 (fait mesuré).
+   */
+  readonly providerOverrides?: Readonly<Record<string, string>>;
+}
+
+function emitSlotRegistry(slots: readonly SlotSource[]): string {
+  const imports = slots.map(
+    (s) => `import { runSlot as ${pascal(s.slotId)} } from "./${s.slotId}";`,
+  );
+  const entries = slots.map((s) => `  ${s.slotId}: ${pascal(s.slotId)},`);
+  return [
+    "// GÉNÉRÉ — NE PAS ÉDITER (registre des Code Slots, Phase 9 / §4).",
+    "// Chaque slot conserve SA signature : le registre importe la fonction",
+    "// par son nom et n'efface aucun type — `tsc` du projet généré vérifie",
+    "// donc la conformité de signature déclarée dans l'AIR (Oracle §9.1).",
+    ...imports,
+    "",
+    "export const slotRegistry = {",
+    ...entries,
+    "} as const;",
+    "",
+    "export type SlotRegistry = typeof slotRegistry;",
+    "",
+  ].join("\n");
+}
+
 interface ScreenSlice {
   screen: ProjectAir["screens"][number];
   title: string;
@@ -83,6 +131,7 @@ interface ScreenSlice {
       id: string;
       blockType: string;
       entityId?: string;
+      visibleWhen?: { kind: string; entityId: string };
       props: Record<string, unknown>;
     }[];
     actions: Record<string, { kind: string; screenId?: string }>;
@@ -151,6 +200,10 @@ function buildScreenSlice(air: ProjectAir, screen: ProjectAir["screens"][number]
         id: b.id,
         blockType: b.blockType,
         ...(b.entityId === undefined ? {} : { entityId: b.entityId }),
+        // Condition de rendu (AIR 1.1.0) : transportée telle quelle dans les
+        // données canoniques — absente = bloc toujours visible, donc les
+        // documents 1.0.0 migrés gardent EXACTEMENT leur comportement.
+        ...(b.visibleWhen === undefined ? {} : { visibleWhen: b.visibleWhen }),
         props: flatToRecord(b.props),
       })),
       actions,
@@ -184,13 +237,29 @@ function emitScreen(slice: ScreenSlice): string {
     ),
   ].sort(byCodeUnit);
   const usesRoute = slice.screen.blocks.some((b) => b.blockType === "detail_header");
+  // DET-006 (D-039) : un écran porteur d'un bloc `list` N'EST PLUS enveloppé
+  // dans un ScrollView. Cause démontrée : une FlatList imbriquée dans un
+  // ScrollView de même axe reçoit une hauteur NON BORNÉE et rend tous ses
+  // éléments — virtualisation neutralisée. La liste redevient donc le
+  // défileur de l'écran (Section `fill` la borne), les blocs voisins
+  // devenant des régions fixes. Effet secondaire favorable : les contrôles
+  // post-liste restent toujours atteignables (dimension A de la grille).
+  const hasList = slice.screen.blocks.some((b) => b.blockType === "list");
+  const containerImport = hasList ? "View" : "ScrollView";
+  const containerOpen = hasList
+    ? "      <View style={{ flex: 1, paddingBottom: insets.bottom }}>"
+    : "      <ScrollView\n" +
+      "        contentContainerStyle={{ paddingBottom: insets.bottom }}\n" +
+      "        automaticallyAdjustKeyboardInsets\n" +
+      '        keyboardShouldPersistTaps="handled"\n' +
+      "      >";
+  const containerClose = hasList ? "      </View>" : "      </ScrollView>";
   const lines = [
     "// GÉNÉRÉ — NE PAS ÉDITER (code structurel d'écran : ScreenShell + blocs,",
     "// contrainte 3.4 ; les points d'insertion de Code Slots arrivent en Phase 9).",
-    "// Page DÉFILANTE (lecture D-031-R47 : le bloc list gelé n'est pas",
-    "// bornable sans toucher au gel — défaut de composition DÉMONTRÉ sur",
-    "// device : blocs post-liste hors écran ; réserve : virtualisation",
-    "// interne neutralisée, revisité au scorecard Phase 8).",
+    "// DÉFILEMENT (D-031-R47 puis DET-006/D-039) : un écran SANS bloc list",
+    "// reste une page défilante ; un écran AVEC bloc list confie le",
+    "// défilement à la liste virtualisée elle-même, bornée par Section fill.",
     "// SAFE AREA DU BAS (D-037) : défaut DÉMONTRÉ sur appareil physique",
     "// (Galaxy A17 / Android 16) — la fenêtre est bord à bord, donc le",
     "// DERNIER bloc était rendu sous la barre de navigation gestuelle et",
@@ -198,7 +267,7 @@ function emitScreen(slice: ScreenSlice): string {
     "// réel. `useSafeAreaInsets` est disponible sans SafeAreaProvider ajouté :",
     "// NativeStackView enveloppe déjà ses écrans dans SafeAreaProviderCompat",
     "// [vérifié dans le paquet installé].",
-    'import { ScrollView } from "react-native";',
+    `import { ${containerImport} } from "react-native";`,
     'import { useSafeAreaInsets } from "react-native-safe-area-context";',
     'import { ScreenShell } from "../lib/primitives";',
     `import { ${wrappers.join(", ")} } from "../lib/runtime/air-runtime";`,
@@ -211,13 +280,13 @@ function emitScreen(slice: ScreenSlice): string {
     "  const insets = useSafeAreaInsets();",
     "  return (",
     `    <ScreenShell testID="${screenId}" title={screenData.title}>`,
-    "      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }}>",
+    containerOpen,
     ...slice.screen.blocks.map((b) => {
       const wrapper = WRAPPER_BY_BLOCK_TYPE[b.blockType] ?? "";
       const itemId = b.blockType === "detail_header" ? " itemId={route?.params?.itemId}" : "";
       return `        <${wrapper} screen={screenData} blockId="${assertId(b.id, screenId)}"${itemId} />`;
     }),
-    "      </ScrollView>",
+    containerClose,
     "    </ScreenShell>",
     "  );",
     "}",
@@ -333,15 +402,36 @@ function emitDemoData(air: ProjectAir): string {
 export function emitProject(
   input: unknown,
   train: ReleaseTrain = RELEASE_TRAIN_V1,
+  options: EmitOptions = {},
 ): EmittedProject {
-  const lock = resolveLock(input, train);
+  const lock = resolveLock(input, train, {
+    ...(options.providerOverrides === undefined ? {} : { providerOverrides: options.providerOverrides }),
+  });
   // Le parse a réussi dans resolveLock — re-parse impossible à échouer ici.
-  const air = input as ProjectAir;
+  // NORMALISATION : le lock a été calculé sur le document MIGRÉ ; émettre
+  // depuis l'entrée brute ferait travailler les deux étages sur deux
+  // versions du même document (airHash d'un côté, code de l'autre).
+  const air = normalizeAir(input) as ProjectAir;
   const locale = air.app.locales.defaultAppLocale;
 
   const files = new Map<string, string>();
   for (const [target, content] of Object.entries(EMBEDDED_ASSETS)) {
     files.set(target, content);
+  }
+  // THÈME PAR APP (v2, P-007) : n'écrase la copie embarquée que si l'AIR
+  // demande une identité propre. Sans surcharge, la sortie reste
+  // byte-identique à celle d'avant la v2 (additivité stricte, testée).
+  if (hasThemeOverrides(air)) {
+    const { problems } = applyThemeOverrides(air);
+    if (problems.length > 0) {
+      const first = problems[0];
+      throw new EmitError(
+        first?.code ?? "THEME_OVERRIDE_INVALID",
+        `design.overrides.${first?.key ?? "?"}`,
+        first?.detail ?? "surcharge refusée",
+      );
+    }
+    files.set("lib/tokens/theme.generated.ts", emitThemeModule(air));
   }
   files.set("App.tsx", emitApp());
   files.set("app.json", emitAppJson(air, train));
@@ -353,6 +443,29 @@ export function emitProject(
     const slice = buildScreenSlice(air, screen, locale);
     files.set(`screens/${screen.id}.data.ts`, emitScreenData(slice));
     files.set(`screens/${screen.id}.tsx`, emitScreen(slice));
+  }
+
+  // Code Slots : émission FAIL-CLOSED et déterministe (tri par point de
+  // code). Un slot non déclaré par l'AIR, ou déclaré deux fois, est un
+  // refus net — le compilateur n'invente jamais un contrat.
+  const bundle = [...(options.slots ?? [])].sort((a, b) => byCodeUnit(a.slotId, b.slotId));
+  if (bundle.length > 0) {
+    const declared = new Set(air.slots.map((s) => s.id));
+    const seen = new Set<string>();
+    for (const impl of bundle) {
+      if (!declared.has(impl.slotId)) {
+        throw new EmitError("EMIT_SLOT_UNDECLARED", `slots.${impl.slotId}`, "absent des slots de l'AIR");
+      }
+      if (seen.has(impl.slotId)) {
+        throw new EmitError("EMIT_SLOT_DUPLICATE", `slots.${impl.slotId}`, "deux implémentations");
+      }
+      seen.add(impl.slotId);
+      // Source VERBATIM : le compilateur n'altère jamais le code d'un slot
+      // (son empreinte reste celle qu'a signée l'auteur et qu'a analysée la
+      // politique AST — toute réécriture invaliderait la preuve).
+      files.set(`slots/${assertId(impl.slotId, "slots")}.ts`, impl.source);
+    }
+    files.set("slots/index.ts", emitSlotRegistry(bundle));
   }
   return { lock, files };
 }

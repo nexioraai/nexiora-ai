@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import type { ProjectAir } from "@deribfy/air-schema";
 import {
   AIR_SCHEMA_VERSION,
+  migrateAirDocument,
   projectAirSchema,
   validateAir,
 } from "@deribfy/air-schema";
@@ -26,8 +27,16 @@ const files = readdirSync(CORPUS_DIR)
   .filter((name) => name.endsWith(".air.json"))
   .sort();
 
+// ÉDITION CONSCIENTE (D-044) : les documents du corpus sont GELÉS et
+// déclarent `airSchemaVersion: "1.0.0"` — ils restent byte-identiques sur
+// disque. Le schéma courant étant 1.1.0, ils sont MIGRÉS en mémoire avant
+// validation, par le mécanisme prévu depuis la Phase 2 et câblé en D-044.
+// La propriété vérifiée est inchangée : le corpus passe les quatre
+// validateurs, sans aucune retouche de fichier.
 const load = (name: string): ProjectAir =>
-  projectAirSchema.parse(JSON.parse(readFileSync(join(CORPUS_DIR, name), "utf8")));
+  projectAirSchema.parse(
+    migrateAirDocument(JSON.parse(readFileSync(join(CORPUS_DIR, name), "utf8"))),
+  );
 
 describe("golden corpus v2 (D-025)", () => {
   it("contient les 12 domaines (un fichier = un domaine, mêmes intentions que v1)", () => {

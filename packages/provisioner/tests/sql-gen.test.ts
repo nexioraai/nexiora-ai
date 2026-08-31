@@ -8,8 +8,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { canonicalJson, sha256Hex } from "@deribfy/air-schema";
-import { LockResolutionError, buildDemoFixtures } from "@deribfy/compiler";
-import { generateProvisioningSql } from "../src/sql-gen.ts";
+import { LockResolutionError, buildDemoFixtures, normalizeAir } from "@deribfy/compiler";
+import { generateProvisioningSql, seedOrder } from "../src/sql-gen.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const CORPUS_V2 = join(HERE, "..", "..", "golden-corpus", "corpus-v2");
@@ -38,7 +38,11 @@ describe("générateur SQL — corpus ACTIF v2", () => {
       const { lock, sql, summary } = generateProvisioningSql(doc);
 
       // En-tête lié à l'AIR (airHash du lock re-calculé indépendamment).
-      expect(sql).toContain(`-- airHash: ${sha256Hex(canonicalJson(doc))}`);
+      // ÉDITION CONSCIENTE (D-044) : le document du corpus déclare 1.0.0 et
+      // est MIGRÉ en mémoire vers la version courante avant résolution — le
+      // hash porte donc sur le document normalisé. Le contre-calcul reste
+      // indépendant : il refait le chemin depuis le fichier source.
+      expect(sql).toContain(`-- airHash: ${sha256Hex(canonicalJson(normalizeAir(doc)))}`);
       expect(lock.resolved.releaseTrain.id).toBe("rt-2026.08");
 
       // Une table par entité + RLS partout + barrières par section.
@@ -68,7 +72,7 @@ describe("générateur SQL — corpus ACTIF v2", () => {
     for (const file of v2Docs) {
       const doc = loadDoc(file);
       const { summary, sql } = generateProvisioningSql(doc);
-      const fixtures = buildDemoFixtures(projectAirSchema.parse(doc));
+      const fixtures = buildDemoFixtures(projectAirSchema.parse(normalizeAir(doc)));
       for (const [entityId, rows] of Object.entries(fixtures)) {
         expect(summary.seedRowsByTable[entityId], `${file}:${entityId}`).toBe(rows.length);
         expect((sql.match(new RegExp(`INSERT INTO "${entityId}" `, "g")) ?? []).length).toBe(
@@ -109,6 +113,76 @@ describe("générateur SQL — corpus ACTIF v2", () => {
     // prématurée évidente : chaque INSERT se termine par DO NOTHING;.
     for (const line of sql.split("\n").filter((l) => l.startsWith("INSERT INTO"))) {
       expect(line.endsWith(`ON CONFLICT ("id") DO NOTHING;`), line.slice(0, 80)).toBe(true);
+    }
+  });
+});
+
+describe("ordre d'insertion du seed — intégrité référentielle (Phase 10)", () => {
+  // Défaut MESURÉ sur le slice 2 : PostgreSQL a refusé le seed avec
+  // `23503 violates foreign key constraint`, parce que les INSERT étaient
+  // ordonnés alphabétiquement (`ent_conteneur` avant `ent_navire`). Les
+  // VALEURS étaient bonnes : seul l'ORDRE était faux.
+  const air = (entities: { id: string; fields: { id: string; referencesEntityId?: string }[] }[]) =>
+    ({ entities }) as never;
+
+  it("une entité référençante est insérée APRÈS sa cible", () => {
+    // Ordre alphabétique : a_enfant, z_parent. Ordre correct : l'inverse.
+    const ordre = seedOrder(
+      air([
+        { id: "a_enfant", fields: [{ id: "f", referencesEntityId: "z_parent" }] },
+        { id: "z_parent", fields: [{ id: "g" }] },
+      ]),
+      ["a_enfant", "z_parent"],
+    );
+    expect(ordre).toEqual(["z_parent", "a_enfant"]);
+  });
+
+  it("déterministe : ensemble prêt trié, pas d'ordre dépendant de l'entrée", () => {
+    const graphe = air([
+      { id: "b", fields: [{ id: "f", referencesEntityId: "d" }] },
+      { id: "a", fields: [{ id: "f" }] },
+      { id: "d", fields: [{ id: "f" }] },
+      { id: "c", fields: [{ id: "f", referencesEntityId: "a" }] },
+    ]);
+    const attendu = seedOrder(graphe, ["a", "b", "c", "d"]);
+    expect(seedOrder(graphe, ["d", "c", "b", "a"])).toEqual(attendu);
+    expect(attendu.indexOf("d")).toBeLessThan(attendu.indexOf("b"));
+    expect(attendu.indexOf("a")).toBeLessThan(attendu.indexOf("c"));
+  });
+
+  it("un cycle ne bloque pas la génération (la barrière de seed tranchera)", () => {
+    const ordre = seedOrder(
+      air([
+        { id: "x", fields: [{ id: "f", referencesEntityId: "y" }] },
+        { id: "y", fields: [{ id: "f", referencesEntityId: "x" }] },
+      ]),
+      ["x", "y"],
+    );
+    expect([...ordre].sort()).toEqual(["x", "y"]);
+  });
+
+  it("les références vers une entité NON semée n'imposent aucun ordre", () => {
+    expect(seedOrder(air([{ id: "a", fields: [{ id: "f", referencesEntityId: "absent" }] }]), ["a"])).toEqual(["a"]);
+  });
+
+  it("corpus v2 : aucun INSERT ne précède la table qu'il référence", () => {
+    for (const file of v2Docs) {
+      const doc = loadDoc(file) as {
+        entities: { id: string; fields: { referencesEntityId?: string }[] }[];
+      };
+      const { sql, summary } = generateProvisioningSql(doc);
+      const position = (id: string) => sql.indexOf(`INSERT INTO "${id}"`);
+      for (const entity of doc.entities) {
+        const p = position(entity.id);
+        if (p < 0) continue;
+        for (const field of entity.fields) {
+          const cible = field.referencesEntityId;
+          if (cible === undefined || !summary.tables.includes(cible)) continue;
+          const pc = position(cible);
+          if (pc < 0) continue;
+          expect(pc, `${file}: ${entity.id} → ${cible}`).toBeLessThan(p);
+        }
+      }
     }
   });
 });

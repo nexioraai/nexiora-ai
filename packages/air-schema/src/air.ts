@@ -16,7 +16,7 @@ import {
   testIdSchema,
 } from "./ids.ts";
 
-export const AIR_SCHEMA_VERSION = "1.0.0";
+export const AIR_SCHEMA_VERSION = "1.1.0";
 
 export const semverSchema = z.string().regex(/^\d+\.\d+\.\d+$/);
 export const sha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
@@ -78,6 +78,23 @@ const appSchema = z.strictObject({
   locales: appLocalesSchema,
 });
 
+// CONDITION DE VISIBILITÉ (AIR 1.1.0, D-044 — DET-017 volet 2).
+// Défaut mesuré avant cette évolution : 19 écrans sur 50 portaient un bloc
+// `empty_state` À CÔTÉ d'une `list` possédant déjà son état vide, et le bloc
+// était rendu SANS condition — un état vide s'affichait donc pendant que des
+// données étaient présentes, observé sur appareil (Phase 8 puis Phase 10).
+// La cause n'était pas le document : le schéma n'offrait AUCUN moyen
+// d'exprimer une condition.
+//
+// Forme volontairement FERMÉE : pas de langage d'expression, deux prédicats
+// seulement, adossés à la notion que le registre manipule déjà — le bloc
+// `list` dérive son état de `items.length === 0`. Étendre ce vocabulaire
+// sera une évolution consciente, pas une improvisation d'un LLM.
+const blockVisibilitySchema = z.strictObject({
+  kind: z.enum(["entity_empty", "entity_not_empty"]),
+  entityId: entityIdSchema,
+});
+
 const blockInstanceSchema = z.strictObject({
   id: blockIdSchema,
   // Clé du registre de Smart Blocks — la version exacte est résolue dans le
@@ -91,6 +108,8 @@ const blockInstanceSchema = z.strictObject({
   // d'émission naturel mesuré du modèle. Ne pas réordonner sans re-dérouler
   // le cycle de preuve D-018.
   entityId: entityIdSchema.optional(),
+  /** Rendu conditionnel (1.1.0) — absent = toujours visible (comportement 1.0.0). */
+  visibleWhen: blockVisibilitySchema.optional(),
   props: flatConfigSchema.optional(),
 });
 

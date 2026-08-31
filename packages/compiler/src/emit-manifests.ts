@@ -96,6 +96,15 @@ export function emitAppJson(air: ProjectAir, train: ReleaseTrain): string {
       package: identity.android,
       permissions: androidPermissions,
       predictiveBackGestureEnabled: false,
+      // DET-016 (D-039, dimension A étendue) : pendant ANDROID de
+      // l'ajustement clavier. `automaticallyAdjustKeyboardInsets` est
+      // iOS-seulement — VÉRIFIÉ sur RN 0.86.3, déclarée dans
+      // `ScrollViewPropsIOS`, aucune implémentation Android. Android exige
+      // donc que la FENÊTRE se redimensionne à l'apparition du clavier,
+      // faute de quoi le contenu est simplement recouvert. Déclaré ici, au
+      // manifeste (territoire D-029), et non dans le code : le code généré
+      // reste identique sur les deux plateformes, sans `Platform.OS`.
+      softwareKeyboardLayoutMode: "resize",
     },
     ios: {
       bundleIdentifier: identity.ios,

@@ -1,3 +1,4 @@
+import { AIR_SCHEMA_VERSION } from "../src";
 import type { DeploymentState, ProjectAir, ProjectLock } from "../src";
 
 const HEX_A = "a".repeat(64);
@@ -8,7 +9,7 @@ const HEX_B = "b".repeat(64);
 // partent d'une copie (structuredClone) et cassent UNE cohérence à la fois.
 export function buildValidAir(): ProjectAir {
   return {
-    airSchemaVersion: "1.0.0",
+    airSchemaVersion: AIR_SCHEMA_VERSION,
     projectId: "prj_resto_demo",
     app: {
       name: "Chez Awa",

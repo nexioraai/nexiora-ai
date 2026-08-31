@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { AirMigration } from "../src";
 import {
   AIR_MIGRATIONS,
+  AIR_SCHEMA_VERSION,
   AirMigrationError,
   AirSemanticError,
   migrateAirDocument,
@@ -34,8 +35,25 @@ function buildLegacyAir(version: string): Record<string, unknown> {
 }
 
 describe("migrateAirDocument", () => {
-  it("le registre réel est vide : v1.0.0 est la première version publiée", () => {
-    expect(AIR_MIGRATIONS).toHaveLength(0);
+  // ÉDITION CONSCIENTE (D-044) : le registre n'est plus vide — la première
+  // migration réelle du projet y entre. Le test vérifie désormais ses
+  // PROPRIÉTÉS, pas son absence : elle part de la version précédente, mène à
+  // la version courante, et n'invente AUCUNE donnée (identité).
+  it("le registre porte la migration 1.0.0 → 1.1.0, et elle est une IDENTITÉ", () => {
+    expect(AIR_MIGRATIONS).toHaveLength(1);
+    const etape = AIR_MIGRATIONS[0];
+    expect(etape?.from).toBe("1.0.0");
+    expect(etape?.to).toBe(AIR_SCHEMA_VERSION);
+    const avant = buildValidAir() as unknown as Record<string, unknown>;
+    expect(etape?.migrate(avant)).toEqual(avant);
+  });
+
+  it("un document 1.0.0 réel est migré sans perdre ni gagner de contenu", () => {
+    const legacy = { ...(buildValidAir() as unknown as Record<string, unknown>), airSchemaVersion: "1.0.0" };
+    const migre = migrateAirDocument(legacy);
+    expect(migre.airSchemaVersion).toBe(AIR_SCHEMA_VERSION);
+    // Aucune condition inventée : un document 1.0.0 n'en portait pas.
+    expect(migre.screens.every((s) => s.blocks.every((b) => b.visibleWhen === undefined))).toBe(true);
   });
 
   it("valide directement un document déjà à la version courante", () => {
@@ -44,8 +62,11 @@ describe("migrateAirDocument", () => {
   });
 
   it("migre un document d'une version antérieure jusqu'à la version courante", () => {
-    const migrated = migrateAirDocument(buildLegacyAir("0.9.0"), [renameViewsToScreens]);
-    expect(migrated.airSchemaVersion).toBe("1.0.0");
+    const migrated = migrateAirDocument(buildLegacyAir("0.9.0"), [
+      renameViewsToScreens,
+      ...AIR_MIGRATIONS,
+    ]);
+    expect(migrated.airSchemaVersion).toBe(AIR_SCHEMA_VERSION);
     expect(migrated.screens).toHaveLength(2);
   });
 
@@ -53,8 +74,9 @@ describe("migrateAirDocument", () => {
     const migrated = migrateAirDocument(buildLegacyAir("0.8.0"), [
       renameViewsToScreens,
       noop080,
+      ...AIR_MIGRATIONS,
     ]);
-    expect(migrated.airSchemaVersion).toBe("1.0.0");
+    expect(migrated.airSchemaVersion).toBe(AIR_SCHEMA_VERSION);
   });
 
   it("refuse une version sans chemin de migration", () => {
@@ -92,9 +114,13 @@ describe("migrateAirDocument", () => {
         return { ...rest, screens };
       },
     };
-    expect(() => migrateAirDocument(buildLegacyAir("0.9.0"), [corrupting])).toThrow(
-      AirSemanticError,
-    );
+    // La chaîne doit atteindre la version COURANTE pour que la validation
+    // sémantique s'exécute : on ajoute donc l'étape réelle après l'étape
+    // défectueuse. C'est bien la corruption qui est refusée, pas l'absence
+    // de chemin de migration.
+    expect(() =>
+      migrateAirDocument(buildLegacyAir("0.9.0"), [corrupting, ...AIR_MIGRATIONS]),
+    ).toThrow(AirSemanticError);
   });
 
   it("une migration ne peut pas sauter de version : le runner fixe `to`", () => {

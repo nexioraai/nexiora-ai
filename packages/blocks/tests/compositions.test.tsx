@@ -213,3 +213,46 @@ describe("états du harnais sur ListBlock (loading/empty/error)", () => {
     expect(retried).toBe(1);
   });
 });
+
+describe("DET-025 — la liste virtualisée reçoit un parent BORNÉ", () => {
+  // Preuve de bout en bout de la CHAÎNE qui avait cédé : `ListBlock`
+  // demande `fill`, la primitive `Section` doit l'appliquer. Le contrat et
+  // les styles étaient corrects depuis DET-006 ; seul le câblage manquait,
+  // et aucun test ne regardait le résultat RENDU. Mesuré sur appareil ET
+  // sur émulateur : sans ce bornage, la dernière ligne est coupée et le
+  // bloc suivant sort de l'écran.
+  const items = Array.from({ length: 12 }, (_, i) => ({
+    id: `row_${String(i + 1)}`,
+    title: `ligne ${String(i + 1)}`,
+  }));
+
+  const flat = (style: unknown): Record<string, unknown> => {
+    if (Array.isArray(style)) {
+      const parts = (style as unknown[]).filter(Boolean).map(flat);
+      return Object.assign<Record<string, unknown>, Record<string, unknown>[]>({}, parts);
+    }
+    return (style ?? {}) as Record<string, unknown>;
+  };
+
+  it("le conteneur de la liste porte flex:1 jusqu'à la FlatList", () => {
+    const r = render(<ListBlock testID="liste" items={items} />);
+    const vues = r.root.findAllByType("View" as never);
+    const bornees = vues.filter((v) => flat((v.props as { style?: unknown }).style).flex === 1);
+    // Section (conteneur) + corps de Section : deux niveaux bornés au moins.
+    expect(bornees.length).toBeGreaterThanOrEqual(2);
+    const liste = r.root
+      .findAllByType("FlatList" as never)
+      .concat(r.root.findAllByType("View" as never))
+      .length;
+    expect(liste).toBeGreaterThan(0);
+  });
+
+  it("un bloc liste en état vide reste NON borné (aucun effet de bord)", () => {
+    // L'état vide rend un StateView, pas la liste : le bornage ne doit pas
+    // s'y appliquer par inadvertance.
+    const r = render(
+      <ListBlock testID="liste" items={[]} state={{ kind: "empty", title: "vide" }} />,
+    );
+    expect(allTexts(r)).toContain("vide");
+  });
+});

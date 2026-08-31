@@ -4,7 +4,9 @@
   "private": true,
   "description": "Oracle v1 (Phase 6, D-034) — service SEPARE qui LIT les artefacts et re-verifie de maniere DETERMINISTE (§9 niveau 1), sans jamais faire confiance au generateur. Aucune autorite LLM sur ce niveau.",
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings 0",
@@ -14,7 +16,9 @@
     "@deribfy/air-schema": "*",
     "@deribfy/capability-registry": "*",
     "@deribfy/compiler": "*",
+    "@deribfy/execution-contract": "*",
     "@deribfy/provisioner": "*",
+    "@deribfy/slots": "*",
     "zod": "^4.4.3"
   },
   "devDependencies": {

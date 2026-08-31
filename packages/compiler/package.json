@@ -2,7 +2,7 @@
   "name": "@deribfy/compiler",
   "version": "0.1.0",
   "private": true,
-  "description": "Compilateur d\u00e9terministe v1 (Phase 4, D-026) \u2014 release train v1 et r\u00e9solveur AIR\u2192lock ; \u00e9tages d'\u00e9mission ajout\u00e9s en 4.2+",
+  "description": "Compilateur déterministe v1 (Phase 4, D-026) — release train v1 et résolveur AIR→lock ; étages d'émission ajoutés en 4.2+",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -17,6 +17,7 @@
     "@deribfy/blocks": "*",
     "@deribfy/capability-registry": "*",
     "@deribfy/design-tokens": "*",
+    "@deribfy/provider-registry": "*",
     "zod": "^4.4.3"
   },
   "devDependencies": {

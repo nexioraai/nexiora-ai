@@ -50,11 +50,17 @@ describe("cliquet statique zéro-réseau (chemin de compilation)", () => {
     const pkg = JSON.parse(readFileSync(join(PKG, "package.json"), "utf8")) as {
       dependencies: Record<string, string>;
     };
+    // ÉDITION CONSCIENTE (Phase 10, §15) : le résolveur renseigne désormais
+    // `resolved.providers` depuis le registre de providers. Ce paquet est
+    // du DONNÉES PURES dérivées du registre de capabilities gelé — aucun
+    // accès réseau, aucun SDK — la propriété que ce cliquet protège reste
+    // donc entière (elle est re-vérifiée ci-dessus sur les sources).
     expect(Object.keys(pkg.dependencies).sort()).toEqual([
       "@deribfy/air-schema",
       "@deribfy/blocks",
       "@deribfy/capability-registry",
       "@deribfy/design-tokens",
+      "@deribfy/provider-registry",
       "zod",
     ]);
   });

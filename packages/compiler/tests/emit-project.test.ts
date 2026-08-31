@@ -9,7 +9,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { canonicalJson, sha256Hex } from "@deribfy/air-schema";
 import { EmitError, emitProject } from "../src/emit-project.ts";
-import { LockResolutionError } from "../src/resolve-lock.ts";
+import { compileProject } from "../src/compile-project.ts";
+import { LockResolutionError, normalizeAir } from "../src/resolve-lock.ts";
 import { EMBEDDED_SOURCES } from "../src/embed-lib.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -102,7 +103,9 @@ describe("émetteur — corpus ACTIF v2", () => {
     const doc = loadDoc("resto-quartier.air.json");
     const { lock } = emitProject(doc);
     expect(lock.resolved.releaseTrain.id).toBe("rt-2026.08");
-    expect(lock.airHash).toBe(sha256Hex(canonicalJson(doc)));
+    // ÉDITION CONSCIENTE (D-044) : le hash porte sur le document NORMALISÉ
+    // (migré 1.0.0 → 1.1.0 en mémoire), pas sur le fichier brut.
+    expect(lock.airHash).toBe(sha256Hex(canonicalJson(normalizeAir(doc))));
   });
 });
 
@@ -170,7 +173,10 @@ describe("émetteur — manifestes/permissions/config native (4.4, D-029)", () =
       .map((f) => loadDoc(f) as { permissions: { platform: string }[] })
       .find((d) => d.permissions.some((p) => p.platform === "ios"));
     if (withIos === undefined) throw new Error("fixture inattendue");
-    const air = projectAirSchema.parse(withIos);
+    // Le document du corpus déclare 1.0.0 : il faut le NORMALISER avant de
+    // le parser contre le schéma courant (D-044).
+    const { normalizeAir: normaliser } = await import("../src/resolve-lock.ts");
+    const air = projectAirSchema.parse(normaliser(withIos));
     const stripped = {
       ...air,
       permissions: air.permissions.filter((p) => p.platform !== "ios"),
@@ -283,5 +289,49 @@ describe("émetteur — fail-closed", () => {
     }
     expect(error).toBeInstanceOf(EmitError);
     expect((error as EmitError).code).toBe("EMIT_UI_ACTION_AMBIGUOUS");
+  });
+});
+
+// DET-006 (D-039, dimension G) — VERROU MÉCANIQUE de la propriété recherchée.
+// Ne dépend d'aucun appareil : se lit directement sur le code émis.
+describe("DET-006 — virtualisation : bornage des écrans porteurs de liste", () => {
+  const docs = v2Docs;
+
+  it("un écran AVEC bloc list n'émet AUCUN ScrollView englobant", () => {
+    const offenders: string[] = [];
+    for (const file of docs) {
+      const air = JSON.parse(readFileSync(join(CORPUS_V2, file), "utf8")) as {
+        screens: { id: string; blocks: { blockType: string }[] }[];
+      };
+      const { files } = compileProject(air);
+      for (const screen of air.screens) {
+        const hasList = screen.blocks.some((b) => b.blockType === "list");
+        const path = [...files.keys()].find((k) => k.endsWith(`${screen.id}.tsx`));
+        if (path === undefined) continue;
+        const code = String(files.get(path));
+        if (hasList && code.includes("ScrollView")) {
+          offenders.push(`${file}:${screen.id}`);
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it("un écran SANS bloc list reste une page défilante (non-régression D-031-R47)", () => {
+    let checked = 0;
+    for (const file of docs) {
+      const air = JSON.parse(readFileSync(join(CORPUS_V2, file), "utf8")) as {
+        screens: { id: string; blocks: { blockType: string }[] }[];
+      };
+      const { files } = compileProject(air);
+      for (const screen of air.screens) {
+        if (screen.blocks.some((b) => b.blockType === "list")) continue;
+        const path = [...files.keys()].find((k) => k.endsWith(`${screen.id}.tsx`));
+        if (path === undefined) continue;
+        expect(String(files.get(path))).toContain("ScrollView");
+        checked += 1;
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
   });
 });

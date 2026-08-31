@@ -62,8 +62,22 @@ export function ListBlock({
     );
   }
   return (
-    <Section title={title} testID={testID}>
+    // `fill` (DET-006) : la section BORNE la hauteur de la liste virtualisée.
+    // Sans parent borné, la FlatList rend tous ses éléments. L'intention est
+    // DÉCLARÉE ici ; le style reste entièrement porté par les primitives —
+    // la contrainte « aucun StyleSheet, aucun style en dur » est préservée.
+    <Section title={title} testID={testID} fill>
       <FlatList
+        // DET-016 (D-039, dimension A étendue) : ajustement natif aux insets
+        // du clavier. Propriété VÉRIFIÉE sur RN 0.86.3 — déclarée dans
+        // `ScrollViewPropsIOS`, sans implémentation Android : elle agit sur
+        // iOS et reste INERTE sur Android, qui est couvert par le mode de
+        // redimensionnement déclaré au manifeste. Aucun `Platform.OS` requis.
+        // `keyboardShouldPersistTaps` évite qu'un appui sur un contrôle
+        // pendant l'édition soit absorbé par la fermeture du clavier.
+        // Ce sont des PROPRIÉTÉS structurelles, jamais des styles.
+        automaticallyAdjustKeyboardInsets
+        keyboardShouldPersistTaps="handled"
         data={items}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (

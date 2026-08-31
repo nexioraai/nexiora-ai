@@ -12,16 +12,52 @@ export const RELEASE_TRAIN_V1 = {
   version: "1.0.0",
 
   // Contrats gelés embarqués par le train.
-  airSchemaVersion: "1.0.0",
+  // Porté à 1.1.0 le 2026-08-29 (D-044, DET-017 volet 2) : le schéma gagne le
+  // champ OPTIONNEL `visibleWhen` sur les blocs. Les 12 documents du corpus
+  // GELÉ restent byte-identiques sur disque — ils déclarent 1.0.0 et sont
+  // MIGRÉS en mémoire par le mécanisme prévu depuis la Phase 2, câblé pour la
+  // première fois ici. Conséquence assumée et mesurée : l'`airHash` change,
+  // donc tous les `rootHash` changent — c'est le prix d'une évolution de
+  // contrat, pas une dérive.
+  airSchemaVersion: "1.1.0",
   blockRegistryVersion: "1.0.0",
+  // Ré-scellé le 2026-08-29 (DET-006 / D-039) : `ListBlock` DÉCLARE désormais
+  // `fill` sur sa Section, afin que la liste virtualisée reçoive un parent
+  // BORNÉ. Cause démontrée : imbriquée dans un ScrollView de même axe, une
+  // FlatList reçoit une hauteur infinie et rend tous ses éléments — la
+  // virtualisation est neutralisée (dimension G de la grille A++). AUCUN
+  // style n'a été ajouté au paquet `blocks` : la contrainte D-021/D-023
+  // (« aucun StyleSheet, aucun style en dur ») est préservée — le style est
+  // porté par la primitive Section. Version du registre INCHANGÉE (1.0.0) :
+  // aucun contrat de bloc, aucun schéma de props, aucun type de bloc n'a
+  // changé — seule la composition interne évolue.
   blocksSourcesHash:
-    "b488608b4f20c2b9845324974a23f2ad65630860812ea6e76746ab5bce84dd4f",
+    // Ré-scellé 2026-08-29 (DET-016) : FlatList porte l ajustement natif aux
+  // insets du clavier + keyboardShouldPersistTaps. Propriétés STRUCTURELLES,
+  // aucun style ajouté ; registre de blocs inchangé en 1.0.0.
+  "6f1ab8b18ac128d2916899e4aece72891936c0f3934998cb811187ce21c324ec",
   capabilityRegistryVersion: "1.0.0",
   capabilitySourcesHash:
     "6c28599246abde6e7010704f23f273aafe50d17c5483133709c9065f2777346c",
-  designTokensVersion: "1.0.0",
+  designTokensVersion: "1.2.0",
+  // Ré-scellé le 2026-08-29 (D-039/D-039-R1) : évolution des tokens en
+  // 1.1.0 — correction de DEUX non-conformités A++ prouvées. Dimension B :
+  // `onPrimary` passe de #FFFFFF à #16181D (blanc sur l'accent #FA5D1E =
+  // 3,16:1, sous le seuil WCAG 2.2 AA de 4,5:1 ; l'encre sombre donne
+  // 5,62:1 en PRÉSERVANT l'accent de marque à l'identique). Dimension A :
+  // nouveau groupe `size.tapTarget` = 48, qui satisfait simultanément les
+  // 44 pt d'iOS et les 48 dp de Material sans ramification Platform.OS.
+  // Ré-scellé le 2026-08-29 (P-007, DESIGN SYSTEM v2 — Phase 10). Évolution
+  // MINEURE, surface additive : 3 groupes ajoutés (`fontWeight`, `opacity`,
+  // `space.xxs`), tous avec un consommateur réel dans les primitives, plus
+  // UNE correction de valeur (`color.light.warn` #8A6D00 → #866A00 : 4,34:1
+  // sur `badgeBg`, sous le seuil AA, mesuré). S'y ajoute un token DÉRIVÉ,
+  // `color.*.primaryText`, calculé depuis l'accent : l'accent de marque
+  // #FA5D1E est PRÉSERVÉ et cesse d'être une couleur de texte (DET-019).
+  // Le cliquet de surface de majeure vérifie qu'aucune clé n'a disparu ni
+  // changé de type — la compatibilité mineure reste donc mécanique.
   designTokensSourcesHash:
-    "e16ce4bf01a07ce005d394c6536331dc6073e411d72d90f47644afc102ac4727",
+    "4786eec85b103f893b5a45fb86ee0b7bc659c7c810ea839a98ff8897e56bd97d",
 
   // Toolchain du projet généré (pins exacts démontrés — lock.toolchain).
   // Planchers RÉELS de plateforme du train (mesurés sur le prebuild du

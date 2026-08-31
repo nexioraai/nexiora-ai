@@ -251,6 +251,23 @@ export function validateAir(air: ProjectAir): AirDiagnostic[] {
     }
   });
 
+  // 7bis. Condition de visibilité (1.1.0) : l'entité visée DOIT exister.
+  //       Sans ce contrôle, un bloc pourrait être conditionné sur une entité
+  //       fantôme et disparaître silencieusement de l'app.
+  air.screens.forEach((screen, si) => {
+    screen.blocks.forEach((block, bi) => {
+      const condition = block.visibleWhen;
+      if (condition === undefined) return;
+      if (!entityById.has(condition.entityId)) {
+        push(
+          "AIR_BLOCK_VISIBILITY_ENTITY_UNKNOWN",
+          `screens[${si}].blocks[${bi}].visibleWhen.entityId`,
+          `entité "${condition.entityId}" introuvable`,
+        );
+      }
+    });
+  });
+
   // 8. Règles : entité existante, champs des assertions appartenant à
   // l'entité ciblée.
   air.rules.forEach((r, i) => {

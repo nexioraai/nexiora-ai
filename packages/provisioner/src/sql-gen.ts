@@ -10,7 +10,7 @@
 // même SQL, octet pour octet ; le lock lie le script à l'AIR (airHash).
 // Fail-closed : la validation passe par resolveLock (4 validateurs).
 import type { ProjectAir, ProjectLock } from "@deribfy/air-schema";
-import { buildDemoFixtures, resolveLock } from "@deribfy/compiler";
+import { buildDemoFixtures, normalizeAir, resolveLock } from "@deribfy/compiler";
 
 export interface GeneratedSql {
   lock: ProjectLock;
@@ -72,9 +72,60 @@ function barrier(name: string, condition: string, detail: string): string {
   ].join("\n");
 }
 
+/**
+ * Ordre d'INSERTION des tables de seed — TOPOLOGIQUE, pas alphabétique.
+ *
+ * Défaut MESURÉ sur le slice 2 (2026-08-29) : le seed insérait
+ * `ent_conteneur` avant `ent_navire` (ordre alphabétique) alors que le
+ * premier porte une clé étrangère vers le second — PostgreSQL refusait avec
+ * `23503 violates foreign key constraint`. Les VALEURS étaient correctes
+ * (les fixtures tirent un identifiant réel de l'entité cible) : c'est bien
+ * l'ORDRE qui était faux. Le slice 1 ne pouvait pas le révéler — une seule
+ * de ses entités porte un dataset, donc aucune référence entre lignes
+ * semées.
+ *
+ * Kahn avec ensemble prêt TRIÉ : le résultat reste parfaitement
+ * déterministe. En cas de cycle (référence mutuelle NOT NULL, insatisfiable
+ * en SQL de toute façon), les entités restantes sont émises dans l'ordre
+ * alphabétique et la barrière de seed signalera l'échec — jamais de
+ * silence.
+ */
+export function seedOrder(air: ProjectAir, seeded: readonly string[]): readonly string[] {
+  const present = new Set(seeded);
+  const deps = new Map<string, Set<string>>();
+  for (const entity of air.entities) {
+    if (!present.has(entity.id)) continue;
+    const required = new Set<string>();
+    for (const field of entity.fields) {
+      const target = field.referencesEntityId;
+      if (target !== undefined && present.has(target) && target !== entity.id) required.add(target);
+    }
+    deps.set(entity.id, required);
+  }
+  const ordered: string[] = [];
+  const restant = new Map(deps);
+  while (restant.size > 0) {
+    const prets = [...restant.entries()]
+      .filter(([, d]) => [...d].every((t) => ordered.includes(t)))
+      .map(([id]) => id)
+      .sort(byCodeUnit);
+    if (prets.length === 0) {
+      ordered.push(...[...restant.keys()].sort(byCodeUnit));
+      break;
+    }
+    for (const id of prets) {
+      ordered.push(id);
+      restant.delete(id);
+    }
+  }
+  return ordered;
+}
+
 export function generateProvisioningSql(input: unknown): GeneratedSql {
   const lock = resolveLock(input); // fail-closed (4 validateurs) + airHash.
-  const air = input as ProjectAir;
+  // Le lock a été résolu sur le document MIGRÉ : générer le SQL depuis
+  // l'entrée brute ferait diverger l'en-tête (airHash) du contenu (D-044).
+  const air = normalizeAir(input) as ProjectAir;
 
   const entities = [...air.entities].sort((a, b) => byCodeUnit(a.id, b.id));
   const lines: string[] = [
@@ -189,7 +240,7 @@ export function generateProvisioningSql(input: unknown): GeneratedSql {
   lines.push("", "-- ===== SECTION 5 : SEED (fixtures déterministes D-030) =====");
   const fixtures = buildDemoFixtures(air);
   const seedRowsByTable: Record<string, number> = {};
-  for (const entityId of Object.keys(fixtures).sort(byCodeUnit)) {
+  for (const entityId of seedOrder(air, Object.keys(fixtures))) {
     const entity = entities.find((e) => e.id === entityId);
     if (entity === undefined) continue;
     const rows = fixtures[entityId] ?? [];

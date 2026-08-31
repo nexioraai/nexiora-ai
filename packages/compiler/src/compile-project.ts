@@ -7,7 +7,7 @@
 // triées par point de code, JSON canonique, racine = SHA-256 du manifeste.
 import { canonicalJson, sha256Hex, type ProjectLock } from "@deribfy/air-schema";
 import { EMBEDDED_TEMPLATE } from "./embedded-template.generated.ts";
-import { EmitError, emitProject } from "./emit-project.ts";
+import { EmitError, emitProject, type EmitOptions } from "./emit-project.ts";
 import { RELEASE_TRAIN_V1, type ReleaseTrain } from "./release-train.ts";
 
 export interface CompiledProject {
@@ -25,8 +25,9 @@ const byCodeUnit = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0
 export function compileProject(
   input: unknown,
   train: ReleaseTrain = RELEASE_TRAIN_V1,
+  options: EmitOptions = {},
 ): CompiledProject {
-  const { lock, files: emitted } = emitProject(input, train);
+  const { lock, files: emitted } = emitProject(input, train, options);
   const files = new Map<string, string>();
   for (const [path, content] of Object.entries(EMBEDDED_TEMPLATE)) {
     files.set(path, content);
