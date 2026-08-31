@@ -21,6 +21,9 @@ export const ruleIdSchema = idSchema("rule");
 export const slotIdSchema = idSchema("slot");
 export const integrationIdSchema = idSchema("intg");
 export const testIdSchema = idSchema("test");
+// Besoin exprimé par le client (AIR 1.2.0, D-056) — un nœud du document au
+// même titre qu'un écran : il porte une identité stable et unique.
+export const needIdSchema = idSchema("need");
 
 // Référence de capability : clé du registre (ARCHITECTURE §2), pas un nœud
 // AIR — le LLM demande la capacité, le registre décide de l'implémentation.

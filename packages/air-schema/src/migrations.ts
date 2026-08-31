@@ -28,6 +28,18 @@ export const AIR_MIGRATIONS: readonly AirMigration[] = [
       "Seule la version est portée à 1.1.0, par le runner lui-même.",
     migrate: (document) => document,
   },
+  {
+    from: "1.1.0",
+    to: "1.2.0",
+    description:
+      "AIR 1.2.0 (D-056) : ajout du champ OPTIONNEL `intent` — la demande du " +
+      "client et les besoins qu'elle exprime. La migration est une IDENTITÉ : " +
+      "un document 1.1.0 ne porte AUCUNE trace de la demande qui l'a produit, " +
+      "et lui en inventer une fabriquerait la seule chose que ce champ existe " +
+      "pour ne plus perdre. Un corpus migré reste donc SANS intention — c'est " +
+      "le FAIT, et la gate de fidélité le refusera comme tel.",
+    migrate: (document) => document,
+  },
 ];
 
 export class AirMigrationError extends Error {

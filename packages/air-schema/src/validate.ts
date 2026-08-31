@@ -66,6 +66,9 @@ export function validateAir(air: ProjectAir): AirDiagnostic[] {
   air.expectedTests.forEach((t, i) => {
     identities.push([t.id, `expectedTests[${i}]`]);
   });
+  air.intent?.needs.forEach((n, i) => {
+    identities.push([n.id, `intent.needs[${i}]`]);
+  });
   for (const [id, path] of identities) {
     const first = seen.get(id);
     if (first === undefined) {

@@ -39,13 +39,33 @@ describe("migrateAirDocument", () => {
   // migration réelle du projet y entre. Le test vérifie désormais ses
   // PROPRIÉTÉS, pas son absence : elle part de la version précédente, mène à
   // la version courante, et n'invente AUCUNE donnée (identité).
-  it("le registre porte la migration 1.0.0 → 1.1.0, et elle est une IDENTITÉ", () => {
-    expect(AIR_MIGRATIONS).toHaveLength(1);
-    const etape = AIR_MIGRATIONS[0];
-    expect(etape?.from).toBe("1.0.0");
-    expect(etape?.to).toBe(AIR_SCHEMA_VERSION);
+  // ÉDITION CONSCIENTE (2026-08-31, D-056) : une seconde migration réelle
+  // entre au registre — 1.1.0 → 1.2.0, l'arrivée du champ `intent`. Le test
+  // cesse de compter les étapes une par une : il vérifie que la CHAÎNE est
+  // continue de la première version publiée jusqu'à la version courante, et
+  // que CHAQUE étape est une identité. Compter aurait exigé de rééditer ce
+  // test à chaque montée ; vérifier la chaîne le rend vrai pour toutes.
+  it("la chaîne de migrations est CONTINUE de 1.0.0 à la version courante, et chaque étape est une IDENTITÉ", () => {
+    expect(AIR_MIGRATIONS.length).toBeGreaterThan(0);
+    expect(AIR_MIGRATIONS[0]?.from).toBe("1.0.0");
+    expect(AIR_MIGRATIONS.at(-1)?.to).toBe(AIR_SCHEMA_VERSION);
     const avant = buildValidAir() as unknown as Record<string, unknown>;
-    expect(etape?.migrate(avant)).toEqual(avant);
+    AIR_MIGRATIONS.forEach((etape, i) => {
+      // Aucun trou : la cible de l'étape i est la source de l'étape i+1.
+      const suivante = AIR_MIGRATIONS[i + 1];
+      if (suivante !== undefined) expect(suivante.from).toBe(etape.to);
+      expect(etape.migrate(avant)).toEqual(avant);
+    });
+  });
+
+  it("la migration 1.1.0 → 1.2.0 n'INVENTE aucune intention", () => {
+    // Le champ `intent` existe pour ne plus perdre la demande du client. Lui
+    // en fabriquer une pour un document historique produirait exactement la
+    // donnée fausse que ce champ existe pour empêcher.
+    const legacy = { ...(buildValidAir() as unknown as Record<string, unknown>), airSchemaVersion: "1.1.0" };
+    const migre = migrateAirDocument(legacy);
+    expect(migre.airSchemaVersion).toBe(AIR_SCHEMA_VERSION);
+    expect(migre.intent).toBeUndefined();
   });
 
   it("un document 1.0.0 réel est migré sans perdre ni gagner de contenu", () => {

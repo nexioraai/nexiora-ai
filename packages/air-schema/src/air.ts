@@ -13,10 +13,11 @@ import {
   ruleIdSchema,
   screenIdSchema,
   slotIdSchema,
+  needIdSchema,
   testIdSchema,
 } from "./ids.ts";
 
-export const AIR_SCHEMA_VERSION = "1.1.0";
+export const AIR_SCHEMA_VERSION = "1.2.0";
 
 export const semverSchema = z.string().regex(/^\d+\.\d+\.\d+$/);
 export const sha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
@@ -312,6 +313,46 @@ const expectedTestSchema = z.strictObject({
   targetId: z.string().min(1),
 });
 
+// INTENTION DU CLIENT (AIR 1.2.0, D-056) — la racine mesurée en `APP-D004`.
+//
+// Fait fondateur : l'AIR portait 19 champs et AUCUN ne contenait la demande.
+// « menu avec photos et prix » entrait dans un prompt et DISPARAISSAIT. Aucun
+// artefact en aval ne savait ce qui avait été demandé, donc toute la
+// vérification comparait l'artefact au document — jamais le document à la
+// demande.
+//
+// `resolution` est REQUISE et FERMÉE : un besoin est soit rattaché à des nœuds
+// du document, soit déclaré inexprimable AVEC MOTIF. Il n'existe pas de
+// troisième issue, et surtout pas l'absence silencieuse — c'est précisément
+// par elle que « avec photos » s'est évaporé dans 12 documents sur 13.
+const needSchema = z.strictObject({
+  id: needIdSchema,
+  // Le besoin dans les termes du client, jamais reformulé en vocabulaire moteur.
+  statement: z.string().min(1),
+  resolution: z.discriminatedUnion("kind", [
+    z.strictObject({
+      kind: z.literal("satisfied"),
+      // Nœuds du document qui portent ce besoin — existence vérifiée par le
+      // validateur sémantique, jamais supposée.
+      nodeIds: z.array(z.string().min(1)).min(1),
+    }),
+    z.strictObject({
+      kind: z.literal("unexpressible"),
+      // Pourquoi le document ne peut pas porter ce besoin. Un motif vide est
+      // refusé : « inexprimable » sans raison serait un abandon déguisé.
+      reason: z.string().min(1),
+    }),
+  ]),
+});
+
+export const intentSchema = z.strictObject({
+  // La demande TELLE QU'ELLE A ÉTÉ FORMULÉE. Elle n'est pas une source de
+  // vérité pour le moteur — elle est la source de vérité pour le JUGE.
+  request: z.string().min(1),
+  requestLocale: localeSchema,
+  needs: z.array(needSchema).min(1),
+});
+
 export const projectAirSchema = z.strictObject({
   airSchemaVersion: z.literal(AIR_SCHEMA_VERSION),
   projectId: projectIdSchema,
@@ -332,6 +373,12 @@ export const projectAirSchema = z.strictObject({
   native: nativeRequirementsSchema,
   compliance: complianceSchema,
   expectedTests: z.array(expectedTestSchema),
+  // OPTIONNEL AU SCHÉMA, EXIGÉ PAR LA GATE. Le rendre requis forcerait la
+  // migration à FABRIQUER une intention pour les 12 documents du corpus gelé —
+  // exactement ce que D-044 s'est interdit. Le fail-closed vit dans la gate de
+  // fidélité (PHASE 10B), pas dans le schéma : un document sans intention ne
+  // peut pas être certifié, mais il reste lisible.
+  intent: intentSchema.optional(),
 });
 
 export type ProjectAir = z.infer<typeof projectAirSchema>;

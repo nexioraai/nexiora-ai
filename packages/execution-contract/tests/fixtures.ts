@@ -2,7 +2,7 @@
 // `agnostic.test.ts` le vérifie mécaniquement). Les identifiants sont
 // délibérément abstraits : un test qui parlerait de restaurants ou de
 // conteneurs ferait entrer un domaine dans le paquet.
-import type { ProjectAir } from "@deribfy/air-schema";
+import { AIR_SCHEMA_VERSION, type ProjectAir } from "@deribfy/air-schema";
 
 const HASH = "0".repeat(64);
 
@@ -38,7 +38,7 @@ export const dataset = (
 /** AIR valide MINIMAL — surchargeable champ par champ. */
 export function air(overrides: Partial<ProjectAir> = {}): ProjectAir {
   return {
-    airSchemaVersion: "1.1.0",
+    airSchemaVersion: AIR_SCHEMA_VERSION,
     projectId: "prj_t",
     app: {
       name: "T",

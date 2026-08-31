@@ -19,7 +19,13 @@ export const RELEASE_TRAIN_V1 = {
   // première fois ici. Conséquence assumée et mesurée : l'`airHash` change,
   // donc tous les `rootHash` changent — c'est le prix d'une évolution de
   // contrat, pas une dérive.
-  airSchemaVersion: "1.1.0",
+  // Porté à 1.2.0 le 2026-08-31 (D-056) : le schéma gagne le champ OPTIONNEL
+  // `intent` — la demande du client, que l'AIR ne conservait NULLE PART
+  // (racine mesurée, APP-D004). Même mécanique qu'en 1.1.0 : le corpus GELÉ
+  // reste byte-identique sur disque, il est MIGRÉ en mémoire, et la migration
+  // n'invente aucune intention. Conséquence assumée : l'`airHash` change,
+  // donc tous les `rootHash`. C'est le prix d'une évolution de contrat.
+  airSchemaVersion: "1.2.0",
   blockRegistryVersion: "1.0.0",
   // Ré-scellé le 2026-08-29 (DET-006 / D-039) : `ListBlock` DÉCLARE désormais
   // `fill` sur sa Section, afin que la liste virtualisée reçoive un parent
