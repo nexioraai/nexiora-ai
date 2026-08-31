@@ -376,8 +376,11 @@ function emitScreenData(slice: ScreenSlice): string {
   ].join("\n");
 }
 
-function emitScreen(slice: ScreenSlice): string {
+function emitScreen(slice: ScreenSlice, aBarre: boolean): string {
   const screenId = assertId(slice.screen.id, "screens");
+  // D-086 : la barre est rendue par CHAQUE écran, en DERNIÈRE position dans la
+  // coquille. Un bloc l'aurait placée dans le corps — répétée ou oubliée selon
+  // ce que le document déclare. Ici elle est structurelle.
   // D-068 : cet écran porte-t-il des actions de cycle de vie ?
   const aCycle = slice.data.lifecycle !== undefined;
   const wrappers = [
@@ -426,6 +429,12 @@ function emitScreen(slice: ScreenSlice): string {
     'import { useSafeAreaInsets } from "react-native-safe-area-context";',
     'import { ScreenShell } from "../lib/primitives";',
     `import { ${[...wrappers, ...(aCycle ? ["AirScreenLifecycle"] : [])].sort().join(", ")} } from "../lib/runtime/air-runtime";`,
+    ...(aBarre
+      ? [
+          'import { PrimaryNav } from "../lib/runtime/primary-nav";',
+          'import { primaryNav } from "../nav.data";',
+        ]
+      : []),
     ...(usesRoute ? ['import type { AirScreenProps } from "../lib/runtime/air-runtime";'] : []),
     `import { screenData } from "./${screenId}.data";`,
     "",
@@ -445,6 +454,13 @@ function emitScreen(slice: ScreenSlice): string {
       return `        <${wrapper} screen={screenData} blockId="${assertId(b.id, screenId)}"${itemId} />`;
     }),
     containerClose,
+    // POSITION STRUCTURELLE (D-086) : la barre est le DERNIER enfant de la
+    // coquille, après tout le contenu. Ce n'est pas un style qui la place en
+    // bas — c'est l'ORDRE DE L'ARBRE, ce qu'une preuve de rendu peut vérifier
+    // sans lire une seule feuille de style.
+    ...(aBarre
+      ? [`      <PrimaryNav destinations={primaryNav} currentScreenId="${screenId}" />`]
+      : []),
     "    </ScreenShell>",
     "  );",
     "}",
@@ -470,6 +486,26 @@ function emitNavData(air: ProjectAir, locale: string): string {
         title: resolveLocalized(title, locale, `navigation.${r.id}`),
       };
     });
+  // NAVIGATION PRINCIPALE (D-086) — triée à l'émission ET re-triée au rendu :
+  // ce qui est AFFICHÉ respecte l'ordre déclaré même si un étage intermédiaire
+  // le réordonnait. Deux gardes valent mieux qu'une promesse.
+  const primary =
+    air.navigation.primary === undefined
+      ? []
+      : [...air.navigation.primary.destinations]
+          .sort((a, b) => a.order - b.order)
+          .map((d) => {
+            const route = air.navigation.routes.find((r) => r.id === d.routeId);
+            if (route === undefined) {
+              throw new EmitError("EMIT_NAV_ROUTE_MISSING", "navigation.primary", d.routeId);
+            }
+            return {
+              routeId: assertId(d.routeId, "navigation.primary"),
+              screenId: assertId(route.screenId, "navigation.primary"),
+              label: resolveLocalized(d.label, locale, `navigation.primary.${d.routeId}`),
+              order: d.order,
+            };
+          });
   const nav = {
     entryScreenId: assertId(air.navigation.entryScreenId, "navigation"),
     locale,
@@ -478,6 +514,9 @@ function emitNavData(air: ProjectAir, locale: string): string {
   return [
     "// GÉNÉRÉ — NE PAS ÉDITER (données canoniques de navigation).",
     `export const navData = ${canonicalJson(nav)} as const;`,
+    "",
+    "// Destinations principales — vide si le document n'en déclare aucune.",
+    `export const primaryNav = ${canonicalJson(primary)} as const;`,
     "",
   ].join("\n");
 }
@@ -633,7 +672,7 @@ export function emitProject(
   for (const screen of [...air.screens].sort((a, b) => byCodeUnit(a.id, b.id))) {
     const slice = buildScreenSlice(air, screen, locale);
     files.set(`screens/${screen.id}.data.ts`, emitScreenData(slice));
-    files.set(`screens/${screen.id}.tsx`, emitScreen(slice));
+    files.set(`screens/${screen.id}.tsx`, emitScreen(slice, air.navigation.primary !== undefined));
   }
 
   // Code Slots : émission FAIL-CLOSED et déterministe (tri par point de

@@ -9,8 +9,11 @@
       "softwareKeyboardLayoutMode": "resize"
     },
     "ios": {
-      "bundleIdentifier": "com.deribfy.preview.chez-tantie",
-      "supportsTablet": false
+      "bundleIdentifier": "com.deribfy.preview.maquis-express",
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "name": "Chez Tantie — Commandes",
     "newArchEnabled": true,
@@ -28,14 +31,14 @@
         }
       ]
     ],
-    "slug": "chez-tantie",
+    "slug": "maquis-express",
     "userInterfaceStyle": "light",
     "version": "1.0.0",
     "extra": {
       "eas": {
-        "projectId": "7f3421a9-b27c-4f4a-8b8f-9bda3d45c4a2"
+        "projectId": "d14f9481-b3b0-4189-9105-6be8049f7cbf"
       }
     },
-    "owner": "deribfy-app"
+    "owner": "deribfy-apps-team"
   }
 }

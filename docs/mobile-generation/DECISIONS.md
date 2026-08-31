@@ -4678,3 +4678,100 @@ d'« après » à mesurer. **Aucun des trois n'est déclaré satisfait.**
 ### Non-régression
 
 **671 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0.**
+
+---
+
+## D-086 — AIR 1.6.0 : la navigation principale devient exprimable — 2026-08-31
+
+**Défaut mesuré** : sur le corpus v3, **184 boutons de navigation pure sur 235**,
+1,7 par écran, jusqu'à **quatre empilés sous la liste des plats**.
+
+### La cause, démontrée à trois niveaux
+
+`FACT` — `navigationSchema` ne portait que `{entryScreenId, routes[]}` : un
+**registre plat**, aucune notion de destination principale.
+`FACT` — le registre de blocs a **6 types, aucun n'est une navigation**.
+`FACT` — le compilateur n'émettait qu'un `createNativeStackNavigator`.
+
+`CONCLUSION` — **la cause était le CONTRAT**, ni le document ni le renderer. Le
+seul moyen d'exprimer « on peut aller au panier » était un `button` dans le corps
+de l'écran. **Sixième câblage inexprimable de ce chantier**, même signature que
+l'intention, la liaison de slot, les titres d'état, l'affichage de référence et
+« écrire puis naviguer ».
+
+### 🔴 Un SECOND défaut, distinct, et qui n'était PAS le contrat
+
+`FACT` — sur **108 navigations, 103 partaient d'un bouton, UNE SEULE d'une ligne
+de liste.** Or `useItemNavigate` lit `uiActionsByBlock` : une ligne EST câblable.
+`FACT` — le prompt ne mentionnait **jamais** qu'une ligne de liste est pressable
+(0 occurrence). **Défaut du GÉNÉRATEUR, corrigé sans toucher au contrat.**
+
+### Ce qui est livré
+
+**AIR 1.6.0** — `navigation.primary.destinations`, 3 à 5, `order` contigu.
+**OPTIONNEL** : migration identité, un document 1.5.0 ne rend aucune barre.
+
+🔴 **L'AIR NE CONNAÎT AUCUNE CATÉGORIE MÉTIER.** Ni restaurant, ni boutique, ni
+réservation. Déduire l'archétype est un raisonnement du **générateur** ; le
+contrat porte sa conclusion, jamais l'étiquette. *Sinon le compilateur devrait
+connaître les métiers, et le moteur cesserait d'être agnostique.*
+
+**Runtime** — `PrimaryNav`, barre persistante, **dernier enfant de la coquille**.
+`FACT` — `@react-navigation/bottom-tabs` n'est **ni dans le gabarit ni dans le
+lock embarqué (0 entrée)**. La barre n'utilise que `useNavigation`, `Pressable`
+et `useSafeAreaInsets` — **déjà présents**. Aucune ouverture du lock.
+**Contrepartie assumée** : un vrai tab navigator conserve l'historique par
+onglet ; celle-ci re-navigue.
+
+**Générateur** — règles 18 à 22, dont les **trois architectures de référence**
+inscrites *comme références à adapter, jamais comme gabarits*.
+
+### 🔴 LE DOUBLON DE `coach-fitness` — la cause était MA GATE
+
+`FACT` — la gate a refusé « Débloquer avec l'abonnement mensuel », depuis
+`scr_programme_detail` **qui n'est pas un onglet**. C'est un appel à l'action
+légitime, pas une redondance.
+
+**Critère précisé** : un bouton **SUR un onglet** menant à **un AUTRE onglet** est
+un doublon — la barre est déjà sous le doigt. Depuis un écran de **flux**, c'est
+une **conversion**. Porté au **validateur** (`AIR_NAV_TAB_DUPLICATE`), à la gate
+et à la règle 21.
+
+**5 cas-tueurs prouvent que ce n'est pas un contournement** : le critère mord
+toujours sur le défaut fondateur — bouton sur un onglet vers un autre onglet — et
+laisse passer les deux cas légitimes.
+
+### Effet mesuré, sur le document RÉELLEMENT GÉNÉRÉ
+
+| `resto-quartier` | avant | après |
+|---|---:|---:|
+| écrans | 7 | **9** |
+| onglets | 0 | **5** |
+| boutons de navigation | 4 | **2** *(contextuels)* |
+| doublons | — | **0** |
+| lignes de liste cliquables | 1 | **5** |
+
+Architecture déduite : **`Accueil \| Menu \| Panier \| Commandes \| Compte`**.
+
+### Une régression que j'ai introduite, refusée par la grille
+
+`numberOfLines={1}` sur un libellé d'onglet → **dimension E `non_conforme`**.
+La grille a raison : **borner un libellé le rend illisible dès qu'on agrandit le
+texte système.** Retiré.
+
+### 🔴 NON DÉMONTRÉ — à ne présenter comme acquis sous aucune forme
+
+| | |
+|---|---|
+| **archétype Réservation** | campagne arrêtée sur *« credit balance is too low »* |
+| **rendu sur appareil physique** | aucune preuve n'a vu un téléphone |
+| **largeur des cartes** | **aucune capture reçue** — rien n'a été modifié |
+
+**Rectification** : un rapport intermédiaire annonçait « Boutique : preuve
+obtenue ». **FAUX.** Le second archétype prouvé est `coach-fitness` —
+**abonnement/services**.
+
+### Vérifications
+
+**682 tests · 0 échec · typecheck EXIT=0 · lint EXIT=0 · 26/26 compilent ·
+4 gates racine vertes · A→H conformes · 6 preuves de rendu.**

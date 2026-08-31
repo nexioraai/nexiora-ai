@@ -73,6 +73,17 @@ export const AIR_MIGRATIONS: readonly AirMigration[] = [
       "une changerait le parcours de l'utilisateur sans décision.",
     migrate: (document) => document,
   },
+  {
+    from: "1.5.0",
+    to: "1.6.0",
+    description:
+      "AIR 1.6.0 (D-086) : ajout du champ OPTIONNEL `navigation.primary` — les " +
+      "destinations principales et leur ordre. Identité : choisir quelles " +
+      "destinations sont principales À LA PLACE du document reviendrait à " +
+      "décider de son architecture. Un document sans `primary` ne rend aucune " +
+      "barre — comportement 1.5.0 inchangé au caractère près.",
+    migrate: (document) => document,
+  },
 ];
 
 export class AirMigrationError extends Error {

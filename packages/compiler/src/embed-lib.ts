@@ -82,6 +82,14 @@ export const EMBEDDED_SOURCES: readonly EmbeddedSourceSpec[] = [
     rewrites: {},
   },
   {
+    source: "compiler/runtime/primary-nav.tsx",
+    target: "lib/runtime/primary-nav.tsx",
+    // `useStyles` vit dans le pont de thème, pas dans l'index des primitives :
+    // la copie doit viser le MÊME module que celui embarqué, sinon l'app émise
+    // ne compile pas — défaut attrapé par le `tsc` du projet témoin.
+    rewrites: { "@deribfy/primitives/theme-bridge": "../primitives/theme-bridge" },
+  },
+  {
     source: "compiler/runtime/demo-provider.ts",
     target: "lib/runtime/demo-provider.ts",
     rewrites: {},

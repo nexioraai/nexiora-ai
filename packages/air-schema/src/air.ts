@@ -17,7 +17,7 @@ import {
   testIdSchema,
 } from "./ids.ts";
 
-export const AIR_SCHEMA_VERSION = "1.5.0";
+export const AIR_SCHEMA_VERSION = "1.6.0";
 
 export const semverSchema = z.string().regex(/^\d+\.\d+\.\d+$/);
 export const sha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
@@ -120,8 +120,49 @@ const screenSchema = z.strictObject({
   blocks: z.array(blockInstanceSchema).min(1),
 });
 
+/**
+ * NAVIGATION PRINCIPALE (1.6.0, D-086) — le RÉSULTAT ARCHITECTURAL, pas la
+ * catégorie qui l'a produit.
+ *
+ * Fait mesuré : `routes` n'était qu'un registre PLAT d'écrans. Aucune notion de
+ * destination principale. Le seul moyen d'exprimer « on peut aller au panier »
+ * était donc un `button` dans le CORPS de l'écran — mesuré sur le corpus v3 :
+ * **184 boutons de navigation pure sur 235, soit 1,7 par écran**, jusqu'à
+ * quatre empilés sous la liste des plats.
+ *
+ * 🔴 L'AIR NE CONNAÎT AUCUNE CATÉGORIE MÉTIER. Ni « restaurant », ni
+ * « boutique », ni « réservation ». Déduire l'archétype est un raisonnement du
+ * GÉNÉRATEUR ; le contrat porte sa conclusion — quelles destinations sont
+ * principales, dans quel ordre — jamais l'étiquette qui a servi à la produire.
+ * Sinon le compilateur devrait connaître les métiers, et le moteur cesserait
+ * d'être agnostique.
+ *
+ * Bornes 3–5 : en deçà une barre n'a pas lieu d'être, au-delà elle devient
+ * illisible sur un écran de téléphone.
+ */
+const primaryNavigationSchema = z.strictObject({
+  destinations: z
+    .array(
+      z.strictObject({
+        routeId: routeIdSchema,
+        /** Libellé de l'onglet — DONNÉE du document, jamais texte moteur (F3). */
+        label: localizedTextSchema,
+        /** Position dans la barre, à partir de 0. Unique, contiguë. */
+        order: z.number().int().min(0).max(4),
+      }),
+    )
+    .min(3)
+    .max(5),
+});
+
 const navigationSchema = z.strictObject({
   entryScreenId: screenIdSchema,
+  /**
+   * OPTIONNELLE : un document 1.5.0 n'en porte pas, et la migration n'en
+   * invente aucune — choisir les destinations principales à la place du
+   * document serait décider de son architecture.
+   */
+  primary: primaryNavigationSchema.optional(),
   routes: z
     .array(
       z.strictObject({

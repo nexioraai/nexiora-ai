@@ -96,6 +96,30 @@ const makeSheet = (c: Palette) =>
       marginTop: theme.space.xs,
     },
     fieldSpinner: { marginStart: theme.space.sm },
+    // — NAVIGATION PRINCIPALE (D-086) — compacte PAR CONSTRUCTION : sa hauteur
+    // est bornée par la cible tactile, pas par le contenu. C'est ce qui la
+    // distingue des quatre gros boutons qu'elle remplace, lesquels grandissaient
+    // avec leur libellé.
+    primaryNav: {
+      flexDirection: "row",
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+      backgroundColor: c.surface,
+      paddingTop: theme.space.xs,
+    },
+    primaryNavItem: {
+      flex: 1,
+      minHeight: theme.size.tapTarget,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: theme.space.xs,
+    },
+    primaryNavLabel: { fontSize: theme.font.label, color: c.muted },
+    primaryNavLabelActive: {
+      fontSize: theme.font.label,
+      color: c.primaryText,
+      fontWeight: theme.fontWeight.semibold,
+    },
     // — ListRow —
     row: {
       minHeight: theme.size.tapTarget,

@@ -180,7 +180,7 @@ RÈGLES NON NÉGOCIABLES :
 7. Réseau : policy "deny_by_default", domaines minimaux (l'API backend de l'app uniquement, ex. "api.deribfy.app").
 8. Aucun secret nulle part (pas de clé, token, password dans les configs).
 9. datasets : contentHash = 64 caractères hexadécimaux minuscules (empreinte du contenu initial) ; si tu inclus un dataset, invente une empreinte hexadécimale plausible.
-10. airSchemaVersion = "1.5.0". DIMENSIONNE L'APPLICATION SUR LE BESOIN, jamais sur un plafond : autant d'écrans et d'entités que le domaine en exige. Une app de catalogue avec panier, commande et suivi demande typiquement 6 à 9 écrans et 4 à 6 entités ; une app d'un seul usage peut n'en demander que 2. Le moteur compile sans difficulté 12 écrans et 8 entités [vérifié]. RÈGLE : tout écran déclaré DOIT être atteignable par au moins une action \`navigate\` depuis l'écran d'entrée, directement ou en chaîne — un écran que personne ne peut atteindre est un défaut, pas une réserve.
+10. airSchemaVersion = "1.6.0". DIMENSIONNE L'APPLICATION SUR LE BESOIN, jamais sur un plafond : autant d'écrans et d'entités que le domaine en exige. Une app de catalogue avec panier, commande et suivi demande typiquement 6 à 9 écrans et 4 à 6 entités ; une app d'un seul usage peut n'en demander que 2. Le moteur compile sans difficulté 12 écrans et 8 entités [vérifié]. RÈGLE : tout écran déclaré DOIT être atteignable par au moins une action \`navigate\` depuis l'écran d'entrée, directement ou en chaîne — un écran que personne ne peut atteindre est un défaut, pas une réserve.
 
 REGISTRE DES CAPABILITIES (allowlist fermée) :
 ${registryDigest()}
@@ -212,6 +212,21 @@ REGISTRE DES SMART BLOCKS (allowlist FERMÉE — blockType UNIQUEMENT parmi ces 
    · N'ÉCRIS AUCUN \`expectedTests\` dont le \`targetId\` est une action à effet \`capability\`. Ce serait promettre un comportement que rien ne tient.
    · Le besoin correspondant va dans \`intent.needs\` avec \`{kind:"unexpressible", reason:"le moteur n'exécute pas encore les effets capability (capabilitiesEmitCode: false)"}\`.
    Déclarer le besoin est juste ; le promettre est un mensonge. Le premier est exigé, le second interdit.
+
+18. LIGNE DE LISTE PRESSABLE — quand une entité possède un écran de détail, la LIGNE de la liste ouvre ce détail : déclare une action \`{trigger:{kind:"ui",blockId:<le bloc list>}, effect:{kind:"navigate",screenId:<le détail>}}\`. N'ÉCRIS JAMAIS un bouton « Voir le détail de X » pour cela. Mesuré sur le corpus précédent : 103 navigations sur 108 partaient d'un bouton, UNE SEULE d'une ligne de liste — l'inverse de ce qu'attend un utilisateur d'application mobile.
+
+19. ARCHITECTURE — tu es responsable de transformer l'intention en ARCHITECTURE, pas seulement en liste d'écrans. Identifie l'archétype, puis déduis les destinations principales, leur rôle et leur ORDRE. Références conceptuelles, à ADAPTER au besoin réellement exprimé — jamais à recopier :
+   · Restaurant   : Accueil | Menu | Commandes | Offres | Compte
+   · Boutique     : Accueil | Produits | Panier | Commandes | Compte
+   · Réservation  : Accueil | Services | Réservations | Compte
+   « Accueil » est le point commun structurel des trois. N'INVENTE AUCUNE destination que le besoin n'exige pas : une app sans programme de fidélité n'a pas d'onglet « Offres ».
+
+20. NAVIGATION PRINCIPALE — déclare \`navigation.primary.destinations\` : 3 à 5 entrées, chacune \`{routeId, label, order}\`, \`order\` contigu depuis 0. Le compilateur en fait une BARRE PERSISTANTE EN BAS DE L'ÉCRAN, comme toute application mobile de référence. RÈGLE GÉNÉRALE : **les destinations principales d'une application mobile sont regroupées dans une navigation persistante située en bas de l'écran ; elles ne doivent jamais être représentées par des boutons de navigation empilés dans le contenu.**
+
+21. INTERDICTION DU DOUBLON — un \`button\` placé SUR un écran qui est lui-même une destination de \`primary\`, et menant à une AUTRE destination de \`primary\`, est INTERDIT : la barre est déjà sous le doigt de l'utilisateur. C'est le défaut exact que la règle 20 supprime — « Mon panier » empilé sous la liste des plats alors que Panier est un onglet. Le validateur REFUSE le document (\`AIR_NAV_TAB_DUPLICATE\`).
+   EN REVANCHE, depuis un écran de FLUX (un détail, une étape de parcours), un bouton menant à un onglet est LÉGITIME : il fait avancer l'utilisateur — « Débloquer avec l'abonnement » depuis la fiche d'un programme verrouillé, « Commander » depuis un panier. Ne confonds pas une redondance avec une conversion.
+
+22. DESTINATION VIVANTE — chaque destination de \`primary\` doit mener à un écran qui porte au moins un bloc lié à une entité OU au moins une action. Le validateur REFUSE le document sinon. Une barre de navigation qui mène à un écran vide est pire que quatre boutons : elle est belle.
 
 RÈGLES BLOCS NON NÉGOCIABLES :
 A. Tout *FieldId d'un bloc référence un champ (fld_*) DE L'ENTITÉ LIÉE à ce bloc.

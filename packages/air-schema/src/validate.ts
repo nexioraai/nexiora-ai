@@ -70,6 +70,97 @@ export function validateAir(air: ProjectAir): AirDiagnostic[] {
     identities.push([n.id, `intent.needs[${i}]`]);
   });
 
+  // NAVIGATION PRINCIPALE (1.6.0, D-086) — quatre refus, chacun mesurable.
+  //
+  // Le quatrième est le plus important : une destination qui mène à un écran
+  // NON FONCTIONNEL produirait une barre magnifique menant à du vide. **Une
+  // navigation qui mène à du vide est pire que quatre boutons empilés : elle est
+  // belle.** Un écran est tenu pour fonctionnel s'il porte au moins un bloc lié
+  // à une entité, ou au moins une action. Un écran qui n'a ni l'un ni l'autre
+  // n'a rien à montrer et rien à faire.
+  if (air.navigation.primary !== undefined) {
+    const routeById = new Map(air.navigation.routes.map((r) => [r.id, r]));
+    const blocsDeLEcran = new Map(air.screens.map((s) => [s.id, s]));
+    const actionsParEcran = new Set<string>();
+    for (const a of air.actions) {
+      const t = a.trigger;
+      if (t.kind === "ui") {
+        const e = air.screens.find((s) => s.blocks.some((b) => b.id === t.blockId));
+        if (e !== undefined) actionsParEcran.add(e.id);
+      } else if (t.kind === "lifecycle" && t.screenId !== undefined) {
+        actionsParEcran.add(t.screenId);
+      }
+    }
+    const ordres = new Set<number>();
+    air.navigation.primary.destinations.forEach((d, i) => {
+      const path = `navigation.primary.destinations[${i}]`;
+      const route = routeById.get(d.routeId);
+      if (route === undefined) {
+        push("AIR_NAV_ROUTE_MISSING", path, `route "${d.routeId}" non déclarée`);
+        return;
+      }
+      if (ordres.has(d.order)) {
+        push("AIR_NAV_ORDER_DUPLICATE", path, `ordre ${String(d.order)} déjà utilisé`);
+      }
+      ordres.add(d.order);
+      const ecran = blocsDeLEcran.get(route.screenId);
+      if (ecran === undefined) {
+        push("AIR_NAV_SCREEN_MISSING", path, `écran "${route.screenId}" non déclaré`);
+        return;
+      }
+      const aDesDonnees = ecran.blocks.some((b) => b.entityId !== undefined);
+      const aUneAction = actionsParEcran.has(ecran.id);
+      if (!aDesDonnees && !aUneAction) {
+        push(
+          "AIR_NAV_DESTINATION_DEAD",
+          path,
+          `l'écran "${ecran.id}" n'a ni bloc lié à une entité ni action : une destination principale ne peut pas mener à un écran vide`,
+        );
+      }
+    });
+    // DOUBLON D'ONGLET (D-086) — un bouton placé SUR un onglet et menant à un
+    // AUTRE onglet est une redondance pure : la barre est déjà là, sous le
+    // doigt. C'est le défaut fondateur — quatre boutons sous la liste des plats,
+    // vers panier / commandes / compte, tous présents dans la barre.
+    //
+    // 🔴 CRITÈRE PRÉCIS, et voici pourquoi il l'est : un bouton depuis un écran
+    // de FLUX (un détail, une étape) vers un onglet n'est PAS un doublon, c'est
+    // un appel à l'action qui fait avancer l'utilisateur — « Débloquer avec
+    // l'abonnement » depuis la fiche d'un programme verrouillé. Le confondre
+    // avec le défaut reviendrait à interdire toute conversion.
+    const ecranDest = new Set<string>();
+    for (const d of air.navigation.primary.destinations) {
+      const r = routeById.get(d.routeId);
+      if (r !== undefined) ecranDest.add(r.screenId);
+    }
+    air.actions.forEach((action, i) => {
+      if (action.effect.kind !== "navigate" || action.trigger.kind !== "ui") return;
+      const bloc = action.trigger.blockId;
+      const source = air.screens.find((s) => s.blocks.some((b) => b.id === bloc));
+      if (source === undefined) return;
+      const type = source.blocks.find((b) => b.id === bloc)?.blockType;
+      if (type !== "button") return;
+      if (!ecranDest.has(source.id)) return;
+      if (!ecranDest.has(action.effect.screenId)) return;
+      push(
+        "AIR_NAV_TAB_DUPLICATE",
+        `actions[${i}]`,
+        `bouton sur l'onglet "${source.id}" menant à l'onglet "${action.effect.screenId}" : la navigation principale l'offre déjà`,
+      );
+    });
+
+    // Ordres CONTIGUS depuis 0 : un trou signifierait une position vide dans la
+    // barre, que le runtime devrait combler en inventant.
+    const attendus = [...air.navigation.primary.destinations.keys()];
+    if ([...ordres].sort((a, b) => a - b).join(",") !== attendus.join(",")) {
+      push(
+        "AIR_NAV_ORDER_NOT_CONTIGUOUS",
+        "navigation.primary",
+        `les ordres doivent être contigus depuis 0 (reçu : ${[...ordres].sort((a, b) => a - b).join(", ")})`,
+      );
+    }
+  }
+
   // AFFICHAGE DES RÉFÉRENCES (1.4.0) — le champ désigné doit exister SUR
   // L'ENTITÉ CIBLE, sinon la traversée afficherait du vide en croyant résoudre.
   air.entities.forEach((entity, i) => {
