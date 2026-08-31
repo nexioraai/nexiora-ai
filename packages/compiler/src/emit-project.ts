@@ -156,7 +156,18 @@ interface ScreenSlice {
       inputs: readonly { port: string; source: unknown }[];
       outputs: readonly { port: string; blockId: string; prop: string }[];
     }[];
-    entities: Record<string, { fields: readonly { id: string; name: string; type: string }[] }>;
+    entities: Record<
+      string,
+      {
+        fields: readonly {
+          id: string;
+          name: string;
+          type: string;
+          referencesEntityId?: string;
+          referenceDisplayFieldId?: string;
+        }[];
+      }
+    >;
   };
 }
 
@@ -260,7 +271,19 @@ function buildScreenSlice(air: ProjectAir, screen: ProjectAir["screens"][number]
       throw new EmitError("EMIT_ENTITY_MISSING", `${where}.${block.id}`, block.entityId);
     }
     entities[block.entityId] = {
-      fields: entity.fields.map((f) => ({ id: f.id, name: f.name, type: f.type })),
+      fields: entity.fields.map((f) => ({
+        id: f.id,
+        name: f.name,
+        type: f.type,
+        // TRAVERSÉE DE RELATION (1.4.0, D-064) : de quoi résoudre l'identifiant
+        // brut en une valeur lisible, sans que le runtime ait à deviner.
+        ...(f.referencesEntityId === undefined || f.referenceDisplayFieldId === undefined
+          ? {}
+          : {
+              referencesEntityId: f.referencesEntityId,
+              referenceDisplayFieldId: f.referenceDisplayFieldId,
+            }),
+      })),
     };
   }
 

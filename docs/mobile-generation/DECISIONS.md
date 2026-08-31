@@ -3911,3 +3911,40 @@ faux vert que ce chantier passe son temps à refuser.**
 ### Non-régression
 
 **657 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0.**
+
+---
+
+## D-064 — AIR 1.4.0 : la traversée de relation — 2026-08-31
+
+`FACT` — `relationTraversal: false` signifiait qu'un champ `reference` s'affichait
+en **IDENTIFIANT BRUT** : *« ent_plat_003 »* au lieu de *« Thiéboudienne »*.
+**6 occurrences mesurées au corpus gelé.**
+
+`FACT` — le champ déclarait `referencesEntityId` — vers **quoi** pointer — et
+**rien ne disait QUOI MONTRER**. Encore un câblage inexprimable, le quatrième de
+la session après l'intention, la liaison de slot et les titres d'état.
+
+### La levée
+
+`referenceDisplayFieldId`, optionnel, sur le champ. Le validateur exige qu'il
+existe **sur l'entité cible** et que le champ soit bien une référence.
+
+> **Deviner « le premier champ texte de la cible » aurait été une convention,
+> c'est-à-dire une supposition.** Le document déclare. Sans déclaration,
+> l'identifiant brut reste affiché — comportement 1.3.0 inchangé.
+
+### La preuve — au rendu
+
+`traversee.obs.tsx` : le panier de `resto-riche` affiche les **noms des plats**,
+et le contrôle vérifie qu'**aucun identifiant `ent_plat*` ne fuit à l'écran**.
+
+### Le cliquet a tenu, et il a été précisé
+
+Le test vérifiait qu'aucun BLOC n'accepte de chemin de relation. **C'est toujours
+vrai** — pas de `targetFieldId`, pas de `relationPath`. La traversée vit sur le
+**CHAMP**, pas sur le bloc. Le cliquet le dit désormais explicitement.
+
+### Non-régression
+
+**657 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0.**
+`RELEASE_TRAIN_V1.airSchemaVersion` → `1.4.0`.

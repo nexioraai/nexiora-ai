@@ -156,7 +156,11 @@ export const EXECUTION_ENVELOPE_V1: ExecutionEnvelope = {
   // traversée n'existe. Conséquence rendue : un champ `reference` s'affiche
   // en identifiant brut (mesuré sur artefact : une ligne de liste dont le
   // titre est une clé étrangère affiche `<entite>_row_<n>`).
-  relationTraversal: false,
+  // VRAI depuis D-064 : un champ `reference` dont le document déclare
+  // `referenceDisplayFieldId` est résolu en la valeur lisible de l'entité cible.
+  // Sans déclaration, l'identifiant brut reste affiché — on ne devine pas quel
+  // champ montrer, et l'enveloppe ne prétend pas le contraire.
+  relationTraversal: true,
 
   // Aucune prop de filtre, de tri ou de pagination au registre de blocs gelé.
   listFiltering: false,

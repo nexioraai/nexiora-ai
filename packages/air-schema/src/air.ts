@@ -17,7 +17,7 @@ import {
   testIdSchema,
 } from "./ids.ts";
 
-export const AIR_SCHEMA_VERSION = "1.3.0";
+export const AIR_SCHEMA_VERSION = "1.4.0";
 
 export const semverSchema = z.string().regex(/^\d+\.\d+\.\d+$/);
 export const sha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
@@ -157,6 +157,19 @@ const fieldSchema = z.strictObject({
   // validateur sémantique (un schéma zod ne voit pas les autres champs).
   enumValues: z.array(z.string().min(1)).min(1).optional(),
   referencesEntityId: entityIdSchema.optional(),
+  /**
+   * CHAMP D'AFFICHAGE DE LA RÉFÉRENCE (1.4.0, D-064).
+   *
+   * `referencesEntityId` disait vers QUOI pointer, jamais QUOI MONTRER. Un champ
+   * `reference` s'affichait donc en identifiant brut — mesuré : 6 occurrences au
+   * corpus, et `relationTraversal: false` le concédait. Deviner « le premier
+   * champ texte de la cible » aurait été une convention, c'est-à-dire une
+   * supposition ; le document le déclare.
+   *
+   * OPTIONNEL : sans lui, l'identifiant brut reste affiché — comportement 1.3.0
+   * inchangé, et la migration n'invente aucune cible.
+   */
+  referenceDisplayFieldId: fieldIdSchema.optional(),
 });
 
 const entitySchema = z.strictObject({

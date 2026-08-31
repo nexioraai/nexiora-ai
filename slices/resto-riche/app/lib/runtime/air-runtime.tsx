@@ -26,6 +26,9 @@ import { useCapabilityProvider } from "./capability-provider";
 export interface AirEffectData {
   kind: "navigate" | "capability" | "mutation" | "slot";
   screenId?: string;
+  /** Effet `mutation` (D-061) — l'entité écrite et l'opération. */
+  entityId?: string;
+  operation?: string;
   /** Effet `capability` (D-059) — transporté pour être INVOQUÉ, plus ignoré. */
   capability?: string;
   method?: string;
@@ -46,10 +49,23 @@ export interface AirBlockInstanceData {
   props: Readonly<Record<string, unknown>>;
 }
 
+/** Règle de validation (AIR `rules`, D-062) — appliquée AVANT toute écriture. */
+export interface AirRuleData {
+  entityId: string;
+  assertions: readonly {
+    fieldId: string;
+    operator: string;
+    value?: string | number | boolean | null;
+  }[];
+}
+
 export interface AirFieldData {
   id: string;
   name: string;
   type: string;
+  /** Traversée de relation (1.4.0, D-064) — vers quoi, et quoi montrer. */
+  referencesEntityId?: string;
+  referenceDisplayFieldId?: string;
 }
 
 export interface AirSlotInvocationData {
@@ -72,6 +88,8 @@ export interface AirScreenData {
   entities: Readonly<Record<string, { fields: readonly AirFieldData[] }>>;
   /** Slots LIÉS dont au moins une sortie alimente un bloc de cet écran (1.3.0). */
   slotInvocations?: readonly AirSlotInvocationData[];
+  /** Règles de validation des entités écrites depuis cet écran (D-062). */
+  rules?: readonly AirRuleData[];
 }
 
 export interface AirScreenProps {
@@ -81,6 +99,64 @@ export interface AirScreenProps {
 interface BlockRef {
   screen: AirScreenData;
   blockId: string;
+}
+
+/**
+ * APPLICATION DES RÈGLES (D-062) — `air.rules` n'était lu NULLE PART.
+ *
+ * `rulesEnforced: false` : un document pouvait déclarer « le téléphone est
+ * obligatoire » et l'app écrivait sans lui. La règle est désormais évaluée
+ * AVANT l'écriture, et une violation ANNULE la mutation.
+ *
+ * Fermé par construction : seuls les opérateurs du schéma sont évalués, aucune
+ * expression arbitraire. Un opérateur inconnu ne bloque JAMAIS — refuser sur
+ * une règle qu'on ne sait pas lire serait s'arroger un jugement.
+ */
+function reglesRespectees(
+  regles: readonly AirRuleData[] | undefined,
+  entityId: string,
+  valeurs: Readonly<Record<string, string>>,
+): boolean {
+  for (const regle of regles ?? []) {
+    if (regle.entityId !== entityId) continue;
+    for (const a of regle.assertions) {
+      const brut = valeurs[a.fieldId];
+      const nombre = brut === undefined ? Number.NaN : Number(brut);
+      const attendu = a.value;
+      switch (a.operator) {
+        case "required":
+          if (brut === undefined || brut.trim() === "") return false;
+          break;
+        case "eq":
+          if (String(brut) !== String(attendu)) return false;
+          break;
+        case "neq":
+          if (String(brut) === String(attendu)) return false;
+          break;
+        case "gt":
+          if (!(nombre > Number(attendu))) return false;
+          break;
+        case "gte":
+          if (!(nombre >= Number(attendu))) return false;
+          break;
+        case "lt":
+          if (!(nombre < Number(attendu))) return false;
+          break;
+        case "lte":
+          if (!(nombre <= Number(attendu))) return false;
+          break;
+        case "in":
+          if (!Array.isArray(attendu) || !attendu.map(String).includes(String(brut))) return false;
+          break;
+        case "matches":
+          if (brut === undefined || !new RegExp(String(attendu)).test(brut)) return false;
+          break;
+        default:
+          break;
+      }
+    }
+  }
+  return true;
 }
 
 function block(screen: AirScreenData, blockId: string): AirBlockInstanceData {
@@ -180,6 +256,29 @@ function useBlockVisible(screen: AirScreenData, blockId: string): boolean {
   return condition.kind === "entity_empty" ? vide : !vide;
 }
 
+/**
+ * TRAVERSÉE DE RELATION (D-064) — `relationTraversal: false` signifiait qu'un
+ * champ `reference` s'affichait en IDENTIFIANT BRUT : « ent_plat_003 » au lieu
+ * de « Thiéboudienne ». Mesuré : 6 occurrences au corpus.
+ *
+ * La résolution n'a lieu que si le document a DÉCLARÉ quoi montrer. Sans
+ * déclaration, l'identifiant reste affiché — on ne devine pas.
+ */
+function useResolveField(
+  screen: AirScreenData,
+  entityId: string | undefined,
+): (fieldId: string, brut: string | undefined) => string | undefined {
+  const provider = useDataProvider();
+  return (fieldId, brut) => {
+    if (brut === undefined || entityId === undefined) return brut;
+    const champ = screen.entities[entityId]?.fields.find((f) => f.id === fieldId);
+    const cible = champ?.referencesEntityId;
+    const affiche = champ?.referenceDisplayFieldId;
+    if (cible === undefined || affiche === undefined) return brut;
+    return provider.getInstance(cible, brut)?.values[affiche] ?? brut;
+  };
+}
+
 function str(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
@@ -187,8 +286,9 @@ function str(value: unknown): string | undefined {
 function useDispatch(screen: AirScreenData) {
   const navigation = useNavigation();
   const capabilities = useCapabilityProvider();
+  const data = useDataProvider();
   return useMemo(
-    () => (actionId: string | undefined) => {
+    () => (actionId: string | undefined, values?: Readonly<Record<string, string>>) => {
       if (actionId === undefined) return;
       const effect = screen.actions[actionId];
       if (effect?.kind === "navigate" && effect.screenId !== undefined) {
@@ -206,9 +306,28 @@ function useDispatch(screen: AirScreenData) {
         });
         return;
       }
-      // mutation : non-opération v1 (Phase 5+). slot : invoqué au RENDU, pas ici.
+      // MUTATION (D-061) : l'effet n'est plus une non-opération. L'écriture est
+      // présentée au fournisseur de données ; un fournisseur en LECTURE SEULE
+      // n'expose pas la méthode et l'appel est simplement absent — jamais un
+      // faux succès.
+      if (effect?.kind === "mutation" && effect.entityId !== undefined) {
+        const cible = effect.entityId;
+        const saisie = values ?? {};
+        // D-062 : une écriture qui viole une règle déclarée est ANNULÉE.
+        if (!reglesRespectees(screen.rules, cible, saisie)) return;
+        if (effect.operation === "create") data.create?.(cible, saisie);
+        else if (effect.operation === "update") {
+          const id = saisie.id;
+          if (id !== undefined) data.update?.(cible, id, saisie);
+        } else if (effect.operation === "delete") {
+          const id = saisie.id;
+          if (id !== undefined) data.remove?.(cible, id);
+        }
+        return;
+      }
+      // slot : invoqué au RENDU, pas ici.
     },
-    [navigation, screen, capabilities],
+    [navigation, screen, capabilities, data],
   );
 }
 
@@ -293,6 +412,7 @@ export function AirDetailHeader({
   const props = useBlockProps(screen, blockId);
   const provider = useDataProvider();
   const statut = useDataStatus(b.entityId);
+  const resoudre = useResolveField(screen, b.entityId);
   if (!visible) return null;
   if (b.entityId === undefined) throw new Error(`AIR_RUNTIME_ENTITY_MISSING:${blockId}`);
   const instance = provider.getInstance(b.entityId, itemId);
@@ -309,7 +429,9 @@ export function AirDetailHeader({
           ? ({ kind: "empty", title: emptyTitle, message: str(props.emptyMessage) } as const)
           : ({ kind: "ready" } as const);
   const value = (fieldId: unknown): string =>
-    typeof fieldId === "string" ? (instance?.values[fieldId] ?? "") : "";
+    typeof fieldId === "string"
+      ? (resoudre(fieldId, instance?.values[fieldId]) ?? "")
+      : "";
   const badgeIds = Array.isArray(props.badgeFieldIds) ? props.badgeFieldIds : undefined;
   return (
     <DetailHeaderBlock
@@ -334,6 +456,7 @@ export function AirList({ screen, blockId }: BlockRef) {
   const props = useBlockProps(screen, blockId);
   const provider = useDataProvider();
   const statut = useDataStatus(b.entityId);
+  const resoudre = useResolveField(screen, b.entityId);
   const onItemNavigate = useItemNavigate(screen, blockId);
   if (!visible) return null;
   if (b.entityId === undefined) throw new Error(`AIR_RUNTIME_ENTITY_MISSING:${blockId}`);
@@ -343,10 +466,10 @@ export function AirList({ screen, blockId }: BlockRef) {
   }
   const instances = provider.listInstances(b.entityId);
   const pick = (fieldId: unknown, values: Readonly<Record<string, string>>) =>
-    typeof fieldId === "string" ? values[fieldId] : undefined;
+    typeof fieldId === "string" ? resoudre(fieldId, values[fieldId]) : undefined;
   const items: ListItemData[] = instances.map((instance) => ({
     id: instance.id,
-    title: instance.values[titleFieldId] ?? "",
+    title: resoudre(titleFieldId, instance.values[titleFieldId]) ?? "",
     subtitle: pick(props.subtitleFieldId, instance.values),
     trailing: pick(props.trailingFieldId, instance.values),
     badge: pick(props.badgeFieldId, instance.values),
@@ -409,10 +532,20 @@ export function AirForm({ screen, blockId }: BlockRef) {
         setValues((prev) => ({ ...prev, [fieldId]: value }))
       }
       submitLabel={submitLabel}
-      onSubmit={() => dispatch(actionId)}
+      // D-061 : les valeurs SAISIES accompagnent l'action — sans elles, une
+      // création écrirait un enregistrement vide.
+      onSubmit={() => dispatch(actionId, values)}
       // États du registre 1.1.0 (D-060) : `loading` et `error` deviennent
       // atteignables dès que la source les rapporte ET que le titre est déclaré.
-      state={statut === "loading" || statut === "error" ? statut : "ready"}
+      // `empty` pour un formulaire = AUCUN champ à saisir. État réel, pas une
+      // commodité : un formulaire sans champ rendu vide serait un écran muet.
+      state={
+        statut === "loading" || statut === "error"
+          ? statut
+          : fields.length === 0 && str(props.emptyTitle) !== undefined
+            ? "empty"
+            : "ready"
+      }
       loadingTitle={str(props.loadingTitle)}
       emptyTitle={str(props.emptyTitle)}
       errorMessage={str(props.errorMessage)}

@@ -21,7 +21,9 @@ const entities = [
     F("commande","numero","string",true), {...F("commande","statut","enum",true), enumValues:["recue","en_preparation","prete","retiree"]}, F("commande","total","number",true),
     F("commande","passee_le","datetime",true), F("commande","retrait_prevu","datetime"), F("commande","note","text") ] },
   { id: "ent_ligne", name: "ligne", fields: [
-    {...F("ligne","plat","reference",true), referencesEntityId:"ent_plat"}, F("ligne","quantite","number",true), F("ligne","prix_ligne","number",true) ] },
+    {...F("ligne","plat","reference",true), referencesEntityId:"ent_plat",
+      // D-064 : le panier affichait « ent_plat_003 ». Il affiche le NOM du plat.
+      referenceDisplayFieldId:"fld_plat_nom"}, F("ligne","quantite","number",true), F("ligne","prix_ligne","number",true) ] },
   { id: "ent_client", name: "client", fields: [
     F("client","nom","string",true), F("client","telephone","string",true), F("client","email","string") ] },
 ];
@@ -141,7 +143,7 @@ const actionSlot = {
   },
 };
 
-const air = { airSchemaVersion:"1.3.0", projectId:"prj_resto_riche", intent,
+const air = { airSchemaVersion:"1.4.0", projectId:"prj_resto_riche", intent,
   app:{ name:"Chez Nous", slug:"chez-nous", locales:{ userLanguage:"fr-FR", appLocales:["fr-FR"],
     defaultAppLocale:"fr-FR", contentLocales:["fr-FR"], rtlSupported:false } },
   screens, navigation:{ entryScreenId:"scr_menu", routes: screens.map((s)=>({ id:`nav_${s.id.slice(4)}`, screenId:s.id })) },
@@ -179,7 +181,7 @@ console.log("DOCUMENT ÉCRIT À LA MAIN — restaurant « Chez Nous »");
 console.log("  écrans:", screens.length, "· entités:", entities.length, "· blocs:", screens.flatMap(s=>s.blocks).length,
   "· actions:", actions.length, "· champs:", entities.flatMap(e=>e.fields).length);
 let v; try { v = assertValidAir(air); console.log("① validateurs .......... 🟢 ACCEPTÉ"); }
-catch (e) { console.log("① validateurs .......... 🔴"); for(const d of (e.diagnostics??[])) console.log("   ",d.code,d.path,d.message); process.exit(1); }
+catch (e) { console.log("① validateurs .......... 🔴", e.message?.slice(0,300)); for(const d of (e.diagnostics??[])) console.log("   ",d.code,d.path,d.message); process.exit(1); }
 // IMPLÉMENTATION du slot — code d'auteur, soumis à la politique AST de
 // l'Oracle comme n'importe quel slot. Il est désormais RÉELLEMENT APPELÉ.
 const sourceSlot = `export function runSlot(entrees: { lignes: { fld_ligne_prix_ligne?: string }[]; devise: string }): { totalAffiche: string } {

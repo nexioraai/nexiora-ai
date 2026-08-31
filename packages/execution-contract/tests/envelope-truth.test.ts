@@ -234,14 +234,22 @@ describe("véracité de l'enveloppe — slots, règles, RTL, thème", () => {
 });
 
 describe("véracité de l'enveloppe — traversée de relation et filtrage", () => {
-  it("aucun bloc n'accepte de champ de l'entité CIBLE d'une référence", () => {
+  // ÉDITION CONSCIENTE (2026-08-31, D-064) : la traversée existe, mais PAS là où
+  // ce cliquet la cherchait. Il vérifiait que les BLOCS n'acceptent aucun chemin
+  // de relation — et c'est toujours vrai : aucune prop `targetFieldId` ni
+  // `relationPath`. La traversée vit sur le CHAMP (`referenceDisplayFieldId`),
+  // pas sur le bloc : le document déclare quoi montrer, le runtime résout.
+  // Un champ sans déclaration continue d'afficher son identifiant brut.
+  it("la traversée vit sur le CHAMP, jamais sur le bloc (D-064)", () => {
     const defs = read("blocks/src/definitions.ts");
-    // Toutes les props de champ sont typées `fieldRef` — un motif unique,
-    // sans notion de chemin ni de cible.
     expect(defs).toContain("const fieldRef = z.string()");
+    // Les blocs restent sans notion de chemin : la propriété d'origine tient.
     expect(defs).not.toContain("targetFieldId");
     expect(defs).not.toContain("relationPath");
-    expect(EXECUTION_ENVELOPE_V1.relationTraversal).toBe(false);
+    // Et la résolution est CONDITIONNELLE à une déclaration du document.
+    expect(RUNTIME).toContain("referenceDisplayFieldId");
+    expect(RUNTIME).toContain("useResolveField");
+    expect(EXECUTION_ENVELOPE_V1.relationTraversal).toBe(true);
   });
 
   it("aucun bloc n'accepte de filtre, de tri ou de pagination", () => {

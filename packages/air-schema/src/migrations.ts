@@ -52,6 +52,17 @@ export const AIR_MIGRATIONS: readonly AirMigration[] = [
       "gate de fidélité continue de compter sa promesse comme morte.",
     migrate: (document) => document,
   },
+  {
+    from: "1.3.0",
+    to: "1.4.0",
+    description:
+      "AIR 1.4.0 (D-064) : ajout du champ OPTIONNEL `referenceDisplayFieldId` " +
+      "sur les champs — QUEL champ de l'entité cible afficher à la place de " +
+      "l'identifiant brut. Identité : choisir la cible à la place du document " +
+      "serait une convention, donc une supposition. Un champ `reference` sans " +
+      "ce pointeur continue d'afficher son identifiant — c'est le FAIT.",
+    migrate: (document) => document,
+  },
 ];
 
 export class AirMigrationError extends Error {

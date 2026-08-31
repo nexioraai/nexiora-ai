@@ -29,7 +29,7 @@ export const RELEASE_TRAIN_V1 = {
   // `binding` sur l'effet `slot` — d'où viennent ses entrées, où vont ses
   // sorties. Même mécanique qu'en 1.1.0 et 1.2.0 : corpus gelé byte-identique,
   // migré en mémoire, aucune liaison inventée.
-  airSchemaVersion: "1.3.0",
+  airSchemaVersion: "1.4.0",
   // Porté à 1.1.0 le 2026-08-31 (D-060) : montée STRICTEMENT ADDITIVE du
   // registre de blocs — `form` gagne `loading`/`empty`, `detail_header` gagne un
   // état, les trois blocs à données gagnent les props de titres. Rien n'est

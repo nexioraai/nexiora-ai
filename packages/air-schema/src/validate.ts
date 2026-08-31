@@ -70,6 +70,28 @@ export function validateAir(air: ProjectAir): AirDiagnostic[] {
     identities.push([n.id, `intent.needs[${i}]`]);
   });
 
+  // AFFICHAGE DES RÉFÉRENCES (1.4.0) — le champ désigné doit exister SUR
+  // L'ENTITÉ CIBLE, sinon la traversée afficherait du vide en croyant résoudre.
+  air.entities.forEach((entity, i) => {
+    entity.fields.forEach((field, j) => {
+      if (field.referenceDisplayFieldId === undefined) return;
+      const path = `entities[${i}].fields[${j}].referenceDisplayFieldId`;
+      if (field.type !== "reference" || field.referencesEntityId === undefined) {
+        push("AIR_FIELD_DISPLAY_NOT_REFERENCE", path, `champ "${field.id}" n'est pas une référence`);
+        return;
+      }
+      const cible = entityById.get(field.referencesEntityId);
+      if (cible === undefined) return;
+      if (!cible.fields.some((f) => f.id === field.referenceDisplayFieldId)) {
+        push(
+          "AIR_FIELD_DISPLAY_MISSING",
+          path,
+          `"${field.referenceDisplayFieldId}" absent de l'entité "${cible.id}"`,
+        );
+      }
+    });
+  });
+
   // LIAISON DES SLOTS (1.3.0) — une liaison partielle est REFUSÉE. Un port
   // d'entrée non lié produirait un `undefined` silencieux dans du code
   // d'auteur ; un port inconnu ferait croire à un câblage qui n'existe pas.

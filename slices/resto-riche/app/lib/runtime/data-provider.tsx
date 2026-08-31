@@ -33,6 +33,20 @@ export interface DataProvider {
    * n'était pas non atteinte — elle était inatteignable (APP-D003).
    */
   status?(entityId: string): DataStatus;
+  /**
+   * ÉCRITURE (1.2.0, D-061) — OPTIONNELLE.
+   *
+   * Sans elle, une action `mutation` reste une non-opération et le moteur le
+   * DIT (l'enveloppe le déclare, la gate de fidélité compte la promesse morte).
+   * Avec elle, un bouton « Commander » commande réellement.
+   *
+   * Retourne `true` si l'écriture a été HONORÉE. Jamais un `void` optimiste :
+   * un appelant doit pouvoir distinguer « écrit » de « refusé », sinon on
+   * recrée `APP-D002` — une promesse que rien ne fonde.
+   */
+  create?(entityId: string, values: Readonly<Record<string, string>>): boolean;
+  update?(entityId: string, instanceId: string, values: Readonly<Record<string, string>>): boolean;
+  remove?(entityId: string, instanceId: string): boolean;
 }
 
 export const EMPTY_DATA_PROVIDER: DataProvider = {

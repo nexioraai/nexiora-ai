@@ -63,6 +63,9 @@ export interface AirFieldData {
   id: string;
   name: string;
   type: string;
+  /** Traversée de relation (1.4.0, D-064) — vers quoi, et quoi montrer. */
+  referencesEntityId?: string;
+  referenceDisplayFieldId?: string;
 }
 
 export interface AirSlotInvocationData {
@@ -253,6 +256,29 @@ function useBlockVisible(screen: AirScreenData, blockId: string): boolean {
   return condition.kind === "entity_empty" ? vide : !vide;
 }
 
+/**
+ * TRAVERSÉE DE RELATION (D-064) — `relationTraversal: false` signifiait qu'un
+ * champ `reference` s'affichait en IDENTIFIANT BRUT : « ent_plat_003 » au lieu
+ * de « Thiéboudienne ». Mesuré : 6 occurrences au corpus.
+ *
+ * La résolution n'a lieu que si le document a DÉCLARÉ quoi montrer. Sans
+ * déclaration, l'identifiant reste affiché — on ne devine pas.
+ */
+function useResolveField(
+  screen: AirScreenData,
+  entityId: string | undefined,
+): (fieldId: string, brut: string | undefined) => string | undefined {
+  const provider = useDataProvider();
+  return (fieldId, brut) => {
+    if (brut === undefined || entityId === undefined) return brut;
+    const champ = screen.entities[entityId]?.fields.find((f) => f.id === fieldId);
+    const cible = champ?.referencesEntityId;
+    const affiche = champ?.referenceDisplayFieldId;
+    if (cible === undefined || affiche === undefined) return brut;
+    return provider.getInstance(cible, brut)?.values[affiche] ?? brut;
+  };
+}
+
 function str(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
@@ -386,6 +412,7 @@ export function AirDetailHeader({
   const props = useBlockProps(screen, blockId);
   const provider = useDataProvider();
   const statut = useDataStatus(b.entityId);
+  const resoudre = useResolveField(screen, b.entityId);
   if (!visible) return null;
   if (b.entityId === undefined) throw new Error(`AIR_RUNTIME_ENTITY_MISSING:${blockId}`);
   const instance = provider.getInstance(b.entityId, itemId);
@@ -402,7 +429,9 @@ export function AirDetailHeader({
           ? ({ kind: "empty", title: emptyTitle, message: str(props.emptyMessage) } as const)
           : ({ kind: "ready" } as const);
   const value = (fieldId: unknown): string =>
-    typeof fieldId === "string" ? (instance?.values[fieldId] ?? "") : "";
+    typeof fieldId === "string"
+      ? (resoudre(fieldId, instance?.values[fieldId]) ?? "")
+      : "";
   const badgeIds = Array.isArray(props.badgeFieldIds) ? props.badgeFieldIds : undefined;
   return (
     <DetailHeaderBlock
@@ -427,6 +456,7 @@ export function AirList({ screen, blockId }: BlockRef) {
   const props = useBlockProps(screen, blockId);
   const provider = useDataProvider();
   const statut = useDataStatus(b.entityId);
+  const resoudre = useResolveField(screen, b.entityId);
   const onItemNavigate = useItemNavigate(screen, blockId);
   if (!visible) return null;
   if (b.entityId === undefined) throw new Error(`AIR_RUNTIME_ENTITY_MISSING:${blockId}`);
@@ -436,10 +466,10 @@ export function AirList({ screen, blockId }: BlockRef) {
   }
   const instances = provider.listInstances(b.entityId);
   const pick = (fieldId: unknown, values: Readonly<Record<string, string>>) =>
-    typeof fieldId === "string" ? values[fieldId] : undefined;
+    typeof fieldId === "string" ? resoudre(fieldId, values[fieldId]) : undefined;
   const items: ListItemData[] = instances.map((instance) => ({
     id: instance.id,
-    title: instance.values[titleFieldId] ?? "",
+    title: resoudre(titleFieldId, instance.values[titleFieldId]) ?? "",
     subtitle: pick(props.subtitleFieldId, instance.values),
     trailing: pick(props.trailingFieldId, instance.values),
     badge: pick(props.badgeFieldId, instance.values),

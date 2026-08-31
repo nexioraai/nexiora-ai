@@ -1,5 +1,5 @@
 {
-  "airSchemaVersion": "1.3.0",
+  "airSchemaVersion": "1.4.0",
   "projectId": "prj_resto_riche",
   "app": {
     "name": "Chez Nous",
@@ -683,7 +683,8 @@
           "name": "plat",
           "type": "reference",
           "required": true,
-          "referencesEntityId": "ent_plat"
+          "referencesEntityId": "ent_plat",
+          "referenceDisplayFieldId": "fld_plat_nom"
         },
         {
           "id": "fld_ligne_quantite",
