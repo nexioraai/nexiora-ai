@@ -1,5 +1,5 @@
 {
-  "airSchemaVersion": "1.1.0",
+  "airSchemaVersion": "1.2.0",
   "projectId": "prj_resto_riche",
   "app": {
     "name": "Chez Nous",
@@ -947,5 +947,84 @@
       "kind": "contract",
       "targetId": "ent_commande"
     }
-  ]
+  ],
+  "intent": {
+    "request": "Je veux une application pour mon restaurant : la carte avec des photos et les prix, pouvoir chercher un plat, un panier, passer commande en laissant mes coordonnées, et pouvoir suivre mes commandes.",
+    "requestLocale": "fr-FR",
+    "needs": [
+      {
+        "id": "need_carte",
+        "statement": "voir la carte du restaurant",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_menu",
+            "ent_plat"
+          ]
+        }
+      },
+      {
+        "id": "need_prix",
+        "statement": "voir les prix des plats",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "ent_plat",
+            "scr_plat"
+          ]
+        }
+      },
+      {
+        "id": "need_panier",
+        "statement": "un panier",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_panier",
+            "act_ajouter_panier"
+          ]
+        }
+      },
+      {
+        "id": "need_commander",
+        "statement": "passer commande en laissant mes coordonnées",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_form",
+            "act_valider",
+            "scr_confirmation"
+          ]
+        }
+      },
+      {
+        "id": "need_suivi",
+        "statement": "suivre mes commandes",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_commandes",
+            "scr_commande",
+            "ent_commande"
+          ]
+        }
+      },
+      {
+        "id": "need_photos",
+        "statement": "des photos sur les plats de la carte",
+        "resolution": {
+          "kind": "unexpressible",
+          "reason": "le registre de Smart Blocks v1.0.0 est GELE a 6 types (header, list, detail_header, form, button, empty_state) et ne comporte aucun bloc image. Leve par le registre v2 (LOT D) ; jusque-la, le besoin est porte au document, pas a l'application."
+        }
+      },
+      {
+        "id": "need_recherche",
+        "statement": "chercher un plat",
+        "resolution": {
+          "kind": "unexpressible",
+          "reason": "aucun bloc de recherche au registre gele, et l'enveloppe d'execution n'expose aucune operation de filtrage (dataOperations = list, get)."
+        }
+      }
+    ]
+  }
 }
