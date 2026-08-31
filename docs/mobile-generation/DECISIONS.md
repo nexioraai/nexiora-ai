@@ -4510,3 +4510,55 @@ React, gates. **Aucune n'a jamais vu l'application tourner sur du matériel.**
 
 `corpus-v2` reste **gelé et intact** ; le nouveau projet vit sous
 `slices/v3-resto-quartier/`.
+
+---
+
+## D-083 — L'APPLICATION QU'ON ALLAIT ENVOYER N'ÉCRIVAIT RIEN — 2026-08-31
+
+**Déclencheur propriétaire** : *« est-ce que tu as bien vérifié l'appli avant de
+me l'envoyer ? »* **Réponse honnête : partiellement.** J'avais vérifié la
+compilation et le rendu. **Pas le comportement.** Le build était déjà lancé.
+
+### Le défaut
+
+`FACT` — l'inspection du projet RÉEL, pressé écran par écran : **116 contrôles
+pressés, 0 écriture.**
+
+`FACT` — le document déclare pourtant **4 `mutation`** et **4 blocs `form`**. Mais
+les mutations sont câblées sur des **BOUTONS**, jamais sur les formulaires — et
+c'est la forme la plus naturelle : *« Valider » est un bouton.*
+
+`FACT` — or l'état d'un formulaire vivait **strictement par bloc** (`D-066`,
+écrit le matin même). **Un bouton n'avait accès à rien.** L'écriture partait donc
+vide, et la règle de validation la refusait.
+
+`CONCLUSION` — **l'utilisateur aurait rempli le formulaire, appuyé sur
+« Valider », et rien ne se serait passé. Sans le moindre message.** C'est
+`APP-D002` à l'identique : une promesse que rien ne fonde.
+
+### La correction
+
+`FormStore.readAll()` — une action portée par un bouton lit les valeurs de **tous
+les formulaires montés**. Un `AirForm` continue de transmettre les siennes en
+priorité ; le bouton prend le relais quand il n'y en a pas.
+
+`FACT` — après correction : **116 contrôles pressés · 3 écritures réelles**
+(`create:ent_client` ×3).
+
+### 🔴 CE QUE MA GATE RACINE NE VOYAIT PAS — corrigé aussi
+
+`FACT` — `gate:app-rendu` **montait** les écrans sans jamais **presser** un seul
+contrôle. Un écran peut se rendre parfaitement et n'avoir que des boutons muets —
+c'était exactement `APP-D002`.
+
+**La gate presse désormais chaque contrôle des 164 écrans des 26 applications.**
+Sans cela, ce défaut serait reparti en build à la prochaine occasion.
+
+> C'est la **cinquième fois** de la session qu'un défaut vit dans mes propres
+> instruments — et la deuxième fois que c'est la question du propriétaire, pas
+> une de mes gates, qui le débusque.
+
+### Non-régression
+
+**659 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0 ·
+26/26 compilent · 164 écrans montés ET pressés · 0 problème.**

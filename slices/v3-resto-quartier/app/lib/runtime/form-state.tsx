@@ -16,12 +16,15 @@ export type FormValues = Readonly<Record<string, string>>;
 
 export interface FormStore {
   read(blockId: string): FormValues;
+  /** Fusion de tous les formulaires — pour une action portée par un BOUTON. */
+  readAll(): FormValues;
   write(blockId: string, values: FormValues): void;
 }
 
 /** Magasin INERTE : chaque lecture rend le vide. Comportement d'avant D-066. */
 export const EMPTY_FORM_STORE: FormStore = {
   read: () => ({}),
+  readAll: () => ({}),
   write: () => undefined,
 };
 
@@ -37,6 +40,7 @@ export function FormStateRoot({ children }: PropsWithChildren) {
   const store = useMemo<FormStore>(
     () => ({
       read: (blockId) => magasin[blockId] ?? {},
+      readAll: () => Object.assign({}, ...Object.values(magasin)) as FormValues,
       write: (blockId, values) => {
         setMagasin((prec) => ({ ...prec, [blockId]: values }));
       },
@@ -44,6 +48,21 @@ export function FormStateRoot({ children }: PropsWithChildren) {
     [magasin],
   );
   return <FormContext.Provider value={store}>{children}</FormContext.Provider>;
+}
+
+/**
+ * Valeurs saisies dans TOUS les formulaires montés (D-083).
+ *
+ * Défaut trouvé en pressant l'application réellement envoyée : les documents
+ * générés câblent la mutation sur un BOUTON, pas sur le formulaire — c'est même
+ * la forme la plus naturelle (« Valider » est un bouton). Or l'état vivait
+ * strictement par bloc : le bouton n'avait accès à RIEN. L'utilisateur
+ * remplissait, appuyait, et la règle de validation refusait une saisie vide.
+ * **Silencieusement.** Exactement la famille de défaut que ce chantier traque.
+ */
+export function useAllFormValues(): FormValues {
+  const store = useContext(FormContext);
+  return store.readAll();
 }
 
 export function useFormValues(

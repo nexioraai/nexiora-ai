@@ -84,6 +84,21 @@ describe("GATE RACINE — les applications émises se MONTENT vraiment", () => {
           (n) => typeof (n.props as { testID?: string }).testID === "string",
         ).length;
         if (ids === 0) problemes.push(`${app}/${f} — AUCUNE identité adressable`);
+        // D-083 : PRESSER, pas seulement monter. Un écran peut se rendre
+        // parfaitement et n'avoir que des boutons muets — c'était `APP-D002`, et
+        // c'est ce qui a failli partir en build : les mutations étaient câblées
+        // sur des BOUTONS, qui n'avaient accès à aucune valeur saisie.
+        try {
+          act(() => {
+            for (const b of r!.root.findAll(
+              (n) => typeof (n.props as { onPress?: unknown }).onPress === "function",
+            )) {
+              (b.props as { onPress: () => void }).onPress();
+            }
+          });
+        } catch (e) {
+          problemes.push(`${app}/${f} — PRESSION FATALE : ${e instanceof Error ? e.message : String(e)}`);
+        }
         identites += ids;
         const textes = r!.root
           .findAll(() => true)

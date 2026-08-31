@@ -22,7 +22,7 @@ import type { FormFieldSpec, ListItemData } from "../blocks/contracts";
 import { useDataProvider } from "./data-provider";
 import { useSlotRegistry } from "./slot-provider";
 import { useCapabilityProvider } from "./capability-provider";
-import { useFormValues } from "./form-state";
+import { useAllFormValues, useFormValues } from "./form-state";
 
 export interface AirEffectData {
   kind: "navigate" | "capability" | "mutation" | "slot";
@@ -302,6 +302,11 @@ function useDispatch(screen: AirScreenData) {
   const navigation = useNavigation();
   const capabilities = useCapabilityProvider();
   const data = useDataProvider();
+  // D-083 : une action `mutation` portée par un BOUTON n'a aucune valeur propre.
+  // Les documents générés câblent pourtant « Valider » sur un bouton, pas sur le
+  // formulaire. Sans cette lecture, l'écriture partait vide et la règle de
+  // validation la refusait — en silence.
+  const saisies = useAllFormValues();
   return useMemo(
     () => (actionId: string | undefined, values?: Readonly<Record<string, string>>) => {
       if (actionId === undefined) return;
@@ -327,7 +332,7 @@ function useDispatch(screen: AirScreenData) {
       // faux succès.
       if (effect?.kind === "mutation" && effect.entityId !== undefined) {
         const cible = effect.entityId;
-        const saisie = values ?? {};
+        const saisie = values ?? saisies;
         // D-062 : une écriture qui viole une règle déclarée est ANNULÉE.
         if (!reglesRespectees(screen.rules, cible, saisie)) return;
         let ecrit = false;
@@ -349,7 +354,7 @@ function useDispatch(screen: AirScreenData) {
       }
       // slot : invoqué au RENDU, pas ici.
     },
-    [navigation, screen, capabilities, data],
+    [navigation, screen, capabilities, data, saisies],
   );
 }
 
