@@ -3866,3 +3866,48 @@ couvrait `capability`/`mutation`/`slot` ; **les trois ont désormais une branche
 ### Non-régression
 
 **657 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0.**
+
+---
+
+## D-062 / D-063 — Les RÈGLES s'appliquent, le drapeau RTL agit — 2026-08-31
+
+### D-062 — `rulesEnforced: false → true`
+
+`FACT` — `air.rules` n'était lu par **AUCUN étage**. Un document pouvait déclarer
+*« le téléphone est obligatoire »* et l'application écrivait sans lui.
+**67 règles déclarées au corpus, 0 appliquée.**
+
+Les règles de `kind: "validation"` sont désormais évaluées **AVANT toute
+écriture** ; une violation **ANNULE la mutation**. Fermé par construction : seuls
+les 9 opérateurs du schéma sont évalués. **Un opérateur inconnu ne bloque
+JAMAIS** — refuser sur une règle qu'on ne sait pas lire serait s'arroger un
+jugement.
+
+**Portée déclarée, pas élargie en douce** : `authorization` n'est **PAS**
+appliquée — elle suppose une identité que le moteur n'a pas. Le cliquet le
+vérifie.
+
+**67 règles → 67 appliquées.**
+
+### D-063 — `rtlFlagEffective: false → true`
+
+`FACT` — `app.locales.rtlSupported` était transporté par le schéma et lu par
+aucun étage : **deux documents, l'un RTL l'autre non, produisaient le MÊME
+artefact.** Le non-négociable #16 n'était pas tenu.
+
+Le drapeau pilote désormais `I18nManager.allowRTL` à la racine de l'app émise.
+
+### 🔴 Ce que j'ai REFUSÉ de faire — `themeNameEffective`
+
+J'ai écrit une graine de teinte dérivée de `design.theme`, puis **je l'ai
+retirée**. Elle touchait **toutes les couleurs de toutes les apps** — donc la
+dimension B (contraste WCAG) et les cliquets du design system — en fin de longue
+session, sans marge pour la valider correctement.
+
+`themeNameEffective` reste **`false`**, honnêtement. **Livrer un changement de
+couleurs non validé pour faire tomber un `false` de plus aurait été exactement le
+faux vert que ce chantier passe son temps à refuser.**
+
+### Non-régression
+
+**657 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0.**

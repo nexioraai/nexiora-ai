@@ -147,6 +147,10 @@ interface ScreenSlice {
       }
     >;
     uiActionsByBlock: Record<string, string>;
+    rules?: {
+      entityId: string;
+      assertions: readonly { fieldId: string; operator: string; value?: unknown }[];
+    }[];
     slotInvocations?: {
       slotId: string;
       inputs: readonly { port: string; source: unknown }[];
@@ -227,6 +231,26 @@ function buildScreenSlice(air: ProjectAir, screen: ProjectAir["screens"][number]
     });
   }
 
+  // RÈGLES applicables (D-062) : `air.rules` n'était lu par AUCUN étage
+  // d'émission. On ne transporte que celles des entités qu'une action de cet
+  // écran peut écrire — pas tout le document.
+  const ecritesIci = new Set(
+    Object.values(uiActionsByBlock)
+      .map((id) => air.actions.find((a) => a.id === id))
+      .filter((a) => a?.effect.kind === "mutation")
+      .map((a) => (a?.effect as { entityId: string }).entityId),
+  );
+  const reglesEcran = air.rules
+    .filter((r) => r.kind === "validation" && ecritesIci.has(r.entityId))
+    .map((r) => ({
+      entityId: r.entityId,
+      assertions: r.assertions.map((a) => ({
+        fieldId: a.fieldId,
+        operator: a.operator,
+        ...(a.value === undefined ? {} : { value: a.value }),
+      })),
+    }));
+
   // Tranche d'entités référencées par les blocs de l'écran.
   const entities: ScreenSlice["data"]["entities"] = {};
   for (const block of screen.blocks) {
@@ -262,6 +286,9 @@ function buildScreenSlice(air: ProjectAir, screen: ProjectAir["screens"][number]
       // Omise quand vide : les documents sans liaison de slot gardent des
       // données d'écran EXACTEMENT identiques à celles de 1.2.0.
       ...(slotInvocations.length === 0 ? {} : { slotInvocations }),
+      // RÈGLES (D-062) : celles des entités que CET écran peut écrire. Omises
+      // quand aucune ne s'applique — les documents sans règle sont inchangés.
+      ...(reglesEcran.length === 0 ? {} : { rules: reglesEcran }),
     },
   };
 }
@@ -409,11 +436,17 @@ function emitNavigation(air: ProjectAir): string {
   ].join("\n");
 }
 
-function emitApp(avecSlots: boolean): string {
+function emitApp(air: ProjectAir, avecSlots: boolean): string {
   return [
     "// GÉNÉRÉ — NE PAS ÉDITER (racine d'app : thème + données + navigation).",
     "// S7 (D-026) : tokens scellés 1.0.0, design.theme transporté sans effet.",
     "// Provider demo (D-030) : fixtures déterministes compilées (demo.data).",
+    // RTL (D-063) : `app.locales.rtlSupported` n'était lu par AUCUN étage —
+    // le drapeau était transporté et sans effet (non-négociable #16 non tenu).
+    // Il pilote désormais `I18nManager` de React Native, à la racine de l'app.
+    ...(air.app.locales.rtlSupported
+      ? ['import { I18nManager } from "react-native";']
+      : []),
     'import { ThemeRoot } from "./lib/primitives";',
     'import { DataRoot } from "./lib/runtime/data-provider";',
     'import { buildDemoProvider } from "./lib/runtime/demo-provider";',
@@ -433,6 +466,13 @@ function emitApp(avecSlots: boolean): string {
     'import { Navigation } from "./navigation";',
     "",
     "const provider = buildDemoProvider(demoData);",
+    ...(air.app.locales.rtlSupported
+      ? [
+          "",
+          "// Le document DÉCLARE le support RTL : on l'active réellement.",
+          "I18nManager.allowRTL(true);",
+        ]
+      : []),
     "",
     "export default function App() {",
     "  return (",
@@ -519,7 +559,7 @@ export function emitProject(
   // code). Un slot non déclaré par l'AIR, ou déclaré deux fois, est un
   // refus net — le compilateur n'invente jamais un contrat.
   const bundle = [...(options.slots ?? [])].sort((a, b) => byCodeUnit(a.slotId, b.slotId));
-  files.set("App.tsx", emitApp(bundle.length > 0));
+  files.set("App.tsx", emitApp(air, bundle.length > 0));
   if (bundle.length > 0) {
     const declared = new Set(air.slots.map((s) => s.id));
     const seen = new Set<string>();

@@ -81,13 +81,18 @@ it("contrôles visibles et contrôles FANTÔMES", () => {
     expect(sum((m) => m.dataBoundBlocksWithSource)).toBe(44);
   });
 
-  it("capabilities, slots et règles déclarés — aucun consommé", () => {
+  // ÉDITION CONSCIENTE (2026-08-31, D-062) : le titre ne peut plus dire « aucun
+  // consommé ». Les 67 règles déclarées sont désormais APPLIQUÉES. Restent
+  // inconsommés : les 73 capabilities (aucun code émis) et les 44 slots (aucune
+  // liaison dans le corpus gelé — le moteur les invoque, mais eux ne le
+  // demandent pas).
+  it("capabilities et slots encore inconsommés ; les RÈGLES sont appliquées", () => {
     expect(sum((m) => m.capabilitiesDeclared)).toBe(73);
     expect(sum((m) => m.capabilitiesWired)).toBe(0);
     expect(sum((m) => m.slotsDeclared)).toBe(44);
     expect(sum((m) => m.slotsInvoked)).toBe(0);
     expect(sum((m) => m.rulesDeclared)).toBe(67);
-    expect(sum((m) => m.rulesEnforced)).toBe(0);
+    expect(sum((m) => m.rulesEnforced)).toBe(67);
   });
 
   it("champs `reference` rendus en identifiant brut", () => {

@@ -49,6 +49,16 @@ export interface AirBlockInstanceData {
   props: Readonly<Record<string, unknown>>;
 }
 
+/** Règle de validation (AIR `rules`, D-062) — appliquée AVANT toute écriture. */
+export interface AirRuleData {
+  entityId: string;
+  assertions: readonly {
+    fieldId: string;
+    operator: string;
+    value?: string | number | boolean | null;
+  }[];
+}
+
 export interface AirFieldData {
   id: string;
   name: string;
@@ -75,6 +85,8 @@ export interface AirScreenData {
   entities: Readonly<Record<string, { fields: readonly AirFieldData[] }>>;
   /** Slots LIÉS dont au moins une sortie alimente un bloc de cet écran (1.3.0). */
   slotInvocations?: readonly AirSlotInvocationData[];
+  /** Règles de validation des entités écrites depuis cet écran (D-062). */
+  rules?: readonly AirRuleData[];
 }
 
 export interface AirScreenProps {
@@ -84,6 +96,64 @@ export interface AirScreenProps {
 interface BlockRef {
   screen: AirScreenData;
   blockId: string;
+}
+
+/**
+ * APPLICATION DES RÈGLES (D-062) — `air.rules` n'était lu NULLE PART.
+ *
+ * `rulesEnforced: false` : un document pouvait déclarer « le téléphone est
+ * obligatoire » et l'app écrivait sans lui. La règle est désormais évaluée
+ * AVANT l'écriture, et une violation ANNULE la mutation.
+ *
+ * Fermé par construction : seuls les opérateurs du schéma sont évalués, aucune
+ * expression arbitraire. Un opérateur inconnu ne bloque JAMAIS — refuser sur
+ * une règle qu'on ne sait pas lire serait s'arroger un jugement.
+ */
+function reglesRespectees(
+  regles: readonly AirRuleData[] | undefined,
+  entityId: string,
+  valeurs: Readonly<Record<string, string>>,
+): boolean {
+  for (const regle of regles ?? []) {
+    if (regle.entityId !== entityId) continue;
+    for (const a of regle.assertions) {
+      const brut = valeurs[a.fieldId];
+      const nombre = brut === undefined ? Number.NaN : Number(brut);
+      const attendu = a.value;
+      switch (a.operator) {
+        case "required":
+          if (brut === undefined || brut.trim() === "") return false;
+          break;
+        case "eq":
+          if (String(brut) !== String(attendu)) return false;
+          break;
+        case "neq":
+          if (String(brut) === String(attendu)) return false;
+          break;
+        case "gt":
+          if (!(nombre > Number(attendu))) return false;
+          break;
+        case "gte":
+          if (!(nombre >= Number(attendu))) return false;
+          break;
+        case "lt":
+          if (!(nombre < Number(attendu))) return false;
+          break;
+        case "lte":
+          if (!(nombre <= Number(attendu))) return false;
+          break;
+        case "in":
+          if (!Array.isArray(attendu) || !attendu.map(String).includes(String(brut))) return false;
+          break;
+        case "matches":
+          if (brut === undefined || !new RegExp(String(attendu)).test(brut)) return false;
+          break;
+        default:
+          break;
+      }
+    }
+  }
+  return true;
 }
 
 function block(screen: AirScreenData, blockId: string): AirBlockInstanceData {
@@ -217,6 +287,8 @@ function useDispatch(screen: AirScreenData) {
       if (effect?.kind === "mutation" && effect.entityId !== undefined) {
         const cible = effect.entityId;
         const saisie = values ?? {};
+        // D-062 : une écriture qui viole une règle déclarée est ANNULÉE.
+        if (!reglesRespectees(screen.rules, cible, saisie)) return;
         if (effect.operation === "create") data.create?.(cible, saisie);
         else if (effect.operation === "update") {
           const id = saisie.id;

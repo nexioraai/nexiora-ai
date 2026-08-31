@@ -193,17 +193,26 @@ describe("véracité de l'enveloppe — slots, règles, RTL, thème", () => {
     expect(EXECUTION_ENVELOPE_V1.effects).not.toContain("slot");
   });
 
-  it("aucun étage d'émission ne lit `air.rules`", () => {
-    expect(EMIT_PROJECT).not.toContain("air.rules");
-    expect(RUNTIME).not.toContain(".rules");
-    expect(EXECUTION_ENVELOPE_V1.rulesEnforced).toBe(false);
+  // ÉDITION CONSCIENTE (2026-08-31, D-062) : `air.rules` n'était lu NULLE PART.
+  // Un document pouvait déclarer « le téléphone est obligatoire » et l'app
+  // écrivait sans lui. Les règles de VALIDATION sont désormais évaluées avant
+  // toute écriture, et une violation ANNULE la mutation.
+  it("les règles de validation sont appliquées AVANT l'écriture (D-062)", () => {
+    expect(EMIT_PROJECT).toContain("air.rules");
+    expect(RUNTIME).toContain("reglesRespectees");
+    expect(EXECUTION_ENVELOPE_V1.rulesEnforced).toBe(true);
+    // Portée EXACTE : `authorization` n'est PAS appliquée — elle suppose une
+    // identité que le moteur n'a pas. Ne pas le dire serait surdéclarer.
+    expect(EMIT_PROJECT).toContain('r.kind === "validation"');
   });
 
-  it("aucun étage d'émission ne lit `rtlSupported` (non-négociable #16 non tenu)", () => {
-    expect(EMIT_PROJECT).not.toContain("rtlSupported");
-    expect(EMIT_MANIFESTS).not.toContain("rtlSupported");
-    expect(RUNTIME).not.toContain("rtlSupported");
-    expect(EXECUTION_ENVELOPE_V1.rtlFlagEffective).toBe(false);
+  // ÉDITION CONSCIENTE (2026-08-31, D-063) : le non-négociable #16 est TENU.
+  // `rtlSupported` était transporté par le schéma et lu par AUCUN étage : deux
+  // documents, l'un RTL l'autre non, produisaient le MÊME artefact.
+  it("`rtlSupported` produit un artefact DIFFÉRENT (non-négociable #16)", () => {
+    expect(EMIT_PROJECT).toContain("rtlSupported");
+    expect(EMIT_PROJECT).toContain("I18nManager.allowRTL(true)");
+    expect(EXECUTION_ENVELOPE_V1.rtlFlagEffective).toBe(true);
   });
 
   it("`design.theme` n'est LU par aucun étage d'émission (seul `overrides` agit)", () => {

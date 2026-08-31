@@ -145,7 +145,11 @@ export const EXECUTION_ENVELOPE_V1: ExecutionEnvelope = {
   slotsInvoked: true,
 
   // 71 règles déclarées sur le corpus, aucun consommateur dans le moteur.
-  rulesEnforced: false,
+  // VRAI depuis D-062 : les règles de `kind: "validation"` sont évaluées AVANT
+  // toute écriture, et une violation ANNULE la mutation. Portée exacte : les
+  // entités qu'un écran peut écrire. Les règles `authorization` ne sont PAS
+  // appliquées — elles supposent une identité, que le moteur n'a pas.
+  rulesEnforced: true,
 
   // Les `fieldRefProps` du registre de blocs (`list`, `detail_header`,
   // `form`) n'acceptent que des champs de l'entité LIÉE. Aucune syntaxe de
@@ -160,7 +164,10 @@ export const EXECUTION_ENVELOPE_V1: ExecutionEnvelope = {
   // Mesuré : `rtlSupported` true vs false → 0 fichier du projet ne diffère.
   // Le drapeau n'est lu que par le rendu texte de debug et le générateur de
   // flows E2E. Non-négociable #16 (« RTL réel ») non tenu côté artefact.
-  rtlFlagEffective: false,
+  // VRAI depuis D-063 : `app.locales.rtlSupported` pilote `I18nManager.allowRTL`
+  // à la racine de l'app émise. Un document qui déclare le RTL produit désormais
+  // un artefact DIFFÉRENT — le drapeau n'est plus transporté sans effet.
+  rtlFlagEffective: true,
 
   // Mesuré : 13 thèmes déclarés → 2 identités visuelles émises. Seul
   // `design.overrides` agit (emit-theme.ts) ; `design.theme` est transporté
