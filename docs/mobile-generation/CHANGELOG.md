@@ -1,6 +1,49 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-31 (2) — LA RACINE EST REFERMÉE : AIR 1.2.0 + deux gates de fidélité (D-055, D-056)
+
+- **PHASE 10B créée** (`D-055`) — « FIDÉLITÉ DE L'APPLICATION PRODUITE », insérée
+  entre 10 et 11, **sans renumérotation**. Les Phases 11→14 ont été relues une par
+  une : aucune ne portait ce critère. Elle possède `DET-008` (jusqu'ici orphelin),
+  `DET-028`, `APP-D003`, `APP-D004`. Cinq critères de sortie **falsifiables**.
+- **AIR 1.2.0** (`D-056`) — 20e champ : `intent = { request, requestLocale, needs[] }`.
+  La demande du client est conservée **verbatim**. `resolution` est REQUISE et
+  FERMÉE : `satisfied` avec des nœuds, ou `unexpressible` avec motif. **L'absence
+  silencieuse n'est plus une issue offerte par le contrat.**
+  Champ OPTIONNEL au schéma, EXIGÉ par la gate — la migration s'interdit
+  d'inventer une intention pour le corpus gelé (patron D-044).
+- **Paquet `@deribfy/fidelity`** — `evaluatePromises` (F1) et
+  `evaluateIntentCoverage` (F4). Fonctions PURES. Les deux publient leurs propres
+  limites dans leur rapport.
+- **10 CAS-TUEURS : les gates ont été VUES ÉCHOUER** (critère F2), dont les deux
+  contournements évidents — *ne rien promettre* et *ne rien déclarer* — chacun
+  fermé par un test.
+- **MESURE** : les **12 documents du corpus sont REFUSÉS** (2 à 7 promesses
+  vivantes sur 15 à 24, aucune intention). `resto-riche` **PASSE** : 10/10
+  promesses vivantes, 5 besoins satisfaits, **2 déclarés inexprimables**.
+- **La démonstration** : *« des photos sur les plats »* et *« chercher un plat »*
+  — les deux besoins qui s'évaporaient — sont désormais **DITS, datés, motivés**.
+  Portés au document faute de pouvoir l'être à l'application.
+- Conséquence assumée : `RELEASE_TRAIN_V1` → `1.2.0`, l'`airHash` change donc tous
+  les `rootHash`. Deux éditions conscientes de cliquets, motivées dans les tests.
+- **Non-régression : 658 tests verts · 16 espaces de travail · typecheck EXIT=0.**
+
 ## 2026-08-31 — RACINE IDENTIFIÉE ET MESURÉE : les promesses ne s'exécutent pas (D-054)
+
+> 🔴 **RECTIFICATION DU 2026-08-31 (`D-054-R1`).** Trois affirmations de cette entrée
+> sont **RÉFUTÉES PAR MESURE** : *« l'intention du client n'est stockée nulle part »*
+> (`app.description` la conserve dans **13/13** documents) · *« avec photos évaporé
+> dans 12 documents sur 13 »* (**12/13** portent un champ `asset`, **6/13** la
+> mentionnent au texte) · *« structurellement inexprimable »* (le besoin est dit —
+> il ne peut être ni **promis**, `targetId` n'acceptant pas un champ, ni **rendu**,
+> le registre étant gelé à 6 blocs par `D-024`). La **contre-épreuve `resto-riche`
+> est CIRCULAIRE** : ses 9 actions sont toutes `navigate`/`ui`, soit exactement
+> l'enveloppe — son 100 % est acquis par construction, et elle ne démontre donc pas
+> que « le moteur n'est pas le plafond ». **Tout ce que cette entrée rapporte par
+> ailleurs demeure exact** — 227 · 167 · 73,6 %, le plafond du prompt saturé 12/12,
+> l'absence d'exécuteur, `emit.mjs`/`emit-v2.mjs` intacts. **Racine démontrée :
+> l'enveloppe d'exécution** (136 des 167 cibles mortes, 81 %). L'entrée est
+> **conservée telle quelle, jamais supprimée**.
 
 - **Hypothèse « le moteur bride » TUÉE** : un AIR écrit à la main de **12 écrans /
   8 entités** est accepté et compilé en **47 fichiers**, sans refus. Le contrat AIR

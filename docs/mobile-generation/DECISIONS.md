@@ -3063,6 +3063,15 @@ sur la réserve du critère 1 ni sur le verrou du critère 2.
 
 ## D-054 — LA RACINE : l'intention n'est stockée nulle part, les promesses ne s'exécutent jamais — 2026-08-31
 
+> 🔴 **RECTIFIÉE LE 2026-08-31 → `D-054-R1`.** Le **titre** de cette décision et
+> **trois de ses affirmations factuelles** — *« l'intention n'est stockée nulle part »*,
+> *« avec photos évaporé sans trace »*, *« le manque est structurellement indicible »* —
+> sont **RÉFUTÉS PAR MESURE**, et la démonstration `resto-riche` est **CIRCULAIRE**.
+> **Ses relevés chiffrés demeurent exacts** (227 · 167 · 73,6 %), et son `INFÉRENCE`
+> centrale — *personne ne compare le document à la demande* — **reste vraie**.
+> L'entrée est **conservée telle quelle, jamais supprimée** : une thèse abandonnée
+> renseigne autant qu'une thèse retenue (patron `D-048`).
+
 **Déclencheur** — arbitrage propriétaire : *« il faut résoudre le problème depuis
 racine sinon ça ne se résout pas profondément »*. La correction du prompt, engagée
 la veille, a été **refusée comme racine** : elle ne traitait qu'un symptôme.
@@ -3173,3 +3182,322 @@ rejouables à l'identique.
 
 `FACT` — **15 suites vertes · `typecheck` EXIT=0**, après la correction `D-047` et
 l'ajout de `resto-riche`. Aucune ligne du moteur modifiée par la présente décision.
+
+---
+
+## D-054-R1 — RECTIFICATION de D-054 : trois faits réfutés, une démonstration retournée, la racine reformulée — 2026-08-31
+
+**Statut** : **RECTIFICATION DOCUMENTAIRE**, sur instruction propriétaire explicite du
+2026-08-31. `D-054` est **conservée intégralement**. Aucun code produit, aucun schéma,
+aucune gate, aucune métrique historique n'est touché par la présente entrée.
+
+> **Ce que la rectification NE remet PAS en cause.** Les relevés chiffrés de `D-054`
+> sont **exacts et reproduits** : **227** promesses · **167** à cible morte · **73,6 %** ·
+> 60 vivantes · 26,4 % · `deterministic` 40/75 · `e2e` 18/35 · `contract` 2/57.
+> Reproduits le 2026-08-31 par **expérience à variable unique** — retrait de la seule
+> ligne du document témoin dans la liste `DOCS` de l'instrument, tout le reste intact.
+> Son `INFÉRENCE` centrale — *« personne ne compare le document à la demande »* —
+> **reste vraie**, mais pour une autre raison que celle avancée (voir § 5).
+
+### 1 · Trois affirmations factuelles de `D-054` sont RÉFUTÉES
+
+**R1 — « L'intention du client n'est conservée nulle part ; l'AIR porte 19 champs de
+premier niveau, aucun ne contient la demande d'origine. »**
+
+`FACT` — `app.description` est **non vide dans 13 documents sur 13**. Comparaison
+littérale sur `resto-quartier` :
+
+| source | texte |
+|---|---|
+| demande d'origine — `benchmarks/air-emission/intentions.mjs` (*« textes FIXES »*) | « … mes clients voient le menu **avec photos et prix**, commandent à emporter, paient par carte dans l'app, et reçoivent une notification quand la commande est prête. » |
+| ce que l'AIR en garde — `app.description` | « … consultez le menu **en photos**, commandez à emporter, payez par carte et recevez une notification dès que votre commande est prête. » |
+
+🔴 **RÉFUTÉE.** L'intention est conservée **clause par clause**. Le nombre de 19 champs
+est exact ; la conclusion qu'aucun ne porte la demande ne l'est pas.
+
+**R2 — « *menu avec photos et prix* entre dans un prompt et disparaît » · « *avec
+photos* n'a laissé aucune trace dans 12 documents sur 13. »**
+
+`FACT` — Mesure sur les 13 documents générés :
+
+| trace | résultat |
+|---|---:|
+| documents portant au moins un champ de type `asset` | **12 / 13** |
+| documents mentionnant photo/image dans `app.description` | **6 / 13** |
+
+`resto-quartier` porte `fld_plat_photo`, type `asset`. 🔴 **RÉFUTÉE** — la trace existe
+à **deux** niveaux, le texte et le modèle de données.
+
+**R3 — « Le manque est structurellement indicible : un besoin sans nœud ne peut pas
+être exprimé comme promesse. »**
+
+`FACT` — Le besoin **est** exprimé, deux fois (R1, R2). Ce qui est impossible est autre
+chose, et se nomme précisément :
+
+| ce qui est impossible | mécanisme | origine |
+|---|---|---|
+| le **promettre** | `expectedTests.targetId` n'accepte qu'un **écran, une action ou une entité** — jamais un champ (`validate.ts` § 11) | contrat AIR |
+| le **rendre** | le registre de blocs est **GELÉ à 6 blocs** — `button` · `detail_header` · `empty_state` · `form` · `header` · `list` — **aucun n'accepte un champ `asset`** | **`D-024`** (2026-08-28) |
+
+🔴 **RÉFUTÉE dans sa formulation.** Le besoin n'est pas indicible : **il est dit, puis
+abandonné par deux portes nommées et datées.** La reformulation est plus dure que
+l'originale, et actionnable.
+
+**Précision — non une réfutation.** `D-054` écrit : *« leurs seuls consommateurs :
+`validate.ts` et `render-text.ts` »*. Le balayage **complet** du dépôt montre d'autres
+**lecteurs** (`air.ts` les déclare, `workflow/src/corpus.ts` les embarque, les
+émetteurs et rejeux de `benchmarks/` les produisent, des fixtures de test). **Aucun ne
+les exécute** : la conclusion de `D-054` tient, seul son périmètre d'établissement
+était trop étroit.
+
+### 2 · La démonstration `resto-riche` est CIRCULAIRE
+
+`FACT` — Composition mesurée des deux documents comparés :
+
+| | actions | effets | déclencheurs | slots | capabilities | rules |
+|---|---:|---|---|---:|---:|---:|
+| **`resto-riche`** *(témoin « honnête »)* | 9 | **`navigate` × 9** | **`ui` × 9** | **0** | **0** | **0** |
+| `resto-quartier` *(généré)* | 17 | navigate 3 · mutation 3 · capability 6 · slot 5 | ui 8 · lifecycle 5 · data 4 | 5 | 5 | 5 |
+
+`FACT` — L'enveloppe d'exécution déclare `effects: ["navigate"]` et `triggers: ["ui"]`.
+
+`CONCL.` — **`resto-riche` est exactement l'enveloppe, et rien d'autre.** Son score de
+100 % est acquis **par construction** : il ne demande au moteur que la seule chose que
+le moteur exécute. Il ne déclare **ni paiement, ni notification, ni authentification,
+ni règle métier, ni calcul**.
+
+🔴 L'`INFÉRENCE` de `D-054` — *« l'écart ne vient pas du moteur : il vient de ce que le
+document promet ce que le moteur peut tenir »* — est **retournée par sa propre pièce à
+conviction**. La comparaison ne mesure pas l'honnêteté du document : **elle mesure
+l'enveloppe.** Un document qui demande ce qu'exige une application de commerce réelle
+a 73,6 % de promesses mortes ; un document qui ne demande que de naviguer en a 0 %.
+
+`FACT` — Corollaire mesuré : **`resto-riche` déclare lui aussi 1 champ `asset` lié à
+aucun bloc.** Le témoin porte le même défaut que le corpus — il se borne à ne rien en
+promettre.
+
+### 3 · Ce que `resto-riche` démontre LÉGITIMEMENT
+
+`FACT` — 7 écrans (contre 4), 20 blocs (contre 16), 5 entités, accepté et compilé sans
+refus.
+
+`CONCL.` — **L'AIR et le compilateur acceptent un document structurellement plus
+riche.** L'hypothèse *« le contrat AIR bride la richesse »* est **valablement écartée
+pour la STRUCTURE** — cette part de `D-054` est maintenue.
+
+🔴 Le saut de là vers *« le moteur n'a jamais été le plafond »* **n'est pas soutenu** :
+le moteur est le plafond pour **tout ce qui dépasse la navigation**.
+
+### 4 · Mesure `asset` — le besoin est dit, jamais montré
+
+| | |
+|---|---:|
+| champs `asset` déclarés sur les 14 documents | **18** |
+| liés à une prop de bloc | **3** |
+| **affichés comme image** | **0** |
+
+`FACT` — Les 3 liés le sont à `form.fieldIds` : ils apparaissent en **champs de
+saisie**, dans des formulaires qui ne peuvent pas soumettre (`dataOperations:
+["list","get"]`). **Aucun bloc du registre gelé n'accepte un champ `asset`.**
+
+### 5 · `app.description` — présente dans l'AIR, ABSENTE de l'artefact émis
+
+`FACT` — Non vide dans **13/13** documents. **Absente de l'application émise**,
+`app.json` compris — la phrase de `resto-quartier` n'apparaît dans aucun fichier du
+projet généré.
+
+`CONCL.` — **L'intention ne meurt pas au schéma : elle meurt à l'émission.** Le champ
+existe ; le compilateur ne le transporte pas. C'est la formulation correcte de
+l'`INFÉRENCE` de `D-054`, qui reste vraie : personne ne compare le document à la
+demande — non par manque de matière, mais **par absence de l'organe de comparaison**.
+
+`INFÉRENCE` — La **montée de schéma** que `D-054` renvoie à l'arbitrage propriétaire
+pour *« conserver l'intention dans l'AIR »* **n'est pas nécessaire pour conserver la
+trace en texte libre** : le champ existe déjà et porte la demande dans 13/13 documents.
+Elle resterait requise pour une intention **structurée** — proposition **non démontrée
+ici**, et qui reste entière à instruire.
+
+### 6 · La racine DÉMONTRÉE au 2026-08-31 : l'ENVELOPPE D'EXÉCUTION
+
+`FACT` — Décomposition des 167 cibles mortes — **jamais chiffrée avant ce jour** :
+
+| cause | nombre | part |
+|---|---:|---:|
+| **effet non exécuté par le runtime** | **136** | **81 %** |
+| entité sans bloc rendu ou sans donnée | 19 | 11 % |
+| écran hors du graphe de navigation | 12 | 7 % |
+
+`FACT` — Les 136, par nature d'effet : **`capability` 69 · `slot` 48 · `mutation` 19**.
+
+`FACT` — Cause au code : `useDispatch` ne traite que `navigate` ; seuls les déclencheurs
+`ui` l'atteignent (`packages/compiler/runtime/air-runtime.tsx`).
+
+`FACT` — **Fiabilité de la mesure** : l'enveloppe est une *déclaration*, donc elle peut
+mentir ; le cliquet `packages/execution-contract/tests/envelope-truth.test.ts` la
+confronte au code réel du runtime copié — **16 tests verts le 2026-08-31**.
+
+`CONCL.` — **La racine démontrée n'est ni l'intention perdue, ni les promesses non
+exécutées : c'est l'enveloppe d'exécution** — `effects ["navigate"]` ·
+`triggers ["ui"]` · `dataOperations ["list","get"]`. Les deux constats de `D-054` en
+sont des **symptômes**, et le « document honnête » en est la **confirmation**, pas la
+réfutation.
+
+### 7 · `DET-008` — nœud hors plan restant, AUCUNE phase inventée
+
+Chaîne de propriété des 136 effets non exécutés :
+
+| effet | nombre | mécanisme | propriétaire |
+|---|---:|---|---|
+| `capability` | 69 | `capabilitiesEmitCode: false` | **Phase 11** |
+| `slot` | 48 | `slotsInvoked: false` — `DET-018` | **Phase 11** (`D-050`) |
+| `mutation` | 19 | `dataOperations: ["list","get"]` — `DataProvider` en lecture seule | 🔴 **`DET-008`** |
+
+`FACT` — `DET-008` n'apparaît **pas une seule fois** dans `ROADMAP.md` (vérifié le
+2026-08-30, `D-052`).
+
+🔴 **Conformément à `D-052`, aucune phase n'est désignée ici** — ni Phase 11, ni aucune
+autre par déduction ou convenance. `ROADMAP.md` n'est pas modifiée. **L'absence reste
+visible comme telle** ; la convertir en échéance serait un abandon déguisé.
+
+`CONCL.` — La racine des promesses mortes et la racine de la dimension C (`DET-028`)
+**convergent sur le même nœud**, déjà isolé par `D-052`, et **qui n'appartient à aucune
+phase**.
+
+### Établi · Inféré — la ligne de partage
+
+| | |
+|---|---|
+| **ÉTABLI par mesure** | 227 / 167 / 73,6 % · `app.description` 13/13 · `asset` 18 déclarés / 3 liés / 0 affichés · composition de `resto-riche` (9 actions, toutes `navigate`/`ui`) · enveloppe `["navigate"]`/`["ui"]`/`["list","get"]` · décomposition 136/19/12 · `app.description` absente de l'artefact · registre gelé à 6 blocs (`D-024`) · `targetId` ∌ champ · cliquet d'enveloppe 16 verts |
+| **INFÉRENCE** | la racine est l'enveloppe d'exécution · la montée de schéma n'est pas requise pour la trace en texte libre · `resto-riche` ne démontre pas l'adéquation du moteur |
+| **NON DÉTERMINÉ** | ce qu'exigerait une intention **structurée** · pourquoi le registre est resté à 6 blocs au-delà du gel `D-024` · si l'organe de comparaison doit être une gate, et de quelle phase |
+
+### Portée de cette rectification
+
+- **Aucun** code produit, schéma AIR, gate, `metrics.json` ou artefact de mesure touché.
+- `D-054` **conservée intégralement** ; bandeau de renvoi ajouté en tête.
+- Rectifications **en place, jamais suppression** : `STATUS.md` (entête) et
+  `CHANGELOG.md` (entrée du 2026-08-31).
+- **Aucun commit, aucun push.**
+
+---
+
+## D-055 — CRÉATION DE LA PHASE 10B : fidélité de l'application produite — 2026-08-31
+
+**Fait établi** (`APP-D004`, D-054) : les Phases 0→10 vérifient le **moteur**.
+**Aucune** ne vérifie que l'application tient ce que le document promet, ni que le
+document couvre ce qui a été demandé. `DET-008` était **orphelin** — 0 occurrence
+dans `ROADMAP.md`, vérifié — et `DET-028` en dépendait sans propriétaire.
+
+**Vérification avant création** — les Phases 11→14 ont été relues une par une :
+
+| phase | ce qu'elle possède | porte-t-elle la fidélité ? |
+|---|---|---|
+| 11 | routage OTA / profils de runtime | **non** |
+| 12 | gate store / conformité / identité | **non** |
+| 13 | distribution réelle / Guardian | **non** |
+| 14 | flotte / scorecard élargi — « qualité UI » = **score A++** | **non** — A++ mesure l'apparence, jamais la fidélité à la demande |
+
+**Décision** : créer **PHASE 10B — FIDÉLITÉ DE L'APPLICATION PRODUITE**, insérée
+entre 10 et 11. **Aucune renumérotation** : les Phases 11→14 gardent leur numéro,
+aucune référence existante n'est cassée. La position exprime la dépendance réelle —
+10B se nourrit des artefacts de la 10 mais **n'attend pas sa clôture**, puisque
+`DET-028`, qui bloque cette clôture, lui appartient désormais.
+
+**Cinq critères de sortie, chacun avec sa condition de réfutation** : `F1` gate des
+promesses · `F2` trois cas-tueurs vus échouer · `F3` demande conservée et migrée
+sans perte · `F4` besoin satisfait ou déclaré inexprimable, jamais perdu · `F5`
+aucun état déclaré atteignable sans l'être.
+
+**Limite inscrite dans la phase elle-même** : elle n'établit qu'une **CONDITION
+NÉCESSAIRE**. L'énoncé d'une promesse n'est pas vérifié — le moteur n'exécute pas
+la logique qu'il faudrait pour cela. `P-C` : `PARTIAL → PASS` ❌.
+
+**Voie employée** : le plan v0.1 est gelé ; toute évolution passe par
+`DECISIONS.md`. C'est ce mécanisme, et non une modification silencieuse du plan,
+qui crée cette phase.
+
+---
+
+## D-056 — AIR 1.2.0 : l'intention entre au contrat, et deux gates la font tenir — 2026-08-31
+
+Exécution de la **PHASE 10B** créée par `D-055`. Traite la racine `APP-D004` —
+non plus la mesurer, la **refermer**.
+
+### ① L'intention entre au contrat — schéma `1.1.0 → 1.2.0`
+
+`FACT` — l'AIR portait **19 champs** et aucun ne contenait la demande. Il en porte
+**20** : `intent = { request, requestLocale, needs[] }`.
+
+**Le champ décisif est `resolution`, requis et FERMÉ** — un besoin est soit
+`satisfied` avec des `nodeIds`, soit `unexpressible` avec un `reason` non vide.
+**Il n'existe pas de troisième issue, et surtout pas l'absence silencieuse** :
+c'est précisément par elle que *« avec photos »* s'est évaporé dans 12 documents
+sur 13.
+
+**`intent` est OPTIONNEL au schéma, EXIGÉ par la gate.** Le rendre requis
+forcerait la migration à **fabriquer** une intention pour le corpus gelé —
+exactement ce que `D-044` s'était interdit. Le fail-closed vit dans la gate, pas
+dans le schéma. Migration `1.1.0 → 1.2.0` : **identité**, testée comme telle.
+
+### ② Deux gates — paquet `@deribfy/fidelity`
+
+| critère | gate | ce qu'elle refuse |
+|---|---|---|
+| **F1** | `evaluatePromises` | une promesse dont la cible est morte, inexistante — **ou l'absence de promesse** |
+| **F4** | `evaluateIntentCoverage` | un besoin rattaché à un nœud absent, à un nœud mort — **ou l'absence d'intention** |
+
+Les deux **publient leurs limites dans leur propre rapport** : une cible vivante
+n'est pas une promesse tenue, et un besoin jamais énuméré reste invisible.
+`P-C` : `PARTIAL → PASS` ❌.
+
+### ③ Critère F2 — les gates ont été VUES ÉCHOUER
+
+**10 cas-tueurs**, chacun sur un défaut distinct : écran inatteignable · effet
+hors enveloppe · entité sans donnée · cible inexistante · **contournement par le
+silence** (ne rien promettre) · absence de compensation · **absence d'intention** ·
+référence brisée · **besoin satisfait par du mort** · absence de compensation.
+
+Les deux contournements évidents — *ne rien promettre*, *ne rien déclarer* — sont
+fermés par un test chacun. Sans eux, un document muet aurait été certifié.
+
+### ④ MESURE — les gates appliquées au réel
+
+| document | F1 | F4 | verdict |
+|---|---|---|---|
+| **12 documents du corpus gelé** | 🔴 2 à 7 promesses vivantes sur 15 à 24 | 🔴 **aucune intention** | 🔴 **REFUSÉS** |
+| `resto-riche` (écrit à la main) | 🟢 **10/10** | 🟢 **5 satisfaits · 2 déclarés · 0 défaillant** | 🟢 **FIDÈLE** |
+
+`FACT` — **1 document sur 13** passe. Ce n'est pas une régression : c'est la
+première fois que la question est posée.
+
+**La démonstration décisive** — dans `resto-riche`, les deux besoins qui
+disparaissaient sont maintenant **DITS**, pas perdus :
+
+> 🟠 *« des photos sur les plats »* → registre de Smart Blocks **gelé à 6 types**, aucun bloc image
+> 🟠 *« chercher un plat »* → aucun bloc de recherche, et `dataOperations` se limite à `list`/`get`
+
+Le besoin est **porté au document**, faute de pouvoir l'être à l'application.
+`LOT D` (registre v2) le lèvera ; jusque-là il est visible, daté et motivé.
+
+### ⑤ Conséquences assumées
+
+`RELEASE_TRAIN_V1.airSchemaVersion` porté à `1.2.0` : l'`airHash` change, donc
+tous les `rootHash`. **C'est le prix d'une évolution de contrat, pas une dérive** —
+même mécanique et même motif qu'en `1.1.0`.
+
+**Deux éditions conscientes de cliquets**, chacune motivée dans le test :
+le registre de migrations ne se compte plus, sa **chaîne** se vérifie (vrai pour
+toutes les montées à venir) ; un pin littéral `"1.1.0"` d'une fixture devient la
+constante `AIR_SCHEMA_VERSION`.
+
+### Non-régression
+
+`FACT` — **658 tests verts sur 16 espaces de travail · `typecheck` EXIT=0 ·
+`lint` 0 écart** sur le paquet créé.
+
+### Ce que cette décision NE fait PAS
+
+Les gates ne sont **pas encore câblées dans l'Oracle** : elles sont exécutables et
+prouvées, non imposées au pipeline. Le registre de blocs v2 (`LOT D`), la campagne
+`emit-v3` (`LOT E`) et la preuve appareil (`LOT F`) restent **en arbitrage
+propriétaire**. `DET-028` reste ouvert.

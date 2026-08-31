@@ -1,12 +1,29 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-08-31** (**RACINE IDENTIFIÉE ET MESURÉE — `APP-D004`, D-054** : l'intention
+> **2026-08-31 (2)** (**RACINE REFERMÉE — D-055 / D-056** : **PHASE 10B** créée
+> (fidélité de l'application produite) ; **AIR 1.2.0** conserve la demande du
+> client ; paquet `@deribfy/fidelity` — deux gates, **10 cas-tueurs vus échouer**.
+> Mesure : **12 documents du corpus REFUSÉS**, `resto-riche` **FIDÈLE**. Les besoins
+> *« photos »* et *« recherche »* sont désormais **DITS** au lieu d'être perdus.
+> **658 tests verts · typecheck EXIT=0.**)
+>
+> *Entrée précédente —* **2026-08-31** (**RACINE IDENTIFIÉE ET MESURÉE — `APP-D004`, D-054** : l'intention
 > du client n'est stockée nulle part et les **227 promesses déclarées ne sont jamais
 > exécutées**. Exécuteur construit : **167/227 visent une cible morte — 73,6 %**.
 > Contre-épreuve livrée (`resto-riche` : 22/22 contrôles agissants, 10/10 promesses
 > vivantes). 🔴 **Verrou nouveau : aucune phase ne possède la qualité de
 > l'application produite.**)
+>
+> 🔴 **RECTIFIÉ LE 2026-08-31 — `D-054-R1`.** *« L'intention du client n'est stockée
+> nulle part »* est **RÉFUTÉ par mesure** : `app.description` la conserve dans
+> **13/13** documents, clause par clause. La contre-épreuve `resto-riche` est
+> **CIRCULAIRE** — ses 9 actions sont **toutes** `navigate`/`ui`, soit exactement
+> l'enveloppe d'exécution : son 100 % est acquis par construction. **Les chiffres
+> 227 · 167 · 73,6 % restent exacts.** Racine démontrée : **l'enveloppe d'exécution**
+> (`effects ["navigate"]` · `triggers ["ui"]` · `dataOperations ["list","get"]`) —
+> **136 des 167 cibles mortes (81 %)**. Nœud hors plan restant : **`DET-008`**,
+> aucune phase désignée (`D-052`).
 >
 > *Entrée précédente —* **2026-08-28** (**4.7 TERMINÉE — PHASE 4 : CRITÈRES TOUS SATISFAITS**
 > (D-031-R47) : app témoin compilée LANCÉE sur émulateurs iOS ET Android,
@@ -21,7 +38,7 @@
 |---|---|
 | Plan v0.1 | 🟢 **VALIDÉ ET FIGÉ** (propriétaire, 2026-08-27) — toute évolution passe par `DECISIONS.md` |
 | Phase 0 — Fondations | 🟢 **TERMINÉE** (2026-08-27) — tous les critères de sortie vérifiés, dont **CI GitHub réelle verte : run #32, commit `54ef2a1`, `success`** (capture propriétaire + confirmation API Actions indépendante) |
-| Phase actuelle | **PHASE 10 : 🔵 EN COURS — CLÔTURE BLOQUÉE.** 🔴 **A++ N'EST PAS ATTEINT** (dimension **C** requalifiée `non_conforme`, `DET-028`/D-048). 🔴 **RACINE `APP-D004` OUVERTE** (D-054) : **167/227 promesses déclarées visent une cible morte (73,6 %)** ; l'intention du client n'est conservée dans aucun des 19 champs de l'AIR. **Trois verrous avant clôture : `DET-028` · validation sur appareil physique · quelle phase possède la QUALITÉ DE L'APPLICATION PRODUITE (aucune aujourd'hui).** **Phases 0, 2-9 : 🟢 TERMINÉES** |
+| Phase actuelle | **PHASE 10 : 🔵 CLÔTURE BLOQUÉE** (dimension C `non_conforme`, preuve appareil suspendue) · **PHASE 10B : 🔵 OUVERTE ET EN COURS** — `F1` 🟢 gate des promesses · `F2` 🟢 10 cas-tueurs vus échouer · `F3` 🟢 AIR 1.2.0, demande conservée, migration sans perte · `F4` 🟢 gate de couverture demande→AIR · `F5` 🔴 `DET-028` ouvert. **Phases 0, 2-9 : 🟢 TERMINÉES** |
 | Générateur mobile | 🔵 **EN IMPLÉMENTATION** — prochaine action : **build EAS + installation du slice 2 sur appareil** (intervention propriétaire), puis clôture de la Phase 10 |
 | Progression globale | **Phases 0, 2-9 terminées** · **Phase 10 : 6 critères sur 7 satisfaits ; restent la preuve appareil (A17 + iPhone 16) ET la racine `APP-D004`** · Phase 1 en cours · **dettes ouvertes : 12** · **décisions en attente du propriétaire : P-008 · montée de schéma AIR (stocker l'intention) · exécution d'`emit-v3.mjs` (budget LLM) · registre de blocs v2 (image/recherche/catégories)** |
 

@@ -197,6 +197,60 @@ critères d'entrée · critères de sortie (tests/validation inclus).
 validation physique · ne pas corriger G4/G5 · ne pas modifier la sévérité ·
 ne pas lancer EXP-2 · ne pas modifier le protocole canonique.
 
+## PHASE 10B — FIDÉLITÉ DE L'APPLICATION PRODUITE
+
+> **Créée le 2026-08-31 par D-055.** Insérée entre 10 et 11 sans renumérotation :
+> les Phases 11→14 ont été relues une par une et **aucune ne porte ce critère**
+> (11 route, 12 conforme aux stores, 13 distribue, 14 industrialise ; la
+> « qualité UI » de la 14 est le score A++, qui mesure l'apparence, jamais la
+> fidélité à la demande).
+
+- **Objectif** : fermer la lacune structurelle mesurée en `APP-D004` — les
+  Phases 0→10 vérifient le **MOTEUR** (il compile, il est déterministe, il est
+  reproductible) ; **aucune ne vérifie que l'application tient ce que le
+  document a promis, ni que le document couvre ce qui a été demandé.**
+  Toute la vérification compare l'artefact au document ; **personne ne compare
+  le document à la demande.**
+- **Dépendances** : Phase 10 (artefacts à confronter). **Ne dépend pas** de sa
+  clôture — la Phase 10 ne peut pas se clore sans `DET-028`, qui appartient
+  désormais à celle-ci.
+- **Possède** : `DET-008` (jusqu'ici orphelin — 0 occurrence dans ce document
+  avant le 2026-08-31), `DET-028`, `APP-D003`, `APP-D004`.
+
+### Critères de sortie — falsifiables
+
+| # | Critère | Comment il est réfuté |
+|---|---|---|
+| **F1** | Toute promesse déclarée (`expectedTests`) est confrontée à sa cible réelle, et une promesse à **cible morte** fait ÉCHOUER la gate | produire un document promettant sur un écran inatteignable et voir la gate passer |
+| **F2** | La gate a été **vue échouer** sur ≥ 3 cas-tueurs distincts (écran inatteignable · effet hors enveloppe · entité sans donnée) avant d'être déclarée valide | un seul cas-tueur qui passe |
+| **F3** | La **demande du client est conservée** dans l'AIR et migrée sans perte sur la totalité du corpus | un document du corpus qui perd sa demande à la migration |
+| **F4** | Tout besoin exprimé est **satisfait** par un nœud, ou **déclaré inexprimable avec motif** — un besoin `PERDU` fait ÉCHOUER | *« menu avec photos »* qui disparaît sans trace, comme dans 12 documents sur 13 |
+| **F5** | Aucun état de bloc n'est déclaré atteignable sans l'être (`DET-028` / `APP-D003`) | un état déclaré au registre et jamais rendu à l'exécution |
+
+### État au 2026-08-31 — **PHASE 10B : OUVERTE**
+
+**Cette phase n'est pas close et ne doit pas l'être par cette inscription.**
+
+| Critère | État | Preuve |
+|---|---|---|
+| **F1** gate des promesses | 🟢 **SATISFAIT** | `@deribfy/fidelity` · `evaluatePromises` — les 12 documents du corpus sont **REFUSÉS** (2 à 7 cibles vivantes sur 15 à 24) |
+| **F2** gate vue échouer sur ≥ 3 cas-tueurs | 🟢 **SATISFAIT — 10 cas-tueurs**, dont les deux contournements par le silence | `packages/fidelity/tests/` |
+| **F3** demande conservée et migrée sans perte | 🟢 **SATISFAIT** | AIR 1.2.0 (D-056) · migration `1.1.0 → 1.2.0` **identité**, testée · chaîne `1.0.0 → 1.2.0` continue |
+| **F4** besoin satisfait ou déclaré, jamais perdu | 🟢 **SATISFAIT** | `evaluateIntentCoverage` · `resto-riche` : 5 satisfaits, **2 déclarés inexprimables**, 0 défaillant |
+| **F5** aucun état déclaré atteignable sans l'être | 🔴 **NON SATISFAIT** | `DET-028` / `APP-D003` — 8 états déclarés sur 11 jamais rendus |
+
+🔴 **Réserve portant sur F1 et F4** : les deux gates sont **exécutables et
+prouvées**, elles ne sont **pas câblées dans l'Oracle**. Rien n'impose encore leur
+verdict au pipeline. Tant que ce câblage n'est pas fait, un document refusé par
+elles peut toujours être compilé et livré.
+
+### Ce que cette phase NE fait PAS
+
+Elle **ne mesure pas l'énoncé** des promesses (« le total additionne
+correctement ») : cela exigerait d'exécuter une logique que le moteur
+n'exécute pas. Elle établit une **CONDITION NÉCESSAIRE** — la cible existe et
+fonctionne, le besoin n'a pas disparu. `P-C` : `PARTIAL → PASS` ❌.
+
 ## PHASE 11 — CAPABILITY ROUTER + RUNTIME PROFILES + OTA
 
 - **Objectif** : routage OTA/native par empreinte calculée ; profils de
