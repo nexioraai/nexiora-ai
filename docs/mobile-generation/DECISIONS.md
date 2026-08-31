@@ -4340,3 +4340,76 @@ same key`** et **échoue**. Rétablis : **0 problème**.
 **659 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0 ·
 14/14 compilent · 58/58 écrans montés · 0 avertissement React.**
 `blocksSourcesHash` re-scellé.
+
+---
+
+## D-078 / D-079 — CAMPAGNE emit-v3 : cinq causes, dont deux dans mes instruments — 2026-08-31
+
+**Exigence propriétaire** : *« vérifie, revérifie, fais des simulations ; ne demande
+l'autorisation qu'une fois la réussite établie. »*
+
+### Ce que la vérification a évité — avant tout appel
+
+`FACT` — **`emit-v3.mjs` n'avait JAMAIS été syntaxiquement valide.** Douze
+backticks non échappés fermaient le littéral du prompt système. Il portait
+pourtant la mention « NON EXÉCUTÉ » : **écrit, jamais lancé, donc jamais vu
+casser.** Sans l'essai, la campagne aurait été autorisée sur un script qui ne
+démarre pas.
+
+`FACT` — il visait `airSchemaVersion = "1.1.0"` : il ne demandait **ni intention,
+ni liaison de slot, ni `thenScreenId`, ni titres d'état, ni champ d'affichage de
+référence**. Les documents produits auraient encore échoué les gates.
+
+**Sept règles ajoutées** (11→17), dont la **17 — honnêteté sur les capabilities**,
+que la SIMULATION a révélée : le modèle promettait des capabilities que le moteur
+n'exécute pas. *Déclarer le besoin est juste ; le promettre est un mensonge.*
+
+### Les cinq causes d'échec, et à qui elles appartenaient
+
+| # | cause | fautif |
+|---|---|---|
+| 1 | syntaxe invalide depuis toujours | le script |
+| 2 | réponse **tronquée** à 8000 jetons, rapportée en « erreur de parsing » | le script — `stop_reason` jamais vérifié |
+| 3 | **« compiled grammar is too large »** — `intent` et les liaisons font déborder | le découpage en sections |
+| 4 | 8 besoins « nœuds inexistants » | 🔴 **MA GATE** |
+| 5 | 5 slots liés déclarés morts | 🔴 **MA GATE** |
+
+**D-079 — les deux défauts de mes gates :**
+
+`FACT` — `evaluateIntentCoverage` n'énumérait que écrans, blocs, actions, entités
+et champs. Elle déclarait **ABSENTS** des datasets, slots, règles, routes,
+intégrations et tests **qui existaient**. Vérifié : sur les **99 `nodeIds`** cités
+par le modèle, **AUCUN n'était inexistant.** *Le modèle avait raison ; c'est moi
+qui n'en connaissais que la moitié.*
+
+`FACT` — `promises.ts` savait qu'un slot **lié** est vivant ; `intent.ts` ne le
+savait pas. **Deux gates du même chantier avec deux définitions de « vivant ».**
+Elles se sont contredites sur le premier document réel.
+
+> **Deux causes sur cinq étaient dans mes propres instruments.** C'est la
+> quatrième fois de la session — et à chaque fois, c'est d'avoir vérifié
+> l'instrument avant de croire son verdict qui a évité une accusation fausse.
+
+### RÉSULTAT — le premier document généré qui soit FIDÈLE
+
+| | v2 (gelé) | v3 (généré) |
+|---|---|---|
+| écrans / entités / actions | 4 / 3 / 17 | **7 / 6 / 18** |
+| F1 promesses vivantes | 6/18 🔴 | **36/36 🟢** |
+| F4 intention | aucune 🔴 | **7 ok · 3 déclarés · 0 KO 🟢** |
+| compilation | — | 🟢 40 fichiers |
+| **verdict** | 🔴 REFUSÉ | **🟢 FIDÈLE** |
+
+`resto-riche` était fidèle parce que **je l'avais écrit à la main**. Celui-ci,
+**le générateur l'a produit.**
+
+### Garde-fous vérifiés avant dépense
+
+`FACT` — `emit-v3` écrivait dans **`corpus-v2`, LE CORPUS GELÉ.** Il l'aurait
+écrasé, détruisant la base de comparaison de toutes les mesures historiques et le
+avant/après que la campagne existe pour produire. **Redirigé vers `corpus-v3`** ;
+`git status` sur `golden-corpus` : **0 fichier modifié**.
+
+`FACT` — coût réel mesuré : **1,74 $ par domaine**, contre 0,03 à 0,18 $ estimés
+avant les sept règles. **L'estimation initiale était fausse et a été corrigée
+auprès du propriétaire avant l'autorisation.** Plafond dur de 25 $ intact.

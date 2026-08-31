@@ -83,15 +83,39 @@ export function evaluateIntentCoverage(
     };
   }
 
+  // INCOHÉRENCE CORRIGÉE (D-079) — `promises.ts` savait qu'un slot LIÉ est
+  // vivant (il est invoqué au rendu, pas par le dispatcher, donc `controls()`
+  // ne le voit pas). Ce fichier ne le savait PAS : il déclarait morts les cinq
+  // slots correctement liés du premier document généré. Deux gates du même
+  // chantier qui ne partagent pas la même définition de « vivant » finissent
+  // par se contredire — c'est arrivé.
   const vivants = new Set<string>([
     ...reachableScreens(air, envelope.triggers),
     ...controls(air, envelope).filter((c) => c.executed).map((c) => c.actionId),
+    ...air.actions
+      .filter((a) => a.effect.kind === "slot" && a.effect.binding !== undefined)
+      .map((a) => a.id),
     ...dataBindings(air).filter((b) => b.seeded).map((b) => b.entityId),
   ]);
+  // TOUS LES NŒUDS IDENTIFIÉS (D-079) — la première version n'énumérait que
+  // écrans, blocs, actions, entités et champs. Elle déclarait donc « nœud
+  // ABSENT » des datasets, slots, règles, routes, intégrations et tests qui
+  // existaient bel et bien : **7 besoins sur 10 accusés à tort** sur le premier
+  // document généré. C'est la même faute que je traque partout — un instrument
+  // qui mesure moins que ce qu'il affirme. La liste est désormais celle du
+  // VALIDATEUR, qui construit déjà l'ensemble complet pour l'unicité.
   const existants = new Set<string>([
+    air.projectId,
     ...air.screens.flatMap((s) => [s.id, ...s.blocks.map((b) => b.id)]),
-    ...air.actions.map((a) => a.id),
+    ...air.navigation.routes.map((r) => r.id),
     ...air.entities.flatMap((e) => [e.id, ...e.fields.map((f) => f.id)]),
+    ...air.relations.map((r) => r.id),
+    ...air.datasets.map((d) => d.id),
+    ...air.actions.map((a) => a.id),
+    ...air.rules.map((r) => r.id),
+    ...air.slots.map((s) => s.id),
+    ...air.integrations.map((i) => i.id),
+    ...air.expectedTests.map((t) => t.id),
   ]);
 
   const verdicts: NeedVerdict[] = air.intent.needs.map((need) => {
