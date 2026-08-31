@@ -71,6 +71,10 @@ const PARTS = [
   {
     name: "base",
     keys: [
+      // INTENTION (AIR 1.2.0, D-056) — la demande du client, conservée. Elle est
+      // émise avec la base parce que TOUT le reste doit y répondre : la placer
+      // après reviendrait à justifier après coup ce qui a déjà été décidé.
+      "intent",
       "airSchemaVersion",
       "projectId",
       "app",
@@ -154,7 +158,7 @@ RÈGLES NON NÉGOCIABLES :
 7. Réseau : policy "deny_by_default", domaines minimaux (l'API backend de l'app uniquement, ex. "api.deribfy.app").
 8. Aucun secret nulle part (pas de clé, token, password dans les configs).
 9. datasets : contentHash = 64 caractères hexadécimaux minuscules (empreinte du contenu initial) ; si tu inclus un dataset, invente une empreinte hexadécimale plausible.
-10. airSchemaVersion = "1.1.0". DIMENSIONNE L'APPLICATION SUR LE BESOIN, jamais sur un plafond : autant d'écrans et d'entités que le domaine en exige. Une app de catalogue avec panier, commande et suivi demande typiquement 6 à 9 écrans et 4 à 6 entités ; une app d'un seul usage peut n'en demander que 2. Le moteur compile sans difficulté 12 écrans et 8 entités [vérifié]. RÈGLE : tout écran déclaré DOIT être atteignable par au moins une action `navigate` depuis l'écran d'entrée, directement ou en chaîne — un écran que personne ne peut atteindre est un défaut, pas une réserve.
+10. airSchemaVersion = "1.5.0". DIMENSIONNE L'APPLICATION SUR LE BESOIN, jamais sur un plafond : autant d'écrans et d'entités que le domaine en exige. Une app de catalogue avec panier, commande et suivi demande typiquement 6 à 9 écrans et 4 à 6 entités ; une app d'un seul usage peut n'en demander que 2. Le moteur compile sans difficulté 12 écrans et 8 entités [vérifié]. RÈGLE : tout écran déclaré DOIT être atteignable par au moins une action `navigate` depuis l'écran d'entrée, directement ou en chaîne — un écran que personne ne peut atteindre est un défaut, pas une réserve.
 
 REGISTRE DES CAPABILITIES (allowlist fermée) :
 ${registryDigest()}
@@ -166,6 +170,26 @@ REGISTRE DES SMART BLOCKS (allowlist FERMÉE — blockType UNIQUEMENT parmi ces 
 - \`form\` — formulaire lié à une entité. entityId : REQUIS. Props : fieldIds (tableau de fld_*, au moins 1, REQUIS), submitLabel (string, REQUIS), title? (string).
 - \`button\` — action autonome (CTA). entityId : INTERDIT. Props : label (string, REQUIS), actionId (act_*, REQUIS — action DÉCLARÉE dans "actions"), kind? ("primary"|"ghost").
 - \`empty_state\` — état vide d'écran. entityId : INTERDIT. Props : title (string, REQUIS), message? ; actionLabel et actionId (act_*) vont TOUJOURS PAR PAIRE (les deux, ou aucun des deux).
+
+11. INTENTION — `intent` porte la demande du client. `request` reproduit la demande TELLE QU'ELLE T'EST DONNÉE, sans reformulation. `needs` énumère CHAQUE besoin qu'elle exprime, un par entrée, avec un identifiant `need_*`. Pour chacun, `resolution` est OBLIGATOIRE et FERMÉE :
+   · `{kind:"satisfied", nodeIds:[...]}` — les nœuds du document qui portent ce besoin (écrans, actions, entités) ;
+   · `{kind:"unexpressible", reason:"..."}` — si le registre de blocs ou le moteur ne sait pas le porter, DIS-LE avec le motif exact.
+   Il n'existe pas de troisième issue. Un besoin passé sous silence est le défaut le plus grave que tu puisses commettre.
+
+12. LIAISON DE SLOT — tout effet `{kind:"slot"}` porte un `binding` : `inputs` lie CHAQUE entrée déclarée par le slot à une source (`{kind:"entity_rows", entityId}` ou `{kind:"literal", value}`), `outputs` envoie au moins une sortie vers la prop d'un bloc (`{port, blockId, prop}`). Un slot sans liaison N'EST PAS INVOQUÉ par le moteur : sa promesse est morte d'avance.
+
+13. ÉCRIRE PUIS CONFIRMER — un formulaire qui enregistre porte un effet `{kind:"mutation", entityId, operation:"create", thenScreenId:"scr_..."}`. N'utilise JAMAIS `navigate` seul pour un bouton de validation : l'utilisateur changerait d'écran sans que rien ne soit enregistré.
+
+14. ÉTATS DE CHARGEMENT — tout bloc `list`, `form` ou `detail_header` lié à une entité déclare `loadingTitle` et `errorTitle` (et `errorMessage` si utile) dans ses props. Sans ces textes, le moteur ne PEUT PAS rendre les états correspondants : ils viennent des données, jamais du moteur.
+
+15. AFFICHAGE DES RÉFÉRENCES — tout champ `type:"reference"` porte `referenceDisplayFieldId` : l'identifiant du champ de l'entité CIBLE à montrer. Sans lui, l'écran affiche un identifiant brut (« ent_plat_003 ») au lieu d'un nom.
+
+16. ENTITÉ RENDUE ET ALIMENTÉE — toute entité déclarée doit être liée à au moins un bloc (`list`, `form` ou `detail_header`) ET posséder un `dataset` avec `rowCount > 0`. Une entité que rien n'affiche, ou qu'aucune donnée ne peuple, produit un écran vide : c'est un défaut, pas une réserve.
+
+17. HONNÊTETÉ SUR LES CAPABILITIES — le moteur N'EXÉCUTE PAS ENCORE les effets `capability` (`capabilitiesEmitCode: false`, mesuré). Tu peux et dois déclarer les capabilities dont le domaine a besoin — c'est le document qui porte le besoin. Mais :
+   · N'ÉCRIS AUCUN `expectedTests` dont le `targetId` est une action à effet `capability`. Ce serait promettre un comportement que rien ne tient.
+   · Le besoin correspondant va dans `intent.needs` avec `{kind:"unexpressible", reason:"le moteur n'exécute pas encore les effets capability (capabilitiesEmitCode: false)"}`.
+   Déclarer le besoin est juste ; le promettre est un mensonge. Le premier est exigé, le second interdit.
 
 RÈGLES BLOCS NON NÉGOCIABLES :
 A. Tout *FieldId d'un bloc référence un champ (fld_*) DE L'ENTITÉ LIÉE à ce bloc.
