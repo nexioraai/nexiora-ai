@@ -3948,3 +3948,31 @@ vrai** — pas de `targetFieldId`, pas de `relationPath`. La traversée vit sur 
 
 **657 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0.**
 `RELEASE_TRAIN_V1.airSchemaVersion` → `1.4.0`.
+
+---
+
+## D-065 — Tri, filtre et pagination des listes — 2026-08-31
+
+`FACT` — `listFiltering: false` : une liste rendait **TOUJOURS tout**, dans
+l'ordre du dataset. Aucun tri, aucun filtre, aucune borne.
+
+### La levée — unions FERMÉES
+
+`sortFieldId` + `sortDirection` (`asc`/`desc`) · `filterFieldId` +
+`filterOperator` (`eq`/`neq`/`contains`) + `filterValue` · `pageSize` (entier,
+borné à 200). **Toutes optionnelles.**
+
+**Aucune expression arbitraire n'entre dans un document** — c'est la propriété
+que le cliquet vérifie désormais : pas de `where:`, `query:`, `expression:`,
+`predicate:`. Trois opérateurs nommés, une direction nommée, une borne entière.
+
+**Ordre d'application volontaire : filtrer → trier → borner.** L'inverse
+tronquerait avant d'avoir vu toutes les lignes.
+
+Sans props, la liste rend tout dans l'ordre du dataset — comportement antérieur
+**inchangé au caractère près**.
+
+### Non-régression
+
+**658 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0.**
+`blocksSourcesHash` re-scellé ; registre toujours 1.1.0, rien retiré.

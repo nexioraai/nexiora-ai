@@ -464,7 +464,37 @@ export function AirList({ screen, blockId }: BlockRef) {
   if (titleFieldId === undefined) {
     throw new Error(`AIR_RUNTIME_PROP_MISSING:${blockId}:titleFieldId`);
   }
-  const instances = provider.listInstances(b.entityId);
+  // TRI / FILTRE / PAGINATION (D-065) — appliqués sur les instances AVANT le
+  // rendu. Fermé par construction : trois opérateurs, une direction, une borne.
+  // Ordre volontaire : filtrer, puis trier, puis borner — l'inverse tronquerait
+  // avant d'avoir vu toutes les lignes.
+  const brutes = provider.listInstances(b.entityId);
+  const filtreChamp = str(props.filterFieldId);
+  const filtreValeur = str(props.filterValue);
+  const filtrees =
+    filtreChamp === undefined || filtreValeur === undefined
+      ? brutes
+      : brutes.filter((i) => {
+          const v = i.values[filtreChamp] ?? "";
+          if (props.filterOperator === "neq") return v !== filtreValeur;
+          if (props.filterOperator === "contains") return v.includes(filtreValeur);
+          return v === filtreValeur;
+        });
+  const triChamp = str(props.sortFieldId);
+  const triees =
+    triChamp === undefined
+      ? filtrees
+      : [...filtrees].sort((x, y) => {
+          const a = x.values[triChamp] ?? "";
+          const c = y.values[triChamp] ?? "";
+          const na = Number(a);
+          const nc = Number(c);
+          const ordre =
+            Number.isFinite(na) && Number.isFinite(nc) ? na - nc : a.localeCompare(c);
+          return props.sortDirection === "desc" ? -ordre : ordre;
+        });
+  const borne = typeof props.pageSize === "number" ? props.pageSize : undefined;
+  const instances = borne === undefined ? triees : triees.slice(0, borne);
   const pick = (fieldId: unknown, values: Readonly<Record<string, string>>) =>
     typeof fieldId === "string" ? resoudre(fieldId, values[fieldId]) : undefined;
   const items: ListItemData[] = instances.map((instance) => ({

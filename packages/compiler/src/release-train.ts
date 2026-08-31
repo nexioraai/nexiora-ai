@@ -51,7 +51,9 @@ export const RELEASE_TRAIN_V1 = {
   // `state`, et les trois blocs consommant des données gagnent les props de
   // titres d'état. Aucun état, aucune prop, aucun type de bloc n'est RETIRÉ :
   // un appelant 1.0.0 est inchangé, ce que le cliquet du registre vérifie.
-  "fbc00e8bd994d01a3f0500ebab5d3acd6183b06ee46f3569912a8984d1de21a7",
+  // Ré-scellé 2026-08-31 (D-065) : le bloc `list` gagne tri, filtre et borne —
+  // unions FERMÉES, toutes optionnelles. Registre toujours 1.1.0, rien retiré.
+  "f6e473f702b54ba9c4a609e31969fe7707a7743adffe258437b73a95f33bee26",
   capabilityRegistryVersion: "1.0.0",
   capabilitySourcesHash:
     "6c28599246abde6e7010704f23f273aafe50d17c5483133709c9065f2777346c",

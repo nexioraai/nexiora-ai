@@ -192,6 +192,15 @@ export const BLOCKS: readonly BlockDefinition[] = [
       loadingTitle: z.string().min(1).optional(),
       errorTitle: z.string().min(1).optional(),
       errorMessage: z.string().min(1).optional(),
+      // TRI, FILTRE, PAGINATION (D-065) — `listFiltering: false` signifiait
+      // qu'une liste rendait TOUJOURS tout, dans l'ordre du dataset. Unions
+      // FERMÉES : aucune expression arbitraire n'entre dans un document.
+      sortFieldId: fieldRef.optional(),
+      sortDirection: z.enum(["asc", "desc"]).optional(),
+      filterFieldId: fieldRef.optional(),
+      filterOperator: z.enum(["eq", "neq", "contains"]).optional(),
+      filterValue: z.string().min(1).optional(),
+      pageSize: z.number().int().positive().max(200).optional(),
 
     }),
     fieldRefProps: [

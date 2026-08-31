@@ -252,11 +252,27 @@ describe("véracité de l'enveloppe — traversée de relation et filtrage", () 
     expect(EXECUTION_ENVELOPE_V1.relationTraversal).toBe(true);
   });
 
-  it("aucun bloc n'accepte de filtre, de tri ou de pagination", () => {
+  // ÉDITION CONSCIENTE (2026-08-31, D-065) : une liste rendait TOUJOURS tout,
+  // dans l'ordre du dataset. Elle peut désormais être triée, filtrée et bornée.
+  it("le tri, le filtre et la borne sont des unions FERMÉES (D-065)", () => {
     const defs = read("blocks/src/definitions.ts");
-    for (const prop of ["filter", "sortBy", "orderBy", "pageSize", "limit"]) {
+    for (const prop of ["sortFieldId", "filterFieldId", "pageSize"]) {
+      expect(defs).toContain(prop);
+    }
+    // Ce qui compte : AUCUNE expression arbitraire n'entre dans un document.
+    // Trois opérateurs nommés, une direction nommée, une borne entière bornée.
+    expect(defs).toContain('z.enum(["eq", "neq", "contains"])');
+    expect(defs).toContain('z.enum(["asc", "desc"])');
+    expect(defs).toContain("z.number().int().positive().max(200)");
+    expect(EXECUTION_ENVELOPE_V1.listFiltering).toBe(true);
+  });
+
+  it("aucune expression libre n'est acceptée en guise de filtre", () => {
+    const defs = read("blocks/src/definitions.ts");
+    // Motifs de PROP, pas de simples mots : le commentaire de D-065 emploie
+    // légitimement le mot « expression » pour dire qu'il n'en accepte aucune.
+    for (const prop of ["where:", "query:", "expression:", "predicate:"]) {
       expect(defs).not.toContain(prop);
     }
-    expect(EXECUTION_ENVELOPE_V1.listFiltering).toBe(false);
   });
 });

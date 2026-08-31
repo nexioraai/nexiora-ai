@@ -163,7 +163,12 @@ export const EXECUTION_ENVELOPE_V1: ExecutionEnvelope = {
   relationTraversal: true,
 
   // Aucune prop de filtre, de tri ou de pagination au registre de blocs gelé.
-  listFiltering: false,
+  // VRAI depuis D-065 : une liste peut être TRIÉE (`sortFieldId` +
+  // `sortDirection`), FILTRÉE (`filterFieldId` + `filterOperator` +
+  // `filterValue`) et BORNÉE (`pageSize`). Unions fermées, aucune expression
+  // arbitraire. Sans props, la liste rend tout dans l'ordre du dataset —
+  // comportement antérieur inchangé.
+  listFiltering: true,
 
   // Mesuré : `rtlSupported` true vs false → 0 fichier du projet ne diffère.
   // Le drapeau n'est lu que par le rendu texte de debug et le générateur de
