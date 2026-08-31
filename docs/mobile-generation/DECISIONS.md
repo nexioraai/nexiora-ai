@@ -4482,3 +4482,31 @@ plafond de campagne.
 
 **659 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0 ·
 26/26 compilent · 164/164 écrans montés.**
+
+---
+
+## D-082 — PREMIER BUILD D'UNE APPLICATION GÉNÉRÉE PAR emit-v3 — 2026-08-31
+
+**Choix délibéré** : builder une application **produite par le générateur**, et non
+`resto-riche` que j'avais écrite à la main. `resto-riche` prouve le MOTEUR ;
+seule une application v3 prouve **le générateur ET le moteur ensemble**.
+
+`FACT` — `v3-resto-quartier` → **« Chez Tantie — Commandes »** · 7 écrans ·
+6 entités · 4 slots · **45 fichiers** · `npm install` EXIT=0 · `tsc` EXIT=0.
+
+`FACT` — les 4 slots déclarés reçoivent une implémentation d'auteur réelle : sans
+elle le registre n'est pas émis et **les slots liés ne sont pas invoqués**. Une
+app de démonstration dont les slots ne tournent pas ne démontrerait rien.
+
+`FACT` — projet EAS créé : `@deribfy-app/chez-tantie` ·
+build Android `preview` (APK, distribution interne) lancé,
+identifiant `3ce71645-62ce-46a6-9539-98a5f4d4913a`.
+
+### Ce que ce build permet, et lui seul
+
+Toutes les mesures du chantier sont indirectes : compilation, rendu sous stubs
+React, gates. **Aucune n'a jamais vu l'application tourner sur du matériel.**
+`RN-07` et la clôture des Phases 8 et 10 en dépendent depuis le début.
+
+`corpus-v2` reste **gelé et intact** ; le nouveau projet vit sous
+`slices/v3-resto-quartier/`.
