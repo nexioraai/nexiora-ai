@@ -69,6 +69,45 @@ export function validateAir(air: ProjectAir): AirDiagnostic[] {
   air.intent?.needs.forEach((n, i) => {
     identities.push([n.id, `intent.needs[${i}]`]);
   });
+
+  // LIAISON DES SLOTS (1.3.0) — une liaison partielle est REFUSÉE. Un port
+  // d'entrée non lié produirait un `undefined` silencieux dans du code
+  // d'auteur ; un port inconnu ferait croire à un câblage qui n'existe pas.
+  const slotById = new Map(air.slots.map((s) => [s.id, s]));
+  air.actions.forEach((action, i) => {
+    if (action.effect.kind !== "slot" || action.effect.binding === undefined) return;
+    const path = `actions[${i}].effect.binding`;
+    const slot = slotById.get(action.effect.slotId);
+    if (slot === undefined) {
+      push("AIR_SLOT_UNKNOWN", path, `slot "${action.effect.slotId}" non déclaré`);
+      return;
+    }
+    const { inputs, outputs } = action.effect.binding;
+    const liees = new Set(inputs.map((b) => b.port));
+    for (const port of slot.inputs) {
+      if (!liees.has(port.name)) {
+        push("AIR_SLOT_INPUT_UNBOUND", path, `entrée "${port.name}" du slot "${slot.id}" non liée`);
+      }
+    }
+    const attendus = new Set(slot.inputs.map((p) => p.name));
+    inputs.forEach((b, j) => {
+      if (!attendus.has(b.port)) {
+        push("AIR_SLOT_INPUT_UNKNOWN", `${path}.inputs[${j}]`, `le slot "${slot.id}" ne déclare aucune entrée "${b.port}"`);
+      }
+      if (b.source.kind === "entity_rows" && !entityById.has(b.source.entityId)) {
+        push("AIR_REF_ENTITY_MISSING", `${path}.inputs[${j}]`, `entité "${b.source.entityId}" inconnue`);
+      }
+    });
+    const sorties = new Set(slot.outputs.map((p) => p.name));
+    outputs.forEach((b, j) => {
+      if (!sorties.has(b.port)) {
+        push("AIR_SLOT_OUTPUT_UNKNOWN", `${path}.outputs[${j}]`, `le slot "${slot.id}" ne déclare aucune sortie "${b.port}"`);
+      }
+      if (!blockIds.has(b.blockId)) {
+        push("AIR_REF_BLOCK_MISSING", `${path}.outputs[${j}]`, `bloc "${b.blockId}" inconnu`);
+      }
+    });
+  });
   for (const [id, path] of identities) {
     const first = seen.get(id);
     if (first === undefined) {

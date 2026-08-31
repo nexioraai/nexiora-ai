@@ -25,7 +25,11 @@ export const RELEASE_TRAIN_V1 = {
   // reste byte-identique sur disque, il est MIGRÉ en mémoire, et la migration
   // n'invente aucune intention. Conséquence assumée : l'`airHash` change,
   // donc tous les `rootHash`. C'est le prix d'une évolution de contrat.
-  airSchemaVersion: "1.2.0",
+  // Porté à 1.3.0 le 2026-08-31 (D-058) : le schéma gagne le champ OPTIONNEL
+  // `binding` sur l'effet `slot` — d'où viennent ses entrées, où vont ses
+  // sorties. Même mécanique qu'en 1.1.0 et 1.2.0 : corpus gelé byte-identique,
+  // migré en mémoire, aucune liaison inventée.
+  airSchemaVersion: "1.3.0",
   blockRegistryVersion: "1.0.0",
   // Ré-scellé le 2026-08-29 (DET-006 / D-039) : `ListBlock` DÉCLARE désormais
   // `fill` sur sa Section, afin que la liste virtualisée reçoive un parent

@@ -136,6 +136,11 @@ interface ScreenSlice {
     }[];
     actions: Record<string, { kind: string; screenId?: string }>;
     uiActionsByBlock: Record<string, string>;
+    slotInvocations?: {
+      slotId: string;
+      inputs: readonly { port: string; source: unknown }[];
+      outputs: readonly { port: string; blockId: string; prop: string }[];
+    }[];
     entities: Record<string, { fields: readonly { id: string; name: string; type: string }[] }>;
   };
 }
@@ -177,6 +182,22 @@ function buildScreenSlice(air: ProjectAir, screen: ProjectAir["screens"][number]
         : { kind: action.effect.kind };
   }
 
+  // INVOCATIONS DE SLOTS (1.3.0, D-058) — un slot lié appartient à CET écran si
+  // au moins une de ses sorties alimente un bloc de cet écran. Règle
+  // STRUCTURELLE, pas une devinette sur le déclencheur : c'est la sortie qui dit
+  // où le résultat est utile, donc où le calcul doit avoir lieu.
+  const slotInvocations: NonNullable<ScreenSlice["data"]["slotInvocations"]> = [];
+  for (const action of [...air.actions].sort((a, b) => byCodeUnit(a.id, b.id))) {
+    if (action.effect.kind !== "slot" || action.effect.binding === undefined) continue;
+    const outputs = action.effect.binding.outputs.filter((o) => blockIds.has(o.blockId));
+    if (outputs.length === 0) continue;
+    slotInvocations.push({
+      slotId: action.effect.slotId,
+      inputs: action.effect.binding.inputs.map((b) => ({ port: b.port, source: b.source })),
+      outputs: outputs.map((o) => ({ port: o.port, blockId: o.blockId, prop: o.prop })),
+    });
+  }
+
   // Tranche d'entités référencées par les blocs de l'écran.
   const entities: ScreenSlice["data"]["entities"] = {};
   for (const block of screen.blocks) {
@@ -209,6 +230,9 @@ function buildScreenSlice(air: ProjectAir, screen: ProjectAir["screens"][number]
       actions,
       uiActionsByBlock,
       entities,
+      // Omise quand vide : les documents sans liaison de slot gardent des
+      // données d'écran EXACTEMENT identiques à celles de 1.2.0.
+      ...(slotInvocations.length === 0 ? {} : { slotInvocations }),
     },
   };
 }
@@ -356,7 +380,7 @@ function emitNavigation(air: ProjectAir): string {
   ].join("\n");
 }
 
-function emitApp(): string {
+function emitApp(avecSlots: boolean): string {
   return [
     "// GÉNÉRÉ — NE PAS ÉDITER (racine d'app : thème + données + navigation).",
     "// S7 (D-026) : tokens scellés 1.0.0, design.theme transporté sans effet.",
@@ -364,6 +388,18 @@ function emitApp(): string {
     'import { ThemeRoot } from "./lib/primitives";',
     'import { DataRoot } from "./lib/runtime/data-provider";',
     'import { buildDemoProvider } from "./lib/runtime/demo-provider";',
+    // Registre de slots (1.3.0, D-058) : importé UNIQUEMENT si le projet en
+    // embarque — sinon l'app émise resterait identique à 1.2.0 au caractère
+    // près, et ce fichier n'a aucune raison de changer.
+    ...(avecSlots
+      ? [
+          'import { SlotRoot } from "./lib/runtime/slot-provider";',
+          // Le registre est émis en `slots/index.ts` — pas `slots/registry.ts`.
+          // Erreur attrapée par le rendu (observation D-058) : l'app émise
+          // n'aurait pas résolu l'import, et aucun test de source ne l'aurait vu.
+          'import { slotRegistry } from "./slots";',
+        ]
+      : []),
     'import { demoData } from "./demo.data";',
     'import { Navigation } from "./navigation";',
     "",
@@ -373,7 +409,13 @@ function emitApp(): string {
     "  return (",
     "    <ThemeRoot>",
     "      <DataRoot provider={provider}>",
-    "        <Navigation />",
+    ...(avecSlots
+      ? [
+          "        <SlotRoot registry={slotRegistry}>",
+          "          <Navigation />",
+          "        </SlotRoot>",
+        ]
+      : ["        <Navigation />"]),
     "      </DataRoot>",
     "    </ThemeRoot>",
     "  );",
@@ -433,7 +475,6 @@ export function emitProject(
     }
     files.set("lib/tokens/theme.generated.ts", emitThemeModule(air));
   }
-  files.set("App.tsx", emitApp());
   files.set("app.json", emitAppJson(air, train));
   files.set("demo.data.ts", emitDemoData(air));
   files.set("manifests/permissions.manifest.json", emitPermissionsManifest(air));
@@ -449,6 +490,7 @@ export function emitProject(
   // code). Un slot non déclaré par l'AIR, ou déclaré deux fois, est un
   // refus net — le compilateur n'invente jamais un contrat.
   const bundle = [...(options.slots ?? [])].sort((a, b) => byCodeUnit(a.slotId, b.slotId));
+  files.set("App.tsx", emitApp(bundle.length > 0));
   if (bundle.length > 0) {
     const declared = new Set(air.slots.map((s) => s.id));
     const seen = new Set<string>();

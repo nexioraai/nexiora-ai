@@ -20,6 +20,7 @@ import {
 } from "../blocks/components";
 import type { FormFieldSpec, ListItemData } from "../blocks/contracts";
 import { useDataProvider } from "./data-provider";
+import { useSlotRegistry } from "./slot-provider";
 
 export interface AirEffectData {
   kind: "navigate" | "capability" | "mutation" | "slot";
@@ -46,6 +47,17 @@ export interface AirFieldData {
   type: string;
 }
 
+export interface AirSlotInvocationData {
+  slotId: string;
+  inputs: readonly {
+    port: string;
+    source:
+      | { kind: "entity_rows"; entityId: string }
+      | { kind: "literal"; value: unknown };
+  }[];
+  outputs: readonly { port: string; blockId: string; prop: string }[];
+}
+
 export interface AirScreenData {
   screenId: string;
   title: string;
@@ -53,6 +65,8 @@ export interface AirScreenData {
   actions: Readonly<Record<string, AirEffectData>>;
   uiActionsByBlock: Readonly<Record<string, string>>;
   entities: Readonly<Record<string, { fields: readonly AirFieldData[] }>>;
+  /** Slots LIÉS dont au moins une sortie alimente un bloc de cet écran (1.3.0). */
+  slotInvocations?: readonly AirSlotInvocationData[];
 }
 
 export interface AirScreenProps {
@@ -68,6 +82,66 @@ function block(screen: AirScreenData, blockId: string): AirBlockInstanceData {
   const found = screen.blocks.find((b) => b.id === blockId);
   if (found === undefined) throw new Error(`AIR_RUNTIME_BLOCK_MISSING:${blockId}`);
   return found;
+}
+
+/**
+ * INVOCATION DES CODE SLOTS (1.3.0, D-058).
+ *
+ * Un slot LIÉ est exécuté à l'ouverture de l'écran, ses entrées prises à la
+ * source déclarée, ses sorties écrites dans les props des blocs ciblés.
+ *
+ * Trois refus délibérés :
+ * - **slot absent du registre** → aucune surcharge. Le bloc garde la prop que le
+ *   document a déclarée. On n'invente pas une valeur pour un code non fourni.
+ * - **slot qui lève** → aucune surcharge, l'écran continue de rendre. Un slot est
+ *   du code d'auteur sous influence potentielle du prompt utilisateur (§4) : il
+ *   ne doit jamais pouvoir abattre l'application.
+ * - **port de sortie absent du résultat** → aucune surcharge pour CE port. Un
+ *   `undefined` écrit dans une prop serait pire que l'absence.
+ */
+function useSlotOverrides(
+  screen: AirScreenData,
+): Readonly<Record<string, Readonly<Record<string, unknown>>>> {
+  const provider = useDataProvider();
+  const registry = useSlotRegistry();
+  const invocations = screen.slotInvocations;
+  return useMemo(() => {
+    const out: Record<string, Record<string, unknown>> = {};
+    for (const invocation of invocations ?? []) {
+      const fn = registry[invocation.slotId];
+      if (fn === undefined) continue;
+      const entrees: Record<string, unknown> = {};
+      for (const { port, source } of invocation.inputs) {
+        entrees[port] =
+          source.kind === "entity_rows"
+            ? provider.listInstances(source.entityId).map((i) => i.values)
+            : source.value;
+      }
+      let resultat: Readonly<Record<string, unknown>>;
+      try {
+        resultat = fn(entrees);
+      } catch {
+        continue;
+      }
+      for (const { port, blockId, prop } of invocation.outputs) {
+        const valeur = resultat[port];
+        if (valeur === undefined) continue;
+        (out[blockId] ??= {})[prop] = valeur;
+      }
+    }
+    return out;
+  }, [invocations, registry, provider]);
+}
+
+/** Props du bloc, surchargées par les sorties de slot qui le ciblent. */
+function useBlockProps(
+  screen: AirScreenData,
+  blockId: string,
+): Readonly<Record<string, unknown>> {
+  const overrides = useSlotOverrides(screen);
+  const base = block(screen, blockId).props;
+  const surcharge = overrides[blockId];
+  return surcharge === undefined ? base : { ...base, ...surcharge };
 }
 
 /**
@@ -129,23 +203,27 @@ function useItemNavigate(screen: AirScreenData, blockId: string) {
 export function AirHeader({ screen, blockId }: BlockRef) {
   const visible = useBlockVisible(screen, blockId);
   const b = block(screen, blockId);
+  // Props SURCHARGÉES par les sorties des slots liés (1.3.0, D-058).
+  const props = useBlockProps(screen, blockId);
   if (!visible) return null;
-  const title = str(b.props.title);
+  const title = str(props.title);
   if (title === undefined) throw new Error(`AIR_RUNTIME_PROP_MISSING:${blockId}:title`);
-  return <HeaderBlock testID={b.id} title={title} subtitle={str(b.props.subtitle)} />;
+  return <HeaderBlock testID={b.id} title={title} subtitle={str(props.subtitle)} />;
 }
 
 export function AirButton({ screen, blockId }: BlockRef) {
   const visible = useBlockVisible(screen, blockId);
   const b = block(screen, blockId);
+  // Props SURCHARGÉES par les sorties des slots liés (1.3.0, D-058).
+  const props = useBlockProps(screen, blockId);
   const dispatch = useDispatch(screen);
   if (!visible) return null;
-  const label = str(b.props.label);
-  const actionId = str(b.props.actionId);
+  const label = str(props.label);
+  const actionId = str(props.actionId);
   if (label === undefined || actionId === undefined) {
     throw new Error(`AIR_RUNTIME_PROP_MISSING:${blockId}:label|actionId`);
   }
-  const kind = b.props.kind === "ghost" ? ("ghost" as const) : ("primary" as const);
+  const kind = props.kind === "ghost" ? ("ghost" as const) : ("primary" as const);
   return (
     <ButtonBlock testID={b.id} label={label} kind={kind} onPress={() => dispatch(actionId)} />
   );
@@ -154,17 +232,19 @@ export function AirButton({ screen, blockId }: BlockRef) {
 export function AirEmptyState({ screen, blockId }: BlockRef) {
   const visible = useBlockVisible(screen, blockId);
   const b = block(screen, blockId);
+  // Props SURCHARGÉES par les sorties des slots liés (1.3.0, D-058).
+  const props = useBlockProps(screen, blockId);
   const dispatch = useDispatch(screen);
   if (!visible) return null;
-  const title = str(b.props.title);
+  const title = str(props.title);
   if (title === undefined) throw new Error(`AIR_RUNTIME_PROP_MISSING:${blockId}:title`);
-  const actionId = str(b.props.actionId);
+  const actionId = str(props.actionId);
   return (
     <EmptyStateBlock
       testID={b.id}
       title={title}
-      message={str(b.props.message)}
-      actionLabel={str(b.props.actionLabel)}
+      message={str(props.message)}
+      actionLabel={str(props.actionLabel)}
       onAction={actionId === undefined ? undefined : () => dispatch(actionId)}
     />
   );
@@ -177,23 +257,25 @@ export function AirDetailHeader({
 }: BlockRef & { itemId?: string }) {
   const visible = useBlockVisible(screen, blockId);
   const b = block(screen, blockId);
+  // Props SURCHARGÉES par les sorties des slots liés (1.3.0, D-058).
+  const props = useBlockProps(screen, blockId);
   const provider = useDataProvider();
   if (!visible) return null;
   if (b.entityId === undefined) throw new Error(`AIR_RUNTIME_ENTITY_MISSING:${blockId}`);
   const instance = provider.getInstance(b.entityId, itemId);
   const value = (fieldId: unknown): string =>
     typeof fieldId === "string" ? (instance?.values[fieldId] ?? "") : "";
-  const badgeIds = Array.isArray(b.props.badgeFieldIds) ? b.props.badgeFieldIds : undefined;
+  const badgeIds = Array.isArray(props.badgeFieldIds) ? props.badgeFieldIds : undefined;
   return (
     <DetailHeaderBlock
       testID={b.id}
-      title={value(b.props.titleFieldId)}
+      title={value(props.titleFieldId)}
       subtitle={
-        b.props.subtitleFieldId === undefined ? undefined : value(b.props.subtitleFieldId)
+        props.subtitleFieldId === undefined ? undefined : value(props.subtitleFieldId)
       }
       badges={badgeIds?.map((id) => value(id))}
       trailing={
-        b.props.trailingFieldId === undefined ? undefined : value(b.props.trailingFieldId)
+        props.trailingFieldId === undefined ? undefined : value(props.trailingFieldId)
       }
     />
   );
@@ -202,11 +284,13 @@ export function AirDetailHeader({
 export function AirList({ screen, blockId }: BlockRef) {
   const visible = useBlockVisible(screen, blockId);
   const b = block(screen, blockId);
+  // Props SURCHARGÉES par les sorties des slots liés (1.3.0, D-058).
+  const props = useBlockProps(screen, blockId);
   const provider = useDataProvider();
   const onItemNavigate = useItemNavigate(screen, blockId);
   if (!visible) return null;
   if (b.entityId === undefined) throw new Error(`AIR_RUNTIME_ENTITY_MISSING:${blockId}`);
-  const titleFieldId = str(b.props.titleFieldId);
+  const titleFieldId = str(props.titleFieldId);
   if (titleFieldId === undefined) {
     throw new Error(`AIR_RUNTIME_PROP_MISSING:${blockId}:titleFieldId`);
   }
@@ -216,19 +300,19 @@ export function AirList({ screen, blockId }: BlockRef) {
   const items: ListItemData[] = instances.map((instance) => ({
     id: instance.id,
     title: instance.values[titleFieldId] ?? "",
-    subtitle: pick(b.props.subtitleFieldId, instance.values),
-    trailing: pick(b.props.trailingFieldId, instance.values),
-    badge: pick(b.props.badgeFieldId, instance.values),
+    subtitle: pick(props.subtitleFieldId, instance.values),
+    trailing: pick(props.trailingFieldId, instance.values),
+    badge: pick(props.badgeFieldId, instance.values),
   }));
-  const emptyTitle = str(b.props.emptyTitle);
+  const emptyTitle = str(props.emptyTitle);
   const state =
     items.length === 0 && emptyTitle !== undefined
-      ? ({ kind: "empty", title: emptyTitle, message: str(b.props.emptyMessage) } as const)
+      ? ({ kind: "empty", title: emptyTitle, message: str(props.emptyMessage) } as const)
       : ({ kind: "ready" } as const);
   return (
     <ListBlock
       testID={b.id}
-      title={str(b.props.title)}
+      title={str(props.title)}
       items={items}
       state={state}
       onItemPress={onItemNavigate}
@@ -239,6 +323,8 @@ export function AirList({ screen, blockId }: BlockRef) {
 export function AirForm({ screen, blockId }: BlockRef) {
   const visible = useBlockVisible(screen, blockId);
   const b = block(screen, blockId);
+  // Props SURCHARGÉES par les sorties des slots liés (1.3.0, D-058).
+  const props = useBlockProps(screen, blockId);
   const dispatch = useDispatch(screen);
   const [values, setValues] = useState<Readonly<Record<string, string>>>({});
   if (!visible) return null;
@@ -246,7 +332,7 @@ export function AirForm({ screen, blockId }: BlockRef) {
   const fieldsById = new Map(
     (screen.entities[b.entityId]?.fields ?? []).map((f) => [f.id, f]),
   );
-  const fieldIds = Array.isArray(b.props.fieldIds) ? b.props.fieldIds : [];
+  const fieldIds = Array.isArray(props.fieldIds) ? props.fieldIds : [];
   // Lecture D-028 : l'AIR v1 ne porte pas de libellés humains de champs —
   // le libellé rendu est `field.name` (donnée AIR), jamais un texte moteur.
   const fields: FormFieldSpec[] = fieldIds.flatMap((fieldId) => {
@@ -254,7 +340,7 @@ export function AirForm({ screen, blockId }: BlockRef) {
     const field = fieldsById.get(fieldId);
     return field === undefined ? [] : [{ id: field.id, label: field.name }];
   });
-  const submitLabel = str(b.props.submitLabel);
+  const submitLabel = str(props.submitLabel);
   if (submitLabel === undefined) {
     throw new Error(`AIR_RUNTIME_PROP_MISSING:${blockId}:submitLabel`);
   }
@@ -262,7 +348,7 @@ export function AirForm({ screen, blockId }: BlockRef) {
   return (
     <FormBlock
       testID={b.id}
-      title={str(b.props.title)}
+      title={str(props.title)}
       fields={fields}
       values={values}
       onChangeField={(fieldId, value) =>

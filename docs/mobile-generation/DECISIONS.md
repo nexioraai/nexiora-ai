@@ -3597,3 +3597,88 @@ critère porte sur le cross-domain. La ROADMAP a raison, avec sa réserve `RN-15
 `FACT` — mesurée après corrections : voir `CHANGELOG.md` du 2026-08-31 (3).
 Aucune correction n'a touché au code produit : les quatre portent sur la CI et sur
 la documentation d'état.
+
+---
+
+## D-058 — VOIE 1 : les Code Slots sont INVOQUÉS (AIR 1.3.0) — 2026-08-31
+
+**Choix fondé sur une mesure, pas sur une intuition.** Sur les **152 promesses
+mortes** du corpus : `capability` **61** · `slot` **44** · `mutation` **17** ·
+entité sans donnée 19 · écran inatteignable 11. **80 % meurent d'un effet non
+exécuté** — et les deux premiers tueurs **ne dépendent ni du backend ni de
+l'asynchrone.** J'allais commencer par les données ; c'était faux.
+
+### Le diagnostic — `DET-018` avait une cause précise
+
+`FACT` — le compilateur **émettait déjà** `slots/<id>.ts` et `slots/index.ts`, et
+l'Oracle **refusait déjà** les slots exfiltrants (3 mutations, gardes qui mordent).
+`FACT` — **rien ne les appelait.** `slotsInvoked: false`.
+`INFÉRENCE` — parce que `{kind:"slot", slotId}` **nommait** un slot sans dire ni ce
+qu'on lui donne, ni ce qu'on fait de son résultat. **Le câblage était
+inexprimable** — exactement le défaut de l'intention avant 1.2.0.
+
+### AIR 1.3.0 — la liaison
+
+`binding: { inputs: [{port, source}], outputs: [{port, blockId, prop}] }`, **unions
+fermées** : une entrée vient des lignes d'une entité ou d'un littéral déclaré ; une
+sortie alimente la prop d'un bloc. **Aucune expression arbitraire.**
+
+Le validateur exige la **TOTALITÉ** : une entrée déclarée par le slot et non liée
+est **refusée** (`AIR_SLOT_INPUT_UNBOUND`) — un port manquant produirait un
+`undefined` silencieux dans du code d'auteur. Ports inconnus, entités et blocs
+inexistants : refusés aussi. `binding` **optionnel**, migration **identité** : les
+12 documents gelés n'en portent pas, et on ne leur en invente aucune.
+
+### Le moteur
+
+`useSlotOverrides` exécute les slots liés **au rendu de l'écran** et écrit leurs
+sorties dans les props des blocs ciblés. **Trois refus délibérés** : slot absent du
+registre → aucune surcharge · slot qui lève → aucune surcharge, l'écran rend quand
+même · port absent du résultat → aucune surcharge pour ce port.
+
+**Règle d'appartenance STRUCTURELLE** : un slot appartient à l'écran dont **une
+sortie** cible un bloc — c'est la sortie qui dit où le résultat sert. Aucune
+devinette sur le déclencheur.
+
+### 🔴 DEUX SURDÉCLARATIONS QUE J'AI CRÉÉES — refusées par les cliquets
+
+1. J'ai ajouté `slot` à `effects`. **Faux** : `effects` décrit ce que le
+   **dispatcher** exécute sur un appui ; un slot est calculé **au rendu**.
+   `envelope-truth` a refusé. **Reverté.**
+2. J'ai basculé `slotsInvoked: true`, et la métrique par document — `envelope
+   .slotsInvoked ? air.slots.length : 0` — a fait **passer les 44 slots du corpus
+   de 0 à 44 sans qu'un seul soit lié.** `corpus.test.ts` a refusé. La métrique
+   compte désormais les slots **réellement liés dans CE document**.
+
+> **Les cliquets de véracité m'ont attrapé deux fois en dix minutes.** C'est
+> exactement ce pour quoi ils ont été écrits.
+
+### La preuve — au RENDU, pas dans le source
+
+`docs/elite-protocol/evidence/observation/slot-invoque.obs.tsx` monte l'écran
+panier de `resto-riche` avec le registre réel :
+
+| | rendu |
+|---|---|
+| **contrôle négatif** — sans registre | *« Vérifiez avant de commander »* (la prop **déclarée**) |
+| **avec registre** | **`Total : 2 911 FCFA`** — calculé sur les **7 lignes réelles** |
+
+La prop déclarée est **remplacée**, pas juxtaposée. Sans le contrôle négatif, le
+vert n'aurait rien prouvé.
+
+**Un bug réel attrapé par ce rendu** : `App.tsx` importait `./slots/registry` alors
+que le registre est émis en `slots/index.ts`. **L'app générée n'aurait pas
+résolu son import** — et aucun test de source ne l'aurait vu.
+
+### Effet mesuré — et ce qu'il n'est PAS
+
+`FACT` — **le corpus gelé est INCHANGÉ** : 12/12 toujours refusés, ses 44 promesses
+de slot toujours mortes. C'est **correct** : elles n'ont aucune liaison. Le moteur a
+gagné une capacité ; **seuls les documents qui l'expriment en bénéficient.**
+`INFÉRENCE` — la suite de la VOIE 1 appartient au **générateur** : sans liaisons
+émises, les 44 promesses restent mortes.
+
+### Non-régression
+
+`FACT` — **658 tests verts · 16 espaces de travail · typecheck EXIT=0 · lint EXIT=0.**
+`RELEASE_TRAIN_V1` porté à `1.3.0` : l'`airHash` change, donc tous les `rootHash`.

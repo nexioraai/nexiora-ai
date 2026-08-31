@@ -1,5 +1,5 @@
 {
-  "airSchemaVersion": "1.2.0",
+  "airSchemaVersion": "1.3.0",
   "projectId": "prj_resto_riche",
   "app": {
     "name": "Chez Nous",
@@ -853,10 +853,70 @@
         "kind": "navigate",
         "screenId": "scr_commande"
       }
+    },
+    {
+      "id": "act_total_panier",
+      "name": "Calcul du total du panier",
+      "trigger": {
+        "kind": "lifecycle",
+        "event": "screen_open",
+        "screenId": "scr_panier"
+      },
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_total_panier",
+        "binding": {
+          "inputs": [
+            {
+              "port": "lignes",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_ligne"
+              }
+            },
+            {
+              "port": "devise",
+              "source": {
+                "kind": "literal",
+                "value": "FCFA"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "port": "totalAffiche",
+              "blockId": "blk_panier_header",
+              "prop": "subtitle"
+            }
+          ]
+        }
+      }
     }
   ],
   "rules": [],
-  "slots": [],
+  "slots": [
+    {
+      "id": "slot_total_panier",
+      "description": "Calcule le total du panier depuis les lignes et le formate en FCFA.",
+      "inputs": [
+        {
+          "name": "lignes",
+          "type": "json"
+        },
+        {
+          "name": "devise",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "totalAffiche",
+          "type": "string"
+        }
+      ],
+      "allowedImports": []
+    }
+  ],
   "capabilities": [],
   "permissions": [],
   "design": {

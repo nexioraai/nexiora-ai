@@ -4,6 +4,8 @@
 import { ThemeRoot } from "./lib/primitives";
 import { DataRoot } from "./lib/runtime/data-provider";
 import { buildDemoProvider } from "./lib/runtime/demo-provider";
+import { SlotRoot } from "./lib/runtime/slot-provider";
+import { slotRegistry } from "./slots";
 import { demoData } from "./demo.data";
 import { Navigation } from "./navigation";
 
@@ -13,7 +15,9 @@ export default function App() {
   return (
     <ThemeRoot>
       <DataRoot provider={provider}>
-        <Navigation />
+        <SlotRoot registry={slotRegistry}>
+          <Navigation />
+        </SlotRoot>
       </DataRoot>
     </ThemeRoot>
   );

@@ -106,10 +106,22 @@ describe("véracité de l'enveloppe — capabilities", () => {
 });
 
 describe("véracité de l'enveloppe — slots, règles, RTL, thème", () => {
-  it("le runtime n'importe ni n'invoque le registre de slots (DET-018)", () => {
-    expect(RUNTIME).not.toContain("slotRegistry");
-    expect(RUNTIME).not.toContain('from "../slots');
-    expect(EXECUTION_ENVELOPE_V1.slotsInvoked).toBe(false);
+  // ÉDITION CONSCIENTE (2026-08-31, D-058) : ce test constatait `DET-018` — le
+  // compilateur ÉMETTAIT le code des slots, l'Oracle en refusait les
+  // exfiltrations, et RIEN NE LES APPELAIT. 44 des 152 promesses mortes du
+  // corpus visaient un slot. Le fait a changé : le runtime invoque désormais un
+  // slot LIÉ. Le test ne vérifie plus une absence, il vérifie la CONDITION
+  // EXACTE de l'invocation — sans quoi `slotsInvoked: true` deviendrait une
+  // surdéclaration comme une autre.
+  it("le runtime invoque un slot LIÉ, et lui seul (D-058)", () => {
+    expect(RUNTIME).toContain("useSlotRegistry");
+    expect(EXECUTION_ENVELOPE_V1.slotsInvoked).toBe(true);
+    // La liaison est la condition : sans `binding`, aucune invocation n'est
+    // possible puisque le compilateur n'émet alors AUCUNE `slotInvocations`.
+    expect(EMIT_PROJECT).toContain("binding === undefined");
+    // Et l'invocation reste hors du dispatcher : un slot n'est pas un effet de
+    // pression, il est calculé au rendu. `effects` ne doit donc pas le porter.
+    expect(EXECUTION_ENVELOPE_V1.effects).not.toContain("slot");
   });
 
   it("aucun étage d'émission ne lit `air.rules`", () => {

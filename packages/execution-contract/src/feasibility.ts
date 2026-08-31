@@ -362,7 +362,18 @@ export function analyzeFeasibility(
     capabilitiesDeclared: capabilities.length,
     capabilitiesWired: envelope.capabilitiesEmitCode ? capabilities.length : 0,
     slotsDeclared: air.slots.length,
-    slotsInvoked: envelope.slotsInvoked ? air.slots.length : 0,
+    // Compte les slots RÉELLEMENT invoqués dans CE document : le moteur doit en
+    // être capable (enveloppe) ET le document doit porter une liaison (1.3.0).
+    // Multiplier `air.slots.length` par le booléen d'enveloppe faisait passer
+    // les 44 slots du corpus gelé de 0 à 44 sans qu'aucun ne soit lié — faux
+    // vert attrapé par le cliquet `corpus.test.ts`.
+    slotsInvoked: envelope.slotsInvoked
+      ? new Set(
+          air.actions
+            .filter((a) => a.effect.kind === "slot" && a.effect.binding !== undefined)
+            .map((a) => (a.effect as { slotId: string }).slotId),
+        ).size
+      : 0,
     rulesDeclared: air.rules.length,
     rulesEnforced: envelope.rulesEnforced ? air.rules.length : 0,
     rawReferencesRendered: raws.length,

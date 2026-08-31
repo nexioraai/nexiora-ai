@@ -17,7 +17,7 @@ import {
   testIdSchema,
 } from "./ids.ts";
 
-export const AIR_SCHEMA_VERSION = "1.2.0";
+export const AIR_SCHEMA_VERSION = "1.3.0";
 
 export const semverSchema = z.string().regex(/^\d+\.\d+\.\d+$/);
 export const sha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
@@ -197,6 +197,33 @@ const actionTriggerSchema = z.discriminatedUnion("kind", [
 
 // Fermé par construction : pas de comportement arbitraire dans l'AIR — le
 // spécifique-domaine passe par une capability ou un Code Slot (§1/§4).
+// Source d'une entrée de slot — union FERMÉE. Aucune expression arbitraire :
+// un slot reçoit des données du document, jamais un calcul improvisé.
+const slotInputSourceSchema = z.discriminatedUnion("kind", [
+  z.strictObject({ kind: z.literal("entity_rows"), entityId: entityIdSchema }),
+  z.strictObject({ kind: z.literal("literal"), value: jsonLeafSchema }),
+]);
+
+const slotPortNameSchema = z.string().regex(/^[a-z][a-zA-Z0-9]*$/);
+
+const slotBindingSchema = z.strictObject({
+  // TOTALITÉ EXIGÉE par le validateur : chaque entrée déclarée par le slot doit
+  // être liée. Une entrée manquante produirait un `undefined` silencieux dans du
+  // code d'auteur — le défaut que ce chantier passe son temps à traquer.
+  inputs: z.array(z.strictObject({ port: slotPortNameSchema, source: slotInputSourceSchema })),
+  // Une sortie alimente la prop d'un bloc. Cible fermée : le slot ne peut
+  // écrire nulle part ailleurs.
+  outputs: z
+    .array(
+      z.strictObject({
+        port: slotPortNameSchema,
+        blockId: blockIdSchema,
+        prop: z.string().regex(/^[a-z][a-zA-Z0-9]*$/),
+      }),
+    )
+    .min(1),
+});
+
 const actionEffectSchema = z.discriminatedUnion("kind", [
   z.strictObject({
     kind: z.literal("capability"),
@@ -204,7 +231,26 @@ const actionEffectSchema = z.discriminatedUnion("kind", [
     method: z.string().regex(/^[a-z][a-zA-Z0-9]*$/),
     params: flatConfigSchema.optional(),
   }),
-  z.strictObject({ kind: z.literal("slot"), slotId: slotIdSchema }),
+  z.strictObject({
+    kind: z.literal("slot"),
+    slotId: slotIdSchema,
+    /**
+     * LIAISON DU SLOT (1.3.0, D-058) — d'où viennent ses entrées, où vont ses
+     * sorties.
+     *
+     * Fait mesuré : sur 152 promesses mortes du corpus, **44 visaient un slot**.
+     * Le compilateur ÉMET pourtant leur code et l'Oracle en refuse les
+     * exfiltrations — mais rien ne les APPELAIT, parce que `{kind:"slot",
+     * slotId}` nommait un slot sans dire ce qu'on lui donne ni ce qu'on fait de
+     * son résultat. **Le câblage était inexprimable**, exactement comme
+     * l'intention l'était avant 1.2.0.
+     *
+     * OPTIONNELLE au schéma : les 12 documents gelés n'en portent pas, et la
+     * migration s'interdit d'en inventer. Sans liaison, le slot n'est PAS
+     * invoqué — et la gate de fidélité le dit.
+     */
+    binding: slotBindingSchema.optional(),
+  }),
   z.strictObject({ kind: z.literal("navigate"), screenId: screenIdSchema }),
   z.strictObject({
     kind: z.literal("mutation"),

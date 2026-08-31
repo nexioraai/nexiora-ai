@@ -40,6 +40,18 @@ export const AIR_MIGRATIONS: readonly AirMigration[] = [
       "le FAIT, et la gate de fidélité le refusera comme tel.",
     migrate: (document) => document,
   },
+  {
+    from: "1.2.0",
+    to: "1.3.0",
+    description:
+      "AIR 1.3.0 (D-058) : ajout du champ OPTIONNEL `binding` sur l'effet " +
+      "`slot` — d'où viennent ses entrées, où vont ses sorties. Identité : un " +
+      "document 1.2.0 ne portait aucune liaison, et lui en inventer une " +
+      "reviendrait à DEVINER ce qu'un slot consomme et produit. Un slot sans " +
+      "liaison reste donc NON INVOQUÉ après migration — c'est le FAIT, et la " +
+      "gate de fidélité continue de compter sa promesse comme morte.",
+    migrate: (document) => document,
+  },
 ];
 
 export class AirMigrationError extends Error {

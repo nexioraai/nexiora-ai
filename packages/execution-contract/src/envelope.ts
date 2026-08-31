@@ -83,6 +83,11 @@ export const EXECUTION_ENVELOPE_V1: ExecutionEnvelope = {
 
   // `useDispatch` ne traite QUE `navigate` ; les trois autres branches sont
   // un commentaire. Mesuré : 27 actions exécutées sur 196.
+  // `slot` N'ENTRE PAS ici, malgré D-058. `effects` décrit ce que le DISPATCHER
+  // exécute sur un appui ; un slot lié est invoqué au RENDU de l'écran, pas par
+  // le dispatcher. L'y ajouter aurait fait mentir l'enveloppe — le cliquet
+  // `envelope-truth` l'a refusé, à raison. L'invocation est déclarée par
+  // `slotsInvoked` ci-dessous, à sa place exacte.
   effects: ["navigate"],
 
   // Seul `trigger.kind === "ui"` atteint un composant (via `uiActionsByBlock`
@@ -119,7 +124,10 @@ export const EXECUTION_ENVELOPE_V1: ExecutionEnvelope = {
   // mais aucune convention de liaison n'existe dans le schéma gelé — l'app
   // ne les invoque jamais. Mesuré : 44 slots déclarés, 43 actions à effet
   // `slot`, 0 invocation.
-  slotsInvoked: false,
+  // VRAI depuis D-058, au sens EXACT suivant : un slot dont l'AIR porte une
+  // liaison, et dont l'implémentation est fournie au compilateur, est exécuté à
+  // l'ouverture de l'écran. Sans liaison, ou sans implémentation : non invoqué.
+  slotsInvoked: true,
 
   // 71 règles déclarées sur le corpus, aucun consommateur dans le moteur.
   rulesEnforced: false,

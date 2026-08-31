@@ -114,11 +114,38 @@ const intent = {
   ],
 };
 
-const air = { airSchemaVersion:"1.2.0", projectId:"prj_resto_riche", intent,
+// SLOT LIÉ (1.3.0, D-058) — la démonstration que le code d'auteur est
+// réellement APPELÉ : il calcule le total du panier depuis les lignes réelles,
+// et sa sortie remplace le sous-titre de l'en-tête du panier.
+const slots = [{
+  id: "slot_total_panier",
+  description: "Calcule le total du panier depuis les lignes et le formate en FCFA.",
+  inputs: [{ name: "lignes", type: "json" }, { name: "devise", type: "string" }],
+  outputs: [{ name: "totalAffiche", type: "string" }],
+  allowedImports: [],
+}];
+const actionSlot = {
+  id: "act_total_panier",
+  name: "Calcul du total du panier",
+  trigger: { kind: "lifecycle", event: "screen_open", screenId: "scr_panier" },
+  effect: {
+    kind: "slot",
+    slotId: "slot_total_panier",
+    binding: {
+      inputs: [
+        { port: "lignes", source: { kind: "entity_rows", entityId: "ent_ligne" } },
+        { port: "devise", source: { kind: "literal", value: "FCFA" } },
+      ],
+      outputs: [{ port: "totalAffiche", blockId: "blk_panier_header", prop: "subtitle" }],
+    },
+  },
+};
+
+const air = { airSchemaVersion:"1.3.0", projectId:"prj_resto_riche", intent,
   app:{ name:"Chez Nous", slug:"chez-nous", locales:{ userLanguage:"fr-FR", appLocales:["fr-FR"],
     defaultAppLocale:"fr-FR", contentLocales:["fr-FR"], rtlSupported:false } },
   screens, navigation:{ entryScreenId:"scr_menu", routes: screens.map((s)=>({ id:`nav_${s.id.slice(4)}`, screenId:s.id })) },
-  entities, relations:[], datasets, actions, rules:[], slots:[], capabilities:[], permissions:[],
+  entities, relations:[], datasets, actions:[...actions, actionSlot], rules:[], slots, capabilities:[], permissions:[],
   design:{ theme:"chez_nous", overrides:[{key:"radius.sm",value:10},{key:"color.light.primary",value:"#0B5E8A"}] },
   integrations:[], network:{ policy:"deny_by_default", allowedDomains:[] },
   native:{ minIosVersion:"16.4", minAndroidSdk:26 },
@@ -153,7 +180,16 @@ console.log("  écrans:", screens.length, "· entités:", entities.length, "· b
   "· actions:", actions.length, "· champs:", entities.flatMap(e=>e.fields).length);
 let v; try { v = assertValidAir(air); console.log("① validateurs .......... 🟢 ACCEPTÉ"); }
 catch (e) { console.log("① validateurs .......... 🔴"); for(const d of (e.diagnostics??[])) console.log("   ",d.code,d.path,d.message); process.exit(1); }
-const c = compileProject(v);
+// IMPLÉMENTATION du slot — code d'auteur, soumis à la politique AST de
+// l'Oracle comme n'importe quel slot. Il est désormais RÉELLEMENT APPELÉ.
+const sourceSlot = `export function runSlot(entrees: { lignes: { fld_ligne_prix_ligne?: string }[]; devise: string }): { totalAffiche: string } {
+  const total = entrees.lignes.reduce((s, l) => s + Number(l.fld_ligne_prix_ligne ?? 0), 0);
+  return { totalAffiche: \`Total : \${total.toLocaleString("fr-FR")} \${entrees.devise}\` };
+}
+`;
+const c = compileProject(v, undefined, {
+  slots: [{ slotId: "slot_total_panier", source: sourceSlot, authorId: "demo" }],
+});
 console.log("② compilation .......... 🟢", c.files.size, "fichiers · rootHash", c.rootHash.slice(0,12)+"…");
 const { writeFileSync, mkdirSync } = await import("node:fs");
 const OUT = R + "slices/resto-riche/app/";

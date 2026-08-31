@@ -86,9 +86,18 @@ export function evaluatePromises(
 ): PromiseReport {
   const atteignables = new Set(reachableScreens(air, envelope.triggers));
   const recensement = controls(air, envelope);
-  const actionsVivantes = new Set(
-    recensement.filter((c) => c.executed).map((c) => c.actionId),
-  );
+  const actionsVivantes = new Set([
+    ...recensement.filter((c) => c.executed).map((c) => c.actionId),
+    // SLOTS LIÉS (1.3.0, D-058) — un slot n'est pas un contrôle : il n'est pas
+    // déclenché par une pression, il est CALCULÉ au rendu de l'écran et ses
+    // sorties alimentent les props des blocs ciblés. `controls()` ne peut donc
+    // pas le voir, et `effects` ne doit pas le porter (ce serait faire mentir
+    // l'enveloppe sur le dispatcher). Sa vie se mesure ici, à sa condition
+    // exacte : la liaison. Sans liaison, il reste mort.
+    ...air.actions
+      .filter((a) => a.effect.kind === "slot" && a.effect.binding !== undefined)
+      .map((a) => a.id),
+  ]);
   const actionsById = new Map(air.actions.map((a) => [a.id, a]));
   const entitesRendues = new Set(
     dataBindings(air)
@@ -116,7 +125,10 @@ export function evaluatePromises(
             ...base,
             targetKind: "action" as const,
             state: "cible_morte" as const,
-            motif: `effet \`${action.effect.kind}\` / déclencheur \`${action.trigger.kind}\` HORS ENVELOPPE, ou action câblée sur aucun bloc — rien ne s'exécute`,
+            motif:
+              action.effect.kind === "slot"
+                ? `slot \`${action.effect.slotId}\` SANS LIAISON : le moteur ne sait ni quoi lui donner, ni où mettre son résultat — il ne l'appelle pas`
+                : `effet \`${action.effect.kind}\` / déclencheur \`${action.trigger.kind}\` HORS ENVELOPPE, ou action câblée sur aucun bloc — rien ne s'exécute`,
           };
     }
     if (entites.has(t.targetId)) {
