@@ -161,11 +161,15 @@ it("une capability non exécutée est imputée au MOTEUR, jamais au document", (
     expect(gap?.owner).toBe("contrat");
   });
 
-  it("les TROIS propriétaires coexistent et restent distingués", () => {
-    // Document construit pour porter EXACTEMENT une cause de chaque nature :
+  it("les propriétaires restent DISTINGUÉS ; l'écart de contrat a disparu (D-066)", () => {
+    // ÉDITION CONSCIENTE (2026-08-31, D-066) : la cause « contrat » de ce
+    // document a DISPARU — l'état d'un formulaire survit désormais au changement
+    // d'écran. Il ne reste donc que deux propriétaires ici. La distinction
+    // elle-même n'est pas perdue : `EXEC_REFERENCE_RENDERED_RAW` reste imputé au
+    // contrat, et le test juste au-dessus le vérifie.
+    // Causes portées par ce document :
     //  · document — `scr_z` n'est ciblé par aucune action ;
-    //  · moteur   — l'effet `mutation` est hors enveloppe ;
-    //  · contrat  — deux écrans portent un formulaire, l'état ne survit pas.
+    //  · moteur   — l'effet `capability` est hors enveloppe.
     const document = air({
       screens: [
         {
@@ -211,16 +215,16 @@ it("une capability non exécutée est imputée au MOTEUR, jamais au document", (
     });
     const report = analyzeFeasibility(document, EXECUTION_ENVELOPE_V1);
     expect([...new Set(report.gaps.map((g) => g.owner))].sort()).toEqual([
-      "contrat",
       "document",
       "moteur",
     ]);
     expect(report.gaps.find((g) => g.owner === "document")?.code).toBe(
       "EXEC_SCREEN_UNREACHABLE_DECLARED",
     );
-    expect(report.gaps.find((g) => g.owner === "contrat")?.code).toBe(
-      "EXEC_CROSS_SCREEN_FORM_STATE",
-    );
+    // L'écart `EXEC_CROSS_SCREEN_FORM_STATE` a DISPARU (D-066) : l'état survit
+    // désormais au changement d'écran. On vérifie son ABSENCE plutôt que de
+    // retirer la ligne — sans quoi une régression le ferait revenir en silence.
+    expect(report.gaps.some((g) => g.code === "EXEC_CROSS_SCREEN_FORM_STATE")).toBe(false);
   });
 });
 

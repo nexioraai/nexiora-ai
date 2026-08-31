@@ -8,7 +8,7 @@
 // Effets d'actions en v1 compilateur : `navigate` est câblé ; les effets
 // `capability`/`mutation`/`slot` sont des non-opérations STRUCTURÉES
 // (implémentations : Phases 5+/9 — lecture consignée D-028).
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useNavigation } from "@react-navigation/native";
 import {
   ButtonBlock,
@@ -22,6 +22,7 @@ import type { FormFieldSpec, ListItemData } from "../blocks/contracts";
 import { useDataProvider } from "./data-provider";
 import { useSlotRegistry } from "./slot-provider";
 import { useCapabilityProvider } from "./capability-provider";
+import { useFormValues } from "./form-state";
 
 export interface AirEffectData {
   kind: "navigate" | "capability" | "mutation" | "slot";
@@ -533,7 +534,9 @@ export function AirForm({ screen, blockId }: BlockRef) {
   const props = useBlockProps(screen, blockId);
   const dispatch = useDispatch(screen);
   const statut = useDataStatus(b.entityId);
-  const [values, setValues] = useState<Readonly<Record<string, string>>>({});
+  // D-066 : l'état vit AU-DESSUS des écrans. Un retour en arrière ne vide plus
+  // le formulaire — défaut mesuré sur le parcours de commande.
+  const [values, changer] = useFormValues(blockId);
   if (!visible) return null;
   if (b.entityId === undefined) throw new Error(`AIR_RUNTIME_ENTITY_MISSING:${blockId}`);
   const fieldsById = new Map(
@@ -558,9 +561,7 @@ export function AirForm({ screen, blockId }: BlockRef) {
       title={str(props.title)}
       fields={fields}
       values={values}
-      onChangeField={(fieldId, value) =>
-        setValues((prev) => ({ ...prev, [fieldId]: value }))
-      }
+      onChangeField={changer}
       submitLabel={submitLabel}
       // D-061 : les valeurs SAISIES accompagnent l'action — sans elles, une
       // création écrirait un enregistrement vide.

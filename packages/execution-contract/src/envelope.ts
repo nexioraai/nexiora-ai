@@ -185,5 +185,10 @@ export const EXECUTION_ENVELOPE_V1: ExecutionEnvelope = {
 
   // `AirForm` porte un `useState` LOCAL, remis à zéro à chaque montage
   // d'écran. Un workflow multi-étapes perd ses données à chaque transition.
-  crossScreenFormState: false,
+  // VRAI depuis D-066 : l'état d'un formulaire est tenu AU-DESSUS des écrans,
+  // indexé par identifiant de bloc. Un retour en arrière ne le vide plus.
+  // Portée exacte : magasin ÉPHÉMÈRE en mémoire — partagé entre écrans, remis à
+  // zéro au redémarrage. Aucune persistance disque n'est promise ; ce serait une
+  // capability, et elle n'en est pas une.
+  crossScreenFormState: true,
 } as const;

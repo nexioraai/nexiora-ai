@@ -227,9 +227,18 @@ describe("véracité de l'enveloppe — slots, règles, RTL, thème", () => {
     expect(EXECUTION_ENVELOPE_V1.themeNameEffective).toBe(false);
   });
 
-  it("l'état d'un formulaire est LOCAL au composant", () => {
-    expect(RUNTIME).toContain("useState<Readonly<Record<string, string>>>({})");
-    expect(EXECUTION_ENVELOPE_V1.crossScreenFormState).toBe(false);
+  // ÉDITION CONSCIENTE (2026-08-31, D-066) : `useState` vivait DANS le
+  // composant. Un utilisateur qui remplissait ses coordonnées, revenait vérifier
+  // son panier puis repartait retrouvait un formulaire VIDE — abandon garanti
+  // sur un parcours de commande.
+  it("l'état d'un formulaire SURVIT au changement d'écran (D-066)", () => {
+    expect(RUNTIME).not.toContain("useState");
+    expect(RUNTIME).toContain("useFormValues");
+    expect(EXECUTION_ENVELOPE_V1.crossScreenFormState).toBe(true);
+    // Portée déclarée, pas élargie : mémoire éphémère, aucune persistance.
+    const store = read("compiler/runtime/form-state.tsx");
+    expect(store).toContain("Aucune persistance");
+    expect(store).not.toContain("AsyncStorage");
   });
 });
 

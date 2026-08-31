@@ -3976,3 +3976,31 @@ Sans props, la liste rend tout dans l'ordre du dataset — comportement antérie
 
 **658 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0.**
 `blocksSourcesHash` re-scellé ; registre toujours 1.1.0, rien retiré.
+
+---
+
+## D-066 — L'état d'un formulaire survit au changement d'écran — 2026-08-31
+
+`FACT` — `useState` vivait **DANS** le composant. Un utilisateur qui remplissait
+ses coordonnées, revenait vérifier son panier, puis repartait — **retrouvait un
+formulaire vide.** Sur un parcours de commande, c'est l'abandon garanti.
+
+### La levée
+
+`FormStateRoot` tient l'état **au-dessus des écrans**, indexé par identifiant de
+bloc, et l'app émise le monte à sa racine.
+
+**Portée DÉCLARÉE, pas élargie** : magasin **éphémère en mémoire** — partagé entre
+écrans, **remis à zéro au redémarrage**. Aucune persistance disque n'est promise :
+ce serait une capability, et elle n'en est pas une. Le cliquet vérifie l'absence
+d'`AsyncStorage`.
+
+### Un écart de FAISABILITÉ a disparu
+
+`EXEC_CROSS_SCREEN_FORM_STATE` n'est plus émis. Le test ne retire pas la ligne :
+il **vérifie désormais son ABSENCE** — sans quoi une régression le ferait revenir
+en silence.
+
+### Non-régression
+
+**658 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0.**

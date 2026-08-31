@@ -3,6 +3,7 @@
 // Provider demo (D-030) : fixtures déterministes compilées (demo.data).
 import { ThemeRoot } from "./lib/primitives";
 import { DataRoot } from "./lib/runtime/data-provider";
+import { FormStateRoot } from "./lib/runtime/form-state";
 import { buildDemoProvider } from "./lib/runtime/demo-provider";
 import { SlotRoot } from "./lib/runtime/slot-provider";
 import { slotRegistry } from "./slots";
@@ -16,7 +17,9 @@ export default function App() {
     <ThemeRoot>
       <DataRoot provider={provider}>
         <SlotRoot registry={slotRegistry}>
-          <Navigation />
+          <FormStateRoot>
+            <Navigation />
+          </FormStateRoot>
         </SlotRoot>
       </DataRoot>
     </ThemeRoot>

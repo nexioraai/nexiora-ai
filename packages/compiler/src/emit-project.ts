@@ -472,6 +472,7 @@ function emitApp(air: ProjectAir, avecSlots: boolean): string {
       : []),
     'import { ThemeRoot } from "./lib/primitives";',
     'import { DataRoot } from "./lib/runtime/data-provider";',
+    'import { FormStateRoot } from "./lib/runtime/form-state";',
     'import { buildDemoProvider } from "./lib/runtime/demo-provider";',
     // Registre de slots (1.3.0, D-058) : importé UNIQUEMENT si le projet en
     // embarque — sinon l'app émise resterait identique à 1.2.0 au caractère
@@ -504,10 +505,12 @@ function emitApp(air: ProjectAir, avecSlots: boolean): string {
     ...(avecSlots
       ? [
           "        <SlotRoot registry={slotRegistry}>",
-          "          <Navigation />",
+          "          <FormStateRoot>",
+          "            <Navigation />",
+          "          </FormStateRoot>",
           "        </SlotRoot>",
         ]
-      : ["        <Navigation />"]),
+      : ["        <FormStateRoot>", "          <Navigation />", "        </FormStateRoot>"]),
     "      </DataRoot>",
     "    </ThemeRoot>",
     "  );",

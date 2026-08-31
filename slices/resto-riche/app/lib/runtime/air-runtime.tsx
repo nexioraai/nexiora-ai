@@ -8,7 +8,7 @@
 // Effets d'actions en v1 compilateur : `navigate` est câblé ; les effets
 // `capability`/`mutation`/`slot` sont des non-opérations STRUCTURÉES
 // (implémentations : Phases 5+/9 — lecture consignée D-028).
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useNavigation } from "@react-navigation/native";
 import {
   ButtonBlock,
@@ -22,6 +22,7 @@ import type { FormFieldSpec, ListItemData } from "../blocks/contracts";
 import { useDataProvider } from "./data-provider";
 import { useSlotRegistry } from "./slot-provider";
 import { useCapabilityProvider } from "./capability-provider";
+import { useFormValues } from "./form-state";
 
 export interface AirEffectData {
   kind: "navigate" | "capability" | "mutation" | "slot";
@@ -464,7 +465,37 @@ export function AirList({ screen, blockId }: BlockRef) {
   if (titleFieldId === undefined) {
     throw new Error(`AIR_RUNTIME_PROP_MISSING:${blockId}:titleFieldId`);
   }
-  const instances = provider.listInstances(b.entityId);
+  // TRI / FILTRE / PAGINATION (D-065) — appliqués sur les instances AVANT le
+  // rendu. Fermé par construction : trois opérateurs, une direction, une borne.
+  // Ordre volontaire : filtrer, puis trier, puis borner — l'inverse tronquerait
+  // avant d'avoir vu toutes les lignes.
+  const brutes = provider.listInstances(b.entityId);
+  const filtreChamp = str(props.filterFieldId);
+  const filtreValeur = str(props.filterValue);
+  const filtrees =
+    filtreChamp === undefined || filtreValeur === undefined
+      ? brutes
+      : brutes.filter((i) => {
+          const v = i.values[filtreChamp] ?? "";
+          if (props.filterOperator === "neq") return v !== filtreValeur;
+          if (props.filterOperator === "contains") return v.includes(filtreValeur);
+          return v === filtreValeur;
+        });
+  const triChamp = str(props.sortFieldId);
+  const triees =
+    triChamp === undefined
+      ? filtrees
+      : [...filtrees].sort((x, y) => {
+          const a = x.values[triChamp] ?? "";
+          const c = y.values[triChamp] ?? "";
+          const na = Number(a);
+          const nc = Number(c);
+          const ordre =
+            Number.isFinite(na) && Number.isFinite(nc) ? na - nc : a.localeCompare(c);
+          return props.sortDirection === "desc" ? -ordre : ordre;
+        });
+  const borne = typeof props.pageSize === "number" ? props.pageSize : undefined;
+  const instances = borne === undefined ? triees : triees.slice(0, borne);
   const pick = (fieldId: unknown, values: Readonly<Record<string, string>>) =>
     typeof fieldId === "string" ? resoudre(fieldId, values[fieldId]) : undefined;
   const items: ListItemData[] = instances.map((instance) => ({
@@ -503,7 +534,9 @@ export function AirForm({ screen, blockId }: BlockRef) {
   const props = useBlockProps(screen, blockId);
   const dispatch = useDispatch(screen);
   const statut = useDataStatus(b.entityId);
-  const [values, setValues] = useState<Readonly<Record<string, string>>>({});
+  // D-066 : l'état vit AU-DESSUS des écrans. Un retour en arrière ne vide plus
+  // le formulaire — défaut mesuré sur le parcours de commande.
+  const [values, changer] = useFormValues(blockId);
   if (!visible) return null;
   if (b.entityId === undefined) throw new Error(`AIR_RUNTIME_ENTITY_MISSING:${blockId}`);
   const fieldsById = new Map(
@@ -528,9 +561,7 @@ export function AirForm({ screen, blockId }: BlockRef) {
       title={str(props.title)}
       fields={fields}
       values={values}
-      onChangeField={(fieldId, value) =>
-        setValues((prev) => ({ ...prev, [fieldId]: value }))
-      }
+      onChangeField={changer}
       submitLabel={submitLabel}
       // D-061 : les valeurs SAISIES accompagnent l'action — sans elles, une
       // création écrirait un enregistrement vide.

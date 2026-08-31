@@ -77,6 +77,11 @@ export const EMBEDDED_SOURCES: readonly EmbeddedSourceSpec[] = [
     rewrites: {},
   },
   {
+    source: "compiler/runtime/form-state.tsx",
+    target: "lib/runtime/form-state.tsx",
+    rewrites: {},
+  },
+  {
     source: "compiler/runtime/demo-provider.ts",
     target: "lib/runtime/demo-provider.ts",
     rewrites: {},
