@@ -1,0 +1,5531 @@
+{
+ "regle": "R-GRAN-2",
+ "decisions": "D-1 → D-15",
+ "perimetre": {
+  "modules": [
+   "packages/execution-contract/src/graph.ts",
+   "packages/execution-contract/src/feasibility.ts",
+   "packages/execution-contract/src/envelope.ts",
+   "packages/air-schema/src/air.ts",
+   "packages/air-schema/src/validate.ts",
+   "packages/air-schema/src/ids.ts",
+   "packages/air-schema/src/lock.ts",
+   "packages/air-schema/src/deployment-state.ts",
+   "packages/blocks/src/registry.ts",
+   "packages/blocks/src/definitions.ts",
+   "packages/compiler/runtime/air-runtime.tsx",
+   "packages/compiler/runtime/data-provider.tsx",
+   "packages/compiler/src/emit-project.ts",
+   "packages/design-tokens/src/schema.ts"
+  ],
+  "racines": [
+   [
+    "projectAirSchema",
+    "packages/air-schema/src/air.ts"
+   ],
+   [
+    "projectLockSchema",
+    "packages/air-schema/src/lock.ts"
+   ],
+   [
+    "deploymentStateSchema",
+    "packages/air-schema/src/deployment-state.ts"
+   ],
+   [
+    "designTokensSchema",
+    "packages/design-tokens/src/schema.ts"
+   ]
+  ]
+ },
+ "unites": [
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::byCodeUnit::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "byCodeUnit",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::byCodeUnit::B2#2",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "byCodeUnit",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::propOf::B6#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "propOf",
+   "genre": "B6"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::propOf::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "propOf",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::actionsOfBlock::B5#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "actionsOfBlock",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::actionsOfBlock::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "actionsOfBlock",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::actionsOfBlock::B3&&#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "actionsOfBlock",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::actionsOfBlock::B1#2",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "actionsOfBlock",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::actionsOfBlock::B3&&#2",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "actionsOfBlock",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::reachableScreens::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "reachableScreens",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::reachableScreens::B5#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "reachableScreens",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::reachableScreens::B5#2",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "reachableScreens",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::reachableScreens::B1#2",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "reachableScreens",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::reachableScreens::B1#3",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "reachableScreens",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::reachableScreens::B1#4",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "reachableScreens",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::reachableScreens::B3||#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "reachableScreens",
+   "genre": "B3||"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::reachableScreens/origin::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "reachableScreens/origin",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::reachableScreens/origin::B6#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "reachableScreens/origin",
+   "genre": "B6"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::reachableScreens/origin::B2#2",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "reachableScreens/origin",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::reachableScreens/originReachable::B3||#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "reachableScreens/originReachable",
+   "genre": "B3||"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::reachableScreens::B1#5",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "reachableScreens",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::detailScreens/fromList::B3&&#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "detailScreens/fromList",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::detailScreens/fromList::B3&&#2",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "detailScreens/fromList",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::detailScreens/fromList::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "detailScreens/fromList",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::dataBindings::B5#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "dataBindings",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::dataBindings::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "dataBindings",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::dataBindings/rowCount::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "dataBindings/rowCount",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::controls::B5#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "controls",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::controls::B5#2",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "controls",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::controls::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "controls",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::controls::B5#3",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "controls",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::controls::B3&&#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "controls",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::rawReferences::B5#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "rawReferences",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::rawReferences::B5#2",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "rawReferences",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::rawReferences::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "rawReferences",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::rawReferences::B1#2",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "rawReferences",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::rawReferences/refs::B3&&#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "rawReferences/refs",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::rawReferences/refs::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "rawReferences/refs",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::rawReferences::B5#3",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "rawReferences",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::rawReferences::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "rawReferences",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::rawReferences/values::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "rawReferences/values",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::rawReferences::B5#4",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "rawReferences",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::rawReferences::B1#3",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "rawReferences",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/graph.ts::rawReferences::B1#4",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/graph.ts",
+   "portee": "rawReferences",
+   "genre": "B1"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::DetailScreenFinding::screenId",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "DetailScreenFinding",
+   "membre": "screenId"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::DetailScreenFinding::blockId",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "DetailScreenFinding",
+   "membre": "blockId"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::DetailScreenFinding::hasItemIdSource",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "DetailScreenFinding",
+   "membre": "hasItemIdSource"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::DataBindingFinding::screenId",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "DataBindingFinding",
+   "membre": "screenId"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::DataBindingFinding::blockId",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "DataBindingFinding",
+   "membre": "blockId"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::DataBindingFinding::blockType",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "DataBindingFinding",
+   "membre": "blockType"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::DataBindingFinding::entityId",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "DataBindingFinding",
+   "membre": "entityId"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::DataBindingFinding::seeded",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "DataBindingFinding",
+   "membre": "seeded"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::DataBindingFinding::rowCount",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "DataBindingFinding",
+   "membre": "rowCount"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::dataBindings/{}#1::entityId",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "dataBindings/{}#1",
+   "membre": "entityId"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::ControlFinding::screenId",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "ControlFinding",
+   "membre": "screenId"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::ControlFinding::blockId",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "ControlFinding",
+   "membre": "blockId"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::ControlFinding::blockType",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "ControlFinding",
+   "membre": "blockType"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::ControlFinding::actionId",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "ControlFinding",
+   "membre": "actionId"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::ControlFinding::effectKind",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "ControlFinding",
+   "membre": "effectKind"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::ControlFinding::executed",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "ControlFinding",
+   "membre": "executed"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::RawReferenceFinding::screenId",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "RawReferenceFinding",
+   "membre": "screenId"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::RawReferenceFinding::blockId",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "RawReferenceFinding",
+   "membre": "blockId"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::RawReferenceFinding::propKey",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "RawReferenceFinding",
+   "membre": "propKey"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::RawReferenceFinding::fieldId",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "RawReferenceFinding",
+   "membre": "fieldId"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/graph.ts::RawReferenceFinding::targetEntityId",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/graph.ts",
+   "contrat": "RawReferenceFinding",
+   "membre": "targetEntityId"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::byCodeUnit::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "byCodeUnit",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::byCodeUnit::B2#2",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "byCodeUnit",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B8#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B8"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B8#2",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B8"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B5#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B3&&#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B1#2",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B1#3",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B5#2",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B1#4",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B1#5",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B5#3",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B1#6",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B5#4",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B1#7",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B5#5",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B5#6",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B5#7",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility/all::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility/all",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility/all::B6#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility/all",
+   "genre": "B6"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility/reachable::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility/reachable",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B1#8",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B1#9",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B5#8",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B1#10",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B5#9",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B1#11",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B5#10",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B1#12",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B3&&#2",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility/hasOverrides::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility/hasOverrides",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B1#13",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B3&&#3",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B1#14",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B3&&#4",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility::B2#2",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility/metrics::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility/metrics",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility/metrics::B2#2",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility/metrics",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility/metrics::B2#3",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility/metrics",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility/verdict::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility/verdict",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::analyzeFeasibility/verdict::B2#2",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "analyzeFeasibility/verdict",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::assertFeasible::B8#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "assertFeasible",
+   "genre": "B8"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::assertFeasible::B8#2",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "assertFeasible",
+   "genre": "B8"
+  },
+  {
+   "id": "EXEC::packages/execution-contract/src/feasibility.ts::assertFeasible::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "portee": "assertFeasible",
+   "genre": "B1"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityGap::code",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityGap",
+   "membre": "code"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityGap::path",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityGap",
+   "membre": "path"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityGap::owner",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityGap",
+   "membre": "owner"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityGap::detail",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityGap",
+   "membre": "detail"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityMetrics::effectsDeclared",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityMetrics",
+   "membre": "effectsDeclared"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityMetrics::effectsExecuted",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityMetrics",
+   "membre": "effectsExecuted"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityMetrics::screensDeclared",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityMetrics",
+   "membre": "screensDeclared"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityMetrics::screensReachableDeclared",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityMetrics",
+   "membre": "screensReachableDeclared"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityMetrics::screensReachableEffective",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityMetrics",
+   "membre": "screensReachableEffective"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityMetrics::controlsVisible",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityMetrics",
+   "membre": "controlsVisible"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityMetrics::ghostControls",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityMetrics",
+   "membre": "ghostControls"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityMetrics::dataBoundBlocks",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityMetrics",
+   "membre": "dataBoundBlocks"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityMetrics::dataBoundBlocksWithSource",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityMetrics",
+   "membre": "dataBoundBlocksWithSource"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityMetrics::blockStatesDeclared",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityMetrics",
+   "membre": "blockStatesDeclared"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityMetrics::blockStatesReachable",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityMetrics",
+   "membre": "blockStatesReachable"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityMetrics::capabilitiesDeclared",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityMetrics",
+   "membre": "capabilitiesDeclared"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityMetrics::capabilitiesWired",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityMetrics",
+   "membre": "capabilitiesWired"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityMetrics::slotsDeclared",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityMetrics",
+   "membre": "slotsDeclared"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityMetrics::slotsInvoked",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityMetrics",
+   "membre": "slotsInvoked"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityMetrics::rulesDeclared",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityMetrics",
+   "membre": "rulesDeclared"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityMetrics::rulesEnforced",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityMetrics",
+   "membre": "rulesEnforced"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityMetrics::rawReferencesRendered",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityMetrics",
+   "membre": "rawReferencesRendered"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityReport::envelopeVersion",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityReport",
+   "membre": "envelopeVersion"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityReport::airSchemaVersion",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityReport",
+   "membre": "airSchemaVersion"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityReport::projectId",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityReport",
+   "membre": "projectId"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityReport::mode",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityReport",
+   "membre": "mode"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityReport::verdict",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityReport",
+   "membre": "verdict"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityReport::metrics",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityReport",
+   "membre": "metrics"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityReport::gaps",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityReport",
+   "membre": "gaps"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::FeasibilityReport::reportHash",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "FeasibilityReport",
+   "membre": "reportHash"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::metrics::effectsDeclared",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "metrics",
+   "membre": "effectsDeclared"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::metrics::effectsExecuted",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "metrics",
+   "membre": "effectsExecuted"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::metrics::screensDeclared",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "metrics",
+   "membre": "screensDeclared"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::metrics::screensReachableDeclared",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "metrics",
+   "membre": "screensReachableDeclared"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::metrics::screensReachableEffective",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "metrics",
+   "membre": "screensReachableEffective"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::metrics::controlsVisible",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "metrics",
+   "membre": "controlsVisible"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::metrics::ghostControls",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "metrics",
+   "membre": "ghostControls"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::metrics::dataBoundBlocks",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "metrics",
+   "membre": "dataBoundBlocks"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::metrics::dataBoundBlocksWithSource",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "metrics",
+   "membre": "dataBoundBlocksWithSource"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::metrics::blockStatesDeclared",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "metrics",
+   "membre": "blockStatesDeclared"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::metrics::blockStatesReachable",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "metrics",
+   "membre": "blockStatesReachable"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::metrics::capabilitiesDeclared",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "metrics",
+   "membre": "capabilitiesDeclared"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::metrics::capabilitiesWired",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "metrics",
+   "membre": "capabilitiesWired"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::metrics::slotsDeclared",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "metrics",
+   "membre": "slotsDeclared"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::metrics::slotsInvoked",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "metrics",
+   "membre": "slotsInvoked"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::metrics::rulesDeclared",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "metrics",
+   "membre": "rulesDeclared"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::metrics::rulesEnforced",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "metrics",
+   "membre": "rulesEnforced"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::metrics::rawReferencesRendered",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "metrics",
+   "membre": "rawReferencesRendered"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::body::airSchemaVersion",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "body",
+   "membre": "airSchemaVersion"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::body::envelopeVersion",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "body",
+   "membre": "envelopeVersion"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::body::gaps",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "body",
+   "membre": "gaps"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::body::metrics",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "body",
+   "membre": "metrics"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::body::mode",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "body",
+   "membre": "mode"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::body::projectId",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "body",
+   "membre": "projectId"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/feasibility.ts::body::verdict",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/feasibility.ts",
+   "contrat": "body",
+   "membre": "verdict"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/envelope.ts::ExecutionEnvelope::version",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/envelope.ts",
+   "contrat": "ExecutionEnvelope",
+   "membre": "version"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/envelope.ts::ExecutionEnvelope::effects",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/envelope.ts",
+   "contrat": "ExecutionEnvelope",
+   "membre": "effects"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/envelope.ts::ExecutionEnvelope::triggers",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/envelope.ts",
+   "contrat": "ExecutionEnvelope",
+   "membre": "triggers"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/envelope.ts::ExecutionEnvelope::dataOperations",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/envelope.ts",
+   "contrat": "ExecutionEnvelope",
+   "membre": "dataOperations"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/envelope.ts::ExecutionEnvelope::reachableBlockStates",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/envelope.ts",
+   "contrat": "ExecutionEnvelope",
+   "membre": "reachableBlockStates"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/envelope.ts::ExecutionEnvelope::capabilitiesEmitCode",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/envelope.ts",
+   "contrat": "ExecutionEnvelope",
+   "membre": "capabilitiesEmitCode"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/envelope.ts::ExecutionEnvelope::slotsInvoked",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/envelope.ts",
+   "contrat": "ExecutionEnvelope",
+   "membre": "slotsInvoked"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/envelope.ts::ExecutionEnvelope::rulesEnforced",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/envelope.ts",
+   "contrat": "ExecutionEnvelope",
+   "membre": "rulesEnforced"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/envelope.ts::ExecutionEnvelope::relationTraversal",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/envelope.ts",
+   "contrat": "ExecutionEnvelope",
+   "membre": "relationTraversal"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/envelope.ts::ExecutionEnvelope::listFiltering",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/envelope.ts",
+   "contrat": "ExecutionEnvelope",
+   "membre": "listFiltering"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/envelope.ts::ExecutionEnvelope::rtlFlagEffective",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/envelope.ts",
+   "contrat": "ExecutionEnvelope",
+   "membre": "rtlFlagEffective"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/envelope.ts::ExecutionEnvelope::themeNameEffective",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/envelope.ts",
+   "contrat": "ExecutionEnvelope",
+   "membre": "themeNameEffective"
+  },
+  {
+   "id": "DECL::packages/execution-contract/src/envelope.ts::ExecutionEnvelope::crossScreenFormState",
+   "espace": "DECLARATIVE",
+   "module": "packages/execution-contract/src/envelope.ts",
+   "contrat": "ExecutionEnvelope",
+   "membre": "crossScreenFormState"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B5#1",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#2",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir/checkLocalized::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir/checkLocalized",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir/checkLocalized::B1#2",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir/checkLocalized",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir/checkLocalized::B5#1",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir/checkLocalized",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir/checkLocalized::B1#3",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir/checkLocalized",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir/checkConfig::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir/checkConfig",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir/checkConfig::B1#2",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir/checkConfig",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#3",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#4",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#5",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#6",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B3&&#1",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#7",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B3&&#2",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#8",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B3&&#3",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#9",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#10",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#11",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#12",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B3&&#4",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#13",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#14",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#15",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#16",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B3&&#5",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#17",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B3&&#6",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B3&&#7",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#18",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B3&&#8",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#19",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B3&&#9",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#20",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B3&&#10",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#21",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B3&&#11",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#22",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B3&&#12",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#23",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#24",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#25",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#26",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#27",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#28",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B3&&#13",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#29",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#30",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#31",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#32",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B1#33",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B2#2",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B2#3",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::validateAir::B2#4",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "validateAir",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/air-schema/src/validate.ts::assertValidAir::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/air-schema/src/validate.ts",
+   "portee": "assertValidAir",
+   "genre": "B1"
+  },
+  {
+   "id": "DECL::packages/air-schema/src/validate.ts::AirDiagnostic::code",
+   "espace": "DECLARATIVE",
+   "module": "packages/air-schema/src/validate.ts",
+   "contrat": "AirDiagnostic",
+   "membre": "code"
+  },
+  {
+   "id": "DECL::packages/air-schema/src/validate.ts::AirDiagnostic::path",
+   "espace": "DECLARATIVE",
+   "module": "packages/air-schema/src/validate.ts",
+   "contrat": "AirDiagnostic",
+   "membre": "path"
+  },
+  {
+   "id": "DECL::packages/air-schema/src/validate.ts::AirDiagnostic::message",
+   "espace": "DECLARATIVE",
+   "module": "packages/air-schema/src/validate.ts",
+   "contrat": "AirDiagnostic",
+   "membre": "message"
+  },
+  {
+   "id": "DECL::packages/air-schema/src/validate.ts::validateAir/checkLocalized/{}#1::locale",
+   "espace": "DECLARATIVE",
+   "module": "packages/air-schema/src/validate.ts",
+   "contrat": "validateAir/checkLocalized/{}#1",
+   "membre": "locale"
+  },
+  {
+   "id": "DECL::packages/air-schema/src/validate.ts::validateAir/checkLocalized/{}#1::text",
+   "espace": "DECLARATIVE",
+   "module": "packages/air-schema/src/validate.ts",
+   "contrat": "validateAir/checkLocalized/{}#1",
+   "membre": "text"
+  },
+  {
+   "id": "DECL::packages/air-schema/src/validate.ts::validateAir/checkConfig/{}#1::key",
+   "espace": "DECLARATIVE",
+   "module": "packages/air-schema/src/validate.ts",
+   "contrat": "validateAir/checkConfig/{}#1",
+   "membre": "key"
+  },
+  {
+   "id": "DECL::packages/air-schema/src/validate.ts::validateAir/checkConfig/{}#1::value",
+   "espace": "DECLARATIVE",
+   "module": "packages/air-schema/src/validate.ts",
+   "contrat": "validateAir/checkConfig/{}#1",
+   "membre": "value"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::flatToRecord::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "flatToRecord",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks/actionIds::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks/actionIds",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks::B1#2",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks::B3&&#1",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks::B1#3",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks::B3&&#2",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks/boundFields::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks/boundFields",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks::B1#4",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks::B3&&#3",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks::B1#5",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks::B5#1",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks::B1#6",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks::B5#2",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks/refs::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks/refs",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks/refs::B2#2",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks/refs",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks::B5#3",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks::B1#7",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks::B5#4",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks::B1#8",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/registry.ts::validateAirBlocks::B3&&#4",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/registry.ts",
+   "portee": "validateAirBlocks",
+   "genre": "B3&&"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::BlockDiagnostic::code",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "BlockDiagnostic",
+   "membre": "code"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::BlockDiagnostic::path",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "BlockDiagnostic",
+   "membre": "path"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::BlockDiagnostic::message",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "BlockDiagnostic",
+   "membre": "message"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::AirBlockSlice::screens",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "AirBlockSlice",
+   "membre": "screens"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::AirBlockSlice::entities",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "AirBlockSlice",
+   "membre": "entities"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::AirBlockSlice::actions",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "AirBlockSlice",
+   "membre": "actions"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::AirBlockSlice/{}#1::id",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "AirBlockSlice/{}#1",
+   "membre": "id"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::AirBlockSlice/{}#1::blocks",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "AirBlockSlice/{}#1",
+   "membre": "blocks"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::AirBlockSlice/{}#2::id",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "AirBlockSlice/{}#2",
+   "membre": "id"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::AirBlockSlice/{}#2::blockType",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "AirBlockSlice/{}#2",
+   "membre": "blockType"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::AirBlockSlice/{}#2::entityId",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "AirBlockSlice/{}#2",
+   "membre": "entityId"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::AirBlockSlice/{}#2::props",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "AirBlockSlice/{}#2",
+   "membre": "props"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::AirBlockSlice/{}#3::key",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "AirBlockSlice/{}#3",
+   "membre": "key"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::AirBlockSlice/{}#3::value",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "AirBlockSlice/{}#3",
+   "membre": "value"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::AirBlockSlice/{}#4::id",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "AirBlockSlice/{}#4",
+   "membre": "id"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::AirBlockSlice/{}#4::fields",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "AirBlockSlice/{}#4",
+   "membre": "fields"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::AirBlockSlice/{}#5::id",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "AirBlockSlice/{}#5",
+   "membre": "id"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::AirBlockSlice/{}#6::id",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "AirBlockSlice/{}#6",
+   "membre": "id"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::flatToRecord/{}#1::key",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "flatToRecord/{}#1",
+   "membre": "key"
+  },
+  {
+   "id": "DECL::packages/blocks/src/registry.ts::flatToRecord/{}#1::value",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/registry.ts",
+   "contrat": "flatToRecord/{}#1",
+   "membre": "value"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/definitions.ts::BLOCKS::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/definitions.ts",
+   "portee": "BLOCKS",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/definitions.ts::BLOCKS::B3&&#1",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/definitions.ts",
+   "portee": "BLOCKS",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/definitions.ts::BLOCKS::B1#2",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/definitions.ts",
+   "portee": "BLOCKS",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/blocks/src/definitions.ts::BLOCKS::B3&&#2",
+   "espace": "EXECUTION",
+   "module": "packages/blocks/src/definitions.ts",
+   "portee": "BLOCKS",
+   "genre": "B3&&"
+  },
+  {
+   "id": "DECL::packages/blocks/src/definitions.ts::BlockDefinition::id",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/definitions.ts",
+   "contrat": "BlockDefinition",
+   "membre": "id"
+  },
+  {
+   "id": "DECL::packages/blocks/src/definitions.ts::BlockDefinition::version",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/definitions.ts",
+   "contrat": "BlockDefinition",
+   "membre": "version"
+  },
+  {
+   "id": "DECL::packages/blocks/src/definitions.ts::BlockDefinition::description",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/definitions.ts",
+   "contrat": "BlockDefinition",
+   "membre": "description"
+  },
+  {
+   "id": "DECL::packages/blocks/src/definitions.ts::BlockDefinition::entity",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/definitions.ts",
+   "contrat": "BlockDefinition",
+   "membre": "entity"
+  },
+  {
+   "id": "DECL::packages/blocks/src/definitions.ts::BlockDefinition::propsSchema",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/definitions.ts",
+   "contrat": "BlockDefinition",
+   "membre": "propsSchema"
+  },
+  {
+   "id": "DECL::packages/blocks/src/definitions.ts::BlockDefinition::fieldRefProps",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/definitions.ts",
+   "contrat": "BlockDefinition",
+   "membre": "fieldRefProps"
+  },
+  {
+   "id": "DECL::packages/blocks/src/definitions.ts::BlockDefinition::actionRefProps",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/definitions.ts",
+   "contrat": "BlockDefinition",
+   "membre": "actionRefProps"
+  },
+  {
+   "id": "DECL::packages/blocks/src/definitions.ts::BlockDefinition::states",
+   "espace": "DECLARATIVE",
+   "module": "packages/blocks/src/definitions.ts",
+   "contrat": "BlockDefinition",
+   "membre": "states"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::block::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "block",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::useBlockVisible::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "useBlockVisible",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::useBlockVisible::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "useBlockVisible",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::str::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "str",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::useDispatch::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "useDispatch",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::useDispatch::B1#2",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "useDispatch",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::useDispatch::B3&&#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "useDispatch",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::useDispatch::B6#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "useDispatch",
+   "genre": "B6"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::useItemNavigate/effect::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "useItemNavigate/effect",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::useItemNavigate::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "useItemNavigate",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::useItemNavigate::B3&&#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "useItemNavigate",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::useItemNavigate::B6#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "useItemNavigate",
+   "genre": "B6"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirHeader::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirHeader",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirHeader::B1#2",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirHeader",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirButton::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirButton",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirButton::B1#2",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirButton",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirButton::B3||#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirButton",
+   "genre": "B3||"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirButton/kind::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirButton/kind",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirEmptyState::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirEmptyState",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirEmptyState::B1#2",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirEmptyState",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirEmptyState::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirEmptyState",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirDetailHeader::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirDetailHeader",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirDetailHeader::B1#2",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirDetailHeader",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirDetailHeader/value::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirDetailHeader/value",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirDetailHeader/value::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirDetailHeader/value",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirDetailHeader/value::B6#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirDetailHeader/value",
+   "genre": "B6"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirDetailHeader/badgeIds::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirDetailHeader/badgeIds",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirDetailHeader::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirDetailHeader",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirDetailHeader::B6#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirDetailHeader",
+   "genre": "B6"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirDetailHeader::B2#2",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirDetailHeader",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirList::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirList",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirList::B1#2",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirList",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirList::B1#3",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirList",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirList/pick::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirList/pick",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirList/items::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirList/items",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirList/state::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirList/state",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirList/state::B3&&#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirList/state",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirForm::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirForm",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirForm::B1#2",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirForm",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirForm/fieldsById::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirForm/fieldsById",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirForm/fieldsById::B6#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirForm/fieldsById",
+   "genre": "B6"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirForm/fieldIds::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirForm/fieldIds",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirForm/fields::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirForm/fields",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirForm/fields::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirForm/fields",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/runtime/air-runtime.tsx::AirForm::B1#3",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "portee": "AirForm",
+   "genre": "B1"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirEffectData::kind",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirEffectData",
+   "membre": "kind"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirEffectData::screenId",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirEffectData",
+   "membre": "screenId"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirBlockVisibility::kind",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirBlockVisibility",
+   "membre": "kind"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirBlockVisibility::entityId",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirBlockVisibility",
+   "membre": "entityId"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirBlockInstanceData::id",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirBlockInstanceData",
+   "membre": "id"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirBlockInstanceData::blockType",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirBlockInstanceData",
+   "membre": "blockType"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirBlockInstanceData::entityId",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirBlockInstanceData",
+   "membre": "entityId"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirBlockInstanceData::visibleWhen",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirBlockInstanceData",
+   "membre": "visibleWhen"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirBlockInstanceData::props",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirBlockInstanceData",
+   "membre": "props"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirFieldData::id",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirFieldData",
+   "membre": "id"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirFieldData::name",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirFieldData",
+   "membre": "name"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirFieldData::type",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirFieldData",
+   "membre": "type"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirScreenData::screenId",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirScreenData",
+   "membre": "screenId"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirScreenData::title",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirScreenData",
+   "membre": "title"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirScreenData::blocks",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirScreenData",
+   "membre": "blocks"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirScreenData::actions",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirScreenData",
+   "membre": "actions"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirScreenData::uiActionsByBlock",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirScreenData",
+   "membre": "uiActionsByBlock"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirScreenData::entities",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirScreenData",
+   "membre": "entities"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirScreenData/{}#1::fields",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirScreenData/{}#1",
+   "membre": "fields"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirScreenProps::route",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirScreenProps",
+   "membre": "route"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirScreenProps/{}#1::params",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirScreenProps/{}#1",
+   "membre": "params"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirScreenProps/{}#2::itemId",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirScreenProps/{}#2",
+   "membre": "itemId"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::BlockRef::screen",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "BlockRef",
+   "membre": "screen"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::BlockRef::blockId",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "BlockRef",
+   "membre": "blockId"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::useItemNavigate/{}#1::itemId",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "useItemNavigate/{}#1",
+   "membre": "itemId"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/air-runtime.tsx::AirDetailHeader/{}#1::itemId",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/air-runtime.tsx",
+   "contrat": "AirDetailHeader/{}#1",
+   "membre": "itemId"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/data-provider.tsx::EntityInstance::id",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/data-provider.tsx",
+   "contrat": "EntityInstance",
+   "membre": "id"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/data-provider.tsx::EntityInstance::values",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/data-provider.tsx",
+   "contrat": "EntityInstance",
+   "membre": "values"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/data-provider.tsx::DataProvider::listInstances",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/data-provider.tsx",
+   "contrat": "DataProvider",
+   "membre": "listInstances"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/data-provider.tsx::DataProvider::getInstance",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/data-provider.tsx",
+   "contrat": "DataProvider",
+   "membre": "getInstance"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/data-provider.tsx::EMPTY_DATA_PROVIDER::listInstances",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/data-provider.tsx",
+   "contrat": "EMPTY_DATA_PROVIDER",
+   "membre": "listInstances"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/data-provider.tsx::EMPTY_DATA_PROVIDER::getInstance",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/data-provider.tsx",
+   "contrat": "EMPTY_DATA_PROVIDER",
+   "membre": "getInstance"
+  },
+  {
+   "id": "DECL::packages/compiler/runtime/data-provider.tsx::DataRoot/{}#1::provider",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/runtime/data-provider.tsx",
+   "contrat": "DataRoot/{}#1",
+   "membre": "provider"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::byCodeUnit::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "byCodeUnit",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::byCodeUnit::B2#2",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "byCodeUnit",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::assertId::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "assertId",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::pascal::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "pascal",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::resolveLocalized::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "resolveLocalized",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::resolveLocalized/base::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "resolveLocalized/base",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::resolveLocalized::B1#2",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "resolveLocalized",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::flatToRecord::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "flatToRecord",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::buildScreenSlice::B5#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "buildScreenSlice",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::buildScreenSlice::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "buildScreenSlice",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::buildScreenSlice::B3&&#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "buildScreenSlice",
+   "genre": "B3&&"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::buildScreenSlice::B1#2",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "buildScreenSlice",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::buildScreenSlice::B5#2",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "buildScreenSlice",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::buildScreenSlice::B1#3",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "buildScreenSlice",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::buildScreenSlice::B5#3",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "buildScreenSlice",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::buildScreenSlice::B1#4",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "buildScreenSlice",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::buildScreenSlice::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "buildScreenSlice",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::buildScreenSlice::B5#4",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "buildScreenSlice",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::buildScreenSlice::B1#5",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "buildScreenSlice",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::buildScreenSlice::B3||#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "buildScreenSlice",
+   "genre": "B3||"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::buildScreenSlice::B1#6",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "buildScreenSlice",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::buildScreenSlice::B2#2",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "buildScreenSlice",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::buildScreenSlice::B2#3",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "buildScreenSlice",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitScreen/wrappers::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitScreen/wrappers",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitScreen/containerImport::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitScreen/containerImport",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitScreen/containerOpen::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitScreen/containerOpen",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitScreen/containerClose::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitScreen/containerClose",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitScreen/lines::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitScreen/lines",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitScreen/lines::B2#2",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitScreen/lines",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitScreen/lines/wrapper::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitScreen/lines/wrapper",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitScreen/lines/itemId::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitScreen/lines/itemId",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitNavData/routes/title::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitNavData/routes/title",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitNavData/routes::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitNavData/routes",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitProject::B8#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitProject",
+   "genre": "B8"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitProject::B8#2",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitProject",
+   "genre": "B8"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitProject/lock::B2#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitProject/lock",
+   "genre": "B2"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitProject::B5#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitProject",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitProject::B1#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitProject",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitProject::B1#2",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitProject",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitProject::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitProject",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitProject::B6#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitProject",
+   "genre": "B6"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitProject::B3??#2",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitProject",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitProject::B6#2",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitProject",
+   "genre": "B6"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitProject::B3??#3",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitProject",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitProject::B6#3",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitProject",
+   "genre": "B6"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitProject::B5#2",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitProject",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitProject/bundle::B3??#1",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitProject/bundle",
+   "genre": "B3??"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitProject::B1#3",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitProject",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitProject::B5#3",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitProject",
+   "genre": "B5"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitProject::B1#4",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitProject",
+   "genre": "B1"
+  },
+  {
+   "id": "EXEC::packages/compiler/src/emit-project.ts::emitProject::B1#5",
+   "espace": "EXECUTION",
+   "module": "packages/compiler/src/emit-project.ts",
+   "portee": "emitProject",
+   "genre": "B1"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::EmittedProject::lock",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "EmittedProject",
+   "membre": "lock"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::EmittedProject::files",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "EmittedProject",
+   "membre": "files"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::Localized/{}#1::locale",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "Localized/{}#1",
+   "membre": "locale"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::Localized/{}#1::text",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "Localized/{}#1",
+   "membre": "text"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::flatToRecord/{}#1::key",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "flatToRecord/{}#1",
+   "membre": "key"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::flatToRecord/{}#1::value",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "flatToRecord/{}#1",
+   "membre": "value"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::WRAPPER_BY_BLOCK_TYPE::button",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "WRAPPER_BY_BLOCK_TYPE",
+   "membre": "button"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::WRAPPER_BY_BLOCK_TYPE::detail_header",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "WRAPPER_BY_BLOCK_TYPE",
+   "membre": "detail_header"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::WRAPPER_BY_BLOCK_TYPE::empty_state",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "WRAPPER_BY_BLOCK_TYPE",
+   "membre": "empty_state"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::WRAPPER_BY_BLOCK_TYPE::form",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "WRAPPER_BY_BLOCK_TYPE",
+   "membre": "form"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::WRAPPER_BY_BLOCK_TYPE::header",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "WRAPPER_BY_BLOCK_TYPE",
+   "membre": "header"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::WRAPPER_BY_BLOCK_TYPE::list",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "WRAPPER_BY_BLOCK_TYPE",
+   "membre": "list"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::SlotSource::slotId",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "SlotSource",
+   "membre": "slotId"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::SlotSource::source",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "SlotSource",
+   "membre": "source"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::SlotSource::authorId",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "SlotSource",
+   "membre": "authorId"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::EmitOptions::slots",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "EmitOptions",
+   "membre": "slots"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::EmitOptions::providerOverrides",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "EmitOptions",
+   "membre": "providerOverrides"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice::screen",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice",
+   "membre": "screen"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice::title",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice",
+   "membre": "title"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice::data",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice",
+   "membre": "data"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice/{}#1::screenId",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice/{}#1",
+   "membre": "screenId"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice/{}#1::title",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice/{}#1",
+   "membre": "title"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice/{}#1::blocks",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice/{}#1",
+   "membre": "blocks"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice/{}#1::actions",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice/{}#1",
+   "membre": "actions"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice/{}#1::uiActionsByBlock",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice/{}#1",
+   "membre": "uiActionsByBlock"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice/{}#1::entities",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice/{}#1",
+   "membre": "entities"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice/{}#2::id",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice/{}#2",
+   "membre": "id"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice/{}#2::blockType",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice/{}#2",
+   "membre": "blockType"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice/{}#2::entityId",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice/{}#2",
+   "membre": "entityId"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice/{}#2::visibleWhen",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice/{}#2",
+   "membre": "visibleWhen"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice/{}#2::props",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice/{}#2",
+   "membre": "props"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice/{}#3::kind",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice/{}#3",
+   "membre": "kind"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice/{}#3::entityId",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice/{}#3",
+   "membre": "entityId"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice/{}#4::kind",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice/{}#4",
+   "membre": "kind"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice/{}#4::screenId",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice/{}#4",
+   "membre": "screenId"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice/{}#5::fields",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice/{}#5",
+   "membre": "fields"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice/{}#6::id",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice/{}#6",
+   "membre": "id"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice/{}#6::name",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice/{}#6",
+   "membre": "name"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::ScreenSlice/{}#6::type",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "ScreenSlice/{}#6",
+   "membre": "type"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::buildScreenSlice/actions/{}#1::kind",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "buildScreenSlice/actions/{}#1",
+   "membre": "kind"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::buildScreenSlice/actions/{}#1::screenId",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "buildScreenSlice/actions/{}#1",
+   "membre": "screenId"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::nav::entryScreenId",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "nav",
+   "membre": "entryScreenId"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::nav::locale",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "nav",
+   "membre": "locale"
+  },
+  {
+   "id": "DECL::packages/compiler/src/emit-project.ts::nav::routes",
+   "espace": "DECLARATIVE",
+   "module": "packages/compiler/src/emit-project.ts",
+   "contrat": "nav",
+   "membre": "routes"
+  },
+  {
+   "id": "VAL::projectAirSchema::::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::airSchemaVersion::LITERAL::1.1.0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "airSchemaVersion",
+   "genre": "LITERAL",
+   "detail": "1.1.0"
+  },
+  {
+   "id": "VAL::projectAirSchema::projectId::CHECK:string_format::/^prj_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "projectId",
+   "genre": "CHECK:string_format",
+   "detail": "/^prj_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::app::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "app",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::app.name::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "app.name",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::app.name::CHECK:max_length::80",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "app.name",
+   "genre": "CHECK:max_length",
+   "detail": "80"
+  },
+  {
+   "id": "VAL::projectAirSchema::app.slug::CHECK:string_format::/^[a-z0-9][a-z0-9-]{1,62}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "app.slug",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z0-9][a-z0-9-]{1,62}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::app.description::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "app.description",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::app.description[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "app.description[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::app.description[].locale::CHECK:string_format::/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|\\d{3}))?$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "app.description[].locale",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|\\d{3}))?$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::app.description[].text::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "app.description[].text",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::app.locales::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "app.locales",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::app.locales.userLanguage::CHECK:string_format::/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|\\d{3}))?$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "app.locales.userLanguage",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|\\d{3}))?$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::app.locales.appLocales::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "app.locales.appLocales",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::app.locales.appLocales[]::CHECK:string_format::/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|\\d{3}))?$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "app.locales.appLocales[]",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|\\d{3}))?$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::app.locales.defaultAppLocale::CHECK:string_format::/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|\\d{3}))?$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "app.locales.defaultAppLocale",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|\\d{3}))?$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::app.locales.contentLocales::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "app.locales.contentLocales",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::app.locales.contentLocales[]::CHECK:string_format::/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|\\d{3}))?$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "app.locales.contentLocales[]",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|\\d{3}))?$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::screens::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "screens",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::screens[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "screens[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::screens[].id::CHECK:string_format::/^scr_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "screens[].id",
+   "genre": "CHECK:string_format",
+   "detail": "/^scr_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::screens[].title::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "screens[].title",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::screens[].title[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "screens[].title[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::screens[].title[].locale::CHECK:string_format::/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|\\d{3}))?$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "screens[].title[].locale",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|\\d{3}))?$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::screens[].title[].text::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "screens[].title[].text",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::screens[].blocks::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "screens[].blocks",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::screens[].blocks[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "screens[].blocks[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::screens[].blocks[].id::CHECK:string_format::/^blk_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "screens[].blocks[].id",
+   "genre": "CHECK:string_format",
+   "detail": "/^blk_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::screens[].blocks[].blockType::CHECK:string_format::/^[a-z][a-z0-9_]*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "screens[].blocks[].blockType",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z][a-z0-9_]*$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::screens[].blocks[].entityId::CHECK:string_format::/^ent_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "screens[].blocks[].entityId",
+   "genre": "CHECK:string_format",
+   "detail": "/^ent_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::screens[].blocks[].visibleWhen::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "screens[].blocks[].visibleWhen",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::screens[].blocks[].visibleWhen.kind::ENUM::entity_empty,entity_not_empty",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "screens[].blocks[].visibleWhen.kind",
+   "genre": "ENUM",
+   "detail": "entity_empty,entity_not_empty"
+  },
+  {
+   "id": "VAL::projectAirSchema::screens[].blocks[].visibleWhen.entityId::CHECK:string_format::/^ent_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "screens[].blocks[].visibleWhen.entityId",
+   "genre": "CHECK:string_format",
+   "detail": "/^ent_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::screens[].blocks[].props[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "screens[].blocks[].props[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::screens[].blocks[].props[].key::CHECK:string_format::/^[a-zA-Z][a-zA-Z0-9_.-]*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "screens[].blocks[].props[].key",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-zA-Z][a-zA-Z0-9_.-]*$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::navigation::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "navigation",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::navigation.entryScreenId::CHECK:string_format::/^scr_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "navigation.entryScreenId",
+   "genre": "CHECK:string_format",
+   "detail": "/^scr_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::navigation.routes::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "navigation.routes",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::navigation.routes[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "navigation.routes[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::navigation.routes[].id::CHECK:string_format::/^nav_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "navigation.routes[].id",
+   "genre": "CHECK:string_format",
+   "detail": "/^nav_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::navigation.routes[].screenId::CHECK:string_format::/^scr_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "navigation.routes[].screenId",
+   "genre": "CHECK:string_format",
+   "detail": "/^scr_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::navigation.routes[].title::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "navigation.routes[].title",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::navigation.routes[].title[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "navigation.routes[].title[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::navigation.routes[].title[].locale::CHECK:string_format::/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|\\d{3}))?$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "navigation.routes[].title[].locale",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|\\d{3}))?$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::navigation.routes[].title[].text::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "navigation.routes[].title[].text",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::entities[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "entities[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::entities[].id::CHECK:string_format::/^ent_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "entities[].id",
+   "genre": "CHECK:string_format",
+   "detail": "/^ent_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::entities[].name::CHECK:string_format::/^[a-z][a-z0-9_]*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "entities[].name",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z][a-z0-9_]*$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::entities[].fields::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "entities[].fields",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::entities[].fields[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "entities[].fields[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::entities[].fields[].id::CHECK:string_format::/^fld_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "entities[].fields[].id",
+   "genre": "CHECK:string_format",
+   "detail": "/^fld_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::entities[].fields[].name::CHECK:string_format::/^[a-z][a-z0-9_]*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "entities[].fields[].name",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z][a-z0-9_]*$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::entities[].fields[].type::ENUM::string,text,number,decimal,boolean,date,datetime,enum,reference,asset,json",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "entities[].fields[].type",
+   "genre": "ENUM",
+   "detail": "string,text,number,decimal,boolean,date,datetime,enum,reference,asset,json"
+  },
+  {
+   "id": "VAL::projectAirSchema::entities[].fields[].enumValues::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "entities[].fields[].enumValues",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::entities[].fields[].enumValues[]::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "entities[].fields[].enumValues[]",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::entities[].fields[].referencesEntityId::CHECK:string_format::/^ent_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "entities[].fields[].referencesEntityId",
+   "genre": "CHECK:string_format",
+   "detail": "/^ent_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::relations[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "relations[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::relations[].id::CHECK:string_format::/^rel_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "relations[].id",
+   "genre": "CHECK:string_format",
+   "detail": "/^rel_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::relations[].fromEntityId::CHECK:string_format::/^ent_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "relations[].fromEntityId",
+   "genre": "CHECK:string_format",
+   "detail": "/^ent_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::relations[].toEntityId::CHECK:string_format::/^ent_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "relations[].toEntityId",
+   "genre": "CHECK:string_format",
+   "detail": "/^ent_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::relations[].kind::ENUM::one_to_one,one_to_many,many_to_many",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "relations[].kind",
+   "genre": "ENUM",
+   "detail": "one_to_one,one_to_many,many_to_many"
+  },
+  {
+   "id": "VAL::projectAirSchema::datasets[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "datasets[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::datasets[].id::CHECK:string_format::/^data_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "datasets[].id",
+   "genre": "CHECK:string_format",
+   "detail": "/^data_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::datasets[].entityId::CHECK:string_format::/^ent_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "datasets[].entityId",
+   "genre": "CHECK:string_format",
+   "detail": "/^ent_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::datasets[].contentHash::CHECK:string_format::/^[0-9a-f]{64}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "datasets[].contentHash",
+   "genre": "CHECK:string_format",
+   "detail": "/^[0-9a-f]{64}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::datasets[].rowCount::CHECK:number_format::",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "datasets[].rowCount",
+   "genre": "CHECK:number_format",
+   "detail": ""
+  },
+  {
+   "id": "VAL::projectAirSchema::datasets[].rowCount::CHECK:greater_than::0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "datasets[].rowCount",
+   "genre": "CHECK:greater_than",
+   "detail": "0"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].id::CHECK:string_format::/^act_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].id",
+   "genre": "CHECK:string_format",
+   "detail": "/^act_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].name::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].name",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].trigger|0::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].trigger|0",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].trigger|0.kind::LITERAL::ui",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].trigger|0.kind",
+   "genre": "LITERAL",
+   "detail": "ui"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].trigger|0.blockId::CHECK:string_format::/^blk_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].trigger|0.blockId",
+   "genre": "CHECK:string_format",
+   "detail": "/^blk_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].trigger|1::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].trigger|1",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].trigger|1.kind::LITERAL::lifecycle",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].trigger|1.kind",
+   "genre": "LITERAL",
+   "detail": "lifecycle"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].trigger|1.event::ENUM::app_start,screen_open,screen_close",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].trigger|1.event",
+   "genre": "ENUM",
+   "detail": "app_start,screen_open,screen_close"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].trigger|1.screenId::CHECK:string_format::/^scr_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].trigger|1.screenId",
+   "genre": "CHECK:string_format",
+   "detail": "/^scr_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].trigger|2::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].trigger|2",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].trigger|2.kind::LITERAL::data",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].trigger|2.kind",
+   "genre": "LITERAL",
+   "detail": "data"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].trigger|2.entityId::CHECK:string_format::/^ent_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].trigger|2.entityId",
+   "genre": "CHECK:string_format",
+   "detail": "/^ent_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].trigger|2.event::ENUM::created,updated,deleted",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].trigger|2.event",
+   "genre": "ENUM",
+   "detail": "created,updated,deleted"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].effect|0::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].effect|0",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].effect|0.kind::LITERAL::capability",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].effect|0.kind",
+   "genre": "LITERAL",
+   "detail": "capability"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].effect|0.capability::CHECK:string_format::/^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].effect|0.capability",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].effect|0.method::CHECK:string_format::/^[a-z][a-zA-Z0-9]*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].effect|0.method",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z][a-zA-Z0-9]*$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].effect|0.params[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].effect|0.params[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].effect|0.params[].key::CHECK:string_format::/^[a-zA-Z][a-zA-Z0-9_.-]*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].effect|0.params[].key",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-zA-Z][a-zA-Z0-9_.-]*$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].effect|1::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].effect|1",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].effect|1.kind::LITERAL::slot",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].effect|1.kind",
+   "genre": "LITERAL",
+   "detail": "slot"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].effect|1.slotId::CHECK:string_format::/^slot_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].effect|1.slotId",
+   "genre": "CHECK:string_format",
+   "detail": "/^slot_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].effect|2::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].effect|2",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].effect|2.kind::LITERAL::navigate",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].effect|2.kind",
+   "genre": "LITERAL",
+   "detail": "navigate"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].effect|2.screenId::CHECK:string_format::/^scr_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].effect|2.screenId",
+   "genre": "CHECK:string_format",
+   "detail": "/^scr_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].effect|3::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].effect|3",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].effect|3.kind::LITERAL::mutation",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].effect|3.kind",
+   "genre": "LITERAL",
+   "detail": "mutation"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].effect|3.entityId::CHECK:string_format::/^ent_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].effect|3.entityId",
+   "genre": "CHECK:string_format",
+   "detail": "/^ent_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::actions[].effect|3.operation::ENUM::create,update,delete",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "actions[].effect|3.operation",
+   "genre": "ENUM",
+   "detail": "create,update,delete"
+  },
+  {
+   "id": "VAL::projectAirSchema::rules[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "rules[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::rules[].id::CHECK:string_format::/^rule_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "rules[].id",
+   "genre": "CHECK:string_format",
+   "detail": "/^rule_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::rules[].description::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "rules[].description",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::rules[].kind::ENUM::validation,authorization",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "rules[].kind",
+   "genre": "ENUM",
+   "detail": "validation,authorization"
+  },
+  {
+   "id": "VAL::projectAirSchema::rules[].entityId::CHECK:string_format::/^ent_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "rules[].entityId",
+   "genre": "CHECK:string_format",
+   "detail": "/^ent_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::rules[].assertions::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "rules[].assertions",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::rules[].assertions[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "rules[].assertions[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::rules[].assertions[].fieldId::CHECK:string_format::/^fld_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "rules[].assertions[].fieldId",
+   "genre": "CHECK:string_format",
+   "detail": "/^fld_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::rules[].assertions[].operator::ENUM::eq,neq,gt,gte,lt,lte,in,matches,required",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "rules[].assertions[].operator",
+   "genre": "ENUM",
+   "detail": "eq,neq,gt,gte,lt,lte,in,matches,required"
+  },
+  {
+   "id": "VAL::projectAirSchema::slots[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "slots[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::slots[].id::CHECK:string_format::/^slot_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "slots[].id",
+   "genre": "CHECK:string_format",
+   "detail": "/^slot_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::slots[].description::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "slots[].description",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::slots[].inputs[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "slots[].inputs[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::slots[].inputs[].name::CHECK:string_format::/^[a-z][a-zA-Z0-9]*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "slots[].inputs[].name",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z][a-zA-Z0-9]*$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::slots[].inputs[].type::ENUM::string,text,number,decimal,boolean,date,datetime,enum,reference,asset,json",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "slots[].inputs[].type",
+   "genre": "ENUM",
+   "detail": "string,text,number,decimal,boolean,date,datetime,enum,reference,asset,json"
+  },
+  {
+   "id": "VAL::projectAirSchema::slots[].outputs[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "slots[].outputs[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::slots[].outputs[].name::CHECK:string_format::/^[a-z][a-zA-Z0-9]*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "slots[].outputs[].name",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z][a-zA-Z0-9]*$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::slots[].outputs[].type::ENUM::string,text,number,decimal,boolean,date,datetime,enum,reference,asset,json",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "slots[].outputs[].type",
+   "genre": "ENUM",
+   "detail": "string,text,number,decimal,boolean,date,datetime,enum,reference,asset,json"
+  },
+  {
+   "id": "VAL::projectAirSchema::capabilities[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "capabilities[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::capabilities[].capability::CHECK:string_format::/^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "capabilities[].capability",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::capabilities[].config[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "capabilities[].config[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::capabilities[].config[].key::CHECK:string_format::/^[a-zA-Z][a-zA-Z0-9_.-]*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "capabilities[].config[].key",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-zA-Z][a-zA-Z0-9_.-]*$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::permissions[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "permissions[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::permissions[].platform::ENUM::ios,android,both",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "permissions[].platform",
+   "genre": "ENUM",
+   "detail": "ios,android,both"
+  },
+  {
+   "id": "VAL::projectAirSchema::permissions[].permission::CHECK:string_format::/^[A-Za-z][A-Za-z0-9_.]*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "permissions[].permission",
+   "genre": "CHECK:string_format",
+   "detail": "/^[A-Za-z][A-Za-z0-9_.]*$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::permissions[].reason::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "permissions[].reason",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::permissions[].reason[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "permissions[].reason[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::permissions[].reason[].locale::CHECK:string_format::/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|\\d{3}))?$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "permissions[].reason[].locale",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|\\d{3}))?$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::permissions[].reason[].text::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "permissions[].reason[].text",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::permissions[].requiredByCapability::CHECK:string_format::/^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "permissions[].requiredByCapability",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::design::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "design",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::design.theme::CHECK:string_format::/^[a-z][a-z0-9_]*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "design.theme",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z][a-z0-9_]*$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::design.tokensVersion::CHECK:string_format::/^\\d+\\.\\d+\\.\\d+$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "design.tokensVersion",
+   "genre": "CHECK:string_format",
+   "detail": "/^\\d+\\.\\d+\\.\\d+$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::design.overrides[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "design.overrides[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::design.overrides[].key::CHECK:string_format::/^[a-zA-Z][a-zA-Z0-9_.-]*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "design.overrides[].key",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-zA-Z][a-zA-Z0-9_.-]*$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::integrations[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "integrations[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::integrations[].id::CHECK:string_format::/^intg_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "integrations[].id",
+   "genre": "CHECK:string_format",
+   "detail": "/^intg_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::integrations[].providerClass::CHECK:string_format::/^[a-z][a-z0-9_]*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "integrations[].providerClass",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z][a-z0-9_]*$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::integrations[].capability::CHECK:string_format::/^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "integrations[].capability",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::integrations[].config[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "integrations[].config[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::integrations[].config[].key::CHECK:string_format::/^[a-zA-Z][a-zA-Z0-9_.-]*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "integrations[].config[].key",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-zA-Z][a-zA-Z0-9_.-]*$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::network::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "network",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::network.policy::LITERAL::deny_by_default",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "network.policy",
+   "genre": "LITERAL",
+   "detail": "deny_by_default"
+  },
+  {
+   "id": "VAL::projectAirSchema::network.allowedDomains[]::CHECK:string_format::/^([a-z0-9-]+\\.)+[a-z]{2,}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "network.allowedDomains[]",
+   "genre": "CHECK:string_format",
+   "detail": "/^([a-z0-9-]+\\.)+[a-z]{2,}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::native::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "native",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::native.minIosVersion::CHECK:string_format::/^\\d+(\\.\\d+)?$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "native.minIosVersion",
+   "genre": "CHECK:string_format",
+   "detail": "/^\\d+(\\.\\d+)?$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::native.minAndroidSdk::CHECK:number_format::",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "native.minAndroidSdk",
+   "genre": "CHECK:number_format",
+   "detail": ""
+  },
+  {
+   "id": "VAL::projectAirSchema::native.minAndroidSdk::CHECK:greater_than::21",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "native.minAndroidSdk",
+   "genre": "CHECK:greater_than",
+   "detail": "21"
+  },
+  {
+   "id": "VAL::projectAirSchema::compliance::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "compliance",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::compliance.commerceClass::ENUM::none,digital,physical_or_offapp",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "compliance.commerceClass",
+   "genre": "ENUM",
+   "detail": "none,digital,physical_or_offapp"
+  },
+  {
+   "id": "VAL::projectAirSchema::compliance.dataCollected[]::ENUM::contact_info,identifiers,usage_data,location,user_content,purchases,diagnostics",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "compliance.dataCollected[]",
+   "genre": "ENUM",
+   "detail": "contact_info,identifiers,usage_data,location,user_content,purchases,diagnostics"
+  },
+  {
+   "id": "VAL::projectAirSchema::expectedTests[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "expectedTests[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectAirSchema::expectedTests[].id::CHECK:string_format::/^test_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "expectedTests[].id",
+   "genre": "CHECK:string_format",
+   "detail": "/^test_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::projectAirSchema::expectedTests[].description::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "expectedTests[].description",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectAirSchema::expectedTests[].kind::ENUM::deterministic,e2e,contract",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "expectedTests[].kind",
+   "genre": "ENUM",
+   "detail": "deterministic,e2e,contract"
+  },
+  {
+   "id": "VAL::projectAirSchema::expectedTests[].targetId::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectAirSchema",
+   "chemin": "expectedTests[].targetId",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectLockSchema::::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectLockSchema::lockSchemaVersion::LITERAL::1.0.0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "lockSchemaVersion",
+   "genre": "LITERAL",
+   "detail": "1.0.0"
+  },
+  {
+   "id": "VAL::projectLockSchema::airSchemaVersion::CHECK:string_format::/^\\d+\\.\\d+\\.\\d+$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "airSchemaVersion",
+   "genre": "CHECK:string_format",
+   "detail": "/^\\d+\\.\\d+\\.\\d+$/"
+  },
+  {
+   "id": "VAL::projectLockSchema::airHash::CHECK:string_format::/^[0-9a-f]{64}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "airHash",
+   "genre": "CHECK:string_format",
+   "detail": "/^[0-9a-f]{64}$/"
+  },
+  {
+   "id": "VAL::projectLockSchema::resolved::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "resolved",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectLockSchema::resolved.blocks[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "resolved.blocks[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectLockSchema::resolved.blocks[].blockType::CHECK:string_format::/^[a-z][a-z0-9_]*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "resolved.blocks[].blockType",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z][a-z0-9_]*$/"
+  },
+  {
+   "id": "VAL::projectLockSchema::resolved.blocks[].version::CHECK:string_format::/^\\d+\\.\\d+\\.\\d+$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "resolved.blocks[].version",
+   "genre": "CHECK:string_format",
+   "detail": "/^\\d+\\.\\d+\\.\\d+$/"
+  },
+  {
+   "id": "VAL::projectLockSchema::resolved.blocks[].integrity::CHECK:string_format::/^[0-9a-f]{64}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "resolved.blocks[].integrity",
+   "genre": "CHECK:string_format",
+   "detail": "/^[0-9a-f]{64}$/"
+  },
+  {
+   "id": "VAL::projectLockSchema::resolved.capabilities[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "resolved.capabilities[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectLockSchema::resolved.capabilities[].capability::CHECK:string_format::/^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "resolved.capabilities[].capability",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$/"
+  },
+  {
+   "id": "VAL::projectLockSchema::resolved.capabilities[].implementation::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "resolved.capabilities[].implementation",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectLockSchema::resolved.capabilities[].version::CHECK:string_format::/^\\d+\\.\\d+\\.\\d+$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "resolved.capabilities[].version",
+   "genre": "CHECK:string_format",
+   "detail": "/^\\d+\\.\\d+\\.\\d+$/"
+  },
+  {
+   "id": "VAL::projectLockSchema::resolved.providers[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "resolved.providers[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectLockSchema::resolved.providers[].providerClass::CHECK:string_format::/^[a-z][a-z0-9_]*$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "resolved.providers[].providerClass",
+   "genre": "CHECK:string_format",
+   "detail": "/^[a-z][a-z0-9_]*$/"
+  },
+  {
+   "id": "VAL::projectLockSchema::resolved.providers[].provider::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "resolved.providers[].provider",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectLockSchema::resolved.releaseTrain::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "resolved.releaseTrain",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectLockSchema::resolved.releaseTrain.id::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "resolved.releaseTrain.id",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectLockSchema::resolved.releaseTrain.version::CHECK:string_format::/^\\d+\\.\\d+\\.\\d+$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "resolved.releaseTrain.version",
+   "genre": "CHECK:string_format",
+   "detail": "/^\\d+\\.\\d+\\.\\d+$/"
+  },
+  {
+   "id": "VAL::projectLockSchema::resolved.toolchain::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "resolved.toolchain",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::projectLockSchema::resolved.toolchain.node::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "resolved.toolchain.node",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectLockSchema::resolved.toolchain.expoSdk::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "resolved.toolchain.expoSdk",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::projectLockSchema::resolved.toolchain.reactNative::CHECK:min_length::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "projectLockSchema",
+   "chemin": "resolved.toolchain.reactNative",
+   "genre": "CHECK:min_length",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::deploymentStateSchema::::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::deploymentStateSchema::stateSchemaVersion::LITERAL::1.0.0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "stateSchemaVersion",
+   "genre": "LITERAL",
+   "detail": "1.0.0"
+  },
+  {
+   "id": "VAL::deploymentStateSchema::projectId::CHECK:string_format::/^prj_[a-z0-9][a-z0-9_]{0,61}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "projectId",
+   "genre": "CHECK:string_format",
+   "detail": "/^prj_[a-z0-9][a-z0-9_]{0,61}$/"
+  },
+  {
+   "id": "VAL::deploymentStateSchema::platforms::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "platforms",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::deploymentStateSchema::platforms.ios::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "platforms.ios",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::deploymentStateSchema::platforms.ios.distribution::ENUM::none,preview,testflight,store",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "platforms.ios.distribution",
+   "genre": "ENUM",
+   "detail": "none,preview,testflight,store"
+  },
+  {
+   "id": "VAL::deploymentStateSchema::platforms.ios.storeVersion::CHECK:string_format::/^\\d+\\.\\d+\\.\\d+$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "platforms.ios.storeVersion",
+   "genre": "CHECK:string_format",
+   "detail": "/^\\d+\\.\\d+\\.\\d+$/"
+  },
+  {
+   "id": "VAL::deploymentStateSchema::platforms.ios.buildNumber::CHECK:number_format::",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "platforms.ios.buildNumber",
+   "genre": "CHECK:number_format",
+   "detail": ""
+  },
+  {
+   "id": "VAL::deploymentStateSchema::platforms.ios.buildNumber::CHECK:greater_than::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "platforms.ios.buildNumber",
+   "genre": "CHECK:greater_than",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::deploymentStateSchema::platforms.ios.artifactHash::CHECK:string_format::/^[0-9a-f]{64}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "platforms.ios.artifactHash",
+   "genre": "CHECK:string_format",
+   "detail": "/^[0-9a-f]{64}$/"
+  },
+  {
+   "id": "VAL::deploymentStateSchema::platforms.android::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "platforms.android",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::deploymentStateSchema::platforms.android.distribution::ENUM::none,preview,testflight,store",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "platforms.android.distribution",
+   "genre": "ENUM",
+   "detail": "none,preview,testflight,store"
+  },
+  {
+   "id": "VAL::deploymentStateSchema::platforms.android.storeVersion::CHECK:string_format::/^\\d+\\.\\d+\\.\\d+$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "platforms.android.storeVersion",
+   "genre": "CHECK:string_format",
+   "detail": "/^\\d+\\.\\d+\\.\\d+$/"
+  },
+  {
+   "id": "VAL::deploymentStateSchema::platforms.android.buildNumber::CHECK:number_format::",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "platforms.android.buildNumber",
+   "genre": "CHECK:number_format",
+   "detail": ""
+  },
+  {
+   "id": "VAL::deploymentStateSchema::platforms.android.buildNumber::CHECK:greater_than::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "platforms.android.buildNumber",
+   "genre": "CHECK:greater_than",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::deploymentStateSchema::platforms.android.artifactHash::CHECK:string_format::/^[0-9a-f]{64}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "platforms.android.artifactHash",
+   "genre": "CHECK:string_format",
+   "detail": "/^[0-9a-f]{64}$/"
+  },
+  {
+   "id": "VAL::deploymentStateSchema::otaChannels[]::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "otaChannels[]",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::deploymentStateSchema::otaChannels[].channel::ENUM::preview,production",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "otaChannels[].channel",
+   "genre": "ENUM",
+   "detail": "preview,production"
+  },
+  {
+   "id": "VAL::deploymentStateSchema::otaChannels[].airHash::CHECK:string_format::/^[0-9a-f]{64}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "otaChannels[].airHash",
+   "genre": "CHECK:string_format",
+   "detail": "/^[0-9a-f]{64}$/"
+  },
+  {
+   "id": "VAL::deploymentStateSchema::otaChannels[].lockHash::CHECK:string_format::/^[0-9a-f]{64}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "deploymentStateSchema",
+   "chemin": "otaChannels[].lockHash",
+   "genre": "CHECK:string_format",
+   "detail": "/^[0-9a-f]{64}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::designTokensSchema::tokensVersion::LITERAL::1.2.0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "tokensVersion",
+   "genre": "LITERAL",
+   "detail": "1.2.0"
+  },
+  {
+   "id": "VAL::designTokensSchema::brand::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "brand",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::designTokensSchema::brand.accent::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "brand.accent",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::brand.bgDeep::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "brand.bgDeep",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::brand.blue::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "brand.blue",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::brand.gold::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "brand.gold",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::brand.prune::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "brand.prune",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::web::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "web",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::designTokensSchema::web.background::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "web.background",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::designTokensSchema::web.background.light::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "web.background.light",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::web.background.dark::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "web.background.dark",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::web.foreground::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "web.foreground",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::designTokensSchema::web.foreground.light::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "web.foreground.light",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::web.foreground.dark::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "web.foreground.dark",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.light::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.light",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.light.bg::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.light.bg",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.light.surface::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.light.surface",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.light.text::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.light.text",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.light.muted::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.light.muted",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.light.primary::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.light.primary",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.light.onPrimary::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.light.onPrimary",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.light.border::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.light.border",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.light.error::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.light.error",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.light.success::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.light.success",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.light.warn::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.light.warn",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.light.badgeBg::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.light.badgeBg",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.dark::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.dark",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.dark.bg::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.dark.bg",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.dark.surface::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.dark.surface",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.dark.text::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.dark.text",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.dark.muted::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.dark.muted",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.dark.primary::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.dark.primary",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.dark.onPrimary::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.dark.onPrimary",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.dark.border::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.dark.border",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.dark.error::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.dark.error",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.dark.success::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.dark.success",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.dark.warn::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.dark.warn",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::color.dark.badgeBg::CHECK:string_format::/^#[0-9A-Fa-f]{6}$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "color.dark.badgeBg",
+   "genre": "CHECK:string_format",
+   "detail": "/^#[0-9A-Fa-f]{6}$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::space::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "space",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::designTokensSchema::space.xxs::CHECK:number_format::",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "space.xxs",
+   "genre": "CHECK:number_format",
+   "detail": ""
+  },
+  {
+   "id": "VAL::designTokensSchema::space.xxs::CHECK:greater_than::0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "space.xxs",
+   "genre": "CHECK:greater_than",
+   "detail": "0"
+  },
+  {
+   "id": "VAL::designTokensSchema::space.xs::CHECK:number_format::",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "space.xs",
+   "genre": "CHECK:number_format",
+   "detail": ""
+  },
+  {
+   "id": "VAL::designTokensSchema::space.xs::CHECK:greater_than::0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "space.xs",
+   "genre": "CHECK:greater_than",
+   "detail": "0"
+  },
+  {
+   "id": "VAL::designTokensSchema::space.sm::CHECK:number_format::",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "space.sm",
+   "genre": "CHECK:number_format",
+   "detail": ""
+  },
+  {
+   "id": "VAL::designTokensSchema::space.sm::CHECK:greater_than::0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "space.sm",
+   "genre": "CHECK:greater_than",
+   "detail": "0"
+  },
+  {
+   "id": "VAL::designTokensSchema::space.md::CHECK:number_format::",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "space.md",
+   "genre": "CHECK:number_format",
+   "detail": ""
+  },
+  {
+   "id": "VAL::designTokensSchema::space.md::CHECK:greater_than::0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "space.md",
+   "genre": "CHECK:greater_than",
+   "detail": "0"
+  },
+  {
+   "id": "VAL::designTokensSchema::space.lg::CHECK:number_format::",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "space.lg",
+   "genre": "CHECK:number_format",
+   "detail": ""
+  },
+  {
+   "id": "VAL::designTokensSchema::space.lg::CHECK:greater_than::0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "space.lg",
+   "genre": "CHECK:greater_than",
+   "detail": "0"
+  },
+  {
+   "id": "VAL::designTokensSchema::space.xl::CHECK:number_format::",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "space.xl",
+   "genre": "CHECK:number_format",
+   "detail": ""
+  },
+  {
+   "id": "VAL::designTokensSchema::space.xl::CHECK:greater_than::0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "space.xl",
+   "genre": "CHECK:greater_than",
+   "detail": "0"
+  },
+  {
+   "id": "VAL::designTokensSchema::radius::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "radius",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::designTokensSchema::radius.sm::CHECK:number_format::",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "radius.sm",
+   "genre": "CHECK:number_format",
+   "detail": ""
+  },
+  {
+   "id": "VAL::designTokensSchema::radius.sm::CHECK:greater_than::0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "radius.sm",
+   "genre": "CHECK:greater_than",
+   "detail": "0"
+  },
+  {
+   "id": "VAL::designTokensSchema::radius.md::CHECK:number_format::",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "radius.md",
+   "genre": "CHECK:number_format",
+   "detail": ""
+  },
+  {
+   "id": "VAL::designTokensSchema::radius.md::CHECK:greater_than::0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "radius.md",
+   "genre": "CHECK:greater_than",
+   "detail": "0"
+  },
+  {
+   "id": "VAL::designTokensSchema::radius.lg::CHECK:number_format::",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "radius.lg",
+   "genre": "CHECK:number_format",
+   "detail": ""
+  },
+  {
+   "id": "VAL::designTokensSchema::radius.lg::CHECK:greater_than::0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "radius.lg",
+   "genre": "CHECK:greater_than",
+   "detail": "0"
+  },
+  {
+   "id": "VAL::designTokensSchema::font::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "font",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::designTokensSchema::font.label::CHECK:number_format::",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "font.label",
+   "genre": "CHECK:number_format",
+   "detail": ""
+  },
+  {
+   "id": "VAL::designTokensSchema::font.label::CHECK:greater_than::0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "font.label",
+   "genre": "CHECK:greater_than",
+   "detail": "0"
+  },
+  {
+   "id": "VAL::designTokensSchema::font.body::CHECK:number_format::",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "font.body",
+   "genre": "CHECK:number_format",
+   "detail": ""
+  },
+  {
+   "id": "VAL::designTokensSchema::font.body::CHECK:greater_than::0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "font.body",
+   "genre": "CHECK:greater_than",
+   "detail": "0"
+  },
+  {
+   "id": "VAL::designTokensSchema::font.title::CHECK:number_format::",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "font.title",
+   "genre": "CHECK:number_format",
+   "detail": ""
+  },
+  {
+   "id": "VAL::designTokensSchema::font.title::CHECK:greater_than::0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "font.title",
+   "genre": "CHECK:greater_than",
+   "detail": "0"
+  },
+  {
+   "id": "VAL::designTokensSchema::font.heading::CHECK:number_format::",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "font.heading",
+   "genre": "CHECK:number_format",
+   "detail": ""
+  },
+  {
+   "id": "VAL::designTokensSchema::font.heading::CHECK:greater_than::0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "font.heading",
+   "genre": "CHECK:greater_than",
+   "detail": "0"
+  },
+  {
+   "id": "VAL::designTokensSchema::fontWeight::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "fontWeight",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::designTokensSchema::fontWeight.semibold::CHECK:string_format::/^[1-9]00$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "fontWeight.semibold",
+   "genre": "CHECK:string_format",
+   "detail": "/^[1-9]00$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::fontWeight.bold::CHECK:string_format::/^[1-9]00$/",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "fontWeight.bold",
+   "genre": "CHECK:string_format",
+   "detail": "/^[1-9]00$/"
+  },
+  {
+   "id": "VAL::designTokensSchema::opacity::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "opacity",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::designTokensSchema::opacity.disabled::CHECK:greater_than::0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "opacity.disabled",
+   "genre": "CHECK:greater_than",
+   "detail": "0"
+  },
+  {
+   "id": "VAL::designTokensSchema::opacity.disabled::CHECK:less_than::1",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "opacity.disabled",
+   "genre": "CHECK:less_than",
+   "detail": "1"
+  },
+  {
+   "id": "VAL::designTokensSchema::size::STRICTNESS::strict",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "size",
+   "genre": "STRICTNESS",
+   "detail": "strict"
+  },
+  {
+   "id": "VAL::designTokensSchema::size.tapTarget::CHECK:number_format::",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "size.tapTarget",
+   "genre": "CHECK:number_format",
+   "detail": ""
+  },
+  {
+   "id": "VAL::designTokensSchema::size.tapTarget::CHECK:greater_than::0",
+   "espace": "VALUE-CONSTRAINT",
+   "racine": "designTokensSchema",
+   "chemin": "size.tapTarget",
+   "genre": "CHECK:greater_than",
+   "detail": "0"
+  }
+ ]
+}
