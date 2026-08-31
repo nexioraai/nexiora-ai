@@ -1,0 +1,76 @@
+{
+  "phase": 9,
+  "slice": "restaurant",
+  "horodatage": "2026-08-29T20-08-05-725Z",
+  "panneProvoquee": {
+    "bloc": "blk_menu_bouton_commandes",
+    "avant": "act_ouvrir_commandes",
+    "apres": "act_ouvrir_commandes_v2"
+  },
+  "reparationAir": {
+    "statut": "repaired",
+    "tentatives": 1,
+    "jetons": 120
+  },
+  "reparationSlots": {
+    "statut": "repaired",
+    "tentatives": 1,
+    "jetons": 850,
+    "slots": 5
+  },
+  "gardesMordants": [
+    "SLOT_NETWORK_ACCESS",
+    "PATCH_BLOCK_COPY_EDIT",
+    "PATCH_AIR_OUT_OF_TARGET"
+  ],
+  "budget": {
+    "statut": "budget_exhausted",
+    "tentatives": 3,
+    "jetons": 900
+  },
+  "apxx": [
+    {
+      "dimension": "A",
+      "etat": "conforme",
+      "detail": "tapTarget=48 (min 48), 3 surface(s) contrainte(s)"
+    },
+    {
+      "dimension": "B",
+      "etat": "conforme",
+      "detail": "36 paires / 0 échec"
+    },
+    {
+      "dimension": "C",
+      "etat": "conforme",
+      "detail": "états rendus par le bloc liste : loading/empty/error"
+    },
+    {
+      "dimension": "D",
+      "etat": "conforme",
+      "detail": "0 valeur en dur (couleurs, espacements, rayons, typographie)"
+    },
+    {
+      "dimension": "E",
+      "etat": "conforme",
+      "detail": "échelle strictement croissante (12 < 14 < 17 < 22), 0 verrou d'agrandissement"
+    },
+    {
+      "dimension": "F",
+      "etat": "conforme",
+      "detail": "0 propriété physique"
+    },
+    {
+      "dimension": "G",
+      "etat": "conforme",
+      "detail": "3 écran(s) à liste, 0 encapsulé dans un ScrollView, parent borné=true"
+    },
+    {
+      "dimension": "H",
+      "etat": "non_determinee",
+      "detail": "aucun échantillon cross-domain fourni — jamais conforme par défaut"
+    }
+  ],
+  "rootHashFinal": "76e7cef0393489b7c64ebef7f40d21b7751557d4c52900ead8ee80a019e99978",
+  "fichiers": 37,
+  "determinisme": "5/5"
+}

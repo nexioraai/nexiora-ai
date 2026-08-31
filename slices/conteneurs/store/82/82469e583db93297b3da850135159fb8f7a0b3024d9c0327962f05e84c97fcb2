@@ -1,0 +1,122 @@
+-- GÉNÉRÉ PAR @deribfy/provisioner (D-032) — NE PAS ÉDITER.
+-- projectId: prj_transit_abidjan_tracking
+-- airHash: c202f8488d4640c6b94f9109d1139b14f6cab4b7acbb5e4773fec689b9186719
+-- releaseTrain: rt-2026.08@1.0.0
+-- Idempotent-rejouable ; barrières fail-closed par section.
+
+-- ===== SECTION 1 : TABLES =====
+CREATE TABLE IF NOT EXISTS "ent_alerte_statut" (
+  "id" text PRIMARY KEY,
+  "fld_alerte_conteneur" text,
+  "fld_alerte_ancien_statut" text,
+  "fld_alerte_nouveau_statut" text,
+  "fld_alerte_titre" text,
+  "fld_alerte_message" text,
+  "fld_alerte_survenue_le" timestamptz,
+  "fld_alerte_lue" boolean
+);
+CREATE TABLE IF NOT EXISTS "ent_conteneur" (
+  "id" text PRIMARY KEY,
+  "fld_conteneur_numero" text,
+  "fld_conteneur_navire" text,
+  "fld_conteneur_port_depart" text,
+  "fld_conteneur_port_arrivee" text,
+  "fld_conteneur_eta" date,
+  "fld_conteneur_statut_douane" text,
+  "fld_conteneur_reference_client" text,
+  "fld_conteneur_transitaire" text,
+  "fld_conteneur_maj_le" timestamptz,
+  "fld_conteneur_notes" text
+);
+CREATE TABLE IF NOT EXISTS "ent_navire" (
+  "id" text PRIMARY KEY,
+  "fld_navire_nom" text,
+  "fld_navire_numero_voyage" text,
+  "fld_navire_compagnie" text,
+  "fld_navire_imo" text
+);
+DO $$ BEGIN
+  IF NOT (to_regclass('public.ent_alerte_statut') IS NOT NULL AND to_regclass('public.ent_conteneur') IS NOT NULL AND to_regclass('public.ent_navire') IS NOT NULL) THEN
+    RAISE EXCEPTION 'BARRIER:tables: table manquante';
+  END IF;
+END $$;
+
+-- ===== SECTION 2 : CONTRAINTES (CHECK énums, FK) =====
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_ent_alerte_statut_fld_alerte_conteneur') THEN
+    ALTER TABLE "ent_alerte_statut" ADD CONSTRAINT "fk_ent_alerte_statut_fld_alerte_conteneur" FOREIGN KEY ("fld_alerte_conteneur") REFERENCES "ent_conteneur"("id");
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_ent_alerte_statut_fld_alerte_ancien_statut') THEN
+    ALTER TABLE "ent_alerte_statut" ADD CONSTRAINT "chk_ent_alerte_statut_fld_alerte_ancien_statut" CHECK ("fld_alerte_ancien_statut" IS NULL OR "fld_alerte_ancien_statut" IN ('en_attente_documents', 'declaration_deposee', 'en_cours_verification', 'droits_a_payer', 'dedouane', 'litige'));
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_ent_alerte_statut_fld_alerte_nouveau_statut') THEN
+    ALTER TABLE "ent_alerte_statut" ADD CONSTRAINT "chk_ent_alerte_statut_fld_alerte_nouveau_statut" CHECK ("fld_alerte_nouveau_statut" IS NULL OR "fld_alerte_nouveau_statut" IN ('en_attente_documents', 'declaration_deposee', 'en_cours_verification', 'droits_a_payer', 'dedouane', 'litige'));
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_ent_conteneur_fld_conteneur_navire') THEN
+    ALTER TABLE "ent_conteneur" ADD CONSTRAINT "fk_ent_conteneur_fld_conteneur_navire" FOREIGN KEY ("fld_conteneur_navire") REFERENCES "ent_navire"("id");
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_ent_conteneur_fld_conteneur_statut_douane') THEN
+    ALTER TABLE "ent_conteneur" ADD CONSTRAINT "chk_ent_conteneur_fld_conteneur_statut_douane" CHECK ("fld_conteneur_statut_douane" IS NULL OR "fld_conteneur_statut_douane" IN ('en_attente_documents', 'declaration_deposee', 'en_cours_verification', 'droits_a_payer', 'dedouane', 'litige'));
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT ((SELECT count(*) FROM pg_constraint WHERE conname LIKE 'fk\_%' OR conname LIKE 'chk\_%') >= 5) THEN
+    RAISE EXCEPTION 'BARRIER:constraints: contraintes manquantes';
+  END IF;
+END $$;
+
+-- ===== SECTION 3 : INDEX (colonnes FK) =====
+CREATE INDEX IF NOT EXISTS "ix_ent_alerte_statut_fld_alerte_conteneur" ON "ent_alerte_statut" ("fld_alerte_conteneur");
+CREATE INDEX IF NOT EXISTS "ix_ent_conteneur_fld_conteneur_navire" ON "ent_conteneur" ("fld_conteneur_navire");
+
+-- ===== SECTION 4 : RLS deny-by-default (D-032) =====
+ALTER TABLE "ent_alerte_statut" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "ent_conteneur" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "ent_navire" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  IF NOT ((SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'public' AND c.relkind = 'r' AND c.relrowsecurity) >= 3) THEN
+    RAISE EXCEPTION 'BARRIER:rls: RLS inactif sur au moins une table';
+  END IF;
+END $$;
+
+-- ===== SECTION 5 : SEED (fixtures déterministes D-030) =====
+INSERT INTO "ent_navire" ("id", "fld_navire_nom", "fld_navire_numero_voyage", "fld_navire_compagnie", "fld_navire_imo") VALUES ('ent_navire_row_1', 'nom 1', 'numero_voyage 1', 'compagnie_maritime 1', 'numero_imo 1') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_navire" ("id", "fld_navire_nom", "fld_navire_numero_voyage", "fld_navire_compagnie", "fld_navire_imo") VALUES ('ent_navire_row_2', 'nom 2', 'numero_voyage 2', 'compagnie_maritime 2', 'numero_imo 2') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_navire" ("id", "fld_navire_nom", "fld_navire_numero_voyage", "fld_navire_compagnie", "fld_navire_imo") VALUES ('ent_navire_row_3', 'nom 3', 'numero_voyage 3', 'compagnie_maritime 3', 'numero_imo 3') ON CONFLICT ("id") DO NOTHING;
+DO $$ BEGIN
+  IF NOT ((SELECT count(*) FROM "ent_navire") >= 3) THEN
+    RAISE EXCEPTION 'BARRIER:seed_ent_navire: seed incomplet pour ent_navire';
+  END IF;
+END $$;
+INSERT INTO "ent_conteneur" ("id", "fld_conteneur_numero", "fld_conteneur_navire", "fld_conteneur_port_depart", "fld_conteneur_port_arrivee", "fld_conteneur_eta", "fld_conteneur_statut_douane", "fld_conteneur_reference_client", "fld_conteneur_transitaire", "fld_conteneur_maj_le", "fld_conteneur_notes") VALUES ('ent_conteneur_row_1', 'numero_conteneur 1', 'ent_navire_row_2', 'port_depart 1', 'port_arrivee 1', '2026-12-09', 'declaration_deposee', 'reference_client 1', 'transitaire_en_charge 1', '2026-08-14T09:29:00.000Z', 'notes 1') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_conteneur" ("id", "fld_conteneur_numero", "fld_conteneur_navire", "fld_conteneur_port_depart", "fld_conteneur_port_arrivee", "fld_conteneur_eta", "fld_conteneur_statut_douane", "fld_conteneur_reference_client", "fld_conteneur_transitaire", "fld_conteneur_maj_le", "fld_conteneur_notes") VALUES ('ent_conteneur_row_2', 'numero_conteneur 2', 'ent_navire_row_2', 'port_depart 2', 'port_arrivee 2', '2026-11-24', 'declaration_deposee', 'reference_client 2', 'transitaire_en_charge 2', '2026-02-09T23:52:00.000Z', 'notes 2') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_conteneur" ("id", "fld_conteneur_numero", "fld_conteneur_navire", "fld_conteneur_port_depart", "fld_conteneur_port_arrivee", "fld_conteneur_eta", "fld_conteneur_statut_douane", "fld_conteneur_reference_client", "fld_conteneur_transitaire", "fld_conteneur_maj_le", "fld_conteneur_notes") VALUES ('ent_conteneur_row_3', 'numero_conteneur 3', 'ent_navire_row_2', 'port_depart 3', 'port_arrivee 3', '2026-10-07', 'declaration_deposee', 'reference_client 3', 'transitaire_en_charge 3', '2026-03-24T12:31:00.000Z', 'notes 3') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_conteneur" ("id", "fld_conteneur_numero", "fld_conteneur_navire", "fld_conteneur_port_depart", "fld_conteneur_port_arrivee", "fld_conteneur_eta", "fld_conteneur_statut_douane", "fld_conteneur_reference_client", "fld_conteneur_transitaire", "fld_conteneur_maj_le", "fld_conteneur_notes") VALUES ('ent_conteneur_row_4', 'numero_conteneur 4', 'ent_navire_row_2', 'port_depart 4', 'port_arrivee 4', '2026-03-21', 'declaration_deposee', 'reference_client 4', 'transitaire_en_charge 4', '2026-05-03T16:49:00.000Z', 'notes 4') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_conteneur" ("id", "fld_conteneur_numero", "fld_conteneur_navire", "fld_conteneur_port_depart", "fld_conteneur_port_arrivee", "fld_conteneur_eta", "fld_conteneur_statut_douane", "fld_conteneur_reference_client", "fld_conteneur_transitaire", "fld_conteneur_maj_le", "fld_conteneur_notes") VALUES ('ent_conteneur_row_5', 'numero_conteneur 5', 'ent_navire_row_3', 'port_depart 5', 'port_arrivee 5', '2026-09-30', 'droits_a_payer', 'reference_client 5', 'transitaire_en_charge 5', '2026-01-23T14:07:00.000Z', 'notes 5') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_conteneur" ("id", "fld_conteneur_numero", "fld_conteneur_navire", "fld_conteneur_port_depart", "fld_conteneur_port_arrivee", "fld_conteneur_eta", "fld_conteneur_statut_douane", "fld_conteneur_reference_client", "fld_conteneur_transitaire", "fld_conteneur_maj_le", "fld_conteneur_notes") VALUES ('ent_conteneur_row_6', 'numero_conteneur 6', 'ent_navire_row_1', 'port_depart 6', 'port_arrivee 6', '2026-01-25', 'dedouane', 'reference_client 6', 'transitaire_en_charge 6', '2026-01-26T02:26:00.000Z', 'notes 6') ON CONFLICT ("id") DO NOTHING;
+DO $$ BEGIN
+  IF NOT ((SELECT count(*) FROM "ent_conteneur") >= 6) THEN
+    RAISE EXCEPTION 'BARRIER:seed_ent_conteneur: seed incomplet pour ent_conteneur';
+  END IF;
+END $$;
+INSERT INTO "ent_alerte_statut" ("id", "fld_alerte_conteneur", "fld_alerte_ancien_statut", "fld_alerte_nouveau_statut", "fld_alerte_titre", "fld_alerte_message", "fld_alerte_survenue_le", "fld_alerte_lue") VALUES ('ent_alerte_statut_row_1', 'ent_conteneur_row_5', 'dedouane', 'droits_a_payer', 'titre 1', 'message 1', '2026-03-20T08:21:00.000Z', 'false') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_alerte_statut" ("id", "fld_alerte_conteneur", "fld_alerte_ancien_statut", "fld_alerte_nouveau_statut", "fld_alerte_titre", "fld_alerte_message", "fld_alerte_survenue_le", "fld_alerte_lue") VALUES ('ent_alerte_statut_row_2', 'ent_conteneur_row_2', 'en_attente_documents', 'en_attente_documents', 'titre 2', 'message 2', '2026-03-02T04:13:00.000Z', 'true') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_alerte_statut" ("id", "fld_alerte_conteneur", "fld_alerte_ancien_statut", "fld_alerte_nouveau_statut", "fld_alerte_titre", "fld_alerte_message", "fld_alerte_survenue_le", "fld_alerte_lue") VALUES ('ent_alerte_statut_row_3', 'ent_conteneur_row_5', 'en_attente_documents', 'declaration_deposee', 'titre 3', 'message 3', '2026-12-31T20:32:00.000Z', 'false') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_alerte_statut" ("id", "fld_alerte_conteneur", "fld_alerte_ancien_statut", "fld_alerte_nouveau_statut", "fld_alerte_titre", "fld_alerte_message", "fld_alerte_survenue_le", "fld_alerte_lue") VALUES ('ent_alerte_statut_row_4', 'ent_conteneur_row_5', 'litige', 'en_attente_documents', 'titre 4', 'message 4', '2026-05-05T10:48:00.000Z', 'false') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_alerte_statut" ("id", "fld_alerte_conteneur", "fld_alerte_ancien_statut", "fld_alerte_nouveau_statut", "fld_alerte_titre", "fld_alerte_message", "fld_alerte_survenue_le", "fld_alerte_lue") VALUES ('ent_alerte_statut_row_5', 'ent_conteneur_row_6', 'en_cours_verification', 'en_attente_documents', 'titre 5', 'message 5', '2026-07-27T08:59:00.000Z', 'false') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_alerte_statut" ("id", "fld_alerte_conteneur", "fld_alerte_ancien_statut", "fld_alerte_nouveau_statut", "fld_alerte_titre", "fld_alerte_message", "fld_alerte_survenue_le", "fld_alerte_lue") VALUES ('ent_alerte_statut_row_6', 'ent_conteneur_row_6', 'dedouane', 'en_attente_documents', 'titre 6', 'message 6', '2026-02-03T04:44:00.000Z', 'true') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_alerte_statut" ("id", "fld_alerte_conteneur", "fld_alerte_ancien_statut", "fld_alerte_nouveau_statut", "fld_alerte_titre", "fld_alerte_message", "fld_alerte_survenue_le", "fld_alerte_lue") VALUES ('ent_alerte_statut_row_7', 'ent_conteneur_row_4', 'en_cours_verification', 'en_attente_documents', 'titre 7', 'message 7', '2026-03-31T13:16:00.000Z', 'true') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_alerte_statut" ("id", "fld_alerte_conteneur", "fld_alerte_ancien_statut", "fld_alerte_nouveau_statut", "fld_alerte_titre", "fld_alerte_message", "fld_alerte_survenue_le", "fld_alerte_lue") VALUES ('ent_alerte_statut_row_8', 'ent_conteneur_row_3', 'en_cours_verification', 'en_attente_documents', 'titre 8', 'message 8', '2026-12-26T09:01:00.000Z', 'false') ON CONFLICT ("id") DO NOTHING;
+DO $$ BEGIN
+  IF NOT ((SELECT count(*) FROM "ent_alerte_statut") >= 8) THEN
+    RAISE EXCEPTION 'BARRIER:seed_ent_alerte_statut: seed incomplet pour ent_alerte_statut';
+  END IF;
+END $$;

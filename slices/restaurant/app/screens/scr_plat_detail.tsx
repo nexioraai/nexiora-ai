@@ -1,9 +1,8 @@
 // GÉNÉRÉ — NE PAS ÉDITER (code structurel d'écran : ScreenShell + blocs,
 // contrainte 3.4 ; les points d'insertion de Code Slots arrivent en Phase 9).
-// Page DÉFILANTE (lecture D-031-R47 : le bloc list gelé n'est pas
-// bornable sans toucher au gel — défaut de composition DÉMONTRÉ sur
-// device : blocs post-liste hors écran ; réserve : virtualisation
-// interne neutralisée, revisité au scorecard Phase 8).
+// DÉFILEMENT (D-031-R47 puis DET-006/D-039) : un écran SANS bloc list
+// reste une page défilante ; un écran AVEC bloc list confie le
+// défilement à la liste virtualisée elle-même, bornée par Section fill.
 // SAFE AREA DU BAS (D-037) : défaut DÉMONTRÉ sur appareil physique
 // (Galaxy A17 / Android 16) — la fenêtre est bord à bord, donc le
 // DERNIER bloc était rendu sous la barre de navigation gestuelle et
@@ -22,7 +21,11 @@ export default function ScrPlatDetailScreen({ route }: AirScreenProps) {
   const insets = useSafeAreaInsets();
   return (
     <ScreenShell testID="scr_plat_detail" title={screenData.title}>
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: insets.bottom }}
+        automaticallyAdjustKeyboardInsets
+        keyboardShouldPersistTaps="handled"
+      >
         <AirDetailHeader screen={screenData} blockId="blk_plat_detail_header" itemId={route?.params?.itemId} />
         <AirButton screen={screenData} blockId="blk_plat_bouton_ajouter" />
         <AirButton screen={screenData} blockId="blk_plat_bouton_retour_menu" />

@@ -1,0 +1,20 @@
+{
+  "phase": 10,
+  "slice": "conteneurs-maritimes",
+  "date": "2026-08-29",
+  "easProject": "@deribfy-apps-team/suivi-conteneurs",
+  "easProjectId": "ef523f29-58e6-4f16-a5d0-c1e0e263573c",
+  "buildId": "8b9dfd2b-937c-4a5a-bb1c-7e02b18b1062",
+  "buildUrl": "https://expo.dev/accounts/deribfy-apps-team/projects/suivi-conteneurs/builds/8b9dfd2b-937c-4a5a-bb1c-7e02b18b1062",
+  "profil": "preview",
+  "distribution": "internal",
+  "artefact": "APK Android",
+  "keystore": "généré dans le cloud EAS (nouveau projet)",
+  "flowsRejouesSurAPK": {
+    "cible": "ÉMULATEUR bench_pixel (emulator-5554) — PAS un appareil physique",
+    "nav-android.yaml": "PASS (8/8 étapes)",
+    "rtl-android.yaml": "PASS (8/8 étapes, forceRTL=true)",
+    "resultat": "2/2"
+  },
+  "critereRoadmapAppareilsPhysiques": "NON SATISFAIT — l'émulateur ne vaut pas preuve d'appareil physique"
+}

@@ -1,0 +1,121 @@
+-- GÉNÉRÉ PAR @deribfy/provisioner (D-032) — NE PAS ÉDITER.
+-- projectId: prj_transit_abidjan
+-- airHash: 4f5f076757e0c60368717896a4533f5d6efe34c057c4dbb980026ab258383508
+-- releaseTrain: rt-2026.08@1.0.0
+-- Idempotent-rejouable ; barrières fail-closed par section.
+
+-- ===== SECTION 1 : TABLES =====
+CREATE TABLE IF NOT EXISTS "ent_container" (
+  "id" text PRIMARY KEY,
+  "fld_ctn_number" text,
+  "fld_ctn_vessel" text,
+  "fld_ctn_departure_port" text,
+  "fld_ctn_arrival_port" text,
+  "fld_ctn_eta" date,
+  "fld_ctn_customs_status" text,
+  "fld_ctn_bl_number" text,
+  "fld_ctn_importer" text,
+  "fld_ctn_last_status_change" timestamptz,
+  "fld_ctn_notes" text,
+  "fld_ctn_synced_at" timestamptz
+);
+CREATE TABLE IF NOT EXISTS "ent_importer" (
+  "id" text PRIMARY KEY,
+  "fld_imp_name" text,
+  "fld_imp_company" text,
+  "fld_imp_email" text,
+  "fld_imp_phone" text,
+  "fld_imp_push_enabled" boolean,
+  "fld_imp_created_at" timestamptz
+);
+CREATE TABLE IF NOT EXISTS "ent_status_event" (
+  "id" text PRIMARY KEY,
+  "fld_evt_container" text,
+  "fld_evt_previous_status" text,
+  "fld_evt_new_status" text,
+  "fld_evt_changed_at" timestamptz,
+  "fld_evt_message" text,
+  "fld_evt_read" boolean,
+  "fld_evt_notified" boolean
+);
+DO $$ BEGIN
+  IF NOT (to_regclass('public.ent_container') IS NOT NULL AND to_regclass('public.ent_importer') IS NOT NULL AND to_regclass('public.ent_status_event') IS NOT NULL) THEN
+    RAISE EXCEPTION 'BARRIER:tables: table manquante';
+  END IF;
+END $$;
+
+-- ===== SECTION 2 : CONTRAINTES (CHECK énums, FK) =====
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_ent_container_fld_ctn_customs_status') THEN
+    ALTER TABLE "ent_container" ADD CONSTRAINT "chk_ent_container_fld_ctn_customs_status" CHECK ("fld_ctn_customs_status" IS NULL OR "fld_ctn_customs_status" IN ('en_attente_documents', 'documents_recus', 'declaration_deposee', 'visite_douaniere', 'dedouane', 'litige'));
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_ent_container_fld_ctn_importer') THEN
+    ALTER TABLE "ent_container" ADD CONSTRAINT "fk_ent_container_fld_ctn_importer" FOREIGN KEY ("fld_ctn_importer") REFERENCES "ent_importer"("id");
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_ent_status_event_fld_evt_container') THEN
+    ALTER TABLE "ent_status_event" ADD CONSTRAINT "fk_ent_status_event_fld_evt_container" FOREIGN KEY ("fld_evt_container") REFERENCES "ent_container"("id");
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_ent_status_event_fld_evt_previous_status') THEN
+    ALTER TABLE "ent_status_event" ADD CONSTRAINT "chk_ent_status_event_fld_evt_previous_status" CHECK ("fld_evt_previous_status" IS NULL OR "fld_evt_previous_status" IN ('en_attente_documents', 'documents_recus', 'declaration_deposee', 'visite_douaniere', 'dedouane', 'litige'));
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_ent_status_event_fld_evt_new_status') THEN
+    ALTER TABLE "ent_status_event" ADD CONSTRAINT "chk_ent_status_event_fld_evt_new_status" CHECK ("fld_evt_new_status" IS NULL OR "fld_evt_new_status" IN ('en_attente_documents', 'documents_recus', 'declaration_deposee', 'visite_douaniere', 'dedouane', 'litige'));
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT ((SELECT count(*) FROM pg_constraint WHERE conname LIKE 'fk\_%' OR conname LIKE 'chk\_%') >= 5) THEN
+    RAISE EXCEPTION 'BARRIER:constraints: contraintes manquantes';
+  END IF;
+END $$;
+
+-- ===== SECTION 3 : INDEX (colonnes FK) =====
+CREATE INDEX IF NOT EXISTS "ix_ent_container_fld_ctn_importer" ON "ent_container" ("fld_ctn_importer");
+CREATE INDEX IF NOT EXISTS "ix_ent_status_event_fld_evt_container" ON "ent_status_event" ("fld_evt_container");
+
+-- ===== SECTION 4 : RLS deny-by-default (D-032) =====
+ALTER TABLE "ent_container" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "ent_importer" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "ent_status_event" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  IF NOT ((SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'public' AND c.relkind = 'r' AND c.relrowsecurity) >= 3) THEN
+    RAISE EXCEPTION 'BARRIER:rls: RLS inactif sur au moins une table';
+  END IF;
+END $$;
+
+-- ===== SECTION 5 : SEED (fixtures déterministes D-030) =====
+INSERT INTO "ent_container" ("id", "fld_ctn_number", "fld_ctn_vessel", "fld_ctn_departure_port", "fld_ctn_arrival_port", "fld_ctn_eta", "fld_ctn_customs_status", "fld_ctn_bl_number", "fld_ctn_importer", "fld_ctn_last_status_change", "fld_ctn_notes", "fld_ctn_synced_at") VALUES ('ent_container_row_1', 'numero_conteneur 1', 'navire 1', 'port_de_depart 1', 'port_d_arrivee 1', '2026-11-10', 'documents_recus', 'numero_connaissement 1', NULL, '2026-11-20T18:24:00.000Z', 'remarques 1', '2026-12-13T01:11:00.000Z') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_container" ("id", "fld_ctn_number", "fld_ctn_vessel", "fld_ctn_departure_port", "fld_ctn_arrival_port", "fld_ctn_eta", "fld_ctn_customs_status", "fld_ctn_bl_number", "fld_ctn_importer", "fld_ctn_last_status_change", "fld_ctn_notes", "fld_ctn_synced_at") VALUES ('ent_container_row_2', 'numero_conteneur 2', 'navire 2', 'port_de_depart 2', 'port_d_arrivee 2', '2026-08-13', 'litige', 'numero_connaissement 2', NULL, '2026-12-18T06:42:00.000Z', 'remarques 2', '2026-08-27T06:22:00.000Z') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_container" ("id", "fld_ctn_number", "fld_ctn_vessel", "fld_ctn_departure_port", "fld_ctn_arrival_port", "fld_ctn_eta", "fld_ctn_customs_status", "fld_ctn_bl_number", "fld_ctn_importer", "fld_ctn_last_status_change", "fld_ctn_notes", "fld_ctn_synced_at") VALUES ('ent_container_row_3', 'numero_conteneur 3', 'navire 3', 'port_de_depart 3', 'port_d_arrivee 3', '2026-08-09', 'declaration_deposee', 'numero_connaissement 3', NULL, '2026-08-05T07:55:00.000Z', 'remarques 3', '2026-04-05T01:51:00.000Z') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_container" ("id", "fld_ctn_number", "fld_ctn_vessel", "fld_ctn_departure_port", "fld_ctn_arrival_port", "fld_ctn_eta", "fld_ctn_customs_status", "fld_ctn_bl_number", "fld_ctn_importer", "fld_ctn_last_status_change", "fld_ctn_notes", "fld_ctn_synced_at") VALUES ('ent_container_row_4', 'numero_conteneur 4', 'navire 4', 'port_de_depart 4', 'port_d_arrivee 4', '2026-02-06', 'declaration_deposee', 'numero_connaissement 4', NULL, '2026-01-12T23:33:00.000Z', 'remarques 4', '2026-01-15T03:23:00.000Z') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_container" ("id", "fld_ctn_number", "fld_ctn_vessel", "fld_ctn_departure_port", "fld_ctn_arrival_port", "fld_ctn_eta", "fld_ctn_customs_status", "fld_ctn_bl_number", "fld_ctn_importer", "fld_ctn_last_status_change", "fld_ctn_notes", "fld_ctn_synced_at") VALUES ('ent_container_row_5', 'numero_conteneur 5', 'navire 5', 'port_de_depart 5', 'port_d_arrivee 5', '2026-08-01', 'visite_douaniere', 'numero_connaissement 5', NULL, '2026-08-15T00:33:00.000Z', 'remarques 5', '2026-03-04T10:56:00.000Z') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_container" ("id", "fld_ctn_number", "fld_ctn_vessel", "fld_ctn_departure_port", "fld_ctn_arrival_port", "fld_ctn_eta", "fld_ctn_customs_status", "fld_ctn_bl_number", "fld_ctn_importer", "fld_ctn_last_status_change", "fld_ctn_notes", "fld_ctn_synced_at") VALUES ('ent_container_row_6', 'numero_conteneur 6', 'navire 6', 'port_de_depart 6', 'port_d_arrivee 6', '2026-03-12', 'en_attente_documents', 'numero_connaissement 6', NULL, '2026-11-16T11:13:00.000Z', 'remarques 6', '2026-09-13T00:58:00.000Z') ON CONFLICT ("id") DO NOTHING;
+DO $$ BEGIN
+  IF NOT ((SELECT count(*) FROM "ent_container") >= 6) THEN
+    RAISE EXCEPTION 'BARRIER:seed_ent_container: seed incomplet pour ent_container';
+  END IF;
+END $$;
+INSERT INTO "ent_status_event" ("id", "fld_evt_container", "fld_evt_previous_status", "fld_evt_new_status", "fld_evt_changed_at", "fld_evt_message", "fld_evt_read", "fld_evt_notified") VALUES ('ent_status_event_row_1', 'ent_container_row_3', 'declaration_deposee', 'visite_douaniere', '2026-12-18T03:32:00.000Z', 'message 1', 'false', 'false') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_status_event" ("id", "fld_evt_container", "fld_evt_previous_status", "fld_evt_new_status", "fld_evt_changed_at", "fld_evt_message", "fld_evt_read", "fld_evt_notified") VALUES ('ent_status_event_row_2', 'ent_container_row_1', 'documents_recus', 'declaration_deposee', '2026-02-20T02:22:00.000Z', 'message 2', 'false', 'false') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_status_event" ("id", "fld_evt_container", "fld_evt_previous_status", "fld_evt_new_status", "fld_evt_changed_at", "fld_evt_message", "fld_evt_read", "fld_evt_notified") VALUES ('ent_status_event_row_3', 'ent_container_row_1', 'dedouane', 'en_attente_documents', '2026-04-29T09:52:00.000Z', 'message 3', 'true', 'true') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_status_event" ("id", "fld_evt_container", "fld_evt_previous_status", "fld_evt_new_status", "fld_evt_changed_at", "fld_evt_message", "fld_evt_read", "fld_evt_notified") VALUES ('ent_status_event_row_4', 'ent_container_row_5', 'visite_douaniere', 'dedouane', '2026-04-18T22:31:00.000Z', 'message 4', 'false', 'true') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_status_event" ("id", "fld_evt_container", "fld_evt_previous_status", "fld_evt_new_status", "fld_evt_changed_at", "fld_evt_message", "fld_evt_read", "fld_evt_notified") VALUES ('ent_status_event_row_5', 'ent_container_row_2', 'visite_douaniere', 'visite_douaniere', '2026-05-29T17:35:00.000Z', 'message 5', 'false', 'true') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_status_event" ("id", "fld_evt_container", "fld_evt_previous_status", "fld_evt_new_status", "fld_evt_changed_at", "fld_evt_message", "fld_evt_read", "fld_evt_notified") VALUES ('ent_status_event_row_6', 'ent_container_row_5', 'en_attente_documents', 'litige', '2026-11-23T03:09:00.000Z', 'message 6', 'true', 'true') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_status_event" ("id", "fld_evt_container", "fld_evt_previous_status", "fld_evt_new_status", "fld_evt_changed_at", "fld_evt_message", "fld_evt_read", "fld_evt_notified") VALUES ('ent_status_event_row_7', 'ent_container_row_2', 'declaration_deposee', 'visite_douaniere', '2026-09-25T19:45:00.000Z', 'message 7', 'false', 'true') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_status_event" ("id", "fld_evt_container", "fld_evt_previous_status", "fld_evt_new_status", "fld_evt_changed_at", "fld_evt_message", "fld_evt_read", "fld_evt_notified") VALUES ('ent_status_event_row_8', 'ent_container_row_3', 'en_attente_documents', 'en_attente_documents', '2026-07-10T04:33:00.000Z', 'message 8', 'true', 'false') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_status_event" ("id", "fld_evt_container", "fld_evt_previous_status", "fld_evt_new_status", "fld_evt_changed_at", "fld_evt_message", "fld_evt_read", "fld_evt_notified") VALUES ('ent_status_event_row_9', 'ent_container_row_2', 'documents_recus', 'en_attente_documents', '2026-01-06T13:33:00.000Z', 'message 9', 'false', 'false') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_status_event" ("id", "fld_evt_container", "fld_evt_previous_status", "fld_evt_new_status", "fld_evt_changed_at", "fld_evt_message", "fld_evt_read", "fld_evt_notified") VALUES ('ent_status_event_row_10', 'ent_container_row_2', 'dedouane', 'documents_recus', '2026-09-02T05:33:00.000Z', 'message 10', 'false', 'true') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_status_event" ("id", "fld_evt_container", "fld_evt_previous_status", "fld_evt_new_status", "fld_evt_changed_at", "fld_evt_message", "fld_evt_read", "fld_evt_notified") VALUES ('ent_status_event_row_11', 'ent_container_row_3', 'visite_douaniere', 'litige', '2026-08-28T06:01:00.000Z', 'message 11', 'true', 'true') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_status_event" ("id", "fld_evt_container", "fld_evt_previous_status", "fld_evt_new_status", "fld_evt_changed_at", "fld_evt_message", "fld_evt_read", "fld_evt_notified") VALUES ('ent_status_event_row_12', 'ent_container_row_1', 'dedouane', 'declaration_deposee', '2026-04-16T01:27:00.000Z', 'message 12', 'false', 'false') ON CONFLICT ("id") DO NOTHING;
+DO $$ BEGIN
+  IF NOT ((SELECT count(*) FROM "ent_status_event") >= 12) THEN
+    RAISE EXCEPTION 'BARRIER:seed_ent_status_event: seed incomplet pour ent_status_event';
+  END IF;
+END $$;

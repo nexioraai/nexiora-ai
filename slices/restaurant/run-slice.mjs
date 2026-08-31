@@ -23,6 +23,7 @@ const { projectAirSchema, validateAir, canonicalJson, sha256Hex } = await import
 const { validateAirCapabilities } = await import(join(REPO, "packages/capability-registry/src/index.ts"));
 const { validateAirBlocks } = await import(join(REPO, "packages/blocks/src/registry.ts"));
 const { compileProject } = await import(join(REPO, "packages/compiler/src/compile-project.ts"));
+const { normalizeAir } = await import(join(REPO, "packages/compiler/src/resolve-lock.ts"));
 const { LocalArtifactStore, storeCompiledProject } = await import(join(REPO, "packages/compiler/src/artifact-store.ts"));
 const { runOracleLevel1, generateMaestroFlows } = await import(join(REPO, "packages/oracle/src/index.ts"));
 const { generateProvisioningSql } = await import(join(REPO, "packages/provisioner/src/sql-gen.ts"));
@@ -45,7 +46,8 @@ const timed = async (name, fn) => {
 // (non-négociable 14). Aucune retouche manuelle.
 const airPath = join(REPO, "packages/golden-corpus/corpus-v2/resto-quartier.air.json");
 const airRaw = JSON.parse(readFileSync(airPath, "utf8"));
-const air = projectAirSchema.parse(airRaw);
+// D-044 : document gelé en 1.0.0, migré en mémoire vers la version courante.
+const air = projectAirSchema.parse(normalizeAir(airRaw));
 log({ etape: "intention-air", projectId: air.projectId, slug: air.app.slug, ecrans: air.screens.length, entites: air.entities.length, capabilities: air.capabilities.length });
 
 // ---------- 2. GATES EXISTANTS (fail-closed) ----------

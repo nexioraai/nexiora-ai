@@ -11,7 +11,7 @@ bruts : `results/*.jsonl`, `results/metrics.json`.
 | AIR | `resto-quartier` — **émis par le modèle** (D-025), aucune retouche manuelle (non-négociable 14 : provenance-modèle préservée) |
 | projectId / slug | `prj_resto_quartier_abidjan` / `maquis-express` |
 | Contenu | 4 écrans · 3 entités · 5 capabilities · 17 blocs |
-| Artefacts | rootHash `343a94d994c44b22…` · SQL `15dd88ffef507151…` |
+| Artefacts | rootHash `29e0af787afe7d2d…` · SQL `15dd88ffef507151…` — **hashes du rejeu post-D-037** (`slice-2026-08-29T04-14-07-618Z.jsonl`). L'ancien rootHash `343a94d994c44b22…` correspond aux 4 exécutions du 2026-08-28, **antérieures à la correction Safe Area** ; le SQL est inchangé, la correction ne portant que sur le code émis |
 
 ## Taux de succès (chaîne bout-en-bout)
 
@@ -26,7 +26,7 @@ bruts : `results/*.jsonl`, `results/metrics.json`.
 | **Dev build + validation ÉMULATEURS iOS et Android** | ✅ builds Release verts ×2, **4/4 flows générés PASS** (nav+RTL, 13 étapes chacun, 0 échec) | `results/slice-e2e.jsonl` |
 | **Build EAS (cloud, §13)** | ✅ **Android APK FINISHED (10 min 57 s)** + **iOS simulateur FINISHED (4 min 07 s)** — 0 $ (palier Free) ; **APK EAS installé sur émulateur : 2/2 flows générés PASS** | `results/eas-builds.jsonl`, `eas-artifact-e2e.jsonl` |
 | **Appareil physique ANDROID (Galaxy A17, SM-A175F, Android 16)** | ✅ **APK EAS installé · app lancée · fixtures rendues · navigation réelle OK** (tap → `scr_panier`, retour → `scr_menu`) — **1 défaut device consigné** (voir dette 5) | `results/device-physique-e2e.jsonl` |
-| **Appareil physique iOS (iPhone 16)** | ⏳ **OUVERT** — décision de méthode requise (§ Actions restantes) | — |
+| **Appareil physique iOS (iPhone 16)** | 🟠 **BUILD LIVRÉ, INSTALLATION EN ATTENTE** — credentials Apple établis par clé App Store Connect (sans mot de passe ni 2FA), UDID enregistré par QR, **build de distribution interne `FINISHED` en 195 s, IPA présent** ; état Apple contre-vérifié par lecture directe de l'API : appareil `ENABLED`, certificat `IOS_DISTRIBUTION`, profil `IOS_APP_ADHOC` `ACTIVE` **contenant l'appareil**. Reste l'installation et la manipulation par le propriétaire — **non automatisable** : le port de données USB-C de l'iPhone est mort (DET-012), donc Maestro ne peut pas piloter l'appareil comme il l'a fait sur Android | `results/` + API App Store Connect |
 
 **Taux de succès de la chaîne automatisée : 7/7 étages verts.**
 
@@ -129,7 +129,13 @@ la dette du générateur.
       slice a utilisé la **distribution interne** (APK release installable
       par QR), qui satisfait « app installée et fonctionnelle » mais n'est
       pas un « dev build » au sens strict du terme.
-   Ces trois manques sont des CONSTATS sur le générateur ; aucun n'a été
+   d) **[ajouté le 2026-08-29]** `app.json` émis sans
+      `ios.infoPlist.ITSAppUsesNonExemptEncryption` (conformité export
+      Apple) : au premier build iOS, **`eas build` a écrit lui-même cette
+      clé** dans le fichier généré. Constaté au `git diff`, pas supposé.
+      Sans effet sur la distribution interne ; obligatoire dès la
+      soumission App Store (Phase 12).
+   Ces quatre manques sont des CONSTATS sur le générateur ; aucun n'a été
    « corrigé » dans les zones scellées (le gabarit reste intact).
 5. **DÉFAUT RÉVÉLÉ PAR L'APPAREIL PHYSIQUE — safe area du bas non
    respectée** [démontré, Galaxy A17 / Android 16] : le **dernier bloc**
@@ -145,10 +151,58 @@ la dette du générateur.
    **Impact** : tout écran dont le dernier bloc atteint le bas ; contrôle
    partiellement inaccessible sur appareil réel (iOS aurait l'équivalent
    avec l'indicateur d'accueil).
-   **Non corrigé ici, volontairement** : le garde-fou ROADMAP impose de
-   consigner comme dette du générateur plutôt que de patcher pour faire
-   passer le slice ; et la correction (padding d'inset dans le code émis)
-   changerait tous les hash de sortie, invalidant les preuves de
-   déterminisme des Phases 4/6/7 — cela relève d'une décision propriétaire.
-   **L'app reste fonctionnelle** : navigation et retour vérifiés sur
-   l'appareil réel.
+   **Initialement non corrigé, volontairement** : le garde-fou ROADMAP
+   impose de consigner comme dette du générateur plutôt que de patcher pour
+   faire passer le slice ; et la correction (padding d'inset dans le code
+   émis) changeait tous les hash de sortie, invalidant les preuves de
+   déterminisme des Phases 4/6/7 — cela relevait d'une décision
+   propriétaire.
+   **🟢 RÉSOLUE le 2026-08-29 (D-037, arbitrage propriétaire)** — corrigée
+   **dans le compilateur** (`packages/compiler/src/emit-project.ts` :
+   `useSafeAreaInsets` + `paddingBottom` sur le `ScrollView`), jamais dans
+   l'artefact. Nouveau rootHash `29e0af787afe7d2d…` ; les Phases 4, 6, 7
+   et 8 ont été **intégralement rejouées** pour reconstituer les preuves de
+   déterminisme. Preuve sur appareil réel : le dernier bloc passe de
+   `[…,2213]→[…,2340]` (bas absolu de l'écran) à une position atteignable,
+   le tap navigue vers `scr_commandes`, **2/2 flows générés PASS**.
+   Consignée aussi au registre permanent de `STATUS.md` sous **DET-001**.
+
+## ÉVALUATION GRILLE A++ (D-039, exigence Premium / Elite 2027 — 2026-08-29)
+
+Critère de sortie amendé de la Phase 8 : « qualité UI évaluée **contre la
+grille A++** », dimension par dimension, preuve à l'appui, une dimension non
+mesurable étant déclarée **non déterminée** et jamais conforme par défaut.
+
+| # | Dimension | Verdict | Preuve / mesure |
+|---|---|---|---|
+| **A** | Ergonomie physique | 🔴 **NON CONFORME** | **Aucun `minHeight`, `minWidth` ni `hitSlop`** dans `packages/primitives/src/styles.ts` — vérifié par recherche exhaustive. Le bouton se dimensionne par `paddingVertical: space.md` (12) + texte `body` 14 pt sans `lineHeight` déclaré ⇒ hauteur estimée **≈ 41 pt**, sous les seuils **44 pt (iOS HIG)** et **48 dp (Material)**. Le fait structurel — *aucun minimum n'est garanti* — est démontré indépendamment de l'estimation : une conformité éventuelle serait fortuite, pas assurée. Safe areas : 🟢 corrigées et prouvées sur appareil (D-037/DET-001) |
+| **B** | Contraste WCAG 2.2 AA | 🔴 **NON CONFORME** | **30 paires texte/fond calculées depuis `tokens.json`** (15 paires × 2 thèmes). 28 conformes. **2 échecs identiques en clair ET en sombre** : `onPrimary` sur `primary` (blanc `#FFFFFF` sur l'accent de marque `#FA5D1E`) = **3,16:1**, seuil requis **4,5:1** pour du texte `body` 14 pt. C'est le **libellé du bouton primaire** — « Voir mon panier » sur l'écran d'entrée du slice. Passerait à 3:1 si le texte était « grand » (≥ 18 pt), ce qu'il n'est pas |
+| **C** | Complétude des états | 🟢 **CONFORME** | États `loading` / `empty` / `error` présents aux composants de blocs (`packages/blocks/src/components.tsx`) ; contrats du registre gelé D-024 + tests de Phase 3 |
+| **D** | Cohérence zéro-style-en-dur | 🟢 **CONFORME** | 25 fichiers de l'app générée analysés : **toutes** les couleurs hex (22) sont concentrées dans `lib/tokens/theme.generated.ts`, le module de thème généré depuis la source unique. **Zéro** couleur en dur dans les écrans et composants |
+| **E** | Typographie / tailles d'accessibilité | ⚪ **NON DÉTERMINÉE** | Échelle hiérarchique appliquée (label 12 · body 14 · title 17 · heading 22). L'absence de troncature aux **tailles d'accessibilité système maximales** n'est pas outillée — non mesurée, donc non conforme par défaut |
+| **F** | Internationalisation / RTL | 🟢 **CONFORME** | Propriétés logiques exclusivement (cliquet RTL de Phase 3) ; flows RTL générés rejoués **PASS** sur les deux plateformes |
+| **G** | Fluidité perçue / virtualisation | 🔴 **NON CONFORME** | **DET-006** : la `FlatList` du bloc `list` est imbriquée dans le `ScrollView` de page ⇒ **virtualisation neutralisée**. Défaut déjà consigné, désormais **bloquant** au titre de la grille |
+| **H** | Variété anti-template (§22) | ⚪ **NON DÉTERMINÉE** | Mesurable à partir de **2 domaines** seulement. Le slice 1 n'en fournit qu'un. Évaluation reportée à la Phase 10, comme la ROADMAP amendée le prévoit |
+
+### Verdict
+
+**Le slice 1 n'atteint PAS le niveau A++** : 3 dimensions conformes, **3 non
+conformes**, 2 non déterminées. La règle de notation est sans ambiguïté —
+A++ exige 8/8 conformes avec preuve.
+
+Deux des trois non-conformités sont des **découvertes de cette évaluation**
+(A et B) ; elles étaient invisibles tant que « fonctionnel » servait de
+critère. L'app démarre, navigue, rend ses fixtures et passe ses flows E2E :
+elle est fonctionnelle, et pourtant le libellé de son bouton principal est
+sous le seuil d'accessibilité AA dans les deux thèmes.
+
+### Conséquence
+
+Les trois non-conformités touchent des **artefacts gelés en Phase 3**
+(tokens 1.0.0, primitives, blocs 1.0.0 / D-024) et scellés dans le train
+`rt-2026.08`. Le garde-fou de la Phase 8 interdit de les retoucher pour
+faire passer le slice, et leur modification invaliderait les preuves de
+déterminisme des Phases 4/6/7. Elles sont donc consignées comme **dettes
+BLOQUANTES** (DET-006 requalifiée, **DET-014**, **DET-015**) à échéance
+**Phase 10 — design system v2**, conformément à l'amendement A++ de la
+ROADMAP.

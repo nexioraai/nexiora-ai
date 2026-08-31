@@ -1,0 +1,20 @@
+# GÉNÉRÉ DEPUIS L'AIR (prj_transit_abidjan_tracking) — navigation LTR. NE PAS ÉDITER.
+appId: com.deribfy.preview.suivi_conteneurs_abidjan
+---
+- launchApp
+- assertVisible:
+    id: "scr_conteneurs"
+- assertVisible:
+    id: "blk_conteneurs_liste-row-ent_conteneur_row_1"
+- scrollUntilVisible:
+    element:
+      id: "blk_conteneurs_ajouter"
+    timeout: 60000
+    speed: 70
+- tapOn:
+    id: "blk_conteneurs_ajouter"
+- assertVisible:
+    id: "scr_suivi_ajout"
+- back
+- assertVisible:
+    id: "scr_conteneurs"
