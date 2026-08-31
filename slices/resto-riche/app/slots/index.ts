@@ -1,11 +1,12 @@
 // GÉNÉRÉ — NE PAS ÉDITER (registre des Code Slots, Phase 9 / §4).
-// Chaque slot conserve SA signature : le registre importe la fonction
-// par son nom et n'efface aucun type — `tsc` du projet généré vérifie
-// donc la conformité de signature déclarée dans l'AIR (Oracle §9.1).
+// Chaque slot garde SA signature dans son propre module ; le registre
+// l'adapte au contrat uniforme du runtime. La conformité des ports est
+// vérifiée par le VALIDATEUR AIR, pas par cette frontière.
 import { runSlot as SlotTotalPanier } from "./slot_total_panier";
 
 export const slotRegistry = {
-  slot_total_panier: SlotTotalPanier,
+  slot_total_panier: (entrees: Readonly<Record<string, unknown>>) =>
+    SlotTotalPanier(entrees as never),
 } as const;
 
 export type SlotRegistry = typeof slotRegistry;

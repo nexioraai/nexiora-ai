@@ -79,7 +79,10 @@ const actions = [
   { id:"act_ajouter_panier", name:"ajouter au panier", trigger:{kind:"ui",blockId:"blk_plat_ajouter"}, effect:{kind:"navigate",screenId:"scr_panier"} },
   { id:"act_retour_menu", name:"retour carte", trigger:{kind:"ui",blockId:"blk_plat_retour"}, effect:{kind:"navigate",screenId:"scr_menu"} },
   { id:"act_ouvrir_form", name:"ouvrir le formulaire", trigger:{kind:"ui",blockId:"blk_panier_commander"}, effect:{kind:"navigate",screenId:"scr_form"} },
-  { id:"act_valider", name:"valider", trigger:{kind:"ui",blockId:"blk_form_client"}, effect:{kind:"navigate",screenId:"scr_confirmation"} },
+  // D-070 : « Valider » CRÉE la commande, puis confirme. Avant, il ne faisait
+  // que changer d'écran — le document promettait de commander, l'app naviguait.
+  { id:"act_valider", name:"valider", trigger:{kind:"ui",blockId:"blk_form_client"},
+    effect:{kind:"mutation", entityId:"ent_client", operation:"create", thenScreenId:"scr_confirmation"} },
   { id:"act_suivre", name:"suivre", trigger:{kind:"ui",blockId:"blk_conf_suivi"}, effect:{kind:"navigate",screenId:"scr_commandes"} },
   { id:"act_ouvrir_commande", name:"ouvrir une commande", trigger:{kind:"ui",blockId:"blk_cmd_liste"}, effect:{kind:"navigate",screenId:"scr_commande"} },
 ];
@@ -143,11 +146,13 @@ const actionSlot = {
   },
 };
 
-const air = { airSchemaVersion:"1.4.0", projectId:"prj_resto_riche", intent,
+const air = { airSchemaVersion:"1.5.0", projectId:"prj_resto_riche", intent,
   app:{ name:"Chez Nous", slug:"chez-nous", locales:{ userLanguage:"fr-FR", appLocales:["fr-FR"],
     defaultAppLocale:"fr-FR", contentLocales:["fr-FR"], rtlSupported:false } },
   screens, navigation:{ entryScreenId:"scr_menu", routes: screens.map((s)=>({ id:`nav_${s.id.slice(4)}`, screenId:s.id })) },
-  entities, relations:[], datasets, actions:[...actions, actionSlot], rules:[], slots, capabilities:[], permissions:[],
+  entities, relations:[], datasets, actions:[...actions, actionSlot], rules:[{ id:"rule_client_tel", description:"Le téléphone est obligatoire pour rappeler le client.",
+    kind:"validation", entityId:"ent_client",
+    assertions:[{ fieldId:"fld_client_telephone", operator:"required" }] }], slots, capabilities:[], permissions:[],
   design:{ theme:"chez_nous", overrides:[{key:"radius.sm",value:10},{key:"color.light.primary",value:"#0B5E8A"}] },
   integrations:[], network:{ policy:"deny_by_default", allowedDomains:[] },
   native:{ minIosVersion:"16.4", minAndroidSdk:26 },

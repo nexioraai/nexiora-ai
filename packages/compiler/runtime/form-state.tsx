@@ -9,7 +9,7 @@
 // bloc. Défaut : un magasin ÉPHÉMÈRE en mémoire, créé à la racine de l'app —
 // donc partagé entre écrans, et remis à zéro au redémarrage. Aucune persistance
 // disque n'est promise : ce serait une capability, et elle n'en est pas une.
-import { createContext, useCallback, useContext, useMemo, useRef } from "react";
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import type { PropsWithChildren } from "react";
 
 export type FormValues = Readonly<Record<string, string>>;
@@ -28,15 +28,20 @@ export const EMPTY_FORM_STORE: FormStore = {
 const FormContext = createContext<FormStore>(EMPTY_FORM_STORE);
 
 export function FormStateRoot({ children }: PropsWithChildren) {
-  const magasin = useRef<Record<string, FormValues>>({});
+  // DÉFAUT CORRIGÉ (D-071) — la première version tenait le magasin dans un
+  // `useRef`. Elle partageait bien l'état entre écrans, mais **aucune écriture
+  // ne provoquait de rendu** : ce que l'utilisateur tapait ne s'affichait pas,
+  // et la soumission envoyait les valeurs du rendu PRÉCÉDENT, donc vides.
+  // Trouvé en pressant réellement le formulaire, pas en relisant le code.
+  const [magasin, setMagasin] = useState<Record<string, FormValues>>({});
   const store = useMemo<FormStore>(
     () => ({
-      read: (blockId) => magasin.current[blockId] ?? {},
+      read: (blockId) => magasin[blockId] ?? {},
       write: (blockId, values) => {
-        magasin.current = { ...magasin.current, [blockId]: values };
+        setMagasin((prec) => ({ ...prec, [blockId]: values }));
       },
     }),
-    [],
+    [magasin],
   );
   return <FormContext.Provider value={store}>{children}</FormContext.Provider>;
 }

@@ -63,6 +63,16 @@ export const AIR_MIGRATIONS: readonly AirMigration[] = [
       "ce pointeur continue d'afficher son identifiant — c'est le FAIT.",
     migrate: (document) => document,
   },
+  {
+    from: "1.4.0",
+    to: "1.5.0",
+    description:
+      "AIR 1.5.0 (D-070) : ajout du champ OPTIONNEL `thenScreenId` sur l'effet " +
+      "`mutation` — où aller une fois l'écriture faite. Identité : un document " +
+      "1.4.0 ne demandait aucune navigation après écriture, et lui en inventer " +
+      "une changerait le parcours de l'utilisateur sans décision.",
+    migrate: (document) => document,
+  },
 ];
 
 export class AirMigrationError extends Error {

@@ -17,7 +17,7 @@ import {
   testIdSchema,
 } from "./ids.ts";
 
-export const AIR_SCHEMA_VERSION = "1.4.0";
+export const AIR_SCHEMA_VERSION = "1.5.0";
 
 export const semverSchema = z.string().regex(/^\d+\.\d+\.\d+$/);
 export const sha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
@@ -269,6 +269,21 @@ const actionEffectSchema = z.discriminatedUnion("kind", [
     kind: z.literal("mutation"),
     entityId: entityIdSchema,
     operation: z.enum(["create", "update", "delete"]),
+    /**
+     * ÉCRAN SUIVANT (1.5.0, D-070) — où aller UNE FOIS l'écriture faite.
+     *
+     * Défaut trouvé en INSPECTANT l'application émise : un effet d'action est
+     * UNIQUE. Un formulaire ne pouvait donc pas « enregistrer PUIS confirmer » —
+     * il fallait choisir. Toutes les vitrines choisissaient `navigate`, si bien
+     * que **« Valider » changeait d'écran sans rien enregistrer**, et la gate de
+     * fidélité laissait passer : sa cible était bien vivante.
+     *
+     * OPTIONNEL : sans lui, l'écriture a lieu et l'utilisateur reste sur place —
+     * comportement 1.4.0 inchangé. La navigation N'A LIEU QUE SI L'ÉCRITURE A
+     * RÉUSSI : une règle qui refuse la saisie doit garder l'utilisateur sur son
+     * formulaire, jamais l'envoyer sur un écran de confirmation mensonger.
+     */
+    thenScreenId: screenIdSchema.optional(),
   }),
 ]);
 

@@ -72,9 +72,18 @@ export function reachableScreens(
   while (grew) {
     grew = false;
     for (const action of air.actions) {
-      if (action.effect.kind !== "navigate") continue;
+      // D-070 : une `mutation` peut mener a un ecran une fois l'ecriture
+      // reussie. Ignorer ce chemin declarerait `scr_confirmation` MORT alors
+      // que l'utilisateur y arrive — l'inverse exact du defaut que la mesure
+      // d'atteignabilite existe pour trouver.
+      const target =
+        action.effect.kind === "navigate"
+          ? action.effect.screenId
+          : action.effect.kind === "mutation"
+            ? action.effect.thenScreenId
+            : undefined;
+      if (target === undefined) continue;
       if (!allowed.has(action.trigger.kind)) continue;
-      const target = action.effect.screenId;
       if (reached.has(target) || !screenIds.has(target)) continue;
 
       // L'origine doit elle-même être atteignable, sinon l'action ne peut

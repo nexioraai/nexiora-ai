@@ -4096,3 +4096,78 @@ ou des slots **sans liaison** : elles restent mortes, et la gate le dit.
 
 **659 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0.**
 **A++ : A·B·C·D·E·F·G·H toutes CONFORMES sur 2 domaines.**
+
+---
+
+## D-069 / D-070 / D-071 — INSPECTION DE L'APPLICATION : trois défauts que 659 tests ne voyaient pas — 2026-08-31
+
+**Déclencheur propriétaire** : *« est-ce que tu as bien regardé l'appli, vérifié
+toi-même avant moi ? »* **Réponse honnête : non.** Onze décisions avaient été
+prises sans jamais monter les 7 écrans ensemble, ni compiler l'app émise, ni
+presser un seul bouton. Je l'ai fait. **Trois défauts sont sortis.**
+
+### 🔴 D-069 — L'APPLICATION ÉMISE NE COMPILAIT PAS
+
+`FACT` — `tsc` du projet `resto-riche` : **erreur TS2322**. Un slot déclare ses
+entrées précises (`{lignes, devise}`) ; TypeScript **refuse** de l'assigner à un
+registre typé `Record<string, unknown>` — contravariance des paramètres.
+
+`CONCLUSION` — **toute application portant un slot échouait au `tsc` de son
+propre projet**, donc au pipeline (`npm_ci` → `typecheck`). **Aucun des 659 tests
+ne le voyait : ils vérifiaient le TEXTE émis, jamais qu'il COMPILE.**
+
+**Correction** : le registre émet un **adaptateur** au point de jonction. La
+conformité des ports n'est pas perdue — elle est garantie par le VALIDATEUR
+(`AIR_SLOT_INPUT_UNBOUND`), qui refuse un document dont la liaison ne couvre pas
+exactement les entrées. `FACT` — **app émise : `tsc` EXIT=0.**
+
+### 🔴 D-071 — LE FORMULAIRE N'AFFICHAIT PAS CE QU'ON TAPAIT
+
+`FACT` — `FormStateRoot` (D-066, écrit quelques heures plus tôt) tenait son
+magasin dans un **`useRef`**. Il partageait bien l'état entre écrans — mais
+**aucune écriture ne provoquait de rendu**. Conséquence : la saisie **ne
+s'affichait pas**, et la soumission envoyait les valeurs du rendu **précédent**,
+donc **vides**.
+
+`INFÉRENCE` — un défaut que **seule la frappe réelle** pouvait révéler. Le test
+d'origine montait le composant et vérifiait son existence ; il ne tapait rien.
+
+### 🔴 D-070 — LE CONTRAT NE SAVAIT PAS « ÉCRIRE PUIS NAVIGUER »
+
+`FACT` — un effet d'action est **UNIQUE**. Un formulaire ne pouvait donc pas
+« enregistrer PUIS confirmer » : il fallait choisir.
+`FACT` — **les 9 actions de ma propre vitrine étaient toutes `navigate`.**
+*« Valider » changeait d'écran sans rien enregistrer* — et **la gate de fidélité
+laissait passer**, puisque sa cible était bien vivante.
+
+> **C'est la limite de la gate, écrite dès le premier jour, qui vient de mordre
+> sur mon propre document de démonstration.** Une cible vivante n'est pas une
+> promesse tenue.
+
+**AIR 1.5.0** : `thenScreenId` optionnel sur l'effet `mutation`. **La navigation
+n'a lieu QUE SI L'ÉCRITURE A RÉUSSI** — envoyer quelqu'un sur un écran de
+confirmation après un refus de règle serait un mensonge de l'interface.
+L'atteignabilité reconnaît ce chemin, sinon `scr_confirmation` serait déclaré
+mort alors que l'utilisateur y arrive.
+
+### La vitrine est devenue honnête
+
+`resto-riche` : « Valider » **crée réellement le client**, puis confirme. Une
+**règle** exige le téléphone. Mesuré au rendu :
+
+| geste | résultat |
+|---|---|
+| saisie complète puis soumission | **`create:ent_client:{nom, telephone, email}`** — écriture réelle |
+| soumission **sans téléphone** | **0 écriture** — la règle refuse |
+| source en **lecture seule** | aucun appel, **aucun crash** |
+
+### Ce que l'inspection a aussi confirmé
+
+**7/7 écrans montés sans exception** (8 à 38 identités adressables chacun) ·
+**aucun identifiant technique ne fuit à l'écran** (`ent_`, `scr_`, `fld_`…).
+
+### Non-régression
+
+**659 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0 ·
+17 observations au rendu · `tsc` de l'app émise EXIT=0.**
+**A++ : A·B·C·D·E·F·G·H toutes CONFORMES.**

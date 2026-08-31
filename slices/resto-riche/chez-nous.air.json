@@ -1,5 +1,5 @@
 {
-  "airSchemaVersion": "1.4.0",
+  "airSchemaVersion": "1.5.0",
   "projectId": "prj_resto_riche",
   "app": {
     "name": "Chez Nous",
@@ -839,8 +839,10 @@
         "blockId": "blk_form_client"
       },
       "effect": {
-        "kind": "navigate",
-        "screenId": "scr_confirmation"
+        "kind": "mutation",
+        "entityId": "ent_client",
+        "operation": "create",
+        "thenScreenId": "scr_confirmation"
       }
     },
     {
@@ -906,7 +908,20 @@
       }
     }
   ],
-  "rules": [],
+  "rules": [
+    {
+      "id": "rule_client_tel",
+      "description": "Le téléphone est obligatoire pour rappeler le client.",
+      "kind": "validation",
+      "entityId": "ent_client",
+      "assertions": [
+        {
+          "fieldId": "fld_client_telephone",
+          "operator": "required"
+        }
+      ]
+    }
+  ],
   "slots": [
     {
       "id": "slot_total_panier",

@@ -104,12 +104,28 @@ function emitSlotRegistry(slots: readonly SlotSource[]): string {
   const imports = slots.map(
     (s) => `import { runSlot as ${pascal(s.slotId)} } from "./${s.slotId}";`,
   );
-  const entries = slots.map((s) => `  ${s.slotId}: ${pascal(s.slotId)},`);
+  // ADAPTATION DE SIGNATURE (D-069) — défaut RÉEL trouvé en compilant l'app
+  // émise : un slot déclare ses entrées PRÉCISES (`{lignes, devise}`), et
+  // TypeScript refuse d'assigner une telle fonction à un registre dont les
+  // entrées sont `Record<string, unknown>` — la contravariance des paramètres
+  // l'interdit. **Toute application portant un slot échouait au `tsc` de son
+  // propre projet**, donc au pipeline. Aucun test du moteur ne le voyait :
+  // ils vérifiaient le TEXTE émis, jamais qu'il COMPILE.
+  //
+  // L'adaptateur convertit au point d'appel, une fois, explicitement. La
+  // conformité des ports n'est pas perdue : elle est vérifiée par le
+  // VALIDATEUR (`AIR_SLOT_INPUT_UNBOUND`, `AIR_SLOT_INPUT_UNKNOWN`), qui refuse
+  // un document dont la liaison ne couvre pas exactement les entrées du slot.
+  const entries = slots.map(
+    (s) =>
+      `  ${s.slotId}: (entrees: Readonly<Record<string, unknown>>) =>\n` +
+      `    ${pascal(s.slotId)}(entrees as never),`,
+  );
   return [
     "// GÉNÉRÉ — NE PAS ÉDITER (registre des Code Slots, Phase 9 / §4).",
-    "// Chaque slot conserve SA signature : le registre importe la fonction",
-    "// par son nom et n'efface aucun type — `tsc` du projet généré vérifie",
-    "// donc la conformité de signature déclarée dans l'AIR (Oracle §9.1).",
+    "// Chaque slot garde SA signature dans son propre module ; le registre",
+    "// l'adapte au contrat uniforme du runtime. La conformité des ports est",
+    "// vérifiée par le VALIDATEUR AIR, pas par cette frontière.",
     ...imports,
     "",
     "export const slotRegistry = {",
@@ -144,6 +160,7 @@ interface ScreenSlice {
         params?: Record<string, unknown>;
         entityId?: string;
         operation?: string;
+        thenScreenId?: string;
       }
     >;
     uiActionsByBlock: Record<string, string>;
@@ -231,6 +248,9 @@ function buildScreenSlice(air: ProjectAir, screen: ProjectAir["screens"][number]
         kind: "mutation",
         entityId: action.effect.entityId,
         operation: action.effect.operation,
+        ...(action.effect.thenScreenId === undefined
+          ? {}
+          : { thenScreenId: action.effect.thenScreenId }),
       };
     } else if (action.effect.kind === "capability") {
       // D-059 : la capability, sa méthode et ses paramètres sont TRANSPORTÉS

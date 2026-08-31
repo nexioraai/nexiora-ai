@@ -30,6 +30,8 @@ export interface AirEffectData {
   /** Effet `mutation` (D-061) — l'entité écrite et l'opération. */
   entityId?: string;
   operation?: string;
+  /** Écran atteint UNE FOIS l'écriture réussie (1.5.0, D-070). */
+  thenScreenId?: string;
   /** Effet `capability` (D-059) — transporté pour être INVOQUÉ, plus ignoré. */
   capability?: string;
   method?: string;
@@ -321,13 +323,20 @@ function useDispatch(screen: AirScreenData) {
         const saisie = values ?? {};
         // D-062 : une écriture qui viole une règle déclarée est ANNULÉE.
         if (!reglesRespectees(screen.rules, cible, saisie)) return;
-        if (effect.operation === "create") data.create?.(cible, saisie);
+        let ecrit = false;
+        if (effect.operation === "create") ecrit = data.create?.(cible, saisie) ?? false;
         else if (effect.operation === "update") {
           const id = saisie.id;
-          if (id !== undefined) data.update?.(cible, id, saisie);
+          if (id !== undefined) ecrit = data.update?.(cible, id, saisie) ?? false;
         } else if (effect.operation === "delete") {
           const id = saisie.id;
-          if (id !== undefined) data.remove?.(cible, id);
+          if (id !== undefined) ecrit = data.remove?.(cible, id) ?? false;
+        }
+        // D-070 : on ne navigue QUE si l'écriture a réussi. Envoyer l'utilisateur
+        // sur un écran de confirmation après un refus serait un mensonge de
+        // l'interface — la faute exacte que ce chantier traque.
+        if (ecrit && effect.thenScreenId !== undefined) {
+          (navigation.navigate as (name: string) => void)(effect.thenScreenId);
         }
         return;
       }

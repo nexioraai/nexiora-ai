@@ -86,12 +86,27 @@ describe("émission avec bundle", () => {
     expect(registry).toContain(
       'import { runSlot as SlotCalculTotalPanier } from "./slot_calcul_total_panier";',
     );
-    expect(registry).toContain("  slot_calcul_total_panier: SlotCalculTotalPanier,");
+    // ÉDITION CONSCIENTE (2026-08-31, D-069) — DÉFAUT RÉEL, trouvé en compilant
+    // l'application émise. Le registre écrivait la fonction NUE ; TypeScript
+    // refusait alors de l'assigner au contrat du runtime (contravariance des
+    // paramètres), et **toute app portant un slot échouait au `tsc` de son
+    // propre projet**, donc au pipeline. Aucun test ne le voyait : ils
+    // vérifiaient le TEXTE émis, jamais qu'il COMPILE.
+    // Le registre émet désormais un ADAPTATEUR au point d'appel.
+    expect(registry).toContain("slot_calcul_total_panier: (entrees: Readonly<");
+    expect(registry).toContain("SlotCalculTotalPanier(entrees as never)");
     expect(registry).toContain("export const slotRegistry = {");
     expect(registry).toContain("} as const;");
-    // AUCUNE érasure de type : pas de signature générique, pas de any.
+    // D-069 : le registre porte désormais une signature uniforme au point de
+    // jonction — c'est ce qui le rend COMPILABLE. Ce qui reste interdit, et que
+    // ce cliquet garde : **aucun `any`**. Le seul élargissement est un
+    // `as never` LOCAL, au point exact où la conformité des ports est déjà
+    // garantie par le validateur AIR.
     expect(registry).not.toContain("any");
-    expect(registry).not.toContain("Record<string, unknown>");
+    expect(registry).not.toContain(": unknown =>");
+    // Un `as never` par slot du bundle, jamais plus : l'élargissement est
+    // strictement local au point de jonction, il ne se répand pas.
+    expect(registry.match(/as never/g) ?? []).toHaveLength(2);
   });
 
   it("déterminisme : ordre du bundle indifférent, compilations identiques", () => {
