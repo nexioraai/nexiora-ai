@@ -129,6 +129,10 @@ jobs:
         working-directory: .
         run: npm run gate:app-compile
 
+      # MONTE reellement les 58 ecrans des 14 applications (react-test-renderer
+      # + stubs RN). La premiere version de cette gate s'appelait « se rendent »
+      # et se contentait de LIRE les modules de donnees : elle SURDECLARAIT,
+      # exactement le defaut qu'elle existe pour attraper.
       - name: Apps emises — se rendent
         id: app_rendu
         continue-on-error: true
