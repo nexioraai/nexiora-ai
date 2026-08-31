@@ -53,9 +53,14 @@ describe("corpus gelé — couverture", () => {
 });
 
 describe("corpus gelé — mesures d'exécution (cliquets, état 2026-08-29)", () => {
+  // ÉDITION CONSCIENTE (2026-08-31, D-061) : 26 -> 48. Les 22 effets `mutation`
+  // du corpus passent de non exécutés à EXÉCUTÉS — le dispatcher présente
+  // désormais l'écriture au fournisseur de données. Le nombre MONTE, ce qui est
+  // le sens souhaité de ce cliquet : « ils doivent BAISSER quand le moteur
+  // gagne des capacités » vaut pour les ÉCARTS, pas pour les effets exécutés.
   it("effets déclarés vs exécutés", () => {
     expect(sum((m) => m.effectsDeclared)).toBe(180);
-    expect(sum((m) => m.effectsExecuted)).toBe(26);
+    expect(sum((m) => m.effectsExecuted)).toBe(48);
   });
 
   it("écrans déclarés, atteignables en théorie, atteignables en pratique", () => {
@@ -64,9 +69,11 @@ describe("corpus gelé — mesures d'exécution (cliquets, état 2026-08-29)", (
     expect(sum((m) => m.screensReachableEffective)).toBe(25);
   });
 
-  it("contrôles visibles et contrôles FANTÔMES", () => {
+    // ÉDITION CONSCIENTE (D-061) : 67 -> 45 contrôles fantômes. Les 22 boutons
+  // et formulaires à effet `mutation` ont CESSÉ d'être muets.
+it("contrôles visibles et contrôles FANTÔMES", () => {
     expect(sum((m) => m.controlsVisible)).toBe(103);
-    expect(sum((m) => m.ghostControls)).toBe(67);
+    expect(sum((m) => m.ghostControls)).toBe(45);
   });
 
   it("blocs liés à une entité RÉELLEMENT pourvue de données", () => {

@@ -56,8 +56,20 @@ describe("véracité de l'enveloppe — effets", () => {
     expect(EXECUTION_ENVELOPE_V1.capabilitiesEmitCode).toBe(false);
   });
 
-  it("les effets hors enveloppe sont explicitement documentés comme non-opérations", () => {
-    expect(RUNTIME).toContain("non-opération v1");
+  // ÉDITION CONSCIENTE (2026-08-31, D-061) : la mention « non-opération v1 » a
+  // DISPARU du runtime — et c'est précisément le résultat recherché. Elle
+  // couvrait `capability`/`mutation`/`slot` ; les trois ont désormais une
+  // branche. Le test devient : le SEUL effet encore sans exécution est
+  // `capability`, et il est routé vers un fournisseur qui REFUSE explicitement.
+  it("aucun effet n'est silencieusement avalé", () => {
+    const branches = new Set(
+      [...RUNTIME.matchAll(/effect\??\.kind === "(\w+)"/g)].flatMap((m) =>
+        m[1] === undefined ? [] : [m[1]],
+      ),
+    );
+    // `slot` est invoqué au rendu, pas au dispatch : les trois autres passent ici.
+    expect([...branches].sort()).toEqual(["capability", "mutation", "navigate"]);
+    expect(RUNTIME).toContain("invoqué au RENDU");
   });
 });
 
@@ -73,16 +85,37 @@ describe("véracité de l'enveloppe — déclencheurs", () => {
 });
 
 describe("véracité de l'enveloppe — opérations de données", () => {
+  // ÉDITION CONSCIENTE (2026-08-31, D-061) : le contrat de données gagne
+  // l'ÉCRITURE. Ces deux cliquets constataient que le moteur ne savait que LIRE
+  // — 17 promesses de `mutation` du corpus en mouraient, et l'état `submitting`
+  // d'un formulaire était inatteignable faute d'écriture à attendre.
   it("l'interface DataProvider expose EXACTEMENT les opérations déclarées", () => {
-    const methods = [...DATA_PROVIDER.matchAll(/^ {2}(\w+)\(/gm)].map((m) => m[1]).sort();
-    expect(methods).toEqual(["getInstance", "listInstances"]);
-    expect([...EXECUTION_ENVELOPE_V1.dataOperations].sort()).toEqual(["get", "list"]);
+    const methods = [...DATA_PROVIDER.matchAll(/^ {2}(\w+)\??\(/gm)].map((m) => m[1]).sort();
+    expect(methods).toEqual([
+      "create",
+      "getInstance",
+      "listInstances",
+      "remove",
+      "status",
+      "update",
+    ]);
+    expect([...EXECUTION_ENVELOPE_V1.dataOperations].sort()).toEqual([
+      "create",
+      "delete",
+      "get",
+      "list",
+      "update",
+    ]);
   });
 
-  it("aucune méthode d'écriture n'existe dans le contrat de données", () => {
-    for (const write of ["create(", "update(", "delete(", "mutate(", "observe("]) {
-      expect(DATA_PROVIDER).not.toContain(write);
+  it("l'écriture est OPTIONNELLE : un fournisseur en lecture seule reste valide", () => {
+    // La propriété qui compte : une source en lecture seule n'expose pas les
+    // méthodes, donc l'appel est ABSENT — jamais un faux succès. C'est ce `?`
+    // qui empêche `mutation` de devenir une promesse que rien ne fonde.
+    for (const w of ["create?(", "update?(", "remove?("]) {
+      expect(DATA_PROVIDER).toContain(w);
     }
+    expect(DATA_PROVIDER).toContain("Retourne `true` si l'écriture a été HONORÉE");
   });
 });
 

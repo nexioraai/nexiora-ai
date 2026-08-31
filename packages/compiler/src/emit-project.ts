@@ -142,6 +142,8 @@ interface ScreenSlice {
         capability?: string;
         method?: string;
         params?: Record<string, unknown>;
+        entityId?: string;
+        operation?: string;
       }
     >;
     uiActionsByBlock: Record<string, string>;
@@ -187,6 +189,13 @@ function buildScreenSlice(air: ProjectAir, screen: ProjectAir["screens"][number]
     if (!referenced.has(action.id)) continue;
     if (action.effect.kind === "navigate") {
       actions[action.id] = { kind: "navigate", screenId: action.effect.screenId };
+    } else if (action.effect.kind === "mutation") {
+      // D-061 : l'entité et l'opération sont TRANSPORTÉES jusqu'au runtime.
+      actions[action.id] = {
+        kind: "mutation",
+        entityId: action.effect.entityId,
+        operation: action.effect.operation,
+      };
     } else if (action.effect.kind === "capability") {
       // D-059 : la capability, sa méthode et ses paramètres sont TRANSPORTÉS
       // jusqu'au runtime. Sans eux, le dispatcher n'avait rien à présenter au

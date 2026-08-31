@@ -26,6 +26,9 @@ import { useCapabilityProvider } from "./capability-provider";
 export interface AirEffectData {
   kind: "navigate" | "capability" | "mutation" | "slot";
   screenId?: string;
+  /** Effet `mutation` (D-061) — l'entité écrite et l'opération. */
+  entityId?: string;
+  operation?: string;
   /** Effet `capability` (D-059) — transporté pour être INVOQUÉ, plus ignoré. */
   capability?: string;
   method?: string;
@@ -187,8 +190,9 @@ function str(value: unknown): string | undefined {
 function useDispatch(screen: AirScreenData) {
   const navigation = useNavigation();
   const capabilities = useCapabilityProvider();
+  const data = useDataProvider();
   return useMemo(
-    () => (actionId: string | undefined) => {
+    () => (actionId: string | undefined, values?: Readonly<Record<string, string>>) => {
       if (actionId === undefined) return;
       const effect = screen.actions[actionId];
       if (effect?.kind === "navigate" && effect.screenId !== undefined) {
@@ -206,9 +210,26 @@ function useDispatch(screen: AirScreenData) {
         });
         return;
       }
-      // mutation : non-opération v1 (Phase 5+). slot : invoqué au RENDU, pas ici.
+      // MUTATION (D-061) : l'effet n'est plus une non-opération. L'écriture est
+      // présentée au fournisseur de données ; un fournisseur en LECTURE SEULE
+      // n'expose pas la méthode et l'appel est simplement absent — jamais un
+      // faux succès.
+      if (effect?.kind === "mutation" && effect.entityId !== undefined) {
+        const cible = effect.entityId;
+        const saisie = values ?? {};
+        if (effect.operation === "create") data.create?.(cible, saisie);
+        else if (effect.operation === "update") {
+          const id = saisie.id;
+          if (id !== undefined) data.update?.(cible, id, saisie);
+        } else if (effect.operation === "delete") {
+          const id = saisie.id;
+          if (id !== undefined) data.remove?.(cible, id);
+        }
+        return;
+      }
+      // slot : invoqué au RENDU, pas ici.
     },
-    [navigation, screen, capabilities],
+    [navigation, screen, capabilities, data],
   );
 }
 
@@ -409,7 +430,9 @@ export function AirForm({ screen, blockId }: BlockRef) {
         setValues((prev) => ({ ...prev, [fieldId]: value }))
       }
       submitLabel={submitLabel}
-      onSubmit={() => dispatch(actionId)}
+      // D-061 : les valeurs SAISIES accompagnent l'action — sans elles, une
+      // création écrirait un enregistrement vide.
+      onSubmit={() => dispatch(actionId, values)}
       // États du registre 1.1.0 (D-060) : `loading` et `error` deviennent
       // atteignables dès que la source les rapporte ET que le titre est déclaré.
       // `empty` pour un formulaire = AUCUN champ à saisir. État réel, pas une

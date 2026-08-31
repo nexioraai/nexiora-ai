@@ -195,7 +195,11 @@ describe("liaisons de données", () => {
 });
 
 describe("contrôles fantômes", () => {
-  it("un bouton `navigate` est exécuté ; un bouton `mutation` est fantôme", () => {
+    // ÉDITION CONSCIENTE (2026-08-31, D-061) : un bouton `mutation` n'est PLUS
+  // fantôme — le dispatcher présente l'écriture au fournisseur. Le contraste
+  // qui prouve que la mesure discrimine encore se porte sur `capability`, seul
+  // effet encore sans exécution.
+it("un bouton `navigate` est exécuté ; un bouton `capability` est fantôme", () => {
     const document = air({
       screens: [
         {
@@ -219,7 +223,7 @@ describe("contrôles fantômes", () => {
           id: "act_mut",
           name: "mut",
           trigger: { kind: "ui", blockId: "blk_a_ko" },
-          effect: { kind: "mutation", entityId: "ent_x", operation: "create" },
+          effect: { kind: "capability", capability: "camera", method: "open" },
         },
       ],
     });

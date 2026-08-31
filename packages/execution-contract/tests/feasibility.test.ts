@@ -58,6 +58,31 @@ const withMutation = () =>
     ],
   });
 
+// D-061 : `mutation` étant désormais EXÉCUTÉE, le contraste qui prouve que
+// l'imputation discrimine se porte sur `capability` — seul effet restant inerte.
+const withCapability = () =>
+  air({
+    screens: [
+      {
+        id: "scr_a",
+        title: L("A"),
+        blocks: [
+          { id: "blk_a_f", blockType: "form", entityId: "ent_x", props: P({ fieldIds: ["fld_x_f0"], submitLabel: "OK" }) },
+        ],
+      },
+    ],
+    entities: [entity("ent_x")],
+    datasets: [dataset("data_x", "ent_x", 2)],
+    actions: [
+      {
+        id: "act_save",
+        name: "save",
+        trigger: { kind: "ui", blockId: "blk_a_f" },
+        effect: { kind: "capability", capability: "camera", method: "open" },
+      },
+    ],
+  });
+
 describe("réconciliation — cas nominal", () => {
   it("un AIR entièrement dans l'enveloppe est RÉALISABLE, sans écart", () => {
     // Un document purement éditorial : aucun effet, aucune donnée, un thème
@@ -77,8 +102,11 @@ describe("réconciliation — cas nominal", () => {
 });
 
 describe("réconciliation — attribution des écarts", () => {
-  it("une mutation non exécutée est imputée au MOTEUR, jamais au document", () => {
-    const report = analyzeFeasibility(withMutation(), EXECUTION_ENVELOPE_V1);
+    // ÉDITION CONSCIENTE (2026-08-31, D-061) : `mutation` est désormais
+  // EXÉCUTÉE. Le contraste qui prouve que l'imputation discrimine encore se
+  // porte sur `capability`, seul effet restant sans exécution.
+it("une capability non exécutée est imputée au MOTEUR, jamais au document", () => {
+    const report = analyzeFeasibility(withCapability(), EXECUTION_ENVELOPE_V1);
     const gap = report.gaps.find((g) => g.code === "EXEC_EFFECT_INERT");
     expect(gap?.owner).toBe("moteur");
     expect(gap?.path).toBe("actions.act_save.effect");
@@ -197,8 +225,11 @@ describe("réconciliation — attribution des écarts", () => {
 });
 
 describe("réconciliation — contrôles fantômes", () => {
-  it("compte un contrôle fantôme pour un formulaire à effet mutation", () => {
-    const report = analyzeFeasibility(withMutation(), EXECUTION_ENVELOPE_V1);
+    // ÉDITION CONSCIENTE (2026-08-31, D-061) : `mutation` est désormais
+  // EXÉCUTÉE. Le contraste qui prouve que l'imputation discrimine encore se
+  // porte sur `capability`, seul effet restant sans exécution.
+it("compte un contrôle fantôme pour un formulaire à effet capability", () => {
+    const report = analyzeFeasibility(withCapability(), EXECUTION_ENVELOPE_V1);
     expect(report.metrics.controlsVisible).toBe(1);
     expect(report.metrics.ghostControls).toBe(1);
     expect(report.gaps.some((g) => g.code === "EXEC_GHOST_CONTROL")).toBe(true);

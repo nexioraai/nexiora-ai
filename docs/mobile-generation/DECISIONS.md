@@ -3817,3 +3817,52 @@ disparaît pas.
 
 **657 tests verts · 16 espaces de travail · 0 échec · typecheck EXIT=0 · lint EXIT=0.**
 `RELEASE_TRAIN_V1` : `blockRegistryVersion` → `1.1.0`, `blocksSourcesHash` re-scellé.
+
+---
+
+## D-061 — VOIE 3 : les MUTATIONS s'exécutent — 2026-08-31
+
+`FACT` — le contrat de données ne savait que **LIRE** : `listInstances` et
+`getInstance`. Un bouton « Commander », un formulaire « Enregistrer » ne
+produisaient **rien**. 17 promesses de `mutation` en mouraient.
+
+### La levée
+
+`DataProvider` gagne `create?` / `update?` / `remove?`, **OPTIONNELLES**. Le
+dispatcher présente l'écriture ; **une source en lecture seule n'expose pas la
+méthode, donc l'appel est ABSENT — jamais un faux succès.** C'est ce `?` qui
+empêche `mutation` de redevenir une promesse que rien ne fonde.
+
+Chaque méthode retourne `true` si l'écriture a été **honorée** — jamais un
+`void` optimiste : l'appelant doit pouvoir distinguer « écrit » de « refusé ».
+
+Le formulaire transmet enfin **ses valeurs saisies** à l'action : sans elles,
+une création écrivait un enregistrement vide.
+
+### Effet MESURÉ sur le corpus — le compteur monte pour la première fois
+
+| document | avant | après |
+|---|---:|---:|
+| `plombier-urgence` | 7/21 | **9/21** |
+| `suivi-chantier` | 6/15 | **8/15** |
+| `toiletteur-chiens` | 6/15 | **8/15** |
+| `livraison-fruits` | 4/24 | **7/24** |
+| `resto-quartier` | 4/18 | **6/18** |
+
+`FACT` — **effets exécutés : 26 → 48. Contrôles fantômes : 67 → 45.**
+**22 contrôles ont cessé d'être muets.**
+
+### Six cliquets consciemment édités
+
+`corpus.test.ts` (×2) · `envelope-truth.test.ts` (×2) · `feasibility.test.ts` ·
+`graph.test.ts` · `promises.test.ts`. Chacun constatait que `mutation` était
+inerte. **Le contraste qui prouve que les mesures discriminent encore se porte
+désormais sur `capability`** — seul effet restant sans exécution : les fixtures
+de test ont été basculées dessus, pas supprimées.
+
+`FACT` — la mention *« non-opération v1 »* a **disparu du runtime**. Elle
+couvrait `capability`/`mutation`/`slot` ; **les trois ont désormais une branche.**
+
+### Non-régression
+
+**657 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0.**

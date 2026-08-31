@@ -143,9 +143,13 @@ describe("gate des promesses — MESURE SUR LE CORPUS GELÉ", () => {
     // capacités — jamais monter en silence.
     const air = base();
     const r = evaluatePromises(air, EXECUTION_ENVELOPE_V1);
+    // ÉDITION CONSCIENTE (2026-08-31, D-061) : 4 -> 6 cibles vivantes. Les
+    // actions `mutation` de ce document ont CESSÉ d'être mortes — le moteur
+    // exécute désormais l'écriture. Ce cliquet doit MONTER quand le moteur
+    // gagne des capacités ; il ne doit jamais monter en silence.
     expect(r.declared).toBe(18);
-    expect(r.vivantes).toBe(4);
-    expect(r.mortes).toBe(14);
+    expect(r.vivantes).toBe(6);
+    expect(r.mortes).toBe(12);
     expect(r.passed).toBe(false);
   });
 

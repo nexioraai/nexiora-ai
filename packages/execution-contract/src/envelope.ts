@@ -88,7 +88,10 @@ export const EXECUTION_ENVELOPE_V1: ExecutionEnvelope = {
   // le dispatcher. L'y ajouter aurait fait mentir l'enveloppe — le cliquet
   // `envelope-truth` l'a refusé, à raison. L'invocation est déclarée par
   // `slotsInvoked` ci-dessous, à sa place exacte.
-  effects: ["navigate"],
+  // `mutation` entre le 2026-08-31 (D-061) : le dispatcher présente l'écriture
+  // au fournisseur de données. Un fournisseur en LECTURE SEULE n'expose pas la
+  // méthode — l'appel est alors absent, jamais un faux succès.
+  effects: ["navigate", "mutation"],
 
   // Seul `trigger.kind === "ui"` atteint un composant (via `uiActionsByBlock`
   // et les props `actionId`). `lifecycle` (68 occurrences) et `data` (36) ne
@@ -97,7 +100,7 @@ export const EXECUTION_ENVELOPE_V1: ExecutionEnvelope = {
 
   // `DataProvider` (runtime copié) n'expose que `listInstances` et
   // `getInstance`. Aucune méthode d'écriture, aucun modèle d'observation.
-  dataOperations: ["list", "get"],
+  dataOperations: ["list", "get", "create", "update", "delete"],
 
   // Le registre de blocs DÉCLARE des états que le runtime ne peut pas
   // atteindre, faute de source de données asynchrone :
