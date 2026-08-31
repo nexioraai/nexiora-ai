@@ -9,7 +9,7 @@
 // (vigilance consignée en D-021).
 import { z } from "zod";
 
-export const DESIGN_TOKENS_VERSION = "1.0.0";
+export const DESIGN_TOKENS_VERSION = "1.2.0";
 
 const hexColor = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
 const dimension = z.number().int().positive();
@@ -45,6 +45,8 @@ export const designTokensSchema = z.strictObject({
   }),
   color: z.strictObject({ light: paletteSchema, dark: paletteSchema }),
   space: z.strictObject({
+    // `xxs` (v2) : le pas fin qu'exigeait le badge, jusque-là écrit en dur.
+    xxs: dimension,
     xs: dimension,
     sm: dimension,
     md: dimension,
@@ -58,6 +60,24 @@ export const designTokensSchema = z.strictObject({
     title: dimension,
     heading: dimension,
   }),
+  // DESIGN SYSTEM v2 (P-007, Phase 10) — trois groupes AJOUTÉS, chacun avec
+  // un consommateur RÉEL dans les primitives ; aucun token « au cas où ».
+  // `fontWeight` et `space.xxs` suppriment les 9 valeurs de style en dur
+  // mesurées (DET-022) ; `opacity` tokenise l'opacité d'état désactivé.
+  // Ce qui n'a PAS été ajouté et pourquoi : `elevation`, `motion`,
+  // `breakpoint`/`density` n'ont AUCUN consommateur dans le design system
+  // v1 — les introduire serait spéculatif (arbitrage consigné, DET-023).
+  fontWeight: z.strictObject({
+    semibold: z.string().regex(/^[1-9]00$/),
+    bold: z.string().regex(/^[1-9]00$/),
+  }),
+  opacity: z.strictObject({ disabled: z.number().gt(0).lt(1) }),
+  // Cible tactile minimale (grille A++ dimension A, D-039). 48 satisfait
+  // SIMULTANÉMENT les deux normes — 44 pt (iOS HIG) et 48 dp (Material) —
+  // ce qui évite toute ramification `Platform.OS` : le code généré reste
+  // strictement identique sur les deux plateformes (propriété prouvée au
+  // scorecard du slice 1).
+  size: z.strictObject({ tapTarget: dimension }),
 });
 
 export type DesignTokens = z.infer<typeof designTokensSchema>;

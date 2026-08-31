@@ -16,13 +16,30 @@ const OUT =
     : process.argv[outIndex + 1];
 
 const source = JSON.parse(readFileSync(join(PKG, "tokens.json"), "utf8"));
+// TOKEN DÉRIVÉ (v2, P-007) : `primaryText` n'existe pas dans la source —
+// il est CALCULÉ depuis l'accent et le fond, de sorte qu'une seule valeur
+// (l'accent) reste la vérité. Le calcul garantit ≥ 4,5:1 pour n'importe
+// quel accent, ce qui rend sûre la variété visuelle par app.
+const { deriveTextInk } = await import("../src/derive.ts");
+const withInk = (scheme) => ({
+  ...source.color[scheme],
+  // Les DEUX encres liées à l'accent sont dérivées : `primaryText` (accent
+  // lu sur le fond) et `onPrimary` (texte lu SUR l'accent). Sur la palette
+  // de base la seconde est une identité — la règle vaut pour les thèmes
+  // par app, où l'accent peut changer.
+  onPrimary: deriveTextInk(source.color[scheme].onPrimary, source.color[scheme].primary),
+  primaryText: deriveTextInk(source.color[scheme].primary, source.color[scheme].bg),
+});
 // Le thème RN n'embarque que le jeu sémantique consommé par les primitives
 // (D-021) — les sections `brand`/`web` sont réservées à la cible web (3.1b).
 const theme = {
-  color: source.color,
+  color: { light: withInk("light"), dark: withInk("dark") },
   space: source.space,
   radius: source.radius,
   font: source.font,
+  fontWeight: source.fontWeight,
+  opacity: source.opacity,
+  size: source.size,
 };
 
 const body = `// GÉNÉRÉ par scripts/generate.mjs depuis tokens.json — NE PAS ÉDITER.

@@ -3,6 +3,9 @@
 // rien (étanchéité §22). Tokens consommés depuis la SOURCE UNIQUE (3.1).
 // RTL : propriétés LOGIQUES exclusivement (start/end) — miroir automatique
 // prouvé au banc, verrouillé par tests/rtl-ratchet.test.ts.
+// DESIGN SYSTEM v2 (P-007, Phase 10) : plus AUCUNE valeur de design en dur —
+// graisses, pas fin d'espacement et opacité d'état viennent des tokens ;
+// l'accent n'est plus utilisé comme couleur de texte (encre dérivée).
 import { theme } from "@deribfy/design-tokens";
 import { StyleSheet } from "react-native";
 import type { Scheme } from "./contracts.ts";
@@ -15,25 +18,29 @@ const makeSheet = (c: Palette) =>
     shell: { flex: 1, backgroundColor: c.bg },
     shellTitle: {
       fontSize: theme.font.heading,
-      fontWeight: "700",
+      fontWeight: theme.fontWeight.bold,
       color: c.text,
       padding: theme.space.lg,
     },
     // — Section —
     section: { padding: theme.space.lg },
+    // DET-006 : section qui remplit et BORNE sa hauteur, plus conteneur
+    // d'enfants borné — la liste virtualisée y retrouve une fenêtre finie.
+    sectionFill: { flex: 1 },
+    sectionFillBody: { flex: 1 },
     sectionTitle: {
       fontSize: theme.font.title,
-      fontWeight: "600",
+      fontWeight: theme.fontWeight.semibold,
       color: c.text,
       marginBottom: theme.space.md,
     },
     // — AppText (variantes = tokens de police ; tons = tokens de couleur) —
     textLabel: { fontSize: theme.font.label, color: c.text },
     textBody: { fontSize: theme.font.body, color: c.text },
-    textTitle: { fontSize: theme.font.title, fontWeight: "600", color: c.text },
-    textHeading: { fontSize: theme.font.heading, fontWeight: "700", color: c.text },
+    textTitle: { fontSize: theme.font.title, fontWeight: theme.fontWeight.semibold, color: c.text },
+    textHeading: { fontSize: theme.font.heading, fontWeight: theme.fontWeight.bold, color: c.text },
     toneMuted: { color: c.muted },
-    tonePrimary: { color: c.primary },
+    tonePrimary: { color: c.primaryText },
     toneError: { color: c.error },
     toneSuccess: { color: c.success },
     toneWarn: { color: c.warn },
@@ -44,6 +51,7 @@ const makeSheet = (c: Palette) =>
     alignEnd: { alignSelf: "flex-end" },
     // — AppButton —
     button: {
+      minHeight: theme.size.tapTarget,
       backgroundColor: c.primary,
       borderRadius: theme.radius.md,
       paddingVertical: theme.space.md,
@@ -58,9 +66,9 @@ const makeSheet = (c: Palette) =>
       borderWidth: 1,
       borderColor: c.primary,
     },
-    buttonDisabled: { opacity: 0.5 },
-    buttonText: { color: c.onPrimary, fontWeight: "600", fontSize: theme.font.body },
-    buttonGhostText: { color: c.primary },
+    buttonDisabled: { opacity: theme.opacity.disabled },
+    buttonText: { color: c.onPrimary, fontWeight: theme.fontWeight.semibold, fontSize: theme.font.body },
+    buttonGhostText: { color: c.primaryText },
     // — TextField —
     fieldWrap: { marginBottom: theme.space.md },
     fieldLabel: {
@@ -74,6 +82,7 @@ const makeSheet = (c: Palette) =>
       borderWidth: 1,
       borderColor: c.border,
       borderRadius: theme.radius.sm,
+      minHeight: theme.size.tapTarget,
       paddingHorizontal: theme.space.md,
       paddingVertical: theme.space.sm,
       color: c.text,
@@ -89,6 +98,7 @@ const makeSheet = (c: Palette) =>
     fieldSpinner: { marginStart: theme.space.sm },
     // — ListRow —
     row: {
+      minHeight: theme.size.tapTarget,
       backgroundColor: c.surface,
       borderColor: c.border,
       borderWidth: 1,
@@ -101,7 +111,7 @@ const makeSheet = (c: Palette) =>
     },
     rowLeading: { marginEnd: theme.space.md },
     rowBody: { flex: 1 },
-    rowTitle: { fontSize: theme.font.body, fontWeight: "600", color: c.text },
+    rowTitle: { fontSize: theme.font.body, fontWeight: theme.fontWeight.semibold, color: c.text },
     rowSubtitle: {
       fontSize: theme.font.label,
       color: c.muted,
@@ -109,8 +119,11 @@ const makeSheet = (c: Palette) =>
     },
     rowTrailing: {
       fontSize: theme.font.body,
-      fontWeight: "700",
-      color: c.primary,
+      fontWeight: theme.fontWeight.bold,
+      // v2 (DET-019) : encre DÉRIVÉE de l'accent — l'accent lui-même reste
+      // réservé aux FONDS et aux bordures, où le seuil 4,5:1 ne s'applique
+      // pas au texte. Mesuré : 2,95:1 avant, 4,57:1 après.
+      color: c.primaryText,
       marginStart: theme.space.md,
     },
     // — Badge —
@@ -118,7 +131,7 @@ const makeSheet = (c: Palette) =>
       backgroundColor: c.badgeBg,
       borderRadius: theme.radius.sm,
       paddingHorizontal: theme.space.sm,
-      paddingVertical: 2,
+      paddingVertical: theme.space.xxs,
       alignSelf: "flex-start",
       marginTop: theme.space.xs,
     },
@@ -136,7 +149,7 @@ const makeSheet = (c: Palette) =>
     },
     stateTitle: {
       fontSize: theme.font.title,
-      fontWeight: "600",
+      fontWeight: theme.fontWeight.semibold,
       color: c.text,
       textAlign: "center",
     },

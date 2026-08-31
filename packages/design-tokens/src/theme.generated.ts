@@ -10,12 +10,13 @@ export const theme = {
       "text": "#16181D",
       "muted": "#5A616E",
       "primary": "#FA5D1E",
-      "onPrimary": "#FFFFFF",
+      "onPrimary": "#16181D",
       "border": "#D9DDE3",
       "error": "#C42B1C",
       "success": "#1F7A3D",
-      "warn": "#8A6D00",
-      "badgeBg": "#EEF1F5"
+      "warn": "#866A00",
+      "badgeBg": "#EEF1F5",
+      "primaryText": "#C34917"
     },
     "dark": {
       "bg": "#0A050E",
@@ -23,15 +24,17 @@ export const theme = {
       "text": "#F2F0F4",
       "muted": "#A49FAC",
       "primary": "#FA5D1E",
-      "onPrimary": "#FFFFFF",
+      "onPrimary": "#16181D",
       "border": "#2E2836",
       "error": "#FF6B5E",
       "success": "#4CC17A",
       "warn": "#E3C25A",
-      "badgeBg": "#241E2B"
+      "badgeBg": "#241E2B",
+      "primaryText": "#FA5D1E"
     }
   },
   "space": {
+    "xxs": 2,
     "xs": 4,
     "sm": 8,
     "md": 12,
@@ -48,6 +51,16 @@ export const theme = {
     "body": 14,
     "title": 17,
     "heading": 22
+  },
+  "fontWeight": {
+    "semibold": "600",
+    "bold": "700"
+  },
+  "opacity": {
+    "disabled": 0.5
+  },
+  "size": {
+    "tapTarget": 48
   }
 } as const;
 export type SchemeName = keyof typeof theme.color;

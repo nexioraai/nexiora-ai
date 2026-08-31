@@ -34,7 +34,15 @@ export type AppTextProps = PropsWithChildren<
 
 export type ScreenShellProps = PropsWithChildren<A11yProps & { title: string }>;
 
-export type SectionProps = PropsWithChildren<A11yProps & { title?: string }>;
+// `fill` (D-039/DET-006) : la section occupe la hauteur disponible et BORNE
+// ses enfants. Indispensable à une liste virtualisée : sans parent borné,
+// une FlatList reçoit une hauteur infinie et rend TOUS ses éléments — la
+// virtualisation est neutralisée. Le style reste porté par les primitives ;
+// le paquet `blocks` se contente de DÉCLARER l'intention (contrainte
+// « aucun style en dur », D-021/D-023).
+export type SectionProps = PropsWithChildren<
+  A11yProps & { title?: string; fill?: boolean }
+>;
 
 export interface AppButtonProps extends A11yProps {
   label: string;

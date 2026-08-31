@@ -6,3 +6,4 @@ export { DESIGN_TOKENS_VERSION, designTokensSchema } from "./schema.ts";
 export type { DesignTokens, TokenPalette } from "./schema.ts";
 export { theme } from "./theme.generated.ts";
 export type { Palette, SchemeName } from "./theme.generated.ts";
+export { WCAG_AA, contrast, deriveTextInk, luminance } from "./derive.ts";

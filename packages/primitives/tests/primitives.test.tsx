@@ -52,11 +52,32 @@ const texts = (renderer: ReactTestRenderer): string[] =>
     .filter((c): c is string => typeof c === "string");
 
 describe("ScreenShell", () => {
-  it("rend le titre (rôle header) et le fond depuis les tokens light", () => {
+  // MISE À JOUR CONSCIENTE (DET-017 volet 1) : ce test validait le rendu
+  // ANTÉRIEUR, où le titre était affiché en double avec l'en-tête natif.
+  it("n'affiche PLUS le titre, et garde le fond issu des tokens light", () => {
     const r = render(<ScreenShell title="Accueil">{null}</ScreenShell>);
-    expect(texts(r)).toContain("Accueil");
+    expect(texts(r)).not.toContain("Accueil");
     const shell = first(r.root.findAllByType("View" as never));
     expect(flatStyle(shell).backgroundColor).toBe(theme.color.light.bg);
+  });
+
+  // DET-020 (Phase 10) : le repli du titre sur `accessibilityLabel` est
+  // RETIRÉ — mesuré inerte pour VoiceOver (conteneur non `accessible`) et
+  // non mesuré côté TalkBack. La sémantique de titre vit dans l'en-tête
+  // natif. Le label explicite, lui, reste transmis tel quel.
+  it("ne fabrique AUCUN label implicite depuis le titre", () => {
+    const auto = render(<ScreenShell title="Accueil">{null}</ScreenShell>);
+    const label = (node: ReactTestInstance): string | undefined =>
+      (node.props as { accessibilityLabel?: string }).accessibilityLabel;
+    expect(label(first(auto.root.findAllByType("View" as never)))).toBeUndefined();
+    const explicit = render(
+      <ScreenShell title="Accueil" accessibilityLabel="Écran d'accueil">
+        {null}
+      </ScreenShell>,
+    );
+    expect(label(first(explicit.root.findAllByType("View" as never)))).toBe(
+      "Écran d'accueil",
+    );
   });
 });
 
@@ -235,5 +256,32 @@ describe("Section & Spinner", () => {
     expect((spinner.props as { size?: string }).size).toBe("large");
     expect((spinner.props as { testID?: string }).testID).toBe("sp");
     expect(texts(r)).toEqual([]);
+  });
+});
+
+describe("Section fill — bornage de la liste virtualisée (DET-025)", () => {
+  // Le contrat portait `fill`, les styles existaient, `ListBlock` le
+  // demandait — mais le composant l'ignorait. Conséquence mesurée sur
+  // appareil ET sur émulateur : dernière ligne coupée, bloc suivant hors
+  // écran. Ces deux contrôles rendent l'omission impossible à répéter.
+  const styleDe = (node: ReactTestInstance): Record<string, unknown> => flatStyle(node);
+
+  it("sans `fill` : aucune contrainte de hauteur (comportement inchangé)", () => {
+    const r = render(<Section testID="s">{null}</Section>);
+    expect(styleDe(first(r.root.findAllByType("View" as never))).flex).toBeUndefined();
+  });
+
+  it("avec `fill` : le conteneur ET le corps sont bornés", () => {
+    const r = render(
+      <Section testID="s" fill>
+        {null}
+      </Section>,
+    );
+    const vues = r.root.findAllByType("View" as never);
+    expect(styleDe(first(vues)).flex).toBe(1);
+    // Le corps aussi : sans lui, l'enfant défilant reste libre de grandir.
+    const corps = vues[1];
+    if (corps === undefined) throw new Error("corps de Section absent");
+    expect(styleDe(corps).flex).toBe(1);
   });
 });

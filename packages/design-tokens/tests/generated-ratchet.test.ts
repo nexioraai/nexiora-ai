@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, it } from "vitest";
 import { theme } from "../src";
+import { deriveTextInk } from "../src/derive.ts";
 
 // CLIQUET DE NON-DÉRIVE — le thème RN versionné (src/theme.generated.ts) doit
 // être EXACTEMENT ce que le codegen produit depuis tokens.json : toute édition
@@ -40,7 +41,7 @@ describe("codegen du thème RN", () => {
     expect(committed).toBe(regenerated);
   });
 
-  it("le thème exporté reflète la source (color/space/radius/font, sans brand/web)", () => {
+  it("le thème exporté reflète la source (color/space/radius/font/size, sans brand/web)", () => {
     const source: unknown = JSON.parse(
       readFileSync(join(PKG, "tokens.json"), "utf8"),
     );
@@ -49,13 +50,37 @@ describe("codegen du thème RN", () => {
       space: unknown;
       radius: unknown;
       font: unknown;
+      fontWeight: unknown;
+      opacity: unknown;
+      size: unknown;
     };
+    // ÉDITION CONSCIENTE (v2, P-007) : le thème porte deux groupes de plus
+    // ET un token DÉRIVÉ par schéma. Le cliquet ne constate pas seulement sa
+    // présence : il RECALCULE la dérivation et exige l'égalité — une dérive
+    // du codegen casserait donc ce test.
+    const attenduColor = Object.fromEntries(
+      Object.entries(src.color as Record<string, Record<string, string>>).map(([scheme, palette]) => [
+        scheme,
+        { ...palette, primaryText: deriveTextInk(palette.primary ?? "", palette.bg ?? "") },
+      ]),
+    );
     expect(theme).toEqual({
-      color: src.color,
+      color: attenduColor,
       space: src.space,
       radius: src.radius,
       font: src.font,
+      fontWeight: src.fontWeight,
+      opacity: src.opacity,
+      size: src.size,
     });
-    expect(Object.keys(theme)).toEqual(["color", "space", "radius", "font"]);
+    expect(Object.keys(theme)).toEqual([
+      "color",
+      "space",
+      "radius",
+      "font",
+      "fontWeight",
+      "opacity",
+      "size",
+    ]);
   });
 });
