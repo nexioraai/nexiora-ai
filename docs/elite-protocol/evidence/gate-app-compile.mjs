@@ -7,16 +7,34 @@
 //
 // Ici : chaque document du corpus est compilé, écrit sur disque, et soumis au
 // VRAI `tsc` avec les vraies dépendances. Aucune simulation.
-const R = "/Users/yia/Documents/woorri/";
+// PORTABILITÉ (D-074) — cette gate embarquait le chemin ABSOLU de ma machine et
+// un répertoire temporaire propre à ma session. Elle ne pouvait donc tourner
+// NULLE PART ailleurs : sur la CI, elle échouait avant même de compiler quoi que
+// ce soit. Une gate qui ne tourne que chez son auteur ne protège personne — le
+// défaut exact que `A-P0-01` avait déjà relevé sur la CI elle-même.
 const { mkdirSync, writeFileSync, rmSync, existsSync, symlinkSync, readdirSync, readFileSync } =
   await import("node:fs");
 const { execFileSync } = await import("node:child_process");
+const { tmpdir } = await import("node:os");
+const { join } = await import("node:path");
+const { fileURLToPath } = await import("node:url");
+const R = join(fileURLToPath(import.meta.url), "..", "..", "..", "..") + "/";
 const { migrateAirDocument } = await import(R + "packages/air-schema/src/migrations.ts");
 const { compileProject } = await import(R + "packages/compiler/src/index.ts");
 
+// Une application émise a besoin des vraies dépendances pour être compilée. On
+// les emprunte à un projet déjà installé ; s'il n'y en a pas, on les installe —
+// jamais d'abandon silencieux, sinon la gate se contenterait de ne rien dire.
 const BASE = R + "slices/resto-riche/app/node_modules";
-if (!existsSync(BASE)) { console.error("prérequis : node_modules de resto-riche"); process.exit(2); }
-const OUT = "/private/tmp/claude-501/-Users-yia/gate-compile/";
+if (!existsSync(BASE)) {
+  console.log("  dépendances absentes → installation dans slices/resto-riche/app…");
+  execFileSync("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], {
+    cwd: R + "slices/resto-riche/app",
+    stdio: "inherit",
+    timeout: 900000,
+  });
+}
+const OUT = join(tmpdir(), "deribfy-gate-compile") + "/";
 rmSync(OUT, { recursive: true, force: true });
 
 const docs = [

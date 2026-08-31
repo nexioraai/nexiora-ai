@@ -11,9 +11,13 @@ import { createElement } from "react";
 import { act, create } from "react-test-renderer";
 import type { ReactTestRenderer } from "react-test-renderer";
 import { readdirSync, existsSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-const RACINE = "/private/tmp/claude-501/-Users-yia/gate-compile/";
+// PORTABILITÉ (D-074) : même répertoire que `gate:app-compile`, calculé et non
+// codé en dur — la version précédente pointait un chemin propre à ma session.
+const RACINE = join(tmpdir(), "deribfy-gate-compile") + "/";
 const ID = /^(ent_|scr_|act_|fld_|blk_|slot_|data_|rule_|need_|nav_)/;
 
 describe("GATE RACINE — les 14 applications émises se MONTENT vraiment", () => {

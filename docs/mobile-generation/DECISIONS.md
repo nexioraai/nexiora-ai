@@ -4238,3 +4238,52 @@ commentaire. Corrigé → **14/14 passent.**
 
 **659 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0 ·
 14/14 applications compilent · 14/14 se rendent.**
+
+---
+
+## D-073 / D-074 — Mes propres gates ne tenaient pas leurs promesses — 2026-08-31
+
+### 🔴 D-073 — `gate:app-rendu` SURDÉCLARAIT
+
+`FACT` — elle s'appelait *« se rendent »* et se contentait de **LIRE les modules
+de données émis**. Elle ne montait rien.
+
+> **C'est exactement le défaut qu'elle existe pour attraper** : un nom qui promet
+> plus que la mesure. Le même que la dimension C cherchant une sous-chaîne, le
+> même que `slotsInvoked` que j'ai failli déclarer vrai sans liaison.
+
+Version réelle : chaque écran est **MONTÉ** avec React et ses données de
+démonstration. Trois refus — exception au montage · écran sans identité
+adressable · **fuite d'identifiant dans un TEXTE RENDU** (et non plus dans une
+prop, qui n'était qu'un proxy).
+
+`FACT` — **14 applications · 58 écrans montés · 2030 identités · 0 problème.**
+
+L'ancien script est **supprimé**, pas gardé en doublon : *deux gates du même nom
+dont l'une ment est pire que pas de gate.*
+
+### 🔴 D-074 — LES GATES NE POUVAIENT TOURNER QUE CHEZ MOI
+
+`FACT` — trois défauts de portabilité, trouvés en relisant après le push :
+
+1. chemin **absolu** de ma machine (`/Users/yia/Documents/woorri/`) ;
+2. répertoire temporaire propre à **ma session** ;
+3. dépendance à `slices/resto-riche/app/node_modules` — **`slices/` n'est pas un
+   workspace npm** et `node_modules` est ignoré par git : sur une machine propre,
+   la gate sortait en **code 2 avant de compiler quoi que ce soit**.
+
+`CONCLUSION` — **la CI que je venais de câbler aurait échoué sur ma propre
+gate.** Une gate qui ne tourne que chez son auteur ne protège personne — défaut
+identique à `A-P0-01`, où la CI ne voyait pas la branche de travail.
+
+**Correction** : racine calculée depuis `import.meta.url` · `os.tmpdir()` ·
+**installation automatique** des dépendances si absentes, jamais d'abandon
+silencieux.
+
+`FACT` — **vérifié par simulation réelle** : `node_modules` déplacé, gate
+relancée → installation, puis **14/14 compilent**.
+
+### Non-régression
+
+**659 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0 ·
+14/14 compilent · 58/58 écrans montés.**
