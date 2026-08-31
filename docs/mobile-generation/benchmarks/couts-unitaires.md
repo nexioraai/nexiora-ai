@@ -67,7 +67,24 @@ adaptatif (défaut acté, ARCHITECTURE §28).
 
 ---
 
-## VOLET 2 — COÛT ET DURÉE D'UN BUILD EAS — ⏳ (prérequis : compte Expo/EAS)
+## VOLET 2 — COÛT ET DURÉE D'UN BUILD EAS — ⏳ **BLOCAGE REQUALIFIÉ (A-P1-01, audit 2026-08-31)**
+
+> 🔴 **Le prérequis déclaré — « compte Expo/EAS » — EST SATISFAIT DEPUIS.**
+> Preuves : builds réellement soumis (UUID `9bf08d4e-e612-4464-939f-35ec43997e07`
+> journalisé dans `benchmarks/eas/results/serie-live.log`), **deux APK de 77 Mo
+> produits** (`slices/restaurant/results/`), `eas.json` présent sur les deux slices.
+>
+> **Le blocage réel est autre.** Deux couches, la seconde seule subsiste :
+> 1. le banc échouait sur `eas build:view <uuid> --json --non-interactive`
+>    (`build:view command failed`) — **script corrigé et correction prouvée le
+>    2026-08-29** (`STATUS.md`) ;
+> 2. **il reste que la série n'a jamais été lancée, parce qu'elle CONSOMME DU
+>    QUOTA** — c'est un **prérequis propriétaire**, déjà inscrit comme tel dans
+>    `STATUS.md` § « Bloqué, prérequis propriétaire ».
+>
+> Pourquoi cette rectification compte : un blocage mal nommé **n'est jamais levé**.
+> Un lecteur attend un compte qui existe déjà, et le volet reste ⏳ indéfiniment —
+> même famille de défaut que `DET-008` resté orphelin de phase.
 
 - Fixture : app Expo témoin (celle de P-003).
 - Mesures : durée de build iOS et Android (froid, puis avec cache activé),

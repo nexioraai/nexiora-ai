@@ -1,5 +1,35 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-31 (3) — AUDIT INTÉGRAL DES PHASES 0 À 10 (D-057)
+
+- **41 critères de sortie confrontés à l'état RÉEL du dépôt**, phase par phase,
+  dans l'ordre. Exécution en direct chaque fois que possible — le critère dur de
+  la Phase 4 (10 compilations, hash identique) a été **rejoué maintenant** :
+  **12/12 documents stables**.
+- **🔴 A-P0-01 · CORRIGÉ** — la CI se déclenchait sur `[main, fix/xss-jsonld]` ;
+  la branche de travail a été renommée sans que le déclencheur suive.
+  **97 commits jamais vus par la CI** depuis le 2026-08-27, dont les 5 nouveaux
+  paquets. Le critère « CI verte » de la Phase 0 était invérifiable sur le travail
+  réel. Branche ajoutée.
+- **🔴 A-P8-01 · CORRIGÉ** — `STATUS.md` affirmait « Phases 0, 2-9 terminées »
+  pendant que son propre détail disait « En cours : Phase 8 ». Le détail a raison :
+  **Android 🟢, iOS 🟠** (IPA construit, non installé, DET-012).
+- **🔴 A-P8-02 · CORRIGÉ** — la ROADMAP exige **A à G conformes** pour clore la
+  Phase 8. **C est `non_conforme` depuis D-048 (2026-08-30)** — postérieurement à
+  la clôture revendiquée. **PHASE 8 ROUVERTE PAR LE FAIT.**
+- **🟠 A-P1-01 · CORRIGÉ PUIS RECTIFIÉ** — le blocage déclaré du banc EAS
+  (« compte Expo/EAS ») est faux : les builds ont eu lieu. Ma première correction
+  était elle-même inexacte ; le blocage réel est un **prérequis propriétaire**
+  (quota).
+- **3 constats RÉFUTÉS par la seconde vérification** — budget unitaire, preuve
+  d'isolation, sonde secrets. Sans la règle des deux vérifications, trois
+  accusations fausses auraient été portées, dont une de falsification.
+- **🔴 RECTIFICATION** — j'avais déclaré « dimension H → 🟢 est faux ». **C'était
+  faux** : H est `conforme` mesurée sur 2 domaines, `non_determinee` seulement
+  quand aucun échantillon cross-domain n'est fourni. J'avais mesuré le mauvais objet.
+- **Phases 2, 3, 4, 5, 6, 7, 9 : tous critères satisfaits, chacun vérifié deux fois.**
+- **Non-régression : 658 tests verts · typecheck EXIT=0 · lint EXIT=0.**
+
 ## 2026-08-31 (2) — LA RACINE EST REFERMÉE : AIR 1.2.0 + deux gates de fidélité (D-055, D-056)
 
 - **PHASE 10B créée** (`D-055`) — « FIDÉLITÉ DE L'APPLICATION PRODUITE », insérée

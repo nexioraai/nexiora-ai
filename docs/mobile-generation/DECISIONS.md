@@ -3501,3 +3501,99 @@ Les gates ne sont **pas encore câblées dans l'Oracle** : elles sont exécutabl
 prouvées, non imposées au pipeline. Le registre de blocs v2 (`LOT D`), la campagne
 `emit-v3` (`LOT E`) et la preuve appareil (`LOT F`) restent **en arbitrage
 propriétaire**. `DET-028` reste ouvert.
+
+---
+
+## D-057 — AUDIT INTÉGRAL DES PHASES 0 À 10 — 2026-08-31
+
+**Mandat propriétaire** : reprendre depuis la Phase 0, dans l'ordre, ne rien rater ;
+**deux vérifications indépendantes obligatoires avant toute correction**.
+
+**Méthode** : chaque critère de sortie déclaré en `ROADMAP.md` est confronté à
+l'état RÉEL du dépôt — exécution en direct chaque fois que c'est possible,
+lecture d'archive seulement à défaut. Aucun critère n'est cru sur parole.
+
+### Résultat global — 41 critères examinés
+
+| Phase | Critères | Verdict |
+|---|---:|---|
+| **0** fondations | 5 | 🟢 4 satisfaits · 🔴 **1 défaut (A-P0-01)** |
+| **1** bancs de mesure | 2 | 🟢 5/5 arbitrages `P-00x` tranchés · 🟠 **1 blocage mal nommé (A-P1-01)** |
+| **2** AIR + capabilities | 4 | 🟢 **4/4** |
+| **3** design system + blocs | 3 | 🟢 **3/3** |
+| **4** compilateur déterministe | 4 | 🟢 **4/4** — critère dur **rejoué en direct** |
+| **5** provisioner | 3 | 🟢 **3/3** — 20 vérifications, 0 échec |
+| **6** sandbox + Oracle | 4 | 🟢 **4/4** |
+| **7** workflow durable | 5 | 🟢 **5/5** — critère dur `kill -9` prouvé |
+| **8** vertical slice 1 | 4 | 🔴 **2 défauts (A-P8-01, A-P8-02)** |
+| **9** repair + slots | 4 | 🟢 **4/4** — 3 mutations, gardes qui mordent |
+| **10** vertical slice 2 | 5 | 🔵 en cours, déjà consigné (D-048, D-053) |
+
+### 🔴 A-P0-01 — LA CI N'A PAS VU 97 COMMITS · `P1` · **CORRIGÉ**
+
+`FACT` — `.github/workflows/ci.yml` déclenchait sur `[main, fix/xss-jsonld]`.
+La branche de travail a été renommée `feat/mobile-generation` **sans que le
+déclencheur suive**.
+`FACT` — dernier commit couvert : **2026-08-27**. **97 commits** jamais vus par la
+CI, dont **les 5 paquets** `slots`, `repair`, `provider-registry`,
+`execution-contract`, `fidelity`.
+`INFÉRENCE` — le critère de sortie « CI verte » de la Phase 0 était **invérifiable
+sur le travail réel** depuis quatre jours. La gate existait ; elle ne portait sur rien.
+**Correction** : branche ajoutée au déclencheur, avec le motif inscrit dans le fichier.
+
+### 🟠 A-P1-01 — UN BLOCAGE MAL NOMMÉ N'EST JAMAIS LEVÉ · `P2` · **CORRIGÉ**
+
+`FACT` — `couts-unitaires.md` volet 2 déclarait *« prérequis : compte Expo/EAS »*.
+Ce prérequis **est satisfait** : builds réellement soumis (UUID
+`9bf08d4e-e612-4464-939f-35ec43997e07`), **deux APK de 77 Mo** produits les 28 et
+29 août, `eas.json` sur les deux slices.
+**Ma première correction était elle-même inexacte** — j'y ai nommé une défaillance
+d'outillage, alors que `STATUS.md` consignait déjà sa réparation au 2026-08-29.
+`FACT` — le blocage réel et **unique** est un **prérequis propriétaire** : la série
+consomme du quota. Rectifié à la seconde passe.
+
+### 🔴 A-P8-01 — `STATUS.md` SE CONTREDIT SUR LA PHASE 8 · `P1` · **CORRIGÉ**
+
+`FACT` — le tableau de synthèse affirmait *« Phases 0, 2-9 terminées »* pendant que
+le **détail du même document** disait *« En cours : Phase 8 »*.
+`FACT` — le détail a raison : le critère « app installée et fonctionnelle sur
+**2 appareils physiques** » n'a que **Android 🟢** ; l'IPA iOS est **construit mais
+non installé** (`DET-012`, prérequis propriétaire).
+
+### 🔴 A-P8-02 — LA CLÔTURE DE LA PHASE 8 REPOSE SUR UN CRITÈRE RÉFUTÉ DEPUIS · `P0` · **CORRIGÉ**
+
+`FACT` — la ROADMAP exige pour clore la Phase 8 que **A à G soient CONFORMES** :
+*« une seule d'entre elles non conforme BLOQUE la clôture »*.
+`FACT` — **C est `non_conforme` depuis `D-048` (2026-08-30)**, donc **postérieurement**
+à la clôture revendiquée.
+`CONCLUSION` — la Phase 8 est **rouverte par le fait**, pour deux motifs indépendants.
+`STATUS.md` le dit désormais.
+
+### Trois constats RÉFUTÉS par la seconde vérification — la discipline a mordu
+
+| Constat de première passe | Ce que la seconde vérification a établi |
+|---|---|
+| *« aucun budget unitaire documenté »* | **FAUX** — `docs/mobile-generation/benchmarks/couts-unitaires.md`, 3 volets, 2 exécutés |
+| *« preuve d'isolation absente en Phase 5 »* | **FAUX** — **8 vérifications d'isolation**, toutes vertes (A↛B, B↛A, ↛cœur ×2, deny-by-default ×2) ; j'avais grepé les mauvais champs |
+| *« un critère est passé de rouge à vert en 72 s par changement d'instrument »* | **FAUX** — consigné en D-034 : *« sonde secrets `MODAL_IMAGE_ID` faux positif (métadonnée publique) »* |
+
+> **Sans la seconde vérification, j'aurais porté trois accusations fausses** — dont
+> une de falsification. C'est la règle qui a produit ce résultat, pas la prudence.
+
+### 🔴 RECTIFICATION D'UNE DÉCLARATION ANTÉRIEURE — dimension H
+
+J'ai affirmé au propriétaire, plus tôt dans la session, que *« Dimension H → 🟢 est
+faux, H vaut `non_determinee` »*. **C'était FAUX.**
+
+`FACT` — `evaluateApxxGrid` prend un paramètre `crossDomain` **optionnel**. Sans
+échantillon : `non_determinee` (*« jamais conforme par défaut »* — fail-closed
+correct). Avec 2 domaines : **`conforme`** — *« 2 silhouettes distinctes, 0 collision »*.
+`INFÉRENCE` — j'avais mesuré **le mauvais objet** : la grille mono-document, quand le
+critère porte sur le cross-domain. La ROADMAP a raison, avec sa réserve `RN-15`
+(mesure recalculée à la volée, aucun artefact de résultat versionné).
+
+### Non-régression
+
+`FACT` — mesurée après corrections : voir `CHANGELOG.md` du 2026-08-31 (3).
+Aucune correction n'a touché au code produit : les quatre portent sur la CI et sur
+la documentation d'état.

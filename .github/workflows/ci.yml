@@ -2,11 +2,19 @@ name: CI
 
 on:
   push:
-    # `fix/xss-jsonld` : branche de travail du chantier mobile-generation
-    # (D-014) -- la CI doit verifier l'etat REEL de la branche, pas seulement
-    # les PR de release vers main. Le rapport de sante ne verifie les
-    # invariants base QUE sur main (voir report-system-health.ts).
-    branches: [main, fix/xss-jsonld]
+    # Branches de travail du chantier mobile-generation -- la CI doit verifier
+    # l'etat REEL de la branche, pas seulement les PR de release vers main. Le
+    # rapport de sante ne verifie les invariants base QUE sur main (voir
+    # report-system-health.ts).
+    #
+    # A-P0-01 (audit 2026-08-31) : `feat/mobile-generation` manquait. Le
+    # chantier a ete renomme de branche sans que ce declencheur suive, et
+    # 97 commits -- dont les 5 nouveaux paquets slots, repair,
+    # provider-registry, execution-contract et fidelity -- n'ont JAMAIS ete
+    # vus par la CI depuis le 2026-08-27. Le critere de sortie « CI verte » de
+    # la Phase 0 etait donc invérifiable sur le travail reel.
+    # `fix/xss-jsonld` est conservee : elle porte encore l'historique publie.
+    branches: [main, fix/xss-jsonld, feat/mobile-generation]
   pull_request:
     branches: [main]
 
