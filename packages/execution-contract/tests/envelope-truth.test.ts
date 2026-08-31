@@ -26,10 +26,34 @@ const EMIT_MANIFESTS = read("compiler/src/emit-manifests.ts");
 const TEMPLATE_PKG = read("compiler/template/package.json");
 
 describe("véracité de l'enveloppe — effets", () => {
-  it("le dispatcher ne câble QUE les effets déclarés dans l'enveloppe", () => {
-    // `useDispatch` ne contient qu'une branche : `effect?.kind === "navigate"`.
-    const branches = [...RUNTIME.matchAll(/effect\??\.kind === "(\w+)"/g)].map((m) => m[1]);
-    expect([...new Set(branches)].sort()).toEqual([...EXECUTION_ENVELOPE_V1.effects].sort());
+  // ÉDITION CONSCIENTE (2026-08-31, D-059) : le dispatcher a gagné une branche
+  // `capability` — l'effet n'est plus AVALÉ, il est PRÉSENTÉ à un fournisseur.
+  //
+  // Mais **présenter n'est pas exécuter**, et `capability` N'ENTRE PAS dans
+  // `effects` : le fournisseur par défaut REFUSE et trace, aucune capability
+  // n'étant implémentée (`capabilitiesEmitCode: false`). L'y ajouter ferait
+  // basculer les 61 promesses de capability du corpus de mortes à vivantes sans
+  // qu'une seule ligne ne s'exécute — le faux vert exact que ce paquet existe
+  // pour empêcher.
+  //
+  // Le test cesse donc d'exiger l'ÉGALITÉ branches = effets. Il exige la
+  // propriété qui compte vraiment : tout effet DÉCLARÉ exécutable a sa branche,
+  // et toute branche EN PLUS est justifiée par un refus explicite.
+  it("tout effet déclaré a sa branche, et toute branche en plus REFUSE explicitement", () => {
+    const branches = new Set(
+      [...RUNTIME.matchAll(/effect\??\.kind === "(\w+)"/g)].flatMap((m) =>
+        m[1] === undefined ? [] : [m[1]],
+      ),
+    );
+    for (const effet of EXECUTION_ENVELOPE_V1.effects) expect(branches).toContain(effet);
+    const enPlus = [...branches].filter(
+      (b) => !(EXECUTION_ENVELOPE_V1.effects as readonly string[]).includes(b),
+    );
+    expect(enPlus).toEqual(["capability"]);
+    // La branche en plus route vers un fournisseur dont le DÉFAUT refuse.
+    expect(RUNTIME).toContain("capabilities.invoke");
+    expect(read("compiler/runtime/capability-provider.tsx")).toContain("return false;");
+    expect(EXECUTION_ENVELOPE_V1.capabilitiesEmitCode).toBe(false);
   });
 
   it("les effets hors enveloppe sont explicitement documentés comme non-opérations", () => {

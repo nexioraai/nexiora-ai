@@ -21,10 +21,15 @@ import {
 import type { FormFieldSpec, ListItemData } from "../blocks/contracts";
 import { useDataProvider } from "./data-provider";
 import { useSlotRegistry } from "./slot-provider";
+import { useCapabilityProvider } from "./capability-provider";
 
 export interface AirEffectData {
   kind: "navigate" | "capability" | "mutation" | "slot";
   screenId?: string;
+  /** Effet `capability` (D-059) — transporté pour être INVOQUÉ, plus ignoré. */
+  capability?: string;
+  method?: string;
+  params?: Readonly<Record<string, unknown>>;
 }
 
 export interface AirBlockVisibility {
@@ -167,16 +172,29 @@ function str(value: unknown): string | undefined {
 
 function useDispatch(screen: AirScreenData) {
   const navigation = useNavigation();
+  const capabilities = useCapabilityProvider();
   return useMemo(
     () => (actionId: string | undefined) => {
       if (actionId === undefined) return;
       const effect = screen.actions[actionId];
       if (effect?.kind === "navigate" && effect.screenId !== undefined) {
         (navigation.navigate as (name: string) => void)(effect.screenId);
+        return;
       }
-      // capability / mutation / slot : non-opération v1 (Phases 5+/9).
+      // CAPABILITY (D-059) : l'effet n'est plus AVALÉ. Il est présenté au
+      // fournisseur, qui répond s'il l'a honoré. Sans implémentation fournie,
+      // le défaut REFUSE ET TRACE — il ne prétend jamais avoir agi.
+      if (effect?.kind === "capability" && effect.capability !== undefined) {
+        capabilities.invoke({
+          capability: effect.capability,
+          method: effect.method ?? "",
+          params: effect.params ?? {},
+        });
+        return;
+      }
+      // mutation : non-opération v1 (Phase 5+). slot : invoqué au RENDU, pas ici.
     },
-    [navigation, screen],
+    [navigation, screen, capabilities],
   );
 }
 

@@ -3682,3 +3682,60 @@ gagné une capacité ; **seuls les documents qui l'expriment en bénéficient.**
 
 `FACT` — **658 tests verts · 16 espaces de travail · typecheck EXIT=0 · lint EXIT=0.**
 `RELEASE_TRAIN_V1` porté à `1.3.0` : l'`airHash` change, donc tous les `rootHash`.
+
+---
+
+## D-059 — VOIE 2 : la couture des capabilities, et le blocage qui la borne — 2026-08-31
+
+**Cible mesurée** : `capability` est le **premier tueur** — **61 des 152 promesses
+mortes** du corpus. 88 actions `capability` au total, réparties sur 14 capabilities.
+
+### 🔴 BLOCAGE DUR, TROUVÉ AVANT D'ÉCRIRE UNE LIGNE
+
+`FACT` — chaque capability du registre gelé exige **son paquet npm**
+(`expo-sharing`, `expo-location`, `expo-notifications`, `@supabase/supabase-js`…).
+`FACT` — l'app émise embarque un **`package-lock.json` de 233 Ko verrouillant
+504 paquets**, et le pipeline installe avec `npm ci --ignore-scripts`
+(`packages/sandbox/src/pipeline.ts`) — commande qui **ÉCHOUE si le manifeste et le
+lock divergent**.
+`CONCLUSION` — **livrer une seule implémentation de capability exige d'étendre le
+lock EMBARQUÉ du moteur** : résolution réseau de l'arbre transitif, empreintes
+d'intégrité, ré-embarquement. Cela fait grandir le **train de release**, déplace
+`EMBEDDED_ASSETS_FINGERPRINT` et **tous les `rootHash`**. **Arbitrage propriétaire.**
+
+> Je l'ai vérifié **avant** de coder, pas après. C'est la différence entre un
+> chantier borné et un chantier abandonné à mi-course.
+
+### Ce qui EST livré — la couture
+
+`capability-provider.tsx` : contrat `CapabilityProvider.invoke(call) → boolean`,
+sur le patron exact du fournisseur de données. **Le défaut REFUSE ET TRACE**
+(`AIR_CAPABILITY_NOT_IMPLEMENTED:<capability>.<method>`) — il ne prétend jamais
+avoir agi. Retourner `true` en silence serait `APP-D002` à l'identique.
+
+Le dispatcher ne **jette plus** l'effet : il le **présente**. Et l'émetteur
+transporte enfin `capability`, `method` et `params` jusqu'au runtime — sans eux, le
+dispatcher n'avait littéralement rien à présenter.
+
+### 🔴 UN TROISIÈME FAUX VERT REFUSÉ PAR LES CLIQUETS
+
+`capability` **N'ENTRE PAS** dans `envelope.effects`. **Présenter n'est pas
+exécuter** : le fournisseur par défaut refuse. L'y ajouter aurait fait basculer les
+**61 promesses de capability du corpus de mortes à vivantes sans qu'une seule ligne
+ne s'exécute.**
+
+Le cliquet exigeait `branches === effects`. Il exige désormais la propriété qui
+compte : **tout effet déclaré a sa branche, et toute branche EN PLUS est justifiée
+par un refus explicite** — vérifié jusque dans le source du fournisseur
+(`return false;`).
+
+### Effet mesuré — honnêtement, aucun
+
+`FACT` — **le corpus est INCHANGÉ** : `resto-quartier` toujours 4/18, 12/12
+refusés. `capabilitiesEmitCode` reste **`false`**.
+`CONCLUSION` — **la VOIE 2 n'est PAS terminée.** L'architecture est posée et
+prouvée ; **les 61 promesses restent mortes** jusqu'à l'arbitrage sur le lock.
+
+### Non-régression
+
+**658 tests verts · 16 espaces de travail · typecheck EXIT=0 · lint EXIT=0.**

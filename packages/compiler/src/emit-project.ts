@@ -134,7 +134,16 @@ interface ScreenSlice {
       visibleWhen?: { kind: string; entityId: string };
       props: Record<string, unknown>;
     }[];
-    actions: Record<string, { kind: string; screenId?: string }>;
+    actions: Record<
+      string,
+      {
+        kind: string;
+        screenId?: string;
+        capability?: string;
+        method?: string;
+        params?: Record<string, unknown>;
+      }
+    >;
     uiActionsByBlock: Record<string, string>;
     slotInvocations?: {
       slotId: string;
@@ -173,13 +182,24 @@ function buildScreenSlice(air: ProjectAir, screen: ProjectAir["screens"][number]
     const actionId = props.actionId;
     if (typeof actionId === "string") referenced.add(actionId);
   }
-  const actions: Record<string, { kind: string; screenId?: string }> = {};
+  const actions: ScreenSlice["data"]["actions"] = {};
   for (const action of air.actions) {
     if (!referenced.has(action.id)) continue;
-    actions[action.id] =
-      action.effect.kind === "navigate"
-        ? { kind: "navigate", screenId: action.effect.screenId }
-        : { kind: action.effect.kind };
+    if (action.effect.kind === "navigate") {
+      actions[action.id] = { kind: "navigate", screenId: action.effect.screenId };
+    } else if (action.effect.kind === "capability") {
+      // D-059 : la capability, sa méthode et ses paramètres sont TRANSPORTÉS
+      // jusqu'au runtime. Sans eux, le dispatcher n'avait rien à présenter au
+      // fournisseur — l'effet ne pouvait qu'être avalé.
+      actions[action.id] = {
+        kind: "capability",
+        capability: action.effect.capability,
+        method: action.effect.method,
+        params: flatToRecord(action.effect.params),
+      };
+    } else {
+      actions[action.id] = { kind: action.effect.kind };
+    }
   }
 
   // INVOCATIONS DE SLOTS (1.3.0, D-058) — un slot lié appartient à CET écran si
