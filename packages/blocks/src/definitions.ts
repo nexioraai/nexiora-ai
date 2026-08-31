@@ -13,7 +13,12 @@ import { z } from "zod";
 // post-gel (D-020) : AJOUT compatible = décision consignée + édition
 // consciente du cliquet + version MINEURE ; retrait/renommage/changement
 // de contrat = RUPTURE (décision + migration + version MAJEURE).
-export const BLOCK_REGISTRY_VERSION = "1.0.0";
+// 1.1.0 (D-060, 2026-08-31) — montée STRICTEMENT ADDITIVE : `form` gagne
+// `loading`/`empty`, `detail_header` gagne un état. Rien n'est retiré, `state`
+// reste optionnel partout, un appelant 1.0.0 est inchangé. Motif : la dimension
+// C d'A++ était INATTEIGNABLE — deux des trois types consommant des données ne
+// savaient pas exprimer les états que le critère nomme.
+export const BLOCK_REGISTRY_VERSION = "1.1.0";
 
 // Motifs d'identités stables — IDENTIQUES à @deribfy/air-schema (ids.ts) ;
 // redéclarés structurellement (patron AirCapabilitySlice : pas de couplage
@@ -76,6 +81,14 @@ export const BLOCKS: readonly BlockDefinition[] = [
       // décisions/corpus — max observé : 3), elle aurait rejeté des AIR
       // légitimes sans protéger aucune propriété architecturale.
       badgeFieldIds: z.array(fieldRef).min(1).optional(),
+      // REGISTRE 1.1.0 (D-060) — titres des états. DONNÉES, jamais texte moteur
+      // (F3) : sans titre déclaré, l'état n'est pas rendu. Additif, optionnel.
+      loadingTitle: z.string().min(1).optional(),
+      emptyTitle: z.string().min(1).optional(),
+      emptyMessage: z.string().min(1).optional(),
+      errorTitle: z.string().min(1).optional(),
+      errorMessage: z.string().min(1).optional(),
+
       trailingFieldId: fieldRef.optional(),
     }),
     fieldRefProps: ["titleFieldId", "subtitleFieldId", "badgeFieldIds", "trailingFieldId"],
@@ -133,6 +146,14 @@ export const BLOCKS: readonly BlockDefinition[] = [
       title: z.string().min(1).optional(),
       fieldIds: z.array(fieldRef).min(1),
       submitLabel: z.string().min(1),
+      // REGISTRE 1.1.0 (D-060) — titres des états. DONNÉES, jamais texte moteur
+      // (F3) : sans titre déclaré, l'état n'est pas rendu. Additif, optionnel.
+      loadingTitle: z.string().min(1).optional(),
+      emptyTitle: z.string().min(1).optional(),
+      emptyMessage: z.string().min(1).optional(),
+      errorTitle: z.string().min(1).optional(),
+      errorMessage: z.string().min(1).optional(),
+
     }),
     fieldRefProps: ["fieldIds"],
     actionRefProps: [],
@@ -165,6 +186,13 @@ export const BLOCKS: readonly BlockDefinition[] = [
       badgeFieldId: fieldRef.optional(),
       emptyTitle: z.string().min(1).optional(),
       emptyMessage: z.string().min(1).optional(),
+      // REGISTRE 1.1.0 (D-060) — titres des états `loading`/`error`. DONNÉES du
+      // document, jamais texte moteur (F3) : sans titre déclaré, l'état n'est
+      // pas rendu. Additif et optionnel — un document 1.0.0 est inchangé.
+      loadingTitle: z.string().min(1).optional(),
+      errorTitle: z.string().min(1).optional(),
+      errorMessage: z.string().min(1).optional(),
+
     }),
     fieldRefProps: [
       "titleFieldId",

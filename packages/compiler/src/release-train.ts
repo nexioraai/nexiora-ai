@@ -30,7 +30,11 @@ export const RELEASE_TRAIN_V1 = {
   // sorties. Même mécanique qu'en 1.1.0 et 1.2.0 : corpus gelé byte-identique,
   // migré en mémoire, aucune liaison inventée.
   airSchemaVersion: "1.3.0",
-  blockRegistryVersion: "1.0.0",
+  // Porté à 1.1.0 le 2026-08-31 (D-060) : montée STRICTEMENT ADDITIVE du
+  // registre de blocs — `form` gagne `loading`/`empty`, `detail_header` gagne un
+  // état, les trois blocs à données gagnent les props de titres. Rien n'est
+  // retiré. Motif : la dimension C d'A++ était INATTEIGNABLE sans cela.
+  blockRegistryVersion: "1.1.0",
   // Ré-scellé le 2026-08-29 (DET-006 / D-039) : `ListBlock` DÉCLARE désormais
   // `fill` sur sa Section, afin que la liste virtualisée reçoive un parent
   // BORNÉ. Cause démontrée : imbriquée dans un ScrollView de même axe, une
@@ -42,10 +46,12 @@ export const RELEASE_TRAIN_V1 = {
   // aucun contrat de bloc, aucun schéma de props, aucun type de bloc n'a
   // changé — seule la composition interne évolue.
   blocksSourcesHash:
-    // Ré-scellé 2026-08-29 (DET-016) : FlatList porte l ajustement natif aux
-  // insets du clavier + keyboardShouldPersistTaps. Propriétés STRUCTURELLES,
-  // aucun style ajouté ; registre de blocs inchangé en 1.0.0.
-  "6f1ab8b18ac128d2916899e4aece72891936c0f3934998cb811187ce21c324ec",
+    // Ré-scellé 2026-08-31 (D-060) : montée ADDITIVE du registre en 1.1.0 —
+  // `FormBlockState` gagne `loading`/`empty`, `DetailHeaderBlockProps` gagne
+  // `state`, et les trois blocs consommant des données gagnent les props de
+  // titres d'état. Aucun état, aucune prop, aucun type de bloc n'est RETIRÉ :
+  // un appelant 1.0.0 est inchangé, ce que le cliquet du registre vérifie.
+  "fbc00e8bd994d01a3f0500ebab5d3acd6183b06ee46f3569912a8984d1de21a7",
   capabilityRegistryVersion: "1.0.0",
   capabilitySourcesHash:
     "6c28599246abde6e7010704f23f273aafe50d17c5483133709c9065f2777346c",

@@ -265,9 +265,18 @@ describe("états de blocs", () => {
   it("signale les états déclarés au registre mais inatteignables", () => {
     const report = analyzeFeasibility(withMutation(), EXECUTION_ENVELOPE_V1);
     const gap = report.gaps.find((g) => g.code === "EXEC_BLOCK_STATE_UNREACHABLE");
-    expect(gap?.detail).toContain("error");
+    // ÉDITION CONSCIENTE (2026-08-31, D-060) : `error` a CESSÉ d'être
+    // inatteignable — comme `loading` et `empty`. Le seul état du registre
+    // encore hors de portée sur `form` est `submitting`, qui suppose une
+    // ÉCRITURE : il tombera avec la VOIE 3 (mutation), pas avant. L'écart se
+    // rétrécit, il ne disparaît pas — et le test le dit précisément.
     expect(gap?.detail).toContain("submitting");
+    expect(gap?.detail).not.toContain("error");
+    expect(gap?.detail).toContain("submitting");
+    // MESURE MISE À JOUR (D-060) : sur les 3 états que le registre déclare pour
+    // ce bloc, 4 sont désormais ATTEINTS (contre 1) — `submitting` reste seul
+    // hors de portée, faute d'écriture.
     expect(report.metrics.blockStatesDeclared).toBe(3);
-    expect(report.metrics.blockStatesReachable).toBe(1);
+    expect(report.metrics.blockStatesReachable).toBe(4);
   });
 });

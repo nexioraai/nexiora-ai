@@ -21,10 +21,15 @@ import {
 import type { FormFieldSpec, ListItemData } from "../blocks/contracts";
 import { useDataProvider } from "./data-provider";
 import { useSlotRegistry } from "./slot-provider";
+import { useCapabilityProvider } from "./capability-provider";
 
 export interface AirEffectData {
   kind: "navigate" | "capability" | "mutation" | "slot";
   screenId?: string;
+  /** Effet `capability` (D-059) — transporté pour être INVOQUÉ, plus ignoré. */
+  capability?: string;
+  method?: string;
+  params?: Readonly<Record<string, unknown>>;
 }
 
 export interface AirBlockVisibility {
@@ -145,6 +150,20 @@ function useBlockProps(
 }
 
 /**
+ * État de la source de données pour un bloc (D-060).
+ *
+ * `loading` et `error` ne sont rendus que si le document a DÉCLARÉ leur titre :
+ * le moteur n'invente aucun texte (F3), exactement comme pour `empty` depuis
+ * l'origine. Un fournisseur sans `status` laisse le comportement de 1.0.0
+ * inchangé.
+ */
+function useDataStatus(entityId: string | undefined): "loading" | "ready" | "error" {
+  const provider = useDataProvider();
+  if (entityId === undefined || provider.status === undefined) return "ready";
+  return provider.status(entityId);
+}
+
+/**
  * Visibilité conditionnelle d'un bloc (AIR 1.1.0, D-044).
  *
  * Défaut corrigé : un bloc `empty_state` était rendu SANS condition, donc un
@@ -167,16 +186,29 @@ function str(value: unknown): string | undefined {
 
 function useDispatch(screen: AirScreenData) {
   const navigation = useNavigation();
+  const capabilities = useCapabilityProvider();
   return useMemo(
     () => (actionId: string | undefined) => {
       if (actionId === undefined) return;
       const effect = screen.actions[actionId];
       if (effect?.kind === "navigate" && effect.screenId !== undefined) {
         (navigation.navigate as (name: string) => void)(effect.screenId);
+        return;
       }
-      // capability / mutation / slot : non-opération v1 (Phases 5+/9).
+      // CAPABILITY (D-059) : l'effet n'est plus AVALÉ. Il est présenté au
+      // fournisseur, qui répond s'il l'a honoré. Sans implémentation fournie,
+      // le défaut REFUSE ET TRACE — il ne prétend jamais avoir agi.
+      if (effect?.kind === "capability" && effect.capability !== undefined) {
+        capabilities.invoke({
+          capability: effect.capability,
+          method: effect.method ?? "",
+          params: effect.params ?? {},
+        });
+        return;
+      }
+      // mutation : non-opération v1 (Phase 5+). slot : invoqué au RENDU, pas ici.
     },
-    [navigation, screen],
+    [navigation, screen, capabilities],
   );
 }
 
@@ -260,15 +292,29 @@ export function AirDetailHeader({
   // Props SURCHARGÉES par les sorties des slots liés (1.3.0, D-058).
   const props = useBlockProps(screen, blockId);
   const provider = useDataProvider();
+  const statut = useDataStatus(b.entityId);
   if (!visible) return null;
   if (b.entityId === undefined) throw new Error(`AIR_RUNTIME_ENTITY_MISSING:${blockId}`);
   const instance = provider.getInstance(b.entityId, itemId);
+  // États du registre 1.1.0 (D-060) — rendus seulement si le titre est DÉCLARÉ.
+  const loadingTitle = str(props.loadingTitle);
+  const errorTitle = str(props.errorTitle);
+  const emptyTitle = str(props.emptyTitle);
+  const etat =
+    statut === "loading" && loadingTitle !== undefined
+      ? ({ kind: "loading", title: loadingTitle } as const)
+      : statut === "error" && errorTitle !== undefined
+        ? ({ kind: "error", title: errorTitle, message: str(props.errorMessage) } as const)
+        : instance === undefined && emptyTitle !== undefined
+          ? ({ kind: "empty", title: emptyTitle, message: str(props.emptyMessage) } as const)
+          : ({ kind: "ready" } as const);
   const value = (fieldId: unknown): string =>
     typeof fieldId === "string" ? (instance?.values[fieldId] ?? "") : "";
   const badgeIds = Array.isArray(props.badgeFieldIds) ? props.badgeFieldIds : undefined;
   return (
     <DetailHeaderBlock
       testID={b.id}
+      state={etat}
       title={value(props.titleFieldId)}
       subtitle={
         props.subtitleFieldId === undefined ? undefined : value(props.subtitleFieldId)
@@ -287,6 +333,7 @@ export function AirList({ screen, blockId }: BlockRef) {
   // Props SURCHARGÉES par les sorties des slots liés (1.3.0, D-058).
   const props = useBlockProps(screen, blockId);
   const provider = useDataProvider();
+  const statut = useDataStatus(b.entityId);
   const onItemNavigate = useItemNavigate(screen, blockId);
   if (!visible) return null;
   if (b.entityId === undefined) throw new Error(`AIR_RUNTIME_ENTITY_MISSING:${blockId}`);
@@ -305,10 +352,16 @@ export function AirList({ screen, blockId }: BlockRef) {
     badge: pick(props.badgeFieldId, instance.values),
   }));
   const emptyTitle = str(props.emptyTitle);
+  const loadingTitle = str(props.loadingTitle);
+  const errorTitle = str(props.errorTitle);
   const state =
-    items.length === 0 && emptyTitle !== undefined
-      ? ({ kind: "empty", title: emptyTitle, message: str(props.emptyMessage) } as const)
-      : ({ kind: "ready" } as const);
+    statut === "loading" && loadingTitle !== undefined
+      ? ({ kind: "loading", title: loadingTitle } as const)
+      : statut === "error" && errorTitle !== undefined
+        ? ({ kind: "error", title: errorTitle, message: str(props.errorMessage) } as const)
+        : items.length === 0 && emptyTitle !== undefined
+          ? ({ kind: "empty", title: emptyTitle, message: str(props.emptyMessage) } as const)
+          : ({ kind: "ready" } as const);
   return (
     <ListBlock
       testID={b.id}
@@ -326,6 +379,7 @@ export function AirForm({ screen, blockId }: BlockRef) {
   // Props SURCHARGÉES par les sorties des slots liés (1.3.0, D-058).
   const props = useBlockProps(screen, blockId);
   const dispatch = useDispatch(screen);
+  const statut = useDataStatus(b.entityId);
   const [values, setValues] = useState<Readonly<Record<string, string>>>({});
   if (!visible) return null;
   if (b.entityId === undefined) throw new Error(`AIR_RUNTIME_ENTITY_MISSING:${blockId}`);
@@ -356,7 +410,12 @@ export function AirForm({ screen, blockId }: BlockRef) {
       }
       submitLabel={submitLabel}
       onSubmit={() => dispatch(actionId)}
-      state="ready"
+      // États du registre 1.1.0 (D-060) : `loading` et `error` deviennent
+      // atteignables dès que la source les rapporte ET que le titre est déclaré.
+      state={statut === "loading" || statut === "error" ? statut : "ready"}
+      loadingTitle={str(props.loadingTitle)}
+      emptyTitle={str(props.emptyTitle)}
+      errorMessage={str(props.errorMessage)}
     />
   );
 }

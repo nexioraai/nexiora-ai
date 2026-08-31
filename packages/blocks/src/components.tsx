@@ -111,8 +111,19 @@ export function FormBlock({
   state = "ready",
   errorMessage,
   fieldErrors,
+  loadingTitle,
+  emptyTitle,
   testID,
 }: FormBlockProps) {
+  // REGISTRE 1.1.0 (D-060) : `loading` et `empty` entrent dans l'union. Comme
+  // ailleurs, un état sans titre DÉCLARÉ n'est pas rendu — le moteur n'invente
+  // aucun texte (F3).
+  if (state === "loading" && loadingTitle !== undefined) {
+    return <StateView state="loading" title={loadingTitle} testID={testID} />;
+  }
+  if (state === "empty" && emptyTitle !== undefined) {
+    return <StateView state="empty" title={emptyTitle} testID={testID} />;
+  }
   return (
     <Section title={title} testID={testID}>
       {fields.map((field) => (
@@ -172,8 +183,24 @@ export function DetailHeaderBlock({
   subtitle,
   badges,
   trailing,
+  state = { kind: "ready" },
   testID,
 }: DetailHeaderBlockProps) {
+  // REGISTRE 1.1.0 (D-060) : les trois états que la dimension C nomme. Titres
+  // issus des DONNÉES — aucun texte moteur (F3).
+  if (state.kind === "loading") {
+    return <StateView state="loading" title={state.title} testID={testID} />;
+  }
+  if (state.kind === "empty") {
+    return (
+      <StateView state="empty" title={state.title} message={state.message} testID={testID} />
+    );
+  }
+  if (state.kind === "error") {
+    return (
+      <StateView state="error" title={state.title} message={state.message} testID={testID} />
+    );
+  }
   return (
     <Section testID={testID}>
       <AppText variant="heading">{title}</AppText>

@@ -32,7 +32,7 @@ const screens = [
     { id:"blk_menu_header", blockType:"header", props:P({ title:"Notre carte", subtitle:"Cuisine maison, préparée à la commande" }) },
     { id:"blk_menu_liste", blockType:"list", entityId:"ent_plat", props:P({ title:"Plats du jour",
       titleFieldId:"fld_plat_nom", subtitleFieldId:"fld_plat_description", trailingFieldId:"fld_plat_prix",
-      emptyTitle:"Carte indisponible", emptyMessage:"Le service reprend à 11h30." }) },
+      emptyTitle:"Carte indisponible", emptyMessage:"Le service reprend à 11h30." , loadingTitle:"Chargement de la carte", errorTitle:"Carte indisponible", errorMessage:"Vérifiez votre connexion."}) },
     { id:"blk_menu_panier", blockType:"button", props:P({ label:"Voir mon panier", actionId:"act_ouvrir_panier", kind:"primary" }) },
     { id:"blk_menu_commandes", blockType:"button", props:P({ label:"Mes commandes", actionId:"act_ouvrir_commandes", kind:"ghost" }) } ] },
   { id:"scr_plat", title:L("Le plat"), blocks:[

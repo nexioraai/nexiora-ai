@@ -68,6 +68,18 @@
             {
               "key": "emptyMessage",
               "value": "Le service reprend à 11h30."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de la carte"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Carte indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Vérifiez votre connexion."
             }
           ]
         },

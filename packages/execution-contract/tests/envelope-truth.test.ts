@@ -87,20 +87,32 @@ describe("véracité de l'enveloppe — opérations de données", () => {
 });
 
 describe("véracité de l'enveloppe — états de blocs", () => {
-  it("AirForm code son état EN DUR : `submitting` et `error` sont inatteignables", () => {
-    expect(RUNTIME).toContain('state="ready"');
-    expect(EXECUTION_ENVELOPE_V1.reachableBlockStates.form).toEqual(["ready"]);
-  });
-
-  it("AirList ne calcule que `empty` et `ready`", () => {
-    expect(RUNTIME).toContain('{ kind: "empty"');
-    expect(RUNTIME).toContain('{ kind: "ready" }');
-    expect(RUNTIME).not.toContain('kind: "loading"');
-    expect(RUNTIME).not.toContain('kind: "error"');
-    expect([...(EXECUTION_ENVELOPE_V1.reachableBlockStates.list ?? [])].sort()).toEqual([
-      "empty",
-      "ready",
-    ]);
+  // ÉDITION CONSCIENTE (2026-08-31, D-060). Ces deux cliquets constataient
+  // `APP-D003` : `AirForm` codait `state="ready"` EN DUR, `AirList` ne calculait
+  // que `empty`/`ready`. Le fournisseur de données était purement synchrone —
+  // `loading` était l'état d'une attente qui n'existait pas, `error` celui d'un
+  // appel qui ne pouvait pas échouer.
+  //
+  // Le fait a changé : `DataProvider.status?()` rend les deux ATTEIGNABLES, et
+  // le registre 1.1.0 les rend EXPRIMABLES sur `form` et `detail_header`.
+  // Chaque état a été OBSERVÉ AU RENDU avec contrôle négatif
+  // (`etats-atteints.obs.tsx`) AVANT d'entrer dans l'enveloppe — jamais l'inverse.
+  it("les trois blocs à données atteignent loading/empty/error (D-060)", () => {
+    // La condition MÉCANIQUE de l'atteignabilité : une source qui rapporte.
+    expect(RUNTIME).toContain("useDataStatus");
+    expect(DATA_PROVIDER).toContain("status?(entityId: string): DataStatus");
+    for (const type of ["list", "detail_header", "form"] as const) {
+      expect([...(EXECUTION_ENVELOPE_V1.reachableBlockStates[type] ?? [])].sort()).toEqual([
+        "empty",
+        "error",
+        "loading",
+        "ready",
+      ]);
+    }
+    // Les blocs qui NE consomment PAS de données n'ont pas gagné d'état :
+    // l'élargissement est ciblé, pas un assouplissement général.
+    expect(EXECUTION_ENVELOPE_V1.reachableBlockStates.button).toEqual(["ready"]);
+    expect(EXECUTION_ENVELOPE_V1.reachableBlockStates.header).toEqual(["ready"]);
   });
 });
 

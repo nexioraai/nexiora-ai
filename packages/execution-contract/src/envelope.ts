@@ -105,13 +105,25 @@ export const EXECUTION_ENVELOPE_V1: ExecutionEnvelope = {
   //    `empty` (items.length === 0) et `ready` ;
   //  - `form` déclare ready/submitting/error → AirForm code `state="ready"`
   //    EN DUR.
+  // ÉLARGI le 2026-08-31 (D-060), après PREUVE AU RENDU — jamais l'inverse.
+  //
+  // `loading` et `error` étaient les états d'un monde asynchrone qui n'existait
+  // pas : le fournisseur de données était purement synchrone et ne pouvait ni
+  // attendre ni échouer. Deux des trois types consommant des données ne savaient
+  // même pas les EXPRIMER (`form` sans `loading`/`empty`, `detail_header` sans
+  // état). La dimension C d'A++ n'était donc pas non atteinte : elle était
+  // INATTEIGNABLE (APP-D003 / DET-028).
+  //
+  // Chaque état listé ci-dessous a été OBSERVÉ au rendu avec contrôle négatif :
+  // `etats-atteints.obs.tsx`. Aucun n'est déclaré sur lecture de source — c'est
+  // exactement l'erreur que D-052 avait corrigée dans l'instrument.
   reachableBlockStates: {
     button: ["ready"],
-    detail_header: ["ready"],
+    detail_header: ["ready", "loading", "empty", "error"],
     empty_state: ["empty"],
-    form: ["ready"],
+    form: ["ready", "loading", "empty", "error"],
     header: ["ready"],
-    list: ["ready", "empty"],
+    list: ["ready", "loading", "empty", "error"],
   },
 
   // Mesuré : ajouter la capability `maps` (implémentation `react-native-maps`)

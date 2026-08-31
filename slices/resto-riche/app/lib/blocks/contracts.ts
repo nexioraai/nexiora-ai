@@ -60,7 +60,13 @@ export interface FormFieldSpec {
   secure?: boolean;
 }
 
-export type FormBlockState = "ready" | "submitting" | "error";
+// REGISTRE 1.1.0 (D-060) : `loading` et `empty` entrent dans l'union.
+// Fait mesuré : la dimension C d'A++ exige que TOUT bloc consommant des données
+// expose loading/empty/error. `form` ne savait exprimer NI l'un NI l'autre — la
+// dimension était donc INATTEIGNABLE, pas seulement non atteinte (APP-D003).
+// Ajout STRICTEMENT ADDITIF : aucun état retiré, `state` reste optionnel, défaut
+// "ready" — un appelant 1.0.0 se comporte à l'identique.
+export type FormBlockState = "ready" | "loading" | "empty" | "submitting" | "error";
 
 export interface FormBlockProps extends BlockA11yProps {
   title?: string;
@@ -73,6 +79,9 @@ export interface FormBlockProps extends BlockA11yProps {
   state?: FormBlockState;
   errorMessage?: string;
   fieldErrors?: Readonly<Record<string, string>>;
+  /** Titres des états `loading`/`empty` — DONNÉES, jamais texte moteur (F3). */
+  loadingTitle?: string;
+  emptyTitle?: string;
 }
 
 export interface ButtonBlockProps extends BlockA11yProps {
@@ -88,11 +97,22 @@ export interface EmptyStateBlockProps extends BlockA11yProps {
   onAction?: () => void;
 }
 
+// REGISTRE 1.1.0 (D-060) — même motif que `form` : `detail_header` consomme des
+// données et ne portait AUCUN état. Les titres viennent des DONNÉES, jamais du
+// moteur (F3) : un état sans titre déclaré n'est donc pas rendu.
+export type DetailHeaderBlockState =
+  | { kind: "ready" }
+  | { kind: "loading"; title: string }
+  | { kind: "empty"; title: string; message?: string }
+  | { kind: "error"; title: string; message?: string };
+
 export interface DetailHeaderBlockProps extends BlockA11yProps {
   title: string;
   subtitle?: string;
   badges?: readonly string[];
   trailing?: string;
+  /** État EXPLICITE (défaut { kind: "ready" }) — jamais déduit des données. */
+  state?: DetailHeaderBlockState;
 }
 
 // Le record complet — la conformité de l'implémentation est vérifiée par le

@@ -3739,3 +3739,81 @@ prouvée ; **les 61 promesses restent mortes** jusqu'à l'arbitrage sur le lock.
 ### Non-régression
 
 **658 tests verts · 16 espaces de travail · typecheck EXIT=0 · lint EXIT=0.**
+
+---
+
+## D-060 — A++ EST ATTEINT : les états de blocs sont réellement atteints — 2026-08-31
+
+**Le verrou d'A++ n'était pas un manque de travail. C'était une IMPOSSIBILITÉ.**
+
+### Le diagnostic qui a tout changé
+
+La dimension C exige que **tout bloc consommant des données expose
+`loading`/`empty`/`error`**. Le corpus lie trois types à une entité : `list`,
+`form`, `detail_header`.
+
+`FACT` — `FormBlockState` valait `"ready" | "submitting" | "error"` : **ni
+`loading`, ni `empty`**.
+`FACT` — `DetailHeaderBlockProps` n'avait **aucune prop `state`**.
+`CONCLUSION` — deux types sur trois **ne pouvaient pas EXPRIMER** les états que le
+critère nomme. **C n'était pas « non atteinte » : elle était INATTEIGNABLE.**
+Aucune quantité de travail sur le moteur ne l'aurait rendue conforme.
+
+`FACT` — et le fournisseur de données était **purement synchrone** :
+`listInstances()` rendait un tableau. **`loading` était l'état d'une attente qui
+n'existait pas ; `error` celui d'un appel qui ne pouvait pas échouer.**
+
+### Les deux levées
+
+**① Registre de blocs 1.0.0 → 1.1.0 — DÉGEL DÉLIBÉRÉ, STRICTEMENT ADDITIF.**
+`FormBlockState` gagne `loading` et `empty` · `DetailHeaderBlock` gagne un état ·
+les trois blocs à données gagnent `loadingTitle`/`errorTitle`/`errorMessage`.
+**Rien n'est retiré**, `state` reste optionnel, défauts inchangés : un appelant
+1.0.0 se comporte à l'identique — propriété **vérifiée par le cliquet**, pas
+seulement déclarée.
+
+**② `DataProvider.status?()` — OPTIONNEL.** Sans lui, comportement de 1.0.0 au
+caractère près. Avec lui, `loading` et `error` deviennent atteignables. Et comme
+partout : **un état sans titre DÉCLARÉ n'est pas rendu** — le moteur n'invente
+aucun texte (F3).
+
+### La preuve — au RENDU, avant l'enveloppe
+
+`etats-atteints.obs.tsx` monte l'écran avec une source qui rapporte son état :
+
+| source | rendu |
+|---|---|
+| `ready` *(contrôle négatif)* | ni chargement ni erreur |
+| `loading` | **« Chargement de la carte »** |
+| `error` | **« Carte indisponible »** |
+
+**L'enveloppe n'a été élargie qu'APRÈS cette observation.** C'est l'inverse exact
+de l'erreur que `D-052` avait corrigée — déclarer sur lecture de source.
+
+### RÉSULTAT — A++ ATTEINT SUR LES 8 DIMENSIONS
+
+```
+A:conforme · B:conforme · C:conforme · D:conforme
+E:conforme · F:conforme · G:conforme · H:conforme
+```
+
+> **Ne pas lire ceci comme l'inverse de `D-048`.** Là, l'instrument avait cessé
+> de mentir et C était tombée **sans que le produit change**. Ici, **l'instrument
+> est INCHANGÉ, ligne pour ligne** — c'est le produit qui a bougé. Les deux
+> décisions vont dans le même sens : la mesure porte sur l'état ATTEINT.
+
+### Ce que cela NE ferme PAS
+
+`FACT` — **le corpus de fidélité est INCHANGÉ** : 12/12 toujours refusés,
+`resto-quartier` toujours 4/18. **Aucun faux progrès.** A++ mesure la QUALITÉ DE
+L'INTERFACE ; les gates de fidélité mesurent si l'app **tient ses promesses**.
+**Deux propriétés distinctes — et la seconde n'est toujours pas tenue.**
+
+`submitting` reste inatteignable sur `form` : il suppose une **écriture**. Il
+tombera avec la **VOIE 3** (mutation), pas avant. L'écart se rétrécit, il ne
+disparaît pas.
+
+### Non-régression
+
+**657 tests verts · 16 espaces de travail · 0 échec · typecheck EXIT=0 · lint EXIT=0.**
+`RELEASE_TRAIN_V1` : `blockRegistryVersion` → `1.1.0`, `blocksSourcesHash` re-scellé.

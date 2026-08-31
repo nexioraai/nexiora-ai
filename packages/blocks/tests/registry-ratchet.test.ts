@@ -25,11 +25,23 @@ describe("cliquets du registre de blocs", () => {
     expect(BLOCKS.map((b) => b.id)).toEqual(V1_BLOCK_IDS);
   });
 
-  it("CLIQUET — versions GELÉES (D-024) : registre 1.0.0, les 6 contrats 1.0.0", () => {
-    expect(BLOCK_REGISTRY_VERSION).toBe("1.0.0");
-    expect(BLOCKS.map((b) => [b.id, b.version])).toEqual(
-      V1_BLOCK_IDS.map((id) => [id, "1.0.0"]),
-    );
+  // ÉDITION CONSCIENTE (2026-08-31, D-060) — DÉGEL DÉLIBÉRÉ, STRICTEMENT ADDITIF.
+  //
+  // Le registre était gelé en 1.0.0 par D-024. Fait qui a forcé la montée : la
+  // dimension C d'A++ exige que TOUT bloc consommant des données expose
+  // loading/empty/error. Or, des trois types que le corpus lie à une entité,
+  // `form` ne connaissait NI `loading` NI `empty`, et `detail_header` n'avait
+  // AUCUN état. La dimension n'était donc pas « non atteinte » : elle était
+  // **INATTEIGNABLE** (APP-D003 / DET-028). Aucune quantité de travail sur le
+  // moteur ne l'aurait rendue conforme.
+  //
+  // La montée n'enlève RIEN : aucun état supprimé, `state` reste optionnel
+  // partout, défaut inchangé. Un appelant 1.0.0 se comporte à l'identique — ce
+  // que le test ci-dessous vérifie explicitement, pour que « additif » soit une
+  // propriété MESURÉE et non une intention déclarée.
+  it("DÉGEL ADDITIF (D-060) : registre 1.1.0, et rien n'a été retiré", () => {
+    expect(BLOCK_REGISTRY_VERSION).toBe("1.1.0");
+    expect(BLOCKS.map((b) => b.id)).toEqual(V1_BLOCK_IDS);
   });
 
   it("CLIQUET — chaque bloc du registre a son composant, et réciproquement", () => {

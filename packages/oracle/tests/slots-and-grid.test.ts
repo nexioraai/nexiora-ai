@@ -111,8 +111,17 @@ describe("grille A++ — instrument déterministe", () => {
     // porter sur autre chose que la propriété nommée. Écart consigné :
     // DET-028 / APP-D003 — `list` ne rend que `empty`/`ready`, `form` que
     // `ready`, `detail_header` aucun état.
+    // ÉDITION CONSCIENTE (2026-08-31, D-060) : C repasse CONFORME — et cette
+    // fois ce n'est PAS l'instrument qui a bougé, c'est le MOTEUR.
+    // D-052 avait rendu la mesure honnête : elle porte sur l'ATTEIGNABILITÉ.
+    // Elle y porte toujours, à l'identique. Ce qui a changé, c'est que les
+    // états sont désormais ATTEINTS : `DataProvider.status?()` rend `loading` et
+    // `error` possibles, et le registre 1.1.0 les rend exprimables sur `form` et
+    // `detail_header` — qui n'en avaient AUCUN moyen. Chacun a été OBSERVÉ au
+    // rendu, contrôle négatif inclus (`etats-atteints.obs.tsx`), AVANT d'entrer
+    // dans l'enveloppe. Aucune ligne de la grille n'a été touchée.
     expect([...signatures]).toEqual([
-      "A:conforme|B:conforme|C:non_conforme|D:conforme|E:conforme|F:conforme|G:conforme|H:non_determinee",
+      "A:conforme|B:conforme|C:conforme|D:conforme|E:conforme|F:conforme|G:conforme|H:non_determinee",
     ]);
   });
 
@@ -137,17 +146,19 @@ describe("grille A++ — instrument déterministe", () => {
     );
   });
 
-  it("H n'est jamais conforme par défaut ; C ne l'est plus depuis D-052", () => {
+  it("H n'est jamais conforme par défaut ; C l'est redevenue par le MOTEUR (D-060)", () => {
     const air = resto as ProjectAir;
     const report = evaluateApxxGrid(compileProject(air).files, air);
     expect(report.dimensions.find((d) => d.dimension === "H")?.state).toBe("non_determinee");
-    expect(report.dimensions.find((d) => d.dimension === "C")?.state).toBe("non_conforme");
-    // ÉDITION CONSCIENTE (2026-08-30, D-052 volet A1) : `passed` porte sur A–G.
-    // Il était `true` tant que C était déclarée conforme sur une lecture de
-    // contrat. L'instrument corrigé mesure l'état ATTEINT : C tombe, donc
-    // `passed` aussi. **A++ N'EST PAS ATTEINT** — c'est le fait, pas une
-    // régression du produit : aucune ligne du code émis n'a changé.
-    expect(report.passed).toBe(false);
+    expect(report.dimensions.find((d) => d.dimension === "C")?.state).toBe("conforme");
+    // ÉDITION CONSCIENTE (2026-08-31, D-060) : `passed` porte sur A–G et
+    // redevient `true`. Il ne faut PAS y lire l'inverse de D-052 : là,
+    // l'instrument avait cessé de mentir et C était tombée sans que le produit
+    // change. Ici, l'INSTRUMENT EST INCHANGÉ et c'est le produit qui a bougé —
+    // trois états rendus atteignables, chacun observé au rendu avec contrôle
+    // négatif. **H reste `non_determinee` sur un document seul** : A++ complet
+    // exige la mesure cross-domain, qui n'est pas de ce test.
+    expect(report.passed).toBe(true);
   });
 
   it("comparateur de non-régression : détecte une dégradation, pas une amélioration", () => {

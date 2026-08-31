@@ -14,9 +14,25 @@ export interface EntityInstance {
   values: Readonly<Record<string, string>>;
 }
 
+export type DataStatus = "loading" | "ready" | "error";
+
 export interface DataProvider {
   listInstances(entityId: string): readonly EntityInstance[];
   getInstance(entityId: string, instanceId?: string): EntityInstance | undefined;
+  /**
+   * ÉTAT DE LA SOURCE (1.1.0, D-060) — OPTIONNEL.
+   *
+   * Sans lui, les données sont immédiates et le comportement est celui de
+   * 1.0.0, au caractère près. Avec lui, `loading` et `error` deviennent
+   * ATTEIGNABLES : le bloc les rend, à condition que le document ait déclaré
+   * leurs titres (F3 — le moteur n'invente aucun texte).
+   *
+   * Fait qui a rendu ce champ nécessaire : le fournisseur était PUREMENT
+   * SYNCHRONE, donc `loading` était l'état d'une attente qui n'existait pas et
+   * `error` celui d'un appel qui ne pouvait pas échouer. La dimension C d'A++
+   * n'était pas non atteinte — elle était inatteignable (APP-D003).
+   */
+  status?(entityId: string): DataStatus;
 }
 
 export const EMPTY_DATA_PROVIDER: DataProvider = {
