@@ -30,6 +30,29 @@ describe("GATE RACINE — les 14 applications émises se MONTENT vraiment", () =
     let identites = 0;
     const problemes: string[] = [];
 
+    // AVERTISSEMENTS REACT (D-076) — la première version de cette gate ne
+    // regardait que les EXCEPTIONS. Or la CI a révélé « Encountered two children
+    // with the same key `` », que React qualifie lui-même de « comportement non
+    // supporté ». Un avertissement React est un DÉFAUT, pas du bruit : il est
+    // désormais capturé et fait échouer.
+    // `AIR_CAPABILITY_NOT_IMPLEMENTED` est EXCLU : ce n'est pas un défaut, c'est
+    // le fournisseur par défaut qui REFUSE ET TRACE, exactement comme conçu.
+    const reactWarnings: string[] = [];
+    const vraiError = console.error;
+    const vraiWarn = console.warn;
+    const capturer = (...args: unknown[]): void => {
+      const m = args.map((a) => String(a)).join(" ");
+      if (
+        !m.includes("AIR_CAPABILITY_NOT_IMPLEMENTED") &&
+        !m.includes("react-test-renderer is deprecated") &&
+        !m.includes("not configured to support act")
+      ) {
+        reactWarnings.push(m.slice(0, 160));
+      }
+    };
+    console.error = capturer;
+    console.warn = capturer;
+
     for (const app of apps) {
       const base = RACINE + app + "/";
       const { DataRoot } = await import(base + "lib/runtime/data-provider.tsx");
@@ -71,6 +94,10 @@ describe("GATE RACINE — les 14 applications émises se MONTENT vraiment", () =
         r!.unmount();
       }
     }
+
+    console.error = vraiError;
+    console.warn = vraiWarn;
+    for (const w of [...new Set(reactWarnings)]) problemes.push(`AVERTISSEMENT REACT : ${w}`);
 
     console.log(
       `\n[GATE RENDU] ${String(apps.length)} applications · ${String(ecrans)} écrans montés · ` +

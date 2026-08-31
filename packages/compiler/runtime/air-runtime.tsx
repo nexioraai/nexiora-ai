@@ -486,7 +486,17 @@ export function AirDetailHeader({
       subtitle={
         props.subtitleFieldId === undefined ? undefined : value(props.subtitleFieldId)
       }
-      badges={badgeIds?.map((id) => value(id))}
+      // D-076 : un badge VIDE n'est pas un badge — il rendait une pastille sans
+      // texte et provoquait une collision de clés. On ne rend que les valeurs
+      // réellement présentes ; `undefined` si aucune ne l'est.
+      badges={
+        badgeIds === undefined
+          ? undefined
+          : (() => {
+              const v = badgeIds.map((id) => value(id)).filter((x) => x !== "");
+              return v.length === 0 ? undefined : v;
+            })()
+      }
       trailing={
         props.trailingFieldId === undefined ? undefined : value(props.trailingFieldId)
       }

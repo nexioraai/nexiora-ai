@@ -51,9 +51,11 @@ export const RELEASE_TRAIN_V1 = {
   // `state`, et les trois blocs consommant des données gagnent les props de
   // titres d'état. Aucun état, aucune prop, aucun type de bloc n'est RETIRÉ :
   // un appelant 1.0.0 est inchangé, ce que le cliquet du registre vérifie.
-  // Ré-scellé 2026-08-31 (D-065) : le bloc `list` gagne tri, filtre et borne —
-  // unions FERMÉES, toutes optionnelles. Registre toujours 1.1.0, rien retiré.
-  "f6e473f702b54ba9c4a609e31969fe7707a7743adffe258437b73a95f33bee26",
+  // Ré-scellé 2026-08-31 (D-076) : clé de badge rendue STABLE par la position.
+  // `key={badge}` collait deux badges de meme valeur — React refusait :
+  // « two children with the same key `` ». Defaut REEL, revele par la CI, que
+  // ma propre gate ne voyait pas. Registre toujours 1.1.0, rien retire.
+  "11dd4fda2c95d89067c188714250ffc2ef115cc7c5757a296c7f0a4eefe30d39",
   capabilityRegistryVersion: "1.0.0",
   capabilitySourcesHash:
     "6c28599246abde6e7010704f23f273aafe50d17c5483133709c9065f2777346c",

@@ -4287,3 +4287,56 @@ relancée → installation, puis **14/14 compilent**.
 
 **659 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0 ·
 14/14 compilent · 58/58 écrans montés.**
+
+---
+
+## D-076 — LA CI A VU CE QUE MA GATE NE VOYAIT PAS — 2026-08-31
+
+### La CI est VERTE, et le correctif de portabilité était la cause
+
+`FACT` — run sur `c2758fc`, machine GitHub (`linux x64`, node `v24.19.0`) :
+**`gate:app-compile` 14/14** (auto-installation : 493 paquets en 10 s) ·
+**`gate:app-rendu` 14 applications · 58 écrans · 2030 identités · 0 problème**.
+Les 7 contrôles historiques : **tous SUCCESS**.
+
+### 🔴 Mais le journal contenait un défaut RÉEL que ma gate ignorait
+
+`FACT` — trois fois dans le log :
+> `Encountered two children with the same key, ``. […] the behavior is
+> unsupported and could change in a future version.`
+
+`FACT` — cause : `key={badge}` dans `DetailHeaderBlock`. Deux champs de badge
+**VIDES** produisaient deux clés `""`.
+`INFÉRENCE` — **ma gate ne surveillait que les EXCEPTIONS.** Un avertissement
+React que React lui-même qualifie de « comportement non supporté » passait
+inaperçu. **Il a fallu que la CI l'imprime pour que je le voie.**
+
+### La correction, aux deux niveaux ET dans la gate
+
+| | |
+|---|---|
+| `components.tsx` | clé rendue **unique par la position** — indépendante des valeurs |
+| `air-runtime.tsx` | un badge **vide n'est pas un badge** : il n'est plus rendu du tout |
+| **la gate** | **capture `console.error`/`console.warn` et fait ÉCHOUER sur tout avertissement React** |
+
+`AIR_CAPABILITY_NOT_IMPLEMENTED` est **explicitement exclu** de cette capture :
+ce n'est pas un défaut, c'est le fournisseur par défaut qui **refuse et trace**,
+exactement comme conçu — le journal de CI l'a d'ailleurs montré à l'œuvre sur
+`geolocation`, `auth`, `analytics`, `offline_storage`, `maps`, `media_upload`,
+`push_notifications`. **Le manque est visible et nommé à l'exécution.**
+
+### CAS-TUEUR — la gate a été VUE échouer
+
+`FACT` — les deux correctifs retirés, la gate rapporte
+**`1 problème(s)` · `🔴 AVERTISSEMENT REACT : Encountered two children with the
+same key`** et **échoue**. Rétablis : **0 problème**.
+
+> Il a fallu retirer **les deux** correctifs pour reproduire : chacun seul
+> suffisait à masquer le défaut. Un cas-tueur qui ne mord pas doit être creusé,
+> jamais accepté comme preuve.
+
+### Non-régression
+
+**659 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0 ·
+14/14 compilent · 58/58 écrans montés · 0 avertissement React.**
+`blocksSourcesHash` re-scellé.

@@ -210,7 +210,11 @@ export function DetailHeaderBlock({
           {trailing}
         </AppText>
       )}
-      {badges?.map((badge) => <Badge key={badge} label={badge} />)}
+      {/* CLÉ STABLE (D-076) — `key={badge}` collait deux badges de même valeur,
+          et React refusait : « two children with the same key `` ». Le cas réel
+          était deux champs de badge VIDES. La position rend la clé unique par
+          construction, quelles que soient les valeurs. */}
+      {badges?.map((badge, i) => <Badge key={`${String(i)}:${badge}`} label={badge} />)}
     </Section>
   );
 }
