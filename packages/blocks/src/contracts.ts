@@ -87,7 +87,13 @@ export interface FormBlockProps extends BlockA11yProps {
 export interface ButtonBlockProps extends BlockA11yProps {
   label: string;
   kind?: "primary" | "ghost";
-  onPress: () => void;
+  /**
+   * OPTIONNEL depuis 1.1.0 (D-084) — même patron que `onItemPress` du bloc
+   * liste : sans gestionnaire, le bouton n'est PAS pressable. Un effet que le
+   * moteur n'exécute pas ne doit pas offrir d'affordance. Additif : un appelant
+   * qui fournit `onPress` est inchangé.
+   */
+  onPress?: () => void;
 }
 
 export interface EmptyStateBlockProps extends BlockA11yProps {

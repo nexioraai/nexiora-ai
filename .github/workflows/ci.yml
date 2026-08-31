@@ -146,6 +146,17 @@ jobs:
       # variables > Actions) — valeur réelle, PAS le placeholder utilisé plus
       # haut pour le build. NEXT_PUBLIC_SUPABASE_URL n'est pas un secret (valeur
       # publique, déjà exposée côté client) : elle est donc écrite en clair ici.
+      # CLIQUET DES CONTROLES FANTOMES (D-084) — presse chaque controle des
+      # 26 applications et exige qu'il PRODUISE un effet observable. Les deux
+      # gates precedentes verifient que l'app compile et se rend ; aucune ne
+      # verifiait qu'un bouton AGIT — c'est pourtant le defaut fondateur du
+      # chantier (APP-D002) et il venait de se reproduire a l'identique.
+      - name: Apps emises — aucun controle fantome nouveau
+        id: app_controles
+        continue-on-error: true
+        working-directory: .
+        run: npm run gate:controles
+
       - name: Report system health
         if: always()
         env:
@@ -161,8 +172,8 @@ jobs:
       - name: Gate — échoue si une étape bloquante a échoué
         if: always()
         run: |
-          if [ "${{ steps.typecheck.outcome }}" != "success" ] || [ "${{ steps.test.outcome }}" != "success" ] || [ "${{ steps.build.outcome }}" != "success" ] || [ "${{ steps.apidocs.outcome }}" != "success" ] || [ "${{ steps.pkg_typecheck.outcome }}" != "success" ] || [ "${{ steps.pkg_lint.outcome }}" != "success" ] || [ "${{ steps.pkg_test.outcome }}" != "success" ] || [ "${{ steps.app_compile.outcome }}" != "success" ] || [ "${{ steps.app_rendu.outcome }}" != "success" ]; then
-            echo "Étape(s) en échec — typecheck=${{ steps.typecheck.outcome }} test=${{ steps.test.outcome }} build=${{ steps.build.outcome }} apidocs=${{ steps.apidocs.outcome }} pkg_typecheck=${{ steps.pkg_typecheck.outcome }} pkg_lint=${{ steps.pkg_lint.outcome }} pkg_test=${{ steps.pkg_test.outcome }} app_compile=${{ steps.app_compile.outcome }} app_rendu=${{ steps.app_rendu.outcome }}"
+          if [ "${{ steps.typecheck.outcome }}" != "success" ] || [ "${{ steps.test.outcome }}" != "success" ] || [ "${{ steps.build.outcome }}" != "success" ] || [ "${{ steps.apidocs.outcome }}" != "success" ] || [ "${{ steps.pkg_typecheck.outcome }}" != "success" ] || [ "${{ steps.pkg_lint.outcome }}" != "success" ] || [ "${{ steps.pkg_test.outcome }}" != "success" ] || [ "${{ steps.app_compile.outcome }}" != "success" ] || [ "${{ steps.app_rendu.outcome }}" != "success" ] || [ "${{ steps.app_controles.outcome }}" != "success" ]; then
+            echo "Étape(s) en échec — typecheck=${{ steps.typecheck.outcome }} test=${{ steps.test.outcome }} build=${{ steps.build.outcome }} apidocs=${{ steps.apidocs.outcome }} pkg_typecheck=${{ steps.pkg_typecheck.outcome }} pkg_lint=${{ steps.pkg_lint.outcome }} pkg_test=${{ steps.pkg_test.outcome }} app_compile=${{ steps.app_compile.outcome }} app_rendu=${{ steps.app_rendu.outcome }} app_controles=${{ steps.app_controles.outcome }}"
             exit 1
           fi
           echo "Toutes les étapes bloquantes ont réussi."

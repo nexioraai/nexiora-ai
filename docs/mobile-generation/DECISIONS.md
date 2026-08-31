@@ -4562,3 +4562,59 @@ Sans cela, ce défaut serait reparti en build à la prochaine occasion.
 
 **659 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0 ·
 26/26 compilent · 164 écrans montés ET pressés · 0 problème.**
+
+---
+
+## D-084 — UNE TROISIÈME GATE RACINE : aucun contrôle fantôme — 2026-08-31
+
+**Question propriétaire** : *« pourquoi tu le vois ? »* — parce que j'ai **pressé**
+l'application, au lieu de relire le code. *« S'il y a un moyen que tu le voies,
+fais-le. »* Le voici.
+
+### La gate
+
+Chaque contrôle de chaque écran des **26 applications** est **pressé un par un**,
+après remplissage des champs, et l'on exige qu'il produise un effet
+**OBSERVABLE** : une navigation journalisée, une écriture, ou un appel de
+capability tracé. **Une pression sans effet est un mensonge de l'interface.**
+
+`FACT` — première exécution : **201 contrôles fantômes sur 1156.**
+
+### Deux causes, et cette fois aucune n'est mon instrument
+
+**A — MOTEUR, corrigé.** Un effet `slot` est calculé **AU RENDU**, jamais sur un
+appui : le dispatcher n'a aucune branche pour lui. Un bouton *« Appliquer les
+filtres »* câblé sur un slot était donc **pressable et muet**. `onPress` devient
+**optionnel** sur `ButtonBlock` et sur la primitive : sans gestionnaire, pas
+d'affordance. **C'est le remède d'`APP-D002`, appliqué à un second effet.**
+`FACT` — **21 fantômes retirés. 201 → 180.**
+
+**B — DOCUMENT, non corrigeable.** Exemple mesuré : `act_ajouter_favori` écrit
+`ent_favori`, sur laquelle `rule_favori_unicite` exige trois champs — et
+**aucun formulaire ne collecte cette entité.** La règle est **insatisfiable** :
+le bouton ne peut jamais écrire. Défaut du document, pas du moteur.
+
+### Pourquoi un CLIQUET et non un pass/fail
+
+`FACT` — le corpus v2 est **GELÉ**. Exiger 0 ferait échouer la CI pour toujours,
+et le corriger détruirait la base de comparaison historique.
+
+**Le cliquet fige l'état mesuré à 180.** Il mord dans le seul sens qui compte :
+**le nombre ne doit jamais AUGMENTER**, et tout contrôle ajouté doit agir.
+Baisser est libre ; monter est un échec. Câblé dans l'étape `Gate` de la CI.
+
+### Les trois gates racine, désormais
+
+| gate | refuse |
+|---|---|
+| `gate:app-compile` | une application qui **ne compile pas** — `tsc` réel, 26 documents |
+| `gate:app-rendu` | un écran qui **ne se monte pas**, sans identité, ou qui fuit un identifiant |
+| `gate:controles` | **un contrôle de plus qui ne fait rien** |
+
+> Les deux premières vérifiaient que l'application **existe**. La troisième
+> vérifie qu'elle **agit** — la seule chose qui intéresse celui qui l'utilise.
+
+### Non-régression
+
+**659 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0 ·
+26/26 compilent · 164 écrans montés et pressés · cliquet 180/180.**

@@ -46,7 +46,13 @@ export type SectionProps = PropsWithChildren<
 
 export interface AppButtonProps extends A11yProps {
   label: string;
-  onPress: () => void;
+  /**
+   * OPTIONNEL depuis D-084 — sans gestionnaire, le bouton n'est PAS pressable.
+   * Un effet que le moteur n'exécute pas ne doit pas offrir d'affordance :
+   * c'est le remède d'`APP-D002`, appliqué ici au niveau de la primitive pour
+   * qu'aucun étage au-dessus ne puisse le contourner.
+   */
+  onPress?: () => void;
   kind?: "primary" | "ghost";
   disabled?: boolean;
   loading?: boolean;

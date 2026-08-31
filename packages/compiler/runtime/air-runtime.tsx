@@ -425,8 +425,21 @@ export function AirButton({ screen, blockId }: BlockRef) {
     throw new Error(`AIR_RUNTIME_PROP_MISSING:${blockId}:label|actionId`);
   }
   const kind = props.kind === "ghost" ? ("ghost" as const) : ("primary" as const);
+  // AFFORDANCE (D-084) — un effet `slot` est calculé AU RENDU, jamais sur un
+  // appui : le dispatcher n'a aucune branche pour lui. Un bouton « Appliquer les
+  // filtres » câblé sur un slot était donc PRESSABLE ET MUET. Mesuré sur les
+  // 26 applications : c'est l'une des deux causes des 201 contrôles fantômes.
+  // On ne fabrique aucun comportement — on retire une promesse que rien ne
+  // fonde. Exactement le remède d'`APP-D002`, appliqué à un second effet.
+  const effet = screen.actions[actionId]?.kind;
+  const inerte = effet === "slot";
   return (
-    <ButtonBlock testID={b.id} label={label} kind={kind} onPress={() => dispatch(actionId)} />
+    <ButtonBlock
+      testID={b.id}
+      label={label}
+      kind={kind}
+      onPress={inerte ? undefined : () => dispatch(actionId)}
+    />
   );
 }
 

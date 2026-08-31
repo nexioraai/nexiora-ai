@@ -51,11 +51,11 @@ export const RELEASE_TRAIN_V1 = {
   // `state`, et les trois blocs consommant des données gagnent les props de
   // titres d'état. Aucun état, aucune prop, aucun type de bloc n'est RETIRÉ :
   // un appelant 1.0.0 est inchangé, ce que le cliquet du registre vérifie.
-  // Ré-scellé 2026-08-31 (D-076) : clé de badge rendue STABLE par la position.
-  // `key={badge}` collait deux badges de meme valeur — React refusait :
-  // « two children with the same key `` ». Defaut REEL, revele par la CI, que
-  // ma propre gate ne voyait pas. Registre toujours 1.1.0, rien retire.
-  "11dd4fda2c95d89067c188714250ffc2ef115cc7c5757a296c7f0a4eefe30d39",
+  // Ré-scellé 2026-08-31 (D-084) : `onPress` devient OPTIONNEL sur le bouton
+  // et sur la primitive. Un effet que le moteur n'exécute pas — `slot` sur un
+  // appui — ne doit pas offrir d'affordance : remède d'APP-D002 appliqué à un
+  // second effet. 21 contrôles fantômes retirés sur les 26 applications.
+  "bdcf111069b7c955a0a02cffbabb79ef2672f772dd689ee85c6d59396f0659ea",
   capabilityRegistryVersion: "1.0.0",
   capabilitySourcesHash:
     "6c28599246abde6e7010704f23f273aafe50d17c5483133709c9065f2777346c",
