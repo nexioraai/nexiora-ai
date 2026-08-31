@@ -1,0 +1,3527 @@
+{
+  "actions": [
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_accueil"
+      },
+      "id": "act_ouvrir_accueil",
+      "name": "Ouvrir l'accueil",
+      "trigger": {
+        "blockId": "blk_rappels_btn_accueil",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_catalogue_packs"
+      },
+      "id": "act_ouvrir_catalogue",
+      "name": "Ouvrir le catalogue de packs",
+      "trigger": {
+        "blockId": "blk_accueil_btn_catalogue",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_pack_detail"
+      },
+      "id": "act_ouvrir_pack_detail",
+      "name": "Ouvrir le détail du pack",
+      "trigger": {
+        "blockId": "blk_catalogue_btn_detail",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_mes_packs"
+      },
+      "id": "act_ouvrir_mes_packs",
+      "name": "Ouvrir mes packs",
+      "trigger": {
+        "blockId": "blk_accueil_btn_mes_packs",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_lecons"
+      },
+      "id": "act_ouvrir_lecons",
+      "name": "Ouvrir les leçons du pack",
+      "trigger": {
+        "blockId": "blk_mes_packs_btn_lecons",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_lecon_detail"
+      },
+      "id": "act_ouvrir_lecon_detail",
+      "name": "Ouvrir la leçon",
+      "trigger": {
+        "blockId": "blk_lecons_btn_ouvrir",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_progression"
+      },
+      "id": "act_ouvrir_progression",
+      "name": "Ouvrir ma progression",
+      "trigger": {
+        "blockId": "blk_accueil_btn_progression",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_rappels"
+      },
+      "id": "act_ouvrir_rappels",
+      "name": "Ouvrir les rappels de révision",
+      "trigger": {
+        "blockId": "blk_accueil_btn_rappels",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_profil"
+      },
+      "id": "act_ouvrir_profil",
+      "name": "Ouvrir mon compte",
+      "trigger": {
+        "blockId": "blk_accueil_btn_profil",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "payments.iap",
+        "kind": "capability",
+        "method": "purchaseProduct",
+        "params": [
+          {
+            "key": "productIdField",
+            "value": "fld_pack_produit_iap"
+          },
+          {
+            "key": "quantity",
+            "value": 1
+          },
+          {
+            "key": "thenScreen",
+            "value": "scr_mes_packs"
+          }
+        ]
+      },
+      "id": "act_acheter_pack",
+      "name": "Acheter ce pack (achat intégré)",
+      "trigger": {
+        "blockId": "blk_pack_detail_btn_acheter",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "payments.iap",
+        "kind": "capability",
+        "method": "restorePurchases",
+        "params": [
+          {
+            "key": "thenScreen",
+            "value": "scr_mes_packs"
+          }
+        ]
+      },
+      "id": "act_restaurer_achats",
+      "name": "Restaurer mes achats",
+      "trigger": {
+        "blockId": "blk_pack_detail_btn_restaurer",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "push_notifications",
+        "kind": "capability",
+        "method": "requestPermission",
+        "params": [
+          {
+            "key": "reason",
+            "value": "rappels_quotidiens_revision"
+          }
+        ]
+      },
+      "id": "act_activer_notifications",
+      "name": "Activer les notifications de révision",
+      "trigger": {
+        "blockId": "blk_rappels_btn_notifications",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_progression",
+        "kind": "mutation",
+        "operation": "create",
+        "thenScreenId": "scr_progression"
+      },
+      "id": "act_enregistrer_progression",
+      "name": "Enregistrer ma progression de leçon",
+      "trigger": {
+        "blockId": "blk_lecon_detail_form_progression",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_rappel",
+        "kind": "mutation",
+        "operation": "create",
+        "thenScreenId": "scr_rappels"
+      },
+      "id": "act_creer_rappel",
+      "name": "Créer un rappel de révision",
+      "trigger": {
+        "blockId": "blk_rappels_form",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_utilisateur",
+        "kind": "mutation",
+        "operation": "update",
+        "thenScreenId": "scr_profil"
+      },
+      "id": "act_enregistrer_profil",
+      "name": "Enregistrer mon profil d'apprentissage",
+      "trigger": {
+        "blockId": "blk_profil_form",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_utilisateur",
+        "kind": "mutation",
+        "operation": "delete",
+        "thenScreenId": "scr_accueil"
+      },
+      "id": "act_supprimer_compte",
+      "name": "Supprimer mon compte",
+      "trigger": {
+        "blockId": "blk_profil_btn_supprimer_compte",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "binding": {
+          "inputs": [
+            {
+              "port": "progressions",
+              "source": {
+                "entityId": "ent_progression",
+                "kind": "entity_rows"
+              }
+            },
+            {
+              "port": "lecons",
+              "source": {
+                "entityId": "ent_lecon",
+                "kind": "entity_rows"
+              }
+            },
+            {
+              "port": "maxElements",
+              "source": {
+                "kind": "literal",
+                "value": 5
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "blockId": "blk_accueil_revision_liste",
+              "port": "titreRevision",
+              "prop": "title"
+            },
+            {
+              "blockId": "blk_accueil_revision_liste",
+              "port": "messageRevision",
+              "prop": "emptyMessage"
+            }
+          ]
+        },
+        "kind": "slot",
+        "slotId": "slot_selection_revision_du_jour"
+      },
+      "id": "act_calculer_revision_du_jour",
+      "name": "Calculer la révision du jour à l'ouverture de l'accueil",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_accueil"
+      }
+    },
+    {
+      "effect": {
+        "binding": {
+          "inputs": [
+            {
+              "port": "progressions",
+              "source": {
+                "entityId": "ent_progression",
+                "kind": "entity_rows"
+              }
+            },
+            {
+              "port": "lecons",
+              "source": {
+                "entityId": "ent_lecon",
+                "kind": "entity_rows"
+              }
+            },
+            {
+              "port": "libelleVide",
+              "source": {
+                "kind": "literal",
+                "value": "Aucune progression enregistrée pour le moment"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "blockId": "blk_progression_header",
+              "port": "resumeGlobal",
+              "prop": "subtitle"
+            },
+            {
+              "blockId": "blk_progression_liste",
+              "port": "detailAvancement",
+              "prop": "title"
+            }
+          ]
+        },
+        "kind": "slot",
+        "slotId": "slot_calcul_progression_globale"
+      },
+      "id": "act_calculer_progression_globale",
+      "name": "Calculer la progression globale",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_progression"
+      }
+    },
+    {
+      "effect": {
+        "binding": {
+          "inputs": [
+            {
+              "port": "rappels",
+              "source": {
+                "entityId": "ent_rappel",
+                "kind": "entity_rows"
+              }
+            },
+            {
+              "port": "locale",
+              "source": {
+                "kind": "literal",
+                "value": "fr"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "blockId": "blk_rappels_header",
+              "port": "prochainRappelTexte",
+              "prop": "subtitle"
+            }
+          ]
+        },
+        "kind": "slot",
+        "slotId": "slot_prochain_rappel"
+      },
+      "id": "act_calculer_prochain_rappel",
+      "name": "Afficher le prochain rappel actif",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_rappels"
+      }
+    },
+    {
+      "effect": {
+        "binding": {
+          "inputs": [
+            {
+              "port": "achats",
+              "source": {
+                "entityId": "ent_achat",
+                "kind": "entity_rows"
+              }
+            },
+            {
+              "port": "packs",
+              "source": {
+                "entityId": "ent_pack",
+                "kind": "entity_rows"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "blockId": "blk_mes_packs_header",
+              "port": "etatPossession",
+              "prop": "subtitle"
+            },
+            {
+              "blockId": "blk_mes_packs_liste",
+              "port": "nombrePacksPossedes",
+              "prop": "title"
+            }
+          ]
+        },
+        "kind": "slot",
+        "slotId": "slot_packs_possedes"
+      },
+      "id": "act_calculer_packs_possedes",
+      "name": "Calculer l'état de possession des packs",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_mes_packs"
+      }
+    },
+    {
+      "effect": {
+        "binding": {
+          "inputs": [
+            {
+              "port": "achats",
+              "source": {
+                "entityId": "ent_achat",
+                "kind": "entity_rows"
+              }
+            },
+            {
+              "port": "packs",
+              "source": {
+                "entityId": "ent_pack",
+                "kind": "entity_rows"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "blockId": "blk_pack_detail_entete",
+              "port": "etatPossession",
+              "prop": "subtitleFieldId"
+            }
+          ]
+        },
+        "kind": "slot",
+        "slotId": "slot_packs_possedes"
+      },
+      "id": "act_rafraichir_possession_apres_achat",
+      "name": "Rafraîchir l'état de possession après un achat",
+      "trigger": {
+        "entityId": "ent_achat",
+        "event": "created",
+        "kind": "data"
+      }
+    }
+  ],
+  "airSchemaVersion": "1.5.0",
+  "app": {
+    "description": [
+      {
+        "locale": "fr",
+        "text": "Application de tutorat linguistique : achat de packs de leçons interactives dans l'app, suivi de progression et rappels quotidiens de révision."
+      },
+      {
+        "locale": "en",
+        "text": "Language tutoring app: buy interactive lesson packs in-app, track your progress and get daily revision reminders."
+      }
+    ],
+    "locales": {
+      "appLocales": [
+        "fr",
+        "en"
+      ],
+      "contentLocales": [
+        "fr",
+        "en"
+      ],
+      "defaultAppLocale": "fr",
+      "rtlSupported": false,
+      "userLanguage": "fr"
+    },
+    "name": "LinguaPacks",
+    "slug": "linguapacks"
+  },
+  "capabilities": [
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "methods",
+          "value": [
+            "email_password",
+            "email_link"
+          ]
+        },
+        {
+          "key": "accountDeletionEnabled",
+          "value": true
+        },
+        {
+          "key": "sessionPersistence",
+          "value": "secure_device_keystore"
+        },
+        {
+          "key": "userEntityId",
+          "value": "ent_utilisateur"
+        }
+      ]
+    },
+    {
+      "capability": "payments.iap",
+      "config": [
+        {
+          "key": "commerceClass",
+          "value": "digital"
+        },
+        {
+          "key": "productType",
+          "value": "non_consumable"
+        },
+        {
+          "key": "productIdFieldId",
+          "value": "fld_pack_produit_iap"
+        },
+        {
+          "key": "restoreEnabled",
+          "value": true
+        },
+        {
+          "key": "receiptValidation",
+          "value": "server_side"
+        },
+        {
+          "key": "validationEndpointPath",
+          "value": "/v1/iap/verify"
+        }
+      ]
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "localScheduledReminders",
+          "value": true
+        },
+        {
+          "key": "remotePush",
+          "value": true
+        },
+        {
+          "key": "defaultReminderHour",
+          "value": "19:30"
+        },
+        {
+          "key": "reminderEntityId",
+          "value": "ent_rappel"
+        },
+        {
+          "key": "channels",
+          "value": [
+            "revision_quotidienne",
+            "annonces_packs"
+          ]
+        }
+      ]
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "cachedEntities",
+          "value": [
+            "ent_pack",
+            "ent_lecon",
+            "ent_progression",
+            "ent_rappel"
+          ]
+        },
+        {
+          "key": "writeQueue",
+          "value": true
+        },
+        {
+          "key": "maxCacheMegabytes",
+          "value": 120
+        }
+      ]
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "events",
+          "value": [
+            "ouverture_catalogue",
+            "achat_pack_valide",
+            "lecon_terminee",
+            "rappel_cree"
+          ]
+        },
+        {
+          "key": "anonymizeIdentifiers",
+          "value": true
+        },
+        {
+          "key": "optInRequired",
+          "value": true
+        }
+      ]
+    }
+  ],
+  "compliance": {
+    "accountDeletionRequired": true,
+    "commerceClass": "digital",
+    "dataCollected": [
+      "contact_info",
+      "identifiers",
+      "usage_data",
+      "purchases",
+      "diagnostics"
+    ]
+  },
+  "datasets": [
+    {
+      "contentHash": "3f9a1c7d8b42e05a6c1d9f37b28e4a5017cc93de6f0a1b2c3d4e5f60718293ab",
+      "entityId": "ent_utilisateur",
+      "id": "data_utilisateur_seed",
+      "rowCount": 3
+    },
+    {
+      "contentHash": "a7c04e19bd63f28051ae9c7d3b4f60128e5a9d0c1f2b3a4c5d6e7f8091a2b3c4",
+      "entityId": "ent_pack",
+      "id": "data_pack_seed",
+      "rowCount": 8
+    },
+    {
+      "contentHash": "be21d4038f75a9c61e0b2d3c4a5f6079182b3c4d5e6f708192a3b4c5d6e7f809",
+      "entityId": "ent_lecon",
+      "id": "data_lecon_seed",
+      "rowCount": 42
+    },
+    {
+      "contentHash": "5c8e0b71a2d94f36e70c1a2b3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60",
+      "entityId": "ent_achat",
+      "id": "data_achat_seed",
+      "rowCount": 5
+    },
+    {
+      "contentHash": "d10f3b6a94c28e57013f2a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f",
+      "entityId": "ent_progression",
+      "id": "data_progression_seed",
+      "rowCount": 24
+    },
+    {
+      "contentHash": "7ab6f2c50d38e914a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f70819",
+      "entityId": "ent_rappel",
+      "id": "data_rappel_seed",
+      "rowCount": 4
+    }
+  ],
+  "design": {
+    "theme": "studious_calm"
+  },
+  "entities": [
+    {
+      "fields": [
+        {
+          "id": "fld_utilisateur_nom",
+          "name": "nom_complet",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_utilisateur_email",
+          "name": "email",
+          "required": true,
+          "type": "string",
+          "unique": true
+        },
+        {
+          "enumValues": [
+            "francais",
+            "anglais",
+            "espagnol",
+            "allemand",
+            "italien"
+          ],
+          "id": "fld_utilisateur_langue_cible",
+          "name": "langue_cible",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "enumValues": [
+            "debutant",
+            "intermediaire",
+            "avance"
+          ],
+          "id": "fld_utilisateur_niveau",
+          "name": "niveau",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_utilisateur_objectif_quotidien",
+          "name": "objectif_quotidien_minutes",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "id": "fld_utilisateur_serie_jours",
+          "name": "serie_jours",
+          "required": false,
+          "type": "number"
+        },
+        {
+          "id": "fld_utilisateur_avatar",
+          "name": "avatar",
+          "required": false,
+          "type": "asset"
+        },
+        {
+          "id": "fld_utilisateur_cree_le",
+          "name": "cree_le",
+          "required": true,
+          "type": "datetime"
+        }
+      ],
+      "id": "ent_utilisateur",
+      "name": "utilisateur"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_pack_titre",
+          "name": "titre",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_pack_resume",
+          "name": "resume",
+          "required": true,
+          "type": "text"
+        },
+        {
+          "enumValues": [
+            "francais",
+            "anglais",
+            "espagnol",
+            "allemand",
+            "italien"
+          ],
+          "id": "fld_pack_langue",
+          "name": "langue",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "enumValues": [
+            "debutant",
+            "intermediaire",
+            "avance"
+          ],
+          "id": "fld_pack_niveau",
+          "name": "niveau",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "enumValues": [
+            "conversation",
+            "grammaire",
+            "vocabulaire",
+            "prononciation",
+            "affaires",
+            "voyage"
+          ],
+          "id": "fld_pack_categorie",
+          "name": "categorie",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_pack_nb_lecons",
+          "name": "nombre_lecons",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "id": "fld_pack_prix_affiche",
+          "name": "prix_affiche",
+          "required": true,
+          "type": "decimal"
+        },
+        {
+          "id": "fld_pack_produit_iap",
+          "name": "identifiant_produit_iap",
+          "required": true,
+          "type": "string",
+          "unique": true
+        },
+        {
+          "id": "fld_pack_couverture",
+          "name": "image_couverture",
+          "required": false,
+          "type": "asset"
+        },
+        {
+          "id": "fld_pack_publie",
+          "name": "publie",
+          "required": true,
+          "type": "boolean"
+        }
+      ],
+      "id": "ent_pack",
+      "name": "pack"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_lecon_titre",
+          "name": "titre",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_lecon_pack",
+          "name": "pack",
+          "referenceDisplayFieldId": "fld_pack_titre",
+          "referencesEntityId": "ent_pack",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "id": "fld_lecon_ordre",
+          "name": "ordre",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "id": "fld_lecon_duree",
+          "name": "duree_minutes",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "enumValues": [
+            "dialogue",
+            "quiz",
+            "dictee",
+            "flashcards",
+            "lecture"
+          ],
+          "id": "fld_lecon_type",
+          "name": "type_exercice",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_lecon_contenu",
+          "name": "contenu",
+          "required": true,
+          "type": "text"
+        },
+        {
+          "id": "fld_lecon_exercices",
+          "name": "exercices",
+          "required": false,
+          "type": "json"
+        },
+        {
+          "id": "fld_lecon_illustration",
+          "name": "illustration",
+          "required": false,
+          "type": "asset"
+        }
+      ],
+      "id": "ent_lecon",
+      "name": "lecon"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_achat_reference",
+          "name": "reference",
+          "required": true,
+          "type": "string",
+          "unique": true
+        },
+        {
+          "id": "fld_achat_utilisateur",
+          "name": "utilisateur",
+          "referenceDisplayFieldId": "fld_utilisateur_nom",
+          "referencesEntityId": "ent_utilisateur",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "id": "fld_achat_pack",
+          "name": "pack",
+          "referenceDisplayFieldId": "fld_pack_titre",
+          "referencesEntityId": "ent_pack",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "enumValues": [
+            "en_attente",
+            "valide",
+            "restaure",
+            "rembourse",
+            "echoue"
+          ],
+          "id": "fld_achat_statut",
+          "name": "statut",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_achat_montant",
+          "name": "montant",
+          "required": true,
+          "type": "decimal"
+        },
+        {
+          "id": "fld_achat_date",
+          "name": "date_achat",
+          "required": true,
+          "type": "datetime"
+        }
+      ],
+      "id": "ent_achat",
+      "name": "achat"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_progression_utilisateur",
+          "name": "utilisateur",
+          "referenceDisplayFieldId": "fld_utilisateur_nom",
+          "referencesEntityId": "ent_utilisateur",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "id": "fld_progression_lecon",
+          "name": "lecon",
+          "referenceDisplayFieldId": "fld_lecon_titre",
+          "referencesEntityId": "ent_lecon",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "enumValues": [
+            "non_commencee",
+            "en_cours",
+            "terminee",
+            "a_reviser"
+          ],
+          "id": "fld_progression_statut",
+          "name": "statut",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_progression_pourcentage",
+          "name": "pourcentage",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "id": "fld_progression_score",
+          "name": "score",
+          "required": false,
+          "type": "number"
+        },
+        {
+          "id": "fld_progression_minutes",
+          "name": "minutes_travaillees",
+          "required": false,
+          "type": "number"
+        },
+        {
+          "id": "fld_progression_derniere_activite",
+          "name": "derniere_activite",
+          "required": false,
+          "type": "datetime"
+        },
+        {
+          "id": "fld_progression_note",
+          "name": "note_personnelle",
+          "required": false,
+          "type": "text"
+        }
+      ],
+      "id": "ent_progression",
+      "name": "progression"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_rappel_libelle",
+          "name": "libelle",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_rappel_utilisateur",
+          "name": "utilisateur",
+          "referenceDisplayFieldId": "fld_utilisateur_nom",
+          "referencesEntityId": "ent_utilisateur",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "id": "fld_rappel_heure",
+          "name": "heure_locale",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "enumValues": [
+            "quotidien",
+            "jours_ouvres",
+            "hebdomadaire"
+          ],
+          "id": "fld_rappel_frequence",
+          "name": "frequence",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_rappel_actif",
+          "name": "actif",
+          "required": true,
+          "type": "boolean"
+        },
+        {
+          "id": "fld_rappel_message",
+          "name": "message",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "id": "fld_rappel_prochaine_occurrence",
+          "name": "prochaine_occurrence",
+          "required": false,
+          "type": "datetime"
+        }
+      ],
+      "id": "ent_rappel",
+      "name": "rappel"
+    }
+  ],
+  "expectedTests": [
+    {
+      "description": "Depuis l'écran d'entrée scr_accueil, le bouton « Catalogue de packs » navigue vers scr_catalogue_packs.",
+      "id": "test_nav_accueil_vers_catalogue",
+      "kind": "deterministic",
+      "targetId": "act_ouvrir_catalogue"
+    },
+    {
+      "description": "Depuis scr_catalogue_packs, le bouton « Voir le détail du pack » navigue vers scr_pack_detail.",
+      "id": "test_nav_catalogue_vers_pack_detail",
+      "kind": "deterministic",
+      "targetId": "act_ouvrir_pack_detail"
+    },
+    {
+      "description": "Depuis scr_accueil, le bouton « Mes packs » navigue vers scr_mes_packs.",
+      "id": "test_nav_accueil_vers_mes_packs",
+      "kind": "deterministic",
+      "targetId": "act_ouvrir_mes_packs"
+    },
+    {
+      "description": "Depuis scr_mes_packs, le bouton « Accéder aux leçons » navigue vers scr_lecons.",
+      "id": "test_nav_mes_packs_vers_lecons",
+      "kind": "deterministic",
+      "targetId": "act_ouvrir_lecons"
+    },
+    {
+      "description": "Depuis scr_lecons, le bouton « Ouvrir la leçon » navigue vers scr_lecon_detail.",
+      "id": "test_nav_lecons_vers_lecon_detail",
+      "kind": "deterministic",
+      "targetId": "act_ouvrir_lecon_detail"
+    },
+    {
+      "description": "Depuis scr_accueil, le bouton « Ma progression » navigue vers scr_progression.",
+      "id": "test_nav_accueil_vers_progression",
+      "kind": "deterministic",
+      "targetId": "act_ouvrir_progression"
+    },
+    {
+      "description": "Depuis scr_accueil, le bouton « Rappels de révision » navigue vers scr_rappels.",
+      "id": "test_nav_accueil_vers_rappels",
+      "kind": "deterministic",
+      "targetId": "act_ouvrir_rappels"
+    },
+    {
+      "description": "Depuis scr_accueil, le bouton « Mon compte » navigue vers scr_profil.",
+      "id": "test_nav_accueil_vers_profil",
+      "kind": "deterministic",
+      "targetId": "act_ouvrir_profil"
+    },
+    {
+      "description": "Depuis scr_rappels, le bouton « Retour à l'accueil » navigue vers scr_accueil.",
+      "id": "test_nav_rappels_retour_accueil",
+      "kind": "deterministic",
+      "targetId": "act_ouvrir_accueil"
+    },
+    {
+      "description": "Chaque écran déclaré (scr_catalogue_packs, scr_pack_detail, scr_mes_packs, scr_lecons, scr_lecon_detail, scr_progression, scr_rappels, scr_profil) est atteignable par une chaîne d'actions navigate depuis scr_accueil.",
+      "id": "test_atteignabilite_tous_ecrans",
+      "kind": "deterministic",
+      "targetId": "scr_accueil"
+    },
+    {
+      "description": "La soumission du formulaire de leçon crée une ligne ent_progression puis redirige vers scr_progression ; la ligne créée est visible dans blk_progression_liste.",
+      "id": "test_mutation_progression_creee",
+      "kind": "e2e",
+      "targetId": "act_enregistrer_progression"
+    },
+    {
+      "description": "La soumission du formulaire de rappel crée une ligne ent_rappel puis revient sur scr_rappels ; le rappel apparaît dans blk_rappels_liste.",
+      "id": "test_mutation_rappel_cree",
+      "kind": "e2e",
+      "targetId": "act_creer_rappel"
+    },
+    {
+      "description": "L'enregistrement du profil met à jour ent_utilisateur (langue cible, niveau, objectif quotidien) et réaffiche scr_profil avec les nouvelles valeurs.",
+      "id": "test_mutation_profil_mis_a_jour",
+      "kind": "e2e",
+      "targetId": "act_enregistrer_profil"
+    },
+    {
+      "description": "L'action de suppression de compte exécute une mutation delete sur ent_utilisateur puis renvoie vers scr_accueil (exigence de suppression de compte).",
+      "id": "test_mutation_suppression_compte",
+      "kind": "e2e",
+      "targetId": "act_supprimer_compte"
+    },
+    {
+      "description": "Sur l'entité ent_pack, la règle rule_pack_publie_prix rejette un pack non publié, sans identifiant de produit IAP ou avec un prix affiché nul ou négatif.",
+      "id": "test_regle_pack_publie_prix",
+      "kind": "deterministic",
+      "targetId": "ent_pack"
+    },
+    {
+      "description": "Sur l'entité ent_pack, la règle rule_pack_nb_lecons_min rejette un pack déclarant zéro leçon.",
+      "id": "test_regle_pack_nb_lecons_min",
+      "kind": "deterministic",
+      "targetId": "ent_pack"
+    },
+    {
+      "description": "Sur l'entité ent_lecon, la règle rule_lecon_ordre_duree rejette une leçon sans pack, d'ordre inférieur à 1 ou de durée inférieure à 1 minute.",
+      "id": "test_regle_lecon_ordre_duree",
+      "kind": "deterministic",
+      "targetId": "ent_lecon"
+    },
+    {
+      "description": "Sur l'entité ent_achat, la règle rule_achat_statut_valide rejette un achat sans référence, avec un statut hors liste ou un montant négatif.",
+      "id": "test_regle_achat_statut_valide",
+      "kind": "deterministic",
+      "targetId": "ent_achat"
+    },
+    {
+      "description": "Sur l'entité ent_achat, la règle d'autorisation rule_acces_lecons_pack_achete n'ouvre les leçons d'un pack que si un achat de statut valide ou restauré lie l'utilisateur au pack ; sinon l'accès est refusé.",
+      "id": "test_regle_acces_lecons_pack_achete",
+      "kind": "deterministic",
+      "targetId": "ent_achat"
+    },
+    {
+      "description": "Sur l'entité ent_progression, la règle rule_progression_pourcentage rejette un pourcentage inférieur à 0 ou supérieur à 100.",
+      "id": "test_regle_progression_pourcentage",
+      "kind": "deterministic",
+      "targetId": "ent_progression"
+    },
+    {
+      "description": "Sur l'entité ent_progression, la règle rule_progression_proprietaire n'autorise lecture et modification que pour l'utilisateur référencé par fld_progression_utilisateur.",
+      "id": "test_regle_progression_proprietaire",
+      "kind": "deterministic",
+      "targetId": "ent_progression"
+    },
+    {
+      "description": "Sur l'entité ent_rappel, la règle rule_rappel_heure_format rejette une heure locale hors format HH:MM ou une fréquence inconnue.",
+      "id": "test_regle_rappel_heure_format",
+      "kind": "deterministic",
+      "targetId": "ent_rappel"
+    },
+    {
+      "description": "Sur l'entité ent_rappel, la règle rule_rappel_proprietaire n'autorise visibilité et modification que pour l'utilisateur référencé par fld_rappel_utilisateur.",
+      "id": "test_regle_rappel_proprietaire",
+      "kind": "deterministic",
+      "targetId": "ent_rappel"
+    },
+    {
+      "description": "Sur l'entité ent_utilisateur, la règle rule_utilisateur_email_objectif rejette un email mal formé ou un objectif quotidien inférieur à 5 minutes.",
+      "id": "test_regle_utilisateur_email_objectif",
+      "kind": "deterministic",
+      "targetId": "ent_utilisateur"
+    },
+    {
+      "description": "À l'ouverture de scr_accueil, le slot de révision du jour reçoit les progressions, les leçons et maxElements=5, et alimente le titre et le message vide de blk_accueil_revision_liste.",
+      "id": "test_slot_revision_du_jour_bindings",
+      "kind": "deterministic",
+      "targetId": "act_calculer_revision_du_jour"
+    },
+    {
+      "description": "À l'ouverture de scr_progression, le slot de calcul global alimente le sous-titre de blk_progression_header et le titre de blk_progression_liste.",
+      "id": "test_slot_progression_globale_bindings",
+      "kind": "deterministic",
+      "targetId": "act_calculer_progression_globale"
+    },
+    {
+      "description": "À l'ouverture de scr_rappels, le slot de prochain rappel alimente le sous-titre de blk_rappels_header avec l'heure et la fréquence du prochain rappel actif.",
+      "id": "test_slot_prochain_rappel_bindings",
+      "kind": "deterministic",
+      "targetId": "act_calculer_prochain_rappel"
+    },
+    {
+      "description": "À l'ouverture de scr_mes_packs, le slot de possession alimente le sous-titre de blk_mes_packs_header et le titre de blk_mes_packs_liste à partir des achats et des packs.",
+      "id": "test_slot_packs_possedes_bindings",
+      "kind": "deterministic",
+      "targetId": "act_calculer_packs_possedes"
+    },
+    {
+      "description": "À la création d'une ligne ent_achat, le slot de possession est réinvoqué et met à jour l'affichage du pack sur scr_pack_detail.",
+      "id": "test_slot_possession_apres_achat",
+      "kind": "deterministic",
+      "targetId": "act_rafraichir_possession_apres_achat"
+    },
+    {
+      "description": "Sur scr_accueil, le bloc blk_accueil_revision_vide ne s'affiche que lorsque ent_progression est vide, et propose l'action de découverte du catalogue.",
+      "id": "test_etat_vide_revision_accueil",
+      "kind": "deterministic",
+      "targetId": "scr_accueil"
+    },
+    {
+      "description": "Sur scr_mes_packs, le bloc blk_mes_packs_vide ne s'affiche que lorsque ent_achat est vide et renvoie vers le catalogue.",
+      "id": "test_etat_vide_mes_packs",
+      "kind": "deterministic",
+      "targetId": "scr_mes_packs"
+    },
+    {
+      "description": "Sur scr_rappels, le bloc blk_rappels_vide ne s'affiche que lorsque ent_rappel est vide, sans masquer le formulaire de création blk_rappels_form.",
+      "id": "test_etat_vide_rappels",
+      "kind": "deterministic",
+      "targetId": "scr_rappels"
+    },
+    {
+      "description": "Sur scr_catalogue_packs, le bloc blk_catalogue_liste rend les états chargement, erreur et vide à partir des textes déclarés dans ses props.",
+      "id": "test_etats_chargement_erreur_catalogue",
+      "kind": "deterministic",
+      "targetId": "scr_catalogue_packs"
+    },
+    {
+      "description": "Sur scr_lecon_detail, le bloc blk_lecon_detail_entete rend les états chargement et erreur à partir des textes déclarés dans ses props.",
+      "id": "test_etats_chargement_erreur_lecon_detail",
+      "kind": "deterministic",
+      "targetId": "scr_lecon_detail"
+    },
+    {
+      "description": "Sur scr_lecons, le champ référence fld_lecon_pack s'affiche via fld_pack_titre et jamais sous forme d'identifiant brut dans blk_lecons_liste.",
+      "id": "test_affichage_reference_lecon_pack",
+      "kind": "deterministic",
+      "targetId": "scr_lecons"
+    },
+    {
+      "description": "Sur scr_progression, le champ référence fld_progression_lecon s'affiche via fld_lecon_titre dans blk_progression_liste.",
+      "id": "test_affichage_reference_progression_lecon",
+      "kind": "deterministic",
+      "targetId": "scr_progression"
+    },
+    {
+      "description": "Depuis l'écran d'entrée scr_accueil, tous les titres de routes et libellés d'écran sont disponibles en français (locale par défaut) et en anglais, sans locale manquante ni dupliquée.",
+      "id": "test_localisation_fr_en",
+      "kind": "deterministic",
+      "targetId": "scr_accueil"
+    },
+    {
+      "description": "L'entité ent_pack, comme chaque autre entité déclarée (utilisateurs, leçons, achats, progressions, rappels), possède un dataset initial non vide.",
+      "id": "test_jeux_de_donnees_non_vides",
+      "kind": "deterministic",
+      "targetId": "ent_pack"
+    },
+    {
+      "description": "Sur scr_catalogue_packs, les appels de données passent uniquement par api.linguapacks.app : la politique réseau deny_by_default refuse tout autre domaine.",
+      "id": "test_contrat_reseau_deny_by_default",
+      "kind": "contract",
+      "targetId": "scr_catalogue_packs"
+    },
+    {
+      "description": "Chaque ligne ent_pack publiée expose un identifiant de produit non consommable correspondant à fld_pack_produit_iap, validé côté serveur via /v1/iap/verify.",
+      "id": "test_contrat_iap_catalogue_produits",
+      "kind": "contract",
+      "targetId": "ent_pack"
+    },
+    {
+      "description": "La configuration liée aux achats et aux lignes ent_achat ne contient aucune clé, aucun jeton ni aucun mot de passe.",
+      "id": "test_contrat_iap_pas_de_secret",
+      "kind": "contract",
+      "targetId": "ent_achat"
+    },
+    {
+      "description": "Les lignes ent_rappel alimentent les canaux revision_quotidienne et annonces_packs via fld_rappel_heure et fld_rappel_frequence.",
+      "id": "test_contrat_push_rappels",
+      "kind": "contract",
+      "targetId": "ent_rappel"
+    },
+    {
+      "description": "L'action de suppression de compte s'appuie sur un chemin de suppression conforme à l'exigence accountDeletionRequired.",
+      "id": "test_contrat_auth_suppression_compte",
+      "kind": "contract",
+      "targetId": "act_supprimer_compte"
+    },
+    {
+      "description": "Depuis scr_accueil, aucun événement analytique n'est émis avant consentement et les identifiants sont anonymisés.",
+      "id": "test_contrat_analytics_opt_in",
+      "kind": "contract",
+      "targetId": "scr_accueil"
+    },
+    {
+      "description": "Les lignes ent_lecon (ainsi que packs, progressions et rappels) sont mises en cache hors ligne et la file d'écriture est rejouée à la reconnexion.",
+      "id": "test_contrat_cache_hors_ligne",
+      "kind": "contract",
+      "targetId": "ent_lecon"
+    },
+    {
+      "description": "Besoin non couvert sur scr_catalogue_packs : le client attend des visuels de packs et de leçons (fld_pack_couverture, fld_lecon_illustration, fld_utilisateur_avatar) mais le registre de blocs ne sait afficher aucune image ; ces champs restent stockés sans rendu.",
+      "id": "test_besoin_non_rendable_images_packs",
+      "kind": "deterministic",
+      "targetId": "scr_catalogue_packs"
+    },
+    {
+      "description": "Besoin non couvert sur scr_catalogue_packs : le catalogue devrait être parcourable par catégorie et par niveau (fld_pack_categorie, fld_pack_niveau) mais le registre de blocs ne propose ni onglets ni regroupement par catégorie.",
+      "id": "test_besoin_non_rendable_categories_catalogue",
+      "kind": "deterministic",
+      "targetId": "scr_catalogue_packs"
+    },
+    {
+      "description": "Besoin non couvert : aucune recherche de pack ou de leçon n'est possible sur scr_catalogue_packs, le registre de blocs ne fournit aucun bloc de recherche ou de filtre.",
+      "id": "test_besoin_non_rendable_recherche_packs",
+      "kind": "deterministic",
+      "targetId": "scr_catalogue_packs"
+    },
+    {
+      "description": "Besoin non couvert sur scr_lecon_detail : le contenu interactif des leçons (fld_lecon_exercices, type json) ne peut être joué par aucun bloc du registre ; seul le texte de la leçon est rendu.",
+      "id": "test_besoin_non_rendable_exercices_interactifs",
+      "kind": "deterministic",
+      "targetId": "scr_lecon_detail"
+    }
+  ],
+  "integrations": [
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "methods",
+          "value": [
+            "email_password",
+            "email_link"
+          ]
+        },
+        {
+          "key": "userEntityId",
+          "value": "ent_utilisateur"
+        },
+        {
+          "key": "emailFieldId",
+          "value": "fld_utilisateur_email"
+        },
+        {
+          "key": "accountDeletionEndpointPath",
+          "value": "/v1/account/delete"
+        },
+        {
+          "key": "sessionEndpointPath",
+          "value": "/v1/auth/session"
+        },
+        {
+          "key": "apiBaseDomain",
+          "value": "api.linguapacks.app"
+        }
+      ],
+      "id": "intg_auth_comptes_apprenants",
+      "providerClass": "managed_auth"
+    },
+    {
+      "capability": "payments.iap",
+      "config": [
+        {
+          "key": "commerceClass",
+          "value": "digital"
+        },
+        {
+          "key": "productType",
+          "value": "non_consumable"
+        },
+        {
+          "key": "productIdFieldId",
+          "value": "fld_pack_produit_iap"
+        },
+        {
+          "key": "catalogEntityId",
+          "value": "ent_pack"
+        },
+        {
+          "key": "purchaseEntityId",
+          "value": "ent_achat"
+        },
+        {
+          "key": "restoreEnabled",
+          "value": true
+        },
+        {
+          "key": "receiptValidation",
+          "value": "server_side"
+        },
+        {
+          "key": "validationEndpointPath",
+          "value": "/v1/iap/verify"
+        },
+        {
+          "key": "storefronts",
+          "value": [
+            "app_store",
+            "play_billing"
+          ]
+        }
+      ],
+      "id": "intg_iap_packs_lecons",
+      "providerClass": "platform_iap"
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "reminderEntityId",
+          "value": "ent_rappel"
+        },
+        {
+          "key": "reminderTimeFieldId",
+          "value": "fld_rappel_heure"
+        },
+        {
+          "key": "reminderFrequencyFieldId",
+          "value": "fld_rappel_frequence"
+        },
+        {
+          "key": "localScheduledReminders",
+          "value": true
+        },
+        {
+          "key": "remotePush",
+          "value": true
+        },
+        {
+          "key": "channels",
+          "value": [
+            "revision_quotidienne",
+            "annonces_packs"
+          ]
+        },
+        {
+          "key": "deviceRegistrationEndpointPath",
+          "value": "/v1/push/register"
+        }
+      ],
+      "id": "intg_push_rappels_revision",
+      "providerClass": "push_service"
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "events",
+          "value": [
+            "ouverture_catalogue",
+            "achat_pack_valide",
+            "lecon_terminee",
+            "rappel_cree"
+          ]
+        },
+        {
+          "key": "anonymizeIdentifiers",
+          "value": true
+        },
+        {
+          "key": "optInRequired",
+          "value": true
+        },
+        {
+          "key": "ingestEndpointPath",
+          "value": "/v1/analytics/events"
+        },
+        {
+          "key": "batchIntervalSeconds",
+          "value": 60
+        }
+      ],
+      "id": "intg_analytics_apprentissage",
+      "providerClass": "product_analytics"
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "cachedEntities",
+          "value": [
+            "ent_pack",
+            "ent_lecon",
+            "ent_progression",
+            "ent_rappel"
+          ]
+        },
+        {
+          "key": "writeQueue",
+          "value": true
+        },
+        {
+          "key": "maxCacheMegabytes",
+          "value": 120
+        },
+        {
+          "key": "encryptionAtRest",
+          "value": true
+        },
+        {
+          "key": "syncEndpointPath",
+          "value": "/v1/sync"
+        }
+      ],
+      "id": "intg_cache_hors_ligne",
+      "providerClass": "local_persistence"
+    },
+    {
+      "config": [
+        {
+          "key": "baseDomain",
+          "value": "api.linguapacks.app"
+        },
+        {
+          "key": "networkPolicy",
+          "value": "deny_by_default"
+        },
+        {
+          "key": "packsPath",
+          "value": "/v1/packs"
+        },
+        {
+          "key": "leconsPath",
+          "value": "/v1/lecons"
+        },
+        {
+          "key": "progressionPath",
+          "value": "/v1/progression"
+        },
+        {
+          "key": "rappelsPath",
+          "value": "/v1/rappels"
+        }
+      ],
+      "id": "intg_api_backend_linguapacks",
+      "providerClass": "rest_backend"
+    }
+  ],
+  "intent": {
+    "needs": [
+      {
+        "id": "need_catalogue_packs_vente",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "ent_pack",
+            "ent_achat",
+            "fld_pack_titre",
+            "fld_pack_prix_affiche",
+            "fld_pack_produit_iap",
+            "fld_achat_statut",
+            "scr_catalogue_packs",
+            "scr_pack_detail",
+            "scr_mes_packs",
+            "blk_catalogue_liste",
+            "blk_pack_detail_entete",
+            "blk_mes_packs_liste",
+            "data_pack_seed",
+            "data_achat_seed",
+            "rule_pack_publie_prix",
+            "rule_achat_statut_valide",
+            "slot_packs_possedes",
+            "act_calculer_packs_possedes",
+            "intg_iap_packs_lecons",
+            "test_contrat_iap_catalogue_produits"
+          ]
+        },
+        "statement": "Proposer à la vente des packs de leçons : catalogue consultable, fiche détaillée du pack avec prix, et liste des packs déjà acquis par l'apprenant."
+      },
+      {
+        "id": "need_achat_integre_dans_app",
+        "resolution": {
+          "kind": "unexpressible",
+          "reason": "le moteur n'exécute pas encore les effets capability (capabilitiesEmitCode: false) : les actions act_acheter_pack et act_restaurer_achats déclarent la capability payments.iap (classe commerce digital) et l'intégration intg_iap_packs_lecons, mais aucun code d'achat n'est émis"
+        },
+        "statement": "Permettre l'achat d'un pack directement dans l'application (achat intégré) et la restauration des achats déjà effectués."
+      },
+      {
+        "id": "need_lecons_structure_contenu",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "ent_lecon",
+            "fld_lecon_titre",
+            "fld_lecon_ordre",
+            "fld_lecon_duree",
+            "fld_lecon_type",
+            "fld_lecon_contenu",
+            "fld_lecon_pack",
+            "rel_pack_lecons",
+            "scr_lecons",
+            "scr_lecon_detail",
+            "blk_pack_detail_lecons",
+            "blk_lecons_liste",
+            "blk_lecon_detail_entete",
+            "data_lecon_seed",
+            "rule_lecon_ordre_duree",
+            "rule_acces_lecons_pack_achete",
+            "test_regle_acces_lecons_pack_achete"
+          ]
+        },
+        "statement": "Organiser les leçons d'un pack : sommaire ordonné, durée, type d'exercice et contenu de chaque leçon, accessibles uniquement aux packs achetés."
+      },
+      {
+        "id": "need_lecons_interactives_jouables",
+        "resolution": {
+          "kind": "unexpressible",
+          "reason": "le registre de blocs fermé (header, list, detail_header, form, button, empty_state) ne sait pas jouer un contenu interactif : le champ fld_lecon_exercices (json) est stocké mais aucun bloc ne peut le rendre ; le manque est porté par le test test_besoin_non_rendable_exercices_interactifs"
+        },
+        "statement": "Rendre les leçons réellement interactives (exercices jouables : quiz, dictée, flashcards, dialogue)."
+      },
+      {
+        "id": "need_suivi_progression",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "ent_progression",
+            "fld_progression_statut",
+            "fld_progression_pourcentage",
+            "fld_progression_score",
+            "fld_progression_minutes",
+            "fld_progression_derniere_activite",
+            "scr_progression",
+            "blk_progression_liste",
+            "blk_lecon_detail_form_progression",
+            "act_enregistrer_progression",
+            "slot_calcul_progression_globale",
+            "act_calculer_progression_globale",
+            "data_progression_seed",
+            "rule_progression_pourcentage",
+            "rule_progression_proprietaire",
+            "test_mutation_progression_creee",
+            "test_slot_progression_globale_bindings"
+          ]
+        },
+        "statement": "Suivre la progression de l'apprenant : avancement par leçon, score, temps travaillé et vue d'ensemble de la progression."
+      },
+      {
+        "id": "need_rappels_quotidiens_configuration",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "ent_rappel",
+            "fld_rappel_libelle",
+            "fld_rappel_heure",
+            "fld_rappel_frequence",
+            "fld_rappel_actif",
+            "scr_rappels",
+            "blk_rappels_liste",
+            "blk_rappels_form",
+            "act_creer_rappel",
+            "data_rappel_seed",
+            "rule_rappel_heure_format",
+            "rule_rappel_proprietaire",
+            "slot_prochain_rappel",
+            "act_calculer_prochain_rappel",
+            "slot_selection_revision_du_jour",
+            "act_calculer_revision_du_jour",
+            "blk_accueil_revision_liste",
+            "test_mutation_rappel_cree",
+            "test_slot_prochain_rappel_bindings"
+          ]
+        },
+        "statement": "Configurer des rappels quotidiens de révision (libellé, heure, fréquence, activation) et voir ce qu'il y a à réviser aujourd'hui."
+      },
+      {
+        "id": "need_notifications_rappels_envoyees",
+        "resolution": {
+          "kind": "unexpressible",
+          "reason": "le moteur n'exécute pas encore les effets capability (capabilitiesEmitCode: false) : la capability push_notifications, la permission android.permission.POST_NOTIFICATIONS, l'action act_activer_notifications et l'intégration intg_push_rappels_revision sont déclarées, mais aucune notification n'est réellement planifiée"
+        },
+        "statement": "Envoyer effectivement la notification de rappel quotidien à l'heure programmée sur l'appareil."
+      },
+      {
+        "id": "need_comptes_apprenants",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "ent_utilisateur",
+            "fld_utilisateur_email",
+            "fld_utilisateur_langue_cible",
+            "fld_utilisateur_niveau",
+            "fld_utilisateur_objectif_quotidien",
+            "scr_profil",
+            "blk_profil_entete",
+            "blk_profil_form",
+            "act_enregistrer_profil",
+            "act_supprimer_compte",
+            "data_utilisateur_seed",
+            "rule_utilisateur_email_objectif",
+            "intg_auth_comptes_apprenants",
+            "test_mutation_suppression_compte"
+          ]
+        },
+        "statement": "Rattacher achats, progression et rappels à un apprenant identifié, avec préférences d'apprentissage et suppression de compte."
+      },
+      {
+        "id": "need_interface_bilingue_fr_en",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "prj_tuteur_packs_lecons",
+            "nav_accueil",
+            "nav_catalogue_packs",
+            "nav_pack_detail",
+            "nav_mes_packs",
+            "nav_lecons",
+            "nav_lecon_detail",
+            "nav_progression",
+            "nav_rappels",
+            "nav_profil",
+            "test_localisation_fr_en"
+          ]
+        },
+        "statement": "Proposer l'interface en français et en anglais."
+      }
+    ],
+    "request": "Je suis tuteur de langues. Je veux vendre dans l'app des packs de leçons interactives (achat dans l'app), avec suivi de progression et rappels quotidiens de révision. Interface en français et en anglais.",
+    "requestLocale": "fr"
+  },
+  "native": {
+    "minAndroidSdk": 24,
+    "minIosVersion": "15.0"
+  },
+  "navigation": {
+    "entryScreenId": "scr_accueil",
+    "routes": [
+      {
+        "id": "nav_accueil",
+        "screenId": "scr_accueil",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Accueil"
+          },
+          {
+            "locale": "en",
+            "text": "Home"
+          }
+        ]
+      },
+      {
+        "id": "nav_catalogue_packs",
+        "screenId": "scr_catalogue_packs",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Catalogue de packs"
+          },
+          {
+            "locale": "en",
+            "text": "Pack catalogue"
+          }
+        ]
+      },
+      {
+        "id": "nav_pack_detail",
+        "screenId": "scr_pack_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Détail du pack"
+          },
+          {
+            "locale": "en",
+            "text": "Pack details"
+          }
+        ]
+      },
+      {
+        "id": "nav_mes_packs",
+        "screenId": "scr_mes_packs",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Mes packs"
+          },
+          {
+            "locale": "en",
+            "text": "My packs"
+          }
+        ]
+      },
+      {
+        "id": "nav_lecons",
+        "screenId": "scr_lecons",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Leçons du pack"
+          },
+          {
+            "locale": "en",
+            "text": "Pack lessons"
+          }
+        ]
+      },
+      {
+        "id": "nav_lecon_detail",
+        "screenId": "scr_lecon_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Leçon"
+          },
+          {
+            "locale": "en",
+            "text": "Lesson"
+          }
+        ]
+      },
+      {
+        "id": "nav_progression",
+        "screenId": "scr_progression",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Ma progression"
+          },
+          {
+            "locale": "en",
+            "text": "My progress"
+          }
+        ]
+      },
+      {
+        "id": "nav_rappels",
+        "screenId": "scr_rappels",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Rappels de révision"
+          },
+          {
+            "locale": "en",
+            "text": "Revision reminders"
+          }
+        ]
+      },
+      {
+        "id": "nav_profil",
+        "screenId": "scr_profil",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Mon compte"
+          },
+          {
+            "locale": "en",
+            "text": "My account"
+          }
+        ]
+      }
+    ]
+  },
+  "network": {
+    "allowedDomains": [
+      "api.linguapacks.app"
+    ],
+    "policy": "deny_by_default"
+  },
+  "permissions": [
+    {
+      "permission": "android.permission.POST_NOTIFICATIONS",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "Pour vous envoyer vos rappels quotidiens de révision et vous prévenir quand un pack acheté est prêt."
+        },
+        {
+          "locale": "en",
+          "text": "To send your daily revision reminders and let you know when a purchased pack is ready."
+        }
+      ],
+      "requiredByCapability": "push_notifications"
+    }
+  ],
+  "projectId": "prj_tuteur_packs_lecons",
+  "relations": [
+    {
+      "fromEntityId": "ent_pack",
+      "id": "rel_pack_lecons",
+      "kind": "one_to_many",
+      "toEntityId": "ent_lecon"
+    },
+    {
+      "fromEntityId": "ent_utilisateur",
+      "id": "rel_utilisateur_achats",
+      "kind": "one_to_many",
+      "toEntityId": "ent_achat"
+    },
+    {
+      "fromEntityId": "ent_pack",
+      "id": "rel_pack_achats",
+      "kind": "one_to_many",
+      "toEntityId": "ent_achat"
+    },
+    {
+      "fromEntityId": "ent_utilisateur",
+      "id": "rel_utilisateur_progressions",
+      "kind": "one_to_many",
+      "toEntityId": "ent_progression"
+    },
+    {
+      "fromEntityId": "ent_lecon",
+      "id": "rel_lecon_progressions",
+      "kind": "one_to_many",
+      "toEntityId": "ent_progression"
+    },
+    {
+      "fromEntityId": "ent_utilisateur",
+      "id": "rel_utilisateur_rappels",
+      "kind": "one_to_many",
+      "toEntityId": "ent_rappel"
+    }
+  ],
+  "rules": [
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_pack_publie",
+          "operator": "eq",
+          "value": true
+        },
+        {
+          "fieldId": "fld_pack_produit_iap",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_pack_prix_affiche",
+          "operator": "gt",
+          "value": 0
+        }
+      ],
+      "description": "Un pack visible au catalogue doit être publié, porter un identifiant de produit IAP et un prix affiché positif.",
+      "entityId": "ent_pack",
+      "id": "rule_pack_publie_prix",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_pack_nb_lecons",
+          "operator": "gte",
+          "value": 1
+        }
+      ],
+      "description": "Un pack doit contenir au moins une leçon.",
+      "entityId": "ent_pack",
+      "id": "rule_pack_nb_lecons_min",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_lecon_ordre",
+          "operator": "gte",
+          "value": 1
+        },
+        {
+          "fieldId": "fld_lecon_duree",
+          "operator": "gte",
+          "value": 1
+        },
+        {
+          "fieldId": "fld_lecon_pack",
+          "operator": "required"
+        }
+      ],
+      "description": "Chaque leçon doit avoir un ordre positif dans son pack et une durée d'au moins une minute.",
+      "entityId": "ent_lecon",
+      "id": "rule_lecon_ordre_duree",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_achat_reference",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_achat_statut",
+          "operator": "in",
+          "value": [
+            "en_attente",
+            "valide",
+            "restaure",
+            "rembourse",
+            "echoue"
+          ]
+        },
+        {
+          "fieldId": "fld_achat_montant",
+          "operator": "gte",
+          "value": 0
+        }
+      ],
+      "description": "Un achat doit porter une référence, un statut connu et un montant non négatif.",
+      "entityId": "ent_achat",
+      "id": "rule_achat_statut_valide",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_achat_statut",
+          "operator": "in",
+          "value": [
+            "valide",
+            "restaure"
+          ]
+        },
+        {
+          "fieldId": "fld_achat_utilisateur",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_achat_pack",
+          "operator": "required"
+        }
+      ],
+      "description": "Autorisation : les leçons d'un pack ne sont consultables que si l'utilisateur possède un achat validé ou restauré de ce pack.",
+      "entityId": "ent_achat",
+      "id": "rule_acces_lecons_pack_achete",
+      "kind": "authorization"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_progression_pourcentage",
+          "operator": "gte",
+          "value": 0
+        },
+        {
+          "fieldId": "fld_progression_pourcentage",
+          "operator": "lte",
+          "value": 100
+        }
+      ],
+      "description": "Le pourcentage de progression d'une leçon reste entre 0 et 100.",
+      "entityId": "ent_progression",
+      "id": "rule_progression_pourcentage",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_progression_utilisateur",
+          "operator": "required"
+        }
+      ],
+      "description": "Autorisation : une progression n'est lisible et modifiable que par l'utilisateur auquel elle appartient.",
+      "entityId": "ent_progression",
+      "id": "rule_progression_proprietaire",
+      "kind": "authorization"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_rappel_heure",
+          "operator": "matches",
+          "value": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+        },
+        {
+          "fieldId": "fld_rappel_frequence",
+          "operator": "in",
+          "value": [
+            "quotidien",
+            "jours_ouvres",
+            "hebdomadaire"
+          ]
+        },
+        {
+          "fieldId": "fld_rappel_libelle",
+          "operator": "required"
+        }
+      ],
+      "description": "Un rappel actif doit porter une heure locale au format HH:MM et une fréquence connue.",
+      "entityId": "ent_rappel",
+      "id": "rule_rappel_heure_format",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_rappel_utilisateur",
+          "operator": "required"
+        }
+      ],
+      "description": "Autorisation : un rappel n'est visible et modifiable que par son utilisateur.",
+      "entityId": "ent_rappel",
+      "id": "rule_rappel_proprietaire",
+      "kind": "authorization"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_utilisateur_email",
+          "operator": "matches",
+          "value": "^[^@\\s]+@[^@\\s]+\\.[a-zA-Z]{2,}$"
+        },
+        {
+          "fieldId": "fld_utilisateur_objectif_quotidien",
+          "operator": "gte",
+          "value": 5
+        }
+      ],
+      "description": "Un utilisateur doit fournir un email valide et un objectif quotidien d'au moins 5 minutes.",
+      "entityId": "ent_utilisateur",
+      "id": "rule_utilisateur_email_objectif",
+      "kind": "validation"
+    }
+  ],
+  "screens": [
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_accueil_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "LinguaPacks"
+            },
+            {
+              "key": "subtitle",
+              "value": "Votre révision du jour en un coup d'œil"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_progression",
+          "id": "blk_accueil_revision_liste",
+          "props": [
+            {
+              "key": "title",
+              "value": "À réviser aujourd'hui"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_progression_lecon"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_progression_statut"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_progression_pourcentage"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_progression_statut"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune révision en attente"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Commencez une leçon pour alimenter votre révision quotidienne."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de votre révision…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Révision indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Impossible de charger votre progression. Réessayez dans un instant."
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_accueil_revision_vide",
+          "props": [
+            {
+              "key": "title",
+              "value": "Rien à réviser pour le moment"
+            },
+            {
+              "key": "message",
+              "value": "Achetez un pack de leçons pour démarrer votre apprentissage."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Découvrir les packs"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_catalogue"
+            }
+          ],
+          "visibleWhen": {
+            "entityId": "ent_progression",
+            "kind": "entity_empty"
+          }
+        },
+        {
+          "blockType": "button",
+          "id": "blk_accueil_btn_catalogue",
+          "props": [
+            {
+              "key": "label",
+              "value": "Catalogue de packs"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_catalogue"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_accueil_btn_mes_packs",
+          "props": [
+            {
+              "key": "label",
+              "value": "Mes packs"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_mes_packs"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_accueil_btn_progression",
+          "props": [
+            {
+              "key": "label",
+              "value": "Ma progression"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_progression"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_accueil_btn_rappels",
+          "props": [
+            {
+              "key": "label",
+              "value": "Rappels de révision"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_rappels"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_accueil_btn_profil",
+          "props": [
+            {
+              "key": "label",
+              "value": "Mon compte"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_profil"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ],
+      "id": "scr_accueil",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Accueil"
+        },
+        {
+          "locale": "en",
+          "text": "Home"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_catalogue_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Packs de leçons"
+            },
+            {
+              "key": "subtitle",
+              "value": "Packs interactifs achetables dans l'application"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_pack",
+          "id": "blk_catalogue_liste",
+          "props": [
+            {
+              "key": "title",
+              "value": "Tous les packs publiés"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_pack_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_pack_resume"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_pack_prix_affiche"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_pack_niveau"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun pack disponible"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "De nouveaux packs seront publiés prochainement."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du catalogue…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Catalogue indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Le catalogue n'a pas pu être chargé. Vérifiez votre connexion."
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_catalogue_vide",
+          "props": [
+            {
+              "key": "title",
+              "value": "Catalogue vide"
+            },
+            {
+              "key": "message",
+              "value": "Aucun pack n'est publié pour l'instant."
+            }
+          ],
+          "visibleWhen": {
+            "entityId": "ent_pack",
+            "kind": "entity_empty"
+          }
+        },
+        {
+          "blockType": "button",
+          "id": "blk_catalogue_btn_detail",
+          "props": [
+            {
+              "key": "label",
+              "value": "Voir le détail du pack"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_pack_detail"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_catalogue_btn_mes_packs",
+          "props": [
+            {
+              "key": "label",
+              "value": "Mes packs achetés"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_mes_packs"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ],
+      "id": "scr_catalogue_packs",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Catalogue de packs"
+        },
+        {
+          "locale": "en",
+          "text": "Pack catalogue"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "detail_header",
+          "entityId": "ent_pack",
+          "id": "blk_pack_detail_entete",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_pack_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_pack_resume"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_pack_prix_affiche"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_pack_niveau",
+                "fld_pack_categorie"
+              ]
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du pack…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Pack indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Les informations de ce pack n'ont pas pu être chargées."
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_lecon",
+          "id": "blk_pack_detail_lecons",
+          "props": [
+            {
+              "key": "title",
+              "value": "Leçons incluses"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_lecon_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_lecon_type"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_lecon_duree"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_lecon_ordre"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune leçon listée"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Le sommaire de ce pack sera bientôt disponible."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du sommaire…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Sommaire indisponible"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_pack_detail_btn_acheter",
+          "props": [
+            {
+              "key": "label",
+              "value": "Acheter ce pack"
+            },
+            {
+              "key": "actionId",
+              "value": "act_acheter_pack"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_pack_detail_btn_restaurer",
+          "props": [
+            {
+              "key": "label",
+              "value": "Restaurer mes achats"
+            },
+            {
+              "key": "actionId",
+              "value": "act_restaurer_achats"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_pack_detail_btn_lecons",
+          "props": [
+            {
+              "key": "label",
+              "value": "Ouvrir les leçons du pack"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_lecons"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ],
+      "id": "scr_pack_detail",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Détail du pack"
+        },
+        {
+          "locale": "en",
+          "text": "Pack details"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_mes_packs_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes packs"
+            },
+            {
+              "key": "subtitle",
+              "value": "Vos achats et vos accès aux leçons"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_achat",
+          "id": "blk_mes_packs_liste",
+          "props": [
+            {
+              "key": "title",
+              "value": "Achats"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_achat_pack"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_achat_date"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_achat_montant"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_achat_statut"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun achat"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Vous n'avez encore acheté aucun pack."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de vos achats…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Achats indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Vos achats n'ont pas pu être chargés. Réessayez plus tard."
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_mes_packs_vide",
+          "props": [
+            {
+              "key": "title",
+              "value": "Aucun pack acheté"
+            },
+            {
+              "key": "message",
+              "value": "Parcourez le catalogue pour acheter votre premier pack de leçons."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Voir le catalogue"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_catalogue"
+            }
+          ],
+          "visibleWhen": {
+            "entityId": "ent_achat",
+            "kind": "entity_empty"
+          }
+        },
+        {
+          "blockType": "button",
+          "id": "blk_mes_packs_btn_lecons",
+          "props": [
+            {
+              "key": "label",
+              "value": "Accéder aux leçons"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_lecons"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_mes_packs_btn_restaurer",
+          "props": [
+            {
+              "key": "label",
+              "value": "Restaurer mes achats"
+            },
+            {
+              "key": "actionId",
+              "value": "act_restaurer_achats"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ],
+      "id": "scr_mes_packs",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Mes packs"
+        },
+        {
+          "locale": "en",
+          "text": "My packs"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_lecons_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Leçons du pack"
+            },
+            {
+              "key": "subtitle",
+              "value": "Suivez les leçons dans l'ordre conseillé"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_lecon",
+          "id": "blk_lecons_liste",
+          "props": [
+            {
+              "key": "title",
+              "value": "Programme"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_lecon_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_lecon_pack"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_lecon_duree"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_lecon_type"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune leçon accessible"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Achetez ce pack pour débloquer ses leçons."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement des leçons…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Leçons indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Les leçons n'ont pas pu être chargées."
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_lecons_vide",
+          "props": [
+            {
+              "key": "title",
+              "value": "Pas encore de leçon"
+            },
+            {
+              "key": "message",
+              "value": "Ce pack n'a pas de leçon accessible pour votre compte."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Voir le catalogue"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_catalogue"
+            }
+          ],
+          "visibleWhen": {
+            "entityId": "ent_lecon",
+            "kind": "entity_empty"
+          }
+        },
+        {
+          "blockType": "button",
+          "id": "blk_lecons_btn_ouvrir",
+          "props": [
+            {
+              "key": "label",
+              "value": "Ouvrir la leçon"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_lecon_detail"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ],
+      "id": "scr_lecons",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Leçons du pack"
+        },
+        {
+          "locale": "en",
+          "text": "Pack lessons"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "detail_header",
+          "entityId": "ent_lecon",
+          "id": "blk_lecon_detail_entete",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_lecon_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_lecon_contenu"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_lecon_duree"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_lecon_type",
+                "fld_lecon_ordre"
+              ]
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de la leçon…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Leçon indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Le contenu de cette leçon n'a pas pu être chargé."
+            }
+          ]
+        },
+        {
+          "blockType": "form",
+          "entityId": "ent_progression",
+          "id": "blk_lecon_detail_form_progression",
+          "props": [
+            {
+              "key": "title",
+              "value": "Enregistrer ma progression"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_progression_lecon",
+                "fld_progression_statut",
+                "fld_progression_pourcentage",
+                "fld_progression_score",
+                "fld_progression_minutes",
+                "fld_progression_note"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Enregistrer ma progression"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Enregistrement en cours…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Enregistrement impossible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Votre progression n'a pas pu être enregistrée. Réessayez."
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_lecon_detail_btn_progression",
+          "props": [
+            {
+              "key": "label",
+              "value": "Voir ma progression"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_progression"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ],
+      "id": "scr_lecon_detail",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Leçon"
+        },
+        {
+          "locale": "en",
+          "text": "Lesson"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_progression_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Ma progression"
+            },
+            {
+              "key": "subtitle",
+              "value": "Avancement global de votre apprentissage"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_progression",
+          "id": "blk_progression_liste",
+          "props": [
+            {
+              "key": "title",
+              "value": "Leçons suivies"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_progression_lecon"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_progression_derniere_activite"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_progression_pourcentage"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_progression_statut"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune progression"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Terminez une première leçon pour voir votre avancement."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Calcul de votre progression…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Progression indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Votre progression n'a pas pu être chargée."
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_progression_vide",
+          "props": [
+            {
+              "key": "title",
+              "value": "Votre parcours commence ici"
+            },
+            {
+              "key": "message",
+              "value": "Ouvrez une leçon pour enregistrer votre première progression."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Voir mes packs"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_mes_packs"
+            }
+          ],
+          "visibleWhen": {
+            "entityId": "ent_progression",
+            "kind": "entity_empty"
+          }
+        },
+        {
+          "blockType": "button",
+          "id": "blk_progression_btn_rappels",
+          "props": [
+            {
+              "key": "label",
+              "value": "Configurer mes rappels"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_rappels"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ],
+      "id": "scr_progression",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Ma progression"
+        },
+        {
+          "locale": "en",
+          "text": "My progress"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_rappels_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Rappels de révision"
+            },
+            {
+              "key": "subtitle",
+              "value": "Programmez vos rappels quotidiens"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_rappel",
+          "id": "blk_rappels_liste",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes rappels"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_rappel_libelle"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_rappel_heure"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_rappel_frequence"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_rappel_actif"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun rappel"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Créez un rappel quotidien pour ne plus manquer une révision."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de vos rappels…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Rappels indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Vos rappels n'ont pas pu être chargés."
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_rappels_vide",
+          "props": [
+            {
+              "key": "title",
+              "value": "Aucun rappel programmé"
+            },
+            {
+              "key": "message",
+              "value": "Ajoutez un rappel quotidien ci-dessous."
+            }
+          ],
+          "visibleWhen": {
+            "entityId": "ent_rappel",
+            "kind": "entity_empty"
+          }
+        },
+        {
+          "blockType": "form",
+          "entityId": "ent_rappel",
+          "id": "blk_rappels_form",
+          "props": [
+            {
+              "key": "title",
+              "value": "Nouveau rappel"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_rappel_libelle",
+                "fld_rappel_heure",
+                "fld_rappel_frequence",
+                "fld_rappel_actif",
+                "fld_rappel_message"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Créer le rappel"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Création du rappel…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Création impossible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Le rappel n'a pas pu être créé. Vérifiez l'heure saisie (HH:MM)."
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_rappels_btn_notifications",
+          "props": [
+            {
+              "key": "label",
+              "value": "Activer les notifications"
+            },
+            {
+              "key": "actionId",
+              "value": "act_activer_notifications"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_rappels_btn_accueil",
+          "props": [
+            {
+              "key": "label",
+              "value": "Retour à l'accueil"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_accueil"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ],
+      "id": "scr_rappels",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Rappels de révision"
+        },
+        {
+          "locale": "en",
+          "text": "Revision reminders"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "detail_header",
+          "entityId": "ent_utilisateur",
+          "id": "blk_profil_entete",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_utilisateur_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_utilisateur_email"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_utilisateur_serie_jours"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_utilisateur_niveau",
+                "fld_utilisateur_langue_cible"
+              ]
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de votre compte…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Compte indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Les informations de votre compte n'ont pas pu être chargées."
+            }
+          ]
+        },
+        {
+          "blockType": "form",
+          "entityId": "ent_utilisateur",
+          "id": "blk_profil_form",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes préférences d'apprentissage"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_utilisateur_nom",
+                "fld_utilisateur_email",
+                "fld_utilisateur_langue_cible",
+                "fld_utilisateur_niveau",
+                "fld_utilisateur_objectif_quotidien"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Enregistrer mon profil"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Enregistrement du profil…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Enregistrement impossible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Votre profil n'a pas pu être enregistré. Vérifiez votre email."
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_profil_btn_rappels",
+          "props": [
+            {
+              "key": "label",
+              "value": "Mes rappels de révision"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_rappels"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_profil_btn_restaurer",
+          "props": [
+            {
+              "key": "label",
+              "value": "Restaurer mes achats"
+            },
+            {
+              "key": "actionId",
+              "value": "act_restaurer_achats"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_profil_btn_supprimer_compte",
+          "props": [
+            {
+              "key": "label",
+              "value": "Supprimer mon compte"
+            },
+            {
+              "key": "actionId",
+              "value": "act_supprimer_compte"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ],
+      "id": "scr_profil",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Mon compte"
+        },
+        {
+          "locale": "en",
+          "text": "My account"
+        }
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "allowedImports": [],
+      "description": "Calcule, à partir des progressions de l'utilisateur et des leçons, un pourcentage global d'avancement, le nombre de leçons terminées et la série de jours consécutifs, sous forme de textes prêts à afficher.",
+      "id": "slot_calcul_progression_globale",
+      "inputs": [
+        {
+          "name": "progressions",
+          "type": "json"
+        },
+        {
+          "name": "lecons",
+          "type": "json"
+        },
+        {
+          "name": "libelleVide",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "resumeGlobal",
+          "type": "string"
+        },
+        {
+          "name": "detailAvancement",
+          "type": "string"
+        },
+        {
+          "name": "pourcentageGlobal",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "allowedImports": [],
+      "description": "Sélectionne les leçons à réviser aujourd'hui (statut a_reviser ou en_cours, la plus ancienne activité d'abord) et produit un libellé de révision du jour ainsi que le nombre de leçons concernées.",
+      "id": "slot_selection_revision_du_jour",
+      "inputs": [
+        {
+          "name": "progressions",
+          "type": "json"
+        },
+        {
+          "name": "lecons",
+          "type": "json"
+        },
+        {
+          "name": "maxElements",
+          "type": "number"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "titreRevision",
+          "type": "string"
+        },
+        {
+          "name": "messageRevision",
+          "type": "string"
+        },
+        {
+          "name": "nombreARevisier",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "allowedImports": [],
+      "description": "Détermine, à partir des rappels de l'utilisateur, le prochain rappel actif à venir et le formate en texte lisible (heure et fréquence) dans la locale par défaut.",
+      "id": "slot_prochain_rappel",
+      "inputs": [
+        {
+          "name": "rappels",
+          "type": "json"
+        },
+        {
+          "name": "locale",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prochainRappelTexte",
+          "type": "string"
+        },
+        {
+          "name": "nombreRappelsActifs",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "allowedImports": [],
+      "description": "Croise les achats et les packs pour produire le libellé d'état de possession d'un pack (possédé, achat en attente, à acheter) et le nombre de packs possédés.",
+      "id": "slot_packs_possedes",
+      "inputs": [
+        {
+          "name": "achats",
+          "type": "json"
+        },
+        {
+          "name": "packs",
+          "type": "json"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "etatPossession",
+          "type": "string"
+        },
+        {
+          "name": "nombrePacksPossedes",
+          "type": "number"
+        }
+      ]
+    }
+  ]
+}

@@ -20,11 +20,12 @@ import { describe, expect, it } from "vitest";
 const RACINE = join(tmpdir(), "deribfy-gate-compile") + "/";
 const ID = /^(ent_|scr_|act_|fld_|blk_|slot_|data_|rule_|need_|nav_)/;
 
-describe("GATE RACINE — les 14 applications émises se MONTENT vraiment", () => {
+describe("GATE RACINE — les applications émises se MONTENT vraiment", () => {
   it("chaque écran de chaque application rend, sans exception ni fuite", async () => {
     expect(existsSync(RACINE), "lancer d'abord `npm run gate:app-compile`").toBe(true);
     const apps = readdirSync(RACINE).sort();
-    expect(apps.length, "les 14 applications du corpus").toBe(14);
+    // 26 depuis la campagne v3 (D-081) : le corpus gelé ET le corpus généré.
+    expect(apps.length, "les applications des deux corpus").toBe(26);
 
     let ecrans = 0;
     let identites = 0;
@@ -105,6 +106,6 @@ describe("GATE RACINE — les 14 applications émises se MONTENT vraiment", () =
     );
     for (const p of problemes.slice(0, 10)) console.log("   🔴 " + p);
     expect(problemes).toEqual([]);
-    expect(ecrans, "au moins 50 écrans sur le corpus").toBeGreaterThan(50);
+    expect(ecrans, "au moins 150 écrans sur les deux corpus").toBeGreaterThan(150);
   });
 });

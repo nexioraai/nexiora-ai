@@ -58,7 +58,17 @@ const MODEL = "claude-opus-5";
 // JSON qu'avant — intention avec un besoin par écran, liaison de chaque slot,
 // titres d'état sur chaque bloc lié — et 8000 jetons ne suffisaient plus.
 const MAX_TOKENS = 16000;
-const client = new Anthropic({ apiKey: apiKey() });
+// DÉLAI ET REPRISES (D-080) — la campagne a perdu deux domaines sur
+// « Request timed out » : le SDK abandonne à 10 minutes par défaut, et les
+// sections lourdes (actions avec liaisons, écrans avec titres d'état) les
+// dépassent. Un abandon coûte le domaine ENTIER et ce qui a déjà été facturé
+// (1,47 $ perdu sur `boutique-mode`). 20 minutes et deux reprises : le SDK
+// rejoue lui-même, sans relancer toute la campagne.
+const client = new Anthropic({
+  apiKey: apiKey(),
+  timeout: 20 * 60 * 1000,
+  maxRetries: 2,
+});
 
 // Tarifs publics claude-opus-5, $/MTok (mêmes valeurs que le banc coûts).
 const PRIX = { in: 5, cacheWrite: 6.25, cacheRead: 0.5, out: 25 };

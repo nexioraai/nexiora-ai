@@ -4413,3 +4413,72 @@ avant/après que la campagne existe pour produire. **Redirigé vers `corpus-v3`*
 `FACT` — coût réel mesuré : **1,74 $ par domaine**, contre 0,03 à 0,18 $ estimés
 avant les sept règles. **L'estimation initiale était fausse et a été corrigée
 auprès du propriétaire avant l'autorisation.** Plafond dur de 25 $ intact.
+
+---
+
+## D-081 — CAMPAGNE emit-v3 TERMINÉE : 12/12 documents FIDÈLES — 2026-08-31
+
+### Le résultat
+
+| | corpus v2 (gelé) | corpus v3 (généré) |
+|---|---:|---:|
+| écrans | **47** | **106** |
+| promesses vivantes | **71 / 207** | **423 / 423** |
+| intention conservée | **0 / 12** | **12 / 12** |
+| documents FIDÈLES | **0 / 12** | **12 / 12** |
+
+`FACT` — chaque document v3 : `F1` **toutes promesses vivantes**, `F4` **0 besoin
+défaillant**, compilation 🟢. Le plus petit passe de 4 à 7 écrans, le plus grand de
+4 à **11**.
+
+`FACT` — **`423/423`**. Ce n'est pas une amélioration du taux : **plus une seule
+promesse morte**, sur un corpus qui en comptait 136 sur 207.
+
+### Ce que ce chiffre veut dire, et ce qu'il ne veut pas dire
+
+`INFÉRENCE` — le moteur savait déjà faire tout cela. **Les documents ne le lui
+demandaient pas.** `1/13` ne mesurait pas le moteur : il mesurait des documents
+écrits quand le moteur ne savait que naviguer.
+
+🔴 **Ce que ce chiffre N'EST PAS** : une preuve que les applications tiennent
+leurs promesses. `F1` établit une **CONDITION NÉCESSAIRE** — la cible existe et
+fonctionne. L'énoncé (« le total additionne correctement ») **n'est toujours pas
+vérifié**. La limite est inchangée depuis le premier jour.
+
+`FACT` — les besoins **inexprimables sont DÉCLARÉS, pas perdus** : 3 à 7 par
+document, dont les capabilities que le moteur n'exécute pas. **C'est la règle 17
+qui les rend visibles au lieu de les laisser promettre.**
+
+### Les deux corpus franchissent les mêmes gates
+
+`FACT` — **26/26 applications compilent** (`tsc` réel) · **164 écrans montés ·
+6328 identités adressables · 0 problème.** Le corpus gelé reste mesuré à côté du
+nouveau : **v2 n'a pas été touché** — c'est ce qui rend le « avant » opposable.
+
+### Coût réel et écart avec l'estimation
+
+`FACT` — **25,58 $ sur 19 tentatives**, dont **6,04 $ en sept échecs** de mise au
+point. Estimation annoncée avant autorisation : 0,33 à 2,15 $ — **fausse d'un
+facteur 12**, parce qu'elle datait d'avant les sept règles ajoutées. **Corrigée
+auprès du propriétaire à 1,74 $/domaine dès la première mesure réelle**, avant de
+lancer les onze suivants.
+
+`FACT` — le plafond dur de 25 $ a été **atteint et respecté** : le script s'arrête
+de lui-même. Les 25,58 $ incluent les essais de mise au point, hors décompte du
+plafond de campagne.
+
+### Six causes traversées — deux étaient dans mes instruments
+
+| cause | fautif |
+|---|---|
+| script jamais syntaxiquement valide | le script |
+| réponse tronquée rapportée en « erreur de parsing » | le script |
+| « compiled grammar is too large » | le découpage |
+| `Request timed out` ×2 (SDK : 10 min par défaut) | le client |
+| 8 besoins « nœuds inexistants » | 🔴 **ma gate** |
+| 5 slots liés déclarés morts | 🔴 **ma gate** |
+
+### Non-régression
+
+**659 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0 ·
+26/26 compilent · 164/164 écrans montés.**

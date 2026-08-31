@@ -62,8 +62,14 @@ console.log("  deps    : empruntées à slices/resto-riche/app ✔");
 rmSync(OUT, { recursive: true, force: true });
 
 const docs = [
+  // v3 (généré par emit-v3) EN PLUS de v2 : le corpus gelé reste mesuré, et le
+  // nouveau doit franchir exactement les mêmes gates.
   ...readdirSync(R + "packages/golden-corpus/corpus-v2").filter((f) => f.endsWith(".air.json"))
     .map((f) => [f.replace(".air.json", ""), R + "packages/golden-corpus/corpus-v2/" + f]),
+  ...(existsSync(R + "packages/golden-corpus/corpus-v3")
+    ? readdirSync(R + "packages/golden-corpus/corpus-v3").filter((f) => f.endsWith(".air.json"))
+        .map((f) => ["v3-" + f.replace(".air.json", ""), R + "packages/golden-corpus/corpus-v3/" + f])
+    : []),
   ["slice-conteneurs", R + "slices/conteneurs/air/suivi-conteneurs.air.json"],
   ["resto-riche", R + "slices/resto-riche/chez-nous.air.json"],
 ].filter(([, p]) => existsSync(p));
