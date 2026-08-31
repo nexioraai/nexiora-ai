@@ -1,0 +1,30 @@
+    Error: build:view command failed.
+node:internal/errors:985
+  const err = new Error(message);
+              ^
+
+Error: Command failed: eas build:view 9bf08d4e-e612-4464-939f-35ec43997e07 --json --non-interactive
+    Error: build:view command failed.
+
+    at genericNodeError (node:internal/errors:985:15)
+    at wrappedFn (node:internal/errors:539:14)
+    at checkExecSyncError (node:child_process:925:11)
+    at execFileSync (node:child_process:961:15)
+    at eas (file:///Users/yia/Documents/woorri/benchmarks/eas/serie-builds.mjs:24:23)
+    at file:///Users/yia/Documents/woorri/benchmarks/eas/serie-builds.mjs:53:28
+    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+    at async node:internal/modules/esm/loader:633:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  status: 1,
+  signal: null,
+  output: [
+    null,
+    'Nonexistent flag: --non-interactive\nSee more help with --help\n',
+    '    Error: build:view command failed.\n'
+  ],
+  pid: 7816,
+  stdout: 'Nonexistent flag: --non-interactive\nSee more help with --help\n',
+  stderr: '    Error: build:view command failed.\n'
+}
+
+Node.js v24.16.0

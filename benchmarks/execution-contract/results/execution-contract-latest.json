@@ -1,0 +1,251 @@
+{
+  "mesure": "contrat d'exécution — écart déclaré / exécuté",
+  "etape": 1,
+  "enveloppe": "1.0.0",
+  "documents": 13,
+  "totaux": {
+    "effetsDeclares": 196,
+    "effetsExecutes": 27,
+    "ecransDeclares": 51,
+    "ecransAtteignablesDeclare": 27,
+    "ecransAtteignablesEffectif": 27,
+    "controlesVisibles": 111,
+    "controlesFantomes": 73,
+    "blocsLiesAUneEntite": 67,
+    "blocsAvecSourceDeDonnees": 49,
+    "etatsDeclares": 140,
+    "etatsAtteignables": 90,
+    "capabilitiesDeclarees": 78,
+    "capabilitiesCablees": 0,
+    "slotsDeclares": 48,
+    "slotsInvoques": 0,
+    "reglesDeclarees": 74,
+    "reglesAppliquees": 0,
+    "referencesRenduesBrutes": 7
+  },
+  "ecarts": {
+    "total": 649,
+    "parProprietaire": {
+      "moteur": 535,
+      "document": 42,
+      "contrat": 72
+    },
+    "parCode": {
+      "EXEC_EFFECT_INERT": {
+        "total": 169,
+        "owner": "moteur"
+      },
+      "EXEC_TRIGGER_INERT": {
+        "total": 104,
+        "owner": "moteur"
+      },
+      "EXEC_BLOCK_STATE_UNREACHABLE": {
+        "total": 25,
+        "owner": "moteur"
+      },
+      "EXEC_CAPABILITY_NOT_WIRED": {
+        "total": 78,
+        "owner": "moteur"
+      },
+      "EXEC_THEME_NAME_INERT": {
+        "total": 12,
+        "owner": "moteur"
+      },
+      "EXEC_RULE_NOT_ENFORCED": {
+        "total": 74,
+        "owner": "moteur"
+      },
+      "EXEC_GHOST_CONTROL": {
+        "total": 73,
+        "owner": "moteur"
+      },
+      "EXEC_SCREEN_UNREACHABLE_DECLARED": {
+        "total": 24,
+        "owner": "document"
+      },
+      "EXEC_DETAIL_WITHOUT_ITEM_SOURCE": {
+        "total": 15,
+        "owner": "contrat"
+      },
+      "EXEC_REFERENCE_RENDERED_RAW": {
+        "total": 7,
+        "owner": "contrat"
+      },
+      "EXEC_SLOT_NOT_INVOKED": {
+        "total": 48,
+        "owner": "contrat"
+      },
+      "EXEC_DATA_SOURCE_EMPTY": {
+        "total": 18,
+        "owner": "document"
+      },
+      "EXEC_CROSS_SCREEN_FORM_STATE": {
+        "total": 2,
+        "owner": "contrat"
+      }
+    }
+  },
+  "lecture": {
+    "moteur": "Le moteur ne sait pas exécuter ce que le document déclare LÉGITIMEMENT. Tous les AIR portent l'écart ; aucun document ne peut l'éviter. Relève des étapes d'exécution.",
+    "contrat": "Le schéma AIR ne permet pas d'exprimer ce qu'il faudrait. Aucun AIR ne peut éviter l'écart, même parfaitement rédigé. Relève de l'AIR 2.0.",
+    "document": "Le document est mal spécifié ; un autre AIR du même domaine n'aurait pas l'écart. Relève de la génération d'AIR, jamais du moteur."
+  },
+  "specificationAir2": [
+    {
+      "besoin": "point d'ancrage d'un Code Slot (liaison entrées/sorties à un site d'exécution)",
+      "code": "EXEC_SLOT_NOT_INVOKED",
+      "occurrences": 48,
+      "documentsTouches": 13
+    },
+    {
+      "besoin": "liaison explicite liste → écran de détail (transport de l'identifiant d'élément)",
+      "code": "EXEC_DETAIL_WITHOUT_ITEM_SOURCE",
+      "occurrences": 15,
+      "documentsTouches": 11
+    },
+    {
+      "besoin": "traversée de relation : afficher un champ de l'entité CIBLE d'une référence",
+      "code": "EXEC_REFERENCE_RENDERED_RAW",
+      "occurrences": 7,
+      "documentsTouches": 6
+    },
+    {
+      "besoin": "état de parcours partagé entre écrans (formulaire multi-étapes)",
+      "code": "EXEC_CROSS_SCREEN_FORM_STATE",
+      "occurrences": 2,
+      "documentsTouches": 2
+    }
+  ],
+  "parDocument": [
+    {
+      "document": "agence-immo",
+      "origine": "corpus gelé",
+      "verdict": "degraded",
+      "sceau": "8a6595818989ab33",
+      "ecarts": 66,
+      "effets": "2/21",
+      "ecransAtteignables": "1/4",
+      "controlesFantomes": "9/11"
+    },
+    {
+      "document": "billetterie-concerts",
+      "origine": "corpus gelé",
+      "verdict": "degraded",
+      "sceau": "e03d2eee34a7d24d",
+      "ecarts": 46,
+      "effets": "3/14",
+      "ecransAtteignables": "2/4",
+      "controlesFantomes": "5/8"
+    },
+    {
+      "document": "boutique-mode",
+      "origine": "corpus gelé",
+      "verdict": "degraded",
+      "sceau": "f535c80ab2137b3c",
+      "ecarts": 53,
+      "effets": "1/13",
+      "ecransAtteignables": "1/4",
+      "controlesFantomes": "7/9"
+    },
+    {
+      "document": "coach-fitness",
+      "origine": "corpus gelé",
+      "verdict": "degraded",
+      "sceau": "25d94f2371a9bde9",
+      "ecarts": 43,
+      "effets": "2/12",
+      "ecransAtteignables": "2/4",
+      "controlesFantomes": "5/8"
+    },
+    {
+      "document": "cours-cuisine",
+      "origine": "corpus gelé",
+      "verdict": "degraded",
+      "sceau": "89709b8eb6ec2068",
+      "ecarts": 49,
+      "effets": "2/15",
+      "ecransAtteignables": "1/4",
+      "controlesFantomes": "4/7"
+    },
+    {
+      "document": "livraison-fruits",
+      "origine": "corpus gelé",
+      "verdict": "degraded",
+      "sceau": "2f08e4408a9164cb",
+      "ecarts": 53,
+      "effets": "1/14",
+      "ecransAtteignables": "1/4",
+      "controlesFantomes": "7/8"
+    },
+    {
+      "document": "plombier-urgence",
+      "origine": "corpus gelé",
+      "verdict": "degraded",
+      "sceau": "1934eea2efc37f0b",
+      "ecarts": 51,
+      "effets": "3/17",
+      "ecransAtteignables": "3/3",
+      "controlesFantomes": "6/10"
+    },
+    {
+      "document": "resto-quartier",
+      "origine": "corpus gelé",
+      "verdict": "degraded",
+      "sceau": "b5690c052f9e4fc1",
+      "ecarts": 51,
+      "effets": "3/17",
+      "ecransAtteignables": "3/4",
+      "controlesFantomes": "5/10"
+    },
+    {
+      "document": "salon-coiffure",
+      "origine": "corpus gelé",
+      "verdict": "degraded",
+      "sceau": "37c9761ffd880188",
+      "ecarts": 44,
+      "effets": "2/13",
+      "ecransAtteignables": "1/4",
+      "controlesFantomes": "4/7"
+    },
+    {
+      "document": "suivi-chantier",
+      "origine": "corpus gelé",
+      "verdict": "degraded",
+      "sceau": "f500028a750f1e4c",
+      "ecarts": 49,
+      "effets": "3/16",
+      "ecransAtteignables": "4/4",
+      "controlesFantomes": "5/8"
+    },
+    {
+      "document": "toiletteur-chiens",
+      "origine": "corpus gelé",
+      "verdict": "degraded",
+      "sceau": "cdc7649d3487fe76",
+      "ecarts": 43,
+      "effets": "3/14",
+      "ecransAtteignables": "4/4",
+      "controlesFantomes": "4/9"
+    },
+    {
+      "document": "tuteur-langues",
+      "origine": "corpus gelé",
+      "verdict": "degraded",
+      "sceau": "31bbc681848d319f",
+      "ecarts": 49,
+      "effets": "1/14",
+      "ecransAtteignables": "2/4",
+      "controlesFantomes": "6/8"
+    },
+    {
+      "document": "suivi-conteneurs",
+      "origine": "slice 2 hors-template",
+      "verdict": "degraded",
+      "sceau": "66bb2f4f8409db2e",
+      "ecarts": 52,
+      "effets": "1/16",
+      "ecransAtteignables": "2/4",
+      "controlesFantomes": "6/8"
+    }
+  ]
+}

@@ -1,0 +1,316 @@
+{
+  "mesure": "cohérence de composition des applications générées",
+  "phase": 10,
+  "documents": 13,
+  "ecransTotaux": 51,
+  "totaux": {
+    "etatsVidesDupliques": 17,
+    "actionsExposeesDeuxFois": 4,
+    "ecransSansCheminDeNavigation": 18
+  },
+  "lecture": {
+    "etatsVidesDupliques": "Un bloc `empty_state` SANS condition coexiste avec un bloc `list` qui porte déjà son propre état vide. Depuis l'AIR 1.1.0 (D-044), un `visibleWhen` supprime le défaut : seuls les blocs non conditionnés sont comptés.",
+    "actionsExposeesDeuxFois": "La MÊME action est proposée par deux blocs du même écran (typiquement un bouton et le CTA d'un état vide). Ce n'est une duplication VISIBLE que parce que l'état vide n'est pas conditionné.",
+    "ecransSansCheminDeNavigation": "Aucune action à effet `navigate` ne cible ces écrans, et ils ne sont pas l'écran d'entrée : rien dans l'app ne permet de les atteindre."
+  },
+  "causeCommune": "Le schéma AIR 1.0.0 GELÉ ne porte aucun moyen de conditionner le rendu d'un bloc (`blockInstanceSchema` = id, blockType, entityId?, props), et aucun validateur ne contrôle l'accessibilité du graphe de navigation. Ces trois mesures sont donc des conséquences d'une limite de CONTRAT, pas des erreurs d'un document particulier.",
+  "parDocument": [
+    {
+      "document": "agence-immo",
+      "origine": "corpus gelé",
+      "ecrans": 4,
+      "etatsVidesDupliques": [
+        {
+          "ecran": "scr_annonces",
+          "listeAvecEtatVideInterne": true,
+          "blocsEmptyState": [
+            "blk_annonces_empty"
+          ]
+        },
+        {
+          "ecran": "scr_favoris",
+          "listeAvecEtatVideInterne": true,
+          "blocsEmptyState": [
+            "blk_favoris_empty"
+          ]
+        }
+      ],
+      "actionsDupliquees": [],
+      "ecransSansChemin": [
+        "scr_bien_detail",
+        "scr_favoris"
+      ]
+    },
+    {
+      "document": "billetterie-concerts",
+      "origine": "corpus gelé",
+      "ecrans": 4,
+      "etatsVidesDupliques": [
+        {
+          "ecran": "scr_evenements",
+          "listeAvecEtatVideInterne": true,
+          "blocsEmptyState": [
+            "blk_evenements_vide"
+          ]
+        }
+      ],
+      "actionsDupliquees": [],
+      "ecransSansChemin": [
+        "scr_evenement_detail"
+      ]
+    },
+    {
+      "document": "boutique-mode",
+      "origine": "corpus gelé",
+      "ecrans": 4,
+      "etatsVidesDupliques": [
+        {
+          "ecran": "scr_panier",
+          "listeAvecEtatVideInterne": true,
+          "blocsEmptyState": [
+            "blk_panier_vide"
+          ]
+        },
+        {
+          "ecran": "scr_commandes",
+          "listeAvecEtatVideInterne": true,
+          "blocsEmptyState": [
+            "blk_commandes_vide"
+          ]
+        }
+      ],
+      "actionsDupliquees": [],
+      "ecransSansChemin": [
+        "scr_article",
+        "scr_panier",
+        "scr_commandes"
+      ]
+    },
+    {
+      "document": "coach-fitness",
+      "origine": "corpus gelé",
+      "ecrans": 4,
+      "etatsVidesDupliques": [],
+      "actionsDupliquees": [
+        {
+          "ecran": "scr_abonnement",
+          "actionId": "act_souscrire_abonnement",
+          "blocs": [
+            "blk_abonnement_souscrire(button)",
+            "blk_abonnement_vide(empty_state)"
+          ]
+        }
+      ],
+      "ecransSansChemin": [
+        "scr_programme_detail"
+      ]
+    },
+    {
+      "document": "cours-cuisine",
+      "origine": "corpus gelé",
+      "ecrans": 4,
+      "etatsVidesDupliques": [
+        {
+          "ecran": "scr_recettes",
+          "listeAvecEtatVideInterne": true,
+          "blocsEmptyState": [
+            "blk_recettes_vers_catalogue"
+          ]
+        }
+      ],
+      "actionsDupliquees": [],
+      "ecransSansChemin": [
+        "scr_cours_detail",
+        "scr_recettes"
+      ]
+    },
+    {
+      "document": "livraison-fruits",
+      "origine": "corpus gelé",
+      "ecrans": 4,
+      "etatsVidesDupliques": [
+        {
+          "ecran": "scr_paniers_semaine",
+          "listeAvecEtatVideInterne": true,
+          "blocsEmptyState": [
+            "blk_accueil_vide"
+          ]
+        },
+        {
+          "ecran": "scr_mes_commandes",
+          "listeAvecEtatVideInterne": true,
+          "blocsEmptyState": [
+            "blk_commandes_vide"
+          ]
+        }
+      ],
+      "actionsDupliquees": [],
+      "ecransSansChemin": [
+        "scr_panier_detail",
+        "scr_mes_commandes"
+      ]
+    },
+    {
+      "document": "plombier-urgence",
+      "origine": "corpus gelé",
+      "ecrans": 3,
+      "etatsVidesDupliques": [
+        {
+          "ecran": "scr_demandes",
+          "listeAvecEtatVideInterne": true,
+          "blocsEmptyState": [
+            "blk_demandes_vide"
+          ]
+        }
+      ],
+      "actionsDupliquees": [
+        {
+          "ecran": "scr_demandes",
+          "actionId": "act_ouvrir_nouvelle_demande",
+          "blocs": [
+            "blk_demandes_vide(empty_state)",
+            "blk_demandes_cta_nouvelle(button)"
+          ]
+        }
+      ],
+      "ecransSansChemin": []
+    },
+    {
+      "document": "resto-quartier",
+      "origine": "corpus gelé",
+      "ecrans": 4,
+      "etatsVidesDupliques": [
+        {
+          "ecran": "scr_panier",
+          "listeAvecEtatVideInterne": true,
+          "blocsEmptyState": [
+            "blk_panier_vide"
+          ]
+        },
+        {
+          "ecran": "scr_commandes",
+          "listeAvecEtatVideInterne": true,
+          "blocsEmptyState": [
+            "blk_commandes_vide"
+          ]
+        }
+      ],
+      "actionsDupliquees": [],
+      "ecransSansChemin": [
+        "scr_plat_detail"
+      ]
+    },
+    {
+      "document": "salon-coiffure",
+      "origine": "corpus gelé",
+      "ecrans": 4,
+      "etatsVidesDupliques": [
+        {
+          "ecran": "scr_services",
+          "listeAvecEtatVideInterne": true,
+          "blocsEmptyState": [
+            "blk_services_empty"
+          ]
+        },
+        {
+          "ecran": "scr_booking",
+          "listeAvecEtatVideInterne": true,
+          "blocsEmptyState": [
+            "blk_booking_slots_empty"
+          ]
+        },
+        {
+          "ecran": "scr_appointments",
+          "listeAvecEtatVideInterne": true,
+          "blocsEmptyState": [
+            "blk_appointments_empty"
+          ]
+        }
+      ],
+      "actionsDupliquees": [],
+      "ecransSansChemin": [
+        "scr_service_detail",
+        "scr_appointments"
+      ]
+    },
+    {
+      "document": "suivi-chantier",
+      "origine": "corpus gelé",
+      "ecrans": 4,
+      "etatsVidesDupliques": [],
+      "actionsDupliquees": [],
+      "ecransSansChemin": []
+    },
+    {
+      "document": "toiletteur-chiens",
+      "origine": "corpus gelé",
+      "ecrans": 4,
+      "etatsVidesDupliques": [
+        {
+          "ecran": "scr_animaux",
+          "listeAvecEtatVideInterne": true,
+          "blocsEmptyState": [
+            "blk_animaux_vide"
+          ]
+        },
+        {
+          "ecran": "scr_historique",
+          "listeAvecEtatVideInterne": true,
+          "blocsEmptyState": [
+            "blk_histo_vide"
+          ]
+        }
+      ],
+      "actionsDupliquees": [
+        {
+          "ecran": "scr_animaux",
+          "actionId": "act_creer_animal",
+          "blocs": [
+            "blk_animaux_ajouter(button)",
+            "blk_animaux_vide(empty_state)"
+          ]
+        }
+      ],
+      "ecransSansChemin": []
+    },
+    {
+      "document": "tuteur-langues",
+      "origine": "corpus gelé",
+      "ecrans": 4,
+      "etatsVidesDupliques": [
+        {
+          "ecran": "scr_progress",
+          "listeAvecEtatVideInterne": true,
+          "blocsEmptyState": [
+            "blk_progress_empty"
+          ]
+        }
+      ],
+      "actionsDupliquees": [],
+      "ecransSansChemin": [
+        "scr_lesson_detail",
+        "scr_progress"
+      ]
+    },
+    {
+      "document": "suivi-conteneurs",
+      "origine": "slice 2",
+      "ecrans": 4,
+      "etatsVidesDupliques": [],
+      "actionsDupliquees": [
+        {
+          "ecran": "scr_conteneurs",
+          "actionId": "act_ouvrir_suivi_ajout",
+          "blocs": [
+            "blk_conteneurs_vide(empty_state)",
+            "blk_conteneurs_ajouter(button)"
+          ]
+        }
+      ],
+      "ecransSansChemin": [
+        "scr_conteneur_detail",
+        "scr_notifications"
+      ]
+    }
+  ]
+}

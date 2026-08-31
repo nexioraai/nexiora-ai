@@ -1,0 +1,145 @@
+{
+  "phase": 10,
+  "mesure": "dimension H — variété anti-template (§22)",
+  "domaines": 12,
+  "verdict": "non_conforme",
+  "detail": "12 domaines · structure : 12 silhouettes distinctes, 0 collision(s) · visuel : 1 identité(s) pour 12 thème(s) déclaré(s) — variété déclarée INERTE dans l'artefact émis",
+  "axeStructurel": {
+    "silhouettesDistinctes": 12,
+    "collisions": []
+  },
+  "axeVisuel": {
+    "themesDeclares": 12,
+    "identitesVisuellesDistinctes": 1,
+    "verdict": "variété DÉCLARÉE mais INERTE"
+  },
+  "grilleApxx": [
+    {
+      "dimension": "A",
+      "etat": "conforme",
+      "detail": "tapTarget=48 (min 48), 3 surface(s) contrainte(s)"
+    },
+    {
+      "dimension": "B",
+      "etat": "conforme",
+      "detail": "36 paires / 0 échec"
+    },
+    {
+      "dimension": "C",
+      "etat": "conforme",
+      "detail": "états rendus par le bloc liste : loading/empty/error"
+    },
+    {
+      "dimension": "D",
+      "etat": "conforme",
+      "detail": "0 valeur en dur (couleurs, espacements, rayons, typographie)"
+    },
+    {
+      "dimension": "E",
+      "etat": "conforme",
+      "detail": "échelle strictement croissante (12 < 14 < 17 < 22), 0 verrou d'agrandissement"
+    },
+    {
+      "dimension": "F",
+      "etat": "conforme",
+      "detail": "0 propriété physique"
+    },
+    {
+      "dimension": "G",
+      "etat": "conforme",
+      "detail": "2 écran(s) à liste, 0 encapsulé dans un ScrollView, parent borné=true"
+    },
+    {
+      "dimension": "H",
+      "etat": "non_conforme",
+      "detail": "12 domaines · structure : 12 silhouettes distinctes, 0 collision(s) · visuel : 1 identité(s) pour 12 thème(s) déclaré(s) — variété déclarée INERTE dans l'artefact émis"
+    }
+  ],
+  "parDomaine": [
+    {
+      "domaine": "agence-immo",
+      "theme": "immo_clair",
+      "ecrans": 4,
+      "silhouette": "72eddd69e8f60c2f",
+      "identiteVisuelle": "d8b1b7f3169a1b6d"
+    },
+    {
+      "domaine": "billetterie-concerts",
+      "theme": "concert_nuit",
+      "ecrans": 4,
+      "silhouette": "84d886063cd0caa3",
+      "identiteVisuelle": "d8b1b7f3169a1b6d"
+    },
+    {
+      "domaine": "boutique-mode",
+      "theme": "boutique_clair",
+      "ecrans": 4,
+      "silhouette": "3cccdfd4b508504e",
+      "identiteVisuelle": "d8b1b7f3169a1b6d"
+    },
+    {
+      "domaine": "coach-fitness",
+      "theme": "fitness_energy",
+      "ecrans": 4,
+      "silhouette": "94ca1c923d3c068c",
+      "identiteVisuelle": "d8b1b7f3169a1b6d"
+    },
+    {
+      "domaine": "cours-cuisine",
+      "theme": "culinary_warm",
+      "ecrans": 4,
+      "silhouette": "fed2aca22ee3c965",
+      "identiteVisuelle": "d8b1b7f3169a1b6d"
+    },
+    {
+      "domaine": "livraison-fruits",
+      "theme": "fresh_market",
+      "ecrans": 4,
+      "silhouette": "a6e0e949a0c0f228",
+      "identiteVisuelle": "d8b1b7f3169a1b6d"
+    },
+    {
+      "domaine": "plombier-urgence",
+      "theme": "artisan_blue",
+      "ecrans": 3,
+      "silhouette": "abbb8a47f0533e5f",
+      "identiteVisuelle": "d8b1b7f3169a1b6d"
+    },
+    {
+      "domaine": "resto-quartier",
+      "theme": "warm_bistro",
+      "ecrans": 4,
+      "silhouette": "b81507bafd0d8fe6",
+      "identiteVisuelle": "d8b1b7f3169a1b6d"
+    },
+    {
+      "domaine": "salon-coiffure",
+      "theme": "salon_soft",
+      "ecrans": 4,
+      "silhouette": "a310a6869bb1c208",
+      "identiteVisuelle": "d8b1b7f3169a1b6d"
+    },
+    {
+      "domaine": "suivi-chantier",
+      "theme": "chantier_industriel",
+      "ecrans": 4,
+      "silhouette": "590fb0e89190c9e1",
+      "identiteVisuelle": "d8b1b7f3169a1b6d"
+    },
+    {
+      "domaine": "toiletteur-chiens",
+      "theme": "soft_pastel",
+      "ecrans": 4,
+      "silhouette": "835bf4121f76f0bc",
+      "identiteVisuelle": "d8b1b7f3169a1b6d"
+    },
+    {
+      "domaine": "tuteur-langues",
+      "theme": "lingua_calm",
+      "ecrans": 4,
+      "silhouette": "671b3186a3d71b0f",
+      "identiteVisuelle": "d8b1b7f3169a1b6d"
+    }
+  ],
+  "reserve": "Les 12 domaines proviennent tous du corpus gelé, émis par le MÊME modèle sur des intentions de type service/commerce. La mesure établit la variété INTERNE à cette famille ; elle ne prouve pas la généralisation à un domaine hors-template (critère de sortie de la Phase 10, bloqué sur P-006)."
+}
