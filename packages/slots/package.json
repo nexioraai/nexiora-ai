@@ -1,0 +1,23 @@
+{
+  "name": "@deribfy/slots",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Code Slots v1 (Phase 9) — contrats de slots et POLITIQUE AST complete (ARCHITECTURE §4/§27) : imports en allowlist, aucun acces reseau/fs/secret direct, aucune edition d'une copie de bloc. Analyse par AST reel (API du compilateur TypeScript), jamais par expression reguliere.",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@deribfy/air-schema": "*",
+    "typescript": "^5"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "eslint": "^9.39.0",
+    "typescript-eslint": "^8.60.0",
+    "vitest": "^4.1.10"
+  }
+}

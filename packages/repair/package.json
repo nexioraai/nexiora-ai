@@ -1,0 +1,28 @@
+{
+  "name": "@deribfy/repair",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Repair Loop v1 (Phase 9, ARCHITECTURE §10) — boucle de reparation BORNEE et BUDGETEE, coeur PUR et agnostique du moteur LLM : FAIL -> DIAGNOSE -> CLASSIFY -> PLAN -> IMPACT -> SIMULATE -> POLICY GATE -> APPLY -> VERIFY -> COMMIT / ROLLBACK. Juge != auteur, garanti structurellement.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@deribfy/air-schema": "*",
+    "@deribfy/slots": "*"
+  },
+  "devDependencies": {
+    "@deribfy/compiler": "*",
+    "@deribfy/oracle": "*",
+    "@types/node": "^20",
+    "eslint": "^9.39.0",
+    "typescript": "^5",
+    "typescript-eslint": "^8.60.0",
+    "vitest": "^4.1.10"
+  }
+}

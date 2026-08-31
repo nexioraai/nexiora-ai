@@ -1,0 +1,25 @@
+{
+  "name": "@deribfy/execution-contract",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Contrat d'execution (Etapes 0-1) — ENVELOPPE declarative de ce que le moteur sait reellement executer, et RECONCILIATION deterministe AIR ∩ enveloppe. Referme l'unique chemin fail-open du moteur : un effet non executable n'est plus ignore en silence, il est NOMME. Fonction PURE, aucune dependance au compilateur.",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@deribfy/air-schema": "*",
+    "@deribfy/blocks": "*",
+    "@deribfy/capability-registry": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "eslint": "^9.39.0",
+    "typescript": "^5",
+    "typescript-eslint": "^8.60.0",
+    "vitest": "^4.1.10"
+  }
+}
