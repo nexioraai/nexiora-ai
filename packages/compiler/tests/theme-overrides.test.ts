@@ -11,8 +11,8 @@ import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import type { ProjectAir } from "@deribfy/air-schema";
-import { contrast, theme as BASE } from "@deribfy/design-tokens";
+import { migrateAirDocument, type ProjectAir } from "@deribfy/air-schema";
+import { contrast } from "@deribfy/design-tokens";
 import { compileProject } from "../src/compile-project.ts";
 import { EmitError } from "../src/emit-project.ts";
 import { applyThemeOverrides, emitThemeModule, isOverridableKey } from "../src/emit-theme.ts";
@@ -27,18 +27,41 @@ const resto = load("resto-quartier.air.json");
 const withOverrides = (entries: { key: string; value: string | number }[]): ProjectAir =>
   ({ ...resto, design: { ...resto.design, overrides: entries } });
 
-describe("additivité — aucune surcharge, aucun changement", () => {
-  it("12/12 documents du corpus : thème émis = copie embarquée, à l'octet", () => {
-    for (const file of docs) {
-      const compiled = compileProject(load(file));
-      expect(compiled.files.get("lib/tokens/theme.generated.ts"), file).toBe(
-        EMBEDDED_ASSETS["lib/tokens/theme.generated.ts"],
-      );
+describe("identité par thème (D-067) — l'additivité stricte a été LEVÉE", () => {
+    // ÉDITION CONSCIENTE (2026-08-31, D-067) — PROPRIÉTÉ DÉLIBÉRÉMENT LEVÉE.
+  //
+  // Ce test tenait l'« additivité stricte » : sans surcharge explicite, le thème
+  // émis était byte-identique à la copie embarquée. La propriété avait un coût
+  // caché, mesuré au banc anti-template : **12 documents déclarant 12 thèmes
+  // distincts produisaient UNE SEULE identité visuelle.** `design.theme` était
+  // transporté et sans effet.
+  //
+  // La levée est CIBLÉE : seule la teinte de l'accent bouge, saturation et
+  // luminosité conservées, encre re-dérivée contre la surface la plus exigeante.
+  // Dimension B (contraste WCAG) : **0 échec sur 12**. Et le déterminisme tient —
+  // c'est ce que ce test vérifie désormais.
+  it("12/12 documents : thème DISTINCT, et STABLE d'une compilation à l'autre", () => {
+    const modules = new Set<string>();
+    for (const f of docs) {
+      const air = migrateAirDocument(load(f));
+      const a = emitThemeModule(air);
+      const b = emitThemeModule(air);
+      expect(a, "même document → même thème").toBe(b);
+      modules.add(a);
     }
+    expect(modules.size, "12 thèmes déclarés → 12 modules distincts").toBe(12);
   });
 
-  it("le générateur de module reproduit EXACTEMENT le format du codegen", () => {
-    expect(emitThemeModule(resto)).toBe(EMBEDDED_ASSETS["lib/tokens/theme.generated.ts"]);
+    // ÉDITION CONSCIENTE (D-067) : le FORMAT reste celui du codegen — c'est la
+  // propriété qui compte, et elle est vérifiée sur la STRUCTURE, pas sur les
+  // valeurs. Les couleurs, elles, dépendent désormais du thème déclaré.
+  it("le générateur de module reproduit EXACTEMENT le FORMAT du codegen", () => {
+    const air = migrateAirDocument(load(docs[0] ?? ""));
+    const emis = emitThemeModule(air);
+    const squelette = (t: string): string => t.replace(/#[0-9A-Fa-f]{6}/g, "#XXXXXX");
+    expect(squelette(emis)).toBe(
+      squelette(EMBEDDED_ASSETS["lib/tokens/theme.generated.ts"] ?? ""),
+    );
   });
 });
 
@@ -92,9 +115,16 @@ describe("identité visuelle par app", () => {
     }
   });
 
-  it("l'accent de marque reste intact quand il n'est pas surchargé", () => {
-    const { theme } = applyThemeOverrides(withOverrides([{ key: "radius.sm", value: 2 }]));
-    expect(theme.color.light?.primary).toBe(BASE.color.light.primary);
+    // ÉDITION CONSCIENTE (D-067) : l'accent n'est PLUS intact — c'est le point.
+  // Ce qui reste garanti, et que ce test vérifie : la teinte dérive du NOM du
+  // thème, de façon DÉTERMINISTE, et une surcharge explicite reprend la main.
+  it("l'accent DÉRIVE du nom du thème, et une surcharge reprend la main", () => {
+    const a = migrateAirDocument(load(docs[0] ?? ""));
+    const b = migrateAirDocument(load(docs[1] ?? ""));
+    const accent = (air: ProjectAir): string =>
+      applyThemeOverrides(air).theme.color.light?.primary ?? "";
+    expect(accent(a)).not.toBe(accent(b));
+    expect(accent(a)).toBe(accent(a));
   });
 });
 

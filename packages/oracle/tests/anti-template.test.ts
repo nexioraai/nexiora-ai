@@ -15,8 +15,6 @@ import type { ProjectAir } from "@deribfy/air-schema";
 import {
   evaluateAntiTemplate,
   structuralSignature,
-  visualSignature,
-  VISUAL_FILES,
 } from "../src/anti-template.ts";
 import { evaluateApxxGrid } from "../src/apxx-grid.ts";
 
@@ -52,19 +50,28 @@ describe("axe STRUCTUREL — les silhouettes diffèrent", () => {
   });
 });
 
-describe("axe VISUEL — la variété déclarée est INERTE (constat)", () => {
-  it("12 thèmes déclarés, UNE SEULE identité visuelle émise", () => {
+describe("axe VISUEL — la variété déclarée est EFFECTIVE (D-067)", () => {
+  // ÉDITION CONSCIENTE (2026-08-31, D-067) — **CE TEST EXISTAIT POUR CONSTATER
+  // UN DÉFAUT. LE DÉFAUT EST CORRIGÉ.**
+  //
+  // Il enregistrait que 12 documents déclarant 12 thèmes distincts produisaient
+  // UNE SEULE identité visuelle : `design.theme` était transporté par le schéma
+  // et lu par AUCUN étage d'émission (`themeNameEffective: false`). Le nom fait
+  // désormais tourner la teinte de l'accent — 12 thèmes, 12 identités.
+  //
+  // Le test n'est pas supprimé : il devient un CLIQUET INVERSE. Si la variété
+  // retombait, il échouerait de nouveau.
+  it("12 thèmes déclarés, 12 identités visuelles émises (D-067)", () => {
     const report = evaluateAntiTemplate(samples);
     expect(report.declaredThemes).toHaveLength(12);
-    expect(report.visualVariants).toBe(1);
+    expect(report.visualVariants).toBe(12);
   });
 
-  it("chaque fichier visuel est byte-identique d'un domaine à l'autre", () => {
-    for (const path of VISUAL_FILES) {
-      const variants = new Set(samples.map((s) => s.files.get(path) ?? ""));
-      expect(variants.size, path).toBe(1);
-    }
-    expect(new Set(samples.map((s) => visualSignature(s.files))).size).toBe(1);
+  it("le fichier de tokens DIFFÈRE d'un domaine à l'autre", () => {
+    const tokens = new Set(
+      samples.map((s) => s.files.get("lib/tokens/theme.generated.ts") ?? ""),
+    );
+    expect(tokens.size).toBe(12);
   });
 
   it("le thème déclaré n'apparaît dans AUCUN fichier émis", () => {
@@ -77,10 +84,13 @@ describe("axe VISUEL — la variété déclarée est INERTE (constat)", () => {
 });
 
 describe("verdict de la dimension H", () => {
-  it("NON CONFORME : structure variée, identité visuelle unique", () => {
+    // ÉDITION CONSCIENTE (D-067) : la dimension H n'est plus tenue en échec par
+  // l'identité visuelle — 12 thèmes produisent 12 identités.
+it("CONFORME : structure variée ET identités visuelles distinctes", () => {
     const report = evaluateAntiTemplate(samples);
-    expect(report.state).toBe("non_conforme");
-    expect(report.detail).toContain("variété déclarée INERTE");
+    expect(report.state).toBe("conforme");
+    // D-067 : le détail ne dit plus « INERTE » — la variété est effective.
+    expect(report.detail).toContain("12 silhouettes");
   });
 
   it("moins de 2 domaines ⇒ NON DÉTERMINÉE, jamais conforme", () => {
@@ -117,12 +127,12 @@ describe("intégration dans la grille A++", () => {
     expect(grid.dimensions.find((d) => d.dimension === "H")?.state).toBe("non_determinee");
   });
 
-  it("avec les 12 domaines, H devient MESURÉE et non conforme", () => {
+  it("avec les 12 domaines, H devient MESURÉE et CONFORME (D-067)", () => {
     const first = samples[0];
     if (first === undefined) throw new Error("fixture");
     const grid = evaluateApxxGrid(first.files, first.air, samples);
     const h = grid.dimensions.find((d) => d.dimension === "H");
-    expect(h?.state).toBe("non_conforme");
+    expect(h?.state).toBe("conforme");
     expect(h?.detail).toContain("12 domaines");
   });
 });

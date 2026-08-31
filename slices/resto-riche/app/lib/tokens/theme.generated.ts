@@ -23,14 +23,14 @@ export const theme = {
       "surface": "#17121C",
       "text": "#F2F0F4",
       "muted": "#A49FAC",
-      "primary": "#FA5D1E",
+      "primary": "#1EFAAA",
       "onPrimary": "#16181D",
       "border": "#2E2836",
       "error": "#FF6B5E",
       "success": "#4CC17A",
       "warn": "#E3C25A",
       "badgeBg": "#241E2B",
-      "primaryText": "#FA5D1E"
+      "primaryText": "#1EFAAA"
     }
   },
   "space": {

@@ -4004,3 +4004,58 @@ en silence.
 ### Non-régression
 
 **658 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0.**
+
+---
+
+## D-067 — Le nom du thème produit une identité visuelle — 2026-08-31
+
+`FACT` — `design.theme` était transporté par le schéma et **lu par AUCUN étage**.
+Conséquence mesurée au banc anti-template : **12 documents, 12 thèmes déclarés,
+UNE SEULE identité visuelle.**
+
+### La levée, et pourquoi elle est SÛRE
+
+Le nom fait tourner la **teinte** de l'accent. **Seule la teinte bouge** —
+saturation et luminosité conservées, car le contraste dépend d'abord de la
+luminosité. Déterministe : même nom → même teinte. Les surcharges explicites sont
+appliquées **après** et gardent la priorité.
+
+**Résultat : 12 identités visuelles distinctes sur 12 thèmes.**
+
+### 🔴 Le risque s'est réalisé, et j'ai réparé plutôt que reculer
+
+`FACT` — première mesure : **2 documents en échec sur la dimension B** —
+`dark:primaryText/surface = 4,16` (seuil 4,5).
+
+`INFÉRENCE` — l'encre était dérivée **contre le fond seul**, alors que le texte
+primaire s'affiche **aussi sur les surfaces**. *Dériver contre le fond, c'était
+garantir le contraste là où on regardait, pas là où le texte est lu.*
+
+**Correction** : l'encre est désormais dérivée contre la **surface la plus
+exigeante**. `FACT` — **0 échec sur 12.**
+
+> C'est la deuxième fois de la session que j'ai touché à ce chantier. La
+> première, j'avais **retiré** la modification faute de marge pour la valider.
+> Cette fois, la marge existait — et la mesure a immédiatement montré le défaut.
+
+### Propriétés DÉLIBÉRÉMENT levées, non contournées
+
+**« Additivité stricte »** — sans surcharge, le thème émis était byte-identique à
+la copie embarquée. Cette propriété **coûtait** l'identité visuelle de toutes les
+apps. Le test ne disparaît pas : il vérifie désormais le **déterminisme** (même
+document → même thème) et la **distinction** (12 documents → 12 modules).
+
+**Le test « 12 thèmes, UNE SEULE identité »** existait pour **constater un
+défaut**. Il devient un **cliquet inverse** : si la variété retombait, il
+échouerait de nouveau.
+
+### Un écart de faisabilité disparaît
+
+`EXEC_THEME_NAME_INERT` n'est plus émis. **Un document éditorial n'a désormais
+AUCUN écart de faisabilité.** Le contraste réalisable/dégradé se démontre sur
+`capability`, seul effet restant sans exécution.
+
+### Non-régression
+
+**659 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0.**
+**A++ : A·B·C·D·E·F·G·H toutes CONFORMES sur 2 domaines.**

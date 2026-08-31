@@ -181,7 +181,14 @@ export const EXECUTION_ENVELOPE_V1: ExecutionEnvelope = {
   // Mesuré : 13 thèmes déclarés → 2 identités visuelles émises. Seul
   // `design.overrides` agit (emit-theme.ts) ; `design.theme` est transporté
   // sans effet.
-  themeNameEffective: false,
+  // VRAI depuis D-067 : `design.theme` fait tourner la teinte de l'accent —
+  // 12 thèmes déclarés au corpus produisaient UNE SEULE identité visuelle, ils
+  // en produisent 12. Seule la TEINTE bouge ; saturation et luminosité sont
+  // conservées, et l'encre est re-dérivée contre la surface la plus exigeante,
+  // de sorte que la dimension B (contraste WCAG) tient : 0 échec sur 12.
+  // Déterministe : même nom → même teinte. Les surcharges explicites du
+  // document sont appliquées APRÈS et gardent la priorité.
+  themeNameEffective: true,
 
   // `AirForm` porte un `useState` LOCAL, remis à zéro à chaque montage
   // d'écran. Un workflow multi-étapes perd ses données à chaque transition.

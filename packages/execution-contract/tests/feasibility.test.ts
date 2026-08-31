@@ -93,11 +93,23 @@ describe("réconciliation — cas nominal", () => {
     expect(report.gaps).toEqual([]);
   });
 
-  it("le MÊME document est DÉGRADÉ sous l'enveloppe réelle du moteur", () => {
+  // ÉDITION CONSCIENTE (2026-08-31, D-067) — ce test constatait le DERNIER écart
+  // d'un document éditorial : `EXEC_THEME_NAME_INERT`, le thème déclaré sans
+  // effet. Il a disparu : le nom du thème produit désormais une identité
+  // visuelle. **Un document simple n'a plus AUCUN écart de faisabilité.**
+  //
+  // Le contraste « réalisable / dégradé » n'est pas perdu : il se démontre sur
+  // `withCapability()`, seul effet restant sans exécution — test ci-dessous.
+  it("un document éditorial n'a plus AUCUN écart de faisabilité (D-067)", () => {
     const report = analyzeFeasibility(air(), EXECUTION_ENVELOPE_V1);
+    expect(report.gaps.map((g) => g.code)).toEqual([]);
+    expect(report.verdict).toBe("realizable");
+  });
+
+  it("un document à effet `capability` reste DÉGRADÉ sous l'enveloppe réelle", () => {
+    const report = analyzeFeasibility(withCapability(), EXECUTION_ENVELOPE_V1);
     expect(report.verdict).toBe("degraded");
-    // Seul écart d'un document éditorial : le thème déclaré est inerte.
-    expect(report.gaps.map((g) => g.code)).toEqual(["EXEC_THEME_NAME_INERT"]);
+    expect(report.gaps.some((g) => g.code === "EXEC_EFFECT_INERT")).toBe(true);
   });
 });
 

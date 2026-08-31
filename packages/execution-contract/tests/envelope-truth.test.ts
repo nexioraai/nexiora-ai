@@ -221,10 +221,17 @@ describe("véracité de l'enveloppe — slots, règles, RTL, thème", () => {
     // un commentaire ÉMIS, ce qui est vrai et ne doit pas faire échouer le
     // cliquet. Le contraste avec `air.design.overrides`, lui bien lu, prouve
     // que la mesure discrimine réellement.
-    const emitters = [EMIT_PROJECT, EMIT_MANIFESTS, read("compiler/src/emit-theme.ts")];
-    for (const source of emitters) expect(source).not.toContain("air.design.theme");
-    expect(read("compiler/src/emit-theme.ts")).toContain("air.design.overrides");
-    expect(EXECUTION_ENVELOPE_V1.themeNameEffective).toBe(false);
+    // ÉDITION CONSCIENTE (2026-08-31, D-067) : `design.theme` était transporté
+    // et lu par AUCUN étage. Mesuré au banc anti-template : 12 thèmes déclarés,
+    // UNE SEULE identité visuelle. Le nom fait désormais tourner la teinte.
+    const theme = read("compiler/src/emit-theme.ts");
+    expect(theme).toContain("air.design.theme");
+    expect(theme).toContain("air.design.overrides");
+    // Ce qui rend l'opération SÛRE, et que ce cliquet garde : seule la teinte
+    // bouge, et l'encre est re-dérivée contre la surface la plus exigeante.
+    expect(theme).toContain("rotateHue");
+    expect(theme).toContain("contrasteMin");
+    expect(EXECUTION_ENVELOPE_V1.themeNameEffective).toBe(true);
   });
 
   // ÉDITION CONSCIENTE (2026-08-31, D-066) : `useState` vivait DANS le

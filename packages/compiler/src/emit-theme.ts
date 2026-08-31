@@ -17,7 +17,7 @@
 //     contraste que la dérivation ferme (DET-019) ;
 //  3. la dérivation est REJOUÉE sur la palette effective — changer l'accent
 //     recalcule l'encre de texte, donc le seuil WCAG tient par construction.
-import { deriveTextInk, theme as BASE_THEME } from "@deribfy/design-tokens";
+import { contrast, deriveTextInk, theme as BASE_THEME } from "@deribfy/design-tokens";
 import type { ProjectAir } from "@deribfy/air-schema";
 
 const SCHEMES = ["light", "dark"] as const;
@@ -82,6 +82,49 @@ interface EffectiveTheme {
   size: Record<string, number>;
 }
 
+/**
+ * Rotation de TEINTE seule (D-067) — saturation et luminosité conservées.
+ *
+ * Conserver S et L est ce qui rend l'opération sûre : le contraste d'une
+ * couleur dépend d'abord de sa luminosité, et `deriveTextInk` recalcule de
+ * toute façon une encre conforme derrière. Fonction PURE et déterministe.
+ */
+function rotateHue(hex: string, degres: number): string {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const d = max - min;
+  const sat = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  let h = 0;
+  if (d !== 0) {
+    if (max === r) h = 60 * (((g - b) / d) % 6);
+    else if (max === g) h = 60 * ((b - r) / d + 2);
+    else h = 60 * ((r - g) / d + 4);
+  }
+  h = (h + degres + 360) % 360;
+  const c = (1 - Math.abs(2 * l - 1)) * sat;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  const [rr, gg, bb] =
+    h < 60 ? [c, x, 0]
+    : h < 120 ? [x, c, 0]
+    : h < 180 ? [0, c, x]
+    : h < 240 ? [0, x, c]
+    : h < 300 ? [x, 0, c]
+    : [c, 0, x];
+  const oct = (v: number): string =>
+    Math.round((v + m) * 255).toString(16).padStart(2, "0");
+  return `#${oct(rr)}${oct(gg)}${oct(bb)}`.toUpperCase();
+}
+
+/** Le PIRE contraste d'une encre parmi les surfaces où elle est réellement lue. */
+function contrasteMin(encre: string, surfaces: readonly string[]): number {
+  return Math.min(...surfaces.map((s) => contrast(encre, s)));
+}
+
 const cloneBase = (): EffectiveTheme => JSON.parse(JSON.stringify(BASE_THEME)) as EffectiveTheme;
 
 /**
@@ -97,6 +140,33 @@ export function applyThemeOverrides(air: ProjectAir): {
   const effective = cloneBase();
   const problems: ThemeOverrideProblem[] = [];
   const applied: { key: string; value: string | number }[] = [];
+
+  // IDENTITÉ VISUELLE PAR THÈME (D-067) — `air.design.theme` n'était LU par
+  // AUCUN étage : `themeNameEffective: false`. Conséquence mesurée au banc
+  // anti-template : **12 documents, 12 thèmes déclarés, UNE SEULE identité
+  // visuelle**. Le nom fait désormais tourner la teinte de l'accent.
+  //
+  // Sûr par construction : seule la TEINTE bouge, saturation et luminosité sont
+  // conservées, et `deriveTextInk` recalcule ensuite une encre garantie ≥ 4,5:1
+  // pour n'importe quel accent (dimension B). Déterministe : même nom → même
+  // teinte, toujours. Les overrides explicites sont appliqués APRÈS et gardent
+  // donc la priorité — le document reste maître.
+  let rotation = 7;
+  for (let i = 0; i < air.design.theme.length; i += 1) {
+    rotation = (rotation * 31 + air.design.theme.charCodeAt(i)) % 360;
+  }
+  if (rotation !== 0) {
+    for (const scheme of SCHEMES) {
+      const palette = effective.color[scheme];
+      if (palette === undefined) continue;
+      // L'accent est porté par `primary` dans la palette effective (la clé
+      // `brand.accent` de la source n'existe plus après dérivation).
+      const accent = palette.primary;
+      if (typeof accent === "string" && HEX.test(accent)) {
+        palette.primary = rotateHue(accent, rotation);
+      }
+    }
+  }
 
   for (const entry of air.design.overrides ?? []) {
     const key = entry.key;
@@ -136,7 +206,20 @@ export function applyThemeOverrides(air: ProjectAir): {
   for (const scheme of SCHEMES) {
     const palette = effective.color[scheme];
     if (palette === undefined) continue;
-    palette.primaryText = deriveTextInk(palette.primary ?? "", palette.bg ?? "");
+    // D-067 : l'encre est dérivée contre la surface la PLUS EXIGEANTE, pas
+    // seulement contre le fond. Mesuré : avec des accents variés,
+    // `dark:primaryText/surface` tombait à 4,16 alors que le couple sur `bg`
+    // passait — le texte primaire s'affiche sur les DEUX. Dériver contre le fond
+    // seul, c'était garantir le contraste là où on regardait, pas là où le texte
+    // est lu.
+    const fond = palette.bg ?? "";
+    const surface = palette.surface ?? fond;
+    const encreFond = deriveTextInk(palette.primary ?? "", fond);
+    const encreSurface = deriveTextInk(palette.primary ?? "", surface);
+    palette.primaryText =
+      contrasteMin(encreFond, [fond, surface]) >= contrasteMin(encreSurface, [fond, surface])
+        ? encreFond
+        : encreSurface;
     palette.onPrimary = deriveTextInk(
       base.color[scheme]?.onPrimary ?? "",
       palette.primary ?? "",
@@ -166,6 +249,14 @@ export function emitThemeModule(air: ProjectAir): string {
   );
 }
 
-/** L'AIR demande-t-il une identité visuelle propre ? */
+/**
+ * L'AIR demande-t-il une identité visuelle propre ?
+ *
+ * D-067 : un THÈME NOMMÉ en demande une, au même titre qu'une surcharge
+ * explicite. Sans cela, les 12 documents du corpus — qui déclarent 12 thèmes
+ * distincts mais AUCUNE surcharge (la campagne D-025 les leur interdisait) —
+ * produisaient tous la MÊME identité visuelle. Le nom était transporté et sans
+ * effet : c'était exactement `themeNameEffective: false`.
+ */
 export const hasThemeOverrides = (air: ProjectAir): boolean =>
-  (air.design.overrides ?? []).length > 0;
+  (air.design.overrides ?? []).length > 0 || air.design.theme.length > 0;
