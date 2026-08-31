@@ -4171,3 +4171,70 @@ mort alors que l'utilisateur y arrive.
 **659 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0 ·
 17 observations au rendu · `tsc` de l'app émise EXIT=0.**
 **A++ : A·B·C·D·E·F·G·H toutes CONFORMES.**
+
+---
+
+## D-072 — LA RACINE : aucune gate ne compilait ni ne rendait l'application émise — 2026-08-31
+
+**Arbitrage propriétaire** : *« couper la tête ne suffit pas, ça repoussera —
+résoudre depuis la racine. »* Il avait raison, et le chiffre le prouve.
+
+### Le diagnostic de fond
+
+`FACT` — les 659 tests du moteur vérifient le **TEXTE émis** : *le fichier
+contient-il telle chaîne, telle structure ?* **Aucun ne compile, aucun n'exécute
+l'application produite.**
+
+`INFÉRENCE` — c'est la cause commune de `APP-D002` (56 contrôles muets),
+`APP-D003` (états jamais atteints), `D-069` (registre de slots non compilable) et
+`D-071` (formulaire qui n'affiche rien). **Chacun a été corrigé une tête à la
+fois ; aucun n'était empêché de revenir.**
+
+### 🔴 LA MESURE — 11 APPLICATIONS SUR 14 NE COMPILAIENT PAS
+
+La gate construite, passée sur le corpus entier :
+
+```
+    3 / 14 applications compilent
+```
+
+`FACT` — cause unique : `AirRuleData.assertions[].value` était typé **à la main**
+dans le runtime comme `string | number | boolean | null`. Or `jsonLeafSchema`
+autorise les **TABLEAUX**, qu'emploie l'opérateur `in`
+(`value: ["payee", "annulee", …]`). **Toute application portant une règle `in`
+échouait au `tsc` de son propre projet** — donc au pipeline.
+
+`INFÉRENCE` — **le défaut vient d'un TYPE ÉCRIT À LA MAIN, miroir du schéma, qui
+a dérivé en silence.** Le runtime est un fichier COPIÉ dans l'app générée : il ne
+peut pas importer le schéma. Le miroir est donc structurel — **seule une gate qui
+compile peut détecter sa dérive.**
+
+`FACT` après correction : **14 / 14 applications compilent.**
+
+### La racine, refermée
+
+Deux gates versionnées, **et surtout CÂBLÉES DANS LA CI** — c'est ce câblage qui
+est la correction de racine, pas les types :
+
+| gate | ce qu'elle refuse |
+|---|---|
+| `gate:app-compile` | une application émise qui **ne compile pas**, `tsc` réel avec les vraies dépendances, sur les 14 documents |
+| `gate:app-rendu` | un écran **sans identité adressable** · une **fuite d'identifiant technique** dans une valeur affichée |
+
+Les deux entrent dans l'étape **Gate** du workflow : leur échec fait échouer la CI.
+
+### L'instrument a été vérifié AVANT d'être cru
+
+`FACT` — première exécution de `gate:app-rendu` : **0 identité sur 14
+applications**, verdict 🔴 partout. **C'était mon extracteur qui était faux**, pas
+les applications : il découpait sur la première accolade, qui appartenait à un
+commentaire. Corrigé → **14/14 passent.**
+
+> Publier ce premier verdict aurait été une accusation fausse contre les
+> 14 applications. C'est la troisième fois de la session que vérifier
+> l'instrument avant de le croire évite une conclusion erronée.
+
+### Non-régression
+
+**659 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0 ·
+14/14 applications compilent · 14/14 se rendent.**

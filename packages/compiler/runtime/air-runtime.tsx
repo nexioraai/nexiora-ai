@@ -58,7 +58,14 @@ export interface AirRuleData {
   assertions: readonly {
     fieldId: string;
     operator: string;
-    value?: string | number | boolean | null;
+    /**
+     * DÉFAUT CORRIGÉ (D-072) — ce type était écrit à la main et **plus étroit
+     * que le schéma** : `jsonLeafSchema` autorise les TABLEAUX, qu'emploie
+     * l'opérateur `in` (`value: ["payee", "annulee", …]`). Résultat : toute
+     * application portant une règle `in` **ne compilait pas**. Mesuré sur le
+     * corpus : 11 documents sur 14.
+     */
+    value?: string | number | boolean | null | readonly (string | number | boolean | null)[];
   }[];
 }
 
