@@ -26,15 +26,39 @@ const { compileProject } = await import(R + "packages/compiler/src/index.ts");
 // les emprunte à un projet déjà installé ; s'il n'y en a pas, on les installe —
 // jamais d'abandon silencieux, sinon la gate se contenterait de ne rien dire.
 const BASE = R + "slices/resto-riche/app/node_modules";
+// DIAGNOSTIC EN TÊTE (D-075) — quand cette gate échoue sur une machine que je
+// n'ai pas, seul son propre journal peut me dire pourquoi. Elle publie donc son
+// contexte AVANT de faire quoi que ce soit, et rapporte la sortie RÉELLE de tout
+// ce qu'elle lance. Un échec muet coûte un aller-retour ; ceci n'en coûte aucun.
+const OUT = join(tmpdir(), "deribfy-gate-compile") + "/";
+console.log("  racine  :", R);
+console.log("  node    :", process.version, "·", process.platform, process.arch);
+console.log("  sortie  :", OUT);
 if (!existsSync(BASE)) {
   console.log("  dépendances absentes → installation dans slices/resto-riche/app…");
-  execFileSync("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], {
-    cwd: R + "slices/resto-riche/app",
-    stdio: "inherit",
-    timeout: 900000,
-  });
+  try {
+    execFileSync("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], {
+      cwd: R + "slices/resto-riche/app",
+      stdio: "inherit",
+      timeout: 900000,
+    });
+  } catch (e) {
+    console.error("  🔴 `npm ci` a échoué —", String(e.message).slice(0, 200));
+    console.error("     repli sur `npm install`…");
+    execFileSync("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund"], {
+      cwd: R + "slices/resto-riche/app",
+      stdio: "inherit",
+      timeout: 900000,
+    });
+  }
 }
-const OUT = join(tmpdir(), "deribfy-gate-compile") + "/";
+if (!existsSync(BASE + "/typescript")) {
+  console.error("  🔴 `typescript` introuvable dans les dépendances empruntées —");
+  console.error("     la compilation ne peut pas avoir lieu. Contenu :",
+    existsSync(BASE) ? readdirSync(BASE).slice(0, 12).join(" ") : "node_modules absent");
+  process.exit(2);
+}
+console.log("  deps    : empruntées à slices/resto-riche/app ✔");
 rmSync(OUT, { recursive: true, force: true });
 
 const docs = [
@@ -80,7 +104,12 @@ for (const [nom, chemin] of docs) {
   } catch (e) {
     const sortie = String(e.stdout ?? "") + String(e.stderr ?? "");
     const lignes = sortie.split("\n").filter((l) => l.includes("error TS"));
-    verdict = `🔴 ${lignes.length} erreur(s) — ${lignes[0]?.slice(0, 60) ?? ""}`;
+    // Si `tsc` n'a produit AUCUNE erreur TS, c'est qu'il n'a pas tourné : on
+    // publie sa sortie brute, sinon l'échec serait indéchiffrable à distance.
+    verdict =
+      lignes.length > 0
+        ? `🔴 ${lignes.length} erreur(s) — ${lignes[0]?.slice(0, 60) ?? ""}`
+        : `🔴 tsc n'a pas abouti — ${sortie.trim().split("\n").slice(0, 2).join(" | ").slice(0, 120)}`;
     echecs++;
   }
   console.log(`  ${nom.padEnd(24)} ${String(c.files.size).padStart(6)}  ${String(slots.length).padStart(5)}   ${verdict}`);
