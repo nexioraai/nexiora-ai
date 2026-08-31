@@ -180,22 +180,34 @@ critères d'entrée · critères de sortie (tests/validation inclus).
   des manques du **design system → design system v2** (dont l'adoption reste
   une décision propriétaire consignée dans `DECISIONS.md`).
 
-### État au 2026-08-30 — **PHASE 10 : OUVERTE**
+### État au 2026-08-31 — **PHASE 10 : 6 CRITÈRES SUR 7 SATISFAITS, NON CLOSE**
 
-**Cette phase n'est pas close et ne doit pas l'être par cette inscription.**
+**Cette phase n'est PAS close, et cette inscription ne la clôt pas.** Un seul
+critère reste ouvert, et il n'appartient pas au moteur.
 
 | Critère de sortie | État | Preuve |
 |---|---|---|
-| app fonctionnelle sur appareils physiques | 🔴 **VALIDATION PHYSIQUE SUSPENDUE** (arbitrage propriétaire 2026-08-30) | slice 1 : Android physique 2/2 flows · slice 2 : non validé |
-| scorecard cross-domain à 2 domaines | 🟢 produit | `slices/run-scorecard.mjs` |
-| preuve de substitution de provider sans changement d'AIR | 🟠 **non vérifié dans cette session** | — |
-| liste mesurée des capabilities manquantes | 🟠 **non vérifié dans cette session** | — |
-| dimension H (variété anti-template) sur **2 domaines** | 🟢 **CONFORME** — `FACT (registre)` `STATUS.md` DET-021 / D-043 : **2 silhouettes distinctes ET 2 identités visuelles pour 2 thèmes déclarés**. 🟠 **Réserve de preuve** : cette mesure est **recalculée à la volée** par `run-scorecard.mjs` — **aucun artefact de résultat versionné** ne la porte (`E-04`, P-G) ⇒ `RN-15` | `STATUS.md` DET-021 · `slices/run-scorecard.mjs` |
-| *(hors critère)* corpus gelé 12 domaines | 🔴 `non_conforme` — **1 seule identité visuelle pour 12 thèmes**. `INFÉR.` propriété du **corpus GELÉ** (la campagne D-025 lui interdisait `design.overrides`), **pas** du moteur. Ne satisfait ni n'infirme le critère de sortie, qui porte sur 2 domaines | `benchmarks/anti-template/results/anti-template-latest.json` (4 runs, tous `domaines: 12`) |
+| app fonctionnelle sur **appareils physiques** | 🔴 **OUVERT — PROPRIÉTAIRE** | Android acquis (Galaxy A17, 2/2 flows) · **iOS : IPA construit, NON INSTALLÉ** (`DET-012`, port USB-C mort, aucune automatisation possible) |
+| scorecard cross-domain à 2 domaines | 🟢 | `slices/run-scorecard.mjs` |
+| substitution de provider sans changement d'AIR | 🟢 avec réserve | D-053 — remplacement prouvé dans le lock, `rootHash` identique |
+| liste mesurée des capabilities manquantes | 🟠 non déterminé, **motivé** | D-053 — l'allowlist est fail-closed : aucun document ne peut exprimer un besoin non couvert |
+| dimension **H** sur 2 domaines | 🟢 **CONFORME** | grille A++ avec échantillons cross-domain · **12 identités visuelles sur 12 thèmes** depuis D-067 |
+| **`DET-028` / dimension C** | 🟢 **FERMÉ** | D-060 — `loading`/`empty`/`error` **atteints**, observés au rendu avec contrôle négatif |
+| **A++ complet (A→H)** | 🟢 **ATTEINT** | `A·B·C·D·E·F·G·H` toutes conformes, mesurées sur 2 domaines |
 
-**Interdits en vigueur sur cette phase** : ne pas clore · ne pas reprendre la
-validation physique · ne pas corriger G4/G5 · ne pas modifier la sévérité ·
-ne pas lancer EXP-2 · ne pas modifier le protocole canonique.
+**Ce qui a changé depuis le 2026-08-30** : `DET-028` était le verrou bloquant
+déclaré. Il est fermé — non par assouplissement du critère, mais parce que les
+états sont devenus **réellement atteignables** (registre de blocs 1.1.0 additif +
+`DataProvider.status?()`), chacun **observé au rendu avant** d'entrer dans
+l'enveloppe.
+
+🔴 **Ce qui reste, et pourquoi je ne peux pas le faire** : l'installation de l'IPA
+sur l'iPhone 16 exige un scan de QR par le propriétaire — le port de données de
+l'appareil est mort (`DET-012`), aucune automatisation n'existe. **Un build
+Android d'une application GÉNÉRÉE est en cours** (`chez-tantie`,
+`ea2a69a5-bf07-41e4-ade3-ab7a0c15561a`) pour rendre ce constat possible sur un
+second appareil.
+
 
 ## PHASE 10B — FIDÉLITÉ DE L'APPLICATION PRODUITE
 
@@ -264,6 +276,29 @@ fonctionne, le besoin n'a pas disparu. `P-C` : `PARTIAL → PASS` ❌.
   soumise à la grille A++ **avant et après livraison** ; une livraison qui
   régresse une dimension est un échec du critère, quelle qu'en soit la
   rapidité.
+
+### État au 2026-08-31 — **PHASE 11 : 3 CRITÈRES SUR 5, NON CLOSE**
+
+**Cette phase n'est PAS close.** Le routeur est construit et prouvé ; deux
+critères exigent une livraison OTA réelle vers un appareil installé.
+
+| Critère de sortie | État | Preuve |
+|---|---|---|
+| **routage par empreinte calculée** | 🟢 | `@deribfy/router` — `nativeSurface()` scelle capabilities, permissions, modules natifs, planchers d'OS et train ; **12/12 documents v3 profilés** |
+| **profils de runtime versionnés** | 🟢 | `core` / `standard` / `extended`, ordonnés par surface native croissante. Mesuré : 11 documents `extended`, 1 `standard`. **Un document sans capability reste `core`, sans aucun module natif** |
+| **ajout d'une capability native → rebuild routé** | 🟢 **preuve par tentative** | `attemptOta` avec `camera` ajoutée : **🔴 OTA REFUSÉE** — *« capability ajoutée : camera · module natif ajouté : expo-camera »* |
+| **tentative OTA d'un changement d'empreinte → REFUSÉE** | 🟢 **6 cas-tueurs** | capability ajoutée · retirée · permission ajoutée · plancher d'OS monté · **train de release changé, document inchangé** · aucune compensation |
+| modification UI livrée en OTA en < 15 min sur les 2 slices | 🔴 **OUVERT** | exige `eas update` réel **vers une application INSTALLÉE** — dépend du même constat appareil que la Phase 10 |
+| rollback OTA testé | 🔴 **OUVERT** | idem |
+| *(amendement A++)* grille avant/après livraison | 🟠 **non déterminé** | sans livraison réelle, il n'y a pas d'« après » à mesurer |
+
+**Contrôle positif inclus** : un changement purement UI (libellé de bouton) est
+**🟢 OTA ACCEPTÉE**. Sans lui, « tout refuser » suffirait à faire verdir la suite.
+
+🔴 **Défaut de conception trouvé par un cas-tueur** : `routeUpdate` ne prenait
+qu'**UN** train, appliqué aux deux côtés — un **changement de plateforme était
+donc inexprimable**, et le routeur aurait laissé passer en OTA une montée d'Expo
+ou de React Native. Corrigé : deux trains, un par version.
 
 ## PHASE 12 — STORE POLICY GATE + COMPLIANCE + APP IDENTITY / BYO
 

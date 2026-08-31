@@ -4618,3 +4618,63 @@ Baisser est libre ; monter est un échec. Câblé dans l'étape `Gate` de la CI.
 
 **659 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0 ·
 26/26 compilent · 164 écrans montés et pressés · cliquet 180/180.**
+
+---
+
+## D-085 — PHASE 11 : le routeur OTA / rebuild par empreinte — 2026-08-31
+
+**Pourquoi ce routeur existe** : une livraison OTA ne remplace que du
+JavaScript. Livrer ainsi un changement qui touche au binaire — une capability
+qui embarque un module natif, une permission, un plancher d'OS — produit une
+application **qui plante à l'ouverture chez l'utilisateur**, sans retour arrière.
+
+### Ce qui est construit et PROUVÉ
+
+`@deribfy/router` — fonction **pure**, aucun réseau, aucune horloge.
+`nativeSurface()` scelle en une empreinte SHA-256 : capabilities · permissions ·
+modules natifs · planchers iOS/Android · **train de release**. Règle unique :
+**empreinte identique ⇒ OTA · empreinte différente ⇒ REBUILD**, avec les causes
+nommées une par une.
+
+**FAIL-CLOSED sans exception** : une empreinte qui diffère sans cause identifiée
+donne quand même REBUILD. *Un routeur qui laisse passer ce qu'il ne comprend pas
+n'est pas un routeur, c'est un pari.*
+
+**Profils de runtime** : `core` / `standard` / `extended`, ordonnés par surface
+native croissante. `FACT` — sur les 12 documents v3 : **11 `extended`, 1
+`standard`**. Un document **sans capability reste `core`, avec zéro module
+natif** — vérifié par test.
+
+### 🔴 UN CAS-TUEUR A TROUVÉ UN DÉFAUT DE CONCEPTION
+
+`FACT` — `routeUpdate` ne prenait qu'**UN SEUL** train, appliqué aux deux côtés
+de la comparaison. Un **changement de plateforme était donc INEXPRIMABLE** : le
+routeur aurait laissé partir en OTA une montée d'Expo ou de React Native.
+
+> **Le test a échoué avant que je comprenne pourquoi.** C'est exactement ce
+> qu'on attend d'un cas-tueur : il ne confirme pas, il découvre.
+
+Corrigé : **deux trains, un par version** — le train fait partie de ce qui est
+livré, pas du contexte de la comparaison.
+
+### Preuve par tentative — mesurée
+
+| tentative | verdict |
+|---|---|
+| changement UI (libellé de bouton) | 🟢 **OTA ACCEPTÉE** |
+| ajout de `camera` | 🔴 **OTA REFUSÉE** — *capability ajoutée : camera · module natif ajouté : expo-camera* |
+
+**6 cas-tueurs**, chacun sur une nature de changement distincte, **plus un
+contrôle positif** : sans lui, « tout refuser » suffirait à faire verdir la suite.
+
+### Ce qui reste OUVERT, et pourquoi
+
+`FACT` — « modification UI livrée en OTA en < 15 min » et « rollback OTA testé »
+exigent un `eas update` réel **vers une application INSTALLÉE sur un appareil**.
+**Ils dépendent du même constat propriétaire que la Phase 10.** L'amendement A++
+(grille avant/après livraison) en dépend aussi : sans livraison, il n'y a pas
+d'« après » à mesurer. **Aucun des trois n'est déclaré satisfait.**
+
+### Non-régression
+
+**671 tests verts · 0 échec · typecheck EXIT=0 · lint EXIT=0.**
