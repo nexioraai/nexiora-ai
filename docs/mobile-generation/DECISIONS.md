@@ -1575,8 +1575,1601 @@ conséquences. Les décisions D-xxx sont actées ; les P-xxx sont EN ATTENTE.
   régénéré pour la structure workspace (grosse diff attendue, sans
   changement de versions applicatives hors SDK déjà mis à niveau).
 
-## P-006 — Domaine du Vertical Slice 2
+## D-042 (ex P-006) — Domaine du Vertical Slice 2 : SUIVI DE CONTENEURS MARITIMES (TRANCHÉ, 2026-08-29)
 
-- **Candidat** : réservation/suivi simplifié de conteneurs maritimes
-  (l'exemple canonique hors-template du mandat).
-- **Tranché par** : décision produit avant la Phase 10.
+- **Décision propriétaire (2026-08-29)** : le domaine du Vertical Slice 2 est
+  **le suivi de conteneurs maritimes**. La fiche P-006 devient donc D-042 ;
+  la Phase 10 n'est plus bloquée sur ce point.
+- **Pourquoi ce domaine satisfait le critère « hors-template »** : les
+  12 domaines du corpus gelé sont tous des intentions de commerce ou de
+  service de proximité (restauration, coiffure, mode, cours, immobilier,
+  plomberie, toilettage, tutorat, billetterie, fitness, livraison,
+  chantier). Le suivi de conteneurs est **logistique B2B** : pas de
+  catalogue, pas d'achat dans l'app, une entité centrale suivie dans le
+  temps et un besoin d'usage hors ligne sur le terrain. Il ne peut pas être
+  produit par recopie d'un gabarit du corpus.
+- **Protocole d'émission imposé** : celui de **D-025** — mêmes sections,
+  même prompt système, mêmes niveaux de dégradation de schéma, même passe de
+  réparation bornée. L'identité du prompt est **vérifiée mécaniquement** par
+  le harnais de la Phase 10, qui refuse de démarrer si le texte diverge de
+  celui de la campagne du corpus. Sans cela, « même protocole » ne serait
+  qu'une affirmation.
+- **Le corpus gelé n'est PAS étendu** : l'AIR du slice 2 est un artefact du
+  slice, écrit dans `slices/conteneurs/`, jamais dans `corpus-v2/`. Le gel de
+  la Phase 2 reste intact et le nombre de documents du corpus ne change pas.
+- **Ancien libellé (P-006)** : « Candidat : réservation/suivi simplifié de
+  conteneurs maritimes (l'exemple canonique hors-template du mandat) —
+  tranché par : décision produit avant la Phase 10. »
+
+## D-039 — EXIGENCE PRODUIT PREMIUM / ELITE 2027 A++ (NON NÉGOCIABLE, 2026-08-29)
+
+- **Décideur** : propriétaire, arbitrage explicite du 2026-08-29.
+- **Portée** : exigence **permanente et non négociable** du projet,
+  applicable aux **phases restantes** à compter du 2026-08-29 (Phase 8 en
+  cours incluse). **Non rétroactive** : les Phases 0-7 closes ne sont pas
+  rouvertes, et leurs artefacts gelés (blocs 1.0.0 / D-024, capabilities
+  1.0.0 / D-020, tokens 1.0.0, train `rt-2026.08`) ne sont pas descellés par
+  la seule inscription de cette exigence.
+- **Problème traité** : avant cette décision, la ROADMAP ne fixait **aucun
+  niveau** de qualité UI — vérification faite, les termes « Premium »,
+  « Elite », « A++ » n'y figuraient nulle part sur 204 lignes. La qualité UI
+  n'y apparaissait qu'en Phase 8 (« qualité UI évaluée ») et en Phase 14
+  (métrique publiée) : deux **mesures**, jamais un **seuil**. « Fonctionnel »
+  pouvait donc suffire à clore une phase.
+- **Décision** : l'objectif Premium / Elite 2027 A++ devient une exigence
+  officielle. « Fonctionnel » ne vaut jamais acceptation si le résultat est
+  manifestement inférieur au niveau visé. L'exigence ne peut être ni
+  dégradée, ni repoussée, ni supprimée pour permettre une clôture de phase.
+- **Rendue vérifiable par une grille de 8 dimensions** (A ergonomie
+  physique · B contraste WCAG 2.2 AA · C complétude des états · D cohérence
+  zéro-style-en-dur · E typographie · F internationalisation/RTL · G
+  fluidité perçue et virtualisation · H variété anti-template §22), chacune
+  adossée à une preuve d'une nature définie. **A++ = 8/8 conformes avec
+  preuve** ; une dimension non conforme interdit la qualification et devient
+  une **dette BLOQUANTE** ; une dimension non mesurable est déclarée **non
+  déterminée**, jamais conforme par défaut. Ce choix évite qu'« A++ » reste
+  un slogan invérifiable, et s'appuie majoritairement sur de l'outillage
+  **déjà existant** (cliquets de style, rejeu RTL, harnais de rendu,
+  géométrie mesurée sur appareil) plutôt que de créer du travail nouveau.
+- **Inscription dans la ROADMAP** : (1) ligne « Exigence produit » dans le
+  tableau de préambule, au même rang que la règle de non-assouplissement ;
+  (2) section **EXIGENCE PRODUIT TRANSVERSE** en fin de document
+  (définition, grille, notation, portée, limite structurelle) ; (3)
+  amendements ciblés aux critères de sortie des Phases **8, 9, 10, 11, 12,
+  14**. **Aucune phase n'a été réorganisée, renumérotée ni supprimée** ; la
+  Phase 13 n'est délibérément pas amendée, ses critères portant sur la
+  distribution et non sur la substance visuelle.
+- **Conséquence sur la Phase 8, en cours — SIGNALÉE AVANT CLÔTURE** : son
+  critère « qualité UI évaluée » devient « évaluée **contre la grille A++**,
+  dimension par dimension, avec preuve ». **Les dimensions A à G doivent être
+  CONFORMES pour clore** ; une seule non conforme bloque la clôture. La
+  dimension H est portée en Phase 10 au seul motif objectif que sa mesure
+  exige un second domaine.
+
+## D-039-R1 — RÉEXAMEN : retrait de la clause de clôture avec dettes (2026-08-29)
+
+- **Contestation propriétaire** : permettre la clôture de la Phase 8 avec des
+  dimensions A++ non conformes contredit le caractère « absolument non
+  négociable » de l'exigence.
+- **Réexamen effectué — la contestation est FONDÉE.** Trois erreurs établies
+  dans la rédaction initiale de D-039 :
+  1. **Contradiction interne** : le préambule de la ROADMAP interdit de
+     « repousser l'exigence pour permettre la clôture d'une phase » ;
+     l'amendement de la Phase 8 repoussait la conformité en Phase 10 pour
+     permettre la clôture. Les deux textes se contredisaient.
+  2. **Raisonnement circulaire** : la clause d'exemption, rédigée le
+     2026-08-29, était ensuite invoquée comme justification — un
+     assouplissement après coup, que la règle fondatrice de la ROADMAP
+     interdit explicitement.
+  3. **Garde-fou mal invoqué** : le garde-fou de la Phase 8 interdit de
+     rustiner un ARTEFACT pour faire passer un test ; il n'interdit pas de
+     corriger le GÉNÉRATEUR. Précédent probant : **D-037**, où le défaut de
+     safe area a été corrigé dans le compilateur avec rejeu intégral des
+     Phases 4/6/7/8. Le gel n'a jamais signifié « incorrigible » mais
+     « toute évolution passe par une décision consignée ».
+- **Décision (propriétaire, 2026-08-29)** : la clause est **RETIRÉE**.
+  Dimensions **A à G conformes obligatoires** pour clore la Phase 8 ; **H**
+  portée en Phase 10 pour insuffisance objective de périmètre. **Une dette
+  bloquante ne vaut jamais satisfaction d'un critère.**
+- **Règle de périmètre inscrite** : manque d'OUTILLAGE ⇒ non reportable,
+  l'outillage est produit dans la phase ; périmètre INSUFFISANT PAR NATURE
+  ⇒ porté nommément à la phase où la mesure devient possible. Invoquer le
+  périmètre là où seul l'outillage manque est une violation de l'exigence.
+  Conséquence directe : la **dimension E** (typographie aux tailles
+  d'accessibilité maximales), non mesurée faute d'instrument, **doit être
+  outillée et évaluée dans la Phase 8**.
+- **Limite structurelle consignée** : élever le niveau visuel au-delà de ce
+  que permettent les artefacts gelés exige une évolution **design system
+  v2**. Cette évolution n'a **pas** de phase dédiée dans la ROADMAP
+  actuelle ; elle est rattachée à la Phase 10 par analogie avec le registre
+  de capabilities v2 que cette phase alimente déjà. Si le propriétaire
+  souhaite une phase dédiée, c'est un arbitrage distinct à consigner.
+
+## D-040 — PHASE 9 : architecture des Code Slots et du Repair Loop (2026-08-29)
+
+- **Contexte** : la Phase 9 exige « slots avec politique AST complète ;
+  boucle de réparation bornée et budgétée ; juge ≠ auteur », plus une
+  démonstration sur le slice 1 et une preuve par mutation des gardes AST.
+  Rien de tout cela n'existait : le mot `slot` n'apparaissait que dans le
+  schéma AIR et dans une non-opération commentée du runtime émis.
+
+### Décisions structurantes
+
+1. **Deux paquets, deux rôles.** `@deribfy/slots` porte les contrats et la
+   POLITIQUE (analyse) ; `@deribfy/repair` porte la BOUCLE (décision).
+   Séparer les deux permet à l'Oracle de rejouer la politique sans importer
+   la boucle, et à la boucle de rester pure.
+2. **AST réel, jamais d'expression régulière.** La politique s'appuie sur
+   l'API du compilateur TypeScript. Preuve DISCRIMINANTE versionnée : un
+   commentaire ou une chaîne contenant `fetch(` / `process.env` est ACCEPTÉ,
+   alors que l'usage réel — y compris via un alias `const f = fetch` — est
+   REFUSÉ. Un cliquet textuel échouerait sur les deux.
+3. **Le compilateur ne juge pas.** Il émet le code d'auteur VERBATIM (son
+   empreinte reste celle qui a été analysée) ; c'est l'Oracle, service
+   séparé, qui refuse l'artefact. Conséquence directe : l'allowlist de
+   dépendances du compilateur reste INCHANGÉE (cliquet zéro-réseau
+   préservé), et le chemin de compilation reste pur.
+4. **Additivité stricte.** Sans bundle de slots, la sortie du compilateur
+   est identique à celle d'avant la Phase 9 — prouvé sur 12/12 documents.
+   Aucun artefact de Phase 8 n'est donc touché par cette phase.
+5. **Slots PURS.** La politique refuse l'horloge et l'aléa ambiants. Ce
+   n'est pas une contrainte inventée : le corpus gelé (2026-08-28) fait déjà
+   entrer le temps par des ENTRÉES déclarées (`horodatage`, `maintenant`).
+   La politique ne fait qu'imposer mécaniquement le contrat existant.
+6. **Deux nouveaux contrôles Oracle L1** — politique AST rejouée sur les
+   modules émis, et intégrité octet à octet des copies (blocs, primitives,
+   tokens, runtime). Le §9 les nommait depuis l'origine ; ils n'étaient pas
+   implémentables avant l'existence des slots.
+7. **Grille A++ instrumentée.** L'amendement D-039 de la Phase 9 exige que
+   la grille soit « rejouée après réparation ». Une grille tenue à la main
+   ne peut pas remplir ce rôle : `evaluateApxxGrid` la calcule sur le PROJET
+   COMPILÉ, en trois états seulement, et `apxxRegressions` compare avant et
+   après. Une dette déjà ouverte ne bloque rien ; une DÉGRADATION bloque.
+8. **Périmètre de patch : le nœud d'AIR, pas le fichier.** Comparer les
+   fichiers ne discrimine rien quand la réparation porte sur l'AIR (le
+   compilateur étant déterministe, tout artefact dérivé change
+   légitimement). Le gate compare donc les NŒUDS D'AIR modifiés aux cibles
+   désignées par le diagnostic. Un auteur qui répare le bouton demandé mais
+   en profite pour élargir le périmètre est refusé — traduction mécanique du
+   non-négociable #8.
+9. **VERIFY à trois conditions cumulatives** : le juge accepte ; la CAUSE
+   DIAGNOSTIQUÉE a disparu ; aucune dimension A++ n'est dégradée. La
+   deuxième condition est indispensable : le juge ignore ce qu'on cherchait
+   à réparer, et sans elle une réparation partielle (3 slots sur 5) passerait
+   pour un succès — cas prouvé par test.
+10. **Auteur = port, déterministe dans cette phase.** Aucun appel LLM n'a
+    été fait : les critères de sortie portent sur le MÉCANISME (diagnostic,
+    gates, budget, juge indépendant), et les scénarios hostiles prouvent que
+    les gardes tiennent quel que soit l'auteur — ce qui est la propriété de
+    sécurité recherchée (§27). Brancher un auteur LLM réel est un
+    remplacement de port, sans modification du cœur.
+
+### Limite consignée, non contournée
+
+L'AIR 1.0.0 déclare la SIGNATURE d'un slot mais ne lie ni ses entrées ni ses
+sorties à un point d'exécution. Les modules émis sont donc réels, typés et
+vérifiés (`tsc` du projet généré les contrôle), mais l'application ne les
+APPELLE pas encore. Inventer ici une convention de liaison aurait été une
+extension silencieuse du schéma gelé : c'est refusé, et la lacune est
+consignée en **DET-018** avec son échéance.
+
+## D-041 — PHASE 10 : abstraction provider et instruments cross-domain (2026-08-29)
+
+- **Contexte** : la Phase 10 porte deux natures de travaux — ceux qui
+  dépendent du **domaine hors-template** (non tranché, P-006) et ceux qui
+  n'en dépendent pas. Les seconds ont été exécutés ; les premiers sont
+  décrits au point de blocage, sans être anticipés ni simulés.
+
+### Décisions actées
+
+1. **La classe de provider n'est JAMAIS lue dans la chaîne libre de l'AIR.**
+   Fait mesuré sur le corpus gelé : `providerClass` porte **40 valeurs
+   distinctes** pour une douzaine de classes réelles (`push_gateway`,
+   `push_messaging`, `push_provider`, `push_service`, `managed_push`
+   désignent la même chose). S'en servir comme clé de résolution laisserait
+   le LLM définir la topologie des fournisseurs — contraire au
+   non-négociable #3. La classe canonique est donc **dérivée de la
+   `capability` déclarée** (contrôlée par le registre gelé) ; les 8
+   intégrations sans capability tombent sur une classe `backend_rest`
+   unique. **Contre-épreuve versionnée** : renommer les 40 chaînes libres ne
+   change RIEN au résultat de la résolution.
+2. **Un provider réel par classe, plus un substitut nommé `mock`.** §15
+   interdit de coder deux fournisseurs « pour le principe » : le provider
+   réel est **exactement** l'implémentation que le registre de capabilities
+   gelé désigne déjà, et un cliquet mécanique interdit toute divergence
+   entre les deux registres.
+3. **La substitution ne touche jamais l'AIR.** Prouvé au sens le plus fort
+   disponible : même document, même `airHash`, **artefact compilé identique
+   octet pour octet**, seul le lock enregistre le changement. Un test
+   supplémentaire verrouille le fait qui rend cette gratuité possible —
+   aucun fichier émis ne nomme un fournisseur concret ; le jour où ce ne
+   sera plus vrai, ce test tombera et la substitution devra être re-prouvée
+   au niveau de l'artefact.
+4. **Le flux de provisioning devient provider-agnostique.** Une interface
+   qu'aucun code partagé n'exerce n'est pas une abstraction. Le flux
+   (création → santé → clé → SQL → démontage → **preuve d'absence**) est
+   écrit une fois contre le contrat seul, et intègre la leçon de la Phase 8
+   (démontage garanti en `finally`, plus de projet orphelin).
+5. **Dimension H mesurée sur deux axes distincts.** Structure ET identité
+   visuelle, parce que la mesure a montré qu'ils divergent : 12 silhouettes
+   structurelles distinctes (0 collision) mais **UNE SEULE identité
+   visuelle** pour 12 thèmes déclarés. Aucun seuil de similarité arbitraire
+   n'a été introduit — les deux critères sont des égalités exactes.
+   L'instrument ne condamne pas l'uniformité en soi : il condamne l'écart
+   entre la variété **déclarée** et la variété **émise** (contre-épreuve
+   versionnée : des thèmes identiques rendent le verdict conforme).
+6. **Instrument de la dimension D renforcé.** Il ne mesurait que les
+   couleurs hexadécimales et déclarait D conforme alors que trois des
+   quatre familles nommées par le critère n'étaient pas regardées. Les
+   quatre sont désormais mesurées (espacements, rayons, couleurs,
+   typographie) ; les propriétés de mise en page restent hors périmètre.
+   **Le code n'a pas régressé — la mesure a cessé d'être partielle.**
+   Conséquence assumée : D passe à non conforme (9 valeurs en dur).
+
+### Ce qui n'a PAS été fait, et pourquoi
+
+- **Aucun token gelé n'a été modifié.** Les manques mesurés alimentent
+  `DESIGN-SYSTEM-V2.md` ; leur adoption est P-007.
+- **Aucune correction de DET-019/020/021/022/023** : toutes touchent des
+  artefacts gelés ou une décision de design system.
+
+## P-007 — Adoption d'un design system v2 (EN ATTENTE)
+
+- **Objet** : `DESIGN-SYSTEM-V2.md` (créé en Phase 10) liste **6 manques
+  mesurés**, chacun avec sa preuve exécutable : variété visuelle par app
+  inexistante (DET-021), accent inutilisable en texte clair (DET-019),
+  9 valeurs de style en dur (DET-022), groupes de tokens absents et absence
+  d'idiomes de plateforme (DET-023), sémantique a11y du conteneur d'écran
+  (DET-020).
+- **Décision demandée** : ouvrir ou non un design system v2, et à quelle
+  phase. Deux de ces manques (DET-019, DET-021) rendent la grille A++
+  **non conforme** ; ils ne peuvent pas être résolus sans toucher aux
+  artefacts gelés, ce qu'aucune phase n'autorise sans cette décision.
+- **Tranché par** : décision propriétaire.
+
+## P-008 — Capabilities v2 : manques mesurés (EN ATTENTE)
+
+- **Mesuré sur le corpus gelé (2026-08-29)** : 14 des 15 capabilities du
+  registre sont demandées par au moins un domaine (`biometrics` : jamais) ;
+  **8 intégrations sur 6 domaines déclarent un backend REST qu'AUCUNE
+  capability ne couvre** (`rest_api`, `rest_backend`).
+- **Manque identifié** : une capability de **backend de données applicatif**
+  (API REST de l'app), aujourd'hui traitée hors registre par la classe de
+  provider `backend_rest`.
+- **MESURE SUR LE DOMAINE HORS-TEMPLATE (2026-08-29, slice 2 émis)** — la
+  réserve de méthode est levée : le domaine logistique a demandé **6
+  capabilities** (`auth`, `push_notifications`, `offline_storage`, `share`,
+  `analytics`, `deep_links`), **toutes présentes dans le registre v1**, et
+  **0 intégration sans capability**. **Le registre gelé a donc suffi à un
+  domaine hors-template** — résultat non trivial, et plutôt rassurant sur le
+  critère d'inclusion v1.
+- **Ce que le slice 2 confirme en revanche** : les 7 `providerClass` qu'il
+  émet sont **7 chaînes libres inédites** (`managed_auth`, `push_gateway`,
+  `rest_backend`, `embedded_database`, `product_analytics`, `app_links`,
+  `system_share_sheet`) — aucune ne figure telle quelle dans le corpus. La
+  dérive lexicale mesurée en D-041 se reproduit donc sur un domaine neuf,
+  ce qui valide **a posteriori** le choix de ne jamais lire cette chaîne.
+- **Reste au registre v2** : la capability de **backend de données
+  applicatif** (8 intégrations `rest_api`/`rest_backend` du corpus sans
+  capability ; le slice 2 a contourné en rattachant son backend REST à
+  `offline_storage`, ce qui est un signal supplémentaire du manque).
+- **Tranché par** : décision propriétaire.
+
+## D-043 (ex P-007) — ADOPTION DU DESIGN SYSTEM v2 (TRANCHÉ, 2026-08-29)
+
+- **Décision propriétaire (2026-08-29)** : adopter le design system v2. La
+  fiche P-007 devient D-043.
+- **Périmètre STRICT** : uniquement les manques déjà mesurés et consignés
+  dans `DESIGN-SYSTEM-V2.md`. Aucun nettoyage opportuniste, aucun token
+  ajouté sans consommateur réel.
+
+### Ce que la v2 change (tokens 1.1.0 → 1.2.0, évolution MINEURE additive)
+
+1. **Trois groupes ajoutés, chacun avec un consommateur** : `fontWeight`
+   (8 graisses littérales supprimées), `space.xxs` (le pas fin du badge),
+   `opacity.disabled` (l'opacité d'état désactivé). ⇒ **DET-022 résolue** :
+   0 valeur de style en dur.
+2. **Une valeur corrigée** : `color.light.warn` `#8A6D00` → `#866A00`.
+   Ce défaut n'était pas connu — il a été révélé en élargissant les paires
+   de contraste aux tons d'état sur `badgeBg` (4,34:1, sous le seuil).
+3. **Deux tokens DÉRIVÉS** — c'est le cœur de la v2 :
+   - `primaryText` = encre de l'accent lue sur le fond ⇒ **DET-019 résolue**
+     (2,95:1 → 4,57:1) sans toucher à l'accent de marque ;
+   - `onPrimary` = encre lue SUR l'accent. Ajouté APRÈS mesure : avec
+     l'accent bleu du slice 2, l'encre statique tombait à **3,14:1**. Une
+     encre fixe ne peut pas rester lisible sur un accent variable.
+   Les deux sont **interdits à la surcharge** : les laisser fixer à la main
+   rouvrirait exactement le défaut qu'ils ferment.
+4. **Identité visuelle par app** ⇒ **DET-021 résolue**. Le canal n'est PAS
+   inventé : `design.overrides` existe dans le schéma AIR **gelé** 1.0.0 et
+   n'était simplement jamais lu. La v2 le rend effectif, avec allowlist de
+   clés, valeurs validées, et re-dérivation des encres. **Conséquence
+   prouvée** : n'importe quel accent produit une app conforme WCAG AA —
+   la variété visuelle ne peut pas casser l'accessibilité.
+5. **Ce qui n'a PAS été ajouté, et pourquoi (arbitrage DET-023)** :
+   `elevation`, `motion`, `breakpoint`/`density` n'ont **aucun
+   consommateur** dans le design system — les ajouter serait spéculatif, ce
+   que le projet s'interdit. Pour les **idiomes iOS/Android**, l'arbitrage
+   est l'**uniformité assumée** : une sortie strictement identique sur les
+   deux plateformes, propriété déjà verrouillée par un test. DET-023 est
+   donc close **par décision**, pas par ajout.
+
+### DET-020 — traitée dans son périmètre réel
+
+Le repli `accessibilityLabel ?? title` du conteneur d'écran est **retiré**.
+Mesuré sur RN 0.86.3 : un conteneur non `accessible` n'expose pas son label
+à VoiceOver (`accessible{false}` + `isAccessibilityElement` lié à cette
+prop) ; côté Android il posait une `contentDescription` jamais mesurée sur
+la racine des 47 écrans. Livrer un comportement **inerte d'un côté et non
+mesuré de l'autre**, pour un bénéfice nul, est pire que ne rien livrer. La
+sémantique de titre est portée par l'**en-tête natif**, qui reçoit la même
+donnée AIR et n'est désactivé nulle part. L'observation « 2 écrans sur 47
+dont le titre de route diffère du titre d'écran » reste consignée : c'est
+une propriété du CONTENU du corpus gelé, pas un défaut du moteur.
+
+### Défaut de générateur découvert par le slice 2 et corrigé
+
+**Ordre d'insertion du seed** : PostgreSQL a refusé le seed du domaine
+logistique (`23503 violates foreign key constraint`). Cause établie par deux
+lectures indépendantes : les VALEURS de référence étaient correctes (les
+fixtures tirent un identifiant réel de l'entité cible), mais les `INSERT`
+étaient ordonnés **alphabétiquement** — `ent_conteneur` avant `ent_navire`.
+Corrigé par un tri **topologique** déterministe (Kahn, ensemble prêt trié).
+Le slice 1 ne pouvait pas révéler ce défaut : une seule de ses entités porte
+un dataset, donc aucune référence entre lignes semées. **C'est exactement ce
+qu'un domaine hors-template est censé produire.**
+
+### Contrôle d'accessibilité promu au rang de CONFORMITÉ
+
+L'Oracle L1 gagne un 7e contrôle, `contraste_wcag`, calculé sur le thème
+**réellement émis** de chaque app — §22 : « accessibilité = conformité (gate
++ Oracle), pas seulement qualité ». Depuis que chaque app peut choisir ses
+couleurs, le seuil doit être vérifié app par app sur l'artefact.
+
+### Garde-fou anti-contournement de l'instrument
+
+La liste des paires de contraste est confrontée par test aux couleurs
+**réellement utilisées comme texte** dans la feuille de style émise : il
+devient impossible de retirer une paire gênante pour obtenir du vert sans
+retirer aussi l'usage correspondant.
+
+## P-009 — Conditionnement des blocs et accessibilité du graphe de navigation (EN ATTENTE)
+
+- **Origine** : trois observations faites SUR APPAREIL (Phase 8 puis Phase 10)
+  décrivaient le même genre de défaut sans qu'aucune mesure n'en donne
+  l'ampleur. L'instrument manquant a été produit dans la phase, comme
+  D-039-R1 l'exige : `benchmarks/composition/`.
+- **MESURE (2026-08-29, 13 documents / 50 écrans)** :
+  - **19 écrans** portent un bloc `empty_state` à côté d'un bloc `list` qui
+    possède déjà son propre état vide conditionnel ;
+  - **4 écrans** exposent la **même action** par deux blocs (bouton + CTA de
+    l'état vide) — le cas « Synchroniser maintenant » / « Synchroniser » du
+    slice 2 en est un ;
+  - **17 écrans sur 50 (34 %)** ne sont ciblés par **aucune** action
+    `navigate` et ne sont pas l'écran d'entrée : rien ne permet de les
+    atteindre dans l'app livrée.
+- **CAUSE COMMUNE ÉTABLIE** (pas une conjecture) : le schéma AIR **1.0.0
+  gelé** ne porte aucun moyen de conditionner le rendu d'un bloc
+  (`blockInstanceSchema` = `id`, `blockType`, `entityId?`, `props`), et aucun
+  validateur ne contrôle l'accessibilité du graphe de navigation. Les trois
+  mesures sont les conséquences d'une limite de **contrat**, pas d'erreurs
+  de tel ou tel document — ce que confirme leur présence sur 12 domaines du
+  corpus gelé **et** sur le domaine hors-template.
+- **Pourquoi cette décision est nécessaire à la Phase 10** : DET-017 porte la
+  gravité « 🔴 BLOQUANTE A++ » et l'échéance « Phase 10 (volet 2 +
+  conditionnement) ». La règle de la ROADMAP est sans ambiguïté : « une dette
+  bloquante ne vaut JAMAIS satisfaction d'un critère ». La phase ne peut donc
+  se clore ni sans traiter ce volet, ni sans le re-router **explicitement**.
+
+### Options (analyse, non arbitrage)
+
+| | Option | Ce qu'elle implique | Coût / risque |
+|---|---|---|---|
+| **A** | **Évolution du schéma AIR** — champ de condition sur le bloc (ex. `visibleWhen`), + validateur d'accessibilité du graphe | Traite la cause. Rupture de contrat gelé ⇒ **AIR 1.1.0**, re-scellement du train. **Rectifié après mesure** : les 12 fichiers du corpus restent byte-identiques (migration en mémoire), mais tous les `rootHash` changent | Le plus lourd. Touche l'artefact gelé de la Phase 2 ; la ré-émission a un coût LLM et repose la question de la provenance-modèle |
+| **B** | **Convention d'émission** — le compilateur conditionne `empty_state` sur l'état du bloc `list` du même écran | Aucun changement de schéma. **Mais** c'est une convention INVENTÉE par le moteur, non exprimée par l'AIR : le document ne dirait plus ce que l'app fait | Contredit « AIR source de vérité » (non-négociable #1). Je le déconseille |
+| **C** | **Re-router la dette** vers la phase où le schéma évolue déjà, par décision consignée | Honnête et traçable ; la Phase 10 se clôt sur ses critères propres | Reporte un défaut visible à l'utilisateur final. La règle de périmètre n'autorise le report que pour un périmètre insuffisant PAR NATURE — ici l'obstacle est un contrat gelé, catégorie que la règle ne nomme pas : d'où la nécessité d'une décision explicite |
+
+### ANALYSE D'IMPACT MESURÉE (travail préparatoire, 2026-08-29)
+
+Quatre faits établis en lisant les contrats, pas en supposant :
+
+1. **`airSchemaVersion` est un `z.literal`** (`air.ts:297`). Faire évoluer le
+   schéma en 1.1.0 fait donc ÉCHOUER les 12 documents du corpus, qui
+   déclarent 1.0.0 — sauf à passer par le mécanisme prévu.
+2. **Ce mécanisme existe déjà et est testé** : `migrateAirDocument`
+   (`migrations.ts`), registre `AIR_MIGRATIONS` **vide**, conçu pour
+   exactement ce cas (« la v1.1 n'improvisera pas »). Il n'est **câblé nulle
+   part** dans le pipeline : l'option A exige donc d'ajouter la migration ET
+   de la brancher en amont de la résolution.
+   ⇒ **Les 12 fichiers du corpus gelé resteraient byte-identiques sur
+   disque.** La migration opère en mémoire. C'est une correction de mon
+   estimation initiale, qui parlait de « ré-émission ou migration ».
+3. **MAIS l'`airHash` change** : mesuré sur `resto-quartier`,
+   `f9f5894172b85238…` en 1.0.0 devient `3d5044d2687bfccf…` en 1.1.0.
+   Conséquence en chaîne : **tous les locks et tous les `rootHash` changent**,
+   donc cascade complète, deux slices à rejouer et **un nouveau build EAS**
+   pour la preuve appareil.
+4. **`AirDiagnostic` n'a pas de niveau de gravité** (`code`, `path`,
+   `message`) : le validateur est binaire, tout diagnostic = refus
+   fail-closed. Un contrôle « écran inatteignable » (DET-024) ne peut donc
+   PAS être ajouté comme avertissement — il **refuserait 10 des 13
+   documents**, corpus gelé compris. Le traiter suppose soit d'introduire une
+   notion de gravité (nouveau changement de contrat), soit de le laisser au
+   rang d'instrument de mesure, ce qu'il est aujourd'hui.
+
+### Fichiers concernés par l'option A (inventaire, aucune modification faite)
+
+| Fichier | Nature du changement |
+|---|---|
+| `packages/air-schema/src/air.ts` | champ optionnel de condition sur `blockInstanceSchema` + bump `AIR_SCHEMA_VERSION` |
+| `packages/air-schema/src/migrations.ts` | migration 1.0.0 → 1.1.0 (identité sur les champs ; le runner pose la version) |
+| point d'entrée du pipeline (`resolve-lock.ts` ou en amont) | brancher `migrateAirDocument` — aujourd'hui jamais appelé en production |
+| `packages/compiler/src/release-train.ts` | pin `airSchemaVersion` + ré-scellement conscient |
+| `packages/compiler/src/emit-project.ts` | rendu conditionnel du bloc |
+| cliquets et tests | corpus, migrations, émission, déterminisme |
+| `benchmarks/air-emission/` | nouvelle campagne SEULEMENT si l'on veut que le modèle PRODUISE des conditions (sinon la migration suffit) |
+
+### Proposition technique (forme minimale, à valider ou à écarter)
+
+Ne pas inventer de langage d'expression. Réutiliser la notion que le registre
+manipule déjà — le bloc `list` dérive son état de `items.length === 0` :
+
+```
+visibleWhen?: { kind: "entity_empty" | "entity_not_empty", entityId }
+```
+
+Fermé, vérifiable par le validateur (l'entité doit exister), sans langage
+d'expression, sans invention sémantique. Un `empty_state` porterait
+`entity_empty`, un CTA de liste `entity_not_empty`.
+
+### Deux variantes de l'option A, à trancher aussi
+
+| | Variante | Conséquence mesurée |
+|---|---|---|
+| **A1** | bump 1.0.0 → 1.1.0 + migration | Honnête : la version décrit le contrat. **Tous les `rootHash` changent** ⇒ cascade + 2 slices + nouveau build EAS |
+| **A2** | champ optionnel **sans** bump | Aucun hash ne bouge pour les documents qui ne l'utilisent pas. **Mais la version cesse de décrire le contrat** — contraire au gel, qui « porte sur les CONTRATS » |
+
+### Plan de reprise si vous choisissez A (ordre exact)
+
+1. Champ optionnel + bump + migration 1.0.0→1.1.0 ; 2. branchement du runner
+de migration ; 3. rendu conditionnel dans l'émetteur ; 4. re-scellement du
+train ; 5. cascade complète (tests/typecheck/lint/déterminisme) ; 6. rejeu des
+2 slices ; 7. grille A++ et scorecard recalculés ; 8. nouveau build EAS et
+**re-validation appareil** ; 9. clôture de DET-017 volet 2, réexamen de
+DET-024. **Preuves exigées** : les 19 états vides dupliqués et les 4 actions
+doublées doivent tomber à 0 dans `benchmarks/composition/`, sans régression
+des dimensions A→H.
+
+### Recommandation (technique, l'arbitrage reste propriétaire)
+
+**Option A, mais pas dans la Phase 10.** Le conditionnement est un vrai manque
+de contrat et mérite d'être traité à la racine ; l'engager maintenant
+rouvrirait le corpus gelé et l'AIR 1.0.0 en fin de phase, au prix d'une
+ré-émission dont la Phase 10 n'a pas besoin. La voie la plus solide est donc
+**C puis A** : re-router formellement DET-017 volet 2 vers la phase où le
+schéma AIR évolue, en inscrivant A comme son traitement prévu. Cela demande
+UNE décision explicite de votre part — sans elle, la Phase 10 reste ouverte.
+
+- **Tranché par** : décision propriétaire.
+
+## D-044 (ex P-009) — AIR 1.1.0 : CONDITION DE VISIBILITÉ DES BLOCS (TRANCHÉ, 2026-08-29)
+
+- **Décision propriétaire (2026-08-29)** : option **A1** — faire évoluer le
+  schéma MAINTENANT plutôt que reporter, la norme **A++ (D-039) restant
+  inchangée**. Ma recommandation initiale (« C puis A1 ») était **incohérente
+  avec l'exigence élite** : reporter une dette « 🔴 BLOQUANTE A++ » est
+  exactement ce que D-039-R1 interdit. La décision corrige ma recommandation.
+
+### Ce qui a été fait
+
+1. **`visibleWhen` sur le bloc** — forme FERMÉE, deux prédicats seulement
+   (`entity_empty` / `entity_not_empty` + `entityId`), adossés à la notion que
+   le registre manipule déjà (le bloc `list` dérive son état de
+   `items.length === 0`). **Aucun langage d'expression** : l'étendre sera une
+   évolution consciente, pas une improvisation de LLM.
+2. **`AIR_SCHEMA_VERSION` 1.0.0 → 1.1.0**, avec la **première migration
+   réelle** du projet. Le mécanisme existait depuis la Phase 2, testé mais
+   **jamais câblé** : il est activé ici. La migration est une **IDENTITÉ** —
+   elle n'invente aucune condition, car en attribuer une reviendrait à
+   réinterpréter un artefact gelé sans décision.
+3. **Les 12 documents du corpus gelé restent byte-identiques** (vérifié :
+   0 fichier modifié). Ils déclarent 1.0.0 et sont migrés EN MÉMOIRE.
+4. **Normalisation câblée à TOUS les points d'entrée** — résolveur, émetteur,
+   Oracle, générateur SQL, harnais de slices, scorecard. Un point d'entrée
+   oublié aurait fait travailler deux étages sur deux versions du même
+   document ; c'est arrivé pendant l'intégration et a été corrigé.
+5. **Séparation migration structurelle / validation** : fusionner les deux
+   faisait s'effondrer toute erreur de schéma en « migration échouée ».
+   Précision des diagnostics perdue ⇒ refusée ⇒ `applyAirMigrations` extrait.
+6. **Rendu conditionnel** dans les 6 wrappers du runtime émis, évalué sur la
+   **même source de données que la liste** — l'état vide et la liste ne
+   peuvent donc pas se contredire.
+7. **Slice 2 ré-émis** avec la règle de condition (substitutions de prompt
+   vérifiées avant remplacement, comme pour `design.overrides`).
+
+### Preuves
+
+- **Slice 2 : 2 états vides dupliqués → 0** (`benchmarks/composition/`).
+- Chaîne complète rejouée : backend réel (démonté, absence prouvée), sandbox
+  (`npm ci`/`tsc`/bundle exit 0), **Oracle 7/7**, **A++ A→H conformes**,
+  déterminisme 5/5. Slice 1 rejoué également.
+- **560 tests verts**, typecheck 0, lint 0.
+
+### Incident du 2026-08-29 — trois défauts de MON code, corrigés
+
+Une panne réseau pendant l'attente de santé a laissé **un projet Supabase
+vivant**. Supprimé immédiatement, **absence prouvée par l'API**. Trois causes,
+toutes corrigées et couvertes par des tests :
+
+1. l'étape en échec était **devinée** → journal faux (« sql » au lieu de
+   « health ») ; elle est désormais suivie explicitement ;
+2. le démontage n'était **pas réessayé** — « démontage garanti » n'a de sens
+   qu'avec une insistance bornée (3 tentatives), et l'absence est vérifiée
+   **dans tous les cas** ;
+3. l'alerte rouge du harnais était placée **après** le `throw` : un backend en
+   échec masquait l'alerte du projet resté vivant.
+
+### Ce que cette décision ne traite PAS
+
+**DET-024** (18 écrans sans chemin de navigation) reste ouverte : un contrôle
+d'accessibilité du graphe supposerait une notion de **gravité** dans
+`AirDiagnostic`, qui n'en a pas — l'ajouter refuserait 10 des 13 documents.
+Autre décision, non prise ici.
+
+## D-045 — CONTRAT D'EXÉCUTION : fermeture de l'unique chemin fail-open du moteur (2026-08-29)
+
+**Statut** : TRANCHÉ — proposition présentée, **approuvée explicitement par le
+propriétaire** le 2026-08-29, exécutée dans la foulée. Consignation conforme à
+`CLAUDE.md` règle 3 (validation explicite → consignation → exécution).
+
+### Problème établi par la mesure
+
+Tout le moteur est fail-closed : allowlists positives (blocs, capabilities,
+imports de slots, clés de thème), `strictObject` partout, quatre validateurs
+qui refusent net. **Une seule exception subsistait**, dans le dispatcher
+d'effets du runtime copié :
+
+```
+// capability / mutation / slot : non-opération v1 (Phases 5+/9).
+```
+
+Le moteur n'ignorait pas seulement ces effets : **il ne savait pas qu'il les
+ignorait**. Conséquence mesurée sur 13 documents (12 du corpus gelé + slice 2) :
+
+| Mesure | Valeur |
+|---|---|
+| effets déclarés **exécutés** | **27 / 196 (14 %)** |
+| écrans **atteignables** | 27 / 51 (53 %) |
+| contrôles visibles **non fantômes** | 38 / 111 (34 %) |
+| états de blocs **atteignables** | 90 / 140 (64 %) |
+| capabilities **câblées** | **0 / 78** |
+| slots **invoqués** | **0 / 48** (DET-018) |
+| règles **appliquées** | **0 / 74** |
+| blocs liés à une entité **pourvue de données** | 49 / 67 (73 %) |
+
+Et malgré cela : **Oracle L1 7/7 et grille A++ A→H conformes**. Aucun
+instrument ne regardait le comportement — les huit dimensions de la grille
+D-039 mesurent toutes la forme.
+
+### Ce qui a été construit
+
+**`@deribfy/execution-contract`** — paquet PUR (aucun fs, réseau, horloge,
+aléa ; aucune dépendance à un producteur ni à un juge), à trois faces :
+
+1. **Enveloppe** (`envelope.ts`) — déclaration versionnée de ce que le moteur
+   sait réellement exécuter : effets, déclencheurs, opérations de données,
+   états atteignables, capabilities émises, slots invoqués, règles appliquées,
+   traversée de relation, filtrage, RTL, thème, état inter-écrans.
+2. **Graphe** (`graph.ts`) — propriétés GLOBALES que l'émetteur, qui raisonne
+   écran par écran, ne peut structurellement pas voir : atteignabilité
+   **transitive**, source d'`itemId` des écrans de détail, disponibilité réelle
+   des données, contrôles fantômes, références rendues brutes.
+3. **Réconciliation** (`feasibility.ts`) — AIR ∩ enveloppe → rapport
+   déterministe, trié, **scellé par empreinte**, avec deux modes fail-closed :
+   `strict` (refus) et `declared_degraded` (compile, mais l'écart est porté).
+
+**ATTRIBUTION — la propriété la plus importante du rapport.** Chaque écart est
+imputé à un propriétaire : `document` (l'AIR est mal spécifié), `moteur` (le
+moteur ne sait pas exécuter ce que l'AIR déclare légitimement), `contrat`
+(l'AIR ne peut pas exprimer ce qu'il faudrait). Confondre ces trois causes est
+exactement ce qui a permis de corriger des documents là où le moteur était en
+cause. **Résultat mesuré : 535 écarts imputables au moteur, 72 au contrat,
+42 aux documents** — les documents décrivent des applications légitimes.
+
+### Trois choix de conception, et leurs raisons
+
+1. **Le runtime n'est PAS modifié.** La non-exécution est intégralement
+   déterminable à la compilation. Toucher `air-runtime.tsx` changerait
+   `embedded-assets.generated.ts`, donc **tous les `rootHash`**, pour zéro
+   information supplémentaire. **Preuve de non-régression : 12/12 `rootHash`
+   du corpus et le `rootHash` du slice 2 sont INCHANGÉS.**
+2. **Le rapport est un SIDECAR, jamais un fichier du projet** — même
+   traitement que le lock (« Le lock n'entre dans AUCUN hash d'artefact »,
+   D-027). Zéro churn d'artefact.
+3. **L'Oracle RAPPORTE, il ne refuse pas encore.** Durcir en `strict`
+   changerait un critère de sortie : la règle qui interdit d'ASSOUPLIR un
+   critère après coup interdit tout autant de le RESSERRER sans décision. Le
+   durcissement est une décision de l'étape d'exécution, pas de celle-ci.
+
+### Anti-mensonge : le cliquet de véracité
+
+Une enveloppe est une DÉCLARATION, donc elle peut mentir — et un mensonge y
+serait pire que le silence qu'elle remplace, puisqu'il serait scellé. Le
+cliquet `tests/envelope-truth.test.ts` (16 contrôles) confronte **chaque**
+affirmation au CODE RÉEL : branches de `useDispatch`, méthodes de
+`DataProvider`, `state="ready"` en dur d'`AirForm`, dépendances du gabarit,
+absence de `slotRegistry`, absence de lecture de `air.rules`, de
+`rtlSupported`, de `air.design.theme`, absence de `filter`/`sortBy` au
+registre de blocs. **Quand le moteur gagnera une capacité, ce fichier échouera
+en premier** : élargir l'enveloppe devient une édition consciente.
+
+### Deux cliquets de généralité créés (I5 / I6)
+
+- **AMPLITUDE** — les 13 documents portent TOUS exactement 3 entités et 3-4
+  écrans. Le paquet est désormais éprouvé sur 0 entité, 1 écran, 15 écrans /
+  12 entités, auto-référence, `many_to_many` — formes qu'aucun document ne
+  contient. *(Note : le compilateur, testé indépendamment sur ces mêmes
+  formes, les traite déjà correctement — 8/8, déterministe, Oracle vert.)*
+- **INVARIANCE AU RENOMMAGE** — renommer mécaniquement tous les identifiants
+  d'un document laisse **métriques et écarts strictement identiques**, tandis
+  que l'empreinte diffère. Aucune dépendance sémantique cachée.
+
+### Découverte non prévue, consignée
+
+**`app.locales.rtlSupported` est INERTE** : mesuré, `true` vs `false` produit
+**0 fichier différent** dans le projet émis. Ses seuls lecteurs sont le rendu
+texte de debug et le générateur de flows E2E. Le **non-négociable #16 (« RTL
+réel »)** n'est donc pas tenu côté artefact — la dimension F est conforme par
+les propriétés logiques des primitives, ce qui est vrai et méritoire, mais
+aucune app générée ne s'initialise en RTL. Nouvelle dette : **DET-026**.
+
+### Livrable de spécification
+
+`benchmarks/execution-contract/` produit, **depuis les documents réels**, la
+spécification de l'AIR 2.0 — pour ne pas décider d'intuition ce qui manque au
+contrat, et ne pas refaire l'erreur d'origine (schéma gelé en Phase 2 avant
+qu'aucun consommateur complet n'existe) :
+
+| Besoin d'expressivité mesuré | Occurrences | Documents |
+|---|---|---|
+| point d'ancrage d'un Code Slot | 48 | 13 / 13 |
+| liaison explicite liste → écran de détail | 15 | 11 / 13 |
+| traversée de relation (afficher un champ de l'entité cible) | 7 | 6 / 13 |
+| état de parcours partagé entre écrans | 2 | 2 / 13 |
+
+### Preuves exécutées (2026-08-29)
+
+**636 tests verts** sur 15 paquets (dont 76 pour le nouveau) ·
+`packages:typecheck` **EXIT=0** · `packages:lint` **EXIT=0** ·
+**12/12 `rootHash` du corpus INCHANGÉS** · `rootHash` du slice 2 **INCHANGÉ** ·
+corpus gelé **byte-identique** (0 fichier modifié) · Oracle passe de 7 à
+**8 contrôles**, cliquet de surface édité consciemment.
+
+### Ce que cette décision ne traite PAS
+
+Elle ne construit **aucune** capacité d'exécution : ni mutation, ni
+persistance, ni capability câblée, ni slot invoqué. Elle rend l'absence
+**visible, imputée et mesurable**. Les étapes d'exécution restent entièrement
+à faire, et **cette décision n'autorise à elle seule aucune d'entre elles** :
+chacune exige sa propre validation, conformément à D-017.
+
+---
+
+## D-046 — Le protocole ELITE 2027 A+ devient le cadre d'exécution permanent de la ROADMAP (2026-08-30)
+
+**Statut** : TRANCHÉ — arbitrage propriétaire du **2026-08-30**, à l'issue de la
+confrontation méthodologique Claude Code ↔ Claude Chat / Opus 5. Consignation
+conforme à `CLAUDE.md` règle 3 (validation explicite → consignation →
+exécution).
+
+### Décision
+
+`docs/elite-protocol/` devient une **référence obligatoire** des processus de
+génération, d'analyse, de validation et de certification du chantier. La
+`ROADMAP.md` devient le **plan directeur persistant d'exécution** : une session
+y détermine la phase active, l'état figé, la prochaine action autorisée et ses
+préconditions, sans dépendre de la mémoire de conversation.
+
+### Ce que la décision NE fait PAS
+
+- elle **ne donne aucune autorité au protocole sur la ROADMAP** : le protocole
+  évalue le chantier, il ne le pilote pas (`elite-protocol/README.md`,
+  périmètres) ;
+- elle **ne déplace ni ne duplique** le protocole : aucune seconde source de
+  vérité n'est créée, la ROADMAP référence et n'a pas préséance ;
+- elle **ne remplace aucun critère de sortie** : elle fixe le **niveau de
+  preuve** exigé pour les déclarer satisfaits ;
+- elle **ne clôt aucune phase** et **n'élève aucun statut**.
+
+### Contenu inscrit à la ROADMAP
+
+1. § **CADRE D'EXÉCUTION PERMANENT** (11 sous-sections) : source de vérité,
+   distinction A+/A++, niveau de preuve exigé pour toute transition, état figé
+   au 2026-08-30, non-correction opportuniste, rapport de continuité à 13
+   champs, gouvernance, capability stack et boucle générale, procédure de
+   reprise, prochaine étape autorisée, points de gouvernance en attente.
+2. § **EXIGENCES OPÉRATIONNELLES PERMANENTES — E-01 → E-20**, issues de la
+   confrontation, chacune formulée en exigence opposable (exigence · où elle
+   mord · preuve exigée · état · interdit), avec table de rattachement par phase.
+
+### Statuts — inchangés par cette décision
+
+```
+PHASE 10 : OUVERTE          VALIDATION PHYSIQUE : SUSPENDUE
+EXP-1 : TERMINÉE            EXP-2 : NON LANCÉE
+H0 : INDÉTERMINÉ            H1/H2 : OUVERTS            H3 : EXCLU
+R-25 : CONDITION D'EXPLOITABILITÉ ÉTABLIE — CAUSE NON IDENTIFIÉE
+PROTOCOL-D020 : ÉTABLI POUR CETTE MÉTRIQUE UNIQUEMENT
+FINAL TECHNICAL AGREEMENT : NO
+```
+
+### Préconditions ouvertes, laissées à l'arbitrage propriétaire
+
+`P1` réarbitration de la granularité avant toute expérience causale ·
+`P2` versement de `PROTOCOL-D006` → `D014` ·
+`P3` versionnement Git de `docs/elite-protocol/` ·
+`P4` consignation du résultat E-11 (le modèle de sévérité ne peut pas
+représenter la composition) dans un registre du protocole.
+
+### Preuve
+
+`docs/mobile-generation/ROADMAP.md` §§ CADRE et EXIGENCES ·
+`docs/elite-protocol/registers/GATE_SEMANTIC_OBSERVABILITY.md` ·
+`docs/elite-protocol/evidence/`.
+
+**Non-régression** : aucun code produit modifié · aucune phase close · aucun
+statut élevé · aucune expérience lancée.
+
+---
+
+## D-047 — Correction du câblage d'appui des lignes de liste (APP-D002 / DET-027) — 2026-08-30
+
+**Statut** : TRANCHÉ — proposition présentée avec sa mesure, **approuvée explicitement
+par le propriétaire** le 2026-08-30, exécutée dans la foulée. Consignation conforme à
+`CLAUDE.md` règle 3.
+
+### Problème établi par la mesure
+
+Un **instrument d'observation** a été construit : il rend l'écran **émis** avec le
+runtime **émis**, presse chaque identité et enregistre le delta, avec **contrôle
+négatif**. C'est la première observation d'exécution du chantier — jusque-là, tous les
+contrôles lisaient le code.
+
+```
+AVANT   96 identités adressables · 60 pressables · 4 AGISSANTS · 56 inertes
+        dont 46 lignes de liste (24 sur le seul scr_menu)
+```
+
+Cause : `useItemNavigate` retournait **toujours** une fonction, même en l'absence
+d'effet `navigate`. `AirList` la passait sans condition à `onItemPress`. Le contrat de
+bloc, lui, savait déjà ne câbler aucun `onPress` quand `onItemPress` est absent.
+
+**Invisible à toute mesure statique** : `controls()` ne recense un bloc que s'il porte
+une action ; un bloc liste n'en porte aucune, donc aucun écart n'était émis.
+
+### Décision
+
+Ne câbler l'appui d'une ligne **que si** une action `navigate` existe.
+
+> **Aucun comportement n'est fabriqué.** On retire une promesse que rien ne fondait.
+> Inventer une navigation là où l'AIR n'en déclare pas aurait été une extension
+> silencieuse du contrat — refusé, au même titre que D-040.
+
+### Périmètre — 4 fichiers, chaîne de propagation complète
+
+| Fichier | Nature |
+|---|---|
+| `packages/compiler/runtime/air-runtime.tsx` | **source** — la condition ajoutée |
+| `packages/compiler/src/embedded-assets.generated.ts` | **régénéré** par `scripts/embed-assets.mjs` (`fingerprint 4962415b777fc447`) |
+| `slices/conteneurs/app/lib/runtime/air-runtime.tsx` | propagé — **byte-identique** à la source avant édition |
+| `slices/restaurant/app/lib/runtime/air-runtime.tsx` | idem |
+
+### Résultat mesuré
+
+```
+APRÈS   96 identités · 14 pressables · 4 AGISSANTS · 10 inertes
+        46 fausses affordances retirées · les 4 navigations fonctionnelles INCHANGÉES
+```
+
+**Correspondance runtime ↔ validateur (`E-19`) : 21,4 % → 100 %** sur la propriété
+« ce contrôle agit ». La correspondance n'a pas été obtenue en changeant le validateur —
+il était **sain**, 0 faux positif, 0 faux fantôme — mais en retirant du produit ce qu'il
+avait raison de ne pas compter.
+
+### Non-régression
+
+**640 tests verts / 56 fichiers · `packages:typecheck` EXIT=0** · cliquet de véracité de
+l'enveloppe et cliquet de non-dérive des assets embarqués passés · contrôle négatif de
+l'instrument : 0 transition sans appui.
+
+### Chaîne de preuve
+
+`observation → hypothèse → preuve causale → correction → vérification → non-régression`
+— parcourue **entièrement, pour la première fois du chantier**, avec un instrument
+capable de mesurer avant **et** après.
+
+### Délibérément NON traité
+
+| | |
+|---|---|
+| les **10** contrôles inertes restants | l'AIR déclare `capability`/`mutation`, le moteur ne sait pas les exécuter. Les « corriger » **masquerait un manque réel** |
+| `PROTOCOL-D005` / `D008` | 2 blocs recensés mais jamais rendus (`visibleWhen: entity_empty` sur entité peuplée) |
+| lacune de conception sur `scr_menu` | après correction, les plats ne sont plus pressables — **conforme à l'AIR**, qui ne déclare aucune action ouvrant le détail depuis la liste. Défaut de **DOCUMENT**, pas de moteur. À arbitrer |
+| `APP-D003` / `DET-028` | dimension C de la grille A++ verte sans fondement observationnel — **requalification requise avant toute clôture de Phase 10** |
+
+---
+
+## D-048 — Dimension C requalifiée `non_conforme` : A++ n'est pas atteint (DET-028) — 2026-08-30
+
+**Statut** : TRANCHÉ — constat présenté avec sa mesure, **arbitrage propriétaire explicite**
+du 2026-08-30. Consignation conforme à `CLAUDE.md` règle 3.
+
+### Ce que le critère demande
+
+`ROADMAP.md` §294 — **C, Complétude des états** : *« Tout bloc consommant des données
+expose `loading` / `empty` / `error` »*. **Nature de la preuve déclarée : « Contrat du
+registre + tests ».**
+
+### Ce que l'instrument mesurait
+
+`apxx-grid.ts` §C :
+
+```js
+["loading","empty","error"].filter(k => blocks.includes(`state.kind === "${k}"`))
+```
+
+Une **recherche de sous-chaîne** dans le source du composant émis.
+
+> **L'instrument n'est pas fautif : il est fidèle à sa spécification.** Le critère
+> lui-même déclare que sa preuve est le *contrat du registre*. Le défaut est dans le
+> **niveau de preuve que le critère s'est assigné** — une lecture de contrat (N2) pour
+> une propriété dont la nature est *ce que l'utilisateur voit* (N6/N7). C'est
+> exactement `P-B` : le niveau exigé dépend de la **nature** de la proposition, jamais
+> de la commodité de la mesure.
+
+### Ce que l'exécution observe
+
+Blocs consommant des données (`entity: "required"` au registre) : `detail_header`,
+`form`, `list`.
+
+| Bloc | déclaré | concédé par l'enveloppe | **observé** | critère C |
+|---|---|---|---|---|
+| `list` | ready/loading/empty/error | ready/empty | **empty · ready** | 🔴 |
+| `form` | ready/submitting/error | ready | **ready** | 🔴 |
+| `detail_header` | ready | ready | **aucun état porté** | 🔴 |
+
+**11 états déclarés · 7 concédés · 3 observés.** L'inatteignabilité est **structurelle** :
+le `DataProvider` est synchrone (`listInstances`, `getInstance` ; aucune écriture, aucun
+modèle d'observation). Aucun chemin ne mène à `loading` ni à `error`.
+
+### Décision
+
+**C = `non_conforme`.** `non_determinee` est écarté : la règle de notation le réserve aux
+dimensions **non mesurables**, or C a été mesurée par **deux voies concordantes** —
+l'enveloppe (cliquetée contre le code réel) et l'exécution.
+
+**`DET-028` = BLOQUANTE Phase 10, à traiter AVANT toute clôture.**
+
+### Conséquences assumées
+
+1. 🔴 **A++ n'est pas atteint** — ni sur le slice conteneurs, ni sur le slice restaurant.
+2. L'entrée `CHANGELOG` du 2026-08-29 (D-043) *« A++ CONFORME A→H »* est **rectifiée en
+   place, jamais supprimée** — une thèse abandonnée renseigne autant qu'une thèse retenue.
+   Tout ce qu'elle rapporte par ailleurs (tokens, encres dérivées, identité visuelle,
+   DET-019/021/022) demeure exact.
+3. `STATUS.md` : ligne de phase et bloc « Oracle L1 7/7 » rectifiés, constats historiques
+   conservés.
+4. **Phase 10 porte désormais deux verrous** : `DET-028` et la validation sur appareil.
+
+### Aucune correction engagée — et pourquoi
+
+| Cause démontrée | Ce que corriger impliquerait |
+|---|---|
+| l'instrument mesure le **contrat**, pas l'état atteint | rendre l'instrument honnête ⇒ C devient non conforme, **sans rien améliorer au produit** |
+| le produit **ne peut pas** atteindre `loading`/`error` — source synchrone | construire une source asynchrone ⇒ **chantier Phase 5+**, pas un correctif |
+
+Aucune de ces voies n'est un patch. Le choix relève de la ROADMAP, pas de cette décision.
+
+### Artefacts de mesure — INTOUCHÉS
+
+`slices/*/results/metrics.json` **n'ont pas été modifiés**. Rectifier un relevé
+d'instrument serait falsifier une preuve : le relevé dit ce que l'instrument a mesuré à
+sa date, et c'est exact. C'est la **conclusion** qui était fausse, pas la mesure.
+
+---
+
+## P-009 — VOLET 2 : ACCESSIBILITÉ DU GRAPHE DE NAVIGATION (EN ATTENTE) — dossier rouvert le 2026-08-30
+
+> **Le volet 1 de P-009 (conditionnement des blocs) est TRANCHÉ → D-044.**
+> Le volet 2 — *« aucun validateur ne contrôle l'accessibilité du graphe de
+> navigation »* — n'a **jamais été arbitré**. Ce dossier le reprend avec ce qui a
+> changé depuis le 2026-08-29.
+
+### Ce qui a changé depuis la rédaction initiale
+
+`FACT` — Le 2026-08-29 au soir, **D-045** a créé `@deribfy/execution-contract`.
+**Le contrôle d'accessibilité EXISTE désormais** : `reachableScreens()` calcule la
+fermeture transitive, et `analyzeFeasibility` émet `EXEC_SCREEN_UNREACHABLE_DECLARED`
+(propriétaire : *document*) et `EXEC_SCREEN_UNREACHABLE_ENGINE` (propriétaire : *moteur*).
+
+**La question n'est donc plus « faut-il construire ce contrôle ? » mais
+« faut-il le rendre BLOQUANT ? ».**
+
+`FACT` — Il ne bloque rien aujourd'hui : le mode par défaut est `declared_degraded`,
+qui **n'oppose aucun refus, quel que soit le nombre d'écarts** (verdict `degraded` de
+1 à 649 écarts). Le mode `strict` existe et refuse au premier écart. **Aucune phase ne
+déclare lequel s'applique.**
+
+### Mesures disponibles
+
+| Mesure | Définition | Résultat |
+|---|---|---|
+| banc `composition/` (2026-08-29) | écrans qu'**aucune** action `navigate` ne cible | **17 / 50** |
+| `reachableScreens` (2026-08-30) | écrans **hors de la fermeture transitive** depuis l'entrée | **24 / 51** |
+| observation d'exécution (2026-08-30) | atteignabilité **runtime** mesurée sur le slice 2 | **identique à l'effectif** — 27/51 sur les 13 documents |
+
+Les deux définitions ne mesurent pas la même chose : la seconde est plus sévère
+(un écran ciblé depuis un écran lui-même mort reste inatteignable).
+
+`FACT` **nouveau, 2026-08-30** — Après la correction `D-047`, les lignes du bloc liste
+de `scr_menu` ne sont plus pressables : **l'AIR ne déclare aucune action ouvrant le
+détail d'un plat depuis la liste**. Ce n'est pas un défaut du moteur — c'est
+exactement la lacune de document que ce volet 2 doit adresser.
+
+### Options — analyse, non arbitrage
+
+| | Option | Ce qu'elle implique | Coût / risque |
+|---|---|---|---|
+| **A** | **Mode `strict` sur l'accessibilité** — un écran inatteignable refuse le document | Traite la cause à la racine, fail-closed comme tout le reste du moteur | 🔴 **refuserait le corpus entier** : 24 écrans sur 51 sont inatteignables. Rend le corpus gelé incompilable |
+| **B** | **Bloquant pour les documents NEUFS seulement**, corpus gelé exempté par décision datée | Arrête l'hémorragie sans casser l'existant. Traçable | Deux régimes coexistent ; il faut une marque d'exemption dans l'artefact, sinon l'exemption devient tacite |
+| **C** | **Rester en rapport seul**, dette acceptée avec échéance de phase | Coût nul immédiat | Reporte un défaut **visible par l'utilisateur** : 24 écrans que personne ne peut atteindre. La règle A++ interdit qu'une dette vaille satisfaction d'un critère |
+| **D** | **Seuil** — refuser au-delà de N écrans morts | Compromis | 🔴 Un seuil est un **choix de commodité**, pas une propriété. `P-B` du protocole l'exclut : le niveau exigé dépend de la nature de la proposition |
+
+### 🔴 Avertissement à porter à l'arbitrage
+
+`FACT` — `PROTOCOL-D015` a démontré que la métrique **déclarée** est **gamable par
+transfert d'imputation** : ajouter deux déclencheurs `data` inertes fait passer
+`owner:document` de 2 à 0, sans rien changer au produit.
+
+`INFÉRENCE` — **Rendre ce contrôle bloquant crée une incitation à le contourner**, et le
+contournement est connu, mesuré et bon marché. Toute option qui rend l'accessibilité
+bloquante devrait s'appuyer sur la métrique **effective**, pas sur la déclarée — ou
+fermer d'abord `R-23`.
+
+### Recommandation
+
+**Option B.** L'option A est juste mais inapplicable en l'état ; C contredit la règle
+A++ que vous venez de faire respecter sur la dimension C ; D introduit un seuil de
+commodité que le protocole proscrit. B est la seule qui arrête le défaut sans nier
+l'existant — **à condition que l'exemption du corpus gelé soit inscrite dans un
+artefact, jamais tacite.**
+
+**Décision requise :** A · B · C · D — et, si bloquant : métrique **déclarée** ou
+**effective** ?
+
+---
+
+## P-010 — LIAISON DES CODE SLOTS (DET-018) — EN ATTENTE, ouvert le 2026-08-30
+
+### Le fait
+
+`FACT` — L'AIR déclare la **signature** d'un slot (`inputs`, `outputs`,
+`allowedImports`) mais **aucune convention de liaison n'existe dans le schéma gelé** :
+rien ne dit où un slot est appelé, ni avec quoi.
+
+`FACT` — Mesure sur le corpus : **44 slots déclarés · 43 actions à effet `slot` ·
+0 invocation**. La Phase 9 émet les modules et un registre **typé**, vérifiés par la
+politique AST et par le `tsc` du projet généré — mais **l'application ne les appelle
+jamais**.
+
+`FACT` — **D-040 a refusé d'inventer une convention** : cela aurait été une extension
+silencieuse du schéma gelé. Le refus était correct ; il laisse la décision ouverte.
+
+**Corollaire consigné** : l'exécution d'un slot en bac à sable — donc les *tests
+unitaires de slot* au sens §4 de l'architecture — n'est pas câblée non plus. La
+vérification actuelle est **statique**.
+
+### Options — analyse, non arbitrage
+
+| | Option | Ce qu'elle implique | Coût / risque |
+|---|---|---|---|
+| **A** | **Évolution du schéma AIR** — convention de liaison explicite (au même titre que `visibleWhen` en 1.1.0) ⇒ **AIR 1.2.0** + migration identité | Traite la cause. Le mécanisme de migration est **déjà câblé** depuis D-044 : le chemin est éprouvé | 🔴 **Cascade de hachages** : `airHash` change ⇒ tous les locks et `rootHash` changent ⇒ **deux slices à rejouer et un nouveau build EAS** |
+| **B** | **Dette acceptée** — les slots restent déclarés et non invoqués, l'écart `EXEC_SLOT_NOT_INVOKED` continue de le dire | Coût nul. L'écart est déjà émis et scellé au rapport | Une capacité annoncée à l'architecture reste **inerte sur 48 slots**. Ce n'est pas un défaut visible par l'utilisateur, mais c'est une promesse non tenue du contrat |
+| **C** | **Retirer les slots du contrat** jusqu'à ce qu'une phase les implémente | Honnête : le document cesse de promettre ce que le moteur ne fait pas | 🔴 **Rupture MAJEURE** du schéma gelé ; perte d'information dans 13 documents ; contredit la trajectoire d'architecture |
+
+### Ce qui distingue P-010 de P-009 volet 2
+
+| | P-009 v2 — écrans morts | P-010 — slots inertes |
+|---|---|---|
+| **visible par l'utilisateur ?** | 🔴 **oui** — 24 écrans inatteignables | ⚪ **non** — aucune surface d'app concernée |
+| gravité au registre | 🔴 bloquante A++ (via DET-017) | 🟠 moyenne (DET-018) |
+| échéance déjà posée | Phase 10 | « évolution du schéma AIR — Phase 10 ou 11 » |
+
+`INFÉRENCE` — Ces deux dossiers n'ont pas la même urgence. P-009 v2 touche ce que
+l'utilisateur voit ; P-010 touche une promesse d'architecture. Les traiter dans le même
+mouvement se justifie **uniquement** par le coût partagé de la cascade de hachages.
+
+### Recommandation
+
+**Option B pour la Phase 10, avec échéance explicite** — *sauf si* P-009 volet 2 conduit
+de toute façon à une évolution de schéma. Dans ce cas, **A pour les deux, en une seule
+montée 1.2.0**, pour ne payer la cascade et le build EAS **qu'une fois**.
+
+**Décision requise :** A · B · C — et : **grouper avec P-009 v2, ou non ?**
+
+### 🔴 CONSÉQUENCE SUR L'ORDRE DES VERROUS — à trancher avant RN-07
+
+`FACT` — Une évolution de schéma change l'`airHash`, donc tous les `rootHash`, donc
+impose **un nouveau build EAS** et une **nouvelle validation sur appareil**.
+
+`CONCL.` — **Valider sur appareil (RN-07) AVANT de trancher P-009 v2 et P-010
+invaliderait cette validation** si l'une des deux conduit à une évolution de schéma.
+L'ordre `RN-07 → RN-12 → RN-13` ferait alors payer **deux builds et deux campagnes
+appareil** au lieu d'une.
+
+**L'ordre sûr est : trancher P-009 v2 et P-010 D'ABORD, puis construire et valider une
+seule fois.**
+
+---
+
+## D-049 — Accessibilité du graphe : bloquante pour les documents NEUFS, sur la métrique EFFECTIVE (P-009 volet 2) — 2026-08-30
+
+**Statut** : TRANCHÉ — dossier présenté avec ses mesures, **arbitrage propriétaire
+explicite** du 2026-08-30. Clôt le volet 2 de `P-009`, resté ouvert depuis le 2026-08-29.
+
+### Décision
+
+**Option B** — le contrôle d'accessibilité devient **bloquant pour les documents
+NEUFS**, le corpus gelé restant exempté.
+
+🔴 **Condition impérative attachée à la décision** :
+
+> Le blocage s'appuie **exclusivement sur la métrique EFFECTIVE**.
+> **La métrique DÉCLARÉE ne peut pas servir de base à un blocage tant que `R-23`
+> n'est pas fermé.**
+
+### Fondement de la condition
+
+`FACT` — `PROTOCOL-D015` a démontré que la métrique **déclarée** est gamable par
+**transfert d'imputation** : deux déclencheurs `data` inertes suffisent à faire passer
+`owner:document` de 2 à 0 sans rien changer au produit. Le comptage reste additif ; c'est
+l'**imputation** qui bascule.
+
+`INFÉRENCE` — Rendre bloquante une métrique dont le contournement est **connu, mesuré et
+bon marché** créerait une incitation directe à l'exercer. La condition ci-dessus ferme
+cette voie avant qu'elle ne s'ouvre.
+
+**Réouverture** : si `R-23` est fermé, la question de bloquer aussi sur la métrique
+déclarée pourra être reposée — jamais avant.
+
+### Exigence d'implémentation — à respecter le jour de la mise en œuvre
+
+`FACT` — Le dossier posait : *« à condition que l'exemption du corpus gelé soit inscrite
+dans un artefact, jamais tacite »*.
+
+Toute mise en œuvre devra donc porter une **marque d'exemption explicite et vérifiable**
+distinguant un document du corpus gelé d'un document neuf. **Une exemption tacite —
+fondée sur une date, un chemin de fichier ou une convention implicite — est refusée par
+avance** : elle rendrait le régime de blocage indécidable pour une session future.
+
+### Options écartées
+
+| | Pourquoi |
+|---|---|
+| **A** — mode `strict` inconditionnel | **24 écrans sur 51 sont inatteignables** : refuserait le corpus entier et le rendrait incompilable |
+| **C** — rapport seul | Contredit la règle A++ que `D-048` vient de faire respecter : une dette ne vaut jamais satisfaction d'un critère. 24 écrans inatteignables sont **visibles par l'utilisateur** |
+| **D** — seuil chiffré | Un seuil est un **choix de commodité**, pas une propriété. `P-B` du protocole l'exclut : le niveau exigé dépend de la **nature** de la proposition |
+
+### Ce qui n'est PAS fait par cette décision
+
+Aucun code, aucun schéma, aucun mode de gate modifié. **La décision fixe le régime ; sa
+mise en œuvre est un travail distinct**, à inscrire au plan.
+
+---
+
+## D-050 — Code Slots : dette acceptée avec échéance, pas d'évolution de schéma (P-010 / DET-018) — 2026-08-30
+
+**Statut** : TRANCHÉ — **arbitrage propriétaire explicite** du 2026-08-30.
+
+### Décision
+
+**Option B** — les slots restent **déclarés et non invoqués** pour la Phase 10. La dette
+est **acceptée, avec échéance**. **Aucune évolution du schéma AIR maintenant.**
+
+### Échéance
+
+`DET-018` portait déjà *« Évolution du schéma AIR — arbitrage propriétaire à consigner
+(Phase 10 ou 11) »*. La présente décision **exclut la Phase 10** ; l'échéance retenue est
+donc **Phase 11**, par élimination sur la fiche existante — non par invention.
+
+### Ce que la dette recouvre, exactement
+
+`FACT` — **44 slots déclarés · 43 actions à effet `slot` · 0 invocation.** L'AIR déclare
+la signature (`inputs`, `outputs`, `allowedImports`) mais **aucune convention de liaison
+n'existe dans le schéma gelé**. La Phase 9 émet les modules et un registre typé, vérifiés
+statiquement ; l'application ne les appelle jamais.
+
+**Corollaire porté à la dette** : l'exécution d'un slot en bac à sable — donc les tests
+unitaires de slot au sens §4 de l'architecture — n'est pas câblée non plus.
+
+### Pourquoi B et non A
+
+`INFÉRENCE` — Contrairement à `D-049`, cette dette **n'a aucune surface visible par
+l'utilisateur** : aucun écran, aucun contrôle. Sa gravité au registre est 🟠 moyenne, non
+bloquante A++. Le coût d'une montée `AIR 1.2.0` — cascade complète des hachages, deux
+slices à rejouer, **un nouveau build EAS** — n'est pas justifié par une promesse
+d'architecture non tenue mais invisible.
+
+`D-040` avait refusé d'**inventer** une convention de liaison. Ce refus reste valide : la
+présente décision ne l'invente pas davantage, elle **date l'échéance** au lieu de la
+laisser flotter.
+
+### Pas de regroupement avec D-049
+
+`D-049` retenant l'option B, **aucune montée de schéma n'est engagée**. Le seul argument
+qui aurait justifié de coupler les deux dossiers — payer la cascade de hachages une seule
+fois — **tombe**. Les deux restent séparés.
+
+---
+
+## D-051 — Correction de l'ordre des verrous de Phase 10 — 2026-08-30
+
+**Statut** : TRANCHÉ — **arbitrage propriétaire explicite** du 2026-08-30.
+
+### Décision
+
+L'ordre des verrous de sortie de Phase 10 est :
+
+```
+RN-12  →  RN-13  →  RN-07  →  RN-08
+```
+
+et **non** `RN-07 → RN-12 → RN-13 → RN-08`, qui avait été énoncé en séquence
+conversationnelle.
+
+### Fondement
+
+`FACT` — Une évolution du schéma AIR change l'`airHash`, donc tous les locks et tous les
+`rootHash`, donc impose **un nouveau build EAS et une nouvelle campagne appareil**
+(mesuré et documenté en `D-044`).
+
+`CONCL.` — Valider sur appareil **avant** de trancher `RN-12` et `RN-13` aurait invalidé
+cette validation si l'un des deux avait conduit à une montée de schéma : **deux builds et
+deux campagnes au lieu d'une**.
+
+`D-049` et `D-050` retenant toutes deux l'option B, **aucune montée n'est finalement
+engagée** — mais l'ordre corrigé reste le bon : il ne dépendait pas du résultat de
+l'arbitrage, seulement de son **antériorité**.
+
+### Fait notable — le plan avait raison
+
+`FACT` — Le § **PLAN DE REMISE À NIVEAU** de `ROADMAP.md` portait **déjà** l'ordre
+correct : `ÉTAGE 5 · RN-12 · RN-13 · RN-07 · RN-08`.
+
+`INFÉRENCE` — La déviation venait de la **séquence conversationnelle**, pas du plan. Le
+plan persistant a joué exactement le rôle pour lequel il a été écrit : **survivre à la
+conversation**. C'est la première fois qu'il rattrape une erreur d'ordonnancement.
+
+---
+
+## P-011 — DIMENSION C : QUE FAIRE DE LA NON-CONFORMITÉ ? (DET-028) — PARTIELLEMENT TRANCHÉ → `D-052`, ouvert le 2026-08-30
+
+> `D-048` a **requalifié** la dimension C en `non_conforme` et fait de `DET-028` un verrou
+> bloquant de Phase 10. Ce dossier ne rouvre pas cette requalification : il instruit
+> **ce qu'on en fait**.
+
+> **ÉTAT AU 2026-08-30 — arbitrage propriétaire → `D-052`.** **A1 = OUI** (instrument à
+> rendre honnête, **non reportable**) · **C = REFUSÉE** (aucun amendement du critère) ·
+> **D = SUSPENDUE** (report **impossible** : aucune phase de `ROADMAP.md` ne prend
+> `DET-008` en charge). Le § **Décision requise** ci-dessous est **conservé tel quel** :
+> ses points **1** et **3** sont répondus par `D-052` ; son point **2** demeure **ouvert**,
+> et le restera tant qu'aucune phase ne sera fondée dans le plan.
+
+### Rappel du fait établi
+
+| | |
+|---|---|
+| **Critère C** | *« Tout bloc consommant des données expose `loading` / `empty` / `error` »* — nature de preuve déclarée : *« Contrat du registre + tests »* |
+| **Ce que l'instrument mesure** | présence des chaînes `state.kind === "loading"` … dans le **source** du composant émis |
+| **Ce que l'exécution observe** | `list` → `empty`/`ready` · `form` → `ready` · `detail_header` → **aucun état porté**. **11 états déclarés · 7 concédés par l'enveloppe · 3 observés** |
+| **Pourquoi** | le `DataProvider` est **synchrone** — `listInstances`, `getInstance`, aucune écriture, aucun modèle d'observation. **Aucun chemin ne mène à `loading` ni à `error`** |
+
+**Deux causes, toutes deux démontrées, de natures différentes** :
+
+1. **un défaut d'OUTILLAGE** — l'instrument mesure un contrat au lieu d'un état atteint ;
+2. **une absence d'OBJET** — la source de données asynchrone n'existe pas dans cette phase.
+
+### 🔴 La règle de périmètre du chantier impose de les traiter séparément
+
+`ROADMAP.md` § **Règle de périmètre** :
+
+| Cause | Traitement imposé |
+|---|---|
+| **Manque d'OUTILLAGE** — la mesure est possible au périmètre, l'instrument n'existe pas | **NON REPORTABLE.** L'outillage est produit dans la phase, puis la dimension est évaluée |
+| **Périmètre INSUFFISANT par nature** — la mesure exige un objet absent de la phase | **Portée explicitement** à la phase où elle devient mesurable, **jamais conforme par défaut** |
+
+> *« Invoquer le périmètre là où seul l'outillage manque est une violation de l'exigence. »*
+
+`INFÉRENCE` — Ici, **les deux causes coexistent**. La règle impose donc de **scinder** :
+le volet outillage **ne peut pas être reporté** ; le volet objet **doit** l'être, avec une
+phase nommée.
+
+### Options — analyse, non arbitrage
+
+| | Option | Ce qu'elle implique | Coût / risque |
+|---|---|---|---|
+| **A** | **Rendre l'instrument honnête** — mesurer l'état **atteint**, pas la chaîne dans le source | Le faux vert disparaît **par mesure** au lieu de l'être par arbitrage. C reste `non_conforme`, mais pour une raison vérifiable | Faible. Deux variantes : **A1** mesurer contre `reachableBlockStates` de l'enveloppe *(déjà cliquetée contre le code réel — N2)* · **A2** mesurer contre l'exécution *(N7, mais couple la grille à un harnais de test)* |
+| **B** | **Construire la source de données asynchrone** pour rendre `loading`/`error` atteignables | Traite la cause profonde. C pourrait devenir conforme **honnêtement** | 🔴 **Le plus lourd.** C'est le chantier déjà porté par `DET-008` (« app non connectée au backend vivant »). Touche le contrat `DataProvider`, l'enveloppe, les apps émises. **Hors périmètre de Phase 10** |
+| **C** | **Amender le critère C** — retirer `loading`/`error`, ne garder que ce qui est atteignable | Rend le critère satisfaisable | 🔴 **Interdit par la ROADMAP** : *« Les critères ne sont jamais assouplis après coup. »* À moins de démontrer qu'il s'agit d'une **erreur de catégorie** et non d'un assouplissement — charge de la preuve élevée |
+| **D** | **Porter la conformité** à la phase où le `DataProvider` cesse d'être synchrone, C restant `non_conforme` d'ici là | Exactement le mécanisme que la règle de périmètre prévoit pour une **absence d'objet** | Exige de **nommer la phase**. 🔴 Or `DET-008` porte aujourd'hui une échéance **non nommée** : *« Phase où les capabilities/auth sont implémentées »*. **Il faudra la nommer.** |
+
+### Recommandation
+
+**A1 + D, conjointement — et non l'un ou l'autre.**
+
+- **A1 est obligatoire et non reportable** : la cause outillage relève du régime « manque
+  d'outillage », que la règle interdit de reporter. Tant que l'instrument déclare vert ce
+  qui ne l'est pas, **toute évaluation A++ future reste fausse**, sur ce slice comme sur
+  les suivants. Variante A1 plutôt que A2 : l'enveloppe est déjà cliquetée contre le code
+  réel, et coupler la grille de qualité produit à un harnais de test créerait une
+  dépendance que rien n'exige.
+- **D traite le reste** : `loading` et `error` sont inatteignables **par absence d'objet**,
+  pas par négligence. La règle prévoit le report — à condition de **nommer la phase**.
+
+**B est le vrai travail de fond**, mais il ne relève pas de la Phase 10 : c'est `DET-008`.
+**C doit être refusée** sauf démonstration d'erreur de catégorie.
+
+### 🔴 Point bloquant à trancher en même temps
+
+`FACT` — `DET-008` porte une échéance **non nommée**. L'option **D** exige une phase
+nommée, faute de quoi le report serait indéfini — c'est-à-dire un abandon déguisé.
+
+**Nommer la phase de `DET-008` est donc une précondition de D.**
+
+### Décision requise
+
+1. **A1** · **A2** · ou pas d'action sur l'instrument
+2. **D** oui/non — et si oui, **quelle phase** pour `DET-008` et pour le volet objet de C
+3. **C** : refusée par défaut, ou instruite comme erreur de catégorie ?
+
+---
+
+## D-052 — Dimension C : instrument à rendre honnête, critère non amendé, report IMPOSSIBLE (P-011 / DET-028) — 2026-08-30
+
+**Statut** : TRANCHÉ PARTIELLEMENT — **arbitrage propriétaire explicite** du 2026-08-30,
+rendu **après** vérification documentaire. Clôt `P-011` sur deux points, en **suspend** un
+troisième faute de fondement dans le plan.
+
+> Cette décision **ne rejuge pas** `D-048` : la requalification de C en `non_conforme` et
+> le caractère bloquant de `DET-028` y sont acquis. Elle décide **quoi en faire**.
+
+### 1 · A1 = OUI — l'instrument doit être rendu honnête
+
+L'instrument de la dimension C doit mesurer **l'état atteint**, non la présence d'une
+chaîne de caractères dans le source du composant émis.
+
+**Ce travail est NON REPORTABLE.** Fondement — règle de périmètre de `ROADMAP.md` :
+
+> *« **Manque d'OUTILLAGE** — la mesure est possible au périmètre mais l'instrument
+> n'existe pas ⇒ **Non reportable.** L'outillage est produit dans la phase. »*
+> *« Invoquer le périmètre là où seul l'outillage manque est une violation de l'exigence. »*
+
+`INFÉRENCE` — Tant que l'instrument déclare vert ce qui ne l'est pas, **toute évaluation
+A++ future reste fausse**, sur ce slice comme sur tous les suivants. Le défaut n'est pas
+local à la Phase 10 : il contamine la grille elle-même.
+
+**Variante retenue : A1** — mesurer contre `reachableBlockStates` de l'enveloppe, déjà
+cliquetée contre le code réel. **A2** (mesurer contre l'exécution) est écartée : coupler
+la grille de qualité produit à un harnais de test créerait une dépendance que rien
+n'exige.
+
+🟢 **A1 — EXÉCUTÉ le 2026-08-30.** *(La décision, elle, ne modifiait aucun code : elle
+prescrivait le travail. L'exécution qui suit a été menée séparément, sur feu vert.)*
+
+| | |
+|---|---|
+| **Fichier corrigé** | `packages/oracle/src/apxx-grid.ts` — dimension C |
+| **Ce qui change** | la mesure porte sur l'**atteignabilité** (`EXECUTION_ENVELOPE_V1.reachableBlockStates`), et non plus sur la présence d'une chaîne dans le source du composant émis |
+| **Blocs mesurés** | ceux que **ce document** lie à une entité, dérivés de l'AIR — jamais une liste écrite à la main |
+| **Cas vide** | aucun bloc consommateur ⇒ **`non_determinee`**, jamais conforme par défaut (D-039-R1) |
+| **Dépendance** | **aucune nouvelle** — `@deribfy/execution-contract` figurait déjà aux dépendances d'oracle |
+| **Verdict obtenu** | `non_conforme` sur le slice conteneurs **et** sur `resto-quartier`. Détail : **8 états requis non atteignables** — `detail_header:loading/empty/error` · `form:loading/empty/error` · `list:loading/error` |
+| **Non-régression** | **640 tests verts / 56 fichiers** · `packages:typecheck` **EXIT=0** · cliquet de véracité de l'enveloppe passé |
+| **Code émis** | 🟢 **inchangé — aucune ligne d'application touchée** |
+
+**Deux tests mis à jour — édition consciente, non contournement.** `slots-and-grid.test.ts`
+asseyait l'ancien verdict (`C:conforme`, `passed: true`). Les deux assertions sont
+corrigées **selon le patron déjà employé par le dépôt** lorsque l'instrument de la
+dimension **D** avait été renforcé en Phase 10 : motif complet en commentaire, et mention
+explicite que **le code émis n'a pas changé — c'est la mesure qui a cessé de porter sur
+autre chose que la propriété nommée**.
+
+### Ce que A1 clôt — et ce qu'il ne clôt pas
+
+| Volet | État |
+|---|---|
+| **A1 — OUTILLAGE** | 🟢 **CLOS.** Le faux vert est mort : toute évaluation A++ future, sur ce slice comme sur les suivants, mesure l'état **atteint** |
+| **D — OBJET** | 🔴 **TOUJOURS SUSPENDU.** `loading` et `error` demeurent inatteignables faute de source de données asynchrone. Le report reste **impossible** : aucune phase de `ROADMAP.md` ne prend `DET-008` en charge |
+
+**La distinction outillage / objet est le cœur de cette décision et doit être conservée :**
+corriger l'instrument n'a rien amélioré au produit — cela a rendu la mesure honnête. Le
+produit, lui, ne satisfait toujours pas le critère, et **rien au plan ne date le moment
+où il le pourrait**.
+
+### 2 · C = REFUSÉE — aucun amendement du critère
+
+Le critère C n'est **ni amendé, ni assoupli, ni reformulé**. Fondement — `ROADMAP.md` :
+
+> *« Les critères ne sont jamais assouplis après coup. »*
+
+**Le statut de la dimension C reste `non_conforme`.**
+
+### 3 · D = SUSPENDUE — le report est IMPOSSIBLE, faute de phase
+
+`FACT` — Vérification documentaire du 2026-08-30 sur `ROADMAP.md` :
+
+| Recherche | Résultat |
+|---|---|
+| `DET-008` dans `ROADMAP.md` | **0 occurrence** |
+| `asynchron` | **1** — titre « PHASE 7 — WORKFLOW ASYNCHRONE DURABLE », qui porte le **workflow d'orchestration**, non la couche de données de l'app |
+| `temps réel` · `realtime` · `abonnement` · `subscription` | **0** |
+| `loading` | **2** — critère de sortie de Phase 3 (harnais de rendu) et le critère C lui-même |
+
+`FACT` — Le passage le plus proche est l'objectif de **Phase 10** : *« première abstraction
+provider exercée (interface + 1 implémentation réelle + 1 mock de substitution) »*, dont
+le critère de sortie est *« preuve de substitution de provider sans changement d'AIR »*.
+
+`INFÉRENCE` — Phase 10 exige la **substituabilité** du provider, **pas son
+asynchronisme**. Un provider réel et substituable peut demeurer synchrone — c'est le cas
+du provider de démonstration actuel. Rendre `loading`/`error` atteignables exige de
+modifier le **contrat** `DataProvider` lui-même (aujourd'hui `listInstances` /
+`getInstance`, sans écriture ni modèle d'observation ; l'enveloppe le scelle :
+`dataOperations: ["list","get"]`).
+
+`CONCL.` — **Aucun critère de sortie d'aucune phase n'exige ce changement de contrat.**
+L'option D exigeait une phase **explicitement nommée et déjà fondée dans la ROADMAP** :
+elle n'existe pas. **D est donc SUSPENDUE, non tranchée.**
+
+🔴 **Interdits attachés à cette suspension** :
+- ne **pas** choisir Phase 11 ni aucune autre phase par déduction ou convenance ;
+- ne **pas** modifier `ROADMAP.md` pour résoudre artificiellement l'absence.
+
+### 4 · DET-028 — état inchangé
+
+```
+DET-028 : 🔴 BLOQUANTE PHASE 10, à traiter avant toute clôture
+Dimension C : non_conforme
+A++ : NON ATTEINT sur les deux slices
+```
+
+### 5 · FAIT NOUVEAU CONSIGNÉ — `DET-008` est une dette HORS PLAN
+
+> `DET-008` — *« app non connectée au backend vivant ; le chemin app ⇄ backend n'est pas
+> encore prouvé »* — **n'est rattachée à AUCUNE phase de la ROADMAP.**
+
+`FACT` — Son échéance, telle qu'elle figure au registre, est *« Phase où les
+capabilities/auth sont implémentées »* : une **désignation par condition, pas par nom de
+phase**. Aucune phase du plan ne porte cette condition comme objectif ou critère de sortie.
+
+`INFÉRENCE` — `DET-008` n'est donc **pas reportée : elle est hors plan.** Et le volet
+« objet » de la dimension C en dépend directement — il est donc **rattaché à rien**.
+
+🔴 **Cette absence doit rester visible comme telle.** Elle **ne doit pas** être convertie
+en échéance fictive. Une échéance inventée serait un abandon déguisé, présenté comme un
+report.
+
+### Ce qui reste à décider — et qui ne l'est pas ici
+
+| # | Décision réellement nécessaire | Nature |
+|---|---|---|
+| **1** | Une phase de la ROADMAP doit-elle prendre `DET-008` en charge ? Si oui, laquelle, et par quel amendement de plan ? | **évolution de plan** — règle 3 : proposition, validation, consignation |
+| **2** | À défaut, `DET-028` reste-t-elle bloquante **sans horizon** ? | conséquence assumée de 1 |
+
+Tant que la décision 1 n'est pas prise, **le volet objet de la dimension C n'a pas
+d'échéance possible**, et `DET-028` demeure un verrou ouvert sans date.
+
+---
+
+## D-053 — Fermeture des deux critères 🟠 de Phase 10 — 2026-08-30
+
+**Statut** : TRANCHÉ — mesures exécutables produites, **arbitrage propriétaire explicite**
+du 2026-08-30. Aucune correction de code n'accompagne ces verdicts.
+
+### Critère « preuve de substitution de provider sans changement d'AIR » → 🟢 CONFORME
+
+`FACT` — Mesuré sur 2 documents (`slice conteneurs`, `suivi-chantier`) :
+
+| Sous-propriété | Résultat |
+|---|---|
+| substitution **sans toucher au document** | 🟢 `airHash` identique avant/après |
+| provider **réellement remplacé** | 🟢 6 puis 7 classes basculées vers `mock` ; le registre offre un mock **16 classes sur 16** |
+| la substitution **change l'artefact émis** | 🔴 `rootHash` **identiques**, **0 fichier différent** |
+
+**Verdict : 🟢 CONFORME au critère TEL QU'IL EST ÉCRIT.** La substitution est démontrée,
+exécutable, et l'AIR reste intact.
+
+🔴 **RÉSERVE INSCRITE AU REGISTRE — à ne pas perdre :**
+
+> Ce qui est prouvé est le remplacement **dans le lock**, jamais dans le **produit**. Un
+> projet dont **tous** les providers sont des mocks est **byte-identique** au projet réel.
+> Même signature que `capabilitiesEmitCode: false` : une déclaration résolue qui n'atteint
+> pas le code émis.
+>
+> L'**objectif** de Phase 10 demande *« 1 mock de substitution prouvant le remplacement »*.
+> Le remplacement prouvé est celui de la **résolution**, pas celui du **comportement**.
+> **Cette nuance n'est PAS tranchée** — elle relève de la portée de l'objectif, non du
+> critère écrit.
+
+**Preuve** : `docs/elite-protocol/evidence/phase10-substitution-provider.mjs`
+
+### Critère « liste mesurée des capabilities manquantes » → 🟠 NON DÉTERMINÉ, MOTIVÉ
+
+`FACT` — Registre v1 gelé : **15 capabilities**. Mesure sur les 13 documents :
+
+| | |
+|---|---:|
+| capabilities distinctes déclarées | **14 / 15** |
+| au registre mais **jamais déclarées** | **1** — `biometrics` |
+| déclarées **hors registre** | **0** |
+| **manquantes constatées** | **0** |
+
+Usage : `analytics`, `push_notifications`, `offline_storage` → **13/13** · `auth` → 12/13 ·
+jusqu'à `barcode_scan` → 1/13.
+
+`INFÉRENCE` — L'allowlist de capabilities est **positive et fail-closed** :
+`validateAirCapabilities` refuse net toute capability hors registre, et le corpus a franchi
+cette barrière. **Par construction, aucun document ne peut exprimer un besoin non couvert.**
+Le corpus est donc **filtré par le registre qu'il devrait servir à évaluer**.
+
+`CONCL.` — Les « 0 manquantes » ne mesurent **pas** une couverture complète : elles mesurent
+**l'impossibilité d'observer un manque**. C'est le cas que le protocole nomme
+*« taux nul mais sondes corrélées : aucune information — le cas le plus dangereux »*.
+
+**Verdict : 🟠 NON DÉTERMINÉ.** Ni conforme, ni non conforme. Déclarer 🟢 sur
+« 0 manquantes » serait un vert obtenu par **aveuglement de l'instrument**.
+
+`INFÉRENCE` — Relève du **périmètre insuffisant PAR NATURE** au sens de la règle du
+chantier : la mesure exige un objet absent — **une source de besoins non filtrée par
+l'allowlist**.
+
+**Preuve** : `docs/elite-protocol/evidence/phase10-capabilities-manquantes.mjs`
+
+### 🔴 Verrou nouveau — À NE PAS CORRIGER MAINTENANT
+
+> **Quelle source de besoins non filtrée est légitime ?**
+>
+> Trois pistes existent — intentions humaines rédigées par des tiers · domaines hors corpus ·
+> journal des candidates rejetées (tier B, consigné en D-020). **Aucune n'est arbitrée.**
+>
+> 🔴 **Décider d'abord, mesurer ensuite.** Fabriquer une source pour obtenir un chiffre
+> produirait une mesure artificielle : exactement le défaut que ce verdict 🟠 dénonce.
+
+### Deux anomalies d'instrument corrigées avant conclusion
+
+| Bug | Ce qui aurait été rapporté sans vérification |
+|---|---|
+| `ProviderDefinition` expose `id`, lu comme `.provider` | *« le registre n'offre aucune alternative »* — **faux** : 16/16 |
+| `listCapabilities()` retourne des définitions, pas des chaînes | *« 15 capabilities jamais déclarées »* — **faux** : 1 seule |
+
+Les deux résultats erronés étaient **plausibles**. C'est l'anomalie du chiffre, non
+l'intuition, qui a déclenché la vérification.
+
+### Ce que cette décision NE fait PAS
+
+Aucun code produit, schéma, gate ou métrique historique modifié. Aucune correction engagée
+sur la réserve du critère 1 ni sur le verrou du critère 2.
+
+---
+
+## D-054 — LA RACINE : l'intention n'est stockée nulle part, les promesses ne s'exécutent jamais — 2026-08-31
+
+**Déclencheur** — arbitrage propriétaire : *« il faut résoudre le problème depuis
+racine sinon ça ne se résout pas profondément »*. La correction du prompt, engagée
+la veille, a été **refusée comme racine** : elle ne traitait qu'un symptôme.
+
+### Ce qui n'est PAS la cause — hypothèse tuée
+
+`FACT` — **Le moteur n'est pas le plafond.** Un AIR écrit à la main de **12 écrans /
+8 entités** passe `assertValidAir` 🟢 et `compileProject` 🟢 **47 fichiers**. Aucun
+refus, aucune dégradation. L'hypothèse « le contrat AIR bride la richesse » est
+**ÉCARTÉE**.
+
+`FACT` — **Le prompt bridait, mais n'est qu'un symptôme.** `emit-v2.mjs:134` et
+`emit.mjs:142`, identiques : *« Sois complet mais sobre : 2 à 4 écrans, 1 à 3
+entités »*. Plafond **saturé 12 fois sur 12**. Réel — mais il n'explique pas
+pourquoi personne ne l'a vu pendant douze documents.
+
+### La racine — deux faits, une seule cause
+
+`FACT` — **① L'intention du client n'est conservée nulle part.** L'AIR porte 19
+champs de premier niveau ; **aucun** ne contient la demande d'origine. *« menu avec
+photos et prix »* entre dans un prompt et **disparaît**. Aucun artefact en aval ne
+sait ce qui avait été demandé.
+
+`FACT` — **② Les promesses sont déclarées et jamais exécutées.** **227
+`expectedTests`** dans le corpus. Leurs seuls consommateurs : `validate.ts`
+(unicité de l'identifiant) et `render-text.ts` (affichage). **Aucun exécuteur.**
+
+`INFÉRENCE` — **Toute la vérification compare l'artefact au document. Personne ne
+compare le document à la demande.** C'est la cause commune de tous les symptômes
+observés : le plafond du prompt passé inaperçu sur 12 documents, *« avec photos »*
+évaporé sans trace, la grille A++ verte sur une application pauvre, `APP-D002`
+(56 contrôles inertes sur 60) non détectée par 640 tests verts.
+
+### MESURE — les promesses confrontées à l'état réel de leur cible
+
+**Instrument** : `docs/elite-protocol/evidence/promesses-tenues.mjs` — rejouable,
+coût nul. Chaque `expectedTests[]` est confronté à sa cible dans l'artefact émis :
+écran atteignable (`reachableScreens`) · action exécutée (`controls` ∩
+`EXECUTION_ENVELOPE_V1`) · entité liée à un bloc rendu et alimentée (`dataBindings`).
+
+| sur les **227** promesses préexistantes | | |
+|---|---:|---:|
+| **CIBLE MORTE** | **167** | **73,6 %** |
+| CIBLE VIVANTE | 60 | 26,4 % |
+| CIBLE INEXISTANTE | 0 | — |
+
+| nature | vivante | **morte** |
+|---|---:|---:|
+| `deterministic` | 40 | **75** |
+| `e2e` | 18 | **35** |
+| `contract` | 2 | **57** |
+
+Causes de mort mesurées : effet `slot`/`mutation`/`capability` **hors enveloppe
+d'exécution** · écran **inatteignable** · entité liée à **aucun bloc rendu**.
+
+> 🔴 **AUCUNE promesse n'est déclarée TENUE.** Ce relevé n'établit qu'une
+> **CONDITION NÉCESSAIRE** — que la cible existe et fonctionne. L'énoncé lui-même
+> (« le total additionne correctement ») **n'est pas vérifié** : il faudrait exécuter
+> une logique que le moteur n'exécute pas. `P-C` : `PARTIAL → PASS` ❌.
+
+### La couche la plus profonde — le manque est structurellement indicible
+
+`FACT` — `expectedTests.targetId` doit désigner un **nœud existant** (`scr_`, `act_`,
+`ent_`). `INFÉRENCE` — **un besoin sans nœud — une photo que rien ne peut rendre —
+ne peut pas être exprimé comme promesse.** Le manque n'est pas *non détecté* : il est
+**inexprimable**. C'est pourquoi *« avec photos »* n'a laissé aucune trace dans 12
+documents sur 13.
+
+### DÉMONSTRATION — même moteur, document honnête
+
+`slices/resto-riche/` — AIR écrit à la main, 7 écrans · 5 entités · 20 blocs ·
+9 actions · 22 champs, compilé en 37 fichiers.
+
+| | promesses | **cible vivante** | contrôles pressables | **qui agissent** |
+|---|---:|---:|---:|---:|
+| `resto-quartier` *(généré)* | 18 | **4 — 22 %** | 14 *(2 slices)* | 4 |
+| `resto-riche` *(écrit à la main)* | 10 | **10 — 100 %** | **22** | **22** |
+
+`INFÉRENCE` — l'écart ne vient **pas** du moteur, identique dans les deux cas : il
+vient de ce que le document **promet ce que le moteur peut tenir**.
+
+### Ce que cette décision NE fait PAS — et pourquoi
+
+| non fait | raison |
+|---|---|
+| stocker l'intention dans l'AIR | **montée de schéma** — arbitrage propriétaire requis |
+| dériver les promesses de l'intention et refuser un document qui ne les couvre pas | dépend du point précédent |
+| ériger `promesses-tenues.mjs` en **gate** | aucune phase ne possède ce critère (voir verrou) |
+| exécuter `emit-v3.mjs` | **budget LLM** — arbitrage propriétaire |
+| registre de blocs v2 (image, recherche, catégories) | artefact **gelé** — arbitrage propriétaire |
+| build appareil | credentials propriétaire |
+
+`emit.mjs` et `emit-v2.mjs` sont **intacts** — les campagnes historiques restent
+rejouables à l'identique.
+
+### 🔴 Verrou nouveau — aucune phase ne possède la qualité de l'application produite
+
+> Les Phases 0→10 vérifient le **moteur** : il compile, il est déterministe, il est
+> gelé, il est reproductible. **Aucune ne vérifie que l'application émise tient ce
+> que le document a promis.** `DET-028` était déjà orphelin (`DET-008` n'appartient à
+> aucune phase — vérifié : 0 occurrence dans `ROADMAP.md`). La mesure ci-dessus l'est
+> aussi.
+>
+> **À trancher avant toute clôture de Phase 10** : quelle phase possède ce critère,
+> ou faut-il en créer une.
+
+### Non-régression
+
+`FACT` — **15 suites vertes · `typecheck` EXIT=0**, après la correction `D-047` et
+l'ajout de `resto-riche`. Aucune ligne du moteur modifiée par la présente décision.

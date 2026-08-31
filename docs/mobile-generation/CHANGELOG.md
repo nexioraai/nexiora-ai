@@ -1,5 +1,254 @@
 # CHANGELOG — CHANTIER MOBILE GENERATION
 
+## 2026-08-31 — RACINE IDENTIFIÉE ET MESURÉE : les promesses ne s'exécutent pas (D-054)
+
+- **Hypothèse « le moteur bride » TUÉE** : un AIR écrit à la main de **12 écrans /
+  8 entités** est accepté et compilé en **47 fichiers**, sans refus. Le contrat AIR
+  n'a jamais été le plafond.
+- **Plafond du prompt identifié** — `emit-v2.mjs:134` / `emit.mjs:142` : *« 2 à 4
+  écrans, 1 à 3 entités »*, **saturé 12 fois sur 12**. Symptôme, pas racine.
+- **RACINE (`APP-D004`)** : l'**intention du client n'est stockée nulle part** (19
+  champs AIR, aucun ne la porte) et les **227 `expectedTests` déclarés ne sont
+  jamais exécutés** (seuls consommateurs : unicité d'identifiant et affichage).
+  *Toute la vérification compare l'artefact au document ; personne ne compare le
+  document à la demande.*
+- **EXÉCUTEUR CONSTRUIT** — `docs/elite-protocol/evidence/promesses-tenues.mjs`,
+  rejouable, coût nul. Chaque promesse confrontée à sa cible réelle :
+  **167 / 227 visent une CIBLE MORTE — 73,6 %** (`deterministic` 75 · `e2e` 35 ·
+  `contract` 57). 🔴 **Aucune promesse n'est déclarée TENUE** : la mesure n'établit
+  qu'une **condition nécessaire**, l'énoncé lui-même n'est pas vérifié.
+- **Couche la plus profonde** : `targetId` doit désigner un nœud existant — un besoin
+  **sans nœud** (une photo que rien ne rend) est **structurellement inexprimable**
+  comme promesse. D'où *« avec photos »* évaporé dans 12 documents sur 13.
+- **CONTRE-ÉPREUVE livrée** — `slices/resto-riche/` : même moteur, document honnête.
+  7 écrans, 37 fichiers, **22/22 contrôles agissants**, **10/10 promesses à cible
+  vivante**. Contre `resto-quartier` : 4/14 et 4/18.
+- `benchmarks/air-emission/emit-v3.mjs` **créé, NON exécuté** (budget LLM =
+  arbitrage propriétaire). `emit.mjs` et `emit-v2.mjs` **intacts**.
+- 🔴 **Verrou nouveau** : **aucune phase ne possède la qualité de l'application
+  produite.** Les Phases 0→10 vérifient le moteur, jamais que l'app tient ce que le
+  document promet. À trancher avant clôture de Phase 10.
+- **Non-régression : 15 suites vertes · `typecheck` EXIT=0.** Aucune ligne du moteur
+  modifiée par cette entrée.
+
+## 2026-08-30 — PREMIER INSTRUMENT D'OBSERVATION + correction APP-D002 (D-047)
+
+- **Instrument d'observation construit** (`docs/elite-protocol/evidence/observation/`) :
+  il rend l'écran **émis** avec le runtime **émis**, presse chaque identité,
+  enregistre le delta et exécute un **contrôle négatif**. Première observation
+  d'exécution du chantier — jusqu'ici tous les contrôles lisaient le code.
+- **APP-D002 découverte puis CORRIGÉE — `DET-027`** : `useItemNavigate`
+  retournait **toujours** une fonction, même sans effet `navigate`. Chaque ligne
+  de liste était donc pressable et muette. **Mesuré : 60 contrôles pressables,
+  4 agissants, 56 inertes** sur les 2 slices. Correction : ne pas câbler l'appui
+  sans action — le contrat de bloc savait déjà ne rien brancher quand
+  `onItemPress` est absent. **Après : 14 pressables, 4 agissants, 10 inertes**
+  (dette moteur `capability`/`mutation`, délibérément non touchée).
+  **46 fausses affordances retirées, 0 régression.**
+- **Correspondance runtime ↔ validateur mesurée** (`E-19`) : **21,4 % → 100 %**
+  sur la propriété « ce contrôle agit ». La correspondance n'a pas été obtenue en
+  changeant le validateur — il était sain — mais en retirant du produit ce qu'il
+  avait raison de ne pas compter.
+- **G2 adressabilité** mesurée pour la première fois : **86,7 %** (13/15 blocs).
+- **APP-D003 ouverte — `DET-028` 🔴 BLOQUANTE A++** : la dimension **C** de la
+  grille est déclarée conforme sur une **recherche de sous-chaîne** dans le
+  source du composant (`state.kind === "loading"`…). L'exécution montre que le
+  bloc `list` ne rend jamais que `empty`/`ready` ; l'enveloppe le concède déjà
+  (`reachableBlockStates.list = ["ready","empty"]`). **11 états déclarés,
+  7 concédés, 3 observés.** Deux organes du dépôt se contredisent sur le même
+  objet. **Requalification de la dimension C requise avant toute clôture.**
+- **Chaîne de preuve complète parcourue pour la première fois** : observation →
+  hypothèse → preuve causale → correction → vérification → non-régression.
+  **640 tests verts / 56 fichiers · typecheck EXIT=0.**
+- **Arbitrages de Phase 10 rendus le 2026-08-30** : `D-049` accessibilité du graphe —
+  bloquante pour les documents **neufs**, **métrique effective uniquement**, la déclarée
+  restant interdite comme base de blocage tant que `R-23` est ouvert · `D-050` Code Slots —
+  dette **acceptée, échéance Phase 11**, aucune évolution de schéma · `D-051` ordre des
+  verrous **corrigé** en `RN-12 → RN-13 → RN-07 → RN-08` (une montée de schéma aurait imposé
+  un second build EAS) · `D-052` dimension C — instrument à rendre honnête (**non
+  reportable**), critère **non amendé**, report du volet objet **IMPOSSIBLE**.
+- 🟢 **`A1` EXÉCUTÉ le 2026-08-30 — l'instrument de la dimension C est corrigé.**
+  Il mesurait la présence de `state.kind === "loading"` dans le **source** du composant
+  émis ; il mesure désormais l'**état ATTEINT**, via `reachableBlockStates` de l'enveloppe
+  — seule source du dépôt cliquetée contre le code réel du runtime. Les blocs mesurés sont
+  ceux que **le document** lie à une entité ; aucun bloc consommateur ⇒ `non_determinee`,
+  jamais conforme par défaut. **Aucune nouvelle dépendance.**
+  **Le faux vert est supprimé** : C est désormais `non_conforme` **par mesure**, avec son
+  détail — 8 états requis non atteignables (`detail_header:loading/empty/error`,
+  `form:loading/empty/error`, `list:loading/error`). **A++ reste NON ATTEINT.**
+  **640 tests verts / 56 fichiers · typecheck EXIT=0 · aucune ligne de code émis modifiée.**
+  Deux tests mis à jour en **édition consciente**, selon le patron déjà employé lors du
+  renforcement de la dimension D en Phase 10.
+  🔵 **Le relevé antérieur n'est pas invalidé comme relevé** : `metrics.json` dit
+  exactement ce que l'ancien instrument a mesuré à sa date, et c'est exact. Ce qui était
+  faux, c'est la **conclusion** qu'on en tirait — l'instrument mesurait « le composant sait
+  rendre l'état », pas « l'état est atteint ». Les artefacts de mesure ne sont pas modifiés.
+  🔴 **Volet OBJET non clos** : `loading`/`error` restent inatteignables (source de données
+  synchrone). Le report demeure **impossible** — voir ci-dessous.
+- 🟢🟠 **Les deux critères 🟠 de Phase 10 sont fermés (`D-053`)** — mesures exécutables,
+  aucune correction de code.
+  **① Substitution de provider sans changement d'AIR → 🟢 CONFORME au critère écrit** :
+  `airHash` intact, 6 puis 7 classes de provider basculées vers `mock`, le registre en
+  offrant un **16/16**. 🔴 **Réserve inscrite au registre** : `rootHash` identiques et
+  **0 fichier émis différent** — un projet dont *tous* les providers sont des mocks est
+  **byte-identique** au projet réel. Le remplacement prouvé est celui du **lock**, pas du
+  **produit** ; même signature que `capabilitiesEmitCode: false`. **Nuance non tranchée.**
+  **② Liste mesurée des capabilities manquantes → 🟠 NON DÉTERMINÉ, motivé** : 14/15
+  capabilities déclarées, `biometrics` jamais employée, **0 hors registre, 0 manquante**.
+  Mais l'allowlist est **positive et fail-closed** : aucun document ne peut exprimer un
+  besoin non couvert. **Le corpus est filtré par le registre qu'il devrait évaluer** — le
+  zéro mesure l'impossibilité d'observer un manque, pas une couverture. Déclarer 🟢 aurait
+  été un vert obtenu par aveuglement de l'instrument.
+  🔴 **Verrou nouveau, à ne pas corriger maintenant** : quelle **source de besoins non
+  filtrée** est légitime ? Trois pistes, aucune arbitrée. **Décider d'abord, mesurer
+  ensuite.**
+  🔵 **Deux anomalies d'instrument** détectées et corrigées **avant** conclusion
+  (`ProviderDefinition.id` lu comme `.provider` · `listCapabilities()` retournant des
+  définitions, non des chaînes). Les deux résultats erronés étaient plausibles ; c'est
+  l'anomalie du chiffre, non l'intuition, qui a déclenché la vérification.
+- 🔴 **Fait nouveau consigné (D-052)** : **`DET-008` — « app non connectée au backend
+  vivant » — n'est rattachée à AUCUNE phase de la ROADMAP.** Vérifié : 0 occurrence dans
+  `ROADMAP.md`. Son échéance historique est une désignation *par condition*, pas par nom de
+  phase. **Cette dette n'est pas reportée : elle est hors plan** — et le volet « objet » de
+  la dimension C en dépend, donc se trouve rattaché à rien. **Cette absence doit rester
+  visible ; la convertir en échéance fictive serait un abandon déguisé.**
+- **Non traité délibérément** : les 10 contrôles inertes restants (l'AIR déclare
+  `capability`/`mutation`, le moteur ne sait pas les exécuter — les « corriger »
+  masquerait un manque réel) · `PROTOCOL-D005`/`D008` (2 blocs recensés jamais
+  rendus) · la lacune de conception révélée sur `scr_menu` (aucune action n'ouvre
+  le détail d'un plat depuis la liste — défaut de DOCUMENT, pas de moteur).
+
+## 2026-08-29 — PHASE 10 : DESIGN SYSTEM v2 adopté, A++ CONFORME A→H (D-043)
+
+> 🔴 **RECTIFICATION DU 2026-08-30 (D-048).** Le titre ci-dessus et la mention
+> « A++ CONFORME A→H » de cette entrée sont **RÉFUTÉS**. La dimension **C** était
+> déclarée conforme sur une **lecture de contrat**, non sur un état atteint :
+> l'exécution montre que les trois blocs consommant des données n'exposent
+> jamais `loading` ni `error`, et l'enveloppe le concédait déjà.
+> **C est requalifiée `non_conforme` (`DET-028`) ⇒ A++ N'EST PAS ATTEINT** sur les
+> deux slices. L'entrée est **conservée telle quelle** : une thèse abandonnée
+> renseigne autant qu'une thèse retenue. Tout ce qu'elle rapporte par ailleurs
+> (tokens, encres dérivées, identité visuelle, DET-019/021/022) reste exact.
+
+- **Tokens 1.1.0 → 1.2.0** (mineure additive) : `fontWeight`, `space.xxs`,
+  `opacity.disabled` ajoutés — chacun avec un consommateur réel (**DET-022
+  résolue**, 0 valeur en dur) ; `color.light.warn` corrigé (4,34:1 → 4,55:1,
+  défaut révélé en élargissant les paires aux tons d'état sur `badgeBg`).
+- **Deux tokens DÉRIVÉS** — `primaryText` et `onPrimary` — qui garantissent
+  WCAG AA **pour n'importe quel accent** (**DET-019 résolue** : 2,95:1 →
+  4,57:1, accent de marque préservé). `onPrimary` a été ajouté APRÈS mesure :
+  avec l'accent bleu du slice 2, l'encre statique tombait à **3,14:1**.
+- **Identité visuelle par app** (**DET-021 résolue**) via `design.overrides`,
+  champ du schéma AIR **gelé** jusque-là jamais lu — allowlist de clés,
+  valeurs validées, encres re-dérivées, tokens dérivés non surchargeables.
+- **DET-020 traitée** : le repli `accessibilityLabel ?? title` est retiré
+  (inerte pour VoiceOver, `contentDescription` non mesurée sur Android) ; la
+  sémantique de titre est portée par l'en-tête natif.
+- **DET-023 close par arbitrage** : `elevation`/`motion`/`breakpoint` NON
+  ajoutés faute de consommateur ; idiomes de plateforme : uniformité assumée.
+- **Défaut de générateur trouvé par le slice 2** : seed inséré dans l'ordre
+  alphabétique → violation de clé étrangère (`23503`). Corrigé par tri
+  **topologique déterministe**, prouvé en test unitaire, sur les 12 documents
+  et sur PostgreSQL réel.
+- **Oracle L1 : 7e contrôle `contraste_wcag`** sur le thème émis de chaque
+  app (§22 : accessibilité = conformité).
+- **GRILLE A++ : A à H CONFORMES sur les DEUX slices** — H mesurée sur
+  2 domaines : 2 silhouettes distinctes, **2 identités visuelles**.
+- Slice 2 rejoué de bout en bout (backend réel, sandbox, Oracle 7/7) ET
+  slice 1 rejoué intégralement : **545 tests verts**, typecheck et lint à 0.
+- **Reste pour clore la Phase 10** : build EAS + installation du slice 2 sur
+  appareil physique (intervention propriétaire).
+
+## 2026-08-29 — PHASE 10 : VERTICAL SLICE 2 hors-template livré (D-042)
+
+- **Domaine tranché** (propriétaire) : **suivi de conteneurs maritimes**.
+  AIR émis avec le protocole D-025 **dont l'identité est vérifiée
+  mécaniquement** (le harnais refuse de démarrer si le prompt diverge) :
+  valide en 1 réparation bornée, **0,75 $**, 250 s, 0 refus. Écrit dans
+  `slices/conteneurs/` — **le corpus gelé n'est pas étendu**.
+- **Chaîne bout-en-bout RÉELLE** : gates → compile (31 fichiers,
+  **déterminisme 5/5**) → **backend Supabase réel** (3 tables, RLS 3/3,
+  seed, **démontage prouvé par absence**) → **sandbox §8** (`npm ci`,
+  `tsc` strict, bundle : **exit 0**) → **Oracle L1 6/6** → flows E2E.
+  **0 réparation, 0 contournement manuel.**
+- **L'abstraction provider de la Phase 10 est exercée pour de vrai** : le
+  backend du slice 2 passe par `runProvisioning`, pas par une orchestration
+  de script — avec vérification métier injectée et démontage garanti.
+- **Scorecard cross-domain à 2 domaines** régénérable depuis les artefacts
+  (`slices/run-scorecard.mjs`) : aucun chiffre saisi à la main.
+- **Dimension H mesurée sur les 2 slices** : 2 silhouettes distinctes,
+  **0 collision** — mais **1 seule identité visuelle pour 2 thèmes
+  déclarés** ⇒ **H NON CONFORME** (DET-021).
+- **Registre de capabilities : suffisant pour un domaine hors-template**
+  (6 capacités demandées, toutes présentes, 0 intégration sans capability).
+  En revanche les 7 `providerClass` émis sont 7 chaînes libres inédites —
+  la dérive lexicale se reproduit, validant a posteriori D-041.
+- **Phase 10 NON CLÔTURABLE** : B, D et H sont non conformes sur les deux
+  slices et ne peuvent être corrigées sans toucher aux tokens gelés
+  (**P-007**) ; les appareils physiques exigent une intervention manuelle.
+
+## 2026-08-29 — PHASE 10 : abstraction provider + instruments cross-domain (D-041) — **EN COURS**
+
+- **`@deribfy/provider-registry`** — la classe de provider n'est plus lue
+  dans la chaîne libre de l'AIR (**40 valeurs distinctes mesurées** pour une
+  douzaine de classes réelles) : elle est DÉRIVÉE de la `capability`
+  contrôlée par le registre gelé. Un provider réel par classe (celui du
+  registre gelé, cliquet mécanique) + un substitut `mock`. Contre-épreuve :
+  renommer les 40 chaînes libres ne change rien au résultat.
+- **Substitution de provider prouvée SANS changement d'AIR** : même
+  document, même `airHash`, **artefact compilé identique octet pour octet**,
+  seul le lock enregistre le changement. Non-régression vérifiée par deux
+  méthodes indépendantes (**12/12 `rootHash` identiques**).
+- **Flux de provisioning provider-agnostique** + `MockProvisioningProvider`,
+  avec la leçon de la Phase 8 intégrée (démontage garanti en `finally`).
+- **Dimension H instrumentée et mesurée** (structure + identité visuelle) :
+  **12 silhouettes distinctes**, mais **1 seule identité visuelle pour
+  12 thèmes déclarés** ⇒ **H NON CONFORME** ; `air.design.theme` n'est lu
+  par aucun chemin de code (DET-021). Campagne reproductible dans
+  `benchmarks/anti-template/`.
+- **Instrument de la dimension D renforcé** : il ne mesurait que les
+  couleurs hexadécimales ; il mesure désormais les 4 familles du critère.
+  Conséquence assumée : **D non conforme** (9 valeurs en dur, DET-022).
+- **`DESIGN-SYSTEM-V2.md`** — liste MESURÉE des 6 manques du design system.
+  **DET-014 et DET-015 re-mesurées et RÉSOLUES** (5,62:1 ; tapTarget 48).
+- **526 tests verts** (14 paquets), `typecheck` EXIT=0, `lint` EXIT=0.
+- **Non clôturable** : P-006 (domaine hors-template) n'est pas tranché,
+  aucune clé LLM n'est présente, et les appareils physiques exigent une
+  intervention manuelle. Décisions en attente : **P-006, P-007, P-008**.
+
+## 2026-08-29 — PHASE 9 : Repair Loop + Code Slots, critères tous satisfaits (D-040)
+
+- **`@deribfy/slots`** — politique AST **par AST réel** (API du compilateur
+  TypeScript, jamais d'expression régulière) : imports en allowlist par slot,
+  zéro réseau/fs/secret, zéro exécution dynamique, zéro asynchronie, zéro
+  non-déterminisme ambiant, forme d'export imposée, aucun effet au
+  chargement. **Preuve discriminante** : un commentaire ou une chaîne
+  contenant `fetch(` est ACCEPTÉ, un alias `const f = fetch` est REFUSÉ.
+  Politique de périmètre des patchs (§3/§10) : `slots/` et rien d'autre.
+- **`@deribfy/repair`** — boucle §10 complète (DIAGNOSE → CLASSIFY → PLAN →
+  IMPACT → SIMULATE → POLICY GATE → APPLY → VERIFY → COMMIT/ROLLBACK),
+  Budget Governor à deux bornes, **juge ≠ auteur vérifié au démarrage**,
+  cœur PUR (cliquet d'indépendance : ni Oracle, ni compilateur, ni SDK LLM).
+  Le gate raisonne sur les **nœuds d'AIR** modifiés, pas sur les fichiers.
+- **Compilateur** — émission des Code Slots (source VERBATIM) + registre
+  typé sans érasure. **Additivité stricte prouvée 12/12** : sans bundle, la
+  sortie est identique à celle d'avant la phase.
+- **Oracle L1** — 2 contrôles ajoutés (politique AST rejouée sur l'artefact,
+  intégrité octet à octet des copies) + **grille A++ instrumentée**
+  (`evaluateApxxGrid` / `apxxRegressions`), qui remplace une grille tenue à
+  la main par une mesure rejouable avant/après réparation.
+- **Démonstration slice 1** (`run-repair.mjs`) : panne provoquée → réparée en
+  1 tentative / 120 jetons, **AIR réparé byte-identique au document gelé** ;
+  réparation par slots (+6 fichiers) ; **3 mutations hostiles refusées avant
+  l'étage APPLY** ; budget épuisé proprement (3 tentatives / 900 jetons,
+  aucun état livré) ; grille A++ **sans régression** ; déterminisme 5/5.
+- **486 tests verts** (13 paquets), `typecheck` EXIT=0, `lint` EXIT=0.
+- Dettes ouvertes : **DET-018** (l'AIR 1.0.0 ne lie pas les E/S de slot — les
+  modules sont émis et typés mais pas encore appelés), **DET-019** (accent
+  de marque en couleur de TEXTE : 2,95:1 et 3,16:1 en thème clair),
+  **DET-020** (deux affirmations de DET-017 volet 1 réfutées, consignées
+  sans correction).
+
 ## 2026-08-28 — PHASE 8 / ÉTAPE A : slice restaurant, chaîne 7/7 verte (D-036-R8A)
 
 - Chaîne bout-en-bout RÉELLE : gates → compile (rootHash identique aux

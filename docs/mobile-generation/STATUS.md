@@ -1,7 +1,14 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-08-28** (**4.7 TERMINÉE — PHASE 4 : CRITÈRES TOUS SATISFAITS**
+> **2026-08-31** (**RACINE IDENTIFIÉE ET MESURÉE — `APP-D004`, D-054** : l'intention
+> du client n'est stockée nulle part et les **227 promesses déclarées ne sont jamais
+> exécutées**. Exécuteur construit : **167/227 visent une cible morte — 73,6 %**.
+> Contre-épreuve livrée (`resto-riche` : 22/22 contrôles agissants, 10/10 promesses
+> vivantes). 🔴 **Verrou nouveau : aucune phase ne possède la qualité de
+> l'application produite.**)
+>
+> *Entrée précédente —* **2026-08-28** (**4.7 TERMINÉE — PHASE 4 : CRITÈRES TOUS SATISFAITS**
 > (D-031-R47) : app témoin compilée LANCÉE sur émulateurs iOS ET Android,
 > parcours Maestro PASS ×2 (fixtures rendues, navigate réel, back), 4
 > captures ; correction composition « page défilante » démontrée sur
@@ -14,9 +21,9 @@
 |---|---|
 | Plan v0.1 | 🟢 **VALIDÉ ET FIGÉ** (propriétaire, 2026-08-27) — toute évolution passe par `DECISIONS.md` |
 | Phase 0 — Fondations | 🟢 **TERMINÉE** (2026-08-27) — tous les critères de sortie vérifiés, dont **CI GitHub réelle verte : run #32, commit `54ef2a1`, `success`** (capture propriétaire + confirmation API Actions indépendante) |
-| Phase actuelle | **PHASE 4 : 🔵 EN COURS** (D-026) — 4.0 🟢 · 4.1 🟢 · 4.2 🟢 · 4.3 🟢 · 4.4 🟢 · 4.5 🟢 · 4.6 🟢 · **4.7 🟢 — CRITÈRES DE PHASE TOUS SATISFAITS, clôture = constat propriétaire** · **PHASE 3 : 🟢 TERMINÉE** (2026-08-28, clôture constatée par le propriétaire avec l'arbitrage C/D-025) · **PHASE 1** : 🔵 bancs restants bloqués sur prérequis propriétaire |
-| Générateur mobile | 🔵 **EN IMPLÉMENTATION** — chantier courant : compilateur déterministe v1 (Phase 4, architecture D-026) |
-| Progression globale | **Phases 0, 2, 3, 4, 5, 6, 7 terminées · Phase 8 : Étape A close, critère devices ouvert** · **Phase 4 : 🟢 TERMINÉE (constat propriétaire 2026-08-28 — feu vert « jusqu'à la fin de la Phase 5 »)** · Phase 1 en cours (bancs exécutables tous faits) |
+| Phase actuelle | **PHASE 10 : 🔵 EN COURS — CLÔTURE BLOQUÉE.** 🔴 **A++ N'EST PAS ATTEINT** (dimension **C** requalifiée `non_conforme`, `DET-028`/D-048). 🔴 **RACINE `APP-D004` OUVERTE** (D-054) : **167/227 promesses déclarées visent une cible morte (73,6 %)** ; l'intention du client n'est conservée dans aucun des 19 champs de l'AIR. **Trois verrous avant clôture : `DET-028` · validation sur appareil physique · quelle phase possède la QUALITÉ DE L'APPLICATION PRODUITE (aucune aujourd'hui).** **Phases 0, 2-9 : 🟢 TERMINÉES** |
+| Générateur mobile | 🔵 **EN IMPLÉMENTATION** — prochaine action : **build EAS + installation du slice 2 sur appareil** (intervention propriétaire), puis clôture de la Phase 10 |
+| Progression globale | **Phases 0, 2-9 terminées** · **Phase 10 : 6 critères sur 7 satisfaits ; restent la preuve appareil (A17 + iPhone 16) ET la racine `APP-D004`** · Phase 1 en cours · **dettes ouvertes : 12** · **décisions en attente du propriétaire : P-008 · montée de schéma AIR (stocker l'intention) · exécution d'`emit-v3.mjs` (budget LLM) · registre de blocs v2 (image/recherche/catégories)** |
 
 ## PHASE 0 — DÉTAIL DES SOUS-ÉTAPES
 
@@ -54,11 +61,22 @@ inchangé ✅ (EXIT=0) · nouveaux paquets lint-bloquant ✅ (règle inscrite) �
   **2.5 🟢 gel du registre v1** (D-020 : 15 capabilities, version 1.0.0,
   critère d'inclusion v2, candidates tier B consignées) — **PHASE 2
   TERMINÉE, critères de sortie tous satisfaits**.
-- **En cours** : Phase 1 uniquement (bancs sur prérequis).
-- **Bloqué, prérequis propriétaire** : P-002 (comptes E2B/Modal/Fly/Vercel
-  Sandbox + budget ~10-20 $) · coûts EAS (compte Expo/EAS) · coût projet
-  Supabase (token Management API, org de test). **Phase 3 n'est plus
-  bloquée** : ses deux dépendances ROADMAP sont satisfaites.
+- **Terminé (suite)** : **Phases 3, 4, 5, 6, 7 🟢** — compilateur
+  déterministe (critère dur 12 docs × 10 compilations, hashes identiques,
+  zéro réseau instrumenté) · backend isolé par app avec teardown prouvé
+  (P-004 = B, D-032) · sandbox + Oracle L1/L2 (P-002 = MODAL, D-033) ·
+  workflow durable Trigger.dev v4 (critère dur 5/5, D-016).
+- **En cours** : **Phase 8** (vertical slice 1) — Étape A close, chaîne
+  automatisée **7/7 verte**, scorecard et rétrospective produits ; critère
+  « app installée et fonctionnelle sur 2 appareils physiques » : **Android
+  🟢 acquis** (Galaxy A17, APK EAS, 2/2 flows générés PASS après D-037),
+  **iOS 🟠** — credentials Apple établis, build de distribution interne
+  **FINISHED** (2026-08-29, 195 s, IPA présent), installation et validation
+  propriétaire en attente. **Phase 1** — volet 2 du banc de coûts EAS :
+  script corrigé et correction prouvée (2026-08-29), série non lancée.
+- **Bloqué, prérequis propriétaire** : installation de l'IPA sur l'iPhone 16
+  par QR (aucune automatisation possible — port de données USB-C mort,
+  DET-012) · lancement de la série du banc de coûts EAS (consomme du quota).
 - **ARBITRAGE C RÉSOLU (D-025, 2026-08-28)** : **golden corpus v2 ÉMIS ET
   VALIDÉ 12/12** — campagne LLM réelle (mêmes 12 intentions, digests
   capabilities + SMART BLOCKS au prompt), 1 passe de réparation bornée par
@@ -229,6 +247,41 @@ prouve l'existence, pas le taux). Voir `DECISIONS.md` D-015.
 | P-004 | Palier preview mutualisé (tenancy) | Avant Phase 5 | ⏳ |
 | P-006 | Domaine du Vertical Slice 2 | Avant Phase 10 | ⏳ |
 
+## CRITÈRES DE SORTIE — PHASE 10 (état mesuré au 2026-08-30)
+
+| Critère | État | Fondement |
+|---|---|---|
+| app fonctionnelle sur appareils physiques | 🔴 **SUSPENDUE** | arbitrage propriétaire |
+| scorecard cross-domain à 2 domaines | 🟢 produit | `slices/run-scorecard.mjs` |
+| **substitution de provider sans changement d'AIR** | 🟢 **CONFORME** *(D-053)* | `airHash` intact, 6 et 7 classes basculées vers `mock`, registre offrant un mock **16/16**. 🔴 **RÉSERVE** : `rootHash` identiques, **0 fichier émis différent** — le remplacement est prouvé **dans le lock**, jamais dans le produit. Nuance **non tranchée** |
+| **liste mesurée des capabilities manquantes** | 🟠 **NON DÉTERMINÉ, MOTIVÉ** *(D-053)* | 14/15 capabilities déclarées · `biometrics` jamais employée · **0 hors registre, 0 manquante constatée**. L'allowlist étant **positive et fail-closed**, aucun document ne peut exprimer un besoin non couvert : le corpus est **filtré par le registre qu'il devrait évaluer**. Le zéro mesure **l'impossibilité d'observer un manque**, pas une couverture |
+| dimension H — variété anti-template | 🟢 conforme sur 2 domaines | DET-021 / D-043 · réserve : mesure recalculée à la volée, sans artefact versionné |
+| **dimension C — complétude des états** | 🔴 **`non_conforme`** *(D-048, D-052)* | mesurée sur l'état **atteint** depuis la correction de l'instrument |
+
+🔴 **A++ NON ATTEINT** — la dimension C interdit la qualification.
+
+## VERROUS DE SORTIE — PHASE 10 (ordre confirmé D-051)
+
+```
+RN-12  →  RN-13  →  RN-07  →  RN-08
+```
+
+🔴 **Trancher AVANT de construire.** Une évolution de schéma change l'`airHash`, donc tous les `rootHash`, donc
+impose un nouveau build EAS et une nouvelle campagne appareil. Valider sur appareil avant les arbitrages aurait
+coûté **deux builds et deux campagnes**. *(Le § PLAN DE REMISE À NIVEAU de `ROADMAP.md` portait déjà cet ordre :
+la déviation venait de la séquence conversationnelle, pas du plan.)*
+
+| Verrou | Sujet | État |
+|---|---|---|
+| **RN-12** | accessibilité du graphe (`P-009` volet 2) | 🟢 **TRANCHÉ → D-049** — bloquant pour les documents neufs, **métrique effective uniquement** ; déclarée interdite comme base de blocage tant que `R-23` est ouvert. Mise en œuvre **non engagée** |
+| **RN-13** | liaison des Code Slots (`DET-018`) | 🟢 **TRANCHÉ → D-050** — dette acceptée, échéance **Phase 11**, aucune évolution de schéma |
+| **RN-07** | validation sur appareil physique du slice 2 | 🔴 **OUVERT** — build EAS + installation par QR. **Prérequis propriétaire** : `eas` n'est pas installé dans l'environnement et un build consomme le quota |
+| **RN-08** | `DET-006` virtualisation (dimension G) | 🔴 **OUVERT** — s'observe **pendant** la session `RN-07`, pas après |
+| **4 — source de besoins** | critère « capabilities manquantes » (D-053) | 🔴 **DÉCISION À PRENDRE, AUCUNE CORRECTION.** Le critère exige une **source de besoins non filtrée par l'allowlist**. Trois pistes non arbitrées : intentions humaines de tiers · domaines hors corpus · journal des candidates tier B (D-020). **Décider d'abord, mesurer ensuite** — fabriquer une source pour obtenir un chiffre produirait une mesure artificielle |
+| **DET-028** | dimension **C** `non_conforme` (D-048, D-052) | 🔴 **OUVERT — SANS HORIZON.** Volet **outillage** : 🟢 **CLOS le 2026-08-30** — instrument corrigé, il mesure désormais l'état **ATTEINT** (`reachableBlockStates`, source cliquetée contre le runtime) et non plus une chaîne dans le source. **640 tests verts · typecheck EXIT=0 · code émis inchangé.** Verdict obtenu : `non_conforme` sur les 2 slices, **8 états requis non atteignables**. Volet **objet** : 🔴 report **IMPOSSIBLE**, aucune phase de la ROADMAP ne prend `DET-008` en charge. **La dimension C reste `non_conforme` et A++ reste NON ATTEINT** |
+
+🔴 **Troisième verrou, hors liste initiale** : `DET-028` — dimension **C** requalifiée `non_conforme` (D-048), **bloquante Phase 10, à traiter avant toute clôture**.
+
 ## DETTES OUVERTES (registre permanent — décision propriétaire 2026-08-29)
 
 > Mécanisme de suivi des dettes, défauts et écarts découverts pendant une
@@ -243,16 +296,31 @@ prouve l'existence, pas le taux). Voir `DECISIONS.md` D-015.
 | **DET-001** | **Safe area du bas non respectée** : le dernier bloc d'un écran était rendu sous la barre de navigation gestuelle (mesuré `[0,2213]→[1080,2340]`, bord = bas absolu), contrôle inatteignable | Phase 8, Galaxy A17 physique, commit `6e857df` | 🔴 haute (fonctionnalité) | — | 🟢 **RÉSOLUE 2026-08-29** (D-037) — correction dans le compilateur ; prouvée sur appareil réel (bouton `[2078→2205]`, tap → `scr_commandes`) ; Phases 4/6/7/8 rejouées |
 | **DET-002** | **Flows E2E générés non robustes sur appareil physique** : `scrollUntilVisible` (20 s/vitesse 40) expirait avant d'atteindre le bas d'une liste de 24 lignes — **faux négatif** (swipes directs : 1,8 s) | Phase 8, Galaxy A17 physique | 🟠 moyenne (fiabilité de l'Oracle L2) | — | 🟢 **RÉSOLUE 2026-08-29** (D-037) — timeout 60 s / vitesse 70 ; **seuil de visibilité 100 % INCHANGÉ** (pouvoir de détection préservé) ; 2/2 PASS device + 2/2 émulateur |
 | **DET-003** | Le gabarit ne produit pas d'**`eas.json`** (profils de build) — ajouté à la main pour le slice | Phase 8, D-036-R8B | 🟠 moyenne | **Phase 11** (canaux OTA) | 🔴 OUVERTE |
-| **DET-004** | L'`app.json` émis ne porte ni **`owner`** ni **`extra.eas.projectId`** — liaison au projet EAS faite à la main à chaque régénération | Phase 8, D-036-R8B | 🟠 moyenne | **Phase 11** | 🔴 OUVERTE |
+| **DET-004** | L'`app.json` émis ne porte ni **`owner`** ni **`extra.eas.projectId`** — liaison au projet EAS faite à la main à chaque régénération. **ÉTENDUE 2026-08-29** : le gabarit n'émet pas non plus **`ios.infoPlist.ITSAppUsesNonExemptEncryption`** — clé de conformité export Apple **écrite dans `app.json` par `eas build` lui-même** au premier build iOS (constatée au `git diff`, pas supposée). Trois clés désormais absentes de la sortie du compilateur et ajoutées hors générateur | Phase 8, D-036-R8B ; extension 2026-08-29 | 🟠 moyenne | **Phase 11** | 🔴 OUVERTE |
 | **DET-005** | **`expo-dev-client` absent** du gabarit → un « dev build » au sens Expo est impossible sans modification manuelle (le slice a utilisé la distribution interne) | Phase 8, D-036-R8B | 🟠 moyenne | **Phase 12** (TestFlight) | 🔴 OUVERTE |
-| **DET-006** | **Virtualisation de la FlatList neutralisée** par la page défilante (ScrollView englobant) — négligeable en preview, à revoir sur listes longues | Phase 4.7, D-031-R47 | 🟡 basse | **Phase 10** (scorecard cross-domain) | 🔴 OUVERTE |
+| **DET-006** | 🟠 **RECTIFIÉE LE 2026-08-29 (DET-025)** — la fiche affirmait « contrat + styles + **composant** » : le composant, lui, **n'appliquait pas** `fill`. Le bornage n'a reellement existe qu'a partir de DET-025. Ancien libelle : `Section.fill` ajoutee aux primitives (contrat + styles + composant) ; `ListBlock` la DÉCLARE sans aucun style (invariant D-021/D-023 vérifié : 0 style réel dans `blocks`) ; l'émetteur n'enveloppe plus dans un `ScrollView` un écran porteur d'un bloc `list`. **Propriété vérifiée sur l'émission réelle** (3 écrans à liste sans `ScrollView` + bornage `flex:1` ; `scr_plat_detail` sans liste conserve sa page défilante) et **verrouillée mécaniquement** (2 tests bidirectionnels sur les 12 documents). Train re-scellé (`blocksSourcesHash`), registre de blocs INCHANGÉ en 1.0.0. **Virtualisation effective à l'exécution : 🟠 NON DÉTERMINÉE** — observation sur appareil requise. — ancien libellé : **Virtualisation de la FlatList neutralisée** par la page défilante (ScrollView englobant) — négligeable en preview, à revoir sur listes longues. **REQUALIFIÉE 2026-08-29 (D-039)** : constitue la non-conformité de la **dimension G** (fluidité perçue / virtualisation) de la grille A++ | Phase 4.7, D-031-R47 ; requalifiée 2026-08-29 | 🔴 **BLOQUANTE A++** (était 🟡 basse) | **Phase 10** (design system v2) | 🔴 OUVERTE |
 | **DET-007** | **Seed partiel** : seules les entités portant un `dataset` reçoivent des lignes (ici 24 / 0 / 0) | Phase 8, D-036-R8A | 🟡 basse | Phase où le Content Pipeline (§19) produit les données | 🔴 OUVERTE |
-| **DET-008** | **App non connectée au backend vivant** en preview (conforme D-013 « données de démonstration » et D-032 « policies RLS différées ») — le chemin app ⇄ backend n'est donc pas encore prouvé | Phase 8, D-036-R8A | 🟠 moyenne | Phase où les capabilities/auth sont implémentées | 🔴 OUVERTE |
+| **DET-008** | **App non connectée au backend vivant** en preview (conforme D-013 « données de démonstration » et D-032 « policies RLS différées ») — le chemin app ⇄ backend n'est donc pas encore prouvé | Phase 8, D-036-R8A | 🟠 moyenne | 🔴 **AUCUNE PHASE DE LA ROADMAP** — vérifié le 2026-08-30 (D-052) : `DET-008` n'apparaît **pas une seule fois** dans `ROADMAP.md`. L'échéance historique *« Phase où les capabilities/auth sont implémentées »* est une **désignation par condition, pas par nom de phase** ; aucune phase ne porte cette condition comme objectif ou critère de sortie. **Cette dette n'est pas reportée : elle est HORS PLAN.** Ne pas convertir cette absence en échéance fictive — ce serait un abandon déguisé présenté comme un report | 🔴 **OUVERTE, NON RATTACHÉE** — le volet « objet » de la dimension C (`DET-028`) en dépend directement, et se trouve donc lui aussi rattaché à rien |
 | **DET-009** | **Provisioning Supabase à ~170 s** sur org Pro (contre ~9,5 s en Free) — impact sur le débit de flotte | Phase 5/8 | 🟡 basse | **Phase 14** (industrialisation) | 🔴 OUVERTE |
 | **DET-010** | **Build natif iOS local en échec** (`ExpoModulesJSI xcframework`, CocoaPods) — contourné par EAS cloud ; outillage local, pas le générateur | Phase 8, 2026-08-29 | 🟡 basse | Phase 12 (si builds locaux nécessaires) | 🔴 OUVERTE |
-| **DET-011** | **Build iOS pour APPAREIL physique impossible via EAS sans credentials Apple** [mesuré 2026-08-29] : « *EAS CLI couldn't find any credentials suitable for internal distribution* ». Le build simulateur (`iphonesimulator`, x86_64+arm64) ne s'installe PAS sur un iPhone | Phase 8, 2026-08-29 | 🔴 haute (bloque le critère 1 côté iOS) | Phase 8 | 🟠 **EN COURS** — adhésion Apple Developer **payée le 2026-08-29 (135 $ CA)**, statut Apple « **en attente** » (traitement ≤ 48 h). Reprise dès activation |
+| **DET-011** | **Build iOS pour APPAREIL physique impossible via EAS sans credentials Apple** [mesuré 2026-08-29] : « *EAS CLI couldn't find any credentials suitable for internal distribution* ». Le build simulateur (`iphonesimulator`, x86_64+arm64) ne s'installe PAS sur un iPhone | Phase 8, 2026-08-29 | 🔴 haute (bloque le critère 1 côté iOS) | Phase 8 | 🟠 **EN COURS** — adhésion Apple Developer **payée le 2026-08-29 (135 $ CA)** puis **ACTIVÉE**. Clé API App Store Connect créée, `~/.deribfy-apple.env` (mode 0600) : formats des 4 variables vérifiés, **une confusion Issuer ID ↔ Team ID détectée et corrigée par le propriétaire**. **Clé ASC PROUVÉE fonctionnelle** [mesuré] : JWT ES256 signé localement, HTTP 200 sur `/v1/bundleIds`, `/v1/devices`, `/v1/certificates`, `/v1/profiles` (compte vierge : 0 entrée partout). **LIEN APPLE ↔ EAS ÉTABLI** [mesuré] : `eas device:create` authentifié **sans mot de passe Apple ni 2FA** via `EXPO_ASC_*` + `EXPO_APPLE_TEAM_ID` + `EXPO_APPLE_TEAM_TYPE=INDIVIDUAL` ; équipe Apple désormais listée par EAS. **URL/QR d'enregistrement d'appareil généré**, profil de configuration installé par le propriétaire, UDID remonté. **🟢 RÉSOLUE 2026-08-29** — build iOS de distribution interne **FINISHED en 195 s, artefact IPA présent** (`fc2ba66a`, profil `preview`, distribution `INTERNAL`, palier gratuit, 0 $), **aucun avertissement « Failed to provision »**. État Apple contre-vérifié par lecture directe de l'API après build : **1 bundleId** (`com.deribfy.preview.maquis-express`), **1 appareil IPHONE statut `ENABLED`** — donc pas « Processing », le délai Apple de 24-72 h ne s'est pas matérialisé —, **1 certificat `IOS_DISTRIBUTION`** (expire 2027-08-29), **1 profil `IOS_APP_ADHOC` état `ACTIVE`** contenant **l'appareil et le certificat**. **TEAM ID CONFIRMÉ PAR APPLE** : le `seedId` du bundleId créé est identique à `APPLE_TEAM_ID` — la réserve laissée ouverte sur ce point est levée |
 | **DET-012** | **Port de données USB-C de l'iPhone 16 non fonctionnel** [démontré] : charge mais **zéro énumération USB**, aucune invite de confiance, y compris déverrouillé au branchement et après nettoyage du port. Câble et port du Mac **innocentés par test de contrôle** (Galaxy A17 détecté avec les mêmes) | Phase 8, 2026-08-29 | 🟠 moyenne (matériel, hors générateur) | — | 🔴 OUVERTE — contournée par la voie EAS/QR (sans câble) |
 | **DET-013** | **Expo Go incompatible avec le release train** [mesuré] : « *requires a newer version of Expo Go* » — l'App Store est en retard sur le SDK 57 du train. Voie de validation sans câble et sans compte : **fermée**. Le train n'a PAS été modifié pour faire passer un test (garde-fou) | Phase 8, 2026-08-29 | 🟡 basse | Réexaminer si Expo Go rattrape le SDK | 🔴 OUVERTE |
+| **DET-014** | **Contraste du bouton primaire sous le seuil WCAG 2.2 AA** [mesuré, déterministe] : `onPrimary` blanc `#FFFFFF` sur l'accent de marque `primary` `#FA5D1E` = **3,16:1**, seuil requis **4,5:1** pour du texte `body` 14 pt. Échec **identique en thème clair ET sombre**. Touche le libellé du bouton primaire de toute app générée. 28 des 30 paires testées sont conformes — le défaut est localisé, pas systémique. Correction impossible sans toucher aux **tokens gelés 1.0.0** (assombrir l'accent, inverser le premier plan, ou porter le libellé à ≥ 18 pt) | Phase 8, évaluation grille A++ 2026-08-29 (D-039) | 🔴 était BLOQUANTE A++ | — | 🟢 **RÉSOLUE — RE-MESURÉE EN PHASE 10 (2026-08-29)** : `onPrimary` `#16181D` sur `primary` `#FA5D1E` = **5,62:1** en thème clair ET sombre (seuil 4,5:1). L'accent de marque est préservé à l'identique |
+| **DET-015** | **Aucune taille minimale de cible tactile garantie** [démontré structurellement] : ni `minHeight`, ni `minWidth`, ni `hitSlop` dans `packages/primitives/src/styles.ts`. Le bouton se dimensionne par `paddingVertical: space.md` (12) + texte `body` 14 pt sans `lineHeight` déclaré ⇒ hauteur estimée **≈ 41 pt**, sous **44 pt (iOS HIG)** et **48 dp (Material)**. Le fait structurel — *aucun minimum n'est imposé* — est démontré indépendamment de l'estimation ; toute conformité observée serait fortuite | Phase 8, évaluation grille A++ 2026-08-29 (D-039) | 🔴 était BLOQUANTE A++ | — | 🟢 **RÉSOLUE — RE-MESURÉE EN PHASE 10 (2026-08-29)** : `size.tapTarget` = **48** (≥ 44 pt iOS, ≥ 48 dp Material), appliqué à **3 surfaces** (bouton, champ, ligne de liste) |
+| **DET-016** | **Clavier système masquant le champ actif et les contrôles** [observé sur iPhone 16 réel] : aucune gestion du clavier n'existait dans le système — ni `KeyboardAvoidingView`, ni `automaticallyAdjustKeyboardInsets`, ni `windowSoftInputMode`. Structurellement garanti sur iOS (pas de redimensionnement de fenêtre), masqué par défaut sur Android. **13 écrans sur 47 portent un bloc `form`**, sur 11 domaines | Phase 8, observation appareil 2026-08-29 | 🔴 **BLOQUANTE A++** (dimension A étendue) | Phase 8 | 🟠 **CORRIGÉE À LA SOURCE** — 3 volets sans `Platform.OS` : `automaticallyAdjustKeyboardInsets` sur le `ScrollView` émis et sur la `FlatList` du bloc liste (propriété VÉRIFIÉE iOS-seulement sur RN 0.86.3, inerte sur Android), `keyboardShouldPersistTaps="handled"`, et `softwareKeyboardLayoutMode: "resize"` au manifeste Android. **7 verrous mécaniques permanents**. Conformité suspendue à l'observation appareil |
+| **DET-017** | **Répétition sémantique et incohérence de composition** [observé sur iPhone 16 réel, écran « Mes commandes »] : titre affiché 3 fois (navigation + `ScreenShell` + bloc `header`), état vide dupliqué, et action « Annuler la commande en cours » proposée alors qu'aucune commande n'existe. **21 % du corpus** portait un titre de bloc égal au titre d'écran | Phase 8, observation appareil 2026-08-29 | 🔴 **BLOQUANTE A++** (dimension I) | Phase 8 (volet 1) · Phase 10 (volet 2 + conditionnement) | 🟠 **VOLET 1 CORRIGÉ À LA SOURCE 2026-08-29** — `ScreenShell` ne rend plus le titre visible, redondant par construction avec l'en-tête natif (même source AIR ; `headerShown` n'est désactivé nulle part) ; titre reporté sur `accessibilityLabel`, contrat `ScreenShellProps` INCHANGÉ. **VOLET 2 RÉFUTÉ et reporté Phase 10** : les 35 blocs `header` portent tous un `subtitle`, et 4 quasi-doublons sémantiques (`Favoris`/« Mes favoris », `Panier`/« Votre panier », `Prestations`/« Nos prestations », `Progression`/« Ma progression ») échappent à toute comparaison de chaînes. **VOLET 2 TRAITÉ LE 2026-08-29 (D-044)** : le schéma AIR passe en 1.1.0 avec `visibleWhen` ; le slice 2 ré-émis affiche **0 état vide dupliqué** (mesuré, était 2). Les 12 documents du corpus GELÉ conservent le défaut — ils sont figés et migrés à l'identique, sans invention de condition. Ancien libellé : idem pour le conditionnement des actions par l'état réel des données → registre v2. **PORTÉE DU VOLET 2 MESURÉE LE 2026-08-29** (instrument `benchmarks/composition/`, 13 documents / 50 écrans) : **19 écrans** portent un bloc `empty_state` À CÔTÉ d'un bloc `list` qui possède déjà son propre état vide conditionnel — les deux peuvent donc s'afficher pendant que des données sont présentes ; et **4 écrans** exposent la MÊME action par deux blocs (bouton + CTA de l'état vide). **Cause commune établie** : le schéma AIR 1.0.0 GELÉ ne porte AUCUN moyen de conditionner le rendu d'un bloc (`blockInstanceSchema` = id, blockType, entityId?, props). Ce n'est donc pas une erreur d'un document : c'est une limite de CONTRAT, qui appelle une décision (P-009) |
+| **DET-018** | **Les Code Slots ne sont pas encore APPELÉS par l'application générée** [démontré structurellement] : l'AIR 1.0.0 déclare la signature d'un slot (`inputs`/`outputs`/`allowedImports`) mais **ne lie ni ses entrées ni ses sorties à un point d'exécution** — aucune convention de binding n'existe dans le schéma gelé. Mesure sur le corpus : **44 slots déclarés, 43 actions à effet `slot`, 0 implémentation** produite par le moteur avant la Phase 9. La Phase 9 émet désormais les modules et un registre TYPÉ (vérifiés par `tsc` du projet généré et par la politique AST), mais l'app ne les invoque pas. Inventer une convention de liaison aurait été une extension silencieuse du schéma gelé — refusé (D-040). **Corollaire** : l'exécution d'un slot en sandbox — donc les *tests unitaires de slot* au sens §4 — n'est pas câblée non plus ; la vérification actuelle est statique (politique AST + `tsc` du projet généré) | Phase 9, 2026-08-29 | 🟠 moyenne (fonctionnalité incomplète, aucune régression) | **Phase 11** — échéance arbitrée le 2026-08-30 (D-050), la Phase 10 étant explicitement exclue | 🟠 **DETTE ACCEPTÉE, DATÉE** — option B : les slots restent déclarés et non invoqués, **aucune évolution de schéma engagée**. Justification : cette dette n'a **aucune surface visible par l'utilisateur** ; le coût d'une montée AIR 1.2.0 (cascade de hachages, 2 slices rejoués, **nouveau build EAS**) n'est pas justifié par une promesse d'architecture invisible. `D-040` (refus d'inventer une convention de liaison) reste valide — la décision **date** l'échéance, elle n'improvise rien |
+| **DET-019** | **Dimension B de la grille A++ : l'accent de marque utilisé comme COULEUR DE TEXTE est sous le seuil WCAG 2.2 AA** [mesuré par instrument déterministe] : `primary` `#FA5D1E` sur `bg` = **2,95:1** et sur `surface` = **3,16:1** en thème clair (seuil 4,5:1). Usages réels : prix de fin de ligne (`rowTrailing`), ton `primary` de `AppText`, libellé de bouton fantôme — donc visible sur **toutes** les listes générées. 28 des 30 paires sont conformes : le défaut est localisé. **Distinct de DET-014** (corrigé), qui portait sur la paire INVERSE (`onPrimary` sur `primary`). La correction touche les tokens gelés ⇒ design system v2 | Phase 9, instrument A++ 2026-08-29 | 🔴 était BLOQUANTE A++ | — | 🟢 **RÉSOLUE — DESIGN SYSTEM v2 (D-043, 2026-08-29)** : token DÉRIVÉ `primaryText` (encre de l'accent lue sur le fond) — 2,95:1 → **4,57:1** ; l'accent de marque `#FA5D1E` est PRÉSERVÉ et n'est plus une couleur de texte. Mesure finale : **36 paires / 0 échec** sur les DEUX slices |
+| **DET-020** | **Deux affirmations de la fiche DET-017 (volet 1) sont réfutées** [démontré, session 2026-08-29 avant Phase 9] : (a) « ce `Text` et l'en-tête dérivent de la MÊME donnée AIR sur les 47 écrans » est FAUX pour **2 écrans sur 47** (`cours-cuisine` : `scr_catalogue` route « Cours » ≠ écran « Cours de cuisine » ; `scr_lecteur` route « Lecture » ≠ écran « Lecture du cours ») — sur `scr_lecteur`, le titre d'écran n'est plus affiché nulle part ; (b) « le titre reste exposé à l'accessibilité via `accessibilityLabel` » est FAUX sur iOS : `AccessibilityProps.h` pose `accessible{false}` et `RCTViewComponentView.mm` lie `isAccessibilityElement` à cette prop — le label d'un conteneur non `accessible` **n'est pas restitué par VoiceOver** ; sur Android il pose une `contentDescription` sur le conteneur racine des 47 écrans, dont l'effet TalkBack est 🟠 non mesuré. La sémantique de titre réellement préservée est celle de **l'en-tête natif**. **CONSIGNÉE, NON CORRIGÉE** (Phase 8 close par constat propriétaire) | Session 2026-08-29 (hors périmètre Phase 9) | 🟠 était moyenne | — | 🟢 **RÉSOLUE — v2 (D-043)** : le repli `accessibilityLabel ?? title` est RETIRÉ (inerte pour VoiceOver, `contentDescription` non mesurée sur Android). La sémantique de titre est portée par l'EN-TÊTE NATIF. L'observation « 2 écrans sur 47 à titre de route divergent » reste consignée : propriété du CONTENU du corpus gelé, pas défaut du moteur |
+| **DET-021** | **Aucune variété visuelle par app — dimension H NON CONFORME** [mesuré, deux méthodes indépendantes] : les 12 domaines déclarent **12 thèmes distincts** (`air.design.theme`) et produisent **UNE SEULE identité visuelle** — `theme.generated.ts`, `styles.ts`, `primitives.tsx`, `components.tsx` sont **byte-identiques** sur les 12 apps. Cause établie : (1) empirique — la chaîne du thème n'apparaît dans **aucun** fichier émis ; (2) statique — **aucun chemin de code** du compilateur ne lit `air.design.theme`. La structure, elle, varie (12 silhouettes, 0 collision). §22 « une app générée ne doit pas ressembler à un gabarit IA générique » n'est donc **pas satisfait sur l'axe visuel** | Phase 10, instrument anti-template 2026-08-29 ; **RE-MESURÉE SUR LES 2 SLICES le 2026-08-29** | 🔴 était BLOQUANTE A++ (dimension H) | — | 🟢 **RÉSOLUE — v2 (D-043)** : `design.overrides` (champ du schéma AIR **gelé**, jusque-là jamais lu) devient effectif ; allowlist de clés, valeurs validées, encres re-dérivées. **Mesure officielle sur les 2 slices : 2 silhouettes distinctes ET 2 identités visuelles pour 2 thèmes déclarés ⇒ H CONFORME**. Les 12 documents du corpus restent visuellement identiques parce que la campagne D-025 leur interdisait `design.overrides` — propriété du corpus GELÉ, pas du moteur |
+| **DET-022** | **9 valeurs de style en dur — dimension D NON CONFORME** [mesuré par AST puis par l'instrument] : **8 `fontWeight`** littéraux et **1 `paddingVertical: 2`** dans `packages/primitives/src/styles.ts`. Cause : les tokens n'ont **ni groupe `fontWeight`, ni pas d'espacement inférieur à `xs`**. **Le code n'a pas régressé** — l'instrument de la dimension D ne mesurait que les couleurs hexadécimales et déclarait D conforme alors que 3 des 4 familles nommées par le critère (espacements, rayons, couleurs, typographie) n'étaient pas regardées ; il les mesure toutes depuis la Phase 10 | Phase 10, instrument renforcé 2026-08-29 | 🔴 était BLOQUANTE A++ (dimension D) | — | 🟢 **RÉSOLUE — v2 (D-043)** : `fontWeight`, `space.xxs` et `opacity.disabled` ajoutés (chacun avec un consommateur réel). Mesure : **0 valeur en dur** (était 9) |
+| **DET-023** | **Couverture du design system inférieure à ce que le §22 annonce** [mesuré sur `tokens.json` 1.1.0 et sur les sources] : groupes **`elevation`, `animation`/`motion`, `opacity`, `breakpoint`/`density` ABSENTS** — ombres, transitions et responsive/adaptive ne peuvent donc pas être cohérents par construction ; et **zéro usage de `Platform`** dans tout le système (absence délibérée au service de la portabilité, DET-016, mais §22 demande des « idiomes iOS/Android »). v2 doit trancher explicitement entre uniformité assumée et idiomes de plateforme | Phase 10, 2026-08-29 | 🟠 était moyenne | — | 🟢 **RÉSOLUE PAR ARBITRAGE — v2 (D-043)** : `opacity` ajouté (consommateur réel) ; `elevation`, `motion`, `breakpoint`/`density` **délibérément NON ajoutés** — aucun consommateur, l'ajout serait spéculatif ; idiomes iOS/Android : **uniformité assumée**, propriété déjà verrouillée par test |
+| **DET-024** | **Écran déclaré mais INATTEIGNABLE dans l'app générée** [mesuré, deux méthodes indépendantes] : dans le slice 2, `scr_notifications` possède une route (`nav_notifications`) mais **aucune action à effet `navigate` ne le cible** — vérifié sur l'AIR et, indépendamment, sur les données d'écran émises. L'écran est donc dans la pile de navigation sans qu'aucun appui ne puisse y mener. Rien dans les validateurs ne l'interdit aujourd'hui : le graphe de navigation n'est pas contrôlé en accessibilité. **RECTIFICATION 2026-08-29** : la fiche affirmait « le slice 1 n'était pas concerné » — **c'est FAUX**, mesure à l'appui : `scr_plat_detail` du slice 1 n'est ciblé par aucune action `navigate` (aucune action à déclencheur ui ne porte sur `blk_menu_liste`). **PORTÉE RÉELLE MESURÉE** sur 13 documents / 50 écrans : **17 écrans sans chemin de navigation (34 %)**, répartis sur 10 des 13 documents. Instrument versionné : `benchmarks/composition/` | Phase 10, préparation de la validation appareil 2026-08-29 | 🟠 moyenne (écran mort dans l'app livrée) | **Phase 11** (Capability Router / graphe de navigation) ou correctif de validateur à arbitrer | 🔴 OUVERTE |
+| **DET-025** | **La liste virtualisee n'avait AUCUN parent borne — derniere ligne inatteignable sur appareil** [observe sur Galaxy A17 physique, REPRODUIT sur emulateur, cause demontree par trois sources] : la primitive `Section` **n'appliquait pas** la prop `fill`. Le contrat la declarait, les styles `sectionFill`/`sectionFillBody` existaient, `ListBlock` la demandait — **le cablage du composant manquait**, depuis l'origine (identique dans `HEAD`). Geometrie mesuree : FlatList jusqu'a `y=2400` (bas d'ecran exact), 11e ligne coupee, **12e inatteignable**, bloc `empty_state` **entierement hors ecran**. Le verrou DET-006 ne verifiait que l'ABSENCE de `ScrollView`, jamais le BORNAGE — d'ou deux phases sans detection. **Le flow E2E genere ne l'a pas vu non plus** : il assure la 1re ligne puis le bloc liste, jamais la derniere | Phase 10, validation appareil 2026-08-29 | 🔴 **haute** (contenu inatteignable dans toute app a liste longue) | Phase 10 | 🟢 **CORRIGEE A LA SOURCE** — `Section` applique `fill` sur le conteneur ET sur le corps. **3 preuves** : rendu de la primitive (2 controles), rendu du bloc de bout en bout (2 controles), verrou sur l'ARTEFACT EMIS verifiant les deux moities de la chaine. **Preuve d'execution sur appareil : EN ATTENTE d'un nouveau build** |
+| **DET-026** | **`app.locales.rtlSupported` est INERTE — non-négociable #16 non tenu côté artefact** [mesuré 2026-08-29, contre-épreuve exécutée] : compiler un même document avec `rtlSupported: true` puis `false` produit **0 fichier différent** dans le projet émis ; seul l'`airHash` du manifeste change. Les deux seuls lecteurs du drapeau sont `render-text.ts` (rendu de debug) et `e2e-flows.ts` (qui force le RTL au niveau de l'ÉMULATEUR, pas de l'app). La dimension **F** de la grille A++ reste conforme — les primitives n'emploient que des propriétés logiques, ce qui est vrai et vérifié par cliquet — mais **aucune app générée ne s'initialise en RTL, quel que soit son AIR**. Aucun document du corpus ne déclare `rtlSupported: true` (0/13), ce qui explique que le défaut n'ait jamais été observé | Étape 1 (contrat d'exécution), D-045 | 🟠 moyenne (promesse d'architecture non tenue, aucune régression) | **Étape d'exécution** (le drapeau doit produire un effet d'artefact) | 🔴 OUVERTE |
+| **DET-027** | **Lignes de liste PRESSABLES et INERTES** [mesuré à l'exécution 2026-08-30, premier instrument d'observation] : `useItemNavigate` retournait **toujours** une fonction, même sans effet `navigate` — chaque ligne était donc appuyable et muette. Le contrat de bloc savait pourtant ne câbler aucun `onPress` quand `onItemPress` est absent. **Mesure sur les 2 slices : 60 contrôles pressables, 4 agissants, 56 inertes**, dont **46 lignes de liste**. Invisible à toute mesure statique : `controls()` ne recense un bloc que s'il porte une action, et un bloc liste n'en porte aucune | Instrument d'observation, 2026-08-30 (`APP-D002`) | 🔴 haute (fausse promesse à l'utilisateur) | — | 🟢 **RÉSOLUE 2026-08-30** (D-047) — correction à la source du runtime, assets embarqués régénérés, 2 copies de slice propagées. **Après : 14 pressables, 4 agissants, 10 inertes** (dette moteur `capability`/`mutation`, délibérément non touchée). **46 fausses affordances retirées · 640 tests verts · typecheck EXIT=0 · les 4 navigations fonctionnelles inchangées.** Correspondance runtime ↔ validateur `E-19` : **21,4 % → 100 %** |
+| **DET-028** | **La dimension C de la grille A++ mesure le CODE, pas l'ÉTAT ATTEINT** [mesuré 2026-08-30] : `apxx-grid.ts` §C calcule `["loading","empty","error"].filter(k => blocks.includes(`state.kind === "${k}"`))` — une **recherche de sous-chaîne** dans le source du composant émis. `metrics.json` enregistre donc **C = conforme**, détail « états rendus par le bloc liste : loading/empty/error ». Or l'**enveloppe** concède `reachableBlockStates.list = ["ready","empty"]`, et l'**observation** (deux conditions de données) montre que le bloc `list` ne rend jamais que `empty`/`ready`. **11 états déclarés au registre · 7 concédés · 3 observés ; 8 états déclarés ne sont jamais rendus.** Quatre types de blocs déclarent un état et n'en portent aucun. Deux organes du dépôt se contredisent sur le même objet, sans qu'ils aient jamais été croisés | Instrument d'observation, 2026-08-30 (`APP-D003`) | 🔴 **BLOQUANTE A++** — **volet outillage CLOS le 2026-08-30** (instrument corrigé, le faux vert est supprimé) ; **volet objet toujours bloquant** : `loading`/`error` restent inatteignables, source de données synchrone | 🔴 **BLOQUANTE PHASE 10 — à traiter AVANT toute clôture** (échéance arbitrée le 2026-08-30, D-048). **VOLET OUTILLAGE** : **non reportable**, à produire dans la phase (`A1`, D-052). **VOLET OBJET** : 🔴 **AUCUNE ÉCHÉANCE POSSIBLE** — le report exigeait une phase **nommée** ; `DET-008`, dont il dépend, n'est rattachée à **aucune** phase de la ROADMAP (D-052) | 🔴 **OUVERTE** — dimension C **requalifiée `non_conforme`** le 2026-08-30. `non_determinee` écarté : la règle de notation le réserve aux dimensions **non mesurables**, or C a été mesurée par deux voies concordantes (enveloppe cliquetée + exécution). **Conséquence : A++ n'est pas atteint sur les 2 slices.** Aucune correction engagée — les deux causes démontrées (instrument lisant le contrat · source de données synchrone) n'admettent pas de correctif court. **ARBITRAGE DU 2026-08-30 (D-052)** : l'instrument **doit** être rendu honnête — variante `A1`, mesurer contre `reachableBlockStates` de l'enveloppe — **travail PRESCRIT, NON ENGAGÉ** (aucun code, aucun instrument, aucun `metrics.json` modifié) ; le critère C **n'est ni amendé ni assoupli** (option C refusée) ; le report du volet objet est **SUSPENDU**, **ni Phase 11 ni aucune autre phase n'étant déduite**. **DET-028 demeure 🔴 BLOQUANTE PHASE 10 · A++ NON ATTEINT.** |
 
 **Règle de tenue** (recommandation acceptée) : toute dette découverte est
 inscrite ici **immédiatement**, avec origine, gravité et **phase
@@ -270,9 +338,277 @@ ouvertes à chaque rapport.
 | Refus classifieur `cyber` sur prompts de forme moteur — **existence [mesuré]** (7/10, n=10), **taux réel [à mesurer]** | ⚠️ suivi | **D-015 actée** : résilience structurelle (refusal géré partout, zéro panne silencieuse, fallbacks, métrique Budget Governor) ; mesure de fréquence sur corpus représentatif planifiée dans les campagnes aval |
 | ~~Upgrade SDK Anthropic : ruptures d'API possibles~~ | 🟢 clos | Re-baseline exécuté le 2026-08-27 : aucune rupture, parité prouvée |
 
+## PROTOCOLE DE PREUVE ELITE 2027 A+ — CADRE D'EXÉCUTION (D-046, 2026-08-30)
+
+**Le protocole de preuve est désormais le cadre d'exécution permanent du
+chantier.** Source de vérité unique : `docs/elite-protocol/` (point d'entrée
+`README.md`). La `ROADMAP.md` porte trois chapitres opposables :
+
+| Chapitre ROADMAP | Rôle |
+|---|---|
+| § **CADRE D'EXÉCUTION PERMANENT** | source de vérité · distinction A+/A++ · niveau de preuve exigé pour toute transition · état figé · rapport de continuité (13 champs) · gouvernance · boucle générale · procédure de reprise |
+| § **EXIGENCES OPÉRATIONNELLES PERMANENTES E-01 → E-20** | règles opposables issues de la confrontation du 2026-08-30 |
+| § **PLAN DE REMISE À NIVEAU RN-01 → RN-23 · S-1 → S-10** | **point de reprise opérationnel** — étages, conditions de transition, points de contrôle 🛑, journal d'exécution |
+
+> ⚠️ **Une nouvelle session lit le JOURNAL D'EXÉCUTION du plan de remise à
+> niveau** pour savoir exactement où reprendre. La mémoire de conversation ne
+> fait jamais foi.
+
+### État figé au 2026-08-30 — à ne présenter comme résolu sous aucune forme
+
+```
+PHASE 10 : OUVERTE            VALIDATION PHYSIQUE : SUSPENDUE
+EXP-1 : TERMINÉE              EXP-2 : NON LANCÉE
+H0 : INDÉTERMINÉ    H1/H2 : OUVERTS    H3 : EXCLU
+R-25 : CONDITION D'EXPLOITABILITÉ ÉTABLIE — CAUSE NON IDENTIFIÉE
+PROTOCOL-D020 : ÉTABLI POUR CETTE MÉTRIQUE UNIQUEMENT
+FINAL TECHNICAL AGREEMENT : NO
+```
+
+`FINAL TECHNICAL AGREEMENT : YES` a été prononcé le 2026-08-30 **pour
+l'implantation et l'exécution du plan de remise à niveau uniquement** — jamais
+pour une certification du protocole ou du produit.
+
+### Mesures structurelles versées le 2026-08-30
+
+| Mesure | Résultat |
+|---|---|
+| gates dont la sémantique est reliée au runtime | **0 / 25** |
+| gates énonçant une propriété observable sur artefact | **9 / 25** (3 exécutées) |
+| gates non observables en l'état | **8 / 25** |
+| gates ayant réellement refusé un artefact | **1 / 25** (G14) |
+| cas-tueurs exécutés | **17** · 9 échecs · concentrés sur 4 proxys |
+| écarts du corpus retirables par soustraction déclarative | **30,8 %** (200 / 649) |
+| déclencheurs `data` référençant un événement non productible | **15 / 36**, sur 10 documents / 13 |
+| sites de dispatch morts | **53 / 108 (49 %)** |
+
+### Étage 0 du plan — exécuté le 2026-08-30
+
+`RN-02` 🟢 · `RN-03` 🟢 · `RN-05` 🟢 · `RN-06` 🟢 (S-1→S-4) — 🛑 **arrêt au point
+de contrôle C-0** : `RN-01` (granularité) est un arbitrage humain.
+
 ## RÈGLE DE CONTINUITÉ
 
 Inscrite en règle permanente dans `CLAUDE.md` (2026-08-27). Toute session
 sur ce chantier commence par `MASTER_PLAN.md`, `ARCHITECTURE.md`,
 `ROADMAP.md`, `STATUS.md` (et `DECISIONS.md` si nécessaire). La mémoire de
 conversation n'est jamais la source de vérité.
+
+## ÉTAT A++ — PHASE 8 (2026-08-29, D-039/D-039-R1/D-039-R2)
+
+| Dim. | État à la source | Reste à faire |
+|---|---|---|
+| **A** ergonomie | 🟢 `size.tapTarget=48` (≥ 44 pt iOS, ≥ 48 dp Material), 3 surfaces | revalidation appareil |
+| **B** contraste | 🟢 **30 paires / 0 échec** (était 2), accent `#FA5D1E` préservé | revalidation appareil |
+| **C** états | 🟢 loading/empty/error au registre | — |
+| **D** cohérence | 🟢 0 couleur en dur hors thème généré | — |
+| **E** typographie | 🟢 **instrument construit** (5 contrôles : échelle stricte, `allowFontScaling` jamais désactivé, aucune hauteur fixe, aucun `numberOfLines`, aucun `lineHeight` fixe) | observation rendu appareil |
+| **F** i18n/RTL | 🟢 propriétés logiques, flows RTL PASS | rejeu |
+| **G** virtualisation | 🟠 cause supprimée + verrou mécanique | **observation exécution requise** |
+| **H** anti-template | ⚪ portée **Phase 10** (2 domaines requis) | — |
+
+**Preuves 2026-08-29** : 409 tests verts (tous paquets), `tsc` silencieux, lint 0.
+Nouveau `rootHash` `resto-quartier` = `e7d98c81b6d5288f…`, **stable sur 5 compilations**.
+Évolutions scellées : tokens **1.1.0** (surface additive prouvée : 0 clé supprimée,
+0 type modifié, 1 ajoutée) · `designTokensSourcesHash` et `blocksSourcesHash` re-scellés.
+**Phase 8 NON CLÔTURABLE** : G non observée, A/B/E/F à revalider par la cascade.
+
+## PHASE 9 — REPAIR LOOP + CODE SLOTS (2026-08-29, D-040)
+
+**Critères de sortie de la ROADMAP — état vérifié**
+
+| Critère | État | Preuve exécutée |
+|---|---|---|
+| Panne provoquée sur le slice 1 diagnostiquée et réparée **automatiquement** | 🟢 | `slices/restaurant/run-repair.mjs` : bouton « Mes commandes » repointé sur une action inexistante → Oracle refuse → diagnostic `AIR_ACTION_DANGLING` (cause RE-DÉRIVÉE de l'AIR, correction candidate DÉDUITE du déclencheur ui) → réparé en **1 tentative / 120 jetons** → **AIR réparé byte-identique au document gelé** |
+| **Analyse d'impact** | 🟢 | Impact calculé sur deux simulations : réparation AIR = artefact absent avant / 31 fichiers après ; réparation slots = **+6 fichiers exactement** (5 modules + registre), 0 supprimé, rootHash `d0349455…` → `748647917c1b…` |
+| **Vérification Oracle** | 🟢 | Oracle L1 **6/6** sur l'état réparé (2 contrôles ajoutés en Phase 9 : politique AST des slots, intégrité des copies) |
+| Gardes AST **mordent** (preuve par mutation) | 🟢 | 3 mutations exécutées : slot exfiltrant (`SLOT_NETWORK_ACCESS`), édition d'une copie de bloc (`PATCH_BLOCK_COPY_EDIT`), modification d'AIR hors cible (`PATCH_AIR_OUT_OF_TARGET`). **Aucune n'atteint l'étage APPLY** |
+| **Budget respecté** | 🟢 | Auteur inefficace : arrêt propre à **3 tentatives / 900 jetons**, `budget_exhausted`, **aucun état livré** ; la borne de jetons mord aussi seule (test dédié) |
+| **Juge ≠ auteur** | 🟢 | Invariant vérifié au démarrage (`REPAIR_JUDGE_IS_AUTHOR`) + cliquet d'indépendance : le cœur n'importe ni l'Oracle, ni le compilateur, ni un SDK LLM |
+| Amendement A++ (D-039) : grille **rejouée**, réparation dégradante **refusée** | 🟢 | Grille rejouée avant/après : **aucune régression**. Refus prouvé par test (réparation fonctionnelle dégradant G → REFUSÉE, aucun état livré) |
+
+**Livrables** : `@deribfy/slots` (politique AST par API TypeScript — 27 tests,
+dont la preuve discriminante « commentaire/chaîne acceptés, alias `const f =
+fetch` refusé ») · `@deribfy/repair` (boucle 9 étages, Budget Governor,
+gates, rollback — 26 tests) · compilateur : émission `slots/*.ts` + registre
+typé, **additivité stricte prouvée 12/12** · Oracle : 2 contrôles + grille A++
+instrumentée (`evaluateApxxGrid`, `apxxRegressions`).
+
+**Preuves de non-régression (2026-08-29)** : **486 tests verts** sur les 13
+paquets (0 échec), `packages:typecheck` **EXIT=0**, `packages:lint`
+**EXIT=0**, artefact réparé **déterministe 5/5**.
+
+**Écart de traçabilité constaté** : le `rootHash` `e7d98c81b6d5288f…`
+consigné dans le bloc « ÉTAT A++ — PHASE 8 » **ne se reproduit pas** sur
+l'arbre de travail actuel. Valeur mesurée aujourd'hui pour `resto-quartier` :
+**`d0349455d51e9894…`** sans slots, **`748647917c1b6319…`** avec les 5 slots.
+Contre-épreuve exécutée : substituer l'ancien `ScreenShell` ne redonne pas
+non plus `e7d98c81…` (`8075bb6f…`) — l'origine de l'écart est 🟠 **NON
+DÉTERMINÉE** et n'est pas imputable à la Phase 9, dont l'additivité est
+prouvée. À trancher lors de la reprise du chantier Phase 8/10.
+
+## PHASE 10 — VERTICAL SLICE 2 + DESIGN SYSTEM v2 (2026-08-29, D-041/D-042/D-043)
+
+**Domaine (D-042)** : suivi de conteneurs maritimes — logistique B2B,
+hors-template. AIR émis par le modèle avec le **protocole D-025 vérifié
+mécaniquement** (le harnais refuse de démarrer si le prompt de référence
+diverge ; seule la règle `design.overrides` a été substituée, texte exact
+contrôlé avant remplacement). Écrit dans `slices/conteneurs/` — **le corpus
+gelé n'est pas étendu**.
+
+| Critère de sortie ROADMAP | État | Preuve exécutée |
+|---|---|---|
+| **Abstraction provider exercée** | 🟢 **SATISFAIT** | `@deribfy/provider-registry` · flux `runProvisioning` provider-agnostique **réellement utilisé par les 2 slices** · `MockProvisioningProvider` · cliquet d'agnosticité |
+| **Substitution sans changement d'AIR** | 🟢 **SATISFAIT** | Même document, même `airHash`, **artefact identique octet pour octet** ; seul le lock change |
+| **Scorecard cross-domain à 2 domaines** | 🟢 **SATISFAIT** | `slices/SCORECARD-CROSS-DOMAIN.md`, **régénéré depuis les artefacts** |
+| **Capabilities manquantes → registre v2** | 🟢 **SATISFAIT** | Domaine hors-template : **toutes les capabilities demandées existaient au registre v1** ; manque confirmé pour v2 = backend de données (P-008) |
+| **Dimension H sur les 2 domaines** | 🟢 **SATISFAIT ET CONFORME** | **2 silhouettes distinctes, 0 collision · 2 identités visuelles pour 2 thèmes déclarés** |
+| **Dettes A++ réexaminées → design system v2** | 🟢 **SATISFAIT** | `DESIGN-SYSTEM-V2.md` ; **P-007 tranchée (D-043)** et les 5 dettes traitées |
+| **Conformité A++ (règle D-039-R1)** | 🟢 **SATISFAIT** | **A à H CONFORMES sur les DEUX slices** — vérifié sur les artefacts, pas déduit du code |
+| **App fonctionnelle sur appareils physiques** | 🔴 **BLOQUÉ — intervention propriétaire** | Slice 2 : toute la chaîne logicielle est verte ; le build EAS et l'installation exigent le compte et l'appareil du propriétaire |
+
+### CHAÎNE DU SLICE 2 — MESURES
+
+gates 🟢 · compile 🟢 (29 fichiers, `rootHash` `7555bc357d294b6e…` après DET-025,
+**déterminisme 5/5**) · backend **RÉEL** 🟢 (3 tables, **RLS 3/3**, seed
+12/6, **démonté avec preuve d'absence**) · sandbox §8 🟢 (`npm ci`, `tsc`
+strict, bundle : **exit 0**) · **Oracle L1 7/7** · flows E2E générés ·
+**0 réparation, 0 contournement manuel**.
+
+**Slice 1 REJOUÉ intégralement** avec le moteur d'aujourd'hui : backend réel
+3 tables / RLS 3/3 / seed 24, sandbox 🟢, **Oracle 7/7** — non-régression du
+domaine initial après la v2.
+
+### DESIGN SYSTEM v2 (D-043) — CE QUI A CHANGÉ
+
+Tokens **1.1.0 → 1.2.0** (mineure additive, cliquet de surface de majeure
+vert) : `fontWeight`, `space.xxs`, `opacity.disabled` ajoutés — chacun avec
+un consommateur réel ; `color.light.warn` corrigé (4,34:1 → 4,55:1, défaut
+révélé en élargissant les paires) ; **deux tokens DÉRIVÉS** (`primaryText`
+et `onPrimary`) qui garantissent WCAG AA **pour n'importe quel accent** ;
+`design.overrides` — champ du schéma AIR **gelé**, jusque-là jamais lu —
+rendu effectif avec allowlist, validation et re-dérivation.
+
+**Défaut de générateur trouvé par le slice 2 et corrigé** : le seed insérait
+les tables dans l'ordre alphabétique, violant une clé étrangère
+(`23503`). Corrigé par un tri **topologique déterministe** ; prouvé par test
+unitaire, par un contrôle sur les 12 documents du corpus, ET par le backend
+PostgreSQL réel.
+
+**Oracle L1 gagne un 7e contrôle** : `contraste_wcag`, calculé sur le thème
+réellement émis de chaque app (§22 : accessibilité = conformité).
+
+### VÉRIFICATIONS (2026-08-29, après v2)
+
+**550 tests verts** sur 14 paquets · `typecheck` **EXIT=0** · `lint`
+**EXIT=0** · déterminisme **5/5** sur les 2 slices · **corpus gelé intact**
+(0 fichier modifié) · démonstration de la Phase 9 rejouée sans régression
+(3 gardes mordent, budget borné, grille non dégradée).
+
+### PASSE NON PHYSIQUE DU 2026-08-29 (après validation A17)
+
+Tout ce qui pouvait être terminé sans appareil l'a été :
+
+- **DET-025 corrigée à la source** — `Section` applique enfin `fill` (le
+  contrat et les styles l'avaient depuis DET-006, le câblage manquait).
+  3 preuves structurelles + verrou sur l'artefact émis vérifiant les DEUX
+  moitiés de la chaîne. **Preuve d'exécution Android obtenue par le
+  propriétaire** ; preuve iOS et rattachement formel de l'artefact : à faire.
+- **Instrument de cohérence de composition PRODUIT et EXÉCUTÉ**
+  (`benchmarks/composition/`, résultats versionnés) — l'outillage manquait,
+  D-039-R1 impose de le produire dans la phase. Mesure sur **13 documents /
+  50 écrans** : **19** états vides dupliqués · **4** actions exposées deux
+  fois · **17 écrans (34 %) sans chemin de navigation**.
+- **DET-017 volet 2 chiffré** : la cause commune est établie — le schéma AIR
+  1.0.0 gelé ne porte aucun moyen de conditionner un bloc. Ce n'est pas une
+  erreur de document : c'est une limite de contrat, présente sur les
+  12 domaines du corpus ET sur le domaine hors-template.
+- **DET-024 RECTIFIÉE** : ma fiche affirmait à tort que le slice 1 n'était
+  pas concerné. Mesure : `scr_plat_detail` y est inatteignable lui aussi.
+- **P-009 consignée** : décision propriétaire requise (conditionnement des
+  blocs + accessibilité du graphe), avec options, analyse et recommandation.
+- Cascade rejouée : **550 tests verts**, `typecheck` 0, `lint` 0, corpus gelé
+  intact, **aucun slice régénéré** (liaison EAS du slice 2 préservée).
+
+### CE QUI RESTE — ACTION MANUELLE DU PROPRIÉTAIRE
+
+**Validation du slice 2 sur appareil physique.** Le projet est écrit et prêt
+(`slices/conteneurs/app`, 29 fichiers). Il faut : (1) un build EAS — le CLI
+`eas` n'est pas installé dans cet environnement et un build consomme le
+quota du compte ; (2) l'installation par QR sur le Galaxy A17 et/ou
+l'iPhone 16, sans automatisation possible (DET-012).
+**La Phase 10 ne sera close qu'après cette preuve.**
+
+## ÉTAPE 1 — CONTRAT D'EXÉCUTION (2026-08-29, D-045)
+
+**Nature de l'étape.** Ce n'est **pas** une phase de la ROADMAP : la ROADMAP
+n'est PAS modifiée par cette session. C'est un étage transverse, approuvé
+explicitement par le propriétaire, qui referme l'unique chemin **fail-open**
+du moteur — le dispatcher d'effets, qui ignorait silencieusement 3 des
+4 types d'effets. **Aucune capacité d'exécution n'est construite ici.**
+
+### Ce qui change réellement
+
+**Avant** : un artefact dont 86 % des actions sont inertes, dont 2 écrans sur
+4 sont inatteignables et dont le formulaire ne persiste rien passait
+**Oracle L1 7/7 · grille A++ A→H conformes · 0 réparation · 0 contournement**.
+> 🔴 *Rectifié le 2026-08-30 (D-048) : la conformité A→H incluait la dimension **C**, depuis requalifiée `non_conforme`. Le constat historique est conservé ; la conclusion « A++ conforme » ne l'est plus.*
+
+**Après** : le même artefact passe toujours — mais l'Oracle porte désormais un
+8e contrôle qui **nomme, impute et scelle** l'écart. L'absence cesse d'être
+invisible.
+
+### Mesure d'ouverture (13 documents, enveloppe 1.0.0)
+
+| Mesure | Valeur |
+|---|---|
+| effets déclarés **exécutés** | **27 / 196 — 14 %** |
+| écrans **atteignables** | 27 / 51 — 53 % |
+| contrôles visibles **non fantômes** | 38 / 111 — 34 % |
+| blocs liés à une entité **pourvue de données** | 49 / 67 — 73 % |
+| états de blocs **atteignables** | 90 / 140 — 64 % |
+| capabilities **câblées** | **0 / 78** |
+| slots **invoqués** | **0 / 48** |
+| règles **appliquées** | **0 / 74** |
+| **écarts totaux** | **649** — moteur 535 · contrat 72 · document 42 |
+
+**Lecture non triviale** : **82 % des écarts sont imputables au MOTEUR**, 11 %
+au CONTRAT, 6 % aux DOCUMENTS. Cela **réfute** l'hypothèse selon laquelle les
+documents seraient mal spécifiés — ils décrivent des applications légitimes
+que le moteur ne sait pas réaliser.
+
+### Livrables
+
+- **`@deribfy/execution-contract`** — enveloppe · graphe · réconciliation.
+  Paquet PUR : aucun fs/réseau/horloge/aléa, aucune dépendance à un
+  producteur ni à un juge (cliquet d'agnosticité + pureté).
+- **Cliquet de véracité** (16 contrôles) : l'enveloppe est confrontée au CODE
+  RÉEL du moteur — elle ne peut pas mentir ni dériver en silence.
+- **Cliquets de généralité I5/I6** : amplitude (0 à 12 entités, 1 à 15 écrans,
+  auto-référence, `many_to_many`) et invariance au renommage.
+- **Oracle L1 : 7 → 8 contrôles** (`contrat_execution`), cliquet de surface
+  édité consciemment.
+- **`benchmarks/execution-contract/`** — instrument qui produit la
+  **spécification de l'AIR 2.0 depuis la mesure**, pas depuis l'intuition.
+
+### Preuves exécutées
+
+**636 tests verts** sur 15 paquets · `typecheck` **EXIT=0** · `lint`
+**EXIT=0** · **12/12 `rootHash` du corpus INCHANGÉS** · `rootHash` du slice 2
+**INCHANGÉ** · corpus gelé **byte-identique** · zones gelées (schéma AIR,
+registres, runtime copié) **non touchées**.
+
+### Découverte consignée
+
+**DET-026** — `rtlSupported` est inerte : 0 fichier différent entre `true` et
+`false`. Non-négociable #16 non tenu côté artefact.
+
+### Ce qui reste INTERDIT à ce stade
+
+- ❌ Durcir l'Oracle en mode `strict` — change un critère de sortie, exige une
+  décision consignée.
+- ❌ Toute évolution de l'AIR (2.0) — la spécification est **mesurée**, elle
+  n'est pas **arbitrée**.
+- ❌ Toute construction d'exécution (mutations, persistance, capabilities,
+  slots) — chacune exige sa propre validation (D-017).
+- ❌ Toute validation appareil se réclamant du mot « fonctionnelle ».
