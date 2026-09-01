@@ -91,6 +91,18 @@ describe("FORM_SANS_ACTION — la réparation doit viser `actions`", () => {
   });
 });
 
+describe("DETAIL_SANS_SOURCE — la réparation doit viser `actions`", () => {
+  // Même famille que `FORM_SANS_ACTION` : produit par la validation de campagne,
+  // hors du pont fail-closed, donc invisible au cliquet de complétude des codes.
+  it("🔴 un détail sans source fait réémettre `actions`", () => {
+    expect(
+      sectionsAReemettre([
+        { code: "DETAIL_SANS_SOURCE", path: "screens[scr_detail].blocks[blk_detail]" },
+      ]),
+    ).toContain("actions");
+  });
+});
+
 describe("anti-amputation — ce que nul diagnostic ne désigne ne disparaît pas", () => {
   const avant = {
     entities: [{ id: "ent_a", fields: [{ id: "fld_photo" }] }, { id: "ent_b" }],

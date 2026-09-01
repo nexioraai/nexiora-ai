@@ -108,6 +108,10 @@ export const SECTIONS_CORRECTIVES: Readonly<Record<string, readonly SectionEmiss
   // n'a rien à corriger — et la règle 27 interdit de le retirer.
   FORM_SANS_ACTION: ["actions"],
 
+  // Un écran de détail qu'aucune ligne de liste n'ouvre. La réparation est de
+  // CÂBLER la ligne : elle vit dans `actions`. L'écran n'a rien à corriger.
+  DETAIL_SANS_SOURCE: ["actions"],
+
   // Une action pointe un écran / une entité / un slot absent.
   AIR_ACTION_SCREEN_UNKNOWN: ["actions", "ecrans"],
   AIR_ACTION_TRIGGER_SCREEN_UNKNOWN: ["actions", "ecrans"],

@@ -306,6 +306,10 @@ REGISTRE DES SMART BLOCKS (allowlist FERMÉE — blockType UNIQUEMENT parmi ces 
    MESURÉ : 7 formulaires sur 45 ne déclenchaient RIEN — dont deux boutons « Payer par carte » et une confirmation de rendez-vous. Le contrat impose \`actionId\` à un \`button\` et rien à un \`form\` : 0 bouton muet sur 259, 7 formulaires muets sur 45. Cette lacune est désormais DIAGNOSTIQUÉE (\`FORM_SANS_ACTION\`).
    Un formulaire sans action est un mensonge de l'interface. La réparation attendue est de CONSTRUIRE l'action — jamais de retirer le formulaire, son bouton ou ses champs (règle 27).
 
+29. UN DÉTAIL SANS LIGNE QUI L'OUVRE EST UN ÉCRAN MENTEUR. Tout écran portant un \`detail_header\` DOIT être atteint par une action \`{trigger:{kind:"ui",blockId:<un bloc list>}, effect:{kind:"navigate",screenId:<ce détail>}}\`. C'est la règle 18, et elle est désormais DIAGNOSTIQUÉE (\`DETAIL_SANS_SOURCE\`).
+   RAISON MESURÉE : seul l'appui sur une LIGNE DE LISTE transmet l'identifiant de l'instance. Une navigation par BOUTON n'en transmet aucun [vérifié dans le runtime]. Sans identifiant, l'écran affiche TOUJOURS le premier enregistrement, sans erreur — 28 écrans de détail sur 34 étaient dans ce cas.
+   Un bouton « Voir le détail » ne remplace donc PAS la ligne pressable : il conduit au bon écran avec le mauvais contenu.
+
 RÈGLES BLOCS NON NÉGOCIABLES :
 A. Tout *FieldId d'un bloc référence un champ (fld_*) DE L'ENTITÉ LIÉE à ce bloc.
 B. Tout actionId référence une action DÉCLARÉE dans la section "actions".
@@ -460,6 +464,37 @@ function validateLocal(document) {
         `NE RETIRE NI LE FORMULAIRE NI SON BOUTON : la réparation attendue est de ` +
         `CONSTRUIRE l'action manquante (règle 27).`,
     })),
+    // ── DETAIL_SANS_SOURCE (2026-09-01) — DIAGNOSTIC, comme FORM_SANS_ACTION.
+    //
+    // Un écran de détail n'apprend QUELLE instance afficher que d'une chose :
+    // `useItemNavigate` transmet `{itemId}` quand une LIGNE DE LISTE est
+    // pressée. Vérifié dans le runtime compilé : la navigation par BOUTON
+    // appelle `navigation.navigate(screenId)` SANS aucun paramètre. Un détail
+    // qu'aucune ligne n'atteint ne peut donc JAMAIS recevoir d'identifiant.
+    //
+    // Le fournisseur retombe alors sur `rows[0]`, EN SILENCE : l'écran affiche
+    // toujours le premier enregistrement. Presser « le troisième » montre « le
+    // premier », sans erreur ni état vide. Mesuré sur le corpus v3 : **28 écrans
+    // de détail sur 34 (82 %)**, dont **27 sur une entité à plusieurs lignes**.
+    //
+    // Le 28e porte un jeu de démo d'UNE ligne — il n'est non ambigu que par
+    // accident de fixture, jamais par le contrat. Aucune exemption n'est donc
+    // accordée : la règle reste STRUCTURELLE.
+    ...executionGraph
+      .detailScreens(parsed.data)
+      .filter((d) => !d.hasItemIdSource)
+      .map((d) => ({
+        code: "DETAIL_SANS_SOURCE",
+        path: `screens[${d.screenId}].blocks[${d.blockId}]`,
+        message:
+          `l'écran de détail "${d.screenId}" n'est atteint par AUCUNE ligne de liste : ` +
+          `il ne recevra jamais d'identifiant et affichera TOUJOURS le premier ` +
+          `enregistrement, en silence. Déclare une action ` +
+          `\`{trigger:{kind:"ui",blockId:<le bloc list de l'entité>}, ` +
+          `effect:{kind:"navigate",screenId:"${d.screenId}"}}\` (règle 18). ` +
+          `NE RETIRE NI L'ÉCRAN NI SON EN-TÊTE : la réparation attendue est de ` +
+          `CÂBLER la ligne (règle 27).`,
+      })),
   ];
   const overrides = parsed.data.design?.overrides;
   if (overrides !== undefined && overrides.length > 0) {
