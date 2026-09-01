@@ -393,6 +393,29 @@ describe("cliquet de véracité — le harnais d'émission RÉEL est confronté 
     expect(corps.slice(iAttache - 200, iAttache + 200)).toContain("throw");
   });
 
+  it("🔴 un document n'hérite JAMAIS de la dégradation d'un autre", () => {
+    // `PARTS` est construit UNE FOIS au chargement : sans remise à zéro, un
+    // refus rencontré sur le document 1 laissait la part en position dégradée
+    // pour tous les suivants. Chaque `part` a bien son propre `levelIndex` —
+    // la contamination était entre DOCUMENTS, pas entre parts.
+    expect(code).toContain("for (const part of PARTS) part.levelIndex = 0;");
+    // Et la remise à zéro doit précéder le corps de l'intention.
+    const boucle = code.slice(code.indexOf("for (const intention of INTENTIONS"));
+    const iReset = boucle.indexOf("part.levelIndex = 0");
+    const iTravail = boucle.indexOf("await emitSectionsAvecPartiel");
+    expect(iReset).toBeGreaterThan(-1);
+    expect(iReset).toBeLessThan(iTravail);
+  });
+
+  it("🔴 l'échelle de dégradation vit dans un module PUR, testable", () => {
+    // Tant que ces fonctions vivaient dans le harnais — qui exécute sa campagne
+    // au chargement — seul un cliquet textuel pouvait les voir, jamais leur
+    // comportement.
+    expect(code).toContain('await import(join(HERE, "schema-levels.mjs"))');
+    expect(occurrences("function makeLevels")).toBe(0);
+    expect(occurrences("function clampMinItems")).toBe(0);
+  });
+
   it("🔴 tout artefact déposé porte son `runId` et ne peut pas en écraser un autre", () => {
     expect(code).toContain("preservation.nomArtefact({ slug, runId: RUN_ID, phase })");
     expect(code).toContain('flag: "wx"');

@@ -45,6 +45,7 @@ const blocksRegistry = await import(join(REPO, "packages/blocks/src/registry.ts"
 const repairScope = await import(join(REPO, "packages/repair/src/repair-scope.ts"));
 const budgetUsd = await import(join(REPO, "packages/repair/src/budget-usd.ts"));
 const preservation = await import(join(REPO, "packages/repair/src/preservation.ts"));
+const { makeLevels } = await import(join(HERE, "schema-levels.mjs"));
 const executionContract = await import(join(REPO, "packages/execution-contract/src/envelope.ts"));
 const executionGraph = await import(join(REPO, "packages/execution-contract/src/graph.ts"));
 
@@ -156,38 +157,26 @@ const PARTS = [
   { name: "intention", keys: ["intent"] },
 ];
 
-function stripKeys(node, keys) {
-  if (Array.isArray(node)) return node.map((n) => stripKeys(n, keys));
-  if (node !== null && typeof node === "object") {
-    const out = {};
-    for (const [k, v] of Object.entries(node)) {
-      if (keys.includes(k)) continue;
-      out[k] = stripKeys(v, keys);
-    }
-    return out;
-  }
-  return node;
-}
-function oneOfToAnyOf(node) {
-  if (Array.isArray(node)) return node.map(oneOfToAnyOf);
-  if (node !== null && typeof node === "object") {
-    const out = {};
-    for (const [k, v] of Object.entries(node)) out[k === "oneOf" ? "anyOf" : k] = oneOfToAnyOf(v);
-    return out;
-  }
-  return node;
-}
-function makeLevels(jsonSchema) {
-  const base = oneOfToAnyOf(jsonSchema);
-  const L1 = stripKeys(base, ["minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf"]);
-  const L2 = stripKeys(L1, ["minLength", "maxLength", "minItems", "maxItems"]);
-  const L3 = stripKeys(L2, ["pattern", "format"]);
-  return [
-    { name: "sans-bornes-numeriques", schema: L1 },
-    { name: "sans-longueurs", schema: L2 },
-    { name: "sans-patterns", schema: L3 },
-  ];
-}
+/**
+ * `minItems` SUPÉRIEUR À 1 → RAMENÉ À 1, le reste INTACT.
+ *
+ * CAUSE RACINE MESURÉE (2026-09-01) : l'API refuse un schéma de sortie portant
+ * un `minItems` autre que 0 ou 1 — « For 'array' type, 'minItems' values other
+ * than 0 or 1 are not supported ». Sur le schéma AIR complet, **une seule**
+ * contrainte est dans ce cas : `minItems: 3` sur
+ * `$.navigation.primary.destinations`, introduite par D-086. Les 16 autres
+ * valent 1 et sont acceptées.
+ *
+ * L'échelle répondait à cette unique incompatibilité en descendant d'un cran
+ * qui détruit **35 contraintes** — 17 `minItems`, 16 `minLength`, et les DEUX
+ * seules bornes hautes du schéma : `maxItems: 5` sur ces mêmes destinations et
+ * `maxLength: 80` sur `app.name`. Une porte fermée à coups de mur.
+ *
+ * Ramener à 1 conserve ce qui peut l'être — le tableau doit rester non vide —
+ * et laisse toutes les autres contraintes en place. Les niveaux suivants
+ * demeurent, inchangés : ce sont des filets, pas le premier réflexe.
+ */
+
 
 for (const part of PARTS) {
   const pick = Object.fromEntries(part.keys.map((k) => [k, true]));
@@ -762,6 +751,14 @@ for (const intention of INTENTIONS.slice(start, end)) {
     break;
   }
   const t0 = Date.now();
+  // ── L'ÉCHELLE REPART DU NIVEAU NOMINAL À CHAQUE DOCUMENT (2026-09-01).
+  //
+  // `PARTS` est construit UNE FOIS au chargement : sans cette remise à zéro, un
+  // refus rencontré sur le document 1 laissait la part en position dégradée
+  // pour tous les documents suivants. Chaque `part` a bien son propre
+  // `levelIndex` — la contamination n'était pas entre parts, elle était entre
+  // DOCUMENTS. Un document ne doit pas hériter de la dégradation d'un autre.
+  for (const part of PARTS) part.levelIndex = 0;
   const journal = { runId: RUN_ID, intention: intention.slug, commerce: intention.commerce };
   const usage = [];
   const refusals = { count: 0 };
