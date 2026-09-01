@@ -1,0 +1,3328 @@
+{
+  "airSchemaVersion": "1.6.0",
+  "projectId": "prj_paniers_hebdo",
+  "app": {
+    "name": "Paniers Frais",
+    "slug": "paniers-frais",
+    "description": [
+      {
+        "locale": "fr",
+        "text": "Commandez chaque semaine votre panier de fruits et légumes de saison, payez par carte et suivez votre livraison à l'adresse de votre choix."
+      }
+    ],
+    "locales": {
+      "userLanguage": "fr",
+      "appLocales": [
+        "fr"
+      ],
+      "defaultAppLocale": "fr",
+      "contentLocales": [
+        "fr"
+      ],
+      "rtlSupported": false
+    }
+  },
+  "navigation": {
+    "entryScreenId": "scr_accueil",
+    "primary": {
+      "destinations": [
+        {
+          "routeId": "nav_accueil",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Accueil"
+            }
+          ],
+          "order": 0
+        },
+        {
+          "routeId": "nav_paniers",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Paniers"
+            }
+          ],
+          "order": 1
+        },
+        {
+          "routeId": "nav_mon_panier",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Mon panier"
+            }
+          ],
+          "order": 2
+        },
+        {
+          "routeId": "nav_commandes",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Commandes"
+            }
+          ],
+          "order": 3
+        },
+        {
+          "routeId": "nav_compte",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Compte"
+            }
+          ],
+          "order": 4
+        }
+      ]
+    },
+    "routes": [
+      {
+        "id": "nav_accueil",
+        "screenId": "scr_accueil",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Accueil"
+          }
+        ]
+      },
+      {
+        "id": "nav_paniers",
+        "screenId": "scr_paniers",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Paniers de la semaine"
+          }
+        ]
+      },
+      {
+        "id": "nav_panier_detail",
+        "screenId": "scr_panier_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Détail du panier"
+          }
+        ]
+      },
+      {
+        "id": "nav_mon_panier",
+        "screenId": "scr_mon_panier",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Mon panier"
+          }
+        ]
+      },
+      {
+        "id": "nav_adresse",
+        "screenId": "scr_adresse_livraison",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Adresse de livraison"
+          }
+        ]
+      },
+      {
+        "id": "nav_paiement",
+        "screenId": "scr_paiement",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Paiement par carte"
+          }
+        ]
+      },
+      {
+        "id": "nav_commandes",
+        "screenId": "scr_commandes",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Mes commandes"
+          }
+        ]
+      },
+      {
+        "id": "nav_commande_detail",
+        "screenId": "scr_commande_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Suivi de la commande"
+          }
+        ]
+      },
+      {
+        "id": "nav_compte",
+        "screenId": "scr_compte",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Mon compte"
+          }
+        ]
+      }
+    ]
+  },
+  "design": {
+    "theme": "marche_frais"
+  },
+  "network": {
+    "policy": "deny_by_default",
+    "allowedDomains": [
+      "api.paniersfrais.app"
+    ]
+  },
+  "native": {
+    "minIosVersion": "15.0",
+    "minAndroidSdk": 24
+  },
+  "compliance": {
+    "commerceClass": "physical_or_offapp",
+    "accountDeletionRequired": true,
+    "dataCollected": [
+      "contact_info",
+      "identifiers",
+      "location",
+      "purchases",
+      "usage_data"
+    ]
+  },
+  "entities": [
+    {
+      "id": "ent_panier",
+      "name": "panier",
+      "fields": [
+        {
+          "id": "fld_panier_nom",
+          "name": "nom",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_panier_description",
+          "name": "description",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "fld_panier_photo",
+          "name": "photo",
+          "type": "asset",
+          "required": true
+        },
+        {
+          "id": "fld_panier_prix",
+          "name": "prix",
+          "type": "decimal",
+          "required": true
+        },
+        {
+          "id": "fld_panier_taille",
+          "name": "taille",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "Solo",
+            "Duo",
+            "Famille"
+          ]
+        },
+        {
+          "id": "fld_panier_composition",
+          "name": "composition",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "fld_panier_semaine",
+          "name": "semaine",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_panier_origine",
+          "name": "origine",
+          "type": "string",
+          "required": false
+        },
+        {
+          "id": "fld_panier_bio",
+          "name": "bio",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "id": "fld_panier_disponible",
+          "name": "disponible",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "id": "fld_panier_stock",
+          "name": "stock",
+          "type": "number",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ent_ligne_panier",
+      "name": "ligne_panier",
+      "fields": [
+        {
+          "id": "fld_ligne_libelle",
+          "name": "libelle",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_ligne_panier_ref",
+          "name": "panier",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_panier",
+          "referenceDisplayFieldId": "fld_panier_nom"
+        },
+        {
+          "id": "fld_ligne_quantite",
+          "name": "quantite",
+          "type": "number",
+          "required": true
+        },
+        {
+          "id": "fld_ligne_prix_total",
+          "name": "prix_total",
+          "type": "decimal",
+          "required": true
+        },
+        {
+          "id": "fld_ligne_statut",
+          "name": "statut",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "en_cours",
+            "commandee"
+          ]
+        },
+        {
+          "id": "fld_ligne_commande_ref",
+          "name": "commande",
+          "type": "reference",
+          "required": false,
+          "referencesEntityId": "ent_commande",
+          "referenceDisplayFieldId": "fld_commande_reference"
+        },
+        {
+          "id": "fld_ligne_client_ref",
+          "name": "client",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_client",
+          "referenceDisplayFieldId": "fld_client_nom"
+        }
+      ]
+    },
+    {
+      "id": "ent_adresse",
+      "name": "adresse",
+      "fields": [
+        {
+          "id": "fld_adresse_libelle",
+          "name": "libelle",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_adresse_rue",
+          "name": "rue",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_adresse_complement",
+          "name": "complement",
+          "type": "string",
+          "required": false
+        },
+        {
+          "id": "fld_adresse_code_postal",
+          "name": "code_postal",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_adresse_ville",
+          "name": "ville",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_adresse_latitude",
+          "name": "latitude",
+          "type": "decimal",
+          "required": false
+        },
+        {
+          "id": "fld_adresse_longitude",
+          "name": "longitude",
+          "type": "decimal",
+          "required": false
+        },
+        {
+          "id": "fld_adresse_instructions",
+          "name": "instructions",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "fld_adresse_par_defaut",
+          "name": "par_defaut",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "id": "fld_adresse_client_ref",
+          "name": "client",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_client",
+          "referenceDisplayFieldId": "fld_client_nom"
+        }
+      ]
+    },
+    {
+      "id": "ent_commande",
+      "name": "commande",
+      "fields": [
+        {
+          "id": "fld_commande_reference",
+          "name": "reference",
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        {
+          "id": "fld_commande_date",
+          "name": "date_commande",
+          "type": "datetime",
+          "required": true
+        },
+        {
+          "id": "fld_commande_statut",
+          "name": "statut",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "en_preparation",
+            "expediee",
+            "en_livraison",
+            "livree",
+            "annulee"
+          ]
+        },
+        {
+          "id": "fld_commande_montant",
+          "name": "montant",
+          "type": "decimal",
+          "required": true
+        },
+        {
+          "id": "fld_commande_creneau",
+          "name": "creneau_livraison",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_commande_adresse_ref",
+          "name": "adresse",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_adresse",
+          "referenceDisplayFieldId": "fld_adresse_libelle"
+        },
+        {
+          "id": "fld_commande_client_ref",
+          "name": "client",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_client",
+          "referenceDisplayFieldId": "fld_client_nom"
+        },
+        {
+          "id": "fld_commande_paiement_statut",
+          "name": "paiement_statut",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "en_attente",
+            "paye",
+            "echoue"
+          ]
+        },
+        {
+          "id": "fld_commande_notification_livraison",
+          "name": "notification_livraison",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "id": "fld_commande_suivi",
+          "name": "suivi",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "ent_paiement",
+      "name": "paiement",
+      "fields": [
+        {
+          "id": "fld_paiement_titulaire",
+          "name": "titulaire",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_paiement_numero_carte",
+          "name": "numero_carte",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_paiement_expiration",
+          "name": "expiration",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_paiement_montant",
+          "name": "montant",
+          "type": "decimal",
+          "required": true
+        },
+        {
+          "id": "fld_paiement_statut",
+          "name": "statut",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "initie",
+            "autorise",
+            "refuse"
+          ]
+        },
+        {
+          "id": "fld_paiement_date",
+          "name": "date_paiement",
+          "type": "datetime",
+          "required": false
+        },
+        {
+          "id": "fld_paiement_commande_ref",
+          "name": "commande",
+          "type": "reference",
+          "required": false,
+          "referencesEntityId": "ent_commande",
+          "referenceDisplayFieldId": "fld_commande_reference"
+        }
+      ]
+    },
+    {
+      "id": "ent_client",
+      "name": "client",
+      "fields": [
+        {
+          "id": "fld_client_nom",
+          "name": "nom",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_client_email",
+          "name": "email",
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        {
+          "id": "fld_client_telephone",
+          "name": "telephone",
+          "type": "string",
+          "required": false
+        },
+        {
+          "id": "fld_client_notifications_push",
+          "name": "notifications_push",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "id": "fld_client_adresse_defaut",
+          "name": "adresse_par_defaut",
+          "type": "reference",
+          "required": false,
+          "referencesEntityId": "ent_adresse",
+          "referenceDisplayFieldId": "fld_adresse_libelle"
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel_panier_lignes",
+      "fromEntityId": "ent_panier",
+      "toEntityId": "ent_ligne_panier",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_commande_lignes",
+      "fromEntityId": "ent_commande",
+      "toEntityId": "ent_ligne_panier",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_client_lignes",
+      "fromEntityId": "ent_client",
+      "toEntityId": "ent_ligne_panier",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_client_commandes",
+      "fromEntityId": "ent_client",
+      "toEntityId": "ent_commande",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_client_adresses",
+      "fromEntityId": "ent_client",
+      "toEntityId": "ent_adresse",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_adresse_commandes",
+      "fromEntityId": "ent_adresse",
+      "toEntityId": "ent_commande",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_commande_paiement",
+      "fromEntityId": "ent_commande",
+      "toEntityId": "ent_paiement",
+      "kind": "one_to_one"
+    }
+  ],
+  "datasets": [
+    {
+      "id": "data_paniers",
+      "entityId": "ent_panier",
+      "contentHash": "3f9a21c47d8b06e5a1c4b7f209de8351cc74a0b6e29f1d3845ab7c60e91f2d47",
+      "rowCount": 14
+    },
+    {
+      "id": "data_lignes_panier",
+      "entityId": "ent_ligne_panier",
+      "contentHash": "a1c8074be3529df6108b47c2e05a9f3d6b71c48e0da295f3781be6c40297ad13",
+      "rowCount": 5
+    },
+    {
+      "id": "data_adresses",
+      "entityId": "ent_adresse",
+      "contentHash": "7d2be51908af634c1e07d95ba2386fc41780e6b93cad524fe0917b3c68da41f2",
+      "rowCount": 3
+    },
+    {
+      "id": "data_commandes",
+      "entityId": "ent_commande",
+      "contentHash": "c40b19f7e2a836d5104fb7c9e83a26d17b5049ce3fa2718b60d94ea5137cf802",
+      "rowCount": 8
+    },
+    {
+      "id": "data_paiements",
+      "entityId": "ent_paiement",
+      "contentHash": "e93d7150ba28c6f4079eb135ac6280df41a7c9053be612f8d047ab29c1350fe6",
+      "rowCount": 8
+    },
+    {
+      "id": "data_clients",
+      "entityId": "ent_client",
+      "contentHash": "5b6104ea3fc9827d0e4a17bd39c05f8241ea7639bc08d5f174a2be93017cd6a5",
+      "rowCount": 4
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule_panier_publiable",
+      "description": "Un panier proposé doit avoir un nom, une photo, un prix strictement positif et être disponible avec du stock.",
+      "kind": "validation",
+      "entityId": "ent_panier",
+      "assertions": [
+        {
+          "fieldId": "fld_panier_nom",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_panier_photo",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_panier_prix",
+          "operator": "gt",
+          "value": 0
+        },
+        {
+          "fieldId": "fld_panier_disponible",
+          "operator": "eq",
+          "value": true
+        },
+        {
+          "fieldId": "fld_panier_stock",
+          "operator": "gte",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "rule_ligne_quantite",
+      "description": "Une ligne de panier porte une référence de panier et une quantité comprise entre 1 et 10.",
+      "kind": "validation",
+      "entityId": "ent_ligne_panier",
+      "assertions": [
+        {
+          "fieldId": "fld_ligne_panier_ref",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_ligne_quantite",
+          "operator": "gte",
+          "value": 1
+        },
+        {
+          "fieldId": "fld_ligne_quantite",
+          "operator": "lte",
+          "value": 10
+        },
+        {
+          "fieldId": "fld_ligne_prix_total",
+          "operator": "gt",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "rule_adresse_livraison_valide",
+      "description": "L'adresse de livraison exige une rue, une ville et un code postal français à 5 chiffres.",
+      "kind": "validation",
+      "entityId": "ent_adresse",
+      "assertions": [
+        {
+          "fieldId": "fld_adresse_rue",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_adresse_ville",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_adresse_code_postal",
+          "operator": "matches",
+          "value": "^[0-9]{5}$"
+        }
+      ]
+    },
+    {
+      "id": "rule_commande_complete",
+      "description": "Une commande exige une adresse, un créneau, un montant positif et un statut de suivi connu.",
+      "kind": "validation",
+      "entityId": "ent_commande",
+      "assertions": [
+        {
+          "fieldId": "fld_commande_adresse_ref",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_commande_creneau",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_commande_montant",
+          "operator": "gt",
+          "value": 0
+        },
+        {
+          "fieldId": "fld_commande_statut",
+          "operator": "in",
+          "value": [
+            "en_preparation",
+            "expediee",
+            "en_livraison",
+            "livree",
+            "annulee"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rule_paiement_carte",
+      "description": "Le paiement par carte exige un titulaire, un numéro de 13 à 19 chiffres, une expiration MM/AA et un montant positif.",
+      "kind": "validation",
+      "entityId": "ent_paiement",
+      "assertions": [
+        {
+          "fieldId": "fld_paiement_titulaire",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_paiement_numero_carte",
+          "operator": "matches",
+          "value": "^[0-9]{13,19}$"
+        },
+        {
+          "fieldId": "fld_paiement_expiration",
+          "operator": "matches",
+          "value": "^(0[1-9]|1[0-2])/[0-9]{2}$"
+        },
+        {
+          "fieldId": "fld_paiement_montant",
+          "operator": "gt",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "rule_client_contact",
+      "description": "Le compte client exige un nom et une adresse e-mail valide.",
+      "kind": "validation",
+      "entityId": "ent_client",
+      "assertions": [
+        {
+          "fieldId": "fld_client_nom",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_client_email",
+          "operator": "matches",
+          "value": "^[^@\\s]+@[^@\\s]+\\.[a-z]{2,}$"
+        }
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "id": "slot_total_panier",
+      "description": "Calcule le sous-total des lignes du panier, ajoute les frais de livraison et renvoie le montant total ainsi qu'un libellé prêt à afficher.",
+      "inputs": [
+        {
+          "name": "lignes",
+          "type": "json"
+        },
+        {
+          "name": "fraisLivraison",
+          "type": "decimal"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "totalLabel",
+          "type": "string"
+        },
+        {
+          "name": "montantTotal",
+          "type": "decimal"
+        }
+      ],
+      "allowedImports": []
+    },
+    {
+      "id": "slot_creneaux_livraison",
+      "description": "Déduit de l'adresse de livraison les créneaux hebdomadaires desservis et renvoie le prochain créneau proposé.",
+      "inputs": [
+        {
+          "name": "adresses",
+          "type": "json"
+        },
+        {
+          "name": "semaineCourante",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prochainCreneau",
+          "type": "string"
+        },
+        {
+          "name": "zoneDesservie",
+          "type": "boolean"
+        }
+      ],
+      "allowedImports": []
+    },
+    {
+      "id": "slot_suivi_livraison",
+      "description": "Transforme le statut brut d'une commande en libellé de suivi lisible et en estimation d'arrivée.",
+      "inputs": [
+        {
+          "name": "commandes",
+          "type": "json"
+        },
+        {
+          "name": "maintenant",
+          "type": "datetime"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "statutLabel",
+          "type": "string"
+        },
+        {
+          "name": "etaLabel",
+          "type": "string"
+        }
+      ],
+      "allowedImports": []
+    },
+    {
+      "id": "slot_paniers_semaine",
+      "description": "Sélectionne les paniers de la semaine en cours et renvoie le titre de la semaine ainsi que le nombre de paniers encore disponibles.",
+      "inputs": [
+        {
+          "name": "paniers",
+          "type": "json"
+        },
+        {
+          "name": "semaineCourante",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "titreSemaine",
+          "type": "string"
+        },
+        {
+          "name": "nombreDisponibles",
+          "type": "number"
+        }
+      ],
+      "allowedImports": []
+    }
+  ],
+  "screens": [
+    {
+      "id": "scr_accueil",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Accueil"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_accueil_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Paniers Frais"
+            },
+            {
+              "key": "subtitle",
+              "value": "Vos fruits et légumes de saison, livrés chaque semaine"
+            }
+          ]
+        },
+        {
+          "id": "blk_accueil_paniers",
+          "blockType": "list",
+          "entityId": "ent_panier",
+          "props": [
+            {
+              "key": "title",
+              "value": "Les paniers de la semaine"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_panier_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_panier_composition"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_panier_prix"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_panier_taille"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_panier_photo"
+            },
+            {
+              "key": "filterFieldId",
+              "value": "fld_panier_disponible"
+            },
+            {
+              "key": "filterOperator",
+              "value": "eq"
+            },
+            {
+              "key": "filterValue",
+              "value": "true"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_panier_prix"
+            },
+            {
+              "key": "sortDirection",
+              "value": "asc"
+            },
+            {
+              "key": "pageSize",
+              "value": 4
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement des paniers…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Paniers indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Impossible de charger les paniers de la semaine. Réessayez dans un instant."
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun panier proposé"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "La sélection de la semaine arrive très bientôt."
+            }
+          ]
+        },
+        {
+          "id": "blk_accueil_commandes",
+          "blockType": "list",
+          "entityId": "ent_commande",
+          "props": [
+            {
+              "key": "title",
+              "value": "Vos dernières commandes"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_commande_reference"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_commande_creneau"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_commande_montant"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_commande_statut"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_commande_date"
+            },
+            {
+              "key": "sortDirection",
+              "value": "desc"
+            },
+            {
+              "key": "pageSize",
+              "value": 3
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de vos commandes…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Suivi indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Le suivi de vos commandes ne répond pas pour le moment."
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Pas encore de commande"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Vos livraisons apparaîtront ici dès votre première commande."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_paniers",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Paniers de la semaine"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_paniers_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Paniers de la semaine"
+            },
+            {
+              "key": "subtitle",
+              "value": "Bio, de saison, cueillis chez nos maraîchers"
+            }
+          ]
+        },
+        {
+          "id": "blk_paniers_liste",
+          "blockType": "list",
+          "entityId": "ent_panier",
+          "props": [
+            {
+              "key": "title",
+              "value": "Paniers disponibles cette semaine"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_panier_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_panier_origine"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_panier_prix"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_panier_taille"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_panier_photo"
+            },
+            {
+              "key": "searchFieldId",
+              "value": "fld_panier_nom"
+            },
+            {
+              "key": "searchPlaceholder",
+              "value": "Rechercher un panier (Solo, Duo, Famille…)"
+            },
+            {
+              "key": "filterFieldId",
+              "value": "fld_panier_disponible"
+            },
+            {
+              "key": "filterOperator",
+              "value": "eq"
+            },
+            {
+              "key": "filterValue",
+              "value": "true"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_panier_prix"
+            },
+            {
+              "key": "sortDirection",
+              "value": "asc"
+            },
+            {
+              "key": "pageSize",
+              "value": 12
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement des paniers…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Catalogue indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Les paniers ne peuvent pas être affichés. Vérifiez votre connexion."
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun panier ne correspond"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Essayez un autre mot-clé ou revenez lundi pour la nouvelle sélection."
+            }
+          ]
+        },
+        {
+          "id": "blk_paniers_vide",
+          "blockType": "empty_state",
+          "visibleWhen": {
+            "kind": "entity_empty",
+            "entityId": "ent_panier"
+          },
+          "props": [
+            {
+              "key": "title",
+              "value": "Aucun panier cette semaine"
+            },
+            {
+              "key": "message",
+              "value": "La récolte est en cours : la sélection sera publiée dans quelques heures."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_panier_detail",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Détail du panier"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_panier_detail_header",
+          "blockType": "detail_header",
+          "entityId": "ent_panier",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_panier_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_panier_description"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_panier_prix"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_panier_photo"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_panier_taille",
+                "fld_panier_bio",
+                "fld_panier_semaine"
+              ]
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du panier…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Panier introuvable"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Ce panier n'est plus disponible cette semaine."
+            }
+          ]
+        },
+        {
+          "id": "blk_panier_detail_composition",
+          "blockType": "list",
+          "entityId": "ent_panier",
+          "props": [
+            {
+              "key": "title",
+              "value": "Composition et provenance"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_panier_composition"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_panier_origine"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_panier_stock"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_panier_bio"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_panier_photo"
+            },
+            {
+              "key": "pageSize",
+              "value": 1
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de la composition…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Composition indisponible"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Composition non communiquée"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Le maraîcher publiera le détail des variétés avant la livraison."
+            }
+          ]
+        },
+        {
+          "id": "blk_panier_detail_form",
+          "blockType": "form",
+          "entityId": "ent_ligne_panier",
+          "props": [
+            {
+              "key": "title",
+              "value": "Ajouter ce panier à ma commande"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_ligne_libelle",
+                "fld_ligne_panier_ref",
+                "fld_ligne_quantite"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Ajouter au panier"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Préparation de votre sélection…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Ajout impossible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Vérifiez la quantité (1 à 10) avant de réessayer."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_mon_panier",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Mon panier"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_mon_panier_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mon panier"
+            },
+            {
+              "key": "subtitle",
+              "value": "Vérifiez votre sélection avant de commander"
+            }
+          ]
+        },
+        {
+          "id": "blk_mon_panier_lignes",
+          "blockType": "list",
+          "entityId": "ent_ligne_panier",
+          "props": [
+            {
+              "key": "title",
+              "value": "Vos paniers sélectionnés"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_ligne_libelle"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_ligne_panier_ref"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_ligne_prix_total"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_ligne_quantite"
+            },
+            {
+              "key": "filterFieldId",
+              "value": "fld_ligne_statut"
+            },
+            {
+              "key": "filterOperator",
+              "value": "eq"
+            },
+            {
+              "key": "filterValue",
+              "value": "en_cours"
+            },
+            {
+              "key": "pageSize",
+              "value": 10
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Calcul de votre panier…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Panier indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Votre panier n'a pas pu être chargé. Réessayez."
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Votre panier est vide"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Ajoutez un panier de la semaine pour démarrer votre commande."
+            }
+          ]
+        },
+        {
+          "id": "blk_mon_panier_vide",
+          "blockType": "empty_state",
+          "visibleWhen": {
+            "kind": "entity_empty",
+            "entityId": "ent_ligne_panier"
+          },
+          "props": [
+            {
+              "key": "title",
+              "value": "Votre panier est vide"
+            },
+            {
+              "key": "message",
+              "value": "Parcourez la sélection de la semaine et ajoutez un panier pour continuer."
+            }
+          ]
+        },
+        {
+          "id": "blk_mon_panier_btn_adresse",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Choisir l'adresse de livraison"
+            },
+            {
+              "key": "actionId",
+              "value": "act_vers_adresse"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_adresse_livraison",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Adresse de livraison"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_adresse_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Adresse de livraison"
+            },
+            {
+              "key": "subtitle",
+              "value": "Où déposons-nous votre panier ?"
+            }
+          ]
+        },
+        {
+          "id": "blk_adresse_liste",
+          "blockType": "list",
+          "entityId": "ent_adresse",
+          "props": [
+            {
+              "key": "title",
+              "value": "Vos adresses enregistrées"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_adresse_libelle"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_adresse_rue"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_adresse_ville"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_adresse_par_defaut"
+            },
+            {
+              "key": "pageSize",
+              "value": 5
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de vos adresses…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Adresses indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Vos adresses ne peuvent pas être affichées pour le moment."
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune adresse enregistrée"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Ajoutez votre première adresse de livraison ci-dessous."
+            }
+          ]
+        },
+        {
+          "id": "blk_adresse_btn_position",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Utiliser ma position actuelle"
+            },
+            {
+              "key": "actionId",
+              "value": "act_localiser_adresse"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "id": "blk_adresse_form",
+          "blockType": "form",
+          "entityId": "ent_adresse",
+          "props": [
+            {
+              "key": "title",
+              "value": "Nouvelle adresse de livraison"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_adresse_libelle",
+                "fld_adresse_rue",
+                "fld_adresse_complement",
+                "fld_adresse_code_postal",
+                "fld_adresse_ville",
+                "fld_adresse_latitude",
+                "fld_adresse_longitude",
+                "fld_adresse_instructions",
+                "fld_adresse_par_defaut"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Enregistrer et continuer"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Enregistrement de l'adresse…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Adresse incomplète"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Renseignez la rue, la ville et un code postal à 5 chiffres."
+            }
+          ]
+        },
+        {
+          "id": "blk_adresse_btn_paiement",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Continuer vers le paiement"
+            },
+            {
+              "key": "actionId",
+              "value": "act_vers_paiement"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_paiement",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Paiement par carte"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_paiement_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Paiement par carte"
+            },
+            {
+              "key": "subtitle",
+              "value": "Récapitulatif, créneau de livraison et règlement sécurisé"
+            }
+          ]
+        },
+        {
+          "id": "blk_paiement_recap",
+          "blockType": "list",
+          "entityId": "ent_ligne_panier",
+          "props": [
+            {
+              "key": "title",
+              "value": "Récapitulatif de votre commande"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_ligne_libelle"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_ligne_panier_ref"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_ligne_prix_total"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_ligne_quantite"
+            },
+            {
+              "key": "filterFieldId",
+              "value": "fld_ligne_statut"
+            },
+            {
+              "key": "filterOperator",
+              "value": "eq"
+            },
+            {
+              "key": "filterValue",
+              "value": "en_cours"
+            },
+            {
+              "key": "pageSize",
+              "value": 10
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du récapitulatif…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Récapitulatif indisponible"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun panier à régler"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Ajoutez un panier avant de procéder au paiement."
+            }
+          ]
+        },
+        {
+          "id": "blk_paiement_commande_form",
+          "blockType": "form",
+          "entityId": "ent_commande",
+          "props": [
+            {
+              "key": "title",
+              "value": "Votre livraison"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_commande_reference",
+                "fld_commande_creneau",
+                "fld_commande_adresse_ref",
+                "fld_commande_montant",
+                "fld_commande_notification_livraison"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Confirmer la commande"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Enregistrement de la commande…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Commande incomplète"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Choisissez une adresse et un créneau de livraison."
+            }
+          ]
+        },
+        {
+          "id": "blk_paiement_form",
+          "blockType": "form",
+          "entityId": "ent_paiement",
+          "props": [
+            {
+              "key": "title",
+              "value": "Carte bancaire"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_paiement_titulaire",
+                "fld_paiement_numero_carte",
+                "fld_paiement_expiration",
+                "fld_paiement_montant"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Payer par carte"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Paiement en cours…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Paiement refusé"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Vérifiez le numéro de carte et la date d'expiration (MM/AA)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_commandes",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Mes commandes"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_commandes_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes commandes"
+            },
+            {
+              "key": "subtitle",
+              "value": "Suivez la préparation et la livraison de vos paniers"
+            }
+          ]
+        },
+        {
+          "id": "blk_commandes_liste",
+          "blockType": "list",
+          "entityId": "ent_commande",
+          "props": [
+            {
+              "key": "title",
+              "value": "Historique et livraisons en cours"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_commande_reference"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_commande_creneau"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_commande_montant"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_commande_statut"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_commande_date"
+            },
+            {
+              "key": "sortDirection",
+              "value": "desc"
+            },
+            {
+              "key": "pageSize",
+              "value": 10
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de vos commandes…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Commandes indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Le suivi ne répond pas. Réessayez dans un instant."
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune commande"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Vos commandes de paniers s'afficheront ici."
+            }
+          ]
+        },
+        {
+          "id": "blk_commandes_vide",
+          "blockType": "empty_state",
+          "visibleWhen": {
+            "kind": "entity_empty",
+            "entityId": "ent_commande"
+          },
+          "props": [
+            {
+              "key": "title",
+              "value": "Aucune commande pour l'instant"
+            },
+            {
+              "key": "message",
+              "value": "Composez votre panier de la semaine, puis validez votre première commande."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_commande_detail",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Suivi de la commande"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_commande_detail_header",
+          "blockType": "detail_header",
+          "entityId": "ent_commande",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_commande_reference"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_commande_creneau"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_commande_montant"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_commande_statut",
+                "fld_commande_paiement_statut",
+                "fld_commande_notification_livraison"
+              ]
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de la commande…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Commande introuvable"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Impossible d'afficher le suivi de cette commande."
+            }
+          ]
+        },
+        {
+          "id": "blk_commande_detail_lignes",
+          "blockType": "list",
+          "entityId": "ent_ligne_panier",
+          "props": [
+            {
+              "key": "title",
+              "value": "Contenu de la commande"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_ligne_libelle"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_ligne_panier_ref"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_ligne_prix_total"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_ligne_quantite"
+            },
+            {
+              "key": "filterFieldId",
+              "value": "fld_ligne_statut"
+            },
+            {
+              "key": "filterOperator",
+              "value": "eq"
+            },
+            {
+              "key": "filterValue",
+              "value": "commandee"
+            },
+            {
+              "key": "pageSize",
+              "value": 10
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du contenu…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Contenu indisponible"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Contenu non détaillé"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Le détail des paniers de cette commande n'est pas disponible."
+            }
+          ]
+        },
+        {
+          "id": "blk_commande_detail_paiement",
+          "blockType": "list",
+          "entityId": "ent_paiement",
+          "props": [
+            {
+              "key": "title",
+              "value": "Paiement"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_paiement_titulaire"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_paiement_commande_ref"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_paiement_montant"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_paiement_statut"
+            },
+            {
+              "key": "pageSize",
+              "value": 3
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du paiement…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Paiement indisponible"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun paiement enregistré"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Le règlement de cette commande n'a pas encore été enregistré."
+            }
+          ]
+        },
+        {
+          "id": "blk_commande_detail_btn_notif",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "M'avertir à la livraison"
+            },
+            {
+              "key": "actionId",
+              "value": "act_notifier_livraison"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_compte",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Mon compte"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_compte_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mon compte"
+            },
+            {
+              "key": "subtitle",
+              "value": "Coordonnées, adresses et notifications"
+            }
+          ]
+        },
+        {
+          "id": "blk_compte_form",
+          "blockType": "form",
+          "entityId": "ent_client",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes informations"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_client_nom",
+                "fld_client_email",
+                "fld_client_telephone",
+                "fld_client_notifications_push",
+                "fld_client_adresse_defaut"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Enregistrer mes informations"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de votre profil…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Enregistrement impossible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Renseignez un nom et une adresse e-mail valide."
+            }
+          ]
+        },
+        {
+          "id": "blk_compte_adresses",
+          "blockType": "list",
+          "entityId": "ent_adresse",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes adresses de livraison"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_adresse_libelle"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_adresse_rue"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_adresse_ville"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_adresse_par_defaut"
+            },
+            {
+              "key": "pageSize",
+              "value": 5
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de vos adresses…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Adresses indisponibles"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune adresse"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Ajoutez une adresse pour être livré."
+            }
+          ]
+        },
+        {
+          "id": "blk_compte_btn_suppression",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Supprimer mon compte"
+            },
+            {
+              "key": "actionId",
+              "value": "act_supprimer_compte"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "act_ouvrir_panier_detail_accueil",
+      "name": "Ouvrir le panier depuis l'accueil",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_accueil_paniers"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_panier_detail"
+      }
+    },
+    {
+      "id": "act_ouvrir_panier_detail",
+      "name": "Ouvrir le détail du panier",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_paniers_liste"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_panier_detail"
+      }
+    },
+    {
+      "id": "act_ajouter_ligne_panier",
+      "name": "Ajouter le panier à ma commande",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_panier_detail_form"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_ligne_panier",
+        "operation": "create",
+        "thenScreenId": "scr_mon_panier"
+      }
+    },
+    {
+      "id": "act_vers_adresse",
+      "name": "Choisir l'adresse de livraison",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_mon_panier_btn_adresse"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_adresse_livraison"
+      }
+    },
+    {
+      "id": "act_localiser_adresse",
+      "name": "Utiliser ma position actuelle",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_adresse_btn_position"
+      },
+      "effect": {
+        "kind": "capability",
+        "capability": "geolocation",
+        "method": "getCurrentPosition",
+        "params": [
+          {
+            "key": "accuracy",
+            "value": "high"
+          },
+          {
+            "key": "purpose",
+            "value": "prefill_delivery_address"
+          }
+        ]
+      }
+    },
+    {
+      "id": "act_enregistrer_adresse",
+      "name": "Enregistrer l'adresse de livraison",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_adresse_form"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_adresse",
+        "operation": "create",
+        "thenScreenId": "scr_paiement"
+      }
+    },
+    {
+      "id": "act_vers_paiement",
+      "name": "Continuer vers le paiement",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_adresse_btn_paiement"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_paiement"
+      }
+    },
+    {
+      "id": "act_confirmer_commande",
+      "name": "Confirmer la commande",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_paiement_commande_form"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_commande",
+        "operation": "create",
+        "thenScreenId": "scr_commande_detail"
+      }
+    },
+    {
+      "id": "act_payer_carte",
+      "name": "Payer par carte",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_paiement_form"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_paiement",
+        "operation": "create",
+        "thenScreenId": "scr_commande_detail"
+      }
+    },
+    {
+      "id": "act_ouvrir_commande_detail",
+      "name": "Ouvrir le suivi de la commande",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_commandes_liste"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_commande_detail"
+      }
+    },
+    {
+      "id": "act_ouvrir_commande_detail_accueil",
+      "name": "Ouvrir le suivi depuis l'accueil",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_accueil_commandes"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_commande_detail"
+      }
+    },
+    {
+      "id": "act_notifier_livraison",
+      "name": "M'avertir à la livraison",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_commande_detail_btn_notif"
+      },
+      "effect": {
+        "kind": "capability",
+        "capability": "push_notifications",
+        "method": "scheduleNotification",
+        "params": [
+          {
+            "key": "channel",
+            "value": "livraison"
+          },
+          {
+            "key": "title",
+            "value": "Votre panier est livré"
+          },
+          {
+            "key": "body",
+            "value": "Votre panier de fruits et légumes vient d'être déposé à votre adresse de livraison."
+          }
+        ]
+      }
+    },
+    {
+      "id": "act_enregistrer_compte",
+      "name": "Enregistrer mes informations",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_compte_form"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_client",
+        "operation": "update",
+        "thenScreenId": "scr_compte"
+      }
+    },
+    {
+      "id": "act_ouvrir_adresses_compte",
+      "name": "Gérer une adresse depuis le compte",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_compte_adresses"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_adresse_livraison"
+      }
+    },
+    {
+      "id": "act_supprimer_compte",
+      "name": "Supprimer mon compte",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_compte_btn_suppression"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_client",
+        "operation": "delete",
+        "thenScreenId": "scr_accueil"
+      }
+    },
+    {
+      "id": "act_calcul_paniers_semaine",
+      "name": "Composer la sélection de la semaine",
+      "trigger": {
+        "kind": "lifecycle",
+        "event": "screen_open",
+        "screenId": "scr_accueil"
+      },
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_paniers_semaine",
+        "binding": {
+          "inputs": [
+            {
+              "port": "paniers",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_panier"
+              }
+            },
+            {
+              "port": "semaineCourante",
+              "source": {
+                "kind": "literal",
+                "value": "semaine-en-cours"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "port": "titreSemaine",
+              "blockId": "blk_accueil_paniers",
+              "prop": "title"
+            },
+            {
+              "port": "nombreDisponibles",
+              "blockId": "blk_accueil_paniers",
+              "prop": "emptyTitle"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "act_calcul_total_panier",
+      "name": "Calculer le total du panier",
+      "trigger": {
+        "kind": "lifecycle",
+        "event": "screen_open",
+        "screenId": "scr_mon_panier"
+      },
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_total_panier",
+        "binding": {
+          "inputs": [
+            {
+              "port": "lignes",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_ligne_panier"
+              }
+            },
+            {
+              "port": "fraisLivraison",
+              "source": {
+                "kind": "literal",
+                "value": 3.9
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "port": "totalLabel",
+              "blockId": "blk_mon_panier_lignes",
+              "prop": "title"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "act_creneaux_livraison",
+      "name": "Proposer le prochain créneau de livraison",
+      "trigger": {
+        "kind": "lifecycle",
+        "event": "screen_open",
+        "screenId": "scr_paiement"
+      },
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_creneaux_livraison",
+        "binding": {
+          "inputs": [
+            {
+              "port": "adresses",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_adresse"
+              }
+            },
+            {
+              "port": "semaineCourante",
+              "source": {
+                "kind": "literal",
+                "value": "semaine-en-cours"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "port": "prochainCreneau",
+              "blockId": "blk_paiement_header",
+              "prop": "subtitle"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "act_suivi_livraison",
+      "name": "Traduire le suivi de la livraison",
+      "trigger": {
+        "kind": "lifecycle",
+        "event": "screen_open",
+        "screenId": "scr_commande_detail"
+      },
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_suivi_livraison",
+        "binding": {
+          "inputs": [
+            {
+              "port": "commandes",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_commande"
+              }
+            },
+            {
+              "port": "maintenant",
+              "source": {
+                "kind": "literal",
+                "value": "now"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "port": "statutLabel",
+              "blockId": "blk_commande_detail_lignes",
+              "prop": "title"
+            },
+            {
+              "port": "etaLabel",
+              "blockId": "blk_commande_detail_lignes",
+              "prop": "emptyMessage"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "act_afficher_catalogue_paniers",
+      "name": "Afficher le catalogue des paniers de la semaine",
+      "trigger": {
+        "kind": "lifecycle",
+        "event": "screen_open",
+        "screenId": "scr_paniers"
+      },
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_paniers_semaine",
+        "binding": {
+          "inputs": [
+            {
+              "port": "paniers",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_panier"
+              }
+            },
+            {
+              "port": "semaineCourante",
+              "source": {
+                "kind": "literal",
+                "value": "semaine-en-cours"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "port": "titreSemaine",
+              "blockId": "blk_paniers_liste",
+              "prop": "title"
+            },
+            {
+              "port": "nombreDisponibles",
+              "blockId": "blk_paniers_liste",
+              "prop": "emptyTitle"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "act_ouvrir_adresse_depuis_liste",
+      "name": "Ouvrir une adresse enregistrée",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_adresse_liste"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_adresse_livraison"
+      }
+    },
+    {
+      "id": "act_ouvrir_paiement_depuis_suivi",
+      "name": "Ouvrir le paiement depuis le suivi de commande",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_commande_detail_paiement"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_paiement"
+      }
+    },
+    {
+      "id": "act_ouvrir_panier_depuis_recap",
+      "name": "Revenir au panier depuis le récapitulatif de paiement",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_paiement_recap"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_mon_panier"
+      }
+    },
+    {
+      "id": "act_ouvrir_detail_depuis_composition",
+      "name": "Ouvrir la fiche du panier depuis sa composition",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_panier_detail_composition"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_panier_detail"
+      }
+    },
+    {
+      "id": "act_ouvrir_paniers_depuis_vide",
+      "name": "Voir les paniers depuis l'état vide du panier",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_mon_panier_vide"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_paniers"
+      }
+    },
+    {
+      "id": "act_ouvrir_paniers_depuis_vide_commandes",
+      "name": "Voir les paniers depuis l'état vide des commandes",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_commandes_vide"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_paniers"
+      }
+    },
+    {
+      "id": "act_ouvrir_paniers_depuis_catalogue_vide",
+      "name": "Revenir à l'accueil depuis le catalogue vide",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_paniers_vide"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_accueil"
+      }
+    }
+  ],
+  "capabilities": [
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "methods",
+          "value": [
+            "email_password"
+          ]
+        },
+        {
+          "key": "accountDeletionSupported",
+          "value": true
+        },
+        {
+          "key": "sessionScope",
+          "value": "device"
+        }
+      ]
+    },
+    {
+      "capability": "payments.psp",
+      "config": [
+        {
+          "key": "commerceClass",
+          "value": "physical_or_offapp"
+        },
+        {
+          "key": "methods",
+          "value": [
+            "card"
+          ]
+        },
+        {
+          "key": "currency",
+          "value": "EUR"
+        },
+        {
+          "key": "captureMode",
+          "value": "on_order_confirmation"
+        }
+      ]
+    },
+    {
+      "capability": "geolocation",
+      "config": [
+        {
+          "key": "accuracy",
+          "value": "high"
+        },
+        {
+          "key": "usage",
+          "value": "prefill_delivery_address"
+        },
+        {
+          "key": "backgroundUpdates",
+          "value": false
+        }
+      ]
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "channels",
+          "value": [
+            "livraison"
+          ]
+        },
+        {
+          "key": "scheduledLocalNotifications",
+          "value": true
+        }
+      ]
+    }
+  ],
+  "permissions": [
+    {
+      "platform": "ios",
+      "permission": "NSLocationWhenInUseUsageDescription",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "Votre position sert uniquement à pré-remplir l'adresse de livraison de votre panier."
+        }
+      ],
+      "requiredByCapability": "geolocation"
+    },
+    {
+      "platform": "android",
+      "permission": "android.permission.ACCESS_FINE_LOCATION",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "Votre position sert uniquement à pré-remplir l'adresse de livraison de votre panier."
+        }
+      ],
+      "requiredByCapability": "geolocation"
+    },
+    {
+      "platform": "android",
+      "permission": "android.permission.POST_NOTIFICATIONS",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "Les notifications vous avertissent lorsque votre panier de fruits et légumes est livré."
+        }
+      ],
+      "requiredByCapability": "push_notifications"
+    }
+  ],
+  "integrations": [
+    {
+      "id": "intg_auth_client",
+      "providerClass": "auth_provider",
+      "capability": "auth",
+      "config": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.paniersfrais.app/auth"
+        },
+        {
+          "key": "methods",
+          "value": [
+            "email_password"
+          ]
+        },
+        {
+          "key": "accountDeletionEndpoint",
+          "value": "/v1/account/delete"
+        },
+        {
+          "key": "sessionPersistence",
+          "value": "device_secure_store"
+        }
+      ]
+    },
+    {
+      "id": "intg_paiement_carte",
+      "providerClass": "psp_gateway",
+      "capability": "payments.psp",
+      "config": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.paniersfrais.app/payments"
+        },
+        {
+          "key": "commerceClass",
+          "value": "physical_or_offapp"
+        },
+        {
+          "key": "methods",
+          "value": [
+            "card"
+          ]
+        },
+        {
+          "key": "currency",
+          "value": "EUR"
+        },
+        {
+          "key": "captureMode",
+          "value": "on_order_confirmation"
+        },
+        {
+          "key": "threeDSecure",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "intg_push_livraison",
+      "providerClass": "push_service",
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.paniersfrais.app/notifications"
+        },
+        {
+          "key": "channels",
+          "value": [
+            "livraison"
+          ]
+        },
+        {
+          "key": "scheduledLocalNotifications",
+          "value": true
+        },
+        {
+          "key": "defaultLocale",
+          "value": "fr"
+        }
+      ]
+    },
+    {
+      "id": "intg_geocodage_adresse",
+      "providerClass": "geocoding_service",
+      "capability": "geolocation",
+      "config": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.paniersfrais.app/geo"
+        },
+        {
+          "key": "usage",
+          "value": "prefill_delivery_address"
+        },
+        {
+          "key": "accuracy",
+          "value": "high"
+        },
+        {
+          "key": "countryScope",
+          "value": "FR"
+        }
+      ]
+    },
+    {
+      "id": "intg_catalogue_paniers",
+      "providerClass": "backend_api",
+      "config": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.paniersfrais.app"
+        },
+        {
+          "key": "resources",
+          "value": [
+            "paniers",
+            "lignes",
+            "adresses",
+            "commandes",
+            "paiements",
+            "clients"
+          ]
+        },
+        {
+          "key": "timeoutMs",
+          "value": 8000
+        }
+      ]
+    }
+  ],
+  "expectedTests": [
+    {
+      "id": "test_catalogue_paniers_affiche",
+      "description": "L'écran Paniers de la semaine affiche la liste des paniers disponibles avec vignette photo, nom, prix et badge de taille, triée par prix croissant.",
+      "kind": "deterministic",
+      "targetId": "scr_paniers"
+    },
+    {
+      "id": "test_recherche_paniers_filtre",
+      "description": "Saisir un mot-clé dans le champ de recherche du catalogue de l'écran Paniers réduit réellement la liste aux paniers dont le nom correspond.",
+      "kind": "deterministic",
+      "targetId": "scr_paniers"
+    },
+    {
+      "id": "test_ligne_panier_ouvre_detail",
+      "description": "Appuyer sur une ligne de la liste des paniers ouvre l'écran de détail du panier correspondant.",
+      "kind": "e2e",
+      "targetId": "act_ouvrir_panier_detail"
+    },
+    {
+      "id": "test_detail_panier_visuel",
+      "description": "La fiche panier affiche la photo en en-tête, la description, le prix et les badges taille / bio / semaine.",
+      "kind": "deterministic",
+      "targetId": "scr_panier_detail"
+    },
+    {
+      "id": "test_ajout_au_panier",
+      "description": "Soumettre le formulaire d'ajout depuis la fiche crée une ligne de panier puis conduit à l'écran Mon panier.",
+      "kind": "e2e",
+      "targetId": "act_ajouter_ligne_panier"
+    },
+    {
+      "id": "test_regle_quantite_ligne",
+      "description": "Une quantité inférieure à 1 ou supérieure à 10 est refusée avant l'écriture de la ligne de panier.",
+      "kind": "deterministic",
+      "targetId": "ent_ligne_panier"
+    },
+    {
+      "id": "test_reference_panier_lisible",
+      "description": "Dans Mon panier, la référence de panier de chaque ligne s'affiche par le nom du panier et non par un identifiant brut.",
+      "kind": "deterministic",
+      "targetId": "scr_mon_panier"
+    },
+    {
+      "id": "test_total_panier_slot",
+      "description": "À l'ouverture de Mon panier, le slot de calcul est invoqué et son libellé de total alimente le titre de la liste des lignes.",
+      "kind": "deterministic",
+      "targetId": "act_calcul_total_panier"
+    },
+    {
+      "id": "test_selection_semaine_slot",
+      "description": "À l'ouverture de l'accueil, le slot de sélection hebdomadaire est invoqué et renseigne le titre de la liste des paniers de la semaine.",
+      "kind": "deterministic",
+      "targetId": "act_calcul_paniers_semaine"
+    },
+    {
+      "id": "test_vers_adresse_livraison",
+      "description": "Depuis Mon panier, le bouton de continuation ouvre l'écran d'adresse de livraison.",
+      "kind": "e2e",
+      "targetId": "act_vers_adresse"
+    },
+    {
+      "id": "test_enregistrer_adresse",
+      "description": "Soumettre le formulaire d'adresse enregistre l'adresse de livraison puis conduit à l'écran de paiement.",
+      "kind": "e2e",
+      "targetId": "act_enregistrer_adresse"
+    },
+    {
+      "id": "test_regle_code_postal",
+      "description": "Une adresse sans rue, sans ville ou avec un code postal qui n'a pas 5 chiffres est refusée avant l'écriture.",
+      "kind": "deterministic",
+      "targetId": "ent_adresse"
+    },
+    {
+      "id": "test_formulaire_adresse_persistant",
+      "description": "Les valeurs saisies dans le formulaire d'adresse de l'écran Adresse de livraison survivent à une navigation vers un autre écran puis au retour.",
+      "kind": "e2e",
+      "targetId": "scr_adresse_livraison"
+    },
+    {
+      "id": "test_creneau_livraison_slot",
+      "description": "À l'ouverture de l'écran de paiement, le slot de créneaux est invoqué et son prochain créneau alimente le sous-titre de l'en-tête.",
+      "kind": "deterministic",
+      "targetId": "act_creneaux_livraison"
+    },
+    {
+      "id": "test_confirmer_commande",
+      "description": "Soumettre le formulaire de livraison crée la commande avec son créneau et son adresse, puis conduit au suivi de commande.",
+      "kind": "e2e",
+      "targetId": "act_confirmer_commande"
+    },
+    {
+      "id": "test_regle_commande_complete",
+      "description": "Une commande sans adresse, sans créneau ou de montant nul est refusée avant l'écriture.",
+      "kind": "deterministic",
+      "targetId": "ent_commande"
+    },
+    {
+      "id": "test_paiement_carte",
+      "description": "Soumettre le formulaire carte crée le paiement rattaché à la commande puis conduit au suivi de commande.",
+      "kind": "e2e",
+      "targetId": "act_payer_carte"
+    },
+    {
+      "id": "test_regle_carte_bancaire",
+      "description": "Un numéro de carte hors format 13 à 19 chiffres ou une expiration hors format MM/AA est refusé avant l'écriture du paiement.",
+      "kind": "deterministic",
+      "targetId": "ent_paiement"
+    },
+    {
+      "id": "test_contrat_psp_carte",
+      "description": "Le paiement par carte s'appuie sur l'intégration PSP en EUR avec capture à la confirmation de commande, sans aucun secret dans la configuration.",
+      "kind": "contract",
+      "targetId": "act_payer_carte"
+    },
+    {
+      "id": "test_ligne_commande_ouvre_suivi",
+      "description": "Appuyer sur une ligne de la liste Mes commandes ouvre le suivi de la commande correspondante.",
+      "kind": "e2e",
+      "targetId": "act_ouvrir_commande_detail"
+    },
+    {
+      "id": "test_suivi_livraison_slot",
+      "description": "À l'ouverture du suivi, le slot de traduction du statut est invoqué et alimente le titre du contenu de la commande.",
+      "kind": "deterministic",
+      "targetId": "act_suivi_livraison"
+    },
+    {
+      "id": "test_etat_vide_commandes",
+      "description": "Sur l'écran Mes commandes, l'état vide ne s'affiche que lorsque aucune commande n'existe, jamais en présence de données.",
+      "kind": "deterministic",
+      "targetId": "scr_commandes"
+    },
+    {
+      "id": "test_contrat_push_livraison",
+      "description": "La commande porte la préférence de notification de livraison, adossée à l'intégration de notifications déclarant le canal livraison et la programmation locale avec la permission Android POST_NOTIFICATIONS.",
+      "kind": "contract",
+      "targetId": "ent_commande"
+    },
+    {
+      "id": "test_contrat_geocodage",
+      "description": "Les coordonnées de l'adresse proviennent d'un géocodage limité au pré-remplissage de l'adresse de livraison, sans suivi en arrière-plan.",
+      "kind": "contract",
+      "targetId": "ent_adresse"
+    },
+    {
+      "id": "test_contrat_auth",
+      "description": "Le compte client s'appuie sur une authentification e-mail avec suppression de compte, sans secret en configuration.",
+      "kind": "contract",
+      "targetId": "ent_client"
+    },
+    {
+      "id": "test_contrat_backend",
+      "description": "L'accueil ne charge ses données que depuis api.paniersfrais.app, conformément à la politique réseau deny_by_default.",
+      "kind": "contract",
+      "targetId": "scr_accueil"
+    },
+    {
+      "id": "test_enregistrer_compte",
+      "description": "Soumettre le formulaire du compte met à jour les informations client et revient sur l'écran Mon compte.",
+      "kind": "e2e",
+      "targetId": "act_enregistrer_compte"
+    },
+    {
+      "id": "test_regle_contact_client",
+      "description": "Un compte sans nom ou avec un e-mail invalide est refusé avant l'écriture.",
+      "kind": "deterministic",
+      "targetId": "ent_client"
+    },
+    {
+      "id": "test_supprimer_compte",
+      "description": "Le bouton de suppression du compte exécute la suppression du client et ramène à l'accueil.",
+      "kind": "e2e",
+      "targetId": "act_supprimer_compte"
+    },
+    {
+      "id": "test_navigation_persistante",
+      "description": "La barre de navigation principale affiche Accueil, Paniers, Mon panier, Commandes et Compte sur chaque écran, dans cet ordre, y compris depuis l'écran d'entrée.",
+      "kind": "deterministic",
+      "targetId": "scr_accueil"
+    }
+  ],
+  "intent": {
+    "request": "Je livre des paniers de fruits et légumes. L'app doit proposer les paniers de la semaine, la commande avec paiement par carte, l'adresse de livraison avec position, et une notification à la livraison. En français.",
+    "requestLocale": "fr",
+    "needs": [
+      {
+        "id": "need_paniers_semaine",
+        "statement": "Proposer aux clients les paniers de fruits et légumes de la semaine, avec leur visuel, leur composition et leur prix.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "ent_panier",
+            "data_paniers",
+            "scr_paniers",
+            "blk_paniers_liste",
+            "blk_accueil_paniers",
+            "fld_panier_semaine",
+            "fld_panier_photo",
+            "slot_paniers_semaine",
+            "act_calcul_paniers_semaine",
+            "rule_panier_publiable"
+          ]
+        }
+      },
+      {
+        "id": "need_recherche_catalogue",
+        "statement": "Permettre de retrouver rapidement un panier dans la sélection proposée.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "blk_paniers_liste",
+            "fld_panier_nom"
+          ]
+        }
+      },
+      {
+        "id": "need_fiche_panier",
+        "statement": "Consulter le détail d'un panier (photo, description, composition, origine, taille, bio) avant de le choisir.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_panier_detail",
+            "blk_panier_detail_header",
+            "blk_panier_detail_composition",
+            "act_ouvrir_panier_detail",
+            "act_ouvrir_panier_detail_accueil"
+          ]
+        }
+      },
+      {
+        "id": "need_composer_commande",
+        "statement": "Composer sa commande en ajoutant un ou plusieurs paniers avec une quantité.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "ent_ligne_panier",
+            "data_lignes_panier",
+            "blk_panier_detail_form",
+            "act_ajouter_ligne_panier",
+            "scr_mon_panier",
+            "blk_mon_panier_lignes",
+            "slot_total_panier",
+            "act_calcul_total_panier",
+            "rule_ligne_quantite"
+          ]
+        }
+      },
+      {
+        "id": "need_validation_commande",
+        "statement": "Valider la commande avec son créneau de livraison et l'enregistrer.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "ent_commande",
+            "data_commandes",
+            "scr_paiement",
+            "blk_paiement_recap",
+            "blk_paiement_commande_form",
+            "act_confirmer_commande",
+            "rule_commande_complete",
+            "slot_creneaux_livraison",
+            "act_creneaux_livraison"
+          ]
+        }
+      },
+      {
+        "id": "need_paiement_carte",
+        "statement": "Payer la commande par carte bancaire.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "ent_paiement",
+            "data_paiements",
+            "blk_paiement_form",
+            "act_payer_carte",
+            "rule_paiement_carte",
+            "intg_paiement_carte"
+          ]
+        }
+      },
+      {
+        "id": "need_adresse_livraison",
+        "statement": "Renseigner et enregistrer l'adresse de livraison du panier.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "ent_adresse",
+            "data_adresses",
+            "scr_adresse_livraison",
+            "blk_adresse_liste",
+            "blk_adresse_form",
+            "act_enregistrer_adresse",
+            "rule_adresse_livraison_valide",
+            "act_vers_adresse",
+            "blk_compte_adresses"
+          ]
+        }
+      },
+      {
+        "id": "need_position_adresse",
+        "statement": "Récupérer la position actuelle de l'appareil pour renseigner l'adresse de livraison.",
+        "resolution": {
+          "kind": "unexpressible",
+          "reason": "le moteur n'exécute pas encore les effets capability (capabilitiesEmitCode: false)"
+        }
+      },
+      {
+        "id": "need_coordonnees_adresse",
+        "statement": "Conserver et afficher les coordonnées géographiques rattachées à l'adresse de livraison.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "fld_adresse_latitude",
+            "fld_adresse_longitude",
+            "blk_adresse_form",
+            "intg_geocodage_adresse"
+          ]
+        }
+      },
+      {
+        "id": "need_notification_livraison",
+        "statement": "Envoyer une notification au client au moment de la livraison de son panier.",
+        "resolution": {
+          "kind": "unexpressible",
+          "reason": "le moteur n'exécute pas encore les effets capability (capabilitiesEmitCode: false)"
+        }
+      },
+      {
+        "id": "need_preference_notification",
+        "statement": "Permettre au client d'exprimer et de conserver son souhait d'être averti à la livraison.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "fld_commande_notification_livraison",
+            "fld_client_notifications_push",
+            "blk_paiement_commande_form",
+            "blk_compte_form",
+            "blk_commande_detail_header",
+            "intg_push_livraison"
+          ]
+        }
+      },
+      {
+        "id": "need_suivi_commandes",
+        "statement": "Suivre l'état de ses commandes et de leur livraison.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_commandes",
+            "blk_commandes_liste",
+            "act_ouvrir_commande_detail",
+            "scr_commande_detail",
+            "blk_commande_detail_header",
+            "blk_commande_detail_lignes",
+            "blk_commande_detail_paiement",
+            "slot_suivi_livraison",
+            "act_suivi_livraison"
+          ]
+        }
+      },
+      {
+        "id": "need_compte_client",
+        "statement": "Disposer d'un compte client portant les coordonnées, les adresses et les préférences de notification.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "ent_client",
+            "data_clients",
+            "scr_compte",
+            "blk_compte_form",
+            "act_enregistrer_compte",
+            "rule_client_contact",
+            "act_supprimer_compte",
+            "intg_auth_client"
+          ]
+        }
+      },
+      {
+        "id": "need_application_francais",
+        "statement": "Livrer l'application entièrement en français.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "prj_paniers_hebdo"
+          ]
+        }
+      }
+    ]
+  }
+}

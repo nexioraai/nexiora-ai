@@ -5787,3 +5787,98 @@ débordement à absorber.
 (`ecritureCache` 6,25 $/MTok contre `entree` 5). Le contrôle avant appel reste
 donc **légèrement optimiste**. Il n'a pas mordu à tort ici — la marge l'a absorbé.
 Dette consignée, non traitée.
+
+> ### ⬆️ RENFORCÉ LE 2026-09-01 — SECONDE OBSERVATION, SANS DÉPENSE DÉDIÉE
+>
+> La génération de `livraison-fruits` (`D-117`) a reproduit **exactement la même
+> séquence de refus**, sur un **document différent** :
+>
+> ```
+> « minItems-ramene »        → 400 : For 'array' type, property 'maxItems' is…
+> « sans-bornes-numeriques » → 400 : For 'array' type, 'minItems' values othe…
+> acceptation                → « sans-longueurs »
+> ```
+>
+> **Deux documents, deux fois le même motif.** La réserve que je posais —
+> *« il faudrait confirmer que `maxItems` est refusé systématiquement »* — est
+> **levée** : le refus n'était pas circonstanciel. Le constat de `D-116` est
+> renforcé : **le premier niveau de l'échelle est un aller-retour perdu à chaque
+> part et à chaque document**.
+>
+> 🔴 **Aucune modification du code de l'échelle n'est entreprise.** Ce qu'il
+> convient de faire du niveau devenu inutile reste un arbitrage distinct.
+
+## D-117 — LES DIAGNOSTICS SONT ÉPROUVÉS EN GÉNÉRATION RÉELLE — 2026-09-01
+
+**Première épreuve réelle réussie** de `FORM_SANS_ACTION` (`D-112`) et
+`DETAIL_SANS_SOURCE` (R6). Document `livraison-fruits`, index 7, un seul
+lancement, `BUDGET_USD=3.0`.
+
+### Mesures
+
+| | |
+|---|---|
+| issue · valid | `terminee` · **`true`** |
+| coût réel | **2,5970 $** — 10 appels, 502 s, 0 refus *(extrapolation annoncée : ~2,72 $, juste à 5 %)* |
+| diagnostics | **20 → 0** · `amputationsRejetees = []` |
+| vérifications | **919 tests · typecheck EXIT=0 · lint EXIT=0** |
+
+**Les trois familles de défauts, avant → après :**
+
+| Critère | Avant | Après |
+|---|---|---|
+| `FORM_SANS_ACTION` | **2** (`blk_form_adresse`, `blk_form_paiement`) | **0** 🟢 |
+| `DETAIL_SANS_SOURCE` | **4** | **0** 🟢 |
+| `AIR_IMAGE_ORPHELINE` | **1** (`fld_panier_photo`) | **0** 🟢 |
+| Amputations rejetées | — | **0** 🟢 |
+
+### 🟢 LE FAIT CENTRAL : LES DIAGNOSTICS N'ONT PAS EU À MORDRE
+
+`FACT` — les 20 diagnostics de la première passe se répartissent ainsi :
+**17 × `AIR_TEST_TARGET_UNKNOWN`, 2 × `BLOCK_PROPS_INVALID`,
+1 × `AIR_INTEGRATION_SECRET_LIKE_KEY`**.
+
+**Ni `FORM_SANS_ACTION`, ni `DETAIL_SANS_SOURCE`.**
+
+`CONCLUSION` — le modèle a produit un document **correct sur ces deux points dès
+le premier jet**. Ce ne sont pas les diagnostics qui ont corrigé : ce sont les
+**règles 28 et 29 du prompt** qui ont empêché les défauts d'apparaître. Le filet
+n'a pas servi parce que la consigne a suffi — résultat plus fort que celui espéré.
+
+### 🟢 `D-088` ÉPROUVÉE POUR LA PREMIÈRE FOIS SUR UNE GÉNÉRATION RÉELLE
+
+Comparaison **intra-exécution**, la seule bien fondée :
+
+```
+écrans 9=9 · entités 6=6 · blocs 33=33 · promesses 30=30 · actions 19 → 27  (+8)
+promesses présentes en attempt1 et absentes en attempt2 : 0
+amputationsHorsPerimetre = 0     mutationsHorsPerimetre = 0
+```
+
+**La réparation n'a rien retiré : elle a ajouté 8 actions.** Les 17 promesses à
+cible inconnue ont été résolues en **CRÉANT les cibles**, jamais en supprimant les
+promesses. C'est exactement le comportement que `D-088` et la règle 27 visaient —
+**vérifié pour la première fois sur données réelles**.
+
+*(La comparaison avec le document précédent du corpus — blocs −3, promesses −9,
+détails −2 — est une comparaison ENTRE générations, que `D-088` déclare mal
+fondée. Elle est rapportée sans être qualifiée.)*
+
+### Chaîne de garde
+
+`hashCanonical(attempt2)` = `hashCanonical(corpus)` = `journal.airHash`
+= `ea3f9b6c719928f36c61b0f0…`. Trois artefacts conservés, nommés par `runId`
+(`2026-09-01T21-11-04-315Z`), aucun corps tronqué.
+
+### 🔴 CE QUE CETTE RÉUSSITE NE DÉMONTRE PAS
+
+**Un document ne fait pas une preuve générale.** Rien n'établit que ce
+comportement tienne sur les autres documents : le prompt est le même, mais les
+domaines, les tailles et les structures diffèrent.
+
+`FACT` — **9 documents v3 restent à éprouver**, portant encore **5 formulaires
+muets, 24 détails sans source et 17 images orphelines**.
+
+C'est la même prudence qui a fait refuser toute conclusion sur la troncature à
+partir de deux exécutions. Une réussite n'autorise pas plus de généralisation
+qu'un échec.
