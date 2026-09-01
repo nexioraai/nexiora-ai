@@ -1,7 +1,18 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-01 (5)** (**EXPÉRIENCE `toiletteur-chiens` : ÉCHEC INSTRUCTIF, TROIS
+> **2026-09-01 (6)** (**EXPÉRIENCE DIAGNOSTIQUE — `D-116`** : la troncature
+> **NE S'EST PAS REPRODUITE**. Même document, même prompt, même niveau de schéma
+> final : `ecrans` a été émise en **6 309 jetons, 39 % du plafond**, contre
+> ≥ 16 000 la fois précédente. **Écart d'un facteur ≥ 2,5 sans cause identifiée.**
+> 🔴 **CAUSE NON DÉMONTRÉE ET NON REPRODUCTIBLE — aucune correction appliquée**,
+> le phénomène reste OUVERT. · 🔴 **`D-115` rectifiée** : l'API refuse `maxItems`
+> lui-même, donc l'étape A **ne préserve rien** et n'ajoute qu'un aller-retour
+> refusé — elle est **INERTE**. · 🟢 **Le garde budgétaire est éprouvé en réel** :
+> 0,9369 $ sur 1,00 $, appel refusé **avant** émission, `issue =
+> interrompue-budget`. **0,9369 $.**)
+>
+> *Entrée précédente —* **2026-09-01 (5)** (**EXPÉRIENCE `toiletteur-chiens` : ÉCHEC INSTRUCTIF, TROIS
 > INSTRUMENTS RÉPARÉS — `D-113` → `D-115`**. La génération a été **TRONQUÉE** sur
 > la section `ecrans` (16 000 jetons) ; elle **n'a donc pas pu éprouver les trois
 > diagnostics**, son objet initial. Mais elle a démontré en conditions réelles ce
@@ -956,7 +967,41 @@ par un `529`, mais par une troncature, erreur technique authentique.
 **Coût** : 0,3812 $ journalisés, **plus ~0,40 $** d'un appel tronqué qui échappait
 alors à la comptabilité — **cumul réel ~0,78 $** (`D-114`, sans effet rétroactif).
 
-## 🔴 CAUSE DE LA TRONCATURE — NON DÉMONTRÉE
+## 🔴 CAUSE DE LA TRONCATURE — NON DÉMONTRÉE **ET NON REPRODUCTIBLE**
+
+> ### ⬆️ EXPÉRIENCE DIAGNOSTIQUE DU 2026-09-01 — `D-116`
+>
+> Une expérience contrôlée a été autorisée, protocolée avant exécution, et lancée
+> **une seule fois** : `BUDGET_USD=1.0 … 9 10`. **0,9369 $ · 3 appels.**
+>
+> **La troncature ne s'est pas reproduite.** `ecrans` a été émise : **13 écrans,
+> 44 blocs, ~6 309 jetons — 39 % du plafond**, à **485 jetons/écran**, sous la
+> moyenne du corpus. Même document, même prompt, **même niveau de schéma final**
+> que l'exécution qui avait tronqué.
+>
+> **Sept hypothèses confrontées** : H1 (limite ≠ 16 000) et H3 (densité) **écartées
+> par mesure** · H5 (niveau de dégradation) **écartée** — niveau identique,
+> résultats opposés · H2 affaiblie · H4, H6, H7 non observables faute de corps
+> anormal.
+>
+> 🔴 **NON CONCLUANT.** Le protocole l'avait tranché d'avance : un échec non
+> reproductible interdit d'en inférer une cause. **Aucune correction n'est
+> appliquée** — ni moteur, ni prompt, ni `MAX_TOKENS`, ni corpus, ni stratégie.
+> **Le phénomène reste OUVERT.** L'écart d'un facteur ≥ 2,5 est inexpliqué ;
+> l'hypothèse de la variance du modèle n'est **pas démontrée**.
+
+## 🟢 GARDE BUDGÉTAIRE — ÉPROUVÉ EN CONDITIONS RÉELLES (`D-116`)
+
+**0,9369 $ dépensés sur 1,00 $ autorisé.** L'appel `actions` a été **REFUSÉ AVANT
+ÉMISSION** — *« refusé AVANT appel — dépensé 0.9369 $, coût maximal 0.4953 $ »*.
+**Aucun dépassement** : le garde a mordu en amont. `issue = "interrompue-budget"`,
+distincte de `echec-technique` et de `terminee`.
+
+`D-103`, `D-114` et la classification à quatre états sont **démontrés ensemble,
+hors laboratoire**. 🟠 Réserve maintenue : `coutMaxAppel` ignore les tarifs de
+cache — contrôle légèrement optimiste, dette consignée, non traitée.
+
+## Ancien constat, conservé
 
 Faits établis : le modèle a planifié **14 écrans au lieu de 11** · les autres
 sections qu'il a produites sont **plus sobres** que l'existant (×0,93) · 14 écrans
@@ -1005,6 +1050,12 @@ comptabilité, avant toute branche. Montant inchangé, visibilité corrigée.
 9 cas-tueurs, 4 falsifications.
 
 **⑤ `D-115` — dégradation ciblée du schéma, étape A** (`499189a`).
+🔴 **RECTIFIÉE PAR MESURE (`D-116`) — CETTE CORRECTION EST INERTE.** L'API refuse
+**`maxItems` lui-même** : les bornes que `D-115` annonçait préserver ne peuvent
+JAMAIS être envoyées. La dégradation atteint `sans-longueurs` exactement comme
+avant ; le seul effet observable est **un aller-retour refusé supplémentaire**.
+`A` reste juste sur `minItems`, mais elle ne préserve rien. Texte d'origine
+conservé ci-dessous.
 Une seule contrainte incompatible (`minItems: 3`, `D-086`) faisait détruire
 **35 contraintes**, dont les deux seules bornes hautes du schéma. `clampMinItems`
 en touche **une**. `maxItems [5]` et `maxLength [80]` survivent. `levelIndex`

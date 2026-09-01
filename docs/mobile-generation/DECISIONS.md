@@ -5691,3 +5691,99 @@ intacts · aucun appel API.**
 🟠 **Non démontré** : que l'API acceptera ce premier niveau. Cela exige un appel
 réel. Ce qui est établi : plus aucun `minItems` hors {0,1}, seule incompatibilité
 connue.
+
+> ### ⬆️ RECTIFIÉ LE 2026-09-01 PAR MESURE — `D-116`. LA RÉSERVE CI-DESSUS ÉTAIT LA BONNE.
+>
+> L'appel réel a eu lieu. **L'API n'accepte pas ce premier niveau** : elle refuse
+> `maxItems` **lui-même**. La préservation annoncée par cette décision —
+> *« `maxItems [5]` et `maxLength [80]` survivent »* — **n'existe pas en
+> production** : ces bornes ne peuvent JAMAIS être envoyées.
+>
+> `A` reste juste sur `minItems`, mais elle **ne préserve rien** et **ajoute un
+> aller-retour refusé**. Détail et suite dans `D-116`. Le texte ci-dessus est
+> conservé tel qu'il a été écrit : il était sincère, et sa réserve finale
+> annonçait exactement ce qui s'est produit.
+
+## D-116 — LA TRONCATURE NE SE REPRODUIT PAS ; L'ÉTAPE A EST INERTE — 2026-09-01
+
+**Expérience diagnostique contrôlée**, autorisée et protocolée avant exécution.
+Un seul lancement : `BUDGET_USD=1.0 node benchmarks/air-emission/emit-v3.mjs 9 10`.
+**0,9369 $ · 3 appels · 263 s.**
+
+### ① LA TRONCATURE NE S'EST PAS REPRODUITE — cause NON DÉMONTRÉE
+
+`FACT` — la section `ecrans` a été **émise avec succès** : **13 écrans, 44 blocs,
+~6 309 jetons**, soit **39 % du plafond** de 16 000. Zéro occurrence de
+« TRONQUÉE ».
+
+`FACT` — densité **~485 jetons/écran**, **sous** la moyenne du corpus (556-575) et
+sous ce document lui-même (489).
+
+`FACT` — même document, même prompt, **même niveau de schéma final**
+(`sans-longueurs`) que l'exécution qui avait tronqué. Résultats opposés : l'une
+produit ≥ 16 000 jetons, l'autre 6 309. **Écart d'un facteur ≥ 2,5, sans cause
+identifiée.**
+
+**Les sept hypothèses, confrontées :**
+
+| | Hypothèse | Verdict |
+|---|---|---|
+| H1 | limite ≠ 16 000 | 🔴 **écartée** — 39 % du plafond |
+| H2 | surproduction | 🟠 **affaiblie** — 13 écrans vs 11 au corpus, mais 6 309 jetons |
+| H3 | explosion de densité | 🔴 **écartée** — 485 j./écran, sous la moyenne |
+| H4 | effet du schéma AIR | 🟠 **non départageable** |
+| H5 | niveau de dégradation | 🔴 **écartée** — niveau final identique, résultats opposés |
+| H6 | répétition / dérive | ⚪ **non observable** — pas de corps anormal |
+| H7 | réinjection du contexte | ⚪ **non observable** |
+
+`CONCLUSION` — **NON CONCLUANT.** Le protocole avait tranché ce cas d'avance :
+*« aucune troncature ne se reproduit ⇒ l'échec précédent devient non
+reproductible, ce qui interdit d'en inférer une cause »*.
+
+🔴 **AUCUNE CORRECTION N'EST APPLIQUÉE** au moteur, au prompt, à `MAX_TOKENS`, au
+corpus ni à la stratégie de génération. **Le phénomène reste OUVERT et NON
+CONCLUSIF.** L'hypothèse la plus économique est la variance du modèle — elle
+n'est **pas démontrée** : deux points ne font pas une distribution.
+
+### ② `D-115` EST FACTUELLEMENT INCORRECTE — rectification
+
+`FACT` — deux refus successifs, à motifs **distincts** :
+
+```
+« minItems-ramene »        → 400 : For 'array' type, property 'maxItems' is…
+« sans-bornes-numeriques » → 400 : For 'array' type, 'minItems' values othe…
+acceptation                → « sans-longueurs »
+```
+
+**L'API refuse `maxItems` lui-même.** `D-115` a été construite pour le préserver,
+et affirme qu'il survit. **C'est faux en production** : `maxItems` et `maxLength`
+ne peuvent JAMAIS être envoyés.
+
+`CONCLUSION` — **`A` est INERTE.** Elle neutralise correctement `minItems`, mais
+la dégradation atteint `sans-longueurs` **exactement comme avant**. Son seul effet
+observable est **un aller-retour refusé supplémentaire** — sans coût en jetons, un
+400 n'étant pas facturé, mais avec une latence ajoutée.
+
+**Aucune correction de code n'est entreprise ici.** Le constat est consigné ; que
+faire du premier niveau devenu inutile est un arbitrage distinct.
+
+### ③ LE GARDE BUDGÉTAIRE EST ÉPROUVÉ EN CONDITIONS RÉELLES
+
+`FACT` — **0,9369 $ dépensés sur 1,00 $ autorisé.** L'appel `actions` a été
+**REFUSÉ AVANT ÉMISSION** : *« refusé AVANT appel — dépensé 0.9369 $, coût maximal
+de cet appel 0.4953 $ »*.
+
+`FACT` — **aucun dépassement.** Le garde a mordu en amont ; il n'y a eu aucun
+débordement à absorber.
+
+`FACT` — `issue = "interrompue-budget"`, distincte de `echec-technique` et de
+`terminee`. `erreurTechnique = false`.
+
+`CONCLUSION` — `D-103` (contrôle avant appel sur le coût maximal), `D-114`
+(comptabilité de tout appel effectué) et la classification à quatre états sont
+**démontrés ensemble, hors laboratoire**.
+
+🟠 **Réserve maintenue** : `coutMaxAppel` ignore les tarifs de cache
+(`ecritureCache` 6,25 $/MTok contre `entree` 5). Le contrôle avant appel reste
+donc **légèrement optimiste**. Il n'a pas mordu à tort ici — la marge l'a absorbé.
+Dette consignée, non traitée.
