@@ -106,19 +106,40 @@ export function assertNonDepasse(plafond: number, etat: EtatDepense, quoi: strin
   );
 }
 
-/** Trois issues DISTINCTES, jamais confondues. */
-export type IssueGeneration = "terminee" | "rejetee" | "interrompue-budget";
+/** QUATRE issues DISTINCTES, jamais confondues. */
+export type IssueGeneration = "terminee" | "rejetee" | "interrompue-budget" | "echec-technique";
 
 /**
  * `valid` ne peut JAMAIS être vrai si la génération a été interrompue : un
  * arrêt budgétaire laisse un document partiel, il ne certifie rien.
+ *
+ * ── `echec-technique` — AJOUTÉ APRÈS P9 (2026-09-01).
+ *
+ * CAUSE RACINE MESURÉE : ce classifieur ne connaissait que TROIS états. Une
+ * erreur technique — le `529 Overloaded` reçu par P9 pendant la réparation —
+ * ne correspondait à aucun, et retombait donc sur le dernier `return` :
+ * `terminee`, l'état le PLUS FAVORABLE. Le journal d'une génération qui avait
+ * échoué pouvait affirmer qu'elle s'était terminée.
+ *
+ * `valid` valait déjà `false` dans ce cas ; ce n'est pas une consolation. Une
+ * issue est lue par un humain qui cherche ce qui s'est passé, et « terminée »
+ * lui répondait faux. C'est le faux positif que ce chantier ferme partout
+ * ailleurs, laissé ouvert dans l'instrument qui rend compte des autres.
+ *
+ * ORDRE DE PRÉCÉDENCE, énoncé : un arrêt budgétaire est un échec PROPRE et
+ * délibéré — il prime, car c'est notre garde qui a mordu. Vient ensuite
+ * l'erreur technique : c'est elle qui a arrêté la course. Le rejet de
+ * réparation ne la qualifie pas — il porte sur un document que la panne a
+ * empêché d'achever.
  */
 export function issueGeneration(params: {
   readonly interrompuBudget: boolean;
+  readonly erreurTechnique: boolean;
   readonly reparationRejetee: boolean;
   readonly sansDiagnostic: boolean;
 }): { readonly issue: IssueGeneration; readonly valid: boolean } {
   if (params.interrompuBudget) return { issue: "interrompue-budget", valid: false };
+  if (params.erreurTechnique) return { issue: "echec-technique", valid: false };
   if (params.reparationRejetee) return { issue: "rejetee", valid: false };
   return { issue: "terminee", valid: params.sansDiagnostic };
 }

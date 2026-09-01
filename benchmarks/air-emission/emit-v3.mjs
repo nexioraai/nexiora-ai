@@ -44,6 +44,7 @@ const registry = await import(join(REPO, "packages/capability-registry/src/index
 const blocksRegistry = await import(join(REPO, "packages/blocks/src/registry.ts"));
 const repairScope = await import(join(REPO, "packages/repair/src/repair-scope.ts"));
 const budgetUsd = await import(join(REPO, "packages/repair/src/budget-usd.ts"));
+const preservation = await import(join(REPO, "packages/repair/src/preservation.ts"));
 const executionContract = await import(join(REPO, "packages/execution-contract/src/envelope.ts"));
 
 // D-088 — LE PROMPT LIT L'ENVELOPPE, IL NE LA PARAPHRASE PLUS.
@@ -474,22 +475,31 @@ async function emitSections(system, contextText, label, usage, refusals, accumul
  */
 async function emitSectionsAvecPartiel(system, contextText, label, usage, refusals) {
   const partiel = {};
-  try {
-    return await emitSections(system, contextText, label, usage, refusals, partiel);
-  } catch (error) {
-    error.assemblagePartiel = partiel;
-    throw error;
-  }
+  return preservation.avecPreservation(preservation.CLE_EMISSION, partiel, () =>
+    emitSections(system, contextText, label, usage, refusals, partiel),
+  );
 }
 
-async function repairSections(document, diagnostics, intentionText, label, usage, refusals) {
+async function repairSections(
+  document,
+  diagnostics,
+  intentionText,
+  label,
+  usage,
+  refusals,
+  accumulateur,
+) {
   // Réparation BORNÉE (1 passe) et CIBLÉE. D-088 · D1 : les sections réémises
   // sont celles qui PORTENT LE CORRECTIF, plus seulement celle où le défaut
   // s'observe. Mesuré : sur 3 classes de défauts sur 4, la section
   // d'observation ne pouvait pas porter le correctif — la seule issue laissée
   // au modèle était de SUPPRIMER la référence fautive.
   const failing = repairScope.sectionsAReemettre(diagnostics);
-  const repaired = { ...document };
+  // P9 · LE TRAVAIL DE RÉPARATION VIT DÉSORMAIS HORS DE CETTE PILE. Tant que
+  // `repaired` était une variable locale, une erreur technique l'emportait
+  // avec elle : les sections déjà réémises — et déjà PAYÉES — disparaissaient.
+  const partiel = accumulateur ?? preservation.reparationPartielleVierge(document);
+  const repaired = partiel.document;
   for (const part of PARTS.filter((p) => failing.includes(p.name))) {
     // Tous les diagnostics dont CETTE section peut porter le correctif.
     const subset = diagnostics.filter((d) =>
@@ -514,6 +524,9 @@ async function repairSections(document, diagnostics, intentionText, label, usage
       continue;
     }
     Object.assign(repaired, extractJson(response));
+    // La section est réémise ET payée : elle entre dans la preuve AVANT que
+    // l'appel suivant ait la moindre occasion d'échouer.
+    partiel.sectionsReemises.push(part.name);
   }
 
   // GARANTIE INTRA-EXÉCUTION (D-088 · D1). Comparer deux GÉNÉRATIONS est mal
@@ -545,10 +558,23 @@ async function repairSections(document, diagnostics, intentionText, label, usage
   return { document: ampute.length > 0 ? document : repaired, repaired, ampute };
 }
 
+/**
+ * P9 — SYMÉTRIQUE DE `emitSectionsAvecPartiel`, ET POUR LA MÊME RAISON.
+ * L'émission était protégée depuis D-103 ; la réparation ne l'était pas. Le
+ * `529 Overloaded` de P9 a frappé exactement là : 1,7718 $ payés, sections
+ * réparées perdues. Ce qui est payé est conservé, quelle que soit la phase.
+ */
+async function repairSectionsAvecPartiel(document, diagnostics, intentionText, label, usage, refusals) {
+  const partiel = preservation.reparationPartielleVierge(document);
+  return preservation.avecPreservation(preservation.CLE_REPARATION, partiel, () =>
+    repairSections(document, diagnostics, intentionText, label, usage, refusals, partiel),
+  );
+}
+
 async function roundTrip(air, slug, usage, refusals) {
   const rendered = airSchema.renderAirToText(air);
   const context = `RENDU TEXTE DE LA SPÉCIFICATION À TRANSCRIRE :\n\n${rendered}`;
-  const document = await emitSections(SYSTEM_TRANSCRIBE, context, `${slug}#rt`, usage, refusals);
+  const document = await emitSectionsAvecPartiel(SYSTEM_TRANSCRIBE, context, `${slug}#rt`, usage, refusals);
   const { air: air2, diagnostics } = validateLocal(document);
   if (air2 === null || diagnostics.length > 0) {
     return { ok: false, schemaValid: air2 !== null, diagnosticsCount: diagnostics.length };
@@ -574,6 +600,27 @@ mkdirSync(RESULTS_DIR, { recursive: true });
 mkdirSync(CORPUS_DIR, { recursive: true });
 const RUN_ID = new Date().toISOString().replace(/[:.]/g, "-");
 const JOURNAL = join(RESULTS_DIR, `campagne-v2-${RUN_ID}.jsonl`);
+
+/**
+ * P9 · UN ARTEFACT PORTE SA GÉNÉRATION, OU N'EST PAS UNE PREUVE.
+ *
+ * CAUSE RACINE : les artefacts portaient un nom FIXE, réécrit à chaque
+ * campagne. `coach-fitness.attempt2.air.json` produit par P8 a survécu à P9
+ * sous un nom que rien ne distinguait d'un artefact de P9 — et une lecture
+ * rapide l'a effectivement pris pour tel.
+ *
+ * Le nom porte maintenant le `RUN_ID`, le même que celui du journal : un
+ * artefact se rattache à sa campagne SANS contexte, par son seul nom. Et
+ * l'écriture est en `wx` — deux campagnes ne peuvent pas se recouvrir, et un
+ * artefact déjà déposé ne peut pas être remplacé en silence.
+ */
+function ecrireArtefact(slug, phase, contenu) {
+  const fichier = preservation.nomArtefact({ slug, runId: RUN_ID, phase });
+  writeFileSync(join(RESULTS_DIR, fichier), JSON.stringify(contenu, null, 2) + "\n", {
+    flag: "wx",
+  });
+  return fichier;
+}
 
 const start = Number(process.argv[2] ?? 0);
 const end = Number(process.argv[3] ?? INTENTIONS.length);
@@ -604,7 +651,7 @@ for (const intention of INTENTIONS.slice(start, end)) {
     break;
   }
   const t0 = Date.now();
-  const journal = { intention: intention.slug, commerce: intention.commerce };
+  const journal = { runId: RUN_ID, intention: intention.slug, commerce: intention.commerce };
   const usage = [];
   const refusals = { count: 0 };
   try {
@@ -628,8 +675,7 @@ for (const intention of INTENTIONS.slice(start, end)) {
       // construisant ou en supprimant. La preuve la plus chère était détruite
       // à l'écriture du journal. Aucun secret n'entre ici : l'AIR est refusé
       // par `AIR_INTEGRATION_SECRET_LIKE_KEY` s'il en portait.
-      const fichierAttempt1 = `${intention.slug}.attempt1.air.json`;
-      writeFileSync(join(RESULTS_DIR, fichierAttempt1), JSON.stringify(document, null, 2) + "\n");
+      const fichierAttempt1 = ecrireArtefact(intention.slug, "attempt1", document);
       journal.attempt1 = {
         fichier: fichierAttempt1,
         diagnostics: diagnostics.map((d) => ({ code: d.code, path: d.path })),
@@ -638,7 +684,7 @@ for (const intention of INTENTIONS.slice(start, end)) {
       };
 
       const avantReparation = document;
-      const resultat = await repairSections(
+      const resultat = await repairSectionsAvecPartiel(
         document,
         diagnostics,
         `DEMANDE DU CLIENT :\n${intention.text}`,
@@ -653,11 +699,7 @@ for (const intention of INTENTIONS.slice(start, end)) {
       //   generatedAttempt — ce que le modèle a écrit seul ;
       //   repairedAttempt  — ce qu'il a produit en réparant ;
       //   acceptedDocument — ce que le pipeline a finalement retenu.
-      const fichierAttempt2 = `${intention.slug}.attempt2.air.json`;
-      writeFileSync(
-        join(RESULTS_DIR, fichierAttempt2),
-        JSON.stringify(resultat.repaired, null, 2) + "\n",
-      );
+      const fichierAttempt2 = ecrireArtefact(intention.slug, "attempt2", resultat.repaired);
       journal.attempt2 = {
         fichier: fichierAttempt2,
         retenu: resultat.ampute.length === 0,
@@ -684,6 +726,9 @@ for (const intention of INTENTIONS.slice(start, end)) {
 
     const bilan = budgetUsd.issueGeneration({
       interrompuBudget: false,
+      // Ce chemin est celui où AUCUNE erreur n'a été levée : le seul où
+      // `terminee` peut être dit sans mentir.
+      erreurTechnique: false,
       reparationRejetee: (journal.amputationsRejetees?.length ?? 0) > 0,
       sansDiagnostic: air !== null && diagnostics.length === 0,
     });
@@ -704,33 +749,64 @@ for (const intention of INTENTIONS.slice(start, end)) {
       journal.diagnosticsRestants = diagnostics.slice(0, 12);
     }
   } catch (error) {
-    // D-103 · TROIS ISSUES DISTINCTES, jamais confondues. Un arrêt budgétaire
+    // D-103 · QUATRE ISSUES DISTINCTES, jamais confondues. Un arrêt budgétaire
     // n'est ni un succès ni une erreur technique : c'est un ÉCHEC PROPRE, et
     // `valid` ne peut pas être vrai — le document est partiel.
+    //
+    // P9 · TOUTE ERREUR NON BUDGÉTAIRE ARRIVÉE ICI EST UN ÉCHEC TECHNIQUE.
+    // Elle était classée `terminee` — l'état le plus favorable — parce que le
+    // classifieur n'en connaissait pas d'autre. Le `529 Overloaded` de P9 a
+    // donc été journalisé comme une génération TERMINÉE.
     const budgetaire = error instanceof budgetUsd.BudgetEpuiseError;
+    const technique = !budgetaire;
     journal.erreur = String(error?.message ?? error).slice(0, 400);
     journal.interrompuBudget = budgetaire;
-    // Les sections déjà obtenues ont été payées : elles sont conservées.
-    const partiel = error?.assemblagePartiel;
+    journal.erreurTechnique = technique;
+
+    // ── CE QUI A ÉTÉ PAYÉ EST CONSERVÉ — LES DEUX PHASES, PAS UNE SEULE.
+    const partiel = preservation.partielDeLErreur(error, preservation.CLE_EMISSION);
     if (partiel !== undefined && Object.keys(partiel).length > 0) {
-      const fichierPartiel = `${intention.slug}.partiel.air.json`;
-      writeFileSync(join(RESULTS_DIR, fichierPartiel), JSON.stringify(partiel, null, 2) + "\n");
       journal.assemblagePartiel = {
-        fichier: fichierPartiel,
+        fichier: ecrireArtefact(intention.slug, "emission-partielle", partiel),
         sectionsObtenues: Object.keys(partiel).sort(),
       };
     }
+    // P9 — LA RÉPARATION AUSSI. C'est là que le 529 a frappé, et c'est
+    // exactement ce travail-là qui a été perdu.
+    const partielReparation = preservation.partielDeLErreur(error, preservation.CLE_REPARATION);
+    if (partielReparation !== undefined) {
+      journal.reparationPartielle = {
+        sectionsReemises: [...partielReparation.sectionsReemises],
+        // Zéro section réémise : la panne a frappé avant qu'aucune réparation
+        // ne soit produite. Le fait est consigné, aucun artefact n'est inventé.
+        fichier: preservation.estExploitable(partielReparation)
+          ? ecrireArtefact(intention.slug, "reparation-partielle", partielReparation.document)
+          : undefined,
+      };
+    }
+
     const { issue, valid } = budgetUsd.issueGeneration({
       interrompuBudget: budgetaire,
+      erreurTechnique: technique,
       reparationRejetee: (journal.amputationsRejetees?.length ?? 0) > 0,
       sansDiagnostic: false,
     });
     journal.issue = issue;
     journal.valid = valid;
+    const conserves = JSON.stringify({
+      ...(journal.artefacts ?? { generatedAttempt: journal.attempt1?.fichier }),
+      emissionPartielle: journal.assemblagePartiel?.fichier,
+      reparationPartielle: journal.reparationPartielle?.fichier,
+    });
     if (budgetaire) {
       console.log(
         `  [${intention.slug}] INTERROMPUE POUR BUDGET — ${error.message}\n` +
-          `  artefacts conservés : ${JSON.stringify(journal.artefacts ?? { generatedAttempt: journal.attempt1?.fichier })}`,
+          `  artefacts conservés : ${conserves}`,
+      );
+    } else {
+      console.log(
+        `  [${intention.slug}] ÉCHEC TECHNIQUE — ${journal.erreur}\n` +
+          `  issue=${issue} (JAMAIS « terminee ») · artefacts conservés : ${conserves}`,
       );
     }
   }

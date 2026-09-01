@@ -5170,3 +5170,139 @@ négatif devenu aveugle. La vérification indépendante est `gate:controles`, qu
 **Règles B-bis et B-ter** ajoutées au prompt : un déclencheur `ui` exige un bloc
 actionnable ; pour `button`/`empty_state`, la prop et le déclencheur désignent la
 MÊME action, la réutilisation par plusieurs blocs restant explicitement permise.
+
+## D-106 — LE BLOCAGE `C-0` EST CADUC, `RN-01` NE L'EST PAS — 2026-09-01
+
+**Arbitrage propriétaire du 2026-09-01.** Consigné ici parce qu'une divergence entre
+deux documents du chantier ne se résout pas en silence.
+
+### Ce qui était vrai, et le reste
+
+Le plan de remise à niveau (`ROADMAP.md`, chapitre `RN-01 → RN-23`) s'est arrêté le
+**2026-08-30** sur le point de contrôle **`C-0`** : *« `RN-01` (granularité) est un
+arbitrage humain ; `RN-04` (commit) en dépend »*, avec la conséquence énoncée
+*« tant que `RN-01` n'est pas levée, l'étage 1 et toute la branche causale restent
+fermés (`E-17`) »*. Le §10 du même document énonçait, à la même date, *« aucune
+étape d'exécution n'est autorisée »*.
+
+**Ces énoncés étaient exacts au 2026-08-30 et ne sont pas retirés.** Ils portaient
+sur un état précis : une confrontation méthodologique en cours, un protocole non
+versionné, une analyse causale (EXP-2, H1/H2) suspendue à une règle de granularité
+non écrite.
+
+### Ce que les faits ont changé — mesuré, pas supposé
+
+| Fait | Preuve | Date |
+|---|---|---|
+| `RN-04` **exécuté** : `docs/elite-protocol/` versé au dépôt | commit `2f00c00`, libellé *« (RN-04) »* — **88 fichiers suivis par Git** | 2026-08-31 |
+| `RN-16` **résorbé** : les 60 fichiers non committés n'existent plus | `git status --porcelain` : **0 entrée** à `9f88792` | 2026-09-01 |
+| Un chantier entier a été conduit, prouvé et versionné | **D-087 → D-105**, cinq générations réelles (14,8831 $), 7ᵉ gate `invariants`, 842 tests verts | 2026-08-31 → 09-01 |
+
+### Ce qui est tranché
+
+1. **Le blocage `C-0` est CADUC** — non parce qu'on l'annule, mais parce que sa
+   dépendance déclarée s'est dénouée : `RN-04` ne dépendait pas réellement de
+   `RN-01`, et il a été exécuté. Un point de contrôle dont la conséquence est
+   contredite par les faits doit être rectifié, pas conservé comme décor.
+2. **L'interdit « modifier le code produit » du §10 est LEVÉ DE FAIT**, et
+   ce constat est inscrit plutôt que tu. Les travaux P5→P9 l'ont franchi. Ils
+   l'ont fait sous un régime de preuve plus exigeant que celui qu'il protégeait
+   (gates bloquantes, cas-tueurs, falsification systématique) — mais le franchir
+   sans le dire aurait laissé au dépôt une règle que le dépôt lui-même violait.
+3. **`RN-01` N'EST PAS LEVÉE.** Aucun travail de P5→P9 n'a répondu à la question
+   qu'elle pose — la règle de granularité `R-GRAN` pour l'analyse causale. Elle
+   reste **🧑 OUVERTE**, et la branche causale qu'elle gouverne (`EXP-2`, `H1`/`H2`,
+   `RN-11`) reste **fermée**. Ce qui est caduc est le blocage GÉNÉRAL, pas
+   l'arbitrage particulier.
+
+### Ce que cette décision NE fait PAS
+
+Elle ne convertit aucun statut en `PASS`, ne clôt aucune phase, ne lève aucun autre
+interdit du §10 (`EXP-2`, validation physique, clôture de la Phase 10, `G4`/`G5`,
+sévérité, protocole canonique). Le protocole reste **NON CERTIFIÉ**.
+
+> ⬆️ **Sur le seul point de `RN-01`** : voir **`D-108`** (2026-09-01) — arbitrage
+> propriétaire postérieur qui le clôt par caducité. Le reste de `D-106` tient.
+> Ce paragraphe est ajouté en renvoi ; rien n'est réécrit.
+
+## D-107 — CE QUI EST PAYÉ EST CONSERVÉ, MÊME EN RÉPARATION — 2026-09-01
+
+**Cause racine mesurée sur P9.** L'émission initiale était protégée depuis `D-103` :
+`emitSectionsAvecPartiel` attachait à l'erreur les sections déjà obtenues, donc déjà
+facturées. **La réparation ne l'était pas.** Elle accumulait dans une variable
+LOCALE, que l'erreur emportait avec la pile.
+
+Le `529 Overloaded` de P9 a frappé **pendant la réparation** : **1,7718 $ payés sur
+7 appels**, sections réparées **détruites**. Il ne reste de cette dépense qu'un
+nombre dans un journal.
+
+**Trois défauts INDÉPENDANTS, trois corrections :**
+
+| # | Défaut | Correction |
+|---|---|---|
+| **①** | la réparation n'attachait rien à l'erreur | `packages/repair/src/preservation.ts` — `avecPreservation`, symétrique de l'émission ; le harnais appelle `repairSectionsAvecPartiel`, plus jamais `repairSections` nu |
+| **②** | `issueGeneration` ne connaissait que **trois** états ; une erreur technique retombait sur `terminee`, le plus favorable | **quatrième issue `echec-technique`** ; `erreurTechnique` est un paramètre **REQUIS** — un appelant ne peut plus hériter du silence |
+| **③** | les artefacts portaient un nom **FIXE** ; le reliquat de P8 a survécu à P9 sous un nom indiscernable | `nomArtefact()` — le `runId` entre dans le nom, `provenanceDuNom()` le relit ; écriture en `wx`, aucun artefact ne peut plus en écraser un autre |
+
+**Vu échouer avant d'être déclaré valide** — chaque mécanisme a été retiré, et le
+cas-tueur correspondant est tombé à chaque fois. **4 falsifications :** ①
+`repairSectionsAvecPartiel` débranché → cliquet de véracité rouge ; ②
+`echec-technique` supprimé → **3 tests rouges** ; ③ nom d'artefact fixe restauré →
+**2 tests rouges** ; ③bis écriture `wx` retirée → cliquet rouge. La restauration a
+été vérifiée par `diff` : le fichier est revenu **identique** à l'état corrigé.
+
+**Le cliquet de véracité lit le SOURCE RÉEL de `emit-v3.mjs`** : un module pur prouvé
+ne prouve rien si le harnais ne l'appelle pas.
+
+**Portée tenue** : conservation, provenance, classification. Aucun seuil, aucune
+gate, aucun plafond, aucun prompt, aucun corpus touché. Le comportement du
+générateur est inchangé — ce qui change, c'est ce qui survit à sa panne.
+
+**🟠 NON DÉTERMINÉ, énoncé** : la chaîne complète sous un `529` RÉEL n'est pas
+mesurée — elle exigerait un appel API. Ce qui est démontré : le module pur (cas-tueurs
++ falsification), et le fait que le harnais l'appelle (cliquet sur le source).
+
+## D-108 — `RN-01` EST CLOS PAR CADUCITÉ — 2026-09-01
+
+**Arbitrage propriétaire du 2026-09-01.** Postérieur à `D-106`, qu'il complète sur
+un point unique : `D-106` maintenait `RN-01` **ouverte**. Le propriétaire tranche
+l'inverse. `D-106` n'est pas réécrit — il reste le compte rendu exact de ce qui
+était établi à l'heure où il a été pris.
+
+### Ce qui est tranché
+
+**`RN-01` — règle de granularité `R-GRAN` — est CLOS PAR CADUCITÉ.** Il ne bloque
+plus rien, et le point de contrôle `C-0` qui en dépendait est clos avec lui.
+
+### Justification, datée
+
+Le travail que `RN-01` était censé conditionner a été **effectivement réalisé, prouvé
+et sécurisé** dans le dépôt, sans que cette règle ait jamais été écrite :
+
+| Commit | Contenu | Date |
+|---|---|---|
+| `614e6dc` | `D-087` → `D-105` — 19 décisions du chantier fidélité P5→P9 | 2026-09-01 |
+| `bcf8890` | garde-fous — le pipeline ne peut plus réparer par amputation | 2026-09-01 |
+| `afd5954` | artefacts des générations payées + harnais d'invariants | 2026-09-01 |
+| `9f88792` | nettoyage des reliquats, preuves toutes conservées | 2026-09-01 |
+
+Une précondition qu'un chantier entier a franchie sans dommage, et dont l'absence
+n'a bloqué aucune preuve, n'est plus une précondition : c'est un vestige. La
+maintenir ouverte ferait porter au dépôt une contradiction de plus.
+
+### Ce que cette décision NE dit PAS — et qu'il faut lire
+
+**Caduc n'est pas résolu.** La question que `RN-01` posait — *quelle règle de
+granularité pour une analyse causale ?* — **n'a jamais reçu de réponse**. Aucune
+règle `R-GRAN` n'est écrite dans ce fichier, et cette décision n'en écrit pas.
+
+**Conséquence opposable** : si une analyse causale est un jour reprise — `EXP-2`,
+`H1`/`H2`, `RN-11` — la précondition `E-17` **redevient exigible à ce moment-là**,
+et la règle devra être écrite **avant**, pas après. Clore par caducité vaut pour le
+chantier tel qu'il s'est déroulé ; cela ne vaut pas autorisation rétroactive pour un
+travail causal futur.
+
+**Aucun interdit du §10 n'est levé par cette décision** : `EXP-2`, validation
+physique, clôture de la Phase 10, `G4`/`G5`, sévérité, protocole canonique restent
+en vigueur. Le protocole reste **NON CERTIFIÉ**. Aucun statut n'est converti en
+`PASS`.

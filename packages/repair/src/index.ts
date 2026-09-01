@@ -67,3 +67,19 @@ export {
   type IssueGeneration,
   type TarifsUSD,
 } from "./budget-usd.ts";
+export {
+  CLE_EMISSION,
+  CLE_REPARATION,
+  PHASES_ARTEFACT,
+  TravailInterrompuError,
+  attacherPartiel,
+  avecPreservation,
+  estExploitable,
+  nomArtefact,
+  partielDeLErreur,
+  provenanceDuNom,
+  reparationPartielleVierge,
+  type PhaseArtefact,
+  type ProvenanceArtefact,
+  type ReparationPartielle,
+} from "./preservation.ts";

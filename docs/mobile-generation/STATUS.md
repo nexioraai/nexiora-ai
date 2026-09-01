@@ -1,7 +1,18 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-08-31 (2)** (**RACINE REFERMÉE — D-055 / D-056** : **PHASE 10B** créée
+> **2026-09-01 (2)** (**GOUVERNANCE RÉCONCILIÉE ET `PB#2` FERMÉ — D-106 / D-107** :
+> le blocage `C-0` est déclaré **CADUC** — `RN-04` a été exécuté le 2026-08-31
+> (`2f00c00`, 88 fichiers) sans que `RN-01` soit levée, et P5→P9 a suivi.
+> **`RN-01` et `C-0` sont CLOS PAR CADUCITÉ (`D-108`, arbitrage propriétaire)** —
+> aucune règle `R-GRAN` n'ayant été écrite, `E-17` redeviendrait exigible si une
+> analyse causale était reprise. **`PB#2` corrigé** : la
+> réparation conserve désormais ses sections payées, une erreur technique est
+> classée **`echec-technique`** et non plus `terminee`, et tout artefact porte son
+> `runId`. **23 cas-tueurs ajoutés, 4 falsifications concluantes. 865 tests verts ·
+> typecheck EXIT=0 · lint EXIT=0.** Aucun appel API.)
+>
+> *Entrée précédente —* **2026-08-31 (2)** (**RACINE REFERMÉE — D-055 / D-056** : **PHASE 10B** créée
 > (fidélité de l'application produite) ; **AIR 1.2.0** conserve la demande du
 > client ; paquet `@deribfy/fidelity` — deux gates, **10 cas-tueurs vus échouer**.
 > Mesure : **12 documents du corpus REFUSÉS**, `resto-riche` **FIDÈLE**. Les besoins
@@ -40,7 +51,7 @@
 | Phase 0 — Fondations | 🟢 **TERMINÉE** (2026-08-27) — tous les critères de sortie vérifiés, dont **CI GitHub réelle verte : run #32, commit `54ef2a1`, `success`** (capture propriétaire + confirmation API Actions indépendante) |
 | Phase actuelle | 🟢 **A++ EST ATTEINT — les 8 dimensions CONFORMES (D-060, 2026-08-31)** : `A:conforme · B · C · D · E · F · G · H` sur 2 domaines. La dimension **C** était **INATTEIGNABLE** — `form` ne connaissait ni `loading` ni `empty`, `detail_header` aucun état, et le fournisseur de données était purement synchrone. Levée par le **registre de blocs 1.1.0** (dégel ADDITIF) + `DataProvider.status?()`, chaque état **observé au rendu avec contrôle négatif AVANT** d'entrer dans l'enveloppe. · **PHASE 10B : 🔵 F1-F4 🟢, F5 🟢 (DET-028 fermé)** · **Phase 8 / Phase 10 : reste la SEULE preuve appareil** · **Phases 0, 2-7, 9 : 🟢 TERMINÉES** |
 | Générateur mobile | 🔵 **EN IMPLÉMENTATION** — prochaine action : **build EAS + installation du slice 2 sur appareil** (intervention propriétaire), puis clôture de la Phase 10 |
-| Progression globale | 🔴 **A-P8-01 / A-P8-02 (audit 2026-08-31) — LA PHASE 8 N'EST PAS TERMINÉE.** Ce tableau affirmait « Phases 0, 2-9 terminées » pendant que le détail de ce même document disait « **En cours : Phase 8** ». Le détail a raison, pour **deux** motifs indépendants : ① le critère « app installée et fonctionnelle sur **2 appareils physiques** » n'a que **Android 🟢** — l'IPA iOS est construit mais **non installé** (DET-012, prérequis propriétaire) ; ② la ROADMAP exige pour clore la Phase 8 que **A à G soient CONFORMES**, « une seule non conforme BLOQUE la clôture » — or **C est `non_conforme` depuis D-048 (2026-08-30)**, donc postérieurement à la clôture revendiquée. · **Phases 0, 2-7, 9 : 🟢 TERMINÉES** · **Phase 8 : 🔴 ROUVERTE PAR LE FAIT** · **Phase 10 : 🔵 clôture bloquée** · **Phase 10B : 🔵 en cours, F1-F4 🟢, F5 🔴** · Phase 1 : volet EAS bloqué sur quota (propriétaire) · **dettes ouvertes : 12** |
+| Progression globale | 🔴 **A-P8-01 / A-P8-02 (audit 2026-08-31) — LA PHASE 8 N'EST PAS TERMINÉE.** Ce tableau affirmait « Phases 0, 2-9 terminées » pendant que le détail de ce même document disait « **En cours : Phase 8** ». Le détail a raison, pour **deux** motifs indépendants : ① le critère « app installée et fonctionnelle sur **2 appareils physiques** » n'a que **Android 🟢** — l'IPA iOS est construit mais **non installé** (DET-012, prérequis propriétaire) ; ② la ROADMAP exige pour clore la Phase 8 que **A à G soient CONFORMES**, « une seule non conforme BLOQUE la clôture » — or **C est `non_conforme` depuis D-048 (2026-08-30)**, donc postérieurement à la clôture revendiquée. · **Phases 0, 2-7, 9 : 🟢 TERMINÉES** · **Phase 8 : 🔴 ROUVERTE PAR LE FAIT** · **Phase 10 : 🔵 clôture bloquée** · **Phase 10B : 🔵 en cours, F1-F4 🟢, F5 🟢** *(rectifié le 2026-09-01 — cette ligne portait `F5 🔴`, périmé depuis `D-095` : l'invariant `atteignable ⊆ rendable` est tenu sur les 6 blocs, les « 8 états sur 11 » venaient d'une recopie périmée. La phase reste OUVERTE pour une autre raison : les gates de fidélité sont rouges sur des défauts RÉELS du corpus)* · Phase 1 : volet EAS bloqué sur quota (propriétaire) · **dettes ouvertes : 12** |
 
 ## PHASE 0 — DÉTAIL DES SOUS-ÉTAPES
 
@@ -401,8 +412,13 @@ pour une certification du protocole ou du produit.
 
 ### Étage 0 du plan — exécuté le 2026-08-30
 
-`RN-02` 🟢 · `RN-03` 🟢 · `RN-05` 🟢 · `RN-06` 🟢 (S-1→S-4) — 🛑 **arrêt au point
-de contrôle C-0** : `RN-01` (granularité) est un arbitrage humain.
+`RN-02` 🟢 · `RN-03` 🟢 · `RN-05` 🟢 · `RN-06` 🟢 (S-1→S-4) — *🛑 arrêt au point
+de contrôle `C-0` : `RN-01` (granularité) est un arbitrage humain.*
+
+🔵 **RECTIFIÉ LE 2026-09-01** — `RN-04` 🟢 (`2f00c00`, 88 fichiers) · `RN-16` 🟢
+(arbre propre) · **`RN-01` et `C-0` CLOS PAR CADUCITÉ** (`D-108`). L'étage 0 est
+**intégralement clos**. La règle `R-GRAN` n'a jamais été écrite : caduc n'est pas
+résolu.
 
 ## RÈGLE DE CONTINUITÉ
 
@@ -696,30 +712,64 @@ disparu du document que le modèle a écrit seul. Ce qui manque est la fin méca
 ## Vérifications au 2026-09-01
 
 ```
+AU TERME DU CHANTIER P5 → P9
 842 tests · 0 échec     typecheck EXIT=0     lint EXIT=0
 7 gates : controles 🟢 · navigation 🟢 · composition 🟢
           app-compile 🔴 25/26 · app-rendu 🔴 · fidelite 🔴 · invariants 🔴
 rejeux des générations payées : P5 4/4 · P6 6/6
 corpus v2 GELÉ : 0 fichier modifié
 plafonds INCHANGÉS : ORPHELINES 38 · BOUTONS_NAV 121 · FANTÔMES 180
+
+APRÈS D-106 / D-107 — 2026-09-01, AUCUN APPEL API
+865 tests · 0 échec     typecheck EXIT=0     lint EXIT=0     (842 + 23 cas-tueurs)
+7 gates RÉEXÉCUTÉES : controles 🟢 · navigation 🟢 · composition 🟢
+          app-compile 🔴 25/26 · app-rendu 🔴 25≠26 · fidelite 🔴 · invariants 🔴
+          → statuts et motifs IDENTIQUES à l'avant-correction : aucune régression
+corpus v2 GELÉ : empreinte 85612b1f… INCHANGÉE
+preuves P5→P9 (evidence/p5,p6,p8,p9) : empreinte fd97d3d4… INTACTE
 ```
 
-Les quatre gates rouges portent sur **le seul document `coach-fitness`**, dont les
-défauts sont désormais **détectés** — c'est le comportement attendu, pas une
-régression.
+🔵 **RECTIFIÉ LE 2026-09-01 par mesure — l'énoncé précédent était FAUX pour une gate
+sur quatre.** Il affirmait : *« Les quatre gates rouges portent sur le seul document
+`coach-fitness` »*. Les gates ont été réexécutées et lues :
 
-## 🟠 PROBLÈMES CONNUS — à arbitrer, non corrigés
+| Gate rouge | Portée RÉELLE | Conforme à l'énoncé ? |
+|---|---|---|
+| `app-compile` | **`v3-coach-fitness` seul** — résolution refusée (fail-closed), 25/26 | 🟢 oui |
+| `app-rendu` | **conséquence directe** de la précédente : 25 applications au lieu de 26 | 🟢 oui |
+| `invariants` | **3 désaccords, tous sur `v3/coach-fitness`** (`C2`, `detail_header`) | 🟢 oui |
+| `fidelite` | 🔴 **NON** — `F1` sur **13 documents**, `F4` sur **22**, dont **les 12 documents du corpus v2 gelé**, qui n'ont aucune intention (`1.0.0`) | 🔴 **non** |
 
-**1. `issueGeneration` classe une erreur 529 comme `"terminee"`.** Il ne connaît que
-trois états et l'erreur technique retombe sur le plus favorable. **Impact réel** : un
-journal peut affirmer qu'une génération s'est terminée alors qu'elle a échoué —
-exactement le faux positif que ce chantier traque partout ailleurs.
+Les défauts sont **détectés**, ce qui est le comportement attendu ; mais leur
+**portée** n'est pas celle qui était écrite. La `ROADMAP` disait déjà juste
+(*« F1 sur 13 documents, F4 sur 22 »*) : c'est `STATUS.md` qui divergeait.
 
-**2. `assemblagePartiel` ne couvre que l'émission initiale.** Le 529 de P9 a frappé
-pendant la **réparation** : les sections déjà réparées et **payées** sont perdues.
-Et `results/coach-fitness.attempt2.air.json` est un **reliquat de P8** qu'une lecture
-rapide prendrait pour un artefact P9. **Impact réel** : une preuve payée détruite et
-un artefact trompeur laissé en place.
+## 🟠 PROBLÈMES CONNUS — état au 2026-09-01
+
+**1. 🟢 CORRIGÉ le 2026-09-01 (`D-107`) — `issueGeneration` classait une erreur 529
+comme `"terminee"`.** *Constat d'origine, conservé :* il ne connaissait que trois
+états et l'erreur technique retombait sur le plus favorable ; un journal pouvait
+affirmer qu'une génération s'était terminée alors qu'elle avait échoué.
+**Correction** : quatrième issue **`echec-technique`**, et `erreurTechnique` est un
+paramètre **REQUIS** — aucun appelant ne peut plus hériter du silence. **Vu échouer** :
+l'état retiré, 3 cas-tueurs tombent.
+
+**2. 🟢 CORRIGÉ le 2026-09-01 (`D-107`) — la conservation ne couvrait que l'émission
+initiale.** *Constat d'origine, conservé :* le 529 de P9 a frappé pendant la
+**réparation**, et les sections déjà réparées et **payées** ont été perdues.
+**Correction** : `packages/repair/src/preservation.ts` — `avecPreservation`,
+symétrique de l'émission ; le harnais n'appelle plus jamais `repairSections` nu, et
+un cliquet lit le **source réel** de `emit-v3.mjs` pour l'imposer.
+
+> 🔵 **Le sous-constat sur le reliquat était PÉRIMÉ à l'heure où il a été écrit.**
+> `results/coach-fitness.attempt2.air.json` n'est **plus en place** : il a été
+> supprimé par le commit `9f88792` lui-même (4 fichiers, 12 891 suppressions).
+> **Cause traitée à la source** : les artefacts portaient un nom FIXE, réécrit à
+> chaque campagne. Ils portent désormais leur `runId` (`nomArtefact`), se relisent
+> sans journal (`provenanceDuNom`), et s'écrivent en `wx` — aucun artefact ne peut
+> plus en écraser un autre, ni être pris pour celui d'une autre génération.
+
+**🟠 Restent à arbitrer, non corrigés :** les points 3 et 4 ci-dessous.
 
 **3. `empty_state` échoue silencieusement** quand sa prop `actionId` manque, là où
 `button` jette. Divergence de robustesse du runtime.
@@ -739,3 +789,16 @@ BUDGET_USD=3.5 node benchmarks/air-emission/emit-v3.mjs 2 3
 Attendu ~2,50 $ · exposition bornée ~4,10 $ (D-103). Elle ne mesurerait rien de
 nouveau sur le générateur — P9 a déjà répondu — elle **finirait le travail**
 interrompu par la panne. **Aucune dépense sans autorisation explicite.**
+
+**Deux préalables levés le 2026-09-01, aucun appel API :**
+
+- **Gouvernance (`D-106`)** — la divergence `ROADMAP` ↔ `STATUS` est close : le
+  blocage `C-0` **et** `RN-01` sont clos par caducité (`D-108`).
+  Cette génération n'est plus contredite par un autre document du dépôt.
+- **`PB#2` (`D-107`)** — si un second `529` frappe au même endroit, les sections
+  déjà payées sont **conservées**, l'issue est **`echec-technique`** et non plus
+  `terminee`, et l'artefact porte son `runId`. **Le mode d'échec qui a coûté
+  1,7718 $ à P9 ne détruit plus la dépense.**
+
+🟠 **Non déterminé, énoncé** : la chaîne complète sous un `529` RÉEL n'est pas
+mesurée — cela exigerait un appel API.

@@ -84,29 +84,62 @@ describe("garde budgétaire — le RETRY est soumis au même contrôle", () => {
   });
 });
 
-describe("issue de génération — trois états, jamais confondus", () => {
+describe("issue de génération — quatre états, jamais confondus", () => {
   it("🔴 `valid` est IMPOSSIBLE après une interruption budgétaire", () => {
     for (const sansDiagnostic of [true, false]) {
-      const r = issueGeneration({ interrompuBudget: true, reparationRejetee: false, sansDiagnostic });
+      const r = issueGeneration({
+        interrompuBudget: true,
+        erreurTechnique: false,
+        reparationRejetee: false,
+        sansDiagnostic,
+      });
       expect(r.issue).toBe("interrompue-budget");
       expect(r.valid, "un document partiel ne certifie rien").toBe(false);
     }
   });
 
   it("une réparation rejetée donne `rejetee`, jamais `terminee`", () => {
-    const r = issueGeneration({ interrompuBudget: false, reparationRejetee: true, sansDiagnostic: true });
+    const r = issueGeneration({
+      interrompuBudget: false,
+      erreurTechnique: false,
+      reparationRejetee: true,
+      sansDiagnostic: true,
+    });
     expect(r.issue).toBe("rejetee");
     expect(r.valid).toBe(false);
   });
 
   it("🟢 CONTRÔLE POSITIF : sans interruption ni rejet, `terminee` et `valid`", () => {
-    const r = issueGeneration({ interrompuBudget: false, reparationRejetee: false, sansDiagnostic: true });
+    const r = issueGeneration({
+      interrompuBudget: false,
+      erreurTechnique: false,
+      reparationRejetee: false,
+      sansDiagnostic: true,
+    });
     expect(r.issue).toBe("terminee");
     expect(r.valid).toBe(true);
   });
 
+  it("🔴 CAS-TUEUR P9 : une erreur technique ne peut pas se présenter en `terminee`", () => {
+    // Le `529 Overloaded` reçu par P9 pendant la réparation tombait sur le
+    // dernier `return` — le plus favorable — faute d'un état pour le dire.
+    const r = issueGeneration({
+      interrompuBudget: false,
+      erreurTechnique: true,
+      reparationRejetee: false,
+      sansDiagnostic: true,
+    });
+    expect(r.issue).toBe("echec-technique");
+    expect(r.valid).toBe(false);
+  });
+
   it("terminée mais avec diagnostics restants : `terminee` et NON valide", () => {
-    const r = issueGeneration({ interrompuBudget: false, reparationRejetee: false, sansDiagnostic: false });
+    const r = issueGeneration({
+      interrompuBudget: false,
+      erreurTechnique: false,
+      reparationRejetee: false,
+      sansDiagnostic: false,
+    });
     expect(r.issue).toBe("terminee");
     expect(r.valid).toBe(false);
   });

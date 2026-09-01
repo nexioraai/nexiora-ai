@@ -680,6 +680,34 @@ des preuves citées). **Ambiguïté ROADMAP ↔ état réel = STOP et signalemen
 
 ## 10. Prochaine étape autorisée — au 2026-08-30
 
+> ### ⬆️ DÉPASSÉ LE 2026-09-01 — `D-106`. Le texte ci-dessous est CONSERVÉ TEL QUEL :
+> il était exact au 2026-08-30. Il ne décrit plus l'état du chantier.
+>
+> **Ce qui a changé, par les faits :** `RN-04` a été exécuté le **2026-08-31**
+> (commit `2f00c00`, 88 fichiers de `docs/elite-protocol/` suivis) ; le chantier
+> **P5 → P9** a été conduit, prouvé et versionné (`D-087` → `D-105`). Le point de
+> contrôle **`C-0` est donc CADUC** : sa dépendance déclarée s'est dénouée sans que
+> `RN-01` soit levée.
+>
+> **L'interdit « modifier le code produit » est LEVÉ DE FAIT** — P5→P9 l'a franchi.
+> Le constat est inscrit plutôt que tu.
+>
+> **`RN-01` est CLOS PAR CADUCITÉ le 2026-09-01 (`D-108`)** — arbitrage
+> propriétaire. Le travail qu'il conditionnait a été réalisé, prouvé et sécurisé
+> (`614e6dc` → `bcf8890` → `afd5954` → `9f88792`) sans que la règle ait été écrite.
+> **Caduc n'est pas résolu** : aucune règle `R-GRAN` n'existe. Si une analyse
+> causale est reprise (`EXP-2`, `H1`/`H2`, `RN-11`), la précondition `E-17`
+> **redevient exigible à ce moment-là**.
+>
+> **Ce qui reste EN VIGUEUR :** les autres interdits du §10 tiennent — `EXP-2`,
+> validation physique, clôture de la Phase 10, `G4`/`G5`, sévérité, protocole
+> canonique. Le protocole reste **NON CERTIFIÉ**.
+>
+> **Prochaine étape autorisée au 2026-09-01** : voir `STATUS.md`, bloc
+> « CHANTIER P5 → P9 » — une génération `coach-fitness`, **sur autorisation
+> explicite**, aucune dépense sans elle.
+
+
 > **Aucune étape d'exécution n'est autorisée.** Le plan figé du 2026-08-30 se
 > termine par un `STOP` explicite après la mesure structurelle des 25 gates.
 
@@ -719,7 +747,7 @@ tombe sous aucun interdit `E-xx`.
 
 | Point | État | Raison |
 |---|---|---|
-| `docs/elite-protocol/` **non suivi par Git** (`git status` : `?? docs/elite-protocol/`) | 🔴 **OUVERT** | `CLAUDE.md` désigne ce dossier comme « source de vérité versionnée » ; il n'a jamais été committé. Aucun commit sans autorisation explicite (`CLAUDE.md`). **La source de vérité ne doit pas rester uniquement sur le disque local.** |
+| `docs/elite-protocol/` **non suivi par Git** (`git status` : `?? docs/elite-protocol/`) | 🟢 **FERMÉ le 2026-08-31** | *Constat d'origine, conservé :* `CLAUDE.md` désigne ce dossier comme « source de vérité versionnée » ; il n'avait jamais été committé. **Résolu** : commit `2f00c00` — **88 fichiers suivis**, vérifié par `git ls-files`. Versionné localement ; `git push` reste interdit sans accord explicite |
 | Consignation de la présente intégration dans `DECISIONS.md` | 🟠 **NON FAIT** | la tâche du 2026-08-30 prescrit « ne fais aucune autre modification » que la ROADMAP. La règle 3 du chantier exige néanmoins cette consignation |
 | Étiquetage `G4` / `G5` des cas-tueurs des campagnes 1 et 2 | 🟠 **IMPRÉCIS** | `FACT` — la propriété énoncée pour G4 et G5 n'a aucune implémentation ; les cas-tueurs ont attaqué un **proxy**. Leurs résultats restent valides pour ce proxy. `HYPO.` non testée — d'autres gates pourraient être concernées |
 
@@ -970,6 +998,8 @@ tombe sous aucun interdit `E-xx`.
 ```
 ÉTAGE 0  PRÉCONDITIONS DE GOUVERNANCE ......... RN-01 · RN-02 · RN-03 · RN-05 · RN-06
    ▼ condition : RN-01 horodatée dans DECISIONS.md AVANT toute analyse causale (E-17)
+              → LEVÉE le 2026-09-01 (D-108, caducité). E-17 redevient exigible
+                si une analyse causale est reprise.
 ÉTAGE 1  SYNCHRONISATION + VERSIONNEMENT ...... S-4 · S-9 · RN-04 (commit)
    ▼ condition : aucune contradiction connue non consignée
 ÉTAGE 2  MESURES ............................. RN-09 · RN-10 · RN-14 · RN-15
@@ -992,7 +1022,7 @@ conditions sont satisfaites. Une condition partiellement satisfaite vaut
 
 | 🛑 | Après | Motif de l'arrêt |
 |---|---|---|
-| **C-0** | étage 0 | **RN-01 est un arbitrage humain** : choisir la granularité. Claude Code ne peut pas la choisir — la seule candidate connue ferait converger D004/D005, ce que `E-17` interdit de décider après coup |
+| **C-0** | étage 0 | 🟢 **CLOS le 2026-09-01** (`D-108`), avec `RN-01`. *Énoncé d'origine, conservé :* « **RN-01 est un arbitrage humain** : choisir la granularité. Claude Code ne peut pas la choisir — la seule candidate connue ferait converger D004/D005, ce que `E-17` interdit de décider après coup » |
 | **C-1** | étage 1 | RN-04 (commit) exige une autorisation distincte ; `git push` reste interdit en toute circonstance |
 | **C-2** | étage 2 | RN-10 exige un arbitrage : passer une gate en `strict` **change un critère de sortie** |
 | **C-3** | conception d'EXP-2 | **l'exécution d'EXP-2 n'est jamais implicite** — autorisation explicite requise |
@@ -1005,10 +1035,10 @@ conditions sont satisfaites. Une condition partiellement satisfaite vaut
 
 | ID | Objet | Fichier / section | Dép. | Resp. | Condition de sortie |
 |---|---|---|---|---|---|
-| **RN-01** | granularité `R-GRAN` (P1) | `DECISIONS.md` | — | 🧑 | règle écrite et horodatée **avant** toute analyse |
+| **RN-01** | granularité `R-GRAN` (P1) | `DECISIONS.md` | — | 🧑 | 🟢 **CLOS PAR CADUCITÉ le 2026-09-01** (`D-108`, arbitrage propriétaire) — le chantier P5→P9 a été mené et sécurisé sans cette règle. **Aucune règle `R-GRAN` n'a été écrite** : reprendre une analyse causale rendrait `E-17` de nouveau exigible |
 | **RN-02** | verser `PROTOCOL-D006`→`D014` (P2) | `DISCOVERY_REGISTER.md` | — | 🤖 | 🟢 **FAIT 2026-08-30** — 9 entrées versées |
 | **RN-03** | consigner le résultat E-11 (P4) | registres du protocole | — | 🤖 | 🟢 **FAIT 2026-08-30** — `PROTOCOL-D021` |
-| **RN-04** | versionner `docs/elite-protocol/` (P3) | Git | RN-01→06 | 🧑→🤖 | dossier suivi ; **jamais de push** |
+| **RN-04** | versionner `docs/elite-protocol/` (P3) | Git | RN-01→06 | 🧑→🤖 | 🟢 **FAIT 2026-08-31** — `2f00c00`, 88 fichiers suivis, aucun push. *La dépendance déclarée à `RN-01` s'est révélée non fondée (`D-106`).* |
 | **RN-05** | corriger l'entrée « dimension H » | ROADMAP Phase 10 | — | 🤖 | 🟢 **FAIT 2026-08-30** — 2 entrées corrigées |
 | **RN-06** | contradiction « vide » vs 17 cas-tueurs | `README.md` · `GATE_KILLER_TESTS.md` | — | 🤖 | 🟢 **FAIT 2026-08-30** — 4 mentions périmées rectifiées |
 | **RN-07** | validation physique du slice 2 | Phase 10 · `STATUS.md` | 🛑 C-5 | 🧑 | app installée et exercée sur appareil |
@@ -1025,7 +1055,7 @@ conditions sont satisfaites. Une condition partiellement satisfaite vaut
 | **RN-13** | `DET-018` liaison des Code Slots | — | 🧑 | 🟢 **TRANCHÉ 2026-08-30 → D-050** : dette **acceptée** pour la Phase 10, **échéance Phase 11**. **Aucune évolution de schéma maintenant.** Pas de regroupement avec `RN-12` — l'option B des deux fait tomber l'argument du coût partagé |
 | **RN-14** | couverture des cas-tueurs par gate | RN-06 | 🤖 | couverture publiée par gate |
 | **RN-15** | narratif du scorecard vs sa mesure | RN-05 | 🤖 | narratif dérivé de la mesure |
-| **RN-16** | 60 fichiers non committés | — | 🧑 | arbre propre ou décision consignée |
+| **RN-16** | 60 fichiers non committés | — | 🧑 | 🟢 **FAIT 2026-09-01** — `git status --porcelain` : **0 entrée** à `9f88792`. *Reste vrai : 126 commits locaux non poussés, conformément à l'interdiction de `git push`.* |
 
 ### 🟡 PLUS TARD
 
@@ -1058,10 +1088,26 @@ conditions sont satisfaites. Une condition partiellement satisfaite vaut
 | 2026-08-30 | **0** | `RN-03` / S-7 — `PROTOCOL-D021` : le modèle de sévérité ne peut pas représenter la composition (porteur d'arité 2 absent) | `evidence/exp1b.mjs` | 🟢 |
 | 2026-08-30 | **0** | `RN-06` / S-1→S-4 — 4 mentions périmées rectifiées · campagne 2 versée · réserve d'imputation G4/G5 inscrite · mention « aucun faux FAIL » **réfutée** | `GATE_KILLER_TESTS.md` · `GATE_REGISTER.md` · `README.md` | 🟢 |
 | 2026-08-30 | **0** | S-9 — `STATUS.md` porte le cadre, l'état figé et les mesures structurelles | `STATUS.md` | 🟢 |
-| 2026-08-30 | 🛑 **C-0** | **ARRÊT** — `RN-01` (granularité) est un arbitrage humain ; `RN-04` (commit) en dépend | — | ⏸ **en attente** |
+| 2026-08-30 | 🛑 **C-0** | **ARRÊT** — `RN-01` (granularité) est un arbitrage humain ; `RN-04` (commit) en dépend | — | ⏸ *(dénoué le 2026-09-01, `D-106`)* |
+| 2026-08-31 | **1** | `RN-04` — `docs/elite-protocol/` versé au dépôt, 88 fichiers, aucun push | commit `2f00c00` | 🟢 |
+| 2026-08-31 → 09-01 | — | **CHANTIER P5 → P9** — fidélité et couverture des oracles : 5 générations réelles (14,8831 $), gates `fidelite` et `invariants` câblées, 19 décisions | `D-087` → `D-105` · `STATUS.md` · `evidence/p5`,`p6`,`p8`,`p9` | 🟢 |
+| 2026-09-01 | — | `RN-16` — arbre de travail propre | `git status --porcelain` : 0 entrée à `9f88792` | 🟢 |
+| 2026-09-01 | — | **`D-106`** — `C-0` déclaré caduc, `RN-01` maintenue ouverte ; §10 et §11 rectifiés sans suppression | `DECISIONS.md` `D-106` | 🟢 |
+| 2026-09-01 | — | **`D-108`** — `RN-01` et `C-0` **CLOS PAR CADUCITÉ** (arbitrage propriétaire) ; aucune règle `R-GRAN` écrite, `E-17` redevient exigible si une analyse causale reprend | `DECISIONS.md` `D-108` · `614e6dc`→`9f88792` | 🟢 |
+| 2026-09-01 | — | **`D-107`** — `PB#2` fermé : la réparation conserve ses preuves payées, une panne n'est plus classée `terminee`, un artefact porte sa génération | `packages/repair/src/preservation.ts` · **23 cas-tueurs ajoutés** · 4 falsifications | 🟢 |
 
-**Prochaine action à exécuter** : 🛑 **point de contrôle C-0 atteint.**
-L'étage 0 est exécuté à l'exception de **`RN-01`**, qui est un **arbitrage
-humain** : choisir la règle de granularité et l'horodater dans `DECISIONS.md`.
-Tant que `RN-01` n'est pas levée, l'étage 1 (`RN-04` commit) et toute la branche
-causale restent fermés (`E-17`). Aucune autre action n'est autorisée.
+**Prochaine action à exécuter — au 2026-09-01, après `D-106`.**
+
+> *Énoncé précédent, conservé pour mémoire (2026-08-30)* : « 🛑 point de contrôle
+> C-0 atteint. L'étage 0 est exécuté à l'exception de `RN-01`, qui est un arbitrage
+> humain […] Aucune autre action n'est autorisée. » — **DÉPASSÉ** : `RN-04` a été
+> exécuté sans que `RN-01` soit levée, et le chantier P5→P9 a suivi.
+
+**Ce qui est ouvert** : la génération `coach-fitness` décrite dans `STATUS.md`,
+**sur autorisation explicite du propriétaire**, aucune dépense sans elle.
+
+**Ce qui reste FERMÉ, et pourquoi** : `EXP-2`, la validation physique, la clôture
+de la Phase 10, `G4`/`G5`, la sévérité et le protocole canonique — par les interdits
+du §10, qui tiennent. **`RN-01` n'en fait plus partie** : clos par caducité
+(`D-108`). Mais aucune règle `R-GRAN` n'ayant été écrite, reprendre une analyse
+causale rendrait `E-17` de nouveau exigible **avant** de commencer.
