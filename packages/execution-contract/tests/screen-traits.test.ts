@@ -6,9 +6,10 @@
 //
 // La première est REFUSÉE deux fois. `D-086` d'abord : l'AIR ne connaît aucune
 // catégorie métier, sous peine de rendre le moteur non agnostique. La mesure
-// ensuite : sur les **154 écrans** des corpus v2 et v3, **45 — soit 29 %** —
-// portent plus d'un trait. Un `role` à valeur unique serait faux par
-// construction sur près d'un écran sur trois.
+// ensuite : **45 écrans sur 154 (29 %)** au moment de la décision — **47 sur
+// 155 (30 %)** depuis la régénération de `livraison-fruits` (D-117) — portent
+// plus d'un trait. Un `role` à valeur unique serait faux par construction sur
+// plus d'un écran sur quatre.
 //
 // Ce fichier tient l'ensemble : traits CUMULABLES, dérivés des blocs réels.
 import { readFileSync, readdirSync } from "node:fs";
@@ -142,14 +143,17 @@ describe("cliquet de véracité — les traits dérivent des BLOCS RÉELS", () =
     }
   });
 
-  it("🔴 CONTRÔLE NÉGATIF : un rôle UNIQUE serait faux sur 29 % des écrans", () => {
+  it("🔴 CONTRÔLE NÉGATIF : un rôle UNIQUE serait faux sur plus d'un quart des écrans", () => {
     // C'est la mesure qui a refusé le champ `role`. Si elle tombait à zéro, la
     // dérivation par ensemble n'aurait plus de justification — ce test le dirait.
+    // ÉDITION CONSCIENTE (2026-09-01, B′ après D-117) : les égalités exactes
+    // 154 écrans / 45 ambigus sont RETIRÉES — la population mêle le corpus v2
+    // GELÉ (47 écrans, déjà cliqueté à l'exact par corpus.test.ts) et le
+    // corpus v3 destiné à être régénéré. L'INVARIANT qui fonde D-086 est le
+    // seuil ci-dessous, INCHANGÉ. Mesuré ce jour : 47 ambigus sur 155 (30 %).
     const tous = documents.flatMap((d) => screenTraits(d.air));
     const contenu = tous.map((t) => t.traits.filter((x) => x !== "entry"));
     const ambigus = contenu.filter((c) => c.length > 1).length;
-    expect(tous.length).toBe(154);
-    expect(ambigus).toBe(45);
     expect(ambigus / tous.length).toBeGreaterThan(0.25);
   });
 

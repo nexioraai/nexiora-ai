@@ -6,11 +6,13 @@
 // D-104) : une action doit cibler un bloc actionnable, jamais qu'un bloc
 // actionnable possède une action.
 //
-// MESURÉ sur les 24 documents : **7 formulaires muets sur 45 (15,6 %)** contre
-// **0 bouton muet sur 259 (0 %)**. L'asymétrie est la signature de la cause :
-// un défaut d'inattention du générateur toucherait les deux dans les mêmes
-// proportions. Trois de ces formulaires portaient un paiement ou une
-// confirmation de rendez-vous.
+// MESURÉ sur les 24 documents : **7 formulaires muets sur 45 (15,6 %)** à la
+// découverte (D-112) — **5 sur 48 (10,4 %)** depuis la régénération de
+// `livraison-fruits` (D-117) — contre **0 bouton muet** (259 boutons alors,
+// 250 ce jour). L'asymétrie est la signature de la cause : un défaut
+// d'inattention du générateur toucherait les deux dans les mêmes proportions.
+// Deux des formulaires restants portent un paiement ou une prise de
+// rendez-vous.
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -88,7 +90,7 @@ describe("un formulaire promet une soumission", () => {
   });
 });
 
-describe("cliquet de mesure — l'état RÉEL des deux corpus", () => {
+describe("cliquet de régression — l'état des deux corpus ne se dégrade jamais", () => {
   const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "golden-corpus");
   const charger = (dir: string) =>
     readdirSync(join(RACINE, dir))
@@ -99,20 +101,25 @@ describe("cliquet de mesure — l'état RÉEL des deux corpus", () => {
         air: migrateAirDocument(JSON.parse(readFileSync(join(RACINE, dir, f), "utf8"))),
       }));
 
-  it("🔴 le corpus v3 porte EXACTEMENT 7 formulaires muets — le chiffre est figé", () => {
+  // ÉDITION CONSCIENTE (2026-09-01, B′ après D-117) : « EXACTEMENT 7 » +
+  // liste d'ids figée → PLAFOND absolu 5 + ensemble des DOCUMENTS porteurs.
+  // Une régénération renouvelle TOUS les ids de blocs : les figer rendait le
+  // cliquet périssable par construction, sans détection en échange. Les noms
+  // de documents sont stables, et l'ensemble détecte une CONTAMINATION
+  // (nouveau document porteur) même à total constant — le trou de
+  // compensation d'un plafond seul. Le plafond se resserre à chaque
+  // régénération réussie, ne monte jamais.
+  it("🔴 les formulaires muets ne remontent jamais — plafond 5, deux documents porteurs connus", () => {
     const trouves = charger("corpus-v3").flatMap((d) =>
-      formulairesSansAction(d.air).map((f) => `${d.nom}:${f.blockId}`),
+      formulairesSansAction(d.air).map((f) => ({ document: d.nom, blockId: f.blockId })),
     );
-    expect(trouves.length).toBe(7);
-    expect(trouves).toEqual([
-      "corpus-v3/billetterie-concerts:blk_choix_formulaire_commande",
-      "corpus-v3/billetterie-concerts:blk_compte_formulaire",
-      "corpus-v3/billetterie-concerts:blk_controle_formulaire_scan",
-      "corpus-v3/billetterie-concerts:blk_paiement_formulaire_carte",
-      "corpus-v3/livraison-fruits:blk_form_adresse",
-      "corpus-v3/livraison-fruits:blk_form_paiement",
-      "corpus-v3/toiletteur-chiens:blk_prise_rdv_form",
-    ]);
+    expect(trouves.length).toBeLessThanOrEqual(5);
+    const PORTEURS_CONNUS = ["corpus-v3/billetterie-concerts", "corpus-v3/toiletteur-chiens"];
+    for (const t of trouves) {
+      expect(PORTEURS_CONNUS, `document nouvellement contaminé : ${t.document}`).toContain(
+        t.document,
+      );
+    }
   });
 
   it("🟢 le corpus v2 GELÉ n'en porte AUCUN — le diagnostic ne l'invalide pas", () => {

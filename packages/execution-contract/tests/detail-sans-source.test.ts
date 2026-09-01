@@ -6,8 +6,9 @@
 // paramètre. Un écran de détail qu'aucune ligne n'atteint ne peut donc jamais
 // recevoir d'identifiant — et le fournisseur retombe sur `rows[0]`, EN SILENCE.
 //
-// MESURÉ sur le corpus v3 : **28 écrans de détail sur 34 (82 %)** sont dans ce
-// cas, dont **27 sur une entité à plusieurs lignes**. Presser « le troisième »
+// MESURÉ sur le corpus v3 : **24 écrans de détail sur 32 (75 %)** sont dans ce
+// cas, dont **23 sur une entité à plusieurs lignes** (28/34 et 27 avant la
+// régénération de `livraison-fruits`, D-117). Presser « le troisième »
 // affiche « le premier », sans erreur ni état vide.
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -91,7 +92,7 @@ describe("un détail doit être ouvert par une LIGNE, pas par un bouton", () => 
   });
 });
 
-describe("cliquet de mesure — l'état RÉEL du corpus v3", () => {
+describe("cliquet de régression — les défauts du corpus v3 ne remontent jamais", () => {
   const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "golden-corpus");
   const documents = readdirSync(join(RACINE, "corpus-v3"))
     .filter((f) => f.endsWith(".air.json"))
@@ -101,20 +102,35 @@ describe("cliquet de mesure — l'état RÉEL du corpus v3", () => {
       air: migrateAirDocument(JSON.parse(readFileSync(join(RACINE, "corpus-v3", f), "utf8"))),
     }));
 
-  it("🔴 28 écrans de détail sur 34 sont SANS SOURCE — le chiffre est figé", () => {
+  // ÉDITION CONSCIENTE (2026-09-01, B′ après D-117) : cliquet exact 28/34 →
+  // PLAFOND absolu 24. Le corpus v3 est destiné à être régénéré document par
+  // document (9 restants) : une égalité exacte rougirait à chaque amélioration
+  // sans distinguer une régression. Le plafond ne mord que sur une HAUSSE du
+  // défaut ; il se RESSERRE à chaque régénération réussie, ne monte jamais.
+  // Aucun plancher sur la population : `livraison-fruits` a PERDU 2
+  // `detail_header` mal posés — une amélioration qu'un plancher aurait
+  // déclarée amputation.
+  it("🔴 les écrans de détail SANS SOURCE ne remontent jamais — plafond 24", () => {
     const tous = documents.flatMap((d) => detailScreens(d.air));
     const orphelins = tous.filter((x) => !x.hasItemIdSource);
-    expect(tous.length).toBe(34);
-    expect(orphelins.length).toBe(28);
+    expect(orphelins.length).toBeLessThanOrEqual(24);
   });
 
-  it("les 3 documents régénérés après D-088 sont les seuls à tenir la chaîne", () => {
+  // ÉDITION CONSCIENTE (2026-09-01, B′ après D-117) : égalité exacte →
+  // INCLUSION monotone. Un document qui sort de cet ensemble a soit RECHUTÉ,
+  // soit perdu TOUS ses écrans de détail (le filtre exige ds.length > 0) —
+  // deux régressions. Chaque document assaini par une régénération consignée
+  // s'AJOUTE ici ; on ne retire jamais un nom sans décision.
+  it("un document assaini ne rechute jamais — l'ensemble des sains ne peut que croître", () => {
     const sains = documents
       .filter((d) => {
         const ds = detailScreens(d.air);
         return ds.length > 0 && ds.every((x) => x.hasItemIdSource);
       })
       .map((d) => d.nom);
-    expect(sains).toEqual(["coach-fitness", "plombier-urgence"]);
+    expect(sains.length).toBeGreaterThan(0);
+    for (const attendu of ["coach-fitness", "livraison-fruits", "plombier-urgence"]) {
+      expect(sains, `document assaini sorti de l'ensemble : ${attendu}`).toContain(attendu);
+    }
   });
 });
