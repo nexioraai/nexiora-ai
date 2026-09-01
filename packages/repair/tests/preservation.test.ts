@@ -350,6 +350,49 @@ describe("cliquet de véracité — le harnais d'émission RÉEL est confronté 
     expect(occurrences("function extractJson")).toBe(1);
   });
 
+  it("🔴 UN APPEL FACTURÉ EST COMPTÉ, TRONQUÉ OU NON — l'ordre le garantit", () => {
+    // La comptabilité doit précéder la branche de troncature. Avant correction,
+    // le `throw` la précédait : 16 000 jetons facturés, comptés nulle part.
+    const corps = code.slice(code.indexOf("async function callPart"));
+    const iPush = corps.indexOf("usage.push(response.usage)");
+    const iAjout = corps.indexOf("etatDepense = budgetUsd.ajouter");
+    const iTronc = corps.indexOf('stop_reason === "max_tokens"');
+    expect(iPush, "usage.push absent de callPart").toBeGreaterThan(-1);
+    expect(iPush, "la comptabilité doit PRÉCÉDER la troncature").toBeLessThan(iTronc);
+    expect(iAjout, "le cumul doit PRÉCÉDER la troncature").toBeLessThan(iTronc);
+  });
+
+  it("🔴 `callPart` est le SEUL propriétaire — aucun appelant ne compte plus", () => {
+    // Deux compteurs alimentés à deux endroits pouvaient diverger : c'est
+    // exactement ce qui est arrivé. Un seul point de comptabilisation le rend
+    // structurellement impossible.
+    expect(occurrences("usage.push(response.usage)")).toBe(1);
+    expect(occurrences("etatDepense = budgetUsd.ajouter")).toBe(1);
+    // Et CHAQUE site d'appel transmet le compteur — aucun ne peut l'oublier.
+    const sites = code.split("await callPart(").slice(1);
+    expect(sites.length).toBeGreaterThan(0);
+    for (const site of sites) {
+      expect(site.slice(0, site.indexOf(";")), "un appel sans `usage`").toContain(", usage)");
+    }
+  });
+
+  it("🔴 une erreur API AVANT réponse ne comptabilise rien", () => {
+    // La comptabilité est APRÈS le `await` : un 400 n'y parvient jamais.
+    // Aucune dépense fictive n'est donc inventée pour une requête refusée.
+    const corps = code.slice(code.indexOf("async function callPart"));
+    const iAwait = corps.indexOf("await client.messages.create");
+    expect(iAwait).toBeLessThan(corps.indexOf("usage.push(response.usage)"));
+  });
+
+  it("🔴 D et la comptabilité coexistent : corps conservé ET dépense comptée", () => {
+    const corps = code.slice(code.indexOf("async function callPart"));
+    const iPush = corps.indexOf("usage.push(response.usage)");
+    const iAttache = corps.indexOf("preservation.attacherPartiel(tronquee");
+    expect(iPush).toBeLessThan(iAttache);
+    // L'erreur est toujours levée : jamais transformée en succès.
+    expect(corps.slice(iAttache - 200, iAttache + 200)).toContain("throw");
+  });
+
   it("🔴 tout artefact déposé porte son `runId` et ne peut pas en écraser un autre", () => {
     expect(code).toContain("preservation.nomArtefact({ slug, runId: RUN_ID, phase })");
     expect(code).toContain('flag: "wx"');

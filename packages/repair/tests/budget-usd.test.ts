@@ -145,6 +145,56 @@ describe("issue de génération — quatre états, jamais confondus", () => {
   });
 });
 
+describe("comptabilité — un appel qui a eu lieu est un appel facturé", () => {
+  // CAUSE RACINE MESURÉE (2026-09-01) : un appel arrêté par `max_tokens` était
+  // levé en erreur AVANT la comptabilité, et `usage.push` vivait chez les
+  // appelants, après le retour. L'appel échappait donc aux DEUX compteurs.
+  // Mesuré sur `toiletteur-chiens` : 16 000 jetons de sortie facturés, comptés
+  // nulle part — soit ~0,40 $ invisibles au garde D-103.
+  const TRONQUE = { input_tokens: 12_000, output_tokens: 16_000 };
+
+  it("🔴 CAS-TUEUR : une dépense tronquée RÉDUIT le budget disponible", () => {
+    const avant = { depense: 3.0, appels: 5 };
+    const apres = ajouter(avant, coutUSD(TRONQUE, TARIFS));
+    expect(apres.depense).toBeGreaterThan(avant.depense);
+    expect(apres.appels).toBe(6);
+    // Le garde doit désormais REFUSER l'appel suivant : avant la correction,
+    // cette dépense était invisible et l'appel serait passé.
+    expect(peutAppeler(3.5, apres, coutMaxAppel(30_000, 16_000, TARIFS))).toBe(false);
+  });
+
+  it("🔴 le plafond MORD sur un cas construit pour cela", () => {
+    let etat = { depense: 3.2, appels: 4 };
+    etat = ajouter(etat, coutUSD(TRONQUE, TARIFS));
+    expect(() => {
+      assertNonDepasse(3.5, etat, "x:ecrans");
+    }).toThrow(BudgetEpuiseError);
+  });
+
+  it("deux appels successifs : cumul EXACT, aucun double comptage", () => {
+    const un = coutUSD(TRONQUE, TARIFS);
+    let etat = DEPENSE_INITIALE;
+    etat = ajouter(etat, un);
+    etat = ajouter(etat, un);
+    expect(etat.depense).toBeCloseTo(2 * un, 10);
+    expect(etat.appels).toBe(2);
+  });
+
+  it("🟢 le MONTANT est inchangé — seule sa visibilité l'était", () => {
+    // La correction ne touche ni les tarifs ni la formule : mêmes entrées,
+    // même résultat qu'avant.
+    expect(coutUSD(TRONQUE, TARIFS)).toBeCloseTo(
+      (12_000 * 5 + 16_000 * 25) / 1e6,
+      10,
+    );
+  });
+
+  it("sans information de coût, RIEN n'est inventé", () => {
+    expect(coutUSD({}, TARIFS)).toBe(0);
+    expect(ajouter(DEPENSE_INITIALE, coutUSD({}, TARIFS))).toEqual({ depense: 0, appels: 1 });
+  });
+});
+
 describe("exposition maximale — le chiffre qui motivait ce garde", () => {
   it("28 appels sans garde dépassaient largement un budget de 3,50 $", () => {
     let etat = DEPENSE_INITIALE;

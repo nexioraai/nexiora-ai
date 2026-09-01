@@ -358,7 +358,7 @@ const SYSTEM_TRANSCRIBE = `Tu reçois le rendu texte DÉTERMINISTE et COMPLET d'
 
 RÈGLE ABSOLUE : reproduction à l'IDENTIQUE. Chaque identifiant, chaque valeur, chaque ordre de liste, chaque texte localisé doit être repris VERBATIM depuis le rendu. Les valeurs entre backticks sont des littéraux exacts ; les objets/tableaux JSON inclus dans le rendu sont à recopier tels quels. N'ajoute rien, n'omets rien, ne reformule rien, ne "corrige" rien. Un champ optionnel absent du rendu reste absent du JSON.`;
 
-async function callPart(part, system, userText, label) {
+async function callPart(part, system, userText, label, usage) {
   for (; part.levelIndex < part.levels.length; part.levelIndex++) {
     const level = part.levels[part.levelIndex];
     // D-103 · AVANT L'APPEL — on refuse d'ENGAGER un appel dont le coût
@@ -379,6 +379,29 @@ async function callPart(part, system, userText, label) {
         messages: [{ role: "user", content: userText }],
         output_config: { format: { type: "json_schema", schema: level.schema } },
       });
+      // ── UN APPEL QUI A EU LIEU EST UN APPEL FACTURÉ (2026-09-01).
+      //
+      // CAUSE RACINE MESURÉE : la comptabilité vivait APRÈS le `throw` de
+      // troncature, et `usage.push` vivait chez les APPELANTS, après le retour
+      // de cette fonction. Un appel arrêté par `max_tokens` échappait donc aux
+      // DEUX compteurs : ni le garde budgétaire (`etatDepense`) ni le coût du
+      // journal (`usage[]`) ne le voyaient. Mesuré sur `toiletteur-chiens` :
+      // 16 000 jetons de sortie facturés, comptés NULLE PART. Le plafond D-103
+      // pouvait donc être franchi par des troncatures répétées sans mordre.
+      //
+      // `callPart` est désormais le SEUL propriétaire de la comptabilité, et
+      // elle se fait ICI — après le retour de l'API, AVANT toute branche. Les
+      // appelants ne poussent plus rien : les deux compteurs ne peuvent plus
+      // diverger, par construction.
+      //
+      // Le MONTANT est inchangé : mêmes `usage`, mêmes tarifs, même formule.
+      // Seule sa VISIBILITÉ est corrigée.
+      usage.push(response.usage);
+      etatDepense = budgetUsd.ajouter(
+        etatDepense,
+        budgetUsd.coutUSD(response.usage ?? {}, TARIFS),
+      );
+
       // TRONCATURE DÉTECTÉE ICI (D-078) — jamais plus confondue avec une erreur
       // de parsing. La campagne a échoué sur son premier domaine avec
       // « Unexpected end of JSON input » : le JSON n'était pas invalide, il
@@ -405,13 +428,12 @@ async function callPart(part, system, userText, label) {
           corps: texteBrut(response),
         });
       }
-      // D-103 · APRÈS L'APPEL — le coût RÉEL est ajouté immédiatement, puis le
-      // plafond est revérifié. Un appel déjà facturé n'est jamais « oublié »
-      // jusqu'à la fin de l'intention.
-      etatDepense = budgetUsd.ajouter(
-        etatDepense,
-        budgetUsd.coutUSD(response.usage ?? {}, TARIFS),
-      );
+      // D-103 · APRÈS L'APPEL — le plafond est revérifié une fois le coût
+      // comptabilisé ci-dessus. Le contrôle reste sur le chemin NOMINAL : une
+      // troncature lève son erreur propre, qui doit atteindre l'appelant AVEC
+      // son corps. La remplacer par une erreur budgétaire ferait perdre la
+      // preuve. Le plafond mord malgré tout — `assertPeutAppeler` voit la
+      // dépense mise à jour dès l'appel suivant.
       budgetUsd.assertNonDepasse(PLAFOND_USD, etatDepense, label);
       return response;
     } catch (error) {
@@ -543,12 +565,10 @@ async function emitSections(system, contextText, label, usage, refusals, accumul
       (Object.keys(assembled).length
         ? `\n\nSECTIONS DÉJÀ ÉMISES (à respecter strictement, ne pas réémettre) :\n${JSON.stringify(assembled)}`
         : "");
-    let response = await callPart(part, system, user, `${label}:${part.name}`);
-    usage.push(response.usage);
+    let response = await callPart(part, system, user, `${label}:${part.name}`, usage);
     if (response.stop_reason === "refusal") {
       refusals.count++;
-      response = await callPart(part, system, user, `${label}:${part.name}#retry`);
-      usage.push(response.usage);
+      response = await callPart(part, system, user, `${label}:${part.name}#retry`, usage);
       if (response.stop_reason === "refusal") {
         refusals.count++;
         throw new Error(`refus persistant sur ${part.name}`);
@@ -609,8 +629,7 @@ async function repairSections(
       "désigne indirectement est un ÉCHEC, pas une réparation — la suppression " +
       "est détectée et la réparation REJETÉE. Si une exigence te semble " +
       "impossible à tenir, construis-la quand même dans la section qui la porte.";
-    let response = await callPart(part, SYSTEM_EMIT, user, `${label}:${part.name}#repair`);
-    usage.push(response.usage);
+    let response = await callPart(part, SYSTEM_EMIT, user, `${label}:${part.name}#repair`, usage);
     if (response.stop_reason === "refusal") {
       refusals.count++;
       continue;
