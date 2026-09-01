@@ -5526,3 +5526,168 @@ la fourche exacte de `D-088`.
 🟠 **Les 7 formulaires restent muets** : le diagnostic ne mord qu'à la prochaine
 génération. Les corriger exige de régénérer `billetterie-concerts`,
 `livraison-fruits` et `toiletteur-chiens`.
+
+## D-113 — CE QUI EST PAYÉ EST CONSERVÉ, MÊME QUAND LA RÉPONSE EST COUPÉE — 2026-09-01
+
+**Commit `12ce5c0`** — dernière lacune de `PB#2`. Artefacts en **`f84c2b4`**.
+
+**Défaut mesuré** : `callPart` levait sur `stop_reason === "max_tokens"` AVANT
+tout traitement du contenu. `extractJson` n'était jamais atteint,
+`response.content` n'était lu nulle part. **Les jetons de sortie — FACTURÉS —
+disparaissaient avec la pile.**
+
+Constaté sur `toiletteur-chiens` : **16 000 jetons produits puis jetés**.
+Diagnostiquer la troncature a exigé de déduire ce qu'un artefact aurait dit
+directement, et le facteur de sur-production est resté **indéterminé faute de
+trace**.
+
+### Livré
+
+`texteBrut()` concatène les blocs texte **VERBATIM** : ni `trim`, ni retrait de
+clôture Markdown, ni complétion. `extractJson` répare pour parser ; celle-ci ne
+répare **rien**. Un corps tronqué reste tronqué — le conserver sert à
+**comprendre**, jamais à faire passer.
+
+Le corps voyage avec l'erreur via `attacherPartiel`, **le mécanisme existant** :
+on n'en invente pas un second. Le rattrapage le dépose en artefact
+`reponse-tronquee`, nommé par `runId`. **Les trois formes de preuve payée sont
+désormais conservées** : émission partielle, réparation partielle, corps tronqué.
+
+Comportement fonctionnel **inchangé** : même erreur, même échec, issue toujours
+`echec-technique`. Le chemin nominal ne gagne aucune branche.
+
+### Ce que cela permet désormais d'observer, et rien de plus
+
+Au **prochain** échec par troncature, le contenu réellement produit sera lisible :
+combien d'écrans, quelle verbosité, quelles sections. **Aucune de ces questions
+n'a de réponse aujourd'hui** — l'artefact n'existait pas au moment de l'échec.
+
+🔴 **Ceci ne corrige ni n'explique la cause de la troncature.** Cela rend le
+prochain diagnostic possible, voilà tout.
+
+### Preuves expérimentales conservées — `f84c2b4`
+
+Deux artefacts de l'expérience du 2026-09-01, **inchangés**, empreintes SHA-256
+vérifiées identiques avant et après versionnement :
+
+| | |
+|---|---|
+| `campagne-v2-…18-24-05-841Z.jsonl` | 647 o — **première trace en conditions réelles** que `issue = echec-technique` fonctionne. Avant `D-107`, cette panne aurait été journalisée « terminee » |
+| `toiletteur-chiens.…emission-partielle.air.json` | 22 041 o, 13 sections — **première preuve payée conservée par `PB#2`**. C'est elle, et elle seule, qui a établi que le modèle avait planifié **14 écrans au lieu de 11** |
+
+Ce sont les preuves d'un **échec**, non d'une réussite. Un échec instructif vaut
+d'être conservé autant qu'un succès.
+
+## D-114 — UN APPEL QUI A EU LIEU EST UN APPEL FACTURÉ — 2026-09-01
+
+**Commit `ed1c000`.**
+
+**Défaut mesuré — deux compteurs, deux endroits, tous deux aveugles :**
+
+```
+etatDepense (garde D-103)  : dans callPart, APRÈS le throw de troncature
+usage[]     (coût journal) : chez les 3 APPELANTS, après le retour
+```
+
+Un appel arrêté par `max_tokens` levait avant le premier et ne revenait jamais au
+second. **Il échappait donc aux DEUX.** Le plafond `D-103` pouvait être franchi
+par des troncatures répétées **sans mordre**.
+
+**Déplacer une ligne n'aurait corrigé que la moitié du défaut.**
+
+### Livré
+
+`callPart` devient le **propriétaire unique** de la comptabilité : il reçoit
+`usage` et enregistre immédiatement après le retour de l'API, **avant toute
+branche**. Les trois appelants ne comptent plus. Les deux compteurs ne peuvent
+plus diverger, **par construction**.
+
+`assertNonDepasse` reste **délibérément** sur le chemin nominal : le porter sur le
+chemin tronqué substituerait une erreur budgétaire à l'erreur de troncature et
+**ferait perdre le corps conservé par `D-113`**. Le plafond mord malgré tout —
+`assertPeutAppeler` voit la dépense mise à jour dès l'appel suivant.
+
+**Le montant est inchangé** : mêmes usages, mêmes tarifs, même formule. Seule sa
+**visibilité** est corrigée.
+
+### Rectification historique, sans effet rétroactif
+
+`FACT` — la génération `toiletteur-chiens` du 2026-09-01 a été journalisée à
+**0,3812 $ pour 2 appels**. Ce chiffre reste le fait historique consigné.
+
+`FACT` — un troisième appel, arrêté par `max_tokens` à **16 000 jetons de
+sortie**, n'a été compté **ni** dans `etatDepense` **ni** dans `usage[]`. À
+25 $/MTok, cela représente **~0,40 $**.
+
+`CONCLUSION` — le coût réel de l'expérience était **~0,78 $**, non 0,3812 $. Il
+reste sous les 4,00 $ autorisés. **Cette correction n'a aucun effet rétroactif :
+la dépense est faite, elle n'était simplement pas visible.** Tout chiffre de coût
+antérieur au commit `ed1c000` doit être lu avec cette réserve.
+
+## D-115 — UNE PORTE FERMÉE NE SE RÈGLE PLUS À COUPS DE MUR — 2026-09-01
+
+**Commit `499189a5195420560ad91c198bf5917d422d4ad9`.** Étape A, hors ligne, **0 $**.
+
+### 🔴 RÉSERVE ABSOLUE — À LIRE AVANT LE RESTE
+
+**`D-115` NE CORRIGE PAS LA TRONCATURE de `toiletteur-chiens`, et NE DÉMONTRE PAS
+sa cause.**
+
+`FACT` — **`$.screens` ne porte AUCUN `maxItems`**, à aucun niveau de l'échelle,
+ni avant ni après cette correction. Aucune borne récupérée ici ne concerne le
+nombre d'écrans.
+
+`FACT` — le modèle a planifié **14 écrans au lieu de 11**, mais 14 écrans à la
+densité mesurée du corpus (556–575 jetons/écran) représentent **~8 000 jetons**,
+non 16 000. **Le facteur d'écart d'environ ×2 reste INEXPLIQUÉ.**
+
+`CONCLUSION` — **la cause de la troncature demeure NON DÉMONTRÉE.** Toute session
+future qui lirait `D-115` comme sa résolution se tromperait. Cette distinction est
+également inscrite en tête du message du commit `499189a`.
+
+### Cause démontrée — celle que D-115 traite réellement
+
+`FACT` — l'API refuse un schéma de sortie portant un `minItems` autre que 0 ou 1.
+Sur le schéma AIR complet, **UNE SEULE** contrainte est dans ce cas :
+`minItems: 3` sur `$.navigation.primary.destinations`, introduite par `D-086`.
+Les 16 autres valent 1 et sont acceptées.
+
+`FACT` — l'échelle répondait à cette unique incompatibilité par un cran qui
+détruit **35 contraintes** : 17 `minItems`, 16 `minLength`, et **les deux seules
+bornes hautes du schéma** — `maxItems: 5` et `maxLength: 80`.
+
+`FACT` — `L1` était le **premier** niveau et retirait **6 bornes numériques**,
+jamais envoyées, sans qu'aucun refus ne l'ait justifié.
+
+`FACT` — **rectification d'une analyse antérieure erronée** : chaque `part`
+possède **son propre** `levelIndex`. La contamination n'était **pas** entre parts
+— elle était entre **DOCUMENTS**, `PARTS` étant construit une fois au chargement.
+Un refus sur le document 1 dégradait le document 2.
+
+### Livré
+
+`clampMinItems` ramène `minItems > 1` à 1, récursivement : **une contrainte
+touchée au lieu de 35**. Nouveau premier niveau `minItems-ramene` ; les trois
+niveaux existants demeurent **inchangés** — ce sont des filets, pas le premier
+réflexe. `levelIndex` remis à zéro à chaque intention.
+
+Les quatre fonctions de schéma sont extraites dans `benchmarks/air-emission/
+schema-levels.mjs`, **module PUR sans effet de bord** : tant qu'elles vivaient
+dans un harnais qui exécute sa campagne au chargement, seul un cliquet textuel
+pouvait les voir — jamais leur **comportement**.
+
+**Vérifié sur le schéma AIR réel, sans appel API** : 0 `minItems` hors {0,1} ·
+`maxItems` `[5]` conservé · `maxLength` `[80]` conservé · 71 patterns conservés.
+
+**11 cas-tueurs**, dont un contrôle négatif prouvant que l'ancien repli détruisait
+ces deux bornes, et un contrôle positif : sans incompatibilité, le premier niveau
+ne change rien. **4 falsifications** : premier niveau retiré · clamp élargi à
+`maxItems` · récursion coupée · remise à zéro supprimée.
+
+**919 tests · typecheck EXIT=0 · lint EXIT=0 · 6/7 gates · MAX_TOKENS inchangé ·
+0 règle de prompt modifiée · corpus, registre, AIR, primitives, R6, fidélité
+intacts · aucun appel API.**
+
+🟠 **Non démontré** : que l'API acceptera ce premier niveau. Cela exige un appel
+réel. Ce qui est établi : plus aucun `minItems` hors {0,1}, seule incompatibilité
+connue.

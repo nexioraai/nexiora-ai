@@ -1,7 +1,20 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-01 (4)** (**CHANTIER SECTORIEL OUVERT + DEUX INSTRUMENTS RÉPARÉS** :
+> **2026-09-01 (5)** (**EXPÉRIENCE `toiletteur-chiens` : ÉCHEC INSTRUCTIF, TROIS
+> INSTRUMENTS RÉPARÉS — `D-113` → `D-115`**. La génération a été **TRONQUÉE** sur
+> la section `ecrans` (16 000 jetons) ; elle **n'a donc pas pu éprouver les trois
+> diagnostics**, son objet initial. Mais elle a démontré en conditions réelles ce
+> qui ne l'avait jamais été : `PB#1` (`issue = echec-technique`) et `PB#2`
+> (13 sections conservées). Trois corrections en ont découlé — conservation du
+> corps tronqué (`D-113`), comptabilité des appels tronqués (`D-114`),
+> dégradation ciblée du schéma (`D-115`). **919 tests · tsc 0 · lint 0 · 6/7
+> gates · 0 $.**
+>
+> 🔴 **LA CAUSE DE LA TRONCATURE RESTE NON DÉMONTRÉE.** Aucune de ces trois
+> corrections ne la corrige ni ne l'explique — voir la réserve de `D-115`.)
+>
+> *Entrée précédente —* **2026-09-01 (4)** (**CHANTIER SECTORIEL OUVERT + DEUX INSTRUMENTS RÉPARÉS** :
 > **R2 `screenTraits`** 🟢 — les traits d'écran sont DÉRIVÉS, jamais déclarés
 > (`D-086` : l'AIR ne connaît aucune catégorie métier) ; mesuré : **45 écrans
 > sur 154 (29 %) portent plusieurs traits**, un champ `role` unique serait faux
@@ -826,6 +839,14 @@ contrôles fantômes : 1155/1310 agissants · 155 / plafond 180 (marge = amortis
 plafonds INCHANGÉS : FANTÔMES 180 · ORPHELINES 38
 registre de blocs : 0 fichier modifié     schéma AIR : 0 fichier modifié
 corpus v2 GELÉ : empreinte 85612b1f… INCHANGÉE
+
+AU 2026-09-01 (5) — APRÈS D-113, D-114, D-115 · AUCUN APPEL API
+919 tests · 0 échec · 76 fichiers     typecheck EXIT=0     lint EXIT=0
+7 gates : app-compile 🟢 26/26 · app-rendu 🟢 · controles 🟢 · navigation 🟢
+          composition 🟢 · invariants 🟢 · fidelite 🔴 → 6 sur 7
+plafonds INCHANGÉS · MAX_TOKENS = 16000 inchangé · 0 règle de prompt modifiée
+corpus v2, registre de blocs, schéma AIR, primitives : 0 fichier modifié
+commits : 12ce5c0 · ed1c000 · 499189a · f84c2b4
 ```
 
 🔵 **RECTIFIÉ LE 2026-09-01 par mesure — l'énoncé précédent était FAUX pour une gate
@@ -911,6 +932,43 @@ qui sont en `1.0.0` et n'ont aucune intention.
 
 🔴 **Voyage / Transport est ABSENT du corpus** : aucune des 12 intentions.
 
+# EXPÉRIENCE `toiletteur-chiens` — 2026-09-01 · ÉCHEC INSTRUCTIF
+
+**Objet** : éprouver en génération réelle les trois diagnostics produits ce jour
+(`FORM_SANS_ACTION`, `DETAIL_SANS_SOURCE`, remplissage conforme). Document choisi
+parce qu'il les cumulait tous les trois, pour un seul coût.
+
+**Résultat** : `issue = echec-technique`, `valid = false`. L'émission s'est
+arrêtée à la 3ᵉ section — `RÉPONSE TRONQUÉE sur "ecrans" : plafond de 16 000
+jetons atteint`. **Les trois diagnostics n'ont donc jamais été soumis au modèle :
+l'expérience n'a pas répondu à sa question.** Le corpus n'a pas été touché.
+
+**Ce qu'elle a démontré, et qui ne l'avait jamais été en conditions réelles :**
+
+| | Avant | Cette expérience |
+|---|---|---|
+| `PB#1` — classification | démontré par cas-tueurs seulement | 🟢 `issue = echec-technique`. Avant `D-107`, la panne aurait été journalisée « terminee » |
+| `PB#2` — conservation | 🟠 *« jamais éprouvé par un `529` réel »* | 🟢 **13 sections, 22 041 octets conservés**. Avant `D-107`, tout aurait disparu |
+
+**La réserve maintenue depuis `D-107` tombe : `PB#2` est éprouvé en réel** — non
+par un `529`, mais par une troncature, erreur technique authentique.
+
+**Coût** : 0,3812 $ journalisés, **plus ~0,40 $** d'un appel tronqué qui échappait
+alors à la comptabilité — **cumul réel ~0,78 $** (`D-114`, sans effet rétroactif).
+
+## 🔴 CAUSE DE LA TRONCATURE — NON DÉMONTRÉE
+
+Faits établis : le modèle a planifié **14 écrans au lieu de 11** · les autres
+sections qu'il a produites sont **plus sobres** que l'existant (×0,93) · 14 écrans
+à la densité mesurée du corpus (556–575 jetons/écran) ≈ **8 000 jetons**, non
+16 000 · **le facteur d'écart d'environ ×2 reste inexpliqué**.
+
+**`$.screens` ne porte aucun `maxItems`**, à aucun niveau de l'échelle de
+dégradation — donc `D-115` ne peut pas en être la cause, et ne la corrige pas.
+
+Ce qui manquait au diagnostic : **le corps de la réponse tronquée**. Il n'existait
+pas au moment de l'échec ; il existera au prochain, grâce à `D-113`.
+
 ## INSTRUMENTS RÉPARÉS LE 2026-09-01
 
 **① `controles-fantomes` — 28 faux positifs supprimés (183 → 155).**
@@ -929,6 +987,29 @@ portant sur un champ que le formulaire ne collecte pas · **30** `create` décle
 par un bouton, sans valeur propre (`D-083`) · **20 nœuds = 7 contrôles réellement
 muets** · 10 indéterminés. **Seuls 20 sur 155 sont ce que cette gate a été écrite
 pour détecter.**
+
+**③ `D-113` — le corps d'une réponse tronquée est une preuve payée** (`12ce5c0`).
+`callPart` levait sur `max_tokens` AVANT tout traitement du contenu : les jetons
+de sortie, facturés, disparaissaient. Mesuré : **16 000 jetons jetés**.
+`texteBrut()` les conserve **verbatim** — ni `trim`, ni nettoyage, ni complétion.
+Le corps voyage avec l'erreur via `attacherPartiel`, le mécanisme existant. **Les
+trois formes de preuve payée sont désormais conservées.** 10 cas-tueurs,
+3 falsifications. 🔴 **Ne corrige pas la cause de la troncature** : rend le
+prochain diagnostic possible, rien de plus. Artefacts versionnés en `f84c2b4`.
+
+**④ `D-114` — un appel qui a eu lieu est un appel facturé** (`ed1c000`).
+Deux compteurs, deux endroits, tous deux aveugles à la troncature : `etatDepense`
+après le `throw`, `usage[]` chez les appelants. **Le plafond `D-103` pouvait être
+franchi sans mordre.** `callPart` devient le **propriétaire unique** de la
+comptabilité, avant toute branche. Montant inchangé, visibilité corrigée.
+9 cas-tueurs, 4 falsifications.
+
+**⑤ `D-115` — dégradation ciblée du schéma, étape A** (`499189a`).
+Une seule contrainte incompatible (`minItems: 3`, `D-086`) faisait détruire
+**35 contraintes**, dont les deux seules bornes hautes du schéma. `clampMinItems`
+en touche **une**. `maxItems [5]` et `maxLength [80]` survivent. `levelIndex`
+remis à zéro par document. 11 cas-tueurs, 4 falsifications, **0 $**.
+🔴 **Réserve absolue : ne corrige ni n'explique la troncature.**
 
 **② `FORM_SANS_ACTION` — les formulaires qui promettent sans tenir (`D-112`).**
 `FACT` — **7 formulaires muets sur 45 (15,6 %)** contre **0 bouton muet sur 259
