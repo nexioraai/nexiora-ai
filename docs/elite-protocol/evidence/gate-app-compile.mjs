@@ -90,7 +90,17 @@ console.log("  " + "─".repeat(72));
 
 let echecs = 0;
 for (const [nom, chemin] of docs) {
-  const air = migrateAirDocument(JSON.parse(readFileSync(chemin, "utf8")));
+  // Un document devenu INVALIDE ne doit pas faire planter la gate : elle le
+  // RAPPORTE. Un plantage masque l'information au lieu de la donner.
+  let air;
+  try {
+    air = migrateAirDocument(JSON.parse(readFileSync(chemin, "utf8")));
+  } catch (e) {
+    const codes = [...new Set((e.diagnostics ?? []).map((d) => d.code))].join(" ");
+    console.log(`  ${nom.padEnd(24)} 🔴 DOCUMENT INVALIDE : ${codes || String(e.message).slice(0, 50)}`);
+    echecs++;
+    continue;
+  }
   const slots = air.slots.map((s) => slotBidon(s.id));
   let c;
   try { c = compileProject(air, undefined, slots.length > 0 ? { slots } : undefined); }

@@ -1,0 +1,3019 @@
+{
+  "airSchemaVersion": "1.6.0",
+  "projectId": "prj_plombier_express",
+  "app": {
+    "name": "Plombier Express",
+    "slug": "plombier-express",
+    "description": [
+      {
+        "locale": "fr-FR",
+        "text": "Application de demande d'intervention de plomberie : le client décrit son problème avec des photos, partage son adresse et sa position, puis suit le statut de sa demande. Devis et paiement sont traités hors de l'application."
+      }
+    ],
+    "locales": {
+      "userLanguage": "fr-FR",
+      "appLocales": [
+        "fr-FR"
+      ],
+      "defaultAppLocale": "fr-FR",
+      "contentLocales": [
+        "fr-FR"
+      ],
+      "rtlSupported": false
+    }
+  },
+  "navigation": {
+    "entryScreenId": "scr_accueil",
+    "primary": {
+      "destinations": [
+        {
+          "routeId": "nav_accueil",
+          "label": [
+            {
+              "locale": "fr-FR",
+              "text": "Accueil"
+            }
+          ],
+          "order": 0
+        },
+        {
+          "routeId": "nav_prestations",
+          "label": [
+            {
+              "locale": "fr-FR",
+              "text": "Prestations"
+            }
+          ],
+          "order": 1
+        },
+        {
+          "routeId": "nav_demandes",
+          "label": [
+            {
+              "locale": "fr-FR",
+              "text": "Mes demandes"
+            }
+          ],
+          "order": 2
+        },
+        {
+          "routeId": "nav_compte",
+          "label": [
+            {
+              "locale": "fr-FR",
+              "text": "Compte"
+            }
+          ],
+          "order": 3
+        }
+      ]
+    },
+    "routes": [
+      {
+        "id": "nav_accueil",
+        "screenId": "scr_accueil",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Accueil"
+          }
+        ]
+      },
+      {
+        "id": "nav_prestations",
+        "screenId": "scr_prestations",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Prestations"
+          }
+        ]
+      },
+      {
+        "id": "nav_prestation_detail",
+        "screenId": "scr_prestation_detail",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Détail de la prestation"
+          }
+        ]
+      },
+      {
+        "id": "nav_nouvelle_demande",
+        "screenId": "scr_nouvelle_demande",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Décrire mon problème"
+          }
+        ]
+      },
+      {
+        "id": "nav_adresse_intervention",
+        "screenId": "scr_adresse_intervention",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Adresse d'intervention"
+          }
+        ]
+      },
+      {
+        "id": "nav_demande_confirmee",
+        "screenId": "scr_demande_confirmee",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Demande envoyée"
+          }
+        ]
+      },
+      {
+        "id": "nav_demandes",
+        "screenId": "scr_demandes",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Mes demandes"
+          }
+        ]
+      },
+      {
+        "id": "nav_demande_detail",
+        "screenId": "scr_demande_detail",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Suivi de la demande"
+          }
+        ]
+      },
+      {
+        "id": "nav_compte",
+        "screenId": "scr_compte",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Mon compte"
+          }
+        ]
+      }
+    ]
+  },
+  "design": {
+    "theme": "utility_blue"
+  },
+  "network": {
+    "policy": "deny_by_default",
+    "allowedDomains": [
+      "api.plombier-express.app"
+    ]
+  },
+  "native": {
+    "minIosVersion": "15.0",
+    "minAndroidSdk": 26
+  },
+  "compliance": {
+    "commerceClass": "none",
+    "accountDeletionRequired": true,
+    "dataCollected": [
+      "contact_info",
+      "identifiers",
+      "location",
+      "user_content",
+      "usage_data"
+    ]
+  },
+  "entities": [
+    {
+      "id": "ent_prestation",
+      "name": "prestation",
+      "fields": [
+        {
+          "id": "fld_prestation_nom",
+          "name": "nom",
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        {
+          "id": "fld_prestation_categorie",
+          "name": "categorie",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "Fuite d'eau",
+            "Débouchage",
+            "Chauffe-eau",
+            "Robinetterie",
+            "WC et sanitaires",
+            "Urgence"
+          ]
+        },
+        {
+          "id": "fld_prestation_resume",
+          "name": "resume",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_prestation_description",
+          "name": "description",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "fld_prestation_photo",
+          "name": "photo",
+          "type": "asset",
+          "required": true
+        },
+        {
+          "id": "fld_prestation_tarif_indicatif",
+          "name": "tarif_indicatif",
+          "type": "decimal",
+          "required": true
+        },
+        {
+          "id": "fld_prestation_delai",
+          "name": "delai_intervention",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_prestation_urgence_disponible",
+          "name": "urgence_disponible",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "id": "fld_prestation_ordre",
+          "name": "ordre_affichage",
+          "type": "number",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ent_client",
+      "name": "client",
+      "fields": [
+        {
+          "id": "fld_client_nom",
+          "name": "nom",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_client_email",
+          "name": "email",
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        {
+          "id": "fld_client_telephone",
+          "name": "telephone",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_client_notifications",
+          "name": "suivi_par_notification",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "id": "fld_client_cree_le",
+          "name": "cree_le",
+          "type": "datetime",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ent_adresse",
+      "name": "adresse",
+      "fields": [
+        {
+          "id": "fld_adresse_libelle",
+          "name": "libelle",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_adresse_rue",
+          "name": "rue",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_adresse_complement",
+          "name": "complement",
+          "type": "string",
+          "required": false
+        },
+        {
+          "id": "fld_adresse_code_postal",
+          "name": "code_postal",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_adresse_ville",
+          "name": "ville",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_adresse_latitude",
+          "name": "latitude",
+          "type": "decimal",
+          "required": false
+        },
+        {
+          "id": "fld_adresse_longitude",
+          "name": "longitude",
+          "type": "decimal",
+          "required": false
+        },
+        {
+          "id": "fld_adresse_position_partagee",
+          "name": "position_partagee",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "id": "fld_adresse_instructions",
+          "name": "instructions_acces",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "fld_adresse_client",
+          "name": "client",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_client",
+          "referenceDisplayFieldId": "fld_client_nom"
+        }
+      ]
+    },
+    {
+      "id": "ent_demande",
+      "name": "demande",
+      "fields": [
+        {
+          "id": "fld_demande_reference",
+          "name": "reference",
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        {
+          "id": "fld_demande_titre",
+          "name": "titre",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_demande_description",
+          "name": "description_probleme",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "fld_demande_photo",
+          "name": "photo_probleme",
+          "type": "asset",
+          "required": true
+        },
+        {
+          "id": "fld_demande_prestation",
+          "name": "prestation",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_prestation",
+          "referenceDisplayFieldId": "fld_prestation_nom"
+        },
+        {
+          "id": "fld_demande_adresse",
+          "name": "adresse_intervention",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_adresse",
+          "referenceDisplayFieldId": "fld_adresse_libelle"
+        },
+        {
+          "id": "fld_demande_client",
+          "name": "client",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_client",
+          "referenceDisplayFieldId": "fld_client_nom"
+        },
+        {
+          "id": "fld_demande_statut",
+          "name": "statut",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "Envoyée",
+            "Prise en charge",
+            "Intervention planifiée",
+            "Devis transmis",
+            "Terminée",
+            "Annulée"
+          ]
+        },
+        {
+          "id": "fld_demande_urgence",
+          "name": "niveau_urgence",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "Urgent sous 2h",
+            "Aujourd'hui",
+            "Cette semaine",
+            "Pas urgent"
+          ]
+        },
+        {
+          "id": "fld_demande_date_souhaitee",
+          "name": "date_souhaitee",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "fld_demande_creneau",
+          "name": "creneau_souhaite",
+          "type": "string",
+          "required": false
+        },
+        {
+          "id": "fld_demande_telephone_contact",
+          "name": "telephone_contact",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_demande_creee_le",
+          "name": "creee_le",
+          "type": "datetime",
+          "required": true
+        },
+        {
+          "id": "fld_demande_note_plombier",
+          "name": "note_du_plombier",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "ent_suivi",
+      "name": "suivi_statut",
+      "fields": [
+        {
+          "id": "fld_suivi_demande",
+          "name": "demande",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_demande",
+          "referenceDisplayFieldId": "fld_demande_reference"
+        },
+        {
+          "id": "fld_suivi_statut",
+          "name": "statut",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "Envoyée",
+            "Prise en charge",
+            "Intervention planifiée",
+            "Devis transmis",
+            "Terminée",
+            "Annulée"
+          ]
+        },
+        {
+          "id": "fld_suivi_message",
+          "name": "message",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "fld_suivi_auteur",
+          "name": "auteur",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_suivi_horodatage",
+          "name": "horodatage",
+          "type": "datetime",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel_prestation_demandes",
+      "fromEntityId": "ent_prestation",
+      "toEntityId": "ent_demande",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_client_demandes",
+      "fromEntityId": "ent_client",
+      "toEntityId": "ent_demande",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_client_adresses",
+      "fromEntityId": "ent_client",
+      "toEntityId": "ent_adresse",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_adresse_demandes",
+      "fromEntityId": "ent_adresse",
+      "toEntityId": "ent_demande",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_demande_suivis",
+      "fromEntityId": "ent_demande",
+      "toEntityId": "ent_suivi",
+      "kind": "one_to_many"
+    }
+  ],
+  "datasets": [
+    {
+      "id": "data_prestations",
+      "entityId": "ent_prestation",
+      "contentHash": "3f9a1c7d2b8e4056a1d3f7b9c2e648015d7a9b3c6e1f2048ab5c9d3e7f102846",
+      "rowCount": 9
+    },
+    {
+      "id": "data_clients",
+      "entityId": "ent_client",
+      "contentHash": "7c2e1f90a4b6d385e91f0c7a2d5b34681a4c8e70b2d69f35c05e7a1b93d2f846",
+      "rowCount": 3
+    },
+    {
+      "id": "data_adresses",
+      "entityId": "ent_adresse",
+      "contentHash": "b41d9e02c7a5f3683d70c1e9a86b2f4597e0a3c5d128b64f20d8f6b1c9a473e5",
+      "rowCount": 4
+    },
+    {
+      "id": "data_demandes",
+      "entityId": "ent_demande",
+      "contentHash": "e5a70b1c93d846f20b3d7e29a1c5f8467f21c9b0d3a568e49c4a1d70b25e83f6",
+      "rowCount": 6
+    },
+    {
+      "id": "data_suivis",
+      "entityId": "ent_suivi",
+      "contentHash": "1d8b47f0c9a2e563a70c3e91d52b8f464e6b0d92a1c73f858f52a7c30b1d94e6",
+      "rowCount": 14
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule_demande_description_obligatoire",
+      "description": "Une demande d'intervention doit décrire le problème, porter au moins une photo et un téléphone de contact valide.",
+      "kind": "validation",
+      "entityId": "ent_demande",
+      "assertions": [
+        {
+          "fieldId": "fld_demande_titre",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_demande_description",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_demande_photo",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_demande_telephone_contact",
+          "operator": "matches",
+          "value": "^(?:\\+33|0)[1-9][0-9]{8}$"
+        }
+      ]
+    },
+    {
+      "id": "rule_demande_localisation_obligatoire",
+      "description": "Une demande doit être rattachée à une prestation et à une adresse d'intervention.",
+      "kind": "validation",
+      "entityId": "ent_demande",
+      "assertions": [
+        {
+          "fieldId": "fld_demande_prestation",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_demande_adresse",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_demande_client",
+          "operator": "required"
+        }
+      ]
+    },
+    {
+      "id": "rule_demande_statut_valide",
+      "description": "Le statut de suivi d'une demande appartient au cycle de vie défini et l'urgence est renseignée.",
+      "kind": "validation",
+      "entityId": "ent_demande",
+      "assertions": [
+        {
+          "fieldId": "fld_demande_statut",
+          "operator": "in",
+          "value": [
+            "Envoyée",
+            "Prise en charge",
+            "Intervention planifiée",
+            "Devis transmis",
+            "Terminée",
+            "Annulée"
+          ]
+        },
+        {
+          "fieldId": "fld_demande_urgence",
+          "operator": "in",
+          "value": [
+            "Urgent sous 2h",
+            "Aujourd'hui",
+            "Cette semaine",
+            "Pas urgent"
+          ]
+        },
+        {
+          "fieldId": "fld_demande_creee_le",
+          "operator": "required"
+        }
+      ]
+    },
+    {
+      "id": "rule_adresse_valide",
+      "description": "L'adresse d'intervention doit comporter une rue, un code postal français à 5 chiffres et une ville.",
+      "kind": "validation",
+      "entityId": "ent_adresse",
+      "assertions": [
+        {
+          "fieldId": "fld_adresse_libelle",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_adresse_rue",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_adresse_code_postal",
+          "operator": "matches",
+          "value": "^[0-9]{5}$"
+        },
+        {
+          "fieldId": "fld_adresse_ville",
+          "operator": "required"
+        }
+      ]
+    },
+    {
+      "id": "rule_adresse_coordonnees",
+      "description": "Si des coordonnées sont fournies, elles restent dans les bornes géographiques valides.",
+      "kind": "validation",
+      "entityId": "ent_adresse",
+      "assertions": [
+        {
+          "fieldId": "fld_adresse_latitude",
+          "operator": "gte",
+          "value": -90
+        },
+        {
+          "fieldId": "fld_adresse_latitude",
+          "operator": "lte",
+          "value": 90
+        },
+        {
+          "fieldId": "fld_adresse_longitude",
+          "operator": "gte",
+          "value": -180
+        },
+        {
+          "fieldId": "fld_adresse_longitude",
+          "operator": "lte",
+          "value": 180
+        }
+      ]
+    },
+    {
+      "id": "rule_client_contact_valide",
+      "description": "Le compte client doit porter un nom, un e-mail valide et un téléphone joignable.",
+      "kind": "validation",
+      "entityId": "ent_client",
+      "assertions": [
+        {
+          "fieldId": "fld_client_nom",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_client_email",
+          "operator": "matches",
+          "value": "^[^@\\s]+@[^@\\s]+\\.[a-zA-Z]{2,}$"
+        },
+        {
+          "fieldId": "fld_client_telephone",
+          "operator": "matches",
+          "value": "^(?:\\+33|0)[1-9][0-9]{8}$"
+        }
+      ]
+    },
+    {
+      "id": "rule_prestation_tarif_positif",
+      "description": "Une prestation du catalogue doit avoir un nom, un visuel et un tarif indicatif positif.",
+      "kind": "validation",
+      "entityId": "ent_prestation",
+      "assertions": [
+        {
+          "fieldId": "fld_prestation_nom",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_prestation_photo",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_prestation_tarif_indicatif",
+          "operator": "gte",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "rule_suivi_evenement_complet",
+      "description": "Chaque événement de suivi est daté, rattaché à une demande et porte un message lisible.",
+      "kind": "validation",
+      "entityId": "ent_suivi",
+      "assertions": [
+        {
+          "fieldId": "fld_suivi_demande",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_suivi_statut",
+          "operator": "in",
+          "value": [
+            "Envoyée",
+            "Prise en charge",
+            "Intervention planifiée",
+            "Devis transmis",
+            "Terminée",
+            "Annulée"
+          ]
+        },
+        {
+          "fieldId": "fld_suivi_message",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_suivi_horodatage",
+          "operator": "required"
+        }
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "id": "slot_progression_demande",
+      "description": "Calcule, à partir des demandes et de leurs événements de suivi, un résumé lisible de l'avancement (étape courante, prochaine étape attendue) et un pourcentage de progression à afficher sur le suivi de la demande.",
+      "inputs": [
+        {
+          "name": "demandes",
+          "type": "json"
+        },
+        {
+          "name": "evenements",
+          "type": "json"
+        },
+        {
+          "name": "etiquetteEtape",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "resumeAvancement",
+          "type": "string"
+        },
+        {
+          "name": "progression",
+          "type": "number"
+        },
+        {
+          "name": "prochaineEtape",
+          "type": "string"
+        }
+      ],
+      "allowedImports": []
+    },
+    {
+      "id": "slot_adresse_formatee",
+      "description": "Compose une adresse d'intervention lisible en une ligne (rue, complément, code postal, ville) et un libellé de position partagée à partir des coordonnées enregistrées.",
+      "inputs": [
+        {
+          "name": "adresses",
+          "type": "json"
+        },
+        {
+          "name": "paysDefaut",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "adresseFormatee",
+          "type": "string"
+        },
+        {
+          "name": "positionResume",
+          "type": "string"
+        }
+      ],
+      "allowedImports": []
+    },
+    {
+      "id": "slot_estimation_tarif",
+      "description": "Produit une fourchette de tarif indicatif et un délai d'intervention estimé pour une prestation du catalogue, en précisant que le devis définitif est établi hors application.",
+      "inputs": [
+        {
+          "name": "prestations",
+          "type": "json"
+        },
+        {
+          "name": "niveauUrgence",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "fourchetteTarif",
+          "type": "string"
+        },
+        {
+          "name": "delaiEstime",
+          "type": "string"
+        }
+      ],
+      "allowedImports": []
+    }
+  ],
+  "screens": [
+    {
+      "id": "scr_accueil",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Accueil"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_accueil_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Plombier Express"
+            },
+            {
+              "key": "subtitle",
+              "value": "Fuite, WC bouché, chauffe-eau en panne ? Décrivez votre problème avec des photos, partagez votre adresse, suivez l'intervention."
+            }
+          ]
+        },
+        {
+          "id": "blk_accueil_cta_demande",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Décrire mon problème"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_nouvelle_demande"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "id": "blk_accueil_urgences",
+          "blockType": "list",
+          "entityId": "ent_prestation",
+          "props": [
+            {
+              "key": "title",
+              "value": "Interventions d'urgence"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_prestation_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_prestation_resume"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_prestation_tarif_indicatif"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_prestation_categorie"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_prestation_photo"
+            },
+            {
+              "key": "filterFieldId",
+              "value": "fld_prestation_urgence_disponible"
+            },
+            {
+              "key": "filterOperator",
+              "value": "eq"
+            },
+            {
+              "key": "filterValue",
+              "value": true
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_prestation_ordre"
+            },
+            {
+              "key": "sortDirection",
+              "value": "asc"
+            },
+            {
+              "key": "pageSize",
+              "value": 4
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement des interventions d'urgence…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Interventions indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Impossible de charger les interventions d'urgence. Réessayez dans un instant."
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune intervention d'urgence"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Décrivez tout de même votre problème, le plombier vous rappelle."
+            }
+          ]
+        },
+        {
+          "id": "blk_accueil_demandes_en_cours",
+          "blockType": "list",
+          "entityId": "ent_demande",
+          "props": [
+            {
+              "key": "title",
+              "value": "Vos demandes en cours"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_demande_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_demande_prestation"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_demande_creee_le"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_demande_statut"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_demande_photo"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_demande_creee_le"
+            },
+            {
+              "key": "sortDirection",
+              "value": "desc"
+            },
+            {
+              "key": "pageSize",
+              "value": 3
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de vos demandes…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Suivi indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Le suivi de vos demandes n'a pas pu être chargé."
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune demande en cours"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Votre première demande d'intervention apparaîtra ici."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_prestations",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Prestations"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_prestations_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Nos prestations"
+            },
+            {
+              "key": "subtitle",
+              "value": "Tarifs indicatifs et délais d'intervention. Le devis définitif est établi hors application."
+            }
+          ]
+        },
+        {
+          "id": "blk_prestations_liste",
+          "blockType": "list",
+          "entityId": "ent_prestation",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_prestation_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_prestation_resume"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_prestation_tarif_indicatif"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_prestation_categorie"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_prestation_photo"
+            },
+            {
+              "key": "searchFieldId",
+              "value": "fld_prestation_nom"
+            },
+            {
+              "key": "searchPlaceholder",
+              "value": "Rechercher une prestation (fuite, WC, chauffe-eau…)"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_prestation_ordre"
+            },
+            {
+              "key": "sortDirection",
+              "value": "asc"
+            },
+            {
+              "key": "pageSize",
+              "value": 20
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du catalogue…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Catalogue indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Les prestations n'ont pas pu être chargées. Vérifiez votre connexion."
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune prestation trouvée"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Modifiez votre recherche ou décrivez directement votre problème."
+            }
+          ]
+        },
+        {
+          "id": "blk_prestations_vide",
+          "blockType": "empty_state",
+          "visibleWhen": {
+            "kind": "entity_empty",
+            "entityId": "ent_prestation"
+          },
+          "props": [
+            {
+              "key": "title",
+              "value": "Catalogue en cours de mise à jour"
+            },
+            {
+              "key": "message",
+              "value": "Aucune prestation n'est affichée pour le moment. Vous pouvez décrire votre problème, le plombier vous répondra."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Décrire mon problème"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_nouvelle_demande"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_prestation_detail",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Détail de la prestation"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_prestation_detail_header",
+          "blockType": "detail_header",
+          "entityId": "ent_prestation",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_prestation_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_prestation_description"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_prestation_tarif_indicatif"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_prestation_categorie",
+                "fld_prestation_delai"
+              ]
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_prestation_photo"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de la prestation…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Prestation indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Le détail de cette prestation n'a pas pu être chargé."
+            }
+          ]
+        },
+        {
+          "id": "blk_prestation_estimation",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Estimation"
+            },
+            {
+              "key": "subtitle",
+              "value": "Fourchette de tarif et délai calculés selon votre niveau d'urgence."
+            }
+          ]
+        },
+        {
+          "id": "blk_prestation_devis_note",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Devis et paiement hors application"
+            },
+            {
+              "key": "subtitle",
+              "value": "Le plombier vous transmet le devis et encaisse le règlement en dehors de l'application, après l'intervention."
+            }
+          ]
+        },
+        {
+          "id": "blk_prestation_cta",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Demander cette intervention"
+            },
+            {
+              "key": "actionId",
+              "value": "act_demander_prestation"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_nouvelle_demande",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Décrire mon problème"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_nouvelle_demande_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Décrivez votre problème"
+            },
+            {
+              "key": "subtitle",
+              "value": "Étape 1 sur 2 — une photo vaut mieux qu'un long discours : le plombier prépare son matériel avant de venir."
+            }
+          ]
+        },
+        {
+          "id": "blk_nouvelle_demande_photo",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Prendre une photo du problème"
+            },
+            {
+              "key": "actionId",
+              "value": "act_prendre_photo"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "id": "blk_nouvelle_demande_form",
+          "blockType": "form",
+          "entityId": "ent_demande",
+          "props": [
+            {
+              "key": "title",
+              "value": "Votre demande d'intervention"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_demande_titre",
+                "fld_demande_description",
+                "fld_demande_photo",
+                "fld_demande_prestation",
+                "fld_demande_urgence",
+                "fld_demande_date_souhaitee",
+                "fld_demande_creneau",
+                "fld_demande_telephone_contact"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Continuer vers l'adresse"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Préparation du formulaire…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Demande non enregistrée"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Vérifiez le titre, la description, la photo et votre numéro de téléphone."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_adresse_intervention",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Adresse d'intervention"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_adresse_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Où devons-nous intervenir ?"
+            },
+            {
+              "key": "subtitle",
+              "value": "Étape 2 sur 2 — indiquez l'adresse exacte et partagez votre position pour accélérer l'accès."
+            }
+          ]
+        },
+        {
+          "id": "blk_adresse_position",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Partager ma position GPS"
+            },
+            {
+              "key": "actionId",
+              "value": "act_partager_position"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "id": "blk_adresse_form",
+          "blockType": "form",
+          "entityId": "ent_adresse",
+          "props": [
+            {
+              "key": "title",
+              "value": "Adresse d'intervention"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_adresse_libelle",
+                "fld_adresse_rue",
+                "fld_adresse_complement",
+                "fld_adresse_code_postal",
+                "fld_adresse_ville",
+                "fld_adresse_latitude",
+                "fld_adresse_longitude",
+                "fld_adresse_position_partagee",
+                "fld_adresse_instructions",
+                "fld_adresse_client"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Envoyer ma demande"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Préparation de l'adresse…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Adresse non enregistrée"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Rue, code postal à 5 chiffres et ville sont obligatoires."
+            }
+          ]
+        },
+        {
+          "id": "blk_adresse_enregistrees",
+          "blockType": "list",
+          "entityId": "ent_adresse",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes adresses enregistrées"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_adresse_libelle"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_adresse_rue"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_adresse_ville"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_adresse_position_partagee"
+            },
+            {
+              "key": "pageSize",
+              "value": 5
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de vos adresses…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Adresses indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Vos adresses enregistrées n'ont pas pu être chargées."
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune adresse enregistrée"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Renseignez votre première adresse d'intervention ci-dessus."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_demande_confirmee",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Demande envoyée"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_confirmation_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Demande envoyée"
+            },
+            {
+              "key": "subtitle",
+              "value": "Le plombier vous rappelle pour confirmer le créneau. Le devis et le paiement se font hors de l'application."
+            }
+          ]
+        },
+        {
+          "id": "blk_confirmation_detail",
+          "blockType": "detail_header",
+          "entityId": "ent_demande",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_demande_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_demande_adresse"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_demande_reference"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_demande_statut",
+                "fld_demande_urgence"
+              ]
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_demande_photo"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Enregistrement de votre demande…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Demande introuvable"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Le récapitulatif de votre demande n'a pas pu être affiché."
+            }
+          ]
+        },
+        {
+          "id": "blk_confirmation_suivre",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Suivre ma demande"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_suivi_depuis_confirmation"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_demandes",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Mes demandes"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_demandes_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes demandes"
+            },
+            {
+              "key": "subtitle",
+              "value": "Suivez le statut de chaque intervention, de l'envoi à la fin du chantier."
+            }
+          ]
+        },
+        {
+          "id": "blk_demandes_liste",
+          "blockType": "list",
+          "entityId": "ent_demande",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_demande_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_demande_adresse"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_demande_creee_le"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_demande_statut"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_demande_photo"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_demande_creee_le"
+            },
+            {
+              "key": "sortDirection",
+              "value": "desc"
+            },
+            {
+              "key": "pageSize",
+              "value": 20
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de vos demandes…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Demandes indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "La liste de vos demandes n'a pas pu être chargée."
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune demande"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Vos demandes d'intervention apparaîtront ici."
+            }
+          ]
+        },
+        {
+          "id": "blk_demandes_vide",
+          "blockType": "empty_state",
+          "visibleWhen": {
+            "kind": "entity_empty",
+            "entityId": "ent_demande"
+          },
+          "props": [
+            {
+              "key": "title",
+              "value": "Vous n'avez encore aucune demande"
+            },
+            {
+              "key": "message",
+              "value": "Décrivez votre problème avec une photo et partagez votre adresse : le plombier vous rappelle."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Décrire mon problème"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_nouvelle_demande"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_demande_detail",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Suivi de la demande"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_demande_detail_header",
+          "blockType": "detail_header",
+          "entityId": "ent_demande",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_demande_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_demande_description"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_demande_reference"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_demande_statut",
+                "fld_demande_urgence"
+              ]
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_demande_photo"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de la demande…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Demande indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Le détail de cette demande n'a pas pu être chargé."
+            }
+          ]
+        },
+        {
+          "id": "blk_demande_avancement",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Avancement de l'intervention"
+            },
+            {
+              "key": "subtitle",
+              "value": "Calcul de l'étape en cours…"
+            }
+          ]
+        },
+        {
+          "id": "blk_demande_adresse_resume",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Adresse d'intervention"
+            },
+            {
+              "key": "subtitle",
+              "value": "Adresse en cours de mise en forme…"
+            }
+          ]
+        },
+        {
+          "id": "blk_demande_suivi_liste",
+          "blockType": "list",
+          "entityId": "ent_suivi",
+          "props": [
+            {
+              "key": "title",
+              "value": "Historique du suivi"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_suivi_statut"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_suivi_message"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_suivi_horodatage"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_suivi_auteur"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_suivi_horodatage"
+            },
+            {
+              "key": "sortDirection",
+              "value": "desc"
+            },
+            {
+              "key": "pageSize",
+              "value": 15
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du suivi…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Suivi indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Les étapes de suivi n'ont pas pu être chargées."
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune mise à jour"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Le plombier n'a pas encore ajouté d'étape de suivi à cette demande."
+            }
+          ]
+        },
+        {
+          "id": "blk_demande_annuler",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Annuler ma demande"
+            },
+            {
+              "key": "actionId",
+              "value": "act_annuler_demande"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_compte",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Mon compte"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_compte_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mon compte"
+            },
+            {
+              "key": "subtitle",
+              "value": "Vos coordonnées servent au plombier pour vous rappeler et transmettre le devis hors application."
+            }
+          ]
+        },
+        {
+          "id": "blk_compte_form",
+          "blockType": "form",
+          "entityId": "ent_client",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes coordonnées"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_client_nom",
+                "fld_client_email",
+                "fld_client_telephone",
+                "fld_client_notifications"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Enregistrer mes informations"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de vos informations…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Informations non enregistrées"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Vérifiez votre adresse e-mail et votre numéro de téléphone."
+            }
+          ]
+        },
+        {
+          "id": "blk_compte_adresses",
+          "blockType": "list",
+          "entityId": "ent_adresse",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes adresses"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_adresse_libelle"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_adresse_rue"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_adresse_ville"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_adresse_position_partagee"
+            },
+            {
+              "key": "pageSize",
+              "value": 10
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de vos adresses…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Adresses indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Vos adresses n'ont pas pu être chargées."
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune adresse"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Vos adresses d'intervention seront enregistrées lors de votre première demande."
+            }
+          ]
+        },
+        {
+          "id": "blk_compte_notifications",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Activer les notifications de suivi"
+            },
+            {
+              "key": "actionId",
+              "value": "act_activer_notifications"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "id": "blk_compte_suppression",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Supprimer mon compte"
+            },
+            {
+              "key": "actionId",
+              "value": "act_supprimer_compte"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "act_ouvrir_nouvelle_demande",
+      "name": "Ouvrir le formulaire de description du problème",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_accueil_cta_demande"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_nouvelle_demande"
+      }
+    },
+    {
+      "id": "act_ouvrir_prestation_depuis_accueil",
+      "name": "Ouvrir le détail d'une intervention d'urgence depuis l'accueil",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_accueil_urgences"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_prestation_detail"
+      }
+    },
+    {
+      "id": "act_ouvrir_demande_depuis_accueil",
+      "name": "Ouvrir le suivi d'une demande en cours depuis l'accueil",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_accueil_demandes_en_cours"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_demande_detail"
+      }
+    },
+    {
+      "id": "act_ouvrir_prestation_detail",
+      "name": "Ouvrir le détail d'une prestation du catalogue",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_prestations_liste"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_prestation_detail"
+      }
+    },
+    {
+      "id": "act_estimer_tarif_prestation",
+      "name": "Calculer la fourchette de tarif et le délai estimé de la prestation",
+      "trigger": {
+        "kind": "lifecycle",
+        "event": "screen_open",
+        "screenId": "scr_prestation_detail"
+      },
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_estimation_tarif",
+        "binding": {
+          "inputs": [
+            {
+              "port": "prestations",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_prestation"
+              }
+            },
+            {
+              "port": "niveauUrgence",
+              "source": {
+                "kind": "literal",
+                "value": "Aujourd'hui"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "port": "fourchetteTarif",
+              "blockId": "blk_prestation_estimation",
+              "prop": "subtitle"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "act_demander_prestation",
+      "name": "Demander cette intervention",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_prestation_cta"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_nouvelle_demande"
+      }
+    },
+    {
+      "id": "act_prendre_photo",
+      "name": "Prendre une photo du problème de plomberie",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_nouvelle_demande_photo"
+      },
+      "effect": {
+        "kind": "capability",
+        "capability": "camera",
+        "method": "capturePhoto",
+        "params": [
+          {
+            "key": "quality",
+            "value": "high"
+          },
+          {
+            "key": "allowMultiple",
+            "value": true
+          },
+          {
+            "key": "targetFieldId",
+            "value": "fld_demande_photo"
+          }
+        ]
+      }
+    },
+    {
+      "id": "act_enregistrer_demande",
+      "name": "Enregistrer la demande et passer à l'adresse d'intervention",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_nouvelle_demande_form"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_demande",
+        "operation": "create",
+        "thenScreenId": "scr_adresse_intervention"
+      }
+    },
+    {
+      "id": "act_partager_position",
+      "name": "Partager ma position GPS pour l'intervention",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_adresse_position"
+      },
+      "effect": {
+        "kind": "capability",
+        "capability": "geolocation",
+        "method": "getCurrentPosition",
+        "params": [
+          {
+            "key": "accuracy",
+            "value": "high"
+          },
+          {
+            "key": "latitudeFieldId",
+            "value": "fld_adresse_latitude"
+          },
+          {
+            "key": "longitudeFieldId",
+            "value": "fld_adresse_longitude"
+          }
+        ]
+      }
+    },
+    {
+      "id": "act_enregistrer_adresse_et_envoyer",
+      "name": "Enregistrer l'adresse d'intervention et envoyer la demande",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_adresse_form"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_adresse",
+        "operation": "create",
+        "thenScreenId": "scr_demande_confirmee"
+      }
+    },
+    {
+      "id": "act_ouvrir_suivi_depuis_confirmation",
+      "name": "Suivre la demande qui vient d'être envoyée",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_confirmation_suivre"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_demande_detail"
+      }
+    },
+    {
+      "id": "act_ouvrir_demande_detail",
+      "name": "Ouvrir le suivi d'une demande depuis la liste",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_demandes_liste"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_demande_detail"
+      }
+    },
+    {
+      "id": "act_calculer_avancement_demande",
+      "name": "Calculer l'avancement de l'intervention à partir du suivi",
+      "trigger": {
+        "kind": "lifecycle",
+        "event": "screen_open",
+        "screenId": "scr_demande_detail"
+      },
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_progression_demande",
+        "binding": {
+          "inputs": [
+            {
+              "port": "demandes",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_demande"
+              }
+            },
+            {
+              "port": "evenements",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_suivi"
+              }
+            },
+            {
+              "port": "etiquetteEtape",
+              "source": {
+                "kind": "literal",
+                "value": "Étape en cours"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "port": "resumeAvancement",
+              "blockId": "blk_demande_avancement",
+              "prop": "subtitle"
+            },
+            {
+              "port": "prochaineEtape",
+              "blockId": "blk_demande_avancement",
+              "prop": "title"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "act_formater_adresse_intervention",
+      "name": "Mettre en forme l'adresse d'intervention et la position partagée",
+      "trigger": {
+        "kind": "lifecycle",
+        "event": "screen_open",
+        "screenId": "scr_demande_detail"
+      },
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_adresse_formatee",
+        "binding": {
+          "inputs": [
+            {
+              "port": "adresses",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_adresse"
+              }
+            },
+            {
+              "port": "paysDefaut",
+              "source": {
+                "kind": "literal",
+                "value": "France"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "port": "adresseFormatee",
+              "blockId": "blk_demande_adresse_resume",
+              "prop": "subtitle"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "act_annuler_demande",
+      "name": "Annuler ma demande d'intervention",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_demande_annuler"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_demande",
+        "operation": "update",
+        "thenScreenId": "scr_demandes"
+      }
+    },
+    {
+      "id": "act_enregistrer_compte",
+      "name": "Enregistrer mes coordonnées client",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_compte_form"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_client",
+        "operation": "update",
+        "thenScreenId": "scr_compte"
+      }
+    },
+    {
+      "id": "act_activer_notifications",
+      "name": "Activer les notifications de suivi de la demande",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_compte_notifications"
+      },
+      "effect": {
+        "kind": "capability",
+        "capability": "push_notifications",
+        "method": "requestPermission",
+        "params": [
+          {
+            "key": "topic",
+            "value": "suivi_demande"
+          }
+        ]
+      }
+    },
+    {
+      "id": "act_supprimer_compte",
+      "name": "Supprimer mon compte client",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_compte_suppression"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_client",
+        "operation": "delete",
+        "thenScreenId": "scr_accueil"
+      }
+    }
+  ],
+  "capabilities": [
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "methods",
+          "value": [
+            "email_otp",
+            "phone"
+          ]
+        },
+        {
+          "key": "accountDeletionSupported",
+          "value": true
+        },
+        {
+          "key": "sessionScope",
+          "value": "client"
+        }
+      ]
+    },
+    {
+      "capability": "camera",
+      "config": [
+        {
+          "key": "usage",
+          "value": "photo_probleme_plomberie"
+        },
+        {
+          "key": "allowVideo",
+          "value": false
+        },
+        {
+          "key": "maxPhotosParDemande",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "capability": "media_upload",
+      "config": [
+        {
+          "key": "usage",
+          "value": "import_photos_existantes_du_probleme"
+        },
+        {
+          "key": "acceptedTypes",
+          "value": [
+            "image/jpeg",
+            "image/png",
+            "image/heic"
+          ]
+        },
+        {
+          "key": "maxFileSizeMb",
+          "value": 10
+        }
+      ]
+    },
+    {
+      "capability": "geolocation",
+      "config": [
+        {
+          "key": "usage",
+          "value": "position_du_lieu_d_intervention"
+        },
+        {
+          "key": "accuracy",
+          "value": "high"
+        },
+        {
+          "key": "backgroundUpdates",
+          "value": false
+        }
+      ]
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "topics",
+          "value": [
+            "suivi_demande",
+            "rappel_creneau"
+          ]
+        },
+        {
+          "key": "scheduledLocal",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "usage",
+          "value": "brouillon_de_demande_et_derniers_statuts"
+        },
+        {
+          "key": "encrypted",
+          "value": true
+        }
+      ]
+    }
+  ],
+  "permissions": [
+    {
+      "platform": "ios",
+      "permission": "NSCameraUsageDescription",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "L'appareil photo sert à photographier votre problème de plomberie (fuite, WC bouché, chauffe-eau) afin que le plombier prépare le bon matériel."
+        }
+      ],
+      "requiredByCapability": "camera"
+    },
+    {
+      "platform": "ios",
+      "permission": "NSMicrophoneUsageDescription",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "Le micro est utilisé uniquement si vous enregistrez un commentaire sonore avec votre prise de vue pour décrire le bruit ou l'écoulement constaté."
+        }
+      ],
+      "requiredByCapability": "camera"
+    },
+    {
+      "platform": "android",
+      "permission": "android.permission.CAMERA",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "L'appareil photo sert à photographier votre problème de plomberie afin de joindre le visuel à votre demande d'intervention."
+        }
+      ],
+      "requiredByCapability": "camera"
+    },
+    {
+      "platform": "android",
+      "permission": "android.permission.RECORD_AUDIO",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "Le micro n'est utilisé que si vous ajoutez un commentaire sonore à la prise de vue de votre problème."
+        }
+      ],
+      "requiredByCapability": "camera"
+    },
+    {
+      "platform": "ios",
+      "permission": "NSPhotoLibraryUsageDescription",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "L'accès à vos photos vous permet de joindre à votre demande une image du problème déjà prise avec votre téléphone."
+        }
+      ],
+      "requiredByCapability": "media_upload"
+    },
+    {
+      "platform": "android",
+      "permission": "android.permission.READ_MEDIA_IMAGES",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "L'accès à vos images vous permet de sélectionner une photo existante du problème et de l'ajouter à votre demande d'intervention."
+        }
+      ],
+      "requiredByCapability": "media_upload"
+    },
+    {
+      "platform": "ios",
+      "permission": "NSLocationWhenInUseUsageDescription",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "Votre position sert à renseigner et vérifier l'adresse exacte de l'intervention pour que le plombier trouve le lieu rapidement."
+        }
+      ],
+      "requiredByCapability": "geolocation"
+    },
+    {
+      "platform": "android",
+      "permission": "android.permission.ACCESS_FINE_LOCATION",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "Votre position sert à préciser l'adresse d'intervention partagée avec le plombier, uniquement lorsque vous appuyez sur « Partager ma position »."
+        }
+      ],
+      "requiredByCapability": "geolocation"
+    },
+    {
+      "platform": "android",
+      "permission": "android.permission.POST_NOTIFICATIONS",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "Les notifications vous informent de l'avancement de votre demande : prise en charge, intervention planifiée, devis transmis."
+        }
+      ],
+      "requiredByCapability": "push_notifications"
+    }
+  ],
+  "integrations": [
+    {
+      "id": "intg_api_plombier_express",
+      "providerClass": "rest_api",
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.plombier-express.app"
+        },
+        {
+          "key": "authMode",
+          "value": "bearer_session"
+        },
+        {
+          "key": "timeoutMs",
+          "value": 15000
+        },
+        {
+          "key": "resources",
+          "value": [
+            "prestations",
+            "clients",
+            "adresses",
+            "demandes",
+            "suivis"
+          ]
+        },
+        {
+          "key": "offlineDraftSync",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "intg_auth_client",
+      "providerClass": "identity_provider",
+      "capability": "auth",
+      "config": [
+        {
+          "key": "methods",
+          "value": [
+            "email_otp",
+            "phone"
+          ]
+        },
+        {
+          "key": "accountDeletionEndpoint",
+          "value": "/v1/compte/suppression"
+        },
+        {
+          "key": "sessionTtlHours",
+          "value": 720
+        }
+      ]
+    },
+    {
+      "id": "intg_media_demandes",
+      "providerClass": "object_storage",
+      "capability": "media_upload",
+      "config": [
+        {
+          "key": "bucketPath",
+          "value": "demandes/photos"
+        },
+        {
+          "key": "acceptedTypes",
+          "value": [
+            "image/jpeg",
+            "image/png",
+            "image/heic"
+          ]
+        },
+        {
+          "key": "maxFileSizeMb",
+          "value": 10
+        },
+        {
+          "key": "uploadEndpoint",
+          "value": "/v1/medias/demandes"
+        }
+      ]
+    },
+    {
+      "id": "intg_push_suivi",
+      "providerClass": "push_gateway",
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "topics",
+          "value": [
+            "suivi_demande",
+            "rappel_creneau"
+          ]
+        },
+        {
+          "key": "registrationEndpoint",
+          "value": "/v1/notifications/enregistrement"
+        },
+        {
+          "key": "scheduledLocal",
+          "value": true
+        }
+      ]
+    }
+  ],
+  "expectedTests": [
+    {
+      "id": "test_accueil_urgences_visibles",
+      "description": "Sur l'écran d'accueil, la liste des interventions d'urgence n'affiche que les prestations dont urgence_disponible vaut vrai, triées par ordre d'affichage croissant, limitées à 4 lignes avec vignette, catégorie en badge et tarif indicatif à droite.",
+      "kind": "deterministic",
+      "targetId": "blk_accueil_urgences"
+    },
+    {
+      "id": "test_accueil_demandes_recentes",
+      "description": "L'accueil liste les demandes les plus récentes en premier (tri décroissant sur creee_le, 3 lignes maximum) avec le statut en badge et la photo du problème en vignette.",
+      "kind": "deterministic",
+      "targetId": "blk_accueil_demandes_en_cours"
+    },
+    {
+      "id": "test_prestations_recherche_filtre",
+      "description": "La recherche du catalogue filtre réellement les prestations sur le nom : saisir « chauffe » ne laisse que les prestations correspondantes, et un terme inconnu affiche le message de liste vide.",
+      "kind": "deterministic",
+      "targetId": "blk_prestations_liste"
+    },
+    {
+      "id": "test_prestations_images_affichees",
+      "description": "Chaque ligne du catalogue affiche la photo de la prestation en vignette via imageFieldId, et le détail de prestation affiche le même visuel en en-tête.",
+      "kind": "deterministic",
+      "targetId": "blk_prestation_detail_header"
+    },
+    {
+      "id": "test_ligne_prestation_ouvre_detail",
+      "description": "Appuyer sur une ligne de la liste des prestations ouvre l'écran de détail de la prestation.",
+      "kind": "e2e",
+      "targetId": "act_ouvrir_prestation_detail"
+    },
+    {
+      "id": "test_ligne_demande_ouvre_suivi",
+      "description": "Appuyer sur une ligne de la liste « Mes demandes » ouvre l'écran de suivi de la demande correspondante.",
+      "kind": "e2e",
+      "targetId": "act_ouvrir_demande_detail"
+    },
+    {
+      "id": "test_parcours_demande_complet",
+      "description": "Parcours complet : depuis l'accueil, « Décrire mon problème » ouvre le formulaire, la saisie est conservée à l'arrivée sur l'écran d'adresse, l'envoi crée la demande puis affiche l'écran de confirmation.",
+      "kind": "e2e",
+      "targetId": "act_enregistrer_demande"
+    },
+    {
+      "id": "test_adresse_creation_et_confirmation",
+      "description": "La validation du formulaire d'adresse crée l'adresse d'intervention et navigue vers l'écran « Demande envoyée » qui récapitule titre, référence, statut et photo.",
+      "kind": "e2e",
+      "targetId": "act_enregistrer_adresse_et_envoyer"
+    },
+    {
+      "id": "test_regle_demande_photo_et_telephone",
+      "description": "La création d'une demande est refusée si le titre, la description ou la photo manquent, ou si le téléphone de contact ne respecte pas le format français (+33 ou 0 suivi de 9 chiffres).",
+      "kind": "deterministic",
+      "targetId": "rule_demande_description_obligatoire"
+    },
+    {
+      "id": "test_regle_adresse_code_postal",
+      "description": "L'enregistrement d'une adresse est refusé si le code postal n'est pas composé de 5 chiffres, ou si la rue, le libellé ou la ville sont vides.",
+      "kind": "deterministic",
+      "targetId": "rule_adresse_valide"
+    },
+    {
+      "id": "test_regle_coordonnees_bornees",
+      "description": "Une latitude hors de [-90, 90] ou une longitude hors de [-180, 180] est rejetée à l'enregistrement de l'adresse.",
+      "kind": "deterministic",
+      "targetId": "rule_adresse_coordonnees"
+    },
+    {
+      "id": "test_regle_statut_cycle_de_vie",
+      "description": "Une demande dont le statut ou le niveau d'urgence n'appartient pas aux valeurs déclarées est rejetée, et la date de création est obligatoire.",
+      "kind": "deterministic",
+      "targetId": "rule_demande_statut_valide"
+    },
+    {
+      "id": "test_regle_client_contact",
+      "description": "L'enregistrement des coordonnées client est refusé si l'e-mail est mal formé ou si le téléphone ne respecte pas le format français.",
+      "kind": "deterministic",
+      "targetId": "rule_client_contact_valide"
+    },
+    {
+      "id": "test_slot_progression_invoque",
+      "description": "À l'ouverture du suivi d'une demande, le slot de progression est appelé avec les demandes et les événements de suivi, et ses sorties alimentent le titre et le sous-titre du bloc d'avancement.",
+      "kind": "contract",
+      "targetId": "act_calculer_avancement_demande"
+    },
+    {
+      "id": "test_slot_adresse_formatee_invoque",
+      "description": "À l'ouverture du suivi, le slot d'adresse est appelé avec les adresses et le pays par défaut, et sa sortie adresseFormatee remplit le sous-titre du bloc « Adresse d'intervention ».",
+      "kind": "contract",
+      "targetId": "act_formater_adresse_intervention"
+    },
+    {
+      "id": "test_slot_estimation_tarif_invoque",
+      "description": "À l'ouverture du détail d'une prestation, le slot d'estimation est appelé et sa fourchette de tarif s'affiche dans le sous-titre du bloc Estimation.",
+      "kind": "contract",
+      "targetId": "act_estimer_tarif_prestation"
+    },
+    {
+      "id": "test_suivi_historique_trie",
+      "description": "L'historique de suivi d'une demande est affiché du plus récent au plus ancien, avec statut en titre, message en sous-titre, auteur en badge et horodatage à droite.",
+      "kind": "deterministic",
+      "targetId": "blk_demande_suivi_liste"
+    },
+    {
+      "id": "test_annulation_demande",
+      "description": "Le bouton « Annuler ma demande » applique une mise à jour de la demande puis renvoie vers la liste « Mes demandes ».",
+      "kind": "e2e",
+      "targetId": "act_annuler_demande"
+    },
+    {
+      "id": "test_reference_prestation_lisible",
+      "description": "Le champ de référence prestation d'une demande affiche le nom de la prestation et non un identifiant brut, de même que l'adresse affiche son libellé et le client son nom.",
+      "kind": "deterministic",
+      "targetId": "fld_demande_prestation"
+    },
+    {
+      "id": "test_navigation_persistante",
+      "description": "La barre de navigation principale expose Accueil, Prestations, Mes demandes et Compte dans cet ordre, et reste présente sur chaque écran de l'application.",
+      "kind": "e2e",
+      "targetId": "nav_accueil"
+    },
+    {
+      "id": "test_etat_vide_demandes",
+      "description": "L'état vide de l'écran « Mes demandes » ne s'affiche que lorsqu'aucune demande n'existe, et son action ouvre le formulaire de description du problème.",
+      "kind": "deterministic",
+      "targetId": "blk_demandes_vide"
+    },
+    {
+      "id": "test_compte_enregistrement",
+      "description": "La validation du formulaire de compte met à jour les coordonnées client et reste sur l'écran Mon compte.",
+      "kind": "e2e",
+      "targetId": "act_enregistrer_compte"
+    },
+    {
+      "id": "test_suppression_compte",
+      "description": "Le bouton « Supprimer mon compte » déclenche la suppression du client et renvoie l'utilisateur vers l'accueil.",
+      "kind": "e2e",
+      "targetId": "act_supprimer_compte"
+    },
+    {
+      "id": "test_besoin_non_rendable_photo_probleme",
+      "description": "La prise de vue du problème via l'appareil photo ne peut pas être exécutée : le moteur n'exécute pas encore les effets capability (capabilitiesEmitCode: false). Le champ photo reste renseignable et la photo enregistrée est bien affichée en vignette et en en-tête.",
+      "kind": "contract",
+      "targetId": "blk_nouvelle_demande_form"
+    },
+    {
+      "id": "test_besoin_non_rendable_position_gps",
+      "description": "Le partage de la position GPS ne peut pas être exécuté : le moteur n'exécute pas encore les effets capability (capabilitiesEmitCode: false). Les champs latitude et longitude du formulaire d'adresse restent saisissables manuellement.",
+      "kind": "contract",
+      "targetId": "blk_adresse_form"
+    },
+    {
+      "id": "test_besoin_non_rendable_notifications_suivi",
+      "description": "L'activation des notifications de suivi ne peut pas être exécutée : le moteur n'exécute pas encore les effets capability (capabilitiesEmitCode: false). Le suivi reste consultable dans l'écran de la demande.",
+      "kind": "contract",
+      "targetId": "blk_demande_suivi_liste"
+    }
+  ],
+  "intent": {
+    "request": "Je suis plombier. Mes clients doivent pouvoir décrire leur problème avec des photos, partager leur adresse et position pour l'intervention, et suivre le statut de leur demande. Devis et paiement se font hors de l'app. En français.",
+    "requestLocale": "fr-FR",
+    "needs": [
+      {
+        "id": "need_decrire_probleme",
+        "statement": "Le client doit pouvoir décrire son problème de plomberie (nature, urgence, créneau souhaité, téléphone de contact) et envoyer sa demande au plombier.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_nouvelle_demande",
+            "blk_nouvelle_demande_header",
+            "blk_nouvelle_demande_form",
+            "ent_demande",
+            "fld_demande_titre",
+            "fld_demande_description",
+            "fld_demande_urgence",
+            "fld_demande_telephone_contact",
+            "act_ouvrir_nouvelle_demande",
+            "act_enregistrer_demande",
+            "rule_demande_description_obligatoire",
+            "data_demandes"
+          ]
+        }
+      },
+      {
+        "id": "need_photos_du_probleme",
+        "statement": "Le client doit pouvoir joindre des photos de son problème, et ces photos doivent être visibles sur la demande (liste et fiche de suivi) pour que le plombier prépare son matériel.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "fld_demande_photo",
+            "blk_nouvelle_demande_form",
+            "blk_accueil_demandes_en_cours",
+            "blk_demandes_liste",
+            "blk_confirmation_detail",
+            "blk_demande_detail_header",
+            "intg_media_demandes",
+            "test_regle_demande_photo_et_telephone"
+          ]
+        }
+      },
+      {
+        "id": "need_prise_de_vue_camera",
+        "statement": "Prendre la photo du problème directement avec l'appareil photo du téléphone depuis l'application.",
+        "resolution": {
+          "kind": "unexpressible",
+          "reason": "le moteur n'exécute pas encore les effets capability (capabilitiesEmitCode: false)"
+        }
+      },
+      {
+        "id": "need_partager_adresse_intervention",
+        "statement": "Le client doit pouvoir renseigner et partager l'adresse exacte de l'intervention (rue, complément, code postal, ville, instructions d'accès), et la retrouver sur sa demande.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_adresse_intervention",
+            "blk_adresse_header",
+            "blk_adresse_form",
+            "blk_adresse_enregistrees",
+            "blk_compte_adresses",
+            "ent_adresse",
+            "fld_adresse_rue",
+            "fld_adresse_code_postal",
+            "fld_adresse_ville",
+            "fld_adresse_instructions",
+            "fld_demande_adresse",
+            "act_enregistrer_adresse_et_envoyer",
+            "rule_adresse_valide",
+            "slot_adresse_formatee",
+            "act_formater_adresse_intervention",
+            "blk_demande_adresse_resume",
+            "data_adresses"
+          ]
+        }
+      },
+      {
+        "id": "need_enregistrer_position_geographique",
+        "statement": "La position géographique du lieu d'intervention (latitude, longitude) doit pouvoir être enregistrée, validée et transmise avec la demande.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "fld_adresse_latitude",
+            "fld_adresse_longitude",
+            "fld_adresse_position_partagee",
+            "blk_adresse_form",
+            "rule_adresse_coordonnees",
+            "slot_adresse_formatee",
+            "act_formater_adresse_intervention"
+          ]
+        }
+      },
+      {
+        "id": "need_capturer_position_gps",
+        "statement": "Capturer automatiquement la position GPS du client depuis l'appareil pour la joindre à la demande d'intervention.",
+        "resolution": {
+          "kind": "unexpressible",
+          "reason": "le moteur n'exécute pas encore les effets capability (capabilitiesEmitCode: false)"
+        }
+      },
+      {
+        "id": "need_suivre_statut_demande",
+        "statement": "Le client doit pouvoir suivre le statut de sa demande d'intervention, de l'envoi jusqu'à la fin du chantier.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_demandes",
+            "blk_demandes_liste",
+            "blk_demandes_vide",
+            "scr_demande_detail",
+            "blk_demande_detail_header",
+            "blk_demande_avancement",
+            "blk_demande_suivi_liste",
+            "ent_suivi",
+            "fld_demande_statut",
+            "fld_suivi_statut",
+            "fld_suivi_horodatage",
+            "act_ouvrir_demande_detail",
+            "act_ouvrir_demande_depuis_accueil",
+            "act_ouvrir_suivi_depuis_confirmation",
+            "slot_progression_demande",
+            "act_calculer_avancement_demande",
+            "rule_demande_statut_valide",
+            "rule_suivi_evenement_complet",
+            "data_suivis",
+            "nav_demandes"
+          ]
+        }
+      },
+      {
+        "id": "need_notification_changement_statut",
+        "statement": "Prévenir le client par notification push lorsque le statut de sa demande change (prise en charge, intervention planifiée, devis transmis).",
+        "resolution": {
+          "kind": "unexpressible",
+          "reason": "le moteur n'exécute pas encore les effets capability (capabilitiesEmitCode: false)"
+        }
+      },
+      {
+        "id": "need_devis_et_paiement_hors_app",
+        "statement": "Le devis et le paiement se font en dehors de l'application : aucune transaction dans l'app, seulement des tarifs indicatifs et une information claire au client.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_prestations",
+            "blk_prestations_liste",
+            "scr_prestation_detail",
+            "blk_prestation_detail_header",
+            "blk_prestation_estimation",
+            "blk_prestation_devis_note",
+            "blk_confirmation_header",
+            "slot_estimation_tarif",
+            "act_estimer_tarif_prestation",
+            "fld_prestation_tarif_indicatif",
+            "rule_prestation_tarif_positif",
+            "data_prestations"
+          ]
+        }
+      },
+      {
+        "id": "need_coordonnees_client_rappel",
+        "statement": "Le plombier doit pouvoir rappeler le client et lui transmettre le devis hors application : ses coordonnées (nom, e-mail, téléphone) doivent être enregistrées et modifiables.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_compte",
+            "blk_compte_header",
+            "blk_compte_form",
+            "ent_client",
+            "fld_client_nom",
+            "fld_client_email",
+            "fld_client_telephone",
+            "act_enregistrer_compte",
+            "act_supprimer_compte",
+            "rule_client_contact_valide",
+            "data_clients",
+            "nav_compte"
+          ]
+        }
+      },
+      {
+        "id": "need_application_en_francais",
+        "statement": "L'application et tous ses contenus doivent être en français.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "prj_plombier_express",
+            "scr_accueil",
+            "blk_accueil_header",
+            "nav_accueil"
+          ]
+        }
+      }
+    ]
+  }
+}
