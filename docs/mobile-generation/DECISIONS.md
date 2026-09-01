@@ -4775,3 +4775,398 @@ obtenue ». **FAUX.** Le second archétype prouvé est `coach-fitness` —
 
 **682 tests · 0 échec · typecheck EXIT=0 · lint EXIT=0 · 26/26 compilent ·
 4 gates racine vertes · A→H conformes · 6 preuves de rendu.**
+
+---
+
+## D-087 — `gate:composition` : une image déclarée et jamais affichée est un DÉFAUT — 2026-08-31
+
+**Défaut mesuré** : **23 champs `asset` sur 12 documents, rendus NULLE PART**. Le
+registre n'avait aucun bloc image, le runtime ne passait rien, les fixtures
+rendaient la chaîne vide.
+
+`FACT` — quatre étages fautifs simultanément : contrat, registre, runtime, fixtures.
+`CONCLUSION` — le besoin « menu avec photos » était **inexprimable**, pas ignoré.
+
+**Correction** : registre 1.2.0 — `imageFieldId` sur `list` et `detail_header`,
+`searchFieldId` + `searchPlaceholder` sur `list` ; primitive `AppImage`
+(`thumb` | `header`) créée parce que le cliquet d'étanchéité refusait tout style
+dans un bloc ; fixtures émettant une donnée-URI déterministe. `AIR_IMAGE_ORPHELINE`
+refuse désormais un champ `asset` déclaré sur une entité affichée et montré nulle part.
+
+**Cas-tueurs** : `kt-composition.mjs` — état sain, affichage retiré, image ajoutée
+non montrée ; contrôle positif inclus. Preuves de rendu : vignette par ligne,
+visuel d'en-tête, **contrôle négatif** (un écran sans champ image n'en rend aucune).
+
+---
+
+## D-088 — L'ENVELOPPE DOIT DIRE LA VÉRITÉ, ET LE PROMPT DOIT LA LIRE — 2026-09-01
+
+**Défaut mesuré** : le mot « image » apparaissait **0 fois** dans
+`EXECUTION_ENVELOPE_V1` alors que le moteur rendait déjà les images. Conséquence
+mesurée sur un document généré : le besoin « les photos doivent être visibles »
+déclaré **inexprimable**, au motif que « le registre ne sait rendre ni vignette ni
+visuel ». Le motif était faux.
+
+`FACT` — le prompt **REDISAIT** l'enveloppe en prose au lieu de la lire ; le moteur
+a gagné les images, la prose est restée.
+`FACT` — 42 promesses `test_besoin_non_rendable_*` sur **12 documents sur 12**.
+`CONCLUSION` — une enveloppe qui se tait ne protège pas le générateur : **elle le
+fait renoncer**.
+
+**Correction** : trois faits ajoutés à l'enveloppe — `imageRendering`, `listSearch`,
+`primaryNavigation` — chacun adossé à une prop du registre GELÉ et **observé au
+rendu avec contrôle négatif**. Le prompt **CALCULE** désormais sa surface depuis
+l'objet (`surfaceEnveloppe()`), il ne la paraphrase plus.
+
+**Cas-tueurs** : trois sens de l'erreur — annoncer ce qui n'existe pas, TAIRE ce qui
+existe, déclarer ce que le runtime n'exécute pas. Les trois ont été **vus échouer**.
+Un défaut trouvé dans le test lui-même : `toContain` laissait passer `imageUriX` ;
+durci en identifiants entiers.
+
+---
+
+## D-088b — L'INTENTION EST DUE À PARTIR DU CONTRAT QUI L'A CRÉÉE (D4) — 2026-09-01
+
+**Défaut mesuré** : `intent` est optionnel ; **12 documents sur 24 n'en portent
+aucune**. Un document sans intention n'a aucun besoin à perdre, donc aucune
+fidélité à démontrer — l'échappatoire la plus large possible.
+
+`FACT` — la migration 1.1.0 → 1.2.0 est une IDENTITÉ délibérée : inventer une
+demande fabriquerait la seule chose que ce champ existe pour ne plus perdre.
+
+**Correction** : `validateAirIntentRequirement` lit la version **DÉCLARÉE sur le
+document BRUT**, avant migration. À partir de 1.2.0 l'intention est due ; en deçà,
+l'artefact reste valide sous SON contrat. **Le corpus v2 gelé n'est pas réécrit.**
+
+**Cas-tueurs** : 7 — historique 1.0.0 toléré · 1.1.0 toléré · 1.2.0 refusé · neuf
+sans intention refusé · intention supprimée refusée · corpus v2 traversant sans plainte.
+
+---
+
+## D-089 — UN MOTIF VRAI PEUT ÊTRE UNE CAUSE FAUSSE — 2026-09-01
+
+**Défaut mesuré** : `unexpressible` acceptait **n'importe quelle chaîne non vide**.
+**45 besoins sur 130 (35 %)** écartés ainsi, dont 19 au motif d'une incapacité que
+le moteur n'a plus. Puis, une fois le fait exigé : un besoin d'IMAGE écarté au motif
+`capabilitiesEmitCode: false` — fait EXACT, cause FAUSSE — passait encore.
+
+`FACT` — la règle 11 du prompt disait elle-même « dans le doute, préfère
+`unexpressible` ».
+
+**Correction, en deux temps** :
+1. le motif doit **citer un fait de l'enveloppe** et ce fait doit **tenir** (valoir `false`) ;
+2. **causalité** — si le SUJET du besoin relève d'une capacité ✅, aucun motif ne
+   peut l'écarter. Le discriminant vient du corpus lui-même : *ACQUÉRIR* (« joindre
+   des photos, prise de vue ») est légitimement bloqué, *RESTITUER* (« les photos
+   doivent être visibles ») ne l'est pas.
+
+**Cas-tueurs** : 10, dont les cinq exigés. Un **faux positif de mon propre
+classifieur** trouvé et corrigé : « Prendre ou choisir la photo depuis l'appareil »
+était une acquisition mal reconnue.
+
+---
+
+## D-090 — TOUTE PROP QUI DÉSIGNE UN CHAMP DOIT ÊTRE VÉRIFIÉE COMME TELLE — 2026-09-01
+
+**Défaut mesuré** : `imageFieldId` et `searchFieldId` ont été ajoutés au
+`propsSchema` du registre 1.2.0 **sans être ajoutés à `fieldRefProps`** — la liste,
+et la seule, qui fait vérifier qu'une prop désigne un champ de l'entité LIÉE.
+
+`FACT` — pointer `imageFieldId` vers un champ inexistant, **ou vers celui d'une
+AUTRE entité**, passait la validation.
+`CONCLUSION` — pire encore : cela **FAISAIT TAIRE** le diagnostic d'image orpheline.
+**L'exigence fondatrice de tout ce chantier était contournable par une référence croisée.**
+
+**Correction** : les props sont vérifiées, et un cliquet d'exhaustivité rend
+l'omission impossible — *toute prop `*FieldId` doit figurer dans `fieldRefProps`*.
+
+**Le cliquet en a trouvé deux de plus, préexistantes** : `sortFieldId` et
+`filterFieldId` (D-065, omises depuis l'origine) — un tri sur un champ inexistant
+passait et devenait **silencieusement inopérant**.
+
+---
+
+## D-091 — L'IDENTITÉ N'EST PAS L'IDENTIFIANT — 2026-09-01
+
+**Défaut mesuré** : l'anti-amputation comparait des **ensembles d'identifiants**,
+sans aucune notion d'appartenance. Quatre transformations passaient en conservant
+l'identifiant : déplacer un champ vers une autre entité (ou une entité NEUVE non
+affichée), retourner une relation, changer `airSchemaVersion` pendant la réparation,
+basculer la résolution d'un besoin.
+
+`CONCLUSION` — déplacer un champ `asset` **éteignait `AIR_IMAGE_ORPHELINE`** sans
+qu'aucun nœud ne disparaisse.
+
+**Correction** : `signaturesDuDocument` — une **empreinte sémantique** par nœud
+(`champ:<type>@<entité>`, `relation:<de>→<vers>`, `bloc:<type>@<écran>/<entité>`,
+`action:<effet>`, `besoin:<résolution>`, `air:<version>`). Elle ne contient **aucun
+libellé** : renommer reste libre.
+
+**Cas-tueurs** : 8, contrôle positif compris. Antérieurement, D-091a avait fermé la
+**dénaturation** (un champ `asset` retypé en `string` garde son identifiant et perd
+toute obligation).
+
+---
+
+## D-092 — UN BESOIN SATISFAIT DOIT LAISSER UNE TRACE — 2026-09-01
+
+**Défaut mesuré** : un besoin « les photos doivent être visibles » déclaré
+`satisfied` et rattaché à un écran **VIVANT mais sans rapport** passait F4. Les
+nœuds existent, ils fonctionnent, et aucune image n'est montrée nulle part.
+
+`CONCLUSION` — la pertinence des `nodeIds` est indécidable ; **la trace du mécanisme
+dans le document ne l'est pas.**
+
+**Correction** : si le sujet d'un besoin engage une capacité, le document doit en
+porter la trace — au moins un `imageFieldId`, un `searchFieldId`, une
+`navigation.primary`. Nouvel état `satisfaction_non_prouvee`.
+
+**Cas-tueurs** : 4, dont deux contrôles positifs (besoin hors capacités, besoin
+d'acquisition — exiger d'eux une trace serait un faux positif).
+
+---
+
+## D-093 — LE PÉRIMÈTRE EST DANS LE CHEMIN, PAS DANS LE TEXTE — 2026-09-01
+
+**Défaut RÉVÉLÉ PAR LA GÉNÉRATION P5 (2,4799 $), que quatre passes d'audit hors
+ligne n'avaient pas produit.**
+
+`FACT` — le garde autorisait une mutation si l'identifiant du nœud apparaissait
+**quelque part** dans le texte des diagnostics. Faux dans les deux sens : trop lâche
+(un id cité autorisait TOUT sur ce nœud), trop strict (quand le diagnostic nomme la
+**valeur à remplacer**, la réparation attendue était refusée).
+
+`FACT` — mesuré : `AIR_TEST_TARGET_UNKNOWN` sur `expectedTests[0].targetId`, message
+« cible "blk_accueil_urgences" introuvable ». Un bloc n'est pas une cible valide :
+re-pointer vers l'écran **ÉTAIT** la correction. **16 réparations légitimes rejetées,
+document laissé invalide.**
+
+**Correction** : le **CHEMIN** du diagnostic désigne le nœud ET la propriété
+corrigeable. *Mutation autorisée ⟺ elle porte sur une propriété qu'un diagnostic
+désigne.* Un chemin sans propriété terminale désigne le nœud entier.
+
+**Cas-tueurs** : matrice de 16 cas + **rejeu du cas RÉEL P5** sur les artefacts
+payés — une régression échouera sur des données irreproductibles sans repayer.
+
+---
+
+## D-094 — LE SUJET NE SUFFIT PAS : IL FAUT LE VERBE — 2026-09-01
+
+**Défaut mesuré** en cherchant, ailleurs, la classe d'erreur révélée par P5 :
+« supprimer une photo », « chaque photo est horodatée », « archiver les photos »
+étaient tous classés comme besoins d'AFFICHAGE. Aucun n'exige de montrer quoi que
+ce soit.
+
+**Correction** : `imageRendering` exige un **verbe de restitution** (visible, voir,
+afficher, montrer, illustrer…). `listSearch` et `primaryNavigation` n'en ont pas
+besoin — leurs marqueurs de sujet SONT déjà des verbes.
+
+---
+
+## D-095 — SOURCE UNIQUE DES ÉTATS DE BLOC (F5) — 2026-09-01
+
+**Défaut mesuré** : trois sources parlaient des états — le CONTRAT (`contracts.ts`),
+l'ENVELOPPE (`reachableBlockStates`), et `BLOCKS[].states`, **une recopie à la main
+gelée en Phase 3 et jamais remise à jour**. `detail_header` déclarait 1 état sur 4,
+`form` 3 sur 5. Six « divergences » en découlaient.
+
+`FACT` — l'invariant réel, *atteignable ⊆ rendable*, était **TENU sur les 6 blocs**.
+`CONCLUSION` — **F5 n'était pas un défaut du moteur** : c'était une alarme produite
+par une liste périmée. `form.submitting` est rendable et non atteignable — LÉGITIME.
+
+**Correction (solution C)** : les états sont des tableaux `const` dans
+`contracts.ts`, les types en **DÉRIVENT**, et le registre pointe sur ces mêmes
+tableaux. Deux assertions de type encadrent les unions discriminées : elles échouent
+**à la compilation** si tableau et union divergent.
+
+**Conséquence** : `blockStatesDeclared` passe de 3 à 5 pour `form` — non parce que le
+moteur a changé, mais parce que la déclaration cesse de sous-déclarer.
+
+---
+
+## D-096 · D-097 — LES FRONTIÈRES DE MOT SONT ASCII, LE CORPUS EST FRANÇAIS — 2026-09-01
+
+**Défaut mesuré, structurel** : `\b` s'appuie sur `\w`, qui ne contient **aucune
+lettre accentuée**. `/\bclichés?\b/i` ne reconnaissait donc PAS « cliché » — après
+« é », les deux côtés sont non-mots, il n'y a pas de frontière. Même défaut sur
+« apparaît » et « présenté ».
+
+`CONCLUSION` — **un classifieur écrit pour du français, avec des frontières ASCII,
+ratait silencieusement ses propres termes.**
+
+Second effet, trouvé en corrigeant le premier : `\w*` s'arrête **avant** l'accent,
+donc « filtrée » échouait aussi une fois la frontière Unicode posée.
+
+**Correction** : 27 motifs passent par un constructeur à frontières Unicode
+(`(?<!\p{L})…(?!\p{L})`, drapeau `u`) ; les suffixes s'écrivent `\p{L}*`.
+Trois bogues de marqueurs corrigés au passage : `\bgalerie\b` classait « galerie SUR
+LA FICHE » comme acquisition ; `\bvoir\b` ratait « voient » ; « cliché »,
+« miniature », « thumbnail » absents.
+
+**Mesure** : corpus 9 → 13 besoins sur 17 correctement classés · adversarial 8 → 6
+faux négatifs sur 8 · **0 faux positif**.
+
+---
+
+## D-098 — LA FONCTION PRIME SUR LE NOM · LE CHEMIN SUIT LE PORTEUR — 2026-09-01
+
+**Défaut mesuré sur `coach-fitness`** : « Illustrer les programmes par des visuels
+(couverture, vignette **VIDÉO**) » était classé ACQUISITION. « vidéo » y est un NOM
+— la couverture d'une vidéo, qu'on AFFICHE — pas la fonction demandée.
+
+`CONCLUSION` — le besoin n'était plus protégé, et **supprimer `fld_prog_couverture`
+au lieu de l'afficher devenait indolore**.
+
+**Correction a** : l'acquisition ne fait veto **que si aucune restitution n'est
+demandée**. « prendre une photo » reste une acquisition ; « prendre une photo PUIS
+L'AFFICHER » demande aussi un affichage.
+
+**Correction b** : `AIR_IMAGE_ORPHELINE` offrait deux issues et pointait le CHAMP —
+le garde (D-093) autorisait donc sa **suppression**. Quand un **PORTEUR** existe
+(`list` ou `detail_header` lié à l'entité), le chemin désigne **ce bloc** :
+supprimer le champ sort du périmètre. Sans porteur, la suppression reste permise.
+
+`CONCLUSION` — **b ne dépend pas du classifieur** : vérifié en reformulant le besoin
+en périphrase que le classifieur rate, la suppression reste refusée. La faiblesse
+lexicale ne peut plus ouvrir d'amputation.
+
+---
+
+## D-099 — LA BARRE PERSISTANTE EST UNE RACINE D'ATTEIGNABILITÉ — 2026-09-01
+
+**Défaut RÉVÉLÉ PAR LA GÉNÉRATION P6 (2,7396 $).**
+
+`FACT` — `reachableScreens` ne connaissait que `navigate` et `mutation`. Un écran
+atteignable **uniquement par un onglet** de `navigation.primary` était déclaré MORT.
+`scr_prestations` et `scr_compte`, plus **trois promesses accusées à tort**.
+`FACT` — le moteur les atteint : la barre est rendue sur CHAQUE écran et presser un
+onglet navigue — **observé au rendu, contrôle négatif inclus**.
+
+`CONCLUSION` — **le document était CORRECT ; l'oracle n'avait pas suivi AIR 1.6.0.**
+
+**Correction** : les destinations de `navigation.primary` sont des racines, lues
+génériquement depuis les routes déclarées. F1 passe de 39/42 à **42/42**.
+
+**Démonstration a posteriori, décisive** : la requête « un écran destination de
+`primary` est-il déclaré mort ? » aurait révélé le défaut **gratuitement, sur 2
+documents sur 2**, dont un présent au dépôt AVANT P6. **C'est ce qui a fondé le
+harnais d'invariants.**
+
+---
+
+## D-100 — UN NŒUD VIT PAR SON PROPRIÉTAIRE — 2026-09-01
+
+**Défaut mesuré** : `evaluateIntentCoverage` ne mesurait que les nœuds dont la mort
+est directement observable — écrans, actions, entités. Blocs et champs étaient
+écartés au motif qu'ils « vivent par ce qui les porte » : **l'observation était
+juste, l'inférence n'était jamais faite.**
+
+`FACT` — un besoin rattaché à un ÉCRAN mort est signalé ; le même besoin rattaché à
+un **BLOC DE CE MÊME ÉCRAN** passait « satisfait ». N'importe quel besoin pouvait
+être satisfait en citant un bloc au lieu de son écran.
+
+**Correction** : le propriétaire est lu dans la **STRUCTURE** (bloc → écran, champ →
+entité), jamais dans un préfixe d'identifiant, puis mesuré.
+
+---
+
+## D-101 · D-102 — CLIQUETS ANTI-DÉRIVE DES ORACLES — 2026-09-01
+
+`FACT` — `controls()` est **immunisé** : il lit `envelope.effects` et
+`envelope.triggers`. `reachableScreens` **énumère ses effets en dur** — c'est la
+structure même qui a produit D-099.
+
+**Correction** : toucher aux effets ou déclencheurs de l'enveloppe fait échouer un
+test qui **oblige à statuer** sur l'atteignabilité. Deux autres dérivations recopiées
+sont mises sous cliquet : la liste d'affordances de `controls()` et `ALL_TRIGGERS`.
+
+**Harnais d'invariants** (`gate:invariants`, 7ᵉ gate, bloquante en CI) : 6
+invariants × 24 documents, chacun confronté à un **signal indépendant**.
+**Trois de mes propres invariants étaient des tautologies** — leurs contrôles
+négatifs l'ont démontré ; R1 refondé sur un témoin indépendant, D1 sur
+`buildDemoFixtures`, **D2 retiré**. *Un invariant qui ne peut pas échouer n'est pas
+un invariant.*
+
+---
+
+## D-103 — LE PLAFOND MORD ENTRE CHAQUE APPEL — 2026-09-01
+
+**Défaut mesuré** : le plafond de 25 $ était vérifié **une seule fois**, au début de
+chaque intention, et le coût additionné **après** l'intention entière. Une intention
+unique comparait donc le plafond à ZÉRO puis courait sans contrôle.
+
+`FACT` — P6 a coûté **2,7396 $ pour 2,50 $ annoncés**, sans qu'aucun mécanisme ne
+puisse l'interrompre. Exposition réelle d'un lancement : **~16,80 $** (28 appels,
+16 000 jetons chacun).
+
+**Correction** : gouverneur en dollars, testable unitairement. Contrôle **AVANT**
+(refus d'engager un appel dont le coût MAXIMAL franchirait le plafond) et **APRÈS**
+(coût réel ajouté, plafond revérifié). Les retries passent par la même porte.
+Trois issues distinctes — *terminée · rejetée · interrompue-budget* — et `valid`
+**impossible** après interruption. Budget réglable : `BUDGET_USD=3.5`.
+
+**Garantie exacte, énoncée telle qu'elle est** : le contrôle avant s'appuie sur une
+ESTIMATION de l'entrée ; le dépassement reste possible **d'au plus un appel**, et il
+est alors **détecté et interrompu**. Un de mes tests affirmait « jamais de
+dépassement » — c'était faux, l'affirmation a été corrigée, pas l'estimation gonflée.
+
+Second trou fermé : l'assemblage partiel de l'émission initiale est conservé — les
+sections déjà **payées** ne sont plus jetées.
+
+---
+
+## D-104 — UN DÉCLENCHEUR `ui` EXIGE UNE AFFORDANCE — 2026-09-01
+
+**Défaut RÉVÉLÉ PAR LA GÉNÉRATION P8 (2,4805 $), attrapé par le harnais (C2).**
+
+`FACT` — trois actions déclarées avec `trigger:{kind:"ui", blockId:<detail_header>}`.
+Le validateur vérifiait que le bloc EXISTE, jamais qu'il puisse être actionné.
+`FACT` — prouvé à trois niveaux : `detail_header.actionRefProps = []` ·
+`DetailHeaderBlock` ne contient aucun `onPress` · **l'action apparaît 0 fois dans
+l'écran émis**. Aucune prop ne les référence, aucun autre déclencheur, aucune
+promesse ne les cible.
+
+**Correction** : `BlockDefinition.porteAffordance`, déclaré au registre et **lié par
+cliquet au contrat** — *un bloc porte une affordance ssi son contrat déclare un
+gestionnaire `on*`*. `BLOCS_AFFORDANTS` en dérive ; le validateur et `controls()`
+la lisent tous deux au lieu de recopier chacun sa liste.
+
+**Cas-tueurs** : 8. Trois tests ont échoué **en réclamant leur dû** — le cliquet
+d'exhaustivité de D-093, le cliquet D-102 (qui vérifie désormais la DÉRIVATION), et
+la fixture de `orpheline-porteur` repointée sur l'artefact préservé d'avant P8.
+
+---
+
+## D-105 — `executed` EXIGE UN DISPATCH RÉEL — 2026-09-01
+
+**Défaut mesuré sur les 24 documents** : `controls()` calculait `executed` à partir
+de la seule enveloppe. Or **trois conventions de câblage coexistent**, dérivables du
+registre via `actionRefProps` : `button` et `empty_state` dispatchent par leur prop
+`actionId` — **le déclencheur y est décoratif** — tandis que `form` et `list`
+résolvent par `uiActionsByBlock`.
+
+`FACT` — 192 accords · 112 réutilisations légitimes · **17 DÉSACCORDS**, où l'action
+déclare une origine qui dispatche AUTRE CHOSE. Toutes déclarées `executed = true`,
+**jamais appelées par le runtime**. Faux vert contaminant F1.
+
+**🔴 Ma première correction était au mauvais étage.** J'avais ajouté un refus au
+validateur : **30 tests en échec**, corpus v2 gelé devenu invalide — et le
+versionnage n'était pas disponible ici, les documents v2 étant **migrés en 1.6.0
+avant validation**. Refuser aurait **détruit la base de comparaison historique**.
+
+**Correction retenue** : `executed` exige `dispatcheReellement`, dérivé du registre.
+**L'oracle doit dire la vérité ; les gates en tirent les conséquences.**
+
+**Convergence prouvée** : 396 contrôles · 307 déclarés exécutés · **0 mensonge**.
+
+**Édition consciente** : cliquet du corpus gelé 45 → 46 fantômes. Le corpus n'a pas
+changé — **l'instrument a cessé de mentir**. `controlsVisible` reste à 103.
+
+**C3 retiré du harnais** : depuis que `controls()` dérive la même règle, il
+réénumérerait la logique qu'il vérifie — tautologie démontrée par son contrôle
+négatif devenu aveugle. La vérification indépendante est `gate:controles`, qui
+**monte** l'application et presse — sans partager une ligne de code.
+
+**Règles B-bis et B-ter** ajoutées au prompt : un déclencheur `ui` exige un bloc
+actionnable ; pour `button`/`empty_state`, la prop et le déclencheur désignent la
+MÊME action, la réutilisation par plusieurs blocs restant explicitement permise.

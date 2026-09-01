@@ -629,3 +629,113 @@ registres, runtime copié) **non touchées**.
 - ❌ Toute construction d'exécution (mutations, persistance, capabilities,
   slots) — chacune exige sa propre validation (D-017).
 - ❌ Toute validation appareil se réclamant du mot « fonctionnelle ».
+
+---
+
+# ÉTAT AU 2026-09-01 — CHANTIER P5 → P9 : FIDÉLITÉ ET COUVERTURE DES ORACLES
+
+> **Point d'entrée pour une nouvelle session.** Ce bloc consigne un chantier
+> conduit sur cinq générations API réelles et une quinzaine de passes d'audit
+> hors ligne. Les 19 décisions correspondantes sont **D-087 à D-105** dans
+> `DECISIONS.md`. Les artefacts payés sont dans `docs/elite-protocol/evidence/`.
+
+## Ce qui a été démontré
+
+🟢 **Le générateur CONSTRUIT au lieu de renoncer.** C'était le `NON DÉMONTRÉ`
+central du chantier ; il est levé sur données réelles. Mesuré sur P8
+(`coach-fitness`) : `imageFieldId` **0 → 5**, recherche câblée sur la bonne entité,
+**0** promesse `test_besoin_non_rendable_*` (contre 3), 1 seul besoin inexprimable
+et légitime (achat intégré), **0 image orpheline**.
+
+🟢 **Le pipeline ne peut plus réparer par amputation.** 17 classes de contournement
+refusées, 3 contrôles positifs verts — suppression, dénaturation, déplacement,
+fusion, éclatement, inversion de relation, changement de version, motif hors sujet.
+
+🟢 **L'oracle et le runtime convergent** : 396 contrôles, **0 mensonge**.
+
+🟢 **F5 est fermé par construction** — la duplication de source est supprimée, pas
+surveillée. L'invariant *atteignable ⊆ rendable* est tenu sur les 6 blocs.
+
+## Ce qui reste NON DÉMONTRÉ
+
+🔴 **Aucune génération n'a encore produit un `coach-fitness` valide.** P8 a réussi
+mais portait deux défauts alors invisibles ; P9 les a **évités tous les deux** et
+s'est arrêtée sur une **erreur 529 d'infrastructure** pendant la réparation.
+🔴 Archétype Réservation · rendu physique sur appareil · largeur des cartes.
+🔴 Phase 10B reste **OUVERTE** : F1/F4/F5 sont désormais câblés en CI, mais les
+gates de fidélité restent rouges sur des défauts RÉELS du corpus.
+
+## Les cinq générations réelles — coût total 14,8831 $
+
+| | document | issue | coût |
+|---|---|---|---|
+| — | resto-quartier · plombier-urgence ×2 | valides | 5,4113 $ |
+| **P5** | plombier-urgence | rejetée par un garde **trop strict** → D-093 | 2,4799 $ |
+| **P6** | plombier-urgence | `valid=true`, révèle D-099 | 2,7396 $ |
+| **P8** | coach-fitness | `valid=true`, révèle D-104 et D-105 | 2,4805 $ |
+| **P9** | coach-fitness | **529 Overloaded** pendant la réparation | 1,7718 $ |
+
+**Trois générations sur cinq ont révélé un défaut de nos propres instruments.**
+C'est ce constat qui a fondé le **harnais d'invariants** (`gate:invariants`, 7ᵉ gate
+bloquante) : il a été démontré que le défaut de P6 était détectable **gratuitement**,
+sur des documents déjà présents au dépôt.
+
+## État P9 — à ne PAS présenter comme une génération validée
+
+```
+1,7718 $ · 7 appels · 431 s · erreur 529 "Overloaded" PENDANT la réparation
+28 diagnostics en 1re passe · réparation JAMAIS terminée
+document initial conservé (evidence/p9/) · corpus NON modifié
+B-bis : actions ui sur bloc sans affordance   P8 : 3 → P9 : 0
+B-ter : incohérences prop ↔ déclencheur       P8 : 4 → P9 : 0
+```
+
+**Mesure partielle mais concluante sur son objet** : les deux défauts de P8 ont
+disparu du document que le modèle a écrit seul. Ce qui manque est la fin mécanique.
+
+## Vérifications au 2026-09-01
+
+```
+842 tests · 0 échec     typecheck EXIT=0     lint EXIT=0
+7 gates : controles 🟢 · navigation 🟢 · composition 🟢
+          app-compile 🔴 25/26 · app-rendu 🔴 · fidelite 🔴 · invariants 🔴
+rejeux des générations payées : P5 4/4 · P6 6/6
+corpus v2 GELÉ : 0 fichier modifié
+plafonds INCHANGÉS : ORPHELINES 38 · BOUTONS_NAV 121 · FANTÔMES 180
+```
+
+Les quatre gates rouges portent sur **le seul document `coach-fitness`**, dont les
+défauts sont désormais **détectés** — c'est le comportement attendu, pas une
+régression.
+
+## 🟠 PROBLÈMES CONNUS — à arbitrer, non corrigés
+
+**1. `issueGeneration` classe une erreur 529 comme `"terminee"`.** Il ne connaît que
+trois états et l'erreur technique retombe sur le plus favorable. **Impact réel** : un
+journal peut affirmer qu'une génération s'est terminée alors qu'elle a échoué —
+exactement le faux positif que ce chantier traque partout ailleurs.
+
+**2. `assemblagePartiel` ne couvre que l'émission initiale.** Le 529 de P9 a frappé
+pendant la **réparation** : les sections déjà réparées et **payées** sont perdues.
+Et `results/coach-fitness.attempt2.air.json` est un **reliquat de P8** qu'une lecture
+rapide prendrait pour un artefact P9. **Impact réel** : une preuve payée détruite et
+un artefact trompeur laissé en place.
+
+**3. `empty_state` échoue silencieusement** quand sa prop `actionId` manque, là où
+`button` jette. Divergence de robustesse du runtime.
+
+**4. Classification lexicale** — 6 faux négatifs adversariaux sur 8 subsistent
+(périphrases, synonymes). **Ils n'ouvrent aucune suppression** : la protection
+D-098b est structurelle et ne dépend pas du classifieur.
+
+## Prochaine étape autorisée
+
+**Une seule génération**, `coach-fitness`, index **2** :
+
+```
+BUDGET_USD=3.5 node benchmarks/air-emission/emit-v3.mjs 2 3
+```
+
+Attendu ~2,50 $ · exposition bornée ~4,10 $ (D-103). Elle ne mesurerait rien de
+nouveau sur le générateur — P9 a déjà répondu — elle **finirait le travail**
+interrompu par la panne. **Aucune dépense sans autorisation explicite.**

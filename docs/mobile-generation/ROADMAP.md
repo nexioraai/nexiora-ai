@@ -256,6 +256,26 @@ prouvées**, elles ne sont **pas câblées dans l'Oracle**. Rien n'impose encore
 verdict au pipeline. Tant que ce câblage n'est pas fait, un document refusé par
 elles peut toujours être compilé et livré.
 
+> ### ⬆️ MISE À JOUR 2026-09-01 — LA RÉSERVE EST LEVÉE (D-088 → D-105)
+>
+> **F1 et F4 sont désormais CÂBLÉS** : `gate:fidelite` les exécute et **bloque la
+> CI**, sans aucun plafond — la fidélité n'est pas une dette tolérable. Une 7ᵉ gate,
+> `gate:invariants`, a été ajoutée : elle confronte chaque oracle GATÉ à un signal
+> indépendant sur les 24 documents.
+>
+> **F5 : le critère était mal formulé.** L'invariant réel — *atteignable ⊆ rendable*
+> — est **TENU sur les 6 blocs** ; les « 8 états sur 11 » venaient d'une recopie
+> périmée du contrat dans `BLOCKS[].states`. **Duplication supprimée à la source**
+> (D-095) : les états sont des tableaux `const` dont les types dérivent, et le
+> registre pointe dessus. `form.submitting` reste rendable sans être atteignable —
+> c'est **légitime**, les deux sources disent vrai.
+>
+> **La phase reste OUVERTE** : les gates de fidélité sont rouges sur des défauts
+> **RÉELS** du corpus (F1 sur 13 documents, F4 sur 22, 15 motifs d'inexprimabilité
+> réfutés). Leur fermeture exige des régénérations, pas une correction d'instrument.
+>
+> Détail complet : `STATUS.md`, bloc « CHANTIER P5 → P9 ».
+
 ### Ce que cette phase NE fait PAS
 
 Elle **ne mesure pas l'énoncé** des promesses (« le total additionne
