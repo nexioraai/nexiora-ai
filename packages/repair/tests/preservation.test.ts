@@ -18,6 +18,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { issueGeneration } from "../src/budget-usd.ts";
 import {
+  CLE_CORPS_TRONQUE,
   CLE_EMISSION,
   CLE_REPARATION,
   PHASES_ARTEFACT,
@@ -225,6 +226,75 @@ describe("provenance — un artefact porte sa génération, ou n'est pas une pre
   });
 });
 
+describe("corps d'une réponse TRONQUÉE — la preuve payée survit", () => {
+  // CAUSE RACINE : une réponse arrêtée par `max_tokens` était levée en erreur
+  // AVANT tout traitement de son contenu. Les jetons de sortie — FACTURÉS —
+  // disparaissaient. Mesuré sur `toiletteur-chiens` : 16 000 jetons produits,
+  // jetés, et le facteur de sur-production est resté indéterminé faute de trace.
+  const corpsTronque = { label: "x:ecrans", jetonsSortie: 16000, corps: '{"screens":[{"id":"scr_a"' };
+
+  it("🔴 CAS-TUEUR : le corps voyage avec l'erreur de troncature", () => {
+    const erreur = new Error("RÉPONSE TRONQUÉE");
+    attacherPartiel(erreur, CLE_CORPS_TRONQUE, corpsTronque);
+    const relu = partielDeLErreur(erreur, CLE_CORPS_TRONQUE) as typeof corpsTronque;
+    expect(relu).toBeDefined();
+    expect(relu.corps).toBe(corpsTronque.corps);
+    expect(relu.jetonsSortie).toBe(16000);
+  });
+
+  it("🔴 CONTRÔLE NÉGATIF : SANS attache, le corps est PERDU — l'état d'avant", () => {
+    const erreur = new Error("RÉPONSE TRONQUÉE");
+    expect(partielDeLErreur(erreur, CLE_CORPS_TRONQUE)).toBeUndefined();
+  });
+
+  it("🔴 le corps est conservé VERBATIM — aucune réparation silencieuse", () => {
+    const erreur = new Error("t");
+    attacherPartiel(erreur, CLE_CORPS_TRONQUE, corpsTronque);
+    const relu = partielDeLErreur(erreur, CLE_CORPS_TRONQUE) as typeof corpsTronque;
+    // Le JSON est COUPÉ : il doit le rester. Conserver sert à comprendre,
+    // jamais à faire passer.
+    expect(() => {
+      JSON.parse(relu.corps);
+    }).toThrow();
+    expect(relu.corps.endsWith('"scr_a"')).toBe(true);
+  });
+
+  it("un corps VIDE ne provoque aucune exception secondaire", () => {
+    const erreur = new Error("t");
+    attacherPartiel(erreur, CLE_CORPS_TRONQUE, { label: "y", jetonsSortie: 0, corps: "" });
+    const relu = partielDeLErreur(erreur, CLE_CORPS_TRONQUE) as typeof corpsTronque;
+    expect(relu.corps).toBe("");
+  });
+
+  it("les trois preuves ne se confondent pas — trois clés distinctes", () => {
+    const erreur = new Error("t");
+    attacherPartiel(erreur, CLE_CORPS_TRONQUE, corpsTronque);
+    expect(partielDeLErreur(erreur, CLE_CORPS_TRONQUE)).toBeDefined();
+    expect(partielDeLErreur(erreur, CLE_EMISSION)).toBeUndefined();
+    expect(partielDeLErreur(erreur, CLE_REPARATION)).toBeUndefined();
+  });
+
+  it("🔴 une troncature ne devient JAMAIS un succès : l'issue reste `echec-technique`", () => {
+    const r = issueGeneration({
+      interrompuBudget: false,
+      erreurTechnique: true,
+      reparationRejetee: false,
+      sansDiagnostic: false,
+    });
+    expect(r.issue).toBe("echec-technique");
+    expect(r.valid).toBe(false);
+  });
+
+  it("la phase d'artefact existe et se relit depuis le nom seul", () => {
+    const nom = nomArtefact({
+      slug: "x",
+      runId: "2026-09-01T18-24-05-841Z",
+      phase: "reponse-tronquee",
+    });
+    expect(provenanceDuNom(nom)?.phase).toBe("reponse-tronquee");
+  });
+});
+
 describe("cliquet de véracité — le harnais d'émission RÉEL est confronté au code", () => {
   // Un module pur prouvé ne prouve rien si le harnais ne l'appelle pas. Ce
   // cliquet lit le SOURCE de `emit-v3.mjs` : il tombe si un chemin payé
@@ -255,6 +325,29 @@ describe("cliquet de véracité — le harnais d'émission RÉEL est confronté 
   it("🔴 les DEUX partiels sont relus dans le rattrapage d'erreur", () => {
     expect(code).toContain("preservation.partielDeLErreur(error, preservation.CLE_EMISSION)");
     expect(code).toContain("preservation.partielDeLErreur(error, preservation.CLE_REPARATION)");
+  });
+
+  it("🔴 le corps d'une réponse TRONQUÉE est attaché à l'erreur, pas jeté", () => {
+    expect(code).toContain("preservation.CLE_CORPS_TRONQUE");
+    // L'attache se fait AVANT le `throw`, sur l'erreur de troncature elle-même.
+    const bloc = code.slice(code.indexOf('stop_reason === "max_tokens"'));
+    expect(bloc.slice(0, 1400)).toContain("preservation.attacherPartiel(tronquee");
+    // Et le rattrapage le relit pour le déposer.
+    expect(code).toContain("preservation.partielDeLErreur(error, preservation.CLE_CORPS_TRONQUE)");
+  });
+
+  it("🔴 le corps conservé est VERBATIM — `texteBrut` ne répare rien", () => {
+    const fn = code.slice(code.indexOf("function texteBrut"), code.indexOf("function extractJson"));
+    expect(fn).toContain(".join(\"\")");
+    // `extractJson` répare pour parser ; `texteBrut` ne doit RIEN faire de tel.
+    expect(fn).not.toContain(".trim()");
+    expect(fn).not.toContain("replace(");
+    expect(fn).not.toContain("JSON.parse");
+  });
+
+  it("🟢 le chemin NOMINAL est inchangé — `extractJson` reste seul à parser", () => {
+    expect(occurrences("JSON.parse(cleaned)")).toBe(1);
+    expect(occurrences("function extractJson")).toBe(1);
   });
 
   it("🔴 tout artefact déposé porte son `runId` et ne peut pas en écraser un autre", () => {

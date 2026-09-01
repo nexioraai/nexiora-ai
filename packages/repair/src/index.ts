@@ -68,6 +68,7 @@ export {
   type TarifsUSD,
 } from "./budget-usd.ts";
 export {
+  CLE_CORPS_TRONQUE,
   CLE_EMISSION,
   CLE_REPARATION,
   PHASES_ARTEFACT,

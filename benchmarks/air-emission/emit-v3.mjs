@@ -385,10 +385,25 @@ async function callPart(part, system, userText, label) {
       // était COUPÉ. Nommer la cause au bon endroit évite de chercher un défaut
       // de schéma là où il n'y a qu'un plafond de jetons.
       if (response.stop_reason === "max_tokens") {
-        throw new Error(
+        // ── LE CORPS PAYÉ VOYAGE AVEC L'ERREUR (2026-09-01).
+        //
+        // CAUSE RACINE : cette erreur était levée sans son contenu. Les jetons
+        // de sortie — FACTURÉS — disparaissaient avec elle. Diagnostiquer la
+        // troncature de `toiletteur-chiens` a exigé de déduire ce qu'un
+        // artefact aurait dit, et le facteur manquant est resté indéterminé.
+        //
+        // Le corps est attaché, JAMAIS interprété : la troncature reste un
+        // échec, l'erreur est la même, seule la preuve survit. Même mécanisme
+        // que `avecPreservation` — on n'en invente pas un second.
+        const tronquee = new Error(
           `RÉPONSE TRONQUÉE sur "${label}" : plafond de ${String(MAX_TOKENS)} jetons atteint ` +
             `(sortie ${String(response.usage?.output_tokens ?? "?")} jetons).`,
         );
+        throw preservation.attacherPartiel(tronquee, preservation.CLE_CORPS_TRONQUE, {
+          label,
+          jetonsSortie: response.usage?.output_tokens ?? null,
+          corps: texteBrut(response),
+        });
       }
       // D-103 · APRÈS L'APPEL — le coût RÉEL est ajouté immédiatement, puis le
       // plafond est revérifié. Un appel déjà facturé n'est jamais « oublié »
@@ -409,6 +424,19 @@ async function callPart(part, system, userText, label) {
     }
   }
   throw new Error(`tous les niveaux de schéma refusés pour ${part.name}`);
+}
+
+/**
+ * TEXTE REÇU, VERBATIM. Ni `trim`, ni retrait de clôture Markdown, ni
+ * complétion : `extractJson` répare pour parser, celle-ci ne répare RIEN.
+ * Un corps tronqué doit être conservé tel qu'il est arrivé, sinon il ne
+ * témoigne plus de ce que le modèle a réellement produit.
+ */
+function texteBrut(response) {
+  return (response?.content ?? [])
+    .filter((b) => b.type === "text")
+    .map((b) => b.text)
+    .join("");
 }
 
 function extractJson(response) {
@@ -837,6 +865,20 @@ for (const intention of INTENTIONS.slice(start, end)) {
     }
     // P9 — LA RÉPARATION AUSSI. C'est là que le 529 a frappé, et c'est
     // exactement ce travail-là qui a été perdu.
+    // Le corps d'une réponse tronquée est une PREUVE PAYÉE : il est déposé
+    // comme tel. Ce n'est pas un document — il est incomplet par définition.
+    const tronque = preservation.partielDeLErreur(error, preservation.CLE_CORPS_TRONQUE);
+    if (tronque !== undefined) {
+      journal.reponseTronquee = {
+        label: tronque.label,
+        jetonsSortie: tronque.jetonsSortie,
+        octets: tronque.corps.length,
+        fichier:
+          tronque.corps.length > 0
+            ? ecrireArtefact(intention.slug, "reponse-tronquee", tronque)
+            : undefined,
+      };
+    }
     const partielReparation = preservation.partielDeLErreur(error, preservation.CLE_REPARATION);
     if (partielReparation !== undefined) {
       journal.reparationPartielle = {

@@ -38,6 +38,20 @@
  */
 export const CLE_EMISSION = "assemblagePartiel";
 export const CLE_REPARATION = "reparationPartielle";
+/**
+ * Corps BRUT d'une réponse arrêtée par `max_tokens`.
+ *
+ * CAUSE RACINE MESURÉE (2026-09-01) : une réponse tronquée était levée en
+ * erreur AVANT tout traitement de son contenu. Les jetons de sortie — 16 000,
+ * FACTURÉS — étaient jetés avec elle. Diagnostiquer la troncature de
+ * `toiletteur-chiens` a exigé de reconstituer par déduction ce qu'un artefact
+ * aurait dit directement, et le facteur manquant est resté indéterminé.
+ *
+ * Ce qui est conservé ici est le texte REÇU, verbatim : aucune réparation, aucun
+ * nettoyage, aucune tentative de compléter le JSON. Un corps tronqué reste
+ * tronqué — le conserver sert à COMPRENDRE, jamais à faire passer.
+ */
+export const CLE_CORPS_TRONQUE = "corpsTronque";
 
 /**
  * Une erreur qui n'était pas un objet ne pouvait rien porter. Plutôt que de
@@ -113,12 +127,14 @@ export function estExploitable(partiel: ReparationPartielle): boolean {
   return partiel.sectionsReemises.length > 0;
 }
 
-/** Les quatre natures d'artefact qu'une campagne peut déposer. */
+/** Les natures d'artefact qu'une campagne peut déposer. */
 export const PHASES_ARTEFACT = [
   "attempt1",
   "attempt2",
   "emission-partielle",
   "reparation-partielle",
+  // Corps brut d'une réponse tronquée — une preuve payée, jamais un document.
+  "reponse-tronquee",
 ] as const;
 export type PhaseArtefact = (typeof PHASES_ARTEFACT)[number];
 
