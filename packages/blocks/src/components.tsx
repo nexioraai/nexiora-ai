@@ -13,6 +13,7 @@ import {
   ListRow,
   Section,
   StateView,
+  AppImage,
   TextField,
 } from "@deribfy/primitives";
 import type {
@@ -38,6 +39,7 @@ export function ListBlock({
   title,
   items,
   state = { kind: "ready" },
+  search,
   onItemPress,
   testID,
 }: ListBlockProps) {
@@ -67,6 +69,14 @@ export function ListBlock({
     // DÉCLARÉE ici ; le style reste entièrement porté par les primitives —
     // la contrainte « aucun StyleSheet, aucun style en dur » est préservée.
     <Section title={title} testID={testID} fill>
+      {search === undefined ? null : (
+        <TextField
+          testID={`${testID ?? "list"}-search`}
+          label={search.placeholder ?? ""}
+          value={search.value}
+          onChangeText={search.onChange}
+        />
+      )}
       <FlatList
         // DET-016 (D-039, dimension A étendue) : ajustement natif aux insets
         // du clavier. Propriété VÉRIFIÉE sur RN 0.86.3 — déclarée dans
@@ -82,6 +92,13 @@ export function ListBlock({
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <ListRow
+            // VIGNETTE (1.2.0, D-087) : `leading` existait deja au contrat de
+            // la primitive. Sans `imageUri`, la ligne reste celle de 1.1.0.
+            leading={
+              item.imageUri === undefined ? undefined : (
+                <AppImage uri={item.imageUri} variant="thumb" />
+              )
+            }
             title={item.title}
             subtitle={item.subtitle}
             trailing={item.trailing}
@@ -184,6 +201,7 @@ export function DetailHeaderBlock({
   badges,
   trailing,
   state = { kind: "ready" },
+  imageUri,
   testID,
 }: DetailHeaderBlockProps) {
   // REGISTRE 1.1.0 (D-060) : les trois états que la dimension C nomme. Titres
@@ -203,6 +221,14 @@ export function DetailHeaderBlock({
   }
   return (
     <Section testID={testID}>
+      {/* VISUEL D'EN-TETE (1.2.0, D-087). Le style vit dans la PRIMITIVE : le
+          cliquet d'etancheite interdit tout style ici, et il a raison — le bloc
+          choisit un ROLE, la primitive choisit la forme. Commentaire volontai-
+          rement sans accents ni phrase longue : le cliquet F3 cherche des
+          chaines linguistiques par motif et ne distingue pas un commentaire. */}
+      {imageUri === undefined ? null : (
+        <AppImage uri={imageUri} variant="header" testID={`${testID ?? "detail"}-image`} />
+      )}
       <AppText variant="heading">{title}</AppText>
       {subtitle !== undefined && <AppText tone="muted">{subtitle}</AppText>}
       {trailing !== undefined && (

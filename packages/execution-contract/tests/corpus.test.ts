@@ -74,11 +74,20 @@ describe("corpus gelé — mesures d'exécution (cliquets, état 2026-08-29)", (
     expect(sum((m) => m.screensReachableEffective)).toBe(25);
   });
 
-    // ÉDITION CONSCIENTE (D-061) : 67 -> 45 contrôles fantômes. Les 22 boutons
+  // ÉDITION CONSCIENTE (D-061) : 67 -> 45 contrôles fantômes. Les 22 boutons
   // et formulaires à effet `mutation` ont CESSÉ d'être muets.
-it("contrôles visibles et contrôles FANTÔMES", () => {
+  //
+  // ÉDITION CONSCIENTE (D-105) : 45 -> 46. Le corpus n'a pas changé — c'est
+  // l'INSTRUMENT qui a cessé de mentir. `executed` ne se contentait plus de
+  // regarder l'enveloppe : il exige désormais que le runtime dispatche
+  // réellement l'action. Une action de `plombier-urgence` dont le déclencheur
+  // visait un bloc dispatchant AUTRE CHOSE était comptée agissante ; elle est
+  // désormais comptée FANTÔME, ce qu'elle a toujours été.
+  // Le chiffre MONTE parce que la mesure s'affine, jamais parce qu'un seuil
+  // a été relâché : `controlsVisible` reste à 103, inchangé.
+  it("contrôles visibles et contrôles FANTÔMES", () => {
     expect(sum((m) => m.controlsVisible)).toBe(103);
-    expect(sum((m) => m.ghostControls)).toBe(45);
+    expect(sum((m) => m.ghostControls)).toBe(46);
   });
 
   it("blocs liés à une entité RÉELLEMENT pourvue de données", () => {

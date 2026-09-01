@@ -80,6 +80,17 @@ export interface ListRowProps extends A11yProps {
   onPress?: () => void;
 }
 
+/**
+ * IMAGE (1.2.0, D-087) — deux variantes seulement, décidées ici et non par
+ * l'appelant : `thumb` pour une ligne de liste, `header` pour une fiche. Un
+ * bloc ne porte AUCUN style (cliquet d'étanchéité) : il choisit un RÔLE, la
+ * primitive choisit la forme.
+ */
+export interface AppImageProps extends A11yProps {
+  uri: string;
+  variant: "thumb" | "header";
+}
+
 export interface BadgeProps extends A11yProps {
   label: string;
   tone?: "info" | "success" | "warn" | "error";
@@ -105,6 +116,7 @@ export interface Primitives {
   AppText: ComponentType<AppTextProps>;
   AppButton: ComponentType<AppButtonProps>;
   TextField: ComponentType<TextFieldProps>;
+  AppImage: ComponentType<AppImageProps>;
   ListRow: ComponentType<ListRowProps>;
   Badge: ComponentType<BadgeProps>;
   StateView: ComponentType<StateViewProps>;

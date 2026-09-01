@@ -42,6 +42,47 @@ const REPO = join(HERE, "..", "..");
 const airSchema = await import(join(REPO, "packages/air-schema/src/index.ts"));
 const registry = await import(join(REPO, "packages/capability-registry/src/index.ts"));
 const blocksRegistry = await import(join(REPO, "packages/blocks/src/registry.ts"));
+const repairScope = await import(join(REPO, "packages/repair/src/repair-scope.ts"));
+const budgetUsd = await import(join(REPO, "packages/repair/src/budget-usd.ts"));
+const executionContract = await import(join(REPO, "packages/execution-contract/src/envelope.ts"));
+
+// D-088 — LE PROMPT LIT L'ENVELOPPE, IL NE LA PARAPHRASE PLUS.
+//
+// CAUSE RACINE MESURÉE : le prompt REDISAIT en prose ce que le moteur sait
+// faire. Quand le moteur a gagné les images et la recherche, la prose est
+// restée. Le générateur a donc appris — et répété dans 12 documents sur 12 —
+// que le registre était dépourvu de visuel et de recherche. 42 promesses
+// `test_besoin_non_rendable_*` et 19 motifs d'inexprimabilité en découlent.
+// Une prose ne peut pas dériver si elle est CALCULÉE depuis l'objet.
+const ENV = executionContract.EXECUTION_ENVELOPE_V1;
+const surfaceEnveloppe = () => {
+  const faits = [
+    ["imageRendering", "AFFICHER DES IMAGES", "`imageFieldId` sur `list` (vignette) et sur `detail_header` (visuel d'en-tête)"],
+    ["listSearch", "UNE RECHERCHE QUI FILTRE", "`searchFieldId` + `searchPlaceholder` sur `list` — le filtrage est RÉEL, pas décoratif"],
+    ["primaryNavigation", "UNE BARRE PERSISTANTE", "`navigation.primary` — 3 à 5 destinations, présentes sur chaque écran"],
+    ["listFiltering", "TRIER, FILTRER, BORNER", "`sortFieldId`/`sortDirection`, `filterFieldId`/`filterOperator`/`filterValue`, `pageSize`"],
+    ["relationTraversal", "AFFICHER UNE RÉFÉRENCE LISIBLE", "`referenceDisplayFieldId` sur le champ de référence"],
+    ["crossScreenFormState", "CONSERVER UN FORMULAIRE ENTRE ÉCRANS", "l'état saisi survit à une navigation"],
+    ["rulesEnforced", "VALIDER AVANT ÉCRITURE", "`air.rules` est appliquée"],
+    ["slotsInvoked", "INVOQUER UN CODE SLOT", "un slot lié est réellement appelé"],
+  ];
+  const sait = faits.filter(([f]) => ENV[f] === true);
+  const nesaitpas = faits.filter(([f]) => ENV[f] !== true);
+  return (
+    "CE QUE LE MOTEUR SAIT FAIRE (enveloppe " + ENV.version + ", mesurée — non négociable) :\n" +
+    sait.map(([f, quoi, comment]) => `   ✅ ${quoi} — ${comment}   [${f}]`).join("\n") +
+    "\n   ✅ EFFETS D'ACTION : " + ENV.effects.join(", ") +
+    "\n   ✅ DONNÉES : " + ENV.dataOperations.join(", ") +
+    (nesaitpas.length > 0
+      ? "\n\nCE QUE LE MOTEUR NE SAIT PAS ENCORE FAIRE :\n" +
+        nesaitpas.map(([f, quoi]) => `   ❌ ${quoi}   [${f}: false]`).join("\n")
+      : "") +
+    "\n   ❌ EXÉCUTER UN EFFET `capability` (caméra, GPS, carte, notifications)   [capabilitiesEmitCode: " +
+    String(ENV.capabilitiesEmitCode) +
+    "]\n\nCes drapeaux sont les SEULS faits qu'un motif d'inexprimabilité peut invoquer, " +
+    "et il doit les nommer EXACTEMENT. Un motif qui invoque un fait ✅ est REJETÉ par le validateur."
+  );
+};
 
 // --- Clé : lue depuis apps/web/.env.local, jamais journalisée. ---
 function apiKey() {
@@ -170,6 +211,8 @@ function registryDigest() {
 
 const SYSTEM_EMIT = `Tu émets la spécification AIR (Application Intermediate Representation) d'une application mobile native, par sections, au format JSON strictement conforme au schéma fourni. À chaque appel tu émets UNIQUEMENT les sections demandées, parfaitement cohérentes avec les sections déjà émises qui te sont fournies.
 
+${surfaceEnveloppe()}
+
 RÈGLES NON NÉGOCIABLES :
 1. Capabilities : UNIQUEMENT les identifiants du registre ci-dessous. Tu demandes une capacité, jamais un package. "payments.psp" et "payments.iap" ne coexistent jamais.
 2. Classe commerce : biens/services digitaux consommés dans l'app ⇒ "digital" + payments.iap ; biens physiques ou services hors app ⇒ "physical_or_offapp" + payments.psp ; sinon "none" et aucune capability payments.
@@ -194,9 +237,10 @@ REGISTRE DES SMART BLOCKS (allowlist FERMÉE — blockType UNIQUEMENT parmi ces 
 - \`empty_state\` — état vide d'écran. entityId : INTERDIT. Props : title (string, REQUIS), message? ; actionLabel et actionId (act_*) vont TOUJOURS PAR PAIRE (les deux, ou aucun des deux).
 
 11. INTENTION — \`intent\` porte la demande du client. \`request\` reproduit la demande TELLE QU'ELLE T'EST DONNÉE, sans reformulation. \`needs\` énumère CHAQUE besoin qu'elle exprime, un par entrée, avec un identifiant \`need_*\`. Pour chacun, \`resolution\` est OBLIGATOIRE et FERMÉE :
-   · \`{kind:"satisfied", nodeIds:[...]}\` — les nœuds du document qui portent ce besoin. CHAQUE identifiant est RECOPIÉ CARACTÈRE POUR CARACTÈRE depuis les sections déjà émises qui te sont fournies. N'en invente AUCUN, n'en devine AUCUN : un identifiant qui n'existe pas dans le document rend le besoin INVÉRIFIABLE, et c'est le défaut le plus fréquent mesuré (8 besoins sur 12 lors du premier essai). Dans le doute, préfère \`unexpressible\` avec le motif ;
-   · \`{kind:"unexpressible", reason:"..."}\` — si le registre de blocs ou le moteur ne sait pas le porter, DIS-LE avec le motif exact.
-   Il n'existe pas de troisième issue. Un besoin passé sous silence est le défaut le plus grave que tu puisses commettre.
+   · \`{kind:"satisfied", nodeIds:[...]}\` — C'EST L'ISSUE PAR DÉFAUT. Les nœuds du document qui portent ce besoin. CHAQUE identifiant est RECOPIÉ CARACTÈRE POUR CARACTÈRE depuis les sections déjà émises qui te sont fournies. N'en invente AUCUN, n'en devine AUCUN. Dans le doute, RELIS les sections fournies et trouve les identifiants exacts — ne te rabats PAS sur \`unexpressible\` ;
+   · \`{kind:"unexpressible", reason:"..."}\` — issue d'EXCEPTION, réservée à ce que le moteur ne sait RÉELLEMENT pas faire. Le motif doit NOMMER EXACTEMENT un drapeau ❌ de la surface ci-dessus (par exemple \`capabilitiesEmitCode\`). Un motif qui n'en nomme aucun, ou qui invoque un drapeau ✅, est REJETÉ par le validateur : le besoin doit alors être SATISFAIT.
+   Il n'existe pas de troisième issue. Un besoin passé sous silence est le défaut le plus grave que tu puisses commettre — et un besoin déclaré inexprimable alors que le moteur sait le faire en est le déguisement.
+   MESURÉ, pour que tu saches ce qui est en jeu : une version antérieure de cette règle recommandait l'issue d'exception en cas d'hésitation. Résultat : 45 besoins sur 130 écartés, dont 19 au motif d'une incapacité que le moteur n'a plus. La recommandation est INVERSÉE — hésiter conduit à CHERCHER les nœuds, jamais à renoncer.
 
 12. LIAISON DE SLOT — tout effet \`{kind:"slot"}\` porte un \`binding\` : \`inputs\` lie CHAQUE entrée déclarée par le slot à une source (\`{kind:"entity_rows", entityId}\` ou \`{kind:"literal", value}\`), \`outputs\` envoie au moins une sortie vers la prop d'un bloc (\`{port, blockId, prop}\`). Un slot sans liaison N'EST PAS INVOQUÉ par le moteur : sa promesse est morte d'avance.
 
@@ -212,6 +256,7 @@ REGISTRE DES SMART BLOCKS (allowlist FERMÉE — blockType UNIQUEMENT parmi ces 
    · N'ÉCRIS AUCUN \`expectedTests\` dont le \`targetId\` est une action à effet \`capability\`. Ce serait promettre un comportement que rien ne tient.
    · Le besoin correspondant va dans \`intent.needs\` avec \`{kind:"unexpressible", reason:"le moteur n'exécute pas encore les effets capability (capabilitiesEmitCode: false)"}\`.
    Déclarer le besoin est juste ; le promettre est un mensonge. Le premier est exigé, le second interdit.
+   PORTÉE STRICTE : cette règle ne vaut QUE pour les effets \`capability\` — prise de vue, position GPS, carte, notifications. Elle n'autorise RIEN d'autre à être déclaré inexprimable. AFFICHER une image déjà présente dans les données, RECHERCHER dans une liste, NAVIGUER : le moteur sait faire, la surface ci-dessus le dit, et ces besoins DOIVENT être satisfaits. Ne généralise jamais cette règle au-delà de son objet.
 
 18. LIGNE DE LISTE PRESSABLE — quand une entité possède un écran de détail, la LIGNE de la liste ouvre ce détail : déclare une action \`{trigger:{kind:"ui",blockId:<le bloc list>}, effect:{kind:"navigate",screenId:<le détail>}}\`. N'ÉCRIS JAMAIS un bouton « Voir le détail de X » pour cela. Mesuré sur le corpus précédent : 103 navigations sur 108 partaient d'un bouton, UNE SEULE d'une ligne de liste — l'inverse de ce qu'attend un utilisateur d'application mobile.
 
@@ -228,20 +273,72 @@ REGISTRE DES SMART BLOCKS (allowlist FERMÉE — blockType UNIQUEMENT parmi ces 
 
 22. DESTINATION VIVANTE — chaque destination de \`primary\` doit mener à un écran qui porte au moins un bloc lié à une entité OU au moins une action. Le validateur REFUSE le document sinon. Une barre de navigation qui mène à un écran vide est pire que quatre boutons : elle est belle.
 
+23. IMAGES — RÈGLE SANS EXCEPTION. Une image déclarée et jamais affichée est un DÉFAUT. Mesuré : 23 champs d'image sur 12 documents, RENDUS NULLE PART ; puis, malgré une première version de cette règle, 3 champs encore orphelins sur \`plombier-urgence\` — le mot « pertinent » y servait de porte de sortie. Il est retiré.
+   OBLIGATION : dès qu'une entité porte un champ \`type:"asset"\` ET qu'un bloc de ton document affiche cette entité, ce champ DOIT être affiché. Aucun jugement de pertinence n'est demandé : si tu déclares une photo sur une entité que tu montres, tu la montres. Si une entité n'a réellement aucun visuel dans le domaine, alors ne lui invente pas de champ image dès le départ — mais NE RETIRE JAMAIS un champ image déjà déclaré pour faire taire ce diagnostic : la réponse attendue est de l'AFFICHER. La suppression est détectée et la réparation rejetée.
+   Concrètement :
+   · le bloc \`list\` qui montre cette entité porte \`imageFieldId\` — la ligne affiche alors sa vignette à gauche, le texte au centre, le prix ou l'action à droite ;
+   · le bloc \`detail_header\` de sa fiche porte \`imageFieldId\` — une fiche de plat, de bien ou d'article sans visuel n'est pas une fiche.
+   C'est la composition d'un catalogue moderne : rien n'est centré, rien ne reste étroit.
+
+24. RECHERCHE — quand une liste présente un CATALOGUE (plats, produits, biens, services, annonces), déclare \`searchFieldId\` sur le bloc liste, plus \`searchPlaceholder\`. Le champ est rendu EN TÊTE de la liste, donc en haut de l'écran de catalogue. N'en mets PAS sur une liste courte et fermée (les 3 étapes d'une commande, un historique de 5 lignes) : une recherche inutile encombre.
+
+25. DENSITÉ ET COMPOSITION — un écran principal ne se limite pas à deux blocs centrés. Compose comme les applications de référence du domaine — catalogue, marketplace, restauration, livraison, réservation : en-tête porteur de contexte, recherche si pertinente, liste dense qui exploite la largeur, actions attachées à leur contexte. Utilise \`pageSize\` quand une liste serait trop longue, \`sortFieldId\` quand un ordre a du sens (prix, date, popularité). EXTRAIS LES PRINCIPES de ces applications — hiérarchie, emplacement, densité, relation liste→détail — NE COPIE NI LEUR DESIGN NI LEUR CONTENU.
+
+26. LISTE → DÉTAIL → ACTION — le parcours doit être complet : la liste montre, la ligne ouvre le détail (règle 18), le détail présente davantage d'informations ET porte l'action pertinente. L'action dépend du modèle commercial RÉELLEMENT exprimé : commande et paiement quand ils existent, prise de contact quand le commerce fonctionne ainsi. N'invente aucune fonction que l'intention n'exprime pas.
+
+27. INTERDICTION DE RÉSOUDRE UN DÉFAUT EN SUPPRIMANT — RÈGLE TRANSVERSE, elle prime sur toute autre lecture.
+   Chaque règle ci-dessus décrit une chose à CONSTRUIRE. Aucune ne s'obtient en retirant ce qu'elle désigne.
+   INTERDIT, sans exception :
+   · retirer un champ \`asset\` au lieu de l'afficher (règle 23) ;
+   · retirer un \`expectedTests\` au lieu de créer sa cible ;
+   · retirer une entité, un écran, un bloc ou une action au lieu de le relier ;
+   · retirer une destination de \`primary\` au lieu de lui donner un écran vivant (règle 22) ;
+   · déplacer un besoin vers \`unexpressible\` au lieu de le satisfaire (règle 11) ;
+   · retirer un besoin de \`intent.needs\` — la demande du client ne se raccourcit pas.
+   MESURÉ : la boucle de réparation ne réémettait que la section où le défaut s'OBSERVE, jamais celle qui porte
+   le correctif ; supprimer était donc la seule issue offerte. Ce n'est plus vrai — la section corrective t'est
+   désormais fournie. Et toute disparition qu'aucun diagnostic ne nomme est DÉTECTÉE : la réparation est alors
+   REJETÉE en bloc et le document fautif conservé. Supprimer ne te fait plus passer ; cela te fait échouer.
+
 RÈGLES BLOCS NON NÉGOCIABLES :
 A. Tout *FieldId d'un bloc référence un champ (fld_*) DE L'ENTITÉ LIÉE à ce bloc.
 B. Tout actionId référence une action DÉCLARÉE dans la section "actions".
+
+B-bis. UN DÉCLENCHEUR \`ui\` EXIGE UN BLOC ACTIONNABLE. \`{trigger:{kind:"ui", blockId:X}}\`
+   n'est valide que si X est un \`button\`, un \`list\`, un \`form\` ou un \`empty_state\` —
+   les seuls blocs que l'utilisateur peut presser. \`header\` et \`detail_header\` n'exposent
+   AUCUN gestionnaire : une action déclenchée depuis eux n'apparaît même pas dans
+   l'application compilée. MESURÉ : trois actions ainsi déclarées sur des \`detail_header\`
+   étaient valides au schéma et TOTALEMENT MORTES. Le validateur les refuse désormais.
+   L'action d'un écran de détail se place sur un \`button\` de cet écran, jamais sur son en-tête.
+
+B-ter. COHÉRENCE DU DISPATCH — \`button\` et \`empty_state\`. Ces deux blocs portent une prop
+   \`actionId\`, et c'est ELLE que l'application exécute ; le \`trigger\` n'y sert qu'à déclarer
+   l'origine. Les deux DOIVENT donc désigner la MÊME action :
+   \`{id:"blk_x", blockType:"button", props:[{key:"actionId", value:"act_y"}]}\`
+   va avec \`{id:"act_y", trigger:{kind:"ui", blockId:"blk_x"}}\` — jamais avec une autre.
+   MESURÉ : 17 actions du corpus déclaraient un \`trigger\` vers un bloc dont la prop pointait
+   AILLEURS. Elles étaient valides, et JAMAIS exécutées — l'utilisateur presse, une autre action
+   part, et celle-ci n'existe que sur le papier.
+   Un même \`actionId\` peut être réutilisé par PLUSIEURS blocs (c'est légitime : plusieurs boutons
+   ouvrent le même écran) ; ce qui est interdit, c'est qu'un \`trigger\` vise un bloc qui en
+   dispatche une autre. \`form\` et \`list\` ne sont PAS concernés : eux sont résolus par le
+   \`trigger\`, et n'ont pas de prop \`actionId\`.
 C. list/form/detail_header portent TOUJOURS entityId ; header/button/empty_state n'en portent JAMAIS.
 D. design.overrides : NE PAS ÉMETTRE ce champ (absent). design.tokensVersion : NE PAS ÉMETTRE non plus. Le train de release fixe la version des tokens ; un document qui en exige une autre est REFUSÉ à la compilation (mesuré : « le document exige les tokens 1.5.0, le train embarque 1.2.0 » — le modèle avait recopié la version du SCHÉMA, qui n'a aucun rapport).
 
-E. BESOIN NON EXPRIMABLE — RÈGLE D'HONNÊTETÉ. Le registre de blocs ci-dessus ne sait
-   afficher NI IMAGE, NI RECHERCHE, NI CATÉGORIES/ONGLETS. Si l'intention demande l'une
-   de ces choses (« menu avec photos », « catalogue par catégorie », « rechercher un
-   article »), tu ne dois NI l'ignorer en silence, NI la simuler avec un autre bloc.
-   Déclare le champ correspondant sur l'entité (ex. type \`asset\` pour une photo) et
-   AJOUTE un test attendu nommé \`test_besoin_non_rendable_<sujet>\` dont la description
-   énonce le besoin non couvert. Le manque devient ainsi un FAIT PORTÉ PAR LE DOCUMENT,
-   jamais une omission.
+E. BESOIN NON EXPRIMABLE — RÈGLE D'HONNÊTETÉ, CORRIGÉE.
+   Une version antérieure de cette règle décrivait le registre comme dépourvu de visuel et
+   de recherche. Cette description est PÉRIMÉE, et elle a coûté cher : 42 promesses
+   \`test_besoin_non_rendable_*\` dans 12 documents sur 12, dont beaucoup portaient sur des
+   photos et des recherches que le moteur RENDAIT DÉJÀ.
+   N'utilise AUCUNE description du moteur venue d'ailleurs : la surface d'exécution donnée
+   plus haut est calculée depuis le contrat réel, et elle seule fait foi.
+   · « menu avec photos », « photos des biens » → \`imageFieldId\`. SATISFAIT.
+   · « rechercher un article », « trouver un service » → \`searchFieldId\`. SATISFAIT.
+   · « par catégorie » → \`filterFieldId\` + \`filterValue\`, ou un écran par catégorie. SATISFAIT.
+   N'ÉCRIS un test \`test_besoin_non_rendable_<sujet>\` QUE pour un besoin dont un drapeau
+   ❌ de la surface démontre l'impossibilité. Pour tout le reste : construis-le.
 
 F. Un bloc \`empty_state\` placé sur le même écran qu'un bloc \`list\` lié à la MÊME entité
    DOIT porter \`visibleWhen: {kind:"entity_empty", entityId:"<la même entité>"}\` — sinon
@@ -254,6 +351,16 @@ RÈGLE ABSOLUE : reproduction à l'IDENTIQUE. Chaque identifiant, chaque valeur,
 async function callPart(part, system, userText, label) {
   for (; part.levelIndex < part.levels.length; part.levelIndex++) {
     const level = part.levels[part.levelIndex];
+    // D-103 · AVANT L'APPEL — on refuse d'ENGAGER un appel dont le coût
+    // MAXIMAL ferait franchir le plafond. Le pire cas est calculé, jamais
+    // supposé : sortie bornée par `max_tokens`, entrée bornée par la longueur
+    // du prompt. Un garde qui sous-estime ne garde rien.
+    budgetUsd.assertPeutAppeler(
+      PLAFOND_USD,
+      etatDepense,
+      budgetUsd.coutMaxAppel(system.length + userText.length, MAX_TOKENS, TARIFS),
+      label,
+    );
     try {
       const response = await client.messages.create({
         model: MODEL,
@@ -273,6 +380,14 @@ async function callPart(part, system, userText, label) {
             `(sortie ${String(response.usage?.output_tokens ?? "?")} jetons).`,
         );
       }
+      // D-103 · APRÈS L'APPEL — le coût RÉEL est ajouté immédiatement, puis le
+      // plafond est revérifié. Un appel déjà facturé n'est jamais « oublié »
+      // jusqu'à la fin de l'intention.
+      etatDepense = budgetUsd.ajouter(
+        etatDepense,
+        budgetUsd.coutUSD(response.usage ?? {}, TARIFS),
+      );
+      budgetUsd.assertNonDepasse(PLAFOND_USD, etatDepense, label);
       return response;
     } catch (error) {
       const msg = String(error?.message ?? error);
@@ -327,13 +442,8 @@ function validateLocal(document) {
   return { air: parsed.data, diagnostics };
 }
 
-const partOfPath = (path) => {
-  const root = String(path).split(/[.[]/)[0];
-  return PARTS.find((p) => p.keys.includes(root)) ?? PARTS[0];
-};
-
-async function emitSections(system, contextText, label, usage, refusals) {
-  const assembled = {};
+async function emitSections(system, contextText, label, usage, refusals, accumulateur) {
+  const assembled = accumulateur ?? {};
   for (const part of PARTS) {
     const user =
       `${contextText}\n\nSECTIONS À ÉMETTRE MAINTENANT : ${part.keys.join(", ")}.` +
@@ -356,18 +466,47 @@ async function emitSections(system, contextText, label, usage, refusals) {
   return assembled;
 }
 
+/**
+ * D-103 — AUCUN TRAVAIL DÉJÀ PAYÉ N'EST PERDU. Si l'émission s'interrompt en
+ * cours — budget épuisé, refus persistant, troncature — les sections déjà
+ * obtenues ont été FACTURÉES. Les jeter reviendrait à payer sans conserver la
+ * preuve. L'assemblage partiel voyage donc avec l'erreur.
+ */
+async function emitSectionsAvecPartiel(system, contextText, label, usage, refusals) {
+  const partiel = {};
+  try {
+    return await emitSections(system, contextText, label, usage, refusals, partiel);
+  } catch (error) {
+    error.assemblagePartiel = partiel;
+    throw error;
+  }
+}
+
 async function repairSections(document, diagnostics, intentionText, label, usage, refusals) {
-  // Réparation BORNÉE (1 passe) et CIBLÉE : seules les sections portant des
-  // diagnostics sont réémises, avec le document complet en contexte.
-  const failing = [...new Set(diagnostics.map((d) => partOfPath(d.path).name))];
+  // Réparation BORNÉE (1 passe) et CIBLÉE. D-088 · D1 : les sections réémises
+  // sont celles qui PORTENT LE CORRECTIF, plus seulement celle où le défaut
+  // s'observe. Mesuré : sur 3 classes de défauts sur 4, la section
+  // d'observation ne pouvait pas porter le correctif — la seule issue laissée
+  // au modèle était de SUPPRIMER la référence fautive.
+  const failing = repairScope.sectionsAReemettre(diagnostics);
   const repaired = { ...document };
   for (const part of PARTS.filter((p) => failing.includes(p.name))) {
-    const subset = diagnostics.filter((d) => partOfPath(d.path).name === part.name);
+    // Tous les diagnostics dont CETTE section peut porter le correctif.
+    const subset = diagnostics.filter((d) =>
+      repairScope.sectionsAReemettre([d]).includes(part.name),
+    );
+    if (subset.length === 0) continue;
     const user =
       `${intentionText}\n\nDocument complet actuel :\n${JSON.stringify(repaired)}\n\n` +
       `Les validateurs déterministes signalent ces incohérences dans les sections ${part.keys.join(", ")} :\n` +
       `${JSON.stringify(subset, null, 2)}\n\n` +
-      `Réémets UNIQUEMENT les sections ${part.keys.join(", ")}, corrigées : corrige ce que les diagnostics signalent, conserve tout le reste à l'identique.`;
+      `Réémets UNIQUEMENT les sections ${part.keys.join(", ")}, corrigées : corrige ce que les diagnostics signalent, conserve tout le reste à l'identique.\n\n` +
+      "INTERDIT — RÉPARER EN SUPPRIMANT. Un nœud que les diagnostics ne nomment " +
+      "pas NE PEUT PAS disparaître : ni entité, ni champ, ni écran, ni bloc, ni " +
+      "action, ni promesse. Faire taire un diagnostic en retirant ce qu'il " +
+      "désigne indirectement est un ÉCHEC, pas une réparation — la suppression " +
+      "est détectée et la réparation REJETÉE. Si une exigence te semble " +
+      "impossible à tenir, construis-la quand même dans la section qui la porte.";
     let response = await callPart(part, SYSTEM_EMIT, user, `${label}:${part.name}#repair`);
     usage.push(response.usage);
     if (response.stop_reason === "refusal") {
@@ -376,7 +515,34 @@ async function repairSections(document, diagnostics, intentionText, label, usage
     }
     Object.assign(repaired, extractJson(response));
   }
-  return repaired;
+
+  // GARANTIE INTRA-EXÉCUTION (D-088 · D1). Comparer deux GÉNÉRATIONS est mal
+  // fondé — le modèle a le droit de remodeler. Comparer l'attempt 1 et
+  // l'attempt 2 ne l'est pas : même document, même demande, consigne explicite
+  // de tout conserver. Ce qui disparaît sans qu'un diagnostic le nomme est une
+  // amputation, et la réparation est REJETÉE — le document d'origine est
+  // conservé pour que le défaut reste VISIBLE au lieu d'être maquillé.
+  // Deux disparitions, pas une : le nœud RETIRÉ, et le nœud DÉNATURÉ — un champ
+  // `asset` retypé en `string` garde son identifiant et perd tout ce qu'il
+  // promettait. Les deux rejettent la réparation.
+  // TROIS disparitions, pas une. Le nœud RETIRÉ ; le nœud DÉNATURÉ (un champ
+  // `asset` retypé) ; et le nœud DÉPLACÉ — un champ passé sous une autre entité
+  // garde son identifiant et perd toute obligation d'affichage. L'empreinte
+  // sémantique couvre les deux derniers, plus l'inversion de relation, le
+  // changement d'effet d'action, la bascule de résolution d'un besoin et la
+  // modification de `airSchemaVersion` en cours de réparation.
+  const ampute = [
+    ...repairScope.amputationsHorsPerimetre(document, repaired, diagnostics),
+    ...repairScope
+      .mutationsHorsPerimetre(document, repaired, diagnostics)
+      .map((m) => `${m.id} (${m.avant} → ${m.apres})`),
+  ];
+  // D-093 · D8 — LA PREUVE N'EST JAMAIS JETÉE. Lors du rejet précédent, le
+  // document RÉPARÉ a été perdu : impossible, après coup, de savoir ce que le
+  // modèle avait réellement produit, ni si le rejet était fondé. Il a fallu le
+  // reconstituer depuis les signatures du journal. Le document réparé est
+  // désormais rendu dans TOUS les cas, retenu ou non.
+  return { document: ampute.length > 0 ? document : repaired, repaired, ampute };
 }
 
 async function roundTrip(air, slug, usage, refusals) {
@@ -412,12 +578,29 @@ const JOURNAL = join(RESULTS_DIR, `campagne-v2-${RUN_ID}.jsonl`);
 const start = Number(process.argv[2] ?? 0);
 const end = Number(process.argv[3] ?? INTENTIONS.length);
 
-let totalCost = 0;
-const PLAFOND_USD = 25; // D-025 : arrêt dur, jamais dépassé.
+// ── D-103 · LE PLAFOND MORD ENTRE CHAQUE APPEL, PLUS SEULEMENT ENTRE INTENTIONS.
+//
+// Il était vérifié UNE FOIS, au début de chaque intention, et le coût n'était
+// additionné qu'APRÈS l'intention entière. Une intention unique comparait donc
+// le plafond à ZÉRO puis courait sans contrôle : P6 a coûté 2,7396 $ pour
+// 2,50 $ annoncés, et l'exposition réelle d'un lancement était ~16,80 $.
+//
+// `BUDGET_USD` est réglable par l'appelant : `BUDGET_USD=3.5 node emit-v3.mjs 2 3`.
+// À défaut, le plafond historique de 25 $ (D-025) s'applique.
+const PLAFOND_USD = Number(process.env.BUDGET_USD ?? 25);
+let etatDepense = budgetUsd.DEPENSE_INITIALE;
+const TARIFS = {
+  entree: PRIX.in,
+  ecritureCache: PRIX.cacheWrite,
+  lectureCache: PRIX.cacheRead,
+  sortie: PRIX.out,
+};
 const summary = [];
 for (const intention of INTENTIONS.slice(start, end)) {
-  if (totalCost >= PLAFOND_USD) {
-    console.log(`PLAFOND ${PLAFOND_USD}$ ATTEINT — ARRÊT (D-025). Dépensé: $${totalCost.toFixed(2)}`);
+  if (etatDepense.depense >= PLAFOND_USD) {
+    console.log(
+      `PLAFOND ${PLAFOND_USD}$ ATTEINT — ARRÊT (D-025). Dépensé: $${etatDepense.depense.toFixed(4)}`,
+    );
     break;
   }
   const t0 = Date.now();
@@ -425,7 +608,7 @@ for (const intention of INTENTIONS.slice(start, end)) {
   const usage = [];
   const refusals = { count: 0 };
   try {
-    let document = await emitSections(
+    let document = await emitSectionsAvecPartiel(
       SYSTEM_EMIT,
       `DEMANDE DU CLIENT :\n${intention.text}`,
       intention.slug,
@@ -438,7 +621,24 @@ for (const intention of INTENTIONS.slice(start, end)) {
 
     if (air === null || diagnostics.length > 0) {
       journal.attempts = 2;
-      document = await repairSections(
+
+      // D-088 · D8 — L'ATTEMPT 1 NE DISPARAÎT PLUS SANS TRACE.
+      // La campagne précédente n'a journalisé qu'un NOMBRE de diagnostics :
+      // impossible, après coup, de dire si le modèle avait réparé en
+      // construisant ou en supprimant. La preuve la plus chère était détruite
+      // à l'écriture du journal. Aucun secret n'entre ici : l'AIR est refusé
+      // par `AIR_INTEGRATION_SECRET_LIKE_KEY` s'il en portait.
+      const fichierAttempt1 = `${intention.slug}.attempt1.air.json`;
+      writeFileSync(join(RESULTS_DIR, fichierAttempt1), JSON.stringify(document, null, 2) + "\n");
+      journal.attempt1 = {
+        fichier: fichierAttempt1,
+        diagnostics: diagnostics.map((d) => ({ code: d.code, path: d.path })),
+        sectionsReemises: repairScope.sectionsAReemettre(diagnostics),
+        raisonDuRetry: air === null ? "schema-invalide" : "diagnostics-semantiques",
+      };
+
+      const avantReparation = document;
+      const resultat = await repairSections(
         document,
         diagnostics,
         `DEMANDE DU CLIENT :\n${intention.text}`,
@@ -446,28 +646,99 @@ for (const intention of INTENTIONS.slice(start, end)) {
         usage,
         refusals,
       );
+      document = resultat.document;
+      journal.amputationsRejetees = resultat.ampute;
+
+      // Trois artefacts DISTINCTS et tous conservés, même quand ils diffèrent :
+      //   generatedAttempt — ce que le modèle a écrit seul ;
+      //   repairedAttempt  — ce qu'il a produit en réparant ;
+      //   acceptedDocument — ce que le pipeline a finalement retenu.
+      const fichierAttempt2 = `${intention.slug}.attempt2.air.json`;
+      writeFileSync(
+        join(RESULTS_DIR, fichierAttempt2),
+        JSON.stringify(resultat.repaired, null, 2) + "\n",
+      );
+      journal.attempt2 = {
+        fichier: fichierAttempt2,
+        retenu: resultat.ampute.length === 0,
+        motifDuRejet: resultat.ampute.length > 0 ? resultat.ampute : undefined,
+      };
+      journal.artefacts = {
+        generatedAttempt: journal.attempt1.fichier,
+        repairedAttempt: fichierAttempt2,
+        acceptedDocument: resultat.ampute.length === 0 ? fichierAttempt2 : journal.attempt1.fichier,
+      };
+      if (resultat.ampute.length > 0) {
+        // La réparation a été REJETÉE : le document d'origine est conservé et
+        // le défaut reste visible. Ne jamais maquiller une amputation en
+        // succès — c'est exactement ce que ce chantier ferme.
+        console.log(
+          `  [${intention.slug}] RÉPARATION REJETÉE — amputation hors périmètre : ${resultat.ampute.join(", ")}`,
+        );
+      }
       ({ air, diagnostics } = validateLocal(document));
       journal.diagnosticsApresReparation = diagnostics.length;
+      journal.diagnosticsRestantsCodes = [...new Set(diagnostics.map((d) => d.code))];
+      journal.identiqueAvantApres = avantReparation === document;
     }
 
-    journal.valid = air !== null && diagnostics.length === 0;
+    const bilan = budgetUsd.issueGeneration({
+      interrompuBudget: false,
+      reparationRejetee: (journal.amputationsRejetees?.length ?? 0) > 0,
+      sansDiagnostic: air !== null && diagnostics.length === 0,
+    });
+    journal.issue = bilan.issue;
+    journal.valid = bilan.valid;
+    // D-103 — L'EMPREINTE EST CONSIGNÉE MÊME EN ÉCHEC. Elle ne l'était que si
+    // le document était valide : une génération rejetée ne laissait donc aucune
+    // empreinte du document effectivement retenu, et P5 a dû être reconstituée
+    // depuis les signatures du journal. Le hash canonique n'exige pas la
+    // validité sémantique, seulement la conformité au schéma.
+    if (air !== null) journal.airHash = airSchema.hashCanonical(air);
     if (journal.valid) {
       journal.commerceEmis = air.compliance.commerceClass;
       journal.commerceAttendu = intention.commerce;
       writeFileSync(join(CORPUS_DIR, `${intention.slug}.air.json`), corpusJson(air));
       journal.corpusFile = `${intention.slug}.air.json`;
-      journal.airHash = airSchema.hashCanonical(air);
     } else {
       journal.diagnosticsRestants = diagnostics.slice(0, 12);
     }
   } catch (error) {
+    // D-103 · TROIS ISSUES DISTINCTES, jamais confondues. Un arrêt budgétaire
+    // n'est ni un succès ni une erreur technique : c'est un ÉCHEC PROPRE, et
+    // `valid` ne peut pas être vrai — le document est partiel.
+    const budgetaire = error instanceof budgetUsd.BudgetEpuiseError;
     journal.erreur = String(error?.message ?? error).slice(0, 400);
-    journal.valid = false;
+    journal.interrompuBudget = budgetaire;
+    // Les sections déjà obtenues ont été payées : elles sont conservées.
+    const partiel = error?.assemblagePartiel;
+    if (partiel !== undefined && Object.keys(partiel).length > 0) {
+      const fichierPartiel = `${intention.slug}.partiel.air.json`;
+      writeFileSync(join(RESULTS_DIR, fichierPartiel), JSON.stringify(partiel, null, 2) + "\n");
+      journal.assemblagePartiel = {
+        fichier: fichierPartiel,
+        sectionsObtenues: Object.keys(partiel).sort(),
+      };
+    }
+    const { issue, valid } = budgetUsd.issueGeneration({
+      interrompuBudget: budgetaire,
+      reparationRejetee: (journal.amputationsRejetees?.length ?? 0) > 0,
+      sansDiagnostic: false,
+    });
+    journal.issue = issue;
+    journal.valid = valid;
+    if (budgetaire) {
+      console.log(
+        `  [${intention.slug}] INTERROMPUE POUR BUDGET — ${error.message}\n` +
+          `  artefacts conservés : ${JSON.stringify(journal.artefacts ?? { generatedAttempt: journal.attempt1?.fichier })}`,
+      );
+    }
   }
   journal.refusals = refusals.count;
   const cost = usage.reduce((s, u) => s + coutUSD(u ?? {}), 0);
+  journal.depenseCumulee = Number(etatDepense.depense.toFixed(4));
+  journal.appelsAPI = etatDepense.appels;
   journal.coutUSD = Number(cost.toFixed(4));
-  totalCost += cost;
   journal.dureeMs = Date.now() - t0;
   appendFileSync(JOURNAL, JSON.stringify(journal) + "\n");
   summary.push(journal);
@@ -484,5 +755,5 @@ const rtValid = summary.filter((j) => j.roundTrip?.ok).length;
 console.log(
   `\nBILAN tranche [${start},${end}) : ${valid}/${summary.length} AIR valides · ` +
     `round-trip conformes ${rtValid}/${valid} · identiques ${identical}/${valid} · ` +
-    `coût ~$${totalCost.toFixed(2)} · journal ${JOURNAL}`,
+    `coût ~$${etatDepense.depense.toFixed(4)} · ${etatDepense.appels} appels · journal ${JOURNAL}`,
 );

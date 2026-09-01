@@ -68,6 +68,12 @@ export interface ExecutionEnvelope {
   readonly themeNameEffective: boolean;
   /** L'état d'un formulaire survit-il à une transition d'écran ? */
   readonly crossScreenFormState: boolean;
+  /** Un champ `asset` désigné par un bloc est-il RENDU en image ? */
+  readonly imageRendering: boolean;
+  /** Une liste peut-elle porter une recherche qui FILTRE réellement ses lignes ? */
+  readonly listSearch: boolean;
+  /** `navigation.primary` produit-il une barre PERSISTANTE sur chaque écran ? */
+  readonly primaryNavigation: boolean;
 }
 
 /**
@@ -205,4 +211,36 @@ export const EXECUTION_ENVELOPE_V1: ExecutionEnvelope = {
   // zéro au redémarrage. Aucune persistance disque n'est promise ; ce serait une
   // capability, et elle n'en est pas une.
   crossScreenFormState: true,
+
+  // D-088 — TROIS CAPACITÉS QUI EXISTAIENT SANS ÊTRE DÉCLARÉES.
+  //
+  // Le mot « image » n'apparaissait NULLE PART dans cette enveloppe alors que
+  // le moteur rendait déjà les images. Conséquence MESURÉE, pas supposée : un
+  // document généré a déclaré le besoin « les photos doivent être visibles »
+  // INEXPRIMABLE, au motif que « le registre de blocs fermé ne sait rendre ni
+  // vignette ni visuel ». Le motif était faux. Une enveloppe qui se tait ne
+  // protège pas le générateur : elle le fait renoncer.
+  //
+  // Chacune des trois est déclarée VRAIE parce qu'elle appartient à la surface
+  // que le générateur est AUTORISÉ à utiliser — prop du registre GELÉ ou champ
+  // du contrat AIR — et qu'elle a été OBSERVÉE au rendu avec contrôle négatif,
+  // jamais seulement lue dans le code du runtime.
+
+  // `imageFieldId` (registre gelé : `list`, `detail_header`) → le runtime
+  // résout le champ `asset` en `imageUri` → la primitive `AppImage` le rend
+  // (`thumb` | `header`). Observé : vignette par ligne, visuel d'en-tête sur
+  // le détail, et CONTRÔLE NÉGATIF — un écran sans champ image n'en rend aucune.
+  imageRendering: true,
+
+  // `searchFieldId` + `searchPlaceholder` (registre gelé : `list`). Le runtime
+  // filtre les lignes RÉELLES avant tri et bornage. Observé : le champ précède
+  // les lignes, et la saisie FILTRE réellement le rendu — ce n'est pas une
+  // barre décorative.
+  listSearch: true,
+
+  // `navigation.primary` (AIR 1.6.0) → `<PrimaryNav>`, dernier enfant de la
+  // coquille. Observé : présente sur CHAQUE écran avec les mêmes onglets, dans
+  // l'ordre du document, sur UNE ligne et non empilés, et presser un onglet
+  // navigue vers l'écran attendu.
+  primaryNavigation: true,
 } as const;

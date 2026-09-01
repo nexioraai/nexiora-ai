@@ -3,8 +3,9 @@
 // « au cas où » : chaque primitive est exigée par un bloc de 3.3 ou par le
 // harnais 3.4. Les rôles a11y sont posés ici (C2) ; les contrats n'exposent
 // que testID/accessibilityLabel.
-import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, Text, TextInput, View } from "react-native";
 import type {
+  AppImageProps,
   AppButtonProps,
   AppTextProps,
   BadgeProps,
@@ -173,6 +174,19 @@ export function TextField({
   );
 }
 
+export function AppImage({ uri, variant, testID, accessibilityLabel }: AppImageProps) {
+  const s = useStyles();
+  return (
+    <Image
+      testID={testID}
+      accessibilityLabel={accessibilityLabel}
+      source={{ uri }}
+      style={variant === "thumb" ? s.imageThumb : s.imageHeader}
+      accessibilityIgnoresInvertColors
+    />
+  );
+}
+
 export function ListRow({
   title,
   subtitle,
@@ -273,6 +287,7 @@ export const primitives: Primitives = {
   AppText,
   AppButton,
   TextField,
+  AppImage,
   ListRow,
   Badge,
   StateView,

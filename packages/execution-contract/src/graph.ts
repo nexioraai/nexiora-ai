@@ -24,6 +24,9 @@
 // moteur. Les confondre serait imputer au document un défaut du moteur.
 
 import type { ProjectAir } from "@deribfy/air-schema";
+// Sous-chemin `/registry` — même motif que `feasibility.ts` : l index de
+// `@deribfy/blocks` tire `components.tsx` (JSX), inutilisable ici.
+import { BLOCS_AFFORDANTS, getBlock } from "@deribfy/blocks/registry";
 import type { ExecutionEnvelope, TriggerKind } from "./envelope.ts";
 
 const byCodeUnit = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
@@ -67,6 +70,31 @@ export function reachableScreens(
   const screenIds = new Set(air.screens.map((s) => s.id));
   const reached = new Set<string>();
   if (screenIds.has(air.navigation.entryScreenId)) reached.add(air.navigation.entryScreenId);
+
+  // ── D-099 · LA BARRE PERSISTANTE EST UNE RACINE D'ATTEIGNABILITÉ.
+  //
+  // CAUSE RACINE, révélée par la génération P6 sur données réelles. Cette
+  // fonction ne connaissait que les actions `navigate` et `mutation`. Un écran
+  // atteignable UNIQUEMENT par un onglet de `navigation.primary` était donc
+  // déclaré MORT — et les promesses qui le visaient signalées à tort comme
+  // cibles mortes. Mesuré : `scr_prestations` et `scr_compte`, tous deux
+  // destinations primaires, plus trois promesses accusées à tort.
+  //
+  // Le document était CORRECT ; c'est l'oracle qui n'avait pas suivi AIR 1.6.0.
+  // Le moteur, lui, les atteint : la barre est rendue sur CHAQUE écran et
+  // presser un onglet navigue — observé au rendu, contrôle négatif inclus.
+  //
+  // Ces destinations sont donc des racines au même titre que l'écran d'entrée :
+  // la barre est présente partout, il n'existe aucune condition d'origine à
+  // satisfaire. La lecture reste GÉNÉRIQUE — routes et destinations déclarées
+  // dans l'AIR, aucun identifiant en dur.
+  if (air.navigation.primary !== undefined) {
+    const ecranDeRoute = new Map(air.navigation.routes.map((r) => [r.id, r.screenId]));
+    for (const destination of air.navigation.primary.destinations) {
+      const ecran = ecranDeRoute.get(destination.routeId);
+      if (ecran !== undefined && screenIds.has(ecran)) reached.add(ecran);
+    }
+  }
 
   let grew = true;
   while (grew) {
@@ -205,6 +233,25 @@ export interface ControlFinding {
  * critère « application correctement générée », et elle se calcule sur le
  * document seul, sans exécution.
  */
+/**
+ * L'application émise dispatche-t-elle RÉELLEMENT cette action depuis ce bloc ?
+ *
+ * Deux conventions coexistent, et la distinction se DÉRIVE du registre :
+ *  · `actionRefProps` contient `actionId` (button, empty_state) → le runtime lit
+ *    la PROP du bloc ; le déclencheur est décoratif ;
+ *  · sinon (form, list) → le runtime lit `uiActionsByBlock`, donc le déclencheur.
+ */
+function dispatcheReellement(
+  air: Air,
+  block: { readonly id: string; readonly blockType: string; readonly props?: readonly { key: string; value: unknown }[] },
+  actionId: string,
+): boolean {
+  const definition = getBlock(block.blockType);
+  if (definition === undefined) return false;
+  if (!definition.actionRefProps.includes("actionId")) return true;
+  return (block.props ?? []).some((p) => p.key === "actionId" && p.value === actionId);
+}
+
 export function controls(air: Air, envelope: ExecutionEnvelope): readonly ControlFinding[] {
   const executable = new Set<string>(envelope.effects);
   const activable = new Set<TriggerKind>(envelope.triggers);
@@ -213,7 +260,11 @@ export function controls(air: Air, envelope: ExecutionEnvelope): readonly Contro
     for (const block of screen.blocks) {
       // Seuls les blocs porteurs d'une affordance comptent : un `header` ne
       // promet rien à l'utilisateur, un `button` si.
-      if (!["button", "empty_state", "form", "list"].includes(block.blockType)) continue;
+      // D-104 — DÉRIVÉ DU REGISTRE, plus recopié. Cette liste était écrite à la
+      // main ; une génération réelle a placé trois actions sur `detail_header`,
+      // absent de la liste, et `controls()` ne les a pas vues. Le registre est
+      // désormais la source unique, partagée avec le validateur.
+      if (!BLOCS_AFFORDANTS.has(block.blockType)) continue;
       for (const action of actionsOfBlock(air, block)) {
         out.push({
           screenId: screen.id,
@@ -221,7 +272,24 @@ export function controls(air: Air, envelope: ExecutionEnvelope): readonly Contro
           blockType: block.blockType,
           actionId: action.id,
           effectKind: action.effect.kind,
-          executed: executable.has(action.effect.kind) && activable.has(action.trigger.kind),
+          // ── D-105 · `executed` EXIGE UN DISPATCH RÉEL.
+          //
+          // CAUSE RACINE, mesurée sur les 24 documents : `executed` ne regardait
+          // que l'enveloppe. Or `button` et `empty_state` dispatchent par leur
+          // prop `actionId` — le déclencheur y est décoratif. 17 actions dont le
+          // déclencheur visait un bloc dispatchant AUTRE CHOSE étaient donc
+          // déclarées exécutées alors que le runtime ne les appelle jamais.
+          // Faux vert, contaminant F1 : une promesse visant l'une d'elles était
+          // jugée vivante.
+          //
+          // La correction est ici, pas au validateur : refuser ces documents
+          // aurait invalidé le corpus GELÉ, qui en porte 3 et sert de base de
+          // comparaison à toutes les mesures historiques. L'oracle doit dire la
+          // vérité ; les gates en tirent les conséquences.
+          executed:
+            executable.has(action.effect.kind) &&
+            activable.has(action.trigger.kind) &&
+            dispatcheReellement(air, block, action.id),
         });
       }
     }

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { ProjectAir } from "../src";
-import { AirSemanticError, assertValidAir, validateAir } from "../src";
+import {
+  AirSemanticError,
+  assertValidAir,
+  validateAir,
+  validateAirIntentRequirement,
+} from "../src";
 import { at } from "./at";
 import { buildValidAir } from "./fixtures";
 
@@ -180,5 +185,51 @@ describe("assertValidAir", () => {
       expect(error).toBeInstanceOf(AirSemanticError);
       expect((error as AirSemanticError).diagnostics[0]?.code).toBe("AIR_NAV_ENTRY_UNKNOWN");
     }
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// D-088 · D4 — L'INTENTION EST DUE À PARTIR DE 1.2.0, JAMAIS AVANT.
+//
+// Deux exigences OPPOSÉES tenues ensemble : le corpus v2 gelé (12 documents
+// en 1.0.0, sans intention) reste valide sous SON contrat — on ne réécrit pas
+// un artefact gelé pour verdir un test ; et un document neuf sans intention
+// est REFUSÉ, parce qu'un document sans besoins déclarés n'a aucune fidélité
+// à démontrer. La version DÉCLARÉE, lue sur le document brut, sépare les deux.
+// ══════════════════════════════════════════════════════════════════════════
+describe("validateAirIntentRequirement — l'intention est due (D-088)", () => {
+  const neuf = () => ({ airSchemaVersion: "1.6.0", intent: { request: "x" } });
+
+  it("un document HISTORIQUE 1.0.0 sans intention reste valide", () => {
+    expect(validateAirIntentRequirement({ airSchemaVersion: "1.0.0" })).toEqual([]);
+  });
+
+  it("un document 1.1.0 sans intention reste valide — le contrat ne la prévoyait pas", () => {
+    expect(validateAirIntentRequirement({ airSchemaVersion: "1.1.0" })).toEqual([]);
+  });
+
+  it("un document 1.2.0 SANS intention est REFUSÉ — c'est le contrat qui l'a créée", () => {
+    const d = validateAirIntentRequirement({ airSchemaVersion: "1.2.0" });
+    expect(d).toHaveLength(1);
+    expect(d[0]?.code).toBe("AIR_INTENT_REQUISE");
+  });
+
+  it("un document NEUF sans intention est REFUSÉ", () => {
+    expect(validateAirIntentRequirement({ airSchemaVersion: "1.6.0" })).toHaveLength(1);
+  });
+
+  it("un document NEUF avec intention passe", () => {
+    expect(validateAirIntentRequirement(neuf())).toEqual([]);
+  });
+
+  it("SUPPRIMER l'intention d'un document neuf le fait REFUSER", () => {
+    expect(validateAirIntentRequirement({ ...neuf(), intent: undefined })).toHaveLength(1);
+  });
+
+  it("le corpus v2 GELÉ (1.0.0) traverse la règle sans une seule plainte", () => {
+    // Contrôle de non-régression sur l'artefact réel, pas sur une fixture.
+    expect(validateAirIntentRequirement({ airSchemaVersion: "1.0.0", intent: undefined })).toEqual(
+      [],
+    );
   });
 });

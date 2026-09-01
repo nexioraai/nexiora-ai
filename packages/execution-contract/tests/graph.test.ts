@@ -284,3 +284,77 @@ describe("références rendues brutes", () => {
     expect(rawReferences(document)).toEqual([]);
   });
 });
+
+// ══════════════════════════════════════════════════════════════════════════
+// D-099 — LA BARRE PERSISTANTE EST UNE RACINE D'ATTEIGNABILITÉ.
+//
+// CAUSE RACINE révélée par la génération P6, sur données réelles : cette
+// fonction ne connaissait que les actions `navigate` et `mutation`. Un écran
+// atteignable UNIQUEMENT par un onglet de `navigation.primary` était déclaré
+// MORT, et les promesses qui le visaient accusées à tort. Mesuré :
+// `scr_prestations` et `scr_compte`, plus trois promesses.
+//
+// Le document était CORRECT ; l'oracle n'avait pas suivi AIR 1.6.0. Le moteur,
+// lui, les atteint : la barre est rendue sur CHAQUE écran et presser un onglet
+// navigue — observé au rendu, contrôle négatif inclus.
+// ══════════════════════════════════════════════════════════════════════════
+describe("atteignabilité par la navigation primaire (D-099)", () => {
+  /** Trois écrans, AUCUNE action : seule la barre peut mener ailleurs. */
+  const sansAction = (primary?: { destinations: { routeId: string; label: ReturnType<typeof L>; order: number }[] }) =>
+    air({
+      screens: [
+        { id: "scr_a", title: L("A"), blocks: [{ id: "blk_a_h", blockType: "header", props: P({ title: "A" }) }] },
+        { id: "scr_b", title: L("B"), blocks: [{ id: "blk_b_h", blockType: "header", props: P({ title: "B" }) }] },
+        { id: "scr_c", title: L("C"), blocks: [{ id: "blk_c_h", blockType: "header", props: P({ title: "C" }) }] },
+      ],
+      navigation: {
+        entryScreenId: "scr_a",
+        routes: [
+          { id: "nav_a", screenId: "scr_a" },
+          { id: "nav_b", screenId: "scr_b" },
+          { id: "nav_c", screenId: "scr_c" },
+        ],
+        ...(primary === undefined ? {} : { primary }),
+      },
+      actions: [],
+    });
+
+  it("A · CONTRÔLE POSITIF : un écran atteignable UNIQUEMENT par un onglet est vivant", () => {
+    const document = sansAction({
+      destinations: [
+        { routeId: "nav_a", label: L("A"), order: 0 },
+        { routeId: "nav_b", label: L("B"), order: 1 },
+        { routeId: "nav_c", label: L("C"), order: 2 },
+      ],
+    });
+    expect([...reachableScreens(document, ALL)].sort()).toEqual(["scr_a", "scr_b", "scr_c"]);
+  });
+
+  it("B · CONTRÔLE NÉGATIF : sans barre et sans action, seul l'écran d'entrée vit", () => {
+    // Sans ce contrôle, « tout déclarer atteignable » passerait le test A.
+    expect(reachableScreens(sansAction(), ALL)).toEqual(["scr_a"]);
+  });
+
+  it("D · NON-RÉGRESSION : un écran HORS destinations reste mort", () => {
+    // `scr_c` n'est ni entrée, ni destination, ni cible d'une action.
+    const document = sansAction({
+      destinations: [
+        { routeId: "nav_a", label: L("A"), order: 0 },
+        { routeId: "nav_b", label: L("B"), order: 1 },
+        { routeId: "nav_b", label: L("B2"), order: 2 },
+      ],
+    });
+    expect(reachableScreens(document, ALL)).not.toContain("scr_c");
+  });
+
+  it("une destination pointant une route INCONNUE n'invente aucun écran", () => {
+    const document = sansAction({
+      destinations: [
+        { routeId: "nav_a", label: L("A"), order: 0 },
+        { routeId: "nav_inexistante", label: L("X"), order: 1 },
+        { routeId: "nav_b", label: L("B"), order: 2 },
+      ],
+    });
+    expect([...reachableScreens(document, ALL)].sort()).toEqual(["scr_a", "scr_b"]);
+  });
+});

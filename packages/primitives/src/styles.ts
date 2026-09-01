@@ -134,6 +134,26 @@ const makeSheet = (c: Palette) =>
       alignItems: "center",
     },
     rowLeading: { marginEnd: theme.space.md },
+    // VIGNETTE DE LIGNE (1.2.0, D-087) — carrée, bornée, à gauche du texte.
+    // C'est la composition d'un catalogue : image à gauche, titre et
+    // description au centre qui prennent tout l'espace restant (`rowBody`
+    // flex:1), prix à droite. Rien n'est centré, rien ne reste étroit.
+    // VISUEL D'EN-TÊTE — pleine largeur, hauteur bornée : c'est la hiérarchie
+    // d'une fiche produit. `width: "100%"` exploite l'espace horizontal au lieu
+    // de laisser un visuel étroit centré.
+    imageHeader: {
+      width: "100%",
+      minHeight: theme.size.tapTarget * 3,
+      borderRadius: theme.radius.md,
+      backgroundColor: c.border,
+      marginBottom: theme.space.md,
+    },
+    imageThumb: {
+      width: theme.size.tapTarget,
+      height: theme.size.tapTarget,
+      borderRadius: theme.radius.sm,
+      backgroundColor: c.border,
+    },
     rowBody: { flex: 1 },
     rowTitle: { fontSize: theme.font.body, fontWeight: theme.fontWeight.semibold, color: c.text },
     rowSubtitle: {

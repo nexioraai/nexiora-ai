@@ -34,7 +34,7 @@ export const RELEASE_TRAIN_V1 = {
   // registre de blocs — `form` gagne `loading`/`empty`, `detail_header` gagne un
   // état, les trois blocs à données gagnent les props de titres. Rien n'est
   // retiré. Motif : la dimension C d'A++ était INATTEIGNABLE sans cela.
-  blockRegistryVersion: "1.1.0",
+  blockRegistryVersion: "1.2.0",
   // Ré-scellé le 2026-08-29 (DET-006 / D-039) : `ListBlock` DÉCLARE désormais
   // `fill` sur sa Section, afin que la liste virtualisée reçoive un parent
   // BORNÉ. Cause démontrée : imbriquée dans un ScrollView de même axe, une
@@ -45,6 +45,14 @@ export const RELEASE_TRAIN_V1 = {
   // porté par la primitive Section. Version du registre INCHANGÉE (1.0.0) :
   // aucun contrat de bloc, aucun schéma de props, aucun type de bloc n'a
   // changé — seule la composition interne évolue.
+  // ÉDITION CONSCIENTE (D-090). Le sceau change parce que `fieldRefProps` a été
+  // complété sur `list` et `detail_header`. QUATRE props désignaient un champ
+  // sans être vérifiées comme telles : `imageFieldId`, `searchFieldId` (ajoutées
+  // en 1.2.0) et `sortFieldId`, `filterFieldId` (D-065, omises depuis l'origine).
+  // Mesuré : pointer l'une d'elles vers un champ inexistant, ou vers celui d'une
+  // AUTRE entité, passait la validation — et pour `imageFieldId`, cela faisait
+  // TAIRE le diagnostic d'image orpheline sans rien afficher.
+  // Aucune prop n'est ajoutée ni retirée : seule leur VÉRIFICATION est rétablie.
   blocksSourcesHash:
     // Ré-scellé 2026-08-31 (D-060) : montée ADDITIVE du registre en 1.1.0 —
   // `FormBlockState` gagne `loading`/`empty`, `DetailHeaderBlockProps` gagne
@@ -55,7 +63,28 @@ export const RELEASE_TRAIN_V1 = {
   // et sur la primitive. Un effet que le moteur n'exécute pas — `slot` sur un
   // appui — ne doit pas offrir d'affordance : remède d'APP-D002 appliqué à un
   // second effet. 21 contrôles fantômes retirés sur les 26 applications.
-  "bdcf111069b7c955a0a02cffbabb79ef2672f772dd689ee85c6d59396f0659ea",
+  // Re-scelle 2026-08-31 (D-087) : registre 1.2.0 — `list` gagne vignette et
+  // recherche, `detail_header` gagne son visuel, la primitive AppImage porte
+  // leur style. Strictement additif, toutes props optionnelles.
+  // ÉDITION CONSCIENTE (D-090) : `fieldRefProps` complété sur `list` et
+  // `detail_header`. QUATRE props désignaient un champ SANS être vérifiées comme
+  // telles — `imageFieldId`, `searchFieldId` (1.2.0), `sortFieldId`,
+  // `filterFieldId` (D-065, omises depuis l'origine). Mesuré : les pointer vers
+  // un champ inexistant, ou vers celui d'une AUTRE entité, passait la validation ;
+  // et pour `imageFieldId`, cela FAISAIT TAIRE le diagnostic d'image orpheline
+  // sans que rien ne soit rendu. Aucune prop ajoutée ni retirée : seule leur
+  // VÉRIFICATION est rétablie. Version du registre INCHANGÉE (1.2.0).
+// Ré-scellé (D-095) : SOURCE UNIQUE DES ÉTATS. `BLOCKS[].states` ne recopie
+  // plus une liste à la main — il pointe sur les tableaux de `contracts.ts`,
+  // d'où les types DÉRIVENT. Aucun état ajouté au moteur : `detail_header` et
+  // `form` cessent simplement de SOUS-DÉCLARER ce que leurs composants rendent
+  // déjà. La dérive F5 devient impossible par construction.
+// Ré-scellé (D-104) : le registre déclare `porteAffordance` — un bloc est-il
+  // pressable ? — et l'expose par `BLOCS_AFFORDANTS`. Le validateur REFUSE
+  // désormais un déclencheur `ui` visant un bloc sans gestionnaire, et
+  // `controls()` dérive de la même source au lieu d'une liste recopiée.
+  // Aucun bloc, aucune prop, aucun état n'est ajouté ni retiré.
+  "413eb66e5be825d9d3cd5dacabe230cabaad0b6f6036dbb8b87767e2720b1b92",
   capabilityRegistryVersion: "1.0.0",
   capabilitySourcesHash:
     "6c28599246abde6e7010704f23f273aafe50d17c5483133709c9065f2777346c",

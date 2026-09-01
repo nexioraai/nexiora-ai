@@ -23,9 +23,13 @@ describe("étanchéité des contrats", () => {
     expect(source).not.toMatch(/^import \{/m);
   });
 
-  it("CLIQUET — les 9 primitives v1 validées sont toutes présentes, sans extra", () => {
+  it("CLIQUET — les 10 primitives validées (AppImage entre en 1.2.0) sont toutes présentes, sans extra", () => {
     expect(Object.keys(primitives).sort()).toEqual([
       "AppButton",
+      // AppImage (D-087) : le style d'une image vit dans la PRIMITIVE — le
+      // cliquet d'étanchéité des blocs interdit tout style chez eux, et il a
+      // raison. Le bloc choisit un RÔLE, la primitive choisit la forme.
+      "AppImage",
       "AppText",
       "Badge",
       "ListRow",

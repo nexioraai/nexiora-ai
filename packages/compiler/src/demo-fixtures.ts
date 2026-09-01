@@ -116,8 +116,24 @@ function fixtureValue(
       if (count === 0) return "";
       return rowId(target, Math.floor(rand() * count));
     }
-    case "asset":
-      return "";
+    case "asset": {
+      // PLACEHOLDER DETERMINISTE (D-087) — un `asset` rendait la chaine VIDE :
+      // meme avec un bloc image, il n'y avait RIEN a afficher. Le defaut vivait
+      // a trois etages (registre, runtime, fixtures) ; corriger les deux
+      // premiers n'aurait rien montre.
+      //
+      // Data URI, jamais une URL : le cliquet ZERO-RESEAU l'exige, et une
+      // preview qui telecharge n'est pas deterministe. La teinte derive de la
+      // graine : deux lignes different, une meme ligne reste identique.
+      //
+      // C'est un SUBSTITUT, pas une image reelle. Les vrais visuels viendront
+      // d'un provider de donnees (Phase 5+), pas d'ici.
+      const teinte = Math.floor(rand() * 360);
+      const svg =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96">' +
+        `<rect width="96" height="96" fill="hsl(${String(teinte)},45%,72%)"/></svg>`;
+      return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+    }
     case "json":
       return "{}";
     default:

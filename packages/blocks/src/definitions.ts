@@ -8,6 +8,18 @@
 // Pas d'élargissement « au cas où » : ajout = décision consignée + édition
 // consciente du cliquet + version mineure (règle d'évolution D-020).
 import { z } from "zod";
+// D-095 — SOURCE UNIQUE DES ÉTATS. Le registre ne redéclare plus aucune liste :
+// il pointe sur les tableaux de `contracts.ts`, d'où les types DÉRIVENT aussi.
+// La dérive mesurée en F5 (detail_header déclarait 1 état sur 4, form 3 sur 5)
+// devient impossible par construction, et non plus seulement détectable.
+import {
+  BUTTON_BLOCK_STATES,
+  DETAIL_HEADER_BLOCK_STATES,
+  EMPTY_STATE_BLOCK_STATES,
+  FORM_BLOCK_STATES,
+  HEADER_BLOCK_STATES,
+  LIST_BLOCK_STATES,
+} from "./contracts.ts";
 
 // GELÉ (D-024, revue propriétaire du 2026-08-28). Règle d'évolution
 // post-gel (D-020) : AJOUT compatible = décision consignée + édition
@@ -18,7 +30,11 @@ import { z } from "zod";
 // reste optionnel partout, un appelant 1.0.0 est inchangé. Motif : la dimension
 // C d'A++ était INATTEIGNABLE — deux des trois types consommant des données ne
 // savaient pas exprimer les états que le critère nomme.
-export const BLOCK_REGISTRY_VERSION = "1.1.0";
+// 1.2.0 (D-087) — montée STRICTEMENT ADDITIVE : `list` gagne la vignette et la
+// recherche, `detail_header` gagne son visuel. Rien n'est retiré, toutes les
+// props sont optionnelles. Motif : 23 champs image declares sur 12 documents,
+// RENDUS NULLE PART — le besoin du premier jour (« menu avec photos »).
+export const BLOCK_REGISTRY_VERSION = "1.2.0";
 
 // Motifs d'identités stables — IDENTIQUES à @deribfy/air-schema (ids.ts) ;
 // redéclarés structurellement (patron AirCapabilitySlice : pas de couplage
@@ -45,6 +61,20 @@ export interface BlockDefinition {
   actionRefProps: readonly string[];
   /** États rendus par le composant (exigence du harnais 3.4). */
   states: readonly string[];
+  /**
+   * D-104 — LE BLOC PORTE-T-IL UNE AFFORDANCE ?
+   *
+   * Autrement dit : l'utilisateur peut-il DÉCLENCHER quelque chose depuis ce
+   * bloc ? La réponse est décidable et vérifiée : un bloc porte une affordance
+   * ssi son contrat déclare un gestionnaire `on*` — `onPress`, `onItemPress`,
+   * `onSubmit`, `onAction`. `etancheite-affordance.test.ts` lie cette
+   * déclaration au contrat et la fait échouer si les deux divergent.
+   *
+   * Deux consommateurs en dérivent, au lieu de recopier chacun sa liste :
+   * `validateAirBlocks` (qui REFUSE un déclencheur `ui` sur un bloc sans
+   * affordance) et `controls()` (qui compte les contrôles fantômes).
+   */
+  porteAffordance: boolean;
 }
 
 export const BLOCKS: readonly BlockDefinition[] = [
@@ -63,7 +93,8 @@ export const BLOCKS: readonly BlockDefinition[] = [
     }),
     fieldRefProps: [],
     actionRefProps: ["actionId"],
-    states: ["ready"],
+    states: BUTTON_BLOCK_STATES,
+    porteAffordance: true,
   },
   {
     id: "detail_header",
@@ -81,6 +112,8 @@ export const BLOCKS: readonly BlockDefinition[] = [
       // décisions/corpus — max observé : 3), elle aurait rejeté des AIR
       // légitimes sans protéger aucune propriété architecturale.
       badgeFieldIds: z.array(fieldRef).min(1).optional(),
+      /** Visuel d'en-tete de fiche (1.2.0, D-087) — champ de type `asset`. */
+      imageFieldId: fieldRef.optional(),
       // REGISTRE 1.1.0 (D-060) — titres des états. DONNÉES, jamais texte moteur
       // (F3) : sans titre déclaré, l'état n'est pas rendu. Additif, optionnel.
       loadingTitle: z.string().min(1).optional(),
@@ -91,9 +124,21 @@ export const BLOCKS: readonly BlockDefinition[] = [
 
       trailingFieldId: fieldRef.optional(),
     }),
-    fieldRefProps: ["titleFieldId", "subtitleFieldId", "badgeFieldIds", "trailingFieldId"],
+    // D-090 — `imageFieldId` MANQUAIT ICI. Il était déclaré au `propsSchema`
+    // mais absent de `fieldRefProps` : rien ne vérifiait donc qu'il désigne un
+    // champ de l'entité LIÉE. Mesuré : le pointer vers un champ inexistant, ou
+    // vers celui d'une AUTRE entité, passait la validation — et faisait TAIRE
+    // le diagnostic d'image orpheline sans que rien ne soit affiché.
+    fieldRefProps: [
+      "titleFieldId",
+      "subtitleFieldId",
+      "badgeFieldIds",
+      "trailingFieldId",
+      "imageFieldId",
+    ],
     actionRefProps: [],
-    states: ["ready"],
+    states: DETAIL_HEADER_BLOCK_STATES,
+    porteAffordance: false,
   },
   {
     id: "empty_state",
@@ -134,7 +179,8 @@ export const BLOCKS: readonly BlockDefinition[] = [
       }),
     fieldRefProps: [],
     actionRefProps: ["actionId"],
-    states: ["empty"],
+    states: EMPTY_STATE_BLOCK_STATES,
+    porteAffordance: true,
   },
   {
     id: "form",
@@ -157,7 +203,8 @@ export const BLOCKS: readonly BlockDefinition[] = [
     }),
     fieldRefProps: ["fieldIds"],
     actionRefProps: [],
-    states: ["ready", "submitting", "error"],
+    states: FORM_BLOCK_STATES,
+    porteAffordance: true,
   },
   {
     id: "header",
@@ -170,7 +217,8 @@ export const BLOCKS: readonly BlockDefinition[] = [
     }),
     fieldRefProps: [],
     actionRefProps: [],
-    states: ["ready"],
+    states: HEADER_BLOCK_STATES,
+    porteAffordance: false,
   },
   {
     id: "list",
@@ -195,6 +243,11 @@ export const BLOCKS: readonly BlockDefinition[] = [
       // TRI, FILTRE, PAGINATION (D-065) — `listFiltering: false` signifiait
       // qu'une liste rendait TOUJOURS tout, dans l'ordre du dataset. Unions
       // FERMÉES : aucune expression arbitraire n'entre dans un document.
+      // IMAGE ET RECHERCHE (1.2.0, D-087) — additives, optionnelles. Sans
+      // elles, la liste rend EXACTEMENT ce qu'elle rendait en 1.1.0.
+      imageFieldId: fieldRef.optional(),
+      searchFieldId: fieldRef.optional(),
+      searchPlaceholder: z.string().min(1).optional(),
       sortFieldId: fieldRef.optional(),
       sortDirection: z.enum(["asc", "desc"]).optional(),
       filterFieldId: fieldRef.optional(),
@@ -203,13 +256,33 @@ export const BLOCKS: readonly BlockDefinition[] = [
       pageSize: z.number().int().positive().max(200).optional(),
 
     }),
+    // D-090 — QUATRE props manquaient ici, pas deux. `imageFieldId` et
+    // `searchFieldId` (registre 1.2.0), mais aussi `sortFieldId` et
+    // `filterFieldId` (D-065), omis depuis leur introduction : un tri ou un
+    // filtre sur un champ inexistant passait la validation et devenait
+    // silencieusement inopérant au rendu. Le cliquet d'exhaustivité les a
+    // trouvés tous les quatre.
     fieldRefProps: [
       "titleFieldId",
       "subtitleFieldId",
       "trailingFieldId",
       "badgeFieldId",
+      "imageFieldId",
+      "searchFieldId",
+      "sortFieldId",
+      "filterFieldId",
     ],
     actionRefProps: [],
-    states: ["ready", "loading", "empty", "error"],
+    states: LIST_BLOCK_STATES,
+    porteAffordance: true,
   },
 ];
+
+/**
+ * D-104 — SOURCE UNIQUE DES AFFORDANCES. Le validateur et `controls()` la
+ * lisent tous deux, au lieu de recopier chacun sa liste. C'est l'architecture
+ * qui avait produit D-095 et D-101 ; elle ne se répète pas ici.
+ */
+export const BLOCS_AFFORDANTS: ReadonlySet<string> = new Set(
+  BLOCKS.filter((b) => b.porteAffordance).map((b) => b.id),
+);

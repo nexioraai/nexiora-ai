@@ -5,7 +5,9 @@
 // corpus — le corpus reste GELÉ (artefact de Phase 2). Le pont est la porte
 // fail-closed du COMPILATEUR (Phase 4) et l'outil de la ré-émission
 // (arbitrage C, entrée de Phase 4).
-import { BLOCKS, type BlockDefinition } from "./definitions.ts";
+import { BLOCKS, type BlockDefinition,
+  BLOCS_AFFORDANTS,
+} from "./definitions.ts";
 
 const byId = new Map<string, BlockDefinition>(BLOCKS.map((b) => [b.id, b]));
 
@@ -36,7 +38,12 @@ export interface AirBlockSlice {
     }[];
   }[];
   entities: readonly { id: string; fields: readonly { id: string }[] }[];
-  actions?: readonly { id: string }[];
+  // D-104 — la tranche porte désormais le DÉCLENCHEUR : sans lui, le registre
+  // ne pouvait pas vérifier qu'une action `ui` vise un bloc actionnable.
+  actions?: readonly {
+    id: string;
+    trigger?: { kind: string; blockId?: string };
+  }[];
 }
 
 const flatToRecord = (
@@ -50,6 +57,37 @@ export function validateAirBlocks(air: AirBlockSlice): BlockDiagnostic[] {
     air.entities.map((e) => [e.id, new Set(e.fields.map((f) => f.id))]),
   );
   const actionIds = new Set((air.actions ?? []).map((a) => a.id));
+
+  // ── D-104 · UN DÉCLENCHEUR `ui` EXIGE UNE AFFORDANCE.
+  //
+  // CAUSE RACINE, mesurée sur une génération réelle : trois actions ont été
+  // déclarées avec `trigger:{kind:"ui", blockId:<detail_header>}`. Le validateur
+  // vérifiait seulement que le bloc EXISTE, jamais qu'il puisse être actionné.
+  // Or `detail_header` n'expose aucun gestionnaire : les trois actions étaient
+  // valides, et TOTALEMENT MORTES — absentes de l'artefact émis, invisibles à
+  // `controls()`, injoignables par aucun autre chemin.
+  //
+  // La liste des blocs actionnables est DÉRIVÉE du registre (`BLOCS_AFFORDANTS`),
+  // jamais recopiée : un bloc qui gagnerait ou perdrait son gestionnaire change
+  // ce refus automatiquement.
+  const blocsParId = new Map(
+    air.screens.flatMap((s) => s.blocks.map((b) => [b.id, b.blockType])),
+  );
+  (air.actions ?? []).forEach((action, ai) => {
+    const t = action.trigger;
+    if (t?.kind !== "ui" || t.blockId === undefined) return;
+    const blockType = blocsParId.get(t.blockId);
+    if (blockType === undefined) return; // bloc inconnu : déjà refusé ailleurs
+    if (BLOCS_AFFORDANTS.has(blockType)) return;
+    diagnostics.push({
+      code: "BLOCK_TRIGGER_SANS_AFFORDANCE",
+      path: `actions[${ai}].trigger.blockId`,
+      message:
+        `l'action "${action.id}" est déclenchée par le bloc "${t.blockId}" de type ` +
+        `"${blockType}", qui n'expose AUCUN gestionnaire : rien ne peut la déclencher. ` +
+        `Place ce déclencheur sur un bloc actionnable (${[...BLOCS_AFFORDANTS].sort().join(", ")})`,
+    });
+  });
 
   air.screens.forEach((screen, si) => {
     screen.blocks.forEach((block, bi) => {
@@ -136,3 +174,8 @@ export function validateAirBlocks(air: AirBlockSlice): BlockDiagnostic[] {
   });
   return diagnostics;
 }
+
+// D-104 — ré-exporté par le SOUS-CHEMIN `/registry`, seule porte utilisable
+// par les paquets non-JSX (l'index tire `components.tsx`). Même motif que
+// `getBlock`, documenté dans `feasibility.ts`.
+export { BLOCS_AFFORDANTS } from "./definitions.ts";

@@ -247,7 +247,12 @@ describe("véracité de l'enveloppe — slots, règles, RTL, thème", () => {
   // son panier puis repartait retrouvait un formulaire VIDE — abandon garanti
   // sur un parcours de commande.
   it("l'état d'un formulaire SURVIT au changement d'écran (D-066)", () => {
-    expect(RUNTIME).not.toContain("useState");
+    // ÉDITION CONSCIENTE (D-087) : `useState` réapparaît dans le runtime pour
+    // la SAISIE DE RECHERCHE, qui est délibérément LOCALE à une liste —
+    // chercher dans un catalogue n'est pas un état d'application, et le
+    // partager entre écrans surprendrait. L'état de FORMULAIRE, lui, reste
+    // partagé : c'est ce que ce cliquet protège, et il le vérifie ci-dessous.
+    expect(RUNTIME).toContain("useState(\"\")");
     expect(RUNTIME).toContain("useFormValues");
     expect(EXECUTION_ENVELOPE_V1.crossScreenFormState).toBe(true);
     // Portée déclarée, pas élargie : mémoire éphémère, aucune persistance.
@@ -298,5 +303,297 @@ describe("véracité de l'enveloppe — traversée de relation et filtrage", () 
     for (const prop of ["where:", "query:", "expression:", "predicate:"]) {
       expect(defs).not.toContain(prop);
     }
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// D-088 — TROIS CLIQUETS SUR LES CAPACITÉS DE COMPOSITION.
+//
+// CAUSE : le moteur rendait les images ; l'enveloppe n'en disait rien ; un
+// document généré a donc déclaré un besoin d'image INEXPRIMABLE au motif que
+// « le registre ne sait rendre aucun visuel ». Le silence de l'enveloppe a
+// produit un renoncement sincère mais faux.
+//
+// Les trois tests couvrent les trois sens de l'erreur, et pas seulement le
+// premier : annoncer ce qui n'existe pas, TAIRE ce qui existe, et déclarer
+// ce que le runtime n'exécute pas.
+// ══════════════════════════════════════════════════════════════════════════
+
+const BLOCK_DEFS = read("blocks/src/definitions.ts");
+const BLOCK_COMPONENTS = read("blocks/src/components.tsx");
+const PRIMITIVES = read("primitives/src/primitives.tsx");
+const AIR_CONTRACT = read("air-schema/src/air.ts");
+
+/**
+ * Toute prop de capacité du registre GELÉ est rattachée à un fait d'enveloppe.
+ * `null` = affichage textuel de base, couvert par l'existence même du bloc et
+ * par `reachableBlockStates` : ces props ne sont pas une capacité SÉPARÉE.
+ */
+const PROP_TO_ENVELOPE: Readonly<Record<string, keyof typeof EXECUTION_ENVELOPE_V1 | null>> = {
+  titleFieldId: null,
+  subtitleFieldId: null,
+  badgeFieldId: null,
+  trailingFieldId: null,
+  imageFieldId: "imageRendering",
+  searchFieldId: "listSearch",
+  searchPlaceholder: "listSearch",
+  sortFieldId: "listFiltering",
+  sortDirection: "listFiltering",
+  filterFieldId: "listFiltering",
+  filterOperator: "listFiltering",
+  filterValue: "listFiltering",
+  pageSize: "listFiltering",
+};
+
+describe("véracité de l'enveloppe — capacités de composition (D-088)", () => {
+  it("① capacité ANNONCÉE mais inexistante : chaque drapeau vrai a sa surface réelle", () => {
+    // Un drapeau ne peut pas être vrai sans le moyen, pour le générateur, de
+    // l'exprimer : une prop du registre gelé, ou un champ du contrat AIR.
+    expect(EXECUTION_ENVELOPE_V1.imageRendering).toBe(true);
+    expect(BLOCK_DEFS).toContain("imageFieldId");
+
+    expect(EXECUTION_ENVELOPE_V1.listSearch).toBe(true);
+    expect(BLOCK_DEFS).toContain("searchFieldId");
+    expect(BLOCK_DEFS).toContain("searchPlaceholder");
+
+    expect(EXECUTION_ENVELOPE_V1.primaryNavigation).toBe(true);
+    expect(AIR_CONTRACT).toContain("primaryNavigationSchema");
+  });
+
+  it("② capacité DISPONIBLE mais tue : toute prop du registre est rattachée à l'enveloppe", () => {
+    // LE cliquet anti-silence. Ajouter une prop de capacité au registre sans
+    // décider de son statut d'enveloppe fait ÉCHOUER ce test — c'est
+    // exactement la faute commise avec `imageFieldId` et `searchFieldId`.
+    const props = [
+      ...new Set(BLOCK_DEFS.match(/\b[a-zA-Z]+(?:FieldId|Placeholder|Direction|Operator|Value|Size)\b/g) ?? []),
+    ].filter((p) => p !== "entityId");
+
+    const orphelines = props.filter((p) => !(p in PROP_TO_ENVELOPE));
+    expect(
+      orphelines,
+      `props du registre sans fait d'enveloppe : ${orphelines.join(", ")} — ` +
+        "déclare-les dans PROP_TO_ENVELOPE, avec un drapeau ou `null` si c'est de l'affichage de base",
+    ).toEqual([]);
+
+    // Et le fait cité doit être VRAI : une prop offerte au générateur par un
+    // registre gelé alors que l'enveloppe la dit fausse serait un piège.
+    for (const [prop, champ] of Object.entries(PROP_TO_ENVELOPE)) {
+      if (champ === null || !props.includes(prop)) continue;
+      expect(EXECUTION_ENVELOPE_V1[champ], `${prop} → ${champ}`).toBe(true);
+    }
+  });
+
+  it("③ capacité DÉCLARÉE mais non exécutable : le runtime consomme réellement les trois", () => {
+    // Lire la prop ne suffit pas : il faut que la valeur atteigne le rendu.
+    // IDENTIFIANTS ENTIERS, jamais `toContain` : un contrôle négatif a montré
+    // que la sous-chaîne laissait passer `imageUriX` — donc un runtime cassé.
+    // IMAGE — le bloc passe une source, la primitive la rend.
+    expect(RUNTIME).toMatch(/\bimageUri\b/);
+    expect(BLOCK_COMPONENTS).toMatch(/\bimageUri\b/);
+    expect(PRIMITIVES).toMatch(/\bAppImage\b/);
+
+    // RECHERCHE — la saisie filtre les lignes RÉELLES, pas un décor.
+    expect(RUNTIME).toMatch(/\bsearchFieldId\b/);
+    expect(RUNTIME).toMatch(/toLowerCase\(\)\s*\.includes\(/);
+
+    // NAVIGATION PRIMAIRE — la barre est émise dans le projet compilé.
+    expect(EMIT_PROJECT).toMatch(/\bPrimaryNav\b/);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// D-088 — LE PROMPT DU GÉNÉRATEUR NE PEUT PLUS CONTREDIRE L'ENVELOPPE.
+//
+// CAUSE RACINE : le prompt REDISAIT en prose ce que le moteur sait faire.
+// Le moteur a gagné les images et la recherche ; la prose est restée. Le
+// générateur a donc appris que « le registre ne sait afficher NI IMAGE, NI
+// RECHERCHE » et l'a répété dans 12 documents sur 12 — 42 promesses
+// `test_besoin_non_rendable_*` et 19 motifs d'inexprimabilité en découlent.
+//
+// La correction n'est pas une reformulation : le prompt CALCULE désormais sa
+// surface depuis `EXECUTION_ENVELOPE_V1`. Ces tests interdisent le retour de
+// la paraphrase, et des trois formulations qui orientaient vers l'amputation.
+// ══════════════════════════════════════════════════════════════════════════
+const PROMPT_GENERATEUR = readFileSync(join(PKG, "..", "benchmarks/air-emission/emit-v3.mjs"), "utf8");
+
+describe("le prompt du générateur est adossé à l'enveloppe (D-088)", () => {
+  it("il IMPORTE l'enveloppe au lieu de la paraphraser", () => {
+    expect(PROMPT_GENERATEUR).toContain("execution-contract/src/envelope.ts");
+    expect(PROMPT_GENERATEUR).toContain("surfaceEnveloppe()");
+  });
+
+  it("il n'affirme AUCUNE incapacité que l'enveloppe dément", () => {
+    // Formulations RÉELLEMENT trouvées dans le prompt, et mesurément nuisibles.
+    const mensonges = [
+      "ne sait\n   afficher NI IMAGE",
+      "ne sait afficher NI IMAGE",
+      "aucun bloc image",
+      "ne comporte aucun bloc image",
+      "ne sait rendre ni vignette",
+    ];
+    expect(EXECUTION_ENVELOPE_V1.imageRendering).toBe(true);
+    expect(EXECUTION_ENVELOPE_V1.listSearch).toBe(true);
+    for (const m of mensonges) {
+      expect(PROMPT_GENERATEUR, `le prompt affirme encore : « ${m} »`).not.toContain(m);
+    }
+  });
+
+  it("il ne recommande PLUS `unexpressible` par défaut", () => {
+    // La phrase mesurée : 45 besoins sur 130 écartés, dont 19 à tort.
+    // Aucune reproduction LITTÉRALE de l'ancienne consigne, fût-ce pour la nier :
+    // le modèle lit la citation, pas la négation qui l'entoure.
+    expect(PROMPT_GENERATEUR).not.toContain("Dans le doute, préfère");
+    expect(PROMPT_GENERATEUR.toLowerCase()).not.toContain("dans le doute, préfère");
+    expect(PROMPT_GENERATEUR).toContain("C'EST L'ISSUE PAR DÉFAUT");
+  });
+
+  it("il n'invite PLUS à supprimer un champ image plutôt qu'à l'afficher", () => {
+    expect(PROMPT_GENERATEUR).not.toContain("NE LA DÉCLARE PAS comme champ");
+  });
+
+  it("il porte l'interdiction TRANSVERSE de réparer en supprimant", () => {
+    expect(PROMPT_GENERATEUR).toContain("INTERDICTION DE RÉSOUDRE UN DÉFAUT EN SUPPRIMANT");
+  });
+
+  it("il exige qu'un motif d'inexprimabilité NOMME un drapeau de l'enveloppe", () => {
+    // Miroir exact de `refuteUnexpressibleReason` : ce que le prompt demande
+    // est ce que le validateur vérifie, sinon la boucle ne converge jamais.
+    expect(PROMPT_GENERATEUR).toContain("NOMMER EXACTEMENT un drapeau");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// D-101 — CLIQUET ANTI-DÉRIVE DES ORACLES (audit P7).
+//
+// CLASSE DE DÉFAUT visée : « le moteur sait faire X, mais l'oracle ne sait pas
+// observer X ». Elle a frappé deux fois sur données réelles — P5 (garde de
+// réparation), P6 (`reachableScreens` ignorait `navigation.primary`) — et les
+// deux fois APRÈS que le moteur eut gagné la capacité.
+//
+// `controls()` est immunisé : il LIT `envelope.effects` et `envelope.triggers`.
+// `reachableScreens()` ne l'est pas : il énumère ses effets en dur. Un effet
+// ajouté à l'enveloppe ne serait donc pas suivi, en silence.
+//
+// Ce cliquet ne corrige pas `reachableScreens` — il rend l'oubli IMPOSSIBLE :
+// toucher aux effets ou aux déclencheurs de l'enveloppe fait échouer ce test,
+// qui exige de statuer sur l'atteignabilité avant de continuer.
+// ══════════════════════════════════════════════════════════════════════════
+const GRAPHE = read("execution-contract/src/graph.ts");
+
+describe("anti-dérive des oracles (D-101)", () => {
+  it("tout EFFET de l'enveloppe est statué dans `reachableScreens`", () => {
+    // `navigate` et `mutation` mènent à un écran ; les autres non. Ajouter un
+    // effet oblige à trancher ici, explicitement.
+    expect([...EXECUTION_ENVELOPE_V1.effects].sort()).toEqual(["mutation", "navigate"]);
+    for (const effet of EXECUTION_ENVELOPE_V1.effects) {
+      expect(GRAPHE, `l'effet \`${effet}\` n'est pas mentionné par le graphe`).toContain(
+        `"${effet}"`,
+      );
+    }
+  });
+
+  it("tout DÉCLENCHEUR de l'enveloppe est statué dans `reachableScreens`", () => {
+    expect([...EXECUTION_ENVELOPE_V1.triggers].sort()).toEqual(["lifecycle", "ui"]);
+    for (const t of EXECUTION_ENVELOPE_V1.triggers) {
+      expect(GRAPHE, `le déclencheur \`${t}\` n'est pas mentionné`).toContain(`"${t}"`);
+    }
+  });
+
+  it("la navigation PRIMAIRE est une racine d'atteignabilité (D-099)", () => {
+    expect(EXECUTION_ENVELOPE_V1.primaryNavigation).toBe(true);
+    expect(GRAPHE, "reachableScreens doit lire navigation.primary").toContain(
+      "navigation.primary",
+    );
+  });
+
+  it("CONTRÔLE NÉGATIF : le cliquet sait détecter un effet non statué", () => {
+    // Sans lui, un `toContain` qui ne trouve jamais rien passerait pour preuve.
+    expect(GRAPHE.includes('"capability"')).toBe(false);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// D-102 — LES DEUX DÉRIVATIONS RESTANTES (harnais d'invariants).
+//
+// Deux connaissances du runtime sont RECOPIÉES dans les oracles, sans lien
+// avec leur source. C'est l'architecture qui a produit D-095 (états de bloc)
+// et D-101 (effets d'atteignabilité) — elle ne doit plus passer inaperçue.
+// ══════════════════════════════════════════════════════════════════════════
+const FAISABILITE = read("execution-contract/src/feasibility.ts");
+
+describe("dérivations recopiées (D-102)", () => {
+  it("la liste d'AFFORDANCES de `controls()` est figée et statuée", () => {
+    // `controls()` ne regarde que ces blocs. Un bloc qui gagnerait une
+    // affordance sans entrer ici deviendrait un CONTRÔLE FANTÔME invisible.
+    // L'invariant C2 du harnais le détecte sur le corpus ; ce cliquet force à
+    // statuer dès la modification du registre.
+    // ÉDITION CONSCIENTE (D-104). Ce test exigeait que la liste soit ÉCRITE
+    // dans `graph.ts`. Elle ne l'est plus : `controls()` la DÉRIVE du registre,
+    // qui est désormais la source unique partagée avec le validateur. La
+    // dérivation est une garantie plus forte que le cliquet qui la surveillait.
+    expect(GRAPHE, "controls() doit dériver du registre").toContain("BLOCS_AFFORDANTS");
+    expect(GRAPHE, "plus aucune liste recopiée").not.toContain(
+      '["button", "empty_state", "form", "list"]',
+    );
+    expect(BLOCK_DEFS, "le registre déclare l'affordance").toContain("porteAffordance");
+  });
+
+  it("`ALL_TRIGGERS` de la faisabilité couvre les déclencheurs du contrat", () => {
+    // Cette liste énumère TOUS les déclencheurs possibles de l'AIR, pas ceux
+    // que l'enveloppe exécute. Un déclencheur ajouté au contrat sans entrer
+    // ici serait ignoré par l'analyse de faisabilité.
+    expect(FAISABILITE).toContain('["ui", "lifecycle", "data"]');
+    for (const t of EXECUTION_ENVELOPE_V1.triggers) {
+      expect(FAISABILITE, `le déclencheur \`${t}\` doit y figurer`).toContain(`"${t}"`);
+    }
+  });
+
+  it("CONTRÔLE NÉGATIF : les cliquets savent voir une absence", () => {
+    // Deux jetons qui n'existent nulle part : si ces assertions passaient sur
+    // n'importe quoi, les deux cliquets ci-dessus ne prouveraient rien.
+    expect(GRAPHE.includes('"bloc_inexistant_temoin"')).toBe(false);
+    expect(FAISABILITE.includes('"capability_trigger"')).toBe(false);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// D-105 — LE PROMPT DIT AU MODÈLE CE QUE L'ORACLE VÉRIFIE.
+//
+// `controls()` refuse désormais de déclarer exécutée une action dont le
+// déclencheur vise un bloc qui en dispatche une autre. Si le prompt ne le dit
+// pas, le générateur reproduira les 17 cas mesurés — et la génération
+// mesurerait notre silence, non son comportement.
+// ══════════════════════════════════════════════════════════════════════════
+describe("le prompt énonce la cohérence du dispatch (D-105)", () => {
+  it("la règle existe et nomme les deux blocs concernés", () => {
+    expect(PROMPT_GENERATEUR).toContain("COHÉRENCE DU DISPATCH");
+    for (const bloc of ["button", "empty_state"]) {
+      expect(PROMPT_GENERATEUR, `${bloc} doit être nommé`).toContain(bloc);
+    }
+  });
+
+  it("elle exige que la prop et le déclencheur désignent la MÊME action", () => {
+    expect(PROMPT_GENERATEUR).toContain("la MÊME action");
+  });
+
+  it("elle PRÉSERVE la convention légitime de `form` et `list`", () => {
+    // Sans cette exemption, le modèle croirait devoir poser une prop `actionId`
+    // sur des blocs qui n'en ont pas — et le registre la refuserait.
+    // Le prompt est un littéral de gabarit : ses backticks sont échappés.
+    expect(PROMPT_GENERATEUR).toContain("ne sont PAS concernés");
+    expect(PROMPT_GENERATEUR).toMatch(/form\\`? et \\\\?`?list/);
+  });
+
+  it("elle autorise EXPLICITEMENT la réutilisation d'une action par plusieurs blocs", () => {
+    // 112 cas légitimes du corpus. Une règle trop stricte les casserait.
+    expect(PROMPT_GENERATEUR).toContain("réutilisé par PLUSIEURS blocs");
+  });
+
+  it("CONTRÔLE NÉGATIF : les assertions savent voir une absence", () => {
+    expect(PROMPT_GENERATEUR.includes("COHÉRENCE DU DISPATCH INEXISTANTE")).toBe(false);
+  });
+
+  it("la règle du bloc sans affordance (D-104) est toujours là", () => {
+    expect(PROMPT_GENERATEUR).toContain("EXIGE UN BLOC ACTIONNABLE");
   });
 });

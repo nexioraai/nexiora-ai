@@ -23,7 +23,12 @@ export { canonicalJson, sha256Hex, hashCanonical } from "./canonical.ts";
 
 export { renderAirToText } from "./render-text.ts";
 
-export { validateAir, assertValidAir, AirSemanticError } from "./validate.ts";
+export {
+  validateAir,
+  validateAirIntentRequirement,
+  assertValidAir,
+  AirSemanticError,
+} from "./validate.ts";
 export type { AirDiagnostic } from "./validate.ts";
 
 export { AIR_MIGRATIONS, AirMigrationError, applyAirMigrations,

@@ -8,7 +8,7 @@
 // Effets d'actions en v1 compilateur : `navigate` est câblé ; les effets
 // `capability`/`mutation`/`slot` sont des non-opérations STRUCTURÉES
 // (implémentations : Phases 5+/9 — lecture consignée D-028).
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import {
   ButtonBlock,
@@ -500,6 +500,10 @@ export function AirDetailHeader({
     <DetailHeaderBlock
       testID={b.id}
       state={etat}
+      {...(str(props.imageFieldId) !== undefined &&
+      value(props.imageFieldId) !== ""
+        ? { imageUri: value(props.imageFieldId) }
+        : {})}
       title={value(props.titleFieldId)}
       subtitle={
         props.subtitleFieldId === undefined ? undefined : value(props.subtitleFieldId)
@@ -530,6 +534,9 @@ export function AirList({ screen, blockId }: BlockRef) {
   const provider = useDataProvider();
   const statut = useDataStatus(b.entityId);
   const resoudre = useResolveField(screen, b.entityId);
+  // Saisie de recherche — LOCALE à la liste : chercher dans un catalogue n'est
+  // pas un état d'application, et le partager entre écrans surprendrait.
+  const [recherche, setRecherche] = useState("");
   const onItemNavigate = useItemNavigate(screen, blockId);
   if (!visible) return null;
   if (b.entityId === undefined) throw new Error(`AIR_RUNTIME_ENTITY_MISSING:${blockId}`);
@@ -541,7 +548,14 @@ export function AirList({ screen, blockId }: BlockRef) {
   // rendu. Fermé par construction : trois opérateurs, une direction, une borne.
   // Ordre volontaire : filtrer, puis trier, puis borner — l'inverse tronquerait
   // avant d'avoir vu toutes les lignes.
-  const brutes = provider.listInstances(b.entityId);
+  const brutes0 = provider.listInstances(b.entityId);
+  const rechercheChamp = str(props.searchFieldId);
+  const brutes =
+    rechercheChamp === undefined || recherche.trim() === ""
+      ? brutes0
+      : brutes0.filter((i) =>
+          (i.values[rechercheChamp] ?? "").toLowerCase().includes(recherche.trim().toLowerCase()),
+        );
   const filtreChamp = str(props.filterFieldId);
   const filtreValeur = str(props.filterValue);
   const filtrees =
@@ -570,8 +584,14 @@ export function AirList({ screen, blockId }: BlockRef) {
   const instances = borne === undefined ? triees : triees.slice(0, borne);
   const pick = (fieldId: unknown, values: Readonly<Record<string, string>>) =>
     typeof fieldId === "string" ? resoudre(fieldId, values[fieldId]) : undefined;
+  const imageFieldId = str(props.imageFieldId);
   const items: ListItemData[] = instances.map((instance) => ({
     id: instance.id,
+    // VIGNETTE (D-087) — seulement si le document a DÉCLARÉ quel champ porter.
+    // Une valeur vide n'est pas une image : on n'en rend aucune.
+    ...(imageFieldId !== undefined && (instance.values[imageFieldId] ?? "") !== ""
+      ? { imageUri: instance.values[imageFieldId] }
+      : {}),
     title: resoudre(titleFieldId, instance.values[titleFieldId]) ?? "",
     subtitle: pick(props.subtitleFieldId, instance.values),
     trailing: pick(props.trailingFieldId, instance.values),
@@ -594,6 +614,13 @@ export function AirList({ screen, blockId }: BlockRef) {
       title={str(props.title)}
       items={items}
       state={state}
+      // RECHERCHE (D-087) — rendue EN TÊTE de la liste, donc en haut de l'écran
+      // de catalogue. Filtre client sur le champ DÉCLARÉ par le document.
+      search={
+        rechercheChamp === undefined
+          ? undefined
+          : { value: recherche, onChange: setRecherche, placeholder: str(props.searchPlaceholder) }
+      }
       onItemPress={onItemNavigate}
     />
   );

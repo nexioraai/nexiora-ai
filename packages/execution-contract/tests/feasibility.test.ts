@@ -320,10 +320,13 @@ describe("états de blocs", () => {
     expect(gap?.detail).toContain("submitting");
     expect(gap?.detail).not.toContain("error");
     expect(gap?.detail).toContain("submitting");
-    // MESURE MISE À JOUR (D-060) : sur les 3 états que le registre déclare pour
-    // ce bloc, 4 sont désormais ATTEINTS (contre 1) — `submitting` reste seul
-    // hors de portée, faute d'écriture.
-    expect(report.metrics.blockStatesDeclared).toBe(3);
+    // MESURE MISE À JOUR (D-095) : le registre ne recopie plus une liste à la
+    // main, il POINTE sur `FORM_BLOCK_STATES` — la source dont le type dérive.
+    // Le compte passe donc de 3 à 5, non parce que le moteur a changé, mais
+    // parce que la déclaration cesse de sous-déclarer ce que le composant rend.
+    // Ce que ce test PROUVE est inchangé : `submitting` reste le seul état
+    // rendable hors de portée, et `error` reste atteint.
+    expect(report.metrics.blockStatesDeclared).toBe(5);
     expect(report.metrics.blockStatesReachable).toBe(4);
   });
 });

@@ -27,6 +27,7 @@ export {
   BLOCKS,
   type BlockDefinition,
   type EntityBinding,
+  BLOCS_AFFORDANTS,
 } from "./definitions.ts";
 export {
   getBlock,

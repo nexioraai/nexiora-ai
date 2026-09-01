@@ -34,3 +34,36 @@ export type { BudgetLedger, RepairBudget } from "./budget.ts";
 export { diagnose } from "./diagnose.ts";
 export { apxxRegressions, runRepairLoop } from "./loop.ts";
 export type { RepairInput } from "./loop.ts";
+export {
+  SECTION_KEYS,
+  SECTIONS_CORRECTIVES,
+  sectionDuChemin,
+  sectionsAReemettre,
+  identifiantsDuDocument,
+  amputations,
+  amputationsHorsPerimetre,
+  denaturationsHorsPerimetre,
+  mutationsHorsPerimetre,
+  perimetreDeReparation,
+  signaturesDuDocument,
+  type SectionEmission,
+  type DiagnosticLike,
+  type Amputation,
+  type Denaturation,
+  type MutationStructurelle,
+  type PerimetreNoeud,
+} from "./repair-scope.ts";
+export {
+  BudgetEpuiseError,
+  DEPENSE_INITIALE,
+  ajouter,
+  assertNonDepasse,
+  assertPeutAppeler,
+  coutMaxAppel,
+  coutUSD,
+  issueGeneration,
+  peutAppeler,
+  type EtatDepense,
+  type IssueGeneration,
+  type TarifsUSD,
+} from "./budget-usd.ts";

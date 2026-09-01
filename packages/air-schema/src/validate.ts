@@ -14,6 +14,59 @@ export interface AirDiagnostic {
 // les noms de clés de configuration.
 const SECRET_LIKE_KEY = /(secret|token|password|api_?key|private_?key|credential)/i;
 
+// ══════════════════════════════════════════════════════════════════════════
+// D-088 · D4 — L'INTENTION EST DUE À PARTIR DU CONTRAT QUI L'A CRÉÉE.
+//
+// `intent` est OPTIONNEL dans le schéma, et doit le rester : un document
+// 1.0.0 ou 1.1.0 n'en portait aucune, et la migration 1.1.0 → 1.2.0 est une
+// IDENTITÉ délibérée — inventer une demande fabriquerait précisément la seule
+// chose que ce champ existe pour ne plus perdre. Un document historique reste
+// donc VALIDE sous son propre contrat.
+//
+// Mais l'absence d'intention est aussi l'échappatoire la plus large qui soit :
+// un document sans `intent` n'a AUCUN besoin à perdre, donc aucune couverture
+// à démontrer. Mesuré : 12 documents sur 24 n'en portent aucune.
+//
+// La règle porte donc sur la version DÉCLARÉE, lue sur le document BRUT —
+// avant migration, puisque la migration porte tout à la version courante et
+// effacerait la seule information qui distingue un artefact gelé d'un document
+// neuf. À partir de 1.2.0, le contrat prévoyait l'intention : elle est due.
+const VERSION_INTENTION_DUE = [1, 2, 0] as const;
+
+const compareVersions = (a: readonly number[], b: readonly number[]): number => {
+  for (let i = 0; i < 3; i++) {
+    const d = (a[i] ?? 0) - (b[i] ?? 0);
+    if (d !== 0) return d;
+  }
+  return 0;
+};
+
+/**
+ * Refuse un document qui, sous un contrat prévoyant `intent`, n'en porte pas.
+ * Prend le document BRUT (non migré, non parsé) : la version déclarée est la
+ * seule preuve de provenance disponible.
+ */
+export function validateAirIntentRequirement(raw: unknown): AirDiagnostic[] {
+  if (typeof raw !== "object" || raw === null) return [];
+  const doc = raw as { airSchemaVersion?: unknown; intent?: unknown };
+  const version = typeof doc.airSchemaVersion === "string" ? doc.airSchemaVersion : undefined;
+  if (version === undefined) return [];
+  const parts = version.split(".").map((n) => Number.parseInt(n, 10));
+  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return [];
+  if (compareVersions(parts, VERSION_INTENTION_DUE) < 0) return [];
+  if (doc.intent !== undefined) return [];
+  return [
+    {
+      code: "AIR_INTENT_REQUISE",
+      path: "intent",
+      message:
+        `le document déclare la version ${version}, qui prévoit \`intent\` : la demande du ` +
+        "client et les besoins qu'elle exprime sont DUS. Un document sans intention n'a aucun " +
+        "besoin à perdre, donc aucune fidélité à démontrer",
+    },
+  ];
+}
+
 export function validateAir(air: ProjectAir): AirDiagnostic[] {
   const diagnostics: AirDiagnostic[] = [];
   const push = (code: string, path: string, message: string): void => {
@@ -147,6 +200,77 @@ export function validateAir(air: ProjectAir): AirDiagnostic[] {
         `actions[${i}]`,
         `bouton sur l'onglet "${source.id}" menant à l'onglet "${action.effect.screenId}" : la navigation principale l'offre déjà`,
       );
+    });
+
+    // IMAGE ORPHELINE (D-087) — une image déclarée sur une entité AFFICHÉE et
+    // jamais montrée est un défaut. Mesuré : 23 champs sur 12 documents rendus
+    // nulle part, puis 3 encore orphelins APRÈS une première version de la
+    // règle de prompt : le mot « pertinent » y servait de porte de sortie.
+    //
+    // 🔴 POURQUOI ICI ET PAS SEULEMENT DANS LE PROMPT : un prompt est une
+    // DEMANDE, un validateur est une GARANTIE. `emit-v3` valide localement et
+    // renvoie ses diagnostics au modèle pour réparation (`attempts=2`, observé
+    // sur les deux générations). Porté ici, le respect cesse de dépendre du
+    // bon vouloir d'un modèle.
+    //
+    // PORTÉE ASSUMÉE : ce refus ne s'applique qu'aux documents déclarant
+    // `navigation.primary`. Le corpus GELÉ n'en déclare aucun (0/12, vérifié)
+    // et reste donc valide — le geler puis le rendre invalide détruirait la
+    // base de comparaison de toutes les mesures historiques.
+    const entiteAffichee = new Map<string, boolean>();
+    for (const s of air.screens) {
+      for (const b of s.blocks) {
+        if (b.entityId !== undefined) entiteAffichee.set(b.entityId, true);
+      }
+    }
+    const imagesMontrees = new Set<string>();
+    for (const s of air.screens) {
+      for (const b of s.blocks) {
+        for (const pr of b.props ?? []) {
+          if (pr.key === "imageFieldId") imagesMontrees.add(String(pr.value));
+        }
+      }
+    }
+    // ── D-098 · LE CHEMIN DIT OÙ EST LA RÉPARATION LÉGITIME.
+    //
+    // Ce diagnostic offrait DEUX issues : afficher, ou ne pas déclarer. Le
+    // garde de réparation déduit son périmètre du CHEMIN (D-093) ; en pointant
+    // le champ, il autorisait donc la SUPPRESSION — même quand un bloc capable
+    // de l'afficher existait. Mesuré sur `coach-fitness` : `fld_prog_couverture`
+    // a deux porteurs possibles, et le supprimer restait indolore.
+    //
+    // Quand un PORTEUR existe — un `list` ou un `detail_header` lié à cette
+    // entité — la réparation légitime est l'AFFICHAGE, et le chemin désigne ce
+    // bloc : supprimer le champ sort alors du périmètre. Sans porteur, le champ
+    // reste désigné et sa suppression demeure permise. La distinction est une
+    // propriété DÉCIDABLE du document, jamais un cas particulier.
+    const PORTEURS_IMAGE = new Set(["list", "detail_header"]);
+    const porteurDe = new Map<string, string>();
+    air.screens.forEach((s, si) => {
+      s.blocks.forEach((b, bi) => {
+        if (b.entityId === undefined || !PORTEURS_IMAGE.has(b.blockType)) return;
+        if (!porteurDe.has(b.entityId)) porteurDe.set(b.entityId, `screens[${si}].blocks[${bi}]`);
+      });
+    });
+    air.entities.forEach((e, i) => {
+      if (entiteAffichee.get(e.id) !== true) return;
+      e.fields.forEach((f, j) => {
+        if (f.type !== "asset" || imagesMontrees.has(f.id)) return;
+        const porteur = porteurDe.get(e.id);
+        if (porteur !== undefined) {
+          push(
+            "AIR_IMAGE_ORPHELINE",
+            porteur,
+            `"${f.id}" est déclaré sur l'entité affichée "${e.id}" et n'est montré par aucun bloc : ce bloc peut le porter, déclare-le sur son \`imageFieldId\``,
+          );
+          return;
+        }
+        push(
+          "AIR_IMAGE_ORPHELINE",
+          `entities[${i}].fields[${j}]`,
+          `"${f.id}" est déclaré sur l'entité affichée "${e.id}" et aucun bloc \`list\` ou \`detail_header\` ne peut l'afficher : déclare un tel bloc, ou ne déclare pas ce champ`,
+        );
+      });
     });
 
     // Ordres CONTIGUS depuis 0 : un trou signifierait une position vide dans la
