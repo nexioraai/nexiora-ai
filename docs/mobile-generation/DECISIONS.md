@@ -5306,3 +5306,223 @@ travail causal futur.
 physique, clôture de la Phase 10, `G4`/`G5`, sévérité, protocole canonique restent
 en vigueur. Le protocole reste **NON CERTIFIÉ**. Aucun statut n'est converti en
 `PASS`.
+
+## D-109 — P10 : LE GÉNÉRATEUR PRODUIT UN `coach-fitness` FIDÈLE — 2026-09-01
+
+**Génération réelle autorisée par le propriétaire, exécutée le 2026-09-01 à
+15:15:52 UTC.** `BUDGET_USD=3.5 node benchmarks/air-emission/emit-v3.mjs 2 3` —
+un seul document, `coach-fitness`, index 2.
+
+### Ce qui est MESURÉ
+
+| | |
+|---|---|
+| issue · valid | `terminee` · **`true`** |
+| coût réel | **2,3069 $** (plafond 3,50 $ · exposition max 4,00 $) |
+| appels API | 10 · durée 443 s · refus 0 |
+| diagnostics | **27 → 0** (`23 × AIR_TEST_TARGET_UNKNOWN`, `4 × BLOCK_PROPS_INVALID`) |
+| sections réémises | `cablage`, `actions`, `ecrans` |
+| amputations hors périmètre | **0** — vérifié par `amputationsHorsPerimetre(attempt1, attempt2, diagnostics)` |
+| mutations hors périmètre | **0** — vérifié par `mutationsHorsPerimetre(...)` |
+| `airHash` | `968517ceb935251e8b1b50a8a94f0bea13cb4636751867f05f6e975f2522716e` |
+| `runId` | `2026-09-01T15-15-53-015Z` |
+
+**Le `NON DÉMONTRÉ` central du chantier est levé** : *« aucune génération n'a
+encore produit un `coach-fitness` valide »* est **RÉFUTÉ par mesure**. P8 avait
+réussi en portant deux défauts alors invisibles ; P9 les avait évités mais s'était
+arrêtée sur un `529`. P10 aboutit.
+
+### Effet sur les gates — 6 sur 7 au VERT
+
+| Gate | Avant P10 | Après P10 |
+|---|---|---|
+| `controles` · `navigation` · `composition` | 🟢 | 🟢 |
+| `app-compile` | 🔴 25/26 | 🟢 **26/26** |
+| `app-rendu` | 🔴 25 ≠ 26 | 🟢 |
+| `invariants` | 🔴 3 désaccords `C2` sur `coach-fitness` | 🟢 **0 désaccord / 24 documents** |
+| `fidelite` | 🔴 F1 = 13 · F4 = 22 | 🔴 **F1 = 12 · F4 = 21** |
+
+`v3/coach-fitness` est **vert sur toutes ses lignes** : `🟢 portée · 🟢 35/35
+promesses vivantes · 🟢 7 satisfaits · 1 déclaré inexprimable · 0 motif réfuté`.
+
+**Le rouge de `fidelite` ne porte plus sur `coach-fitness`.** Il porte sur les
+**12 documents du corpus v2 gelé** (`1.0.0`, sans intention — structurel) et sur
+**9 documents v3** encore porteurs de motifs d'inexprimabilité réfutés. **Aucun
+seuil, aucune gate, aucun corpus historique n'a été touché pour l'obtenir** : le
+rouge est conservé comme état réel. Sa nature — attendue structurellement, ou
+travail restant de la Phase 10B — sera tranchée par un audit distinct.
+
+### Chaîne de garde — artefacts CONSERVÉS
+
+Les trois artefacts portent le `runId`, conformément à `D-107`. La chaîne est
+vérifiée : `hashCanonical(attempt2)` = `hashCanonical(corpus)` = `journal.airHash`.
+
+```
+campagne-v2-2026-09-01T15-15-53-015Z.jsonl                 16d32694e78fced3…
+coach-fitness.2026-09-01T15-15-53-015Z.attempt1.air.json   4caee4d8a3f5522e…
+coach-fitness.2026-09-01T15-15-53-015Z.attempt2.air.json   0464fdcb90d7b101…
+```
+
+`packages/golden-corpus/corpus-v3/coach-fitness.air.json` est réécrit ; sa version
+P8 reste récupérable dans Git (`afd5954`). **Le corpus v2 gelé est strictement
+inchangé** — empreinte `85612b1f…`.
+
+### Écart ENTRE générations — rapporté, non qualifié
+
+P8 → P10 : actions **24 → 14**, promesses **42 → 35**, blocs **32 → 29** ; entités
+et écrans identiques. **`D-088` déclare mal fondée la comparaison de deux
+générations** — le modèle a le droit de remodeler, et le verdict d'amputation ne
+s'applique pas hors d'une même exécution. Le fait est consigné **sans être
+qualifié** ; le seul verdict opposable est intra-exécution, et il vaut **0**.
+
+### 🟠 `PB#2` — CE QUI N'A PAS ÉTÉ DÉMONTRÉ PAR P10
+
+**P10 ne valide PAS `PB#2` en conditions réelles, et ne doit jamais être présentée
+comme telle.** Aucune erreur technique n'est survenue : `erreurTechnique`,
+`assemblagePartiel` et `reparationPartielle` sont tous `undefined` au journal. Le
+chemin de conservation **n'a pas été emprunté**.
+
+Ce que P10 démontre effectivement de `D-107` : le **nommage par `runId`** a
+fonctionné en production — trois artefacts déposés, aucune collision `wx`, provenance
+relisible depuis le nom seul. Le reste de `PB#2` reste démontré **par cas-tueurs et
+falsification uniquement**.
+
+### 🔵 Observation — dégradation de schéma au premier appel
+
+```
+[coach-fitness:base] niveau "sans-bornes-numeriques" refusé — dégradation : 400
+output_config.format.schema: For 'array' type, 'minItems' values othe…
+```
+
+L'échelle `makeLevels` (`emit-v3.mjs` l.179) a **joué son rôle** : le niveau refusé
+a été dégradé, la génération a suivi son cours et abouti. **Comportement de
+dégradation PRÉVU, non démontré comme une anomalie de P10.** Consigné comme
+observation factuelle, aucune correction entreprise.
+
+## D-110 — LA MARGE DU CLIQUET FANTÔMES EST UN AMORTISSEUR, PAS UNE TOLÉRANCE — 2026-09-01
+
+**Arbitrage propriétaire.** L'instrument de la gate `controles-fantomes` a été
+corrigé le même jour : il remplissait chaque champ avec une constante qui violait
+les règles déclarées des documents, et comptait fantômes des contrôles qui
+refusaient CORRECTEMENT une saisie invalide. **183 → 155**, 28 faux positifs.
+
+**Le plafond reste à 180. Il n'est pas abaissé à 155.**
+
+### Pourquoi — et pourquoi ma propre première recommandation était mauvaise
+
+J'avais recommandé 180 → 155. **Retiré après mesure.**
+
+`FACT` — ce compteur est un nombre **ABSOLU** sur une population **VARIABLE**.
+P10 a fait passer le corpus compilé de **25 à 26 applications** : le compteur est
+monté de **176 à 183** alors que le **taux s'améliorait**. Le cliquet a mordu sur
+une croissance, pas sur une régression.
+
+`FACT` — **135 des 155** relèvent de trois dettes structurelles qui croissent
+mécaniquement avec le corpus :
+
+| | Cause | Nature |
+|---|---|---|
+| 65 | `update`/`delete` exigent `saisie.id` que rien ne fournit | contrat |
+| 30 | une règle porte sur un champ que le formulaire ne collecte pas | document |
+| 30 | un `create` déclenché par un bouton n'a aucune valeur propre (D-083) | contrat + document |
+| **20** | **aucune action câblée** — le bouton ne mène nulle part | **cible historique de la gate (`APP-D002`)** |
+
+`CONCLUSION` — poser le plafond sur la valeur mesurée transformerait un garde-fou
+anti-régression en **détecteur de croissance** : régénérer un document — l'objet
+même de la Phase 10B — le ferait rougir sans régression.
+
+### Ce qui est inscrit
+
+Les **25 d'écart sont un AMORTISSEUR DE POPULATION**, jamais un droit à 25
+fantômes. Une session future qui lirait 180 comme une tolérance se tromperait.
+
+**Options écartées** : abaisser à 155 (piège de croissance) · raisonner en TAUX
+(masque une régression absolue quand le corpus grandit).
+
+**Chantier conservé, non entrepris** : un cliquet **DÉCOMPOSÉ PAR CAUSE**, chaque
+classe portant son plafond nommé. La cause de chaque fantôme est dérivable de
+façon déterministe — démontré sur les 155. C'est la seule forme qui rende chaque
+nombre interprétable et fasse bouger le bon compteur quand le corpus grandit.
+
+## D-111 — LES TRAITS D'ÉCRAN SONT DÉRIVÉS, JAMAIS DÉCLARÉS — 2026-09-01
+
+**Chantier sectoriel, règle `R2`.** Les règles de composition par secteur exigeaient
+de savoir ce qu'un écran EST. Deux voies : un champ `role` déclaré à l'AIR, ou une
+dérivation. **La première est refusée deux fois.**
+
+`FACT` — `D-086` l'interdit : *« l'AIR ne connaît aucune catégorie métier […] sinon
+le compilateur devrait connaître les métiers, et le moteur cesserait d'être
+agnostique »*. La proposition initiale d'un champ `app.archetype` y contrevenait
+frontalement ; **elle est abandonnée**.
+
+`FACT` — la mesure la réfute aussi. Sur les **154 écrans** des corpus v2 et v3,
+**45 — soit 29 %** — portent **plus d'un trait** : 20 × `detail+listing`,
+15 × `listing+form`, 9 × `detail+form`, 1 × les trois. Un écran `detail+listing` —
+une fiche et la liste de ses éléments liés — est une composition normale. **Un champ
+`role` à valeur unique serait faux par construction sur près d'un écran sur trois.**
+
+**Livré** : `screenTraits()` dans `@deribfy/execution-contract`, rendant un ENSEMBLE
+de traits cumulables — `entry · detail · listing · form · statique` — dérivés des
+**mêmes blocs** que `detailScreens` (`D-095` : la duplication se supprime à la
+source). `entry` est orthogonal et cumule.
+
+**Aucun champ AIR, aucune migration, aucun corpus, aucun `rootHash`, aucune gate.**
+**10 cas-tueurs**, dont un cliquet de véracité vérifiant sur les 24 documents que
+`detail` coïncide EXACTEMENT avec `detailScreens`, et un contrôle négatif qui fige
+la mesure des 45 écrans ambigus. **3 falsifications** : rôle unique → 3 rouges ;
+`entry` remplaçant au lieu de cumuler → 1 rouge ; `detail` dérivé d'ailleurs → 5.
+
+🔵 **Un garde existant a mordu sur ma première rédaction** : le cliquet
+d'agnosticité a refusé le mot « restaurant », que je citais depuis `D-086` — dans le
+paquet même qui interdit le vocabulaire métier. Il a eu raison.
+
+## D-112 — UN FORMULAIRE PROMET UNE SOUMISSION — 2026-09-01
+
+**Défaut mesuré** : **7 formulaires sur 45 (15,6 %)** rendent un bouton portant leur
+`submitLabel` qu'**aucune action ne déclenche**. Deux portent **« Payer par carte »**,
+un **« Confirmer le rendez-vous »**. C'est `APP-D002` — *56 boutons pressables et
+muets* — **reproduit**, et aucune des 7 gates ne l'arrêtait.
+
+### La cause, démontrée par deux méthodes indépendantes
+
+`FACT` — les documents AIR ne déclarent **aucune** action `ui` ciblant ces blocs. Le
+compilateur n'a rien perdu : le générateur n'a jamais produit l'action.
+
+`FACT` — asymétrie du contrat : le registre impose `actionId` à un `button`
+(*« un CTA sans action »*) et **rien** à un `form` (`actionRefProps: []`). Le pont de
+validation ne vérifie que le sens INVERSE (`BLOCK_TRIGGER_SANS_AFFORDANCE`, `D-104`) :
+une action doit cibler un bloc actionnable, jamais qu'un bloc actionnable ait une
+action.
+
+`CONCLUSION` — **0 bouton muet sur 259 (0 %)** contre **7 formulaires sur 45
+(15,6 %)**. Si le défaut venait de l'inattention du modèle, les boutons seraient
+touchés dans les mêmes proportions. Ils ne le sont jamais — leur schéma les protège.
+**C'est le CONTRAT, pas le modèle.**
+
+### Ce qui est livré, et où — l'étage compte
+
+`formulairesSansAction()` dans `@deribfy/execution-contract`, consommé comme
+diagnostic **`FORM_SANS_ACTION`** par la validation de campagne (`emit-v3`), mappé
+sur la section corrective **`actions`**, et doublé de la **règle 28** du prompt.
+
+🔴 **Le diagnostic NE VIT PAS dans `validateAirBlocks`**, et c'est délibéré : ce pont
+est consommé **en fail-closed** par le compilateur (`resolve-lock`) et par le cliquet
+du corpus gelé qui exige zéro diagnostic. L'y placer aurait **REFUSÉ trois documents
+existants** et détruit la base de comparaison — l'erreur d'étage de `D-105`, à
+l'identique. Même patron que `OVERRIDES_NON_VIDE`.
+
+### Portée restreinte au `form`, et pourquoi
+
+`FACT` — la même règle appliquée aux quatre blocs affordants (`button`,
+`empty_state`, `form`, `list`) signalerait **111 blocs**, presque tous des `list`.
+Une liste qui AFFICHE sans ouvrir de détail est légitime. **Seul le `form` rend
+TOUJOURS un bouton porteur d'une promesse.** Élargir produirait 104 faux positifs.
+
+**8 cas-tueurs, 3 falsifications.** Une lacune de robustesse fermée au passage : le
+cliquet de complétude des codes ne scanne que `AIR_*`/`BLOCK_*` — sans mappage
+explicite, le repli aurait renvoyé la réparation vers `ecrans` au lieu d'`actions`,
+la fourche exacte de `D-088`.
+
+🟠 **Les 7 formulaires restent muets** : le diagnostic ne mord qu'à la prochaine
+génération. Les corriger exige de régénérer `billetterie-concerts`,
+`livraison-fruits` et `toiletteur-chiens`.

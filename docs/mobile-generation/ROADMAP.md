@@ -276,6 +276,41 @@ elles peut toujours être compilé et livré.
 >
 > Détail complet : `STATUS.md`, bloc « CHANTIER P5 → P9 ».
 
+> ### ⬆️ MISE À JOUR 2026-09-01 (2) — P10 EXÉCUTÉE (`D-109`)
+>
+> *« Leur fermeture exige des régénérations »* : **la première a été faite.** P10 a
+> régénéré `coach-fitness` — **`valid=true`**, 2,3069 $, 10 appels, 27 diagnostics
+> → 0, **0 amputation**, **0 mutation hors périmètre**.
+>
+> **6 gates sur 7 sont passées au VERT** : `app-compile` 25/26 → **26/26**,
+> `app-rendu` → 🟢, `invariants` 3 désaccords → **0 sur 24 documents**.
+> `v3/coach-fitness` est vert sur toutes ses lignes — 35/35 promesses vivantes,
+> 0 motif réfuté.
+>
+> **`fidelite` reste ROUGE, et ce rouge est CONSERVÉ comme état réel** : `F1` passe
+> de 13 à **12 documents**, `F4` de 22 à **21**. **Aucun ne concerne plus
+> `coach-fitness`** — restent les **12 documents du corpus v2 gelé** (`1.0.0`, sans
+> intention) et **9 documents v3**. Aucun seuil, aucune gate, aucun corpus
+> historique n'a été touché.
+>
+> **La phase 10B reste OUVERTE.** Ce qui reste à trancher, par audit distinct : ce
+> rouge résiduel est-il **structurellement attendu** ou un **travail restant** ?
+
+> ### ⬆️ MISE À JOUR 2026-09-01 (3) — LA QUESTION CI-DESSUS EST TRANCHÉE PAR MESURE
+>
+> Les **9 documents v3** rouges sur `F4` sont **exactement** les 9 qui n'affichent
+> aucune image, n'ont aucune navigation primaire et aucune recherche. Les 3 verts
+> sont **exactement** les 3 régénérés après `D-088`. **C'est une DETTE DE
+> GÉNÉRATION, pas un défaut structurel.** Seuls les 12 documents v2 gelés le sont
+> — ils sont en `1.0.0` et ne portent aucune intention.
+>
+> **Corollaire** : fermer `F4` exige de régénérer 9 documents. Aucune correction
+> d'instrument n'y suffira.
+>
+> Deux instruments ont par ailleurs été réparés ce jour — `controles-fantomes`
+> (28 faux positifs) et `FORM_SANS_ACTION` (7 formulaires muets démasqués).
+> Détail : `STATUS.md`, § « INSTRUMENTS RÉPARÉS ».
+
 ### Ce que cette phase NE fait PAS
 
 Elle **ne mesure pas l'énoncé** des promesses (« le total additionne
@@ -1096,15 +1131,35 @@ conditions sont satisfaites. Une condition partiellement satisfaite vaut
 | 2026-09-01 | — | **`D-108`** — `RN-01` et `C-0` **CLOS PAR CADUCITÉ** (arbitrage propriétaire) ; aucune règle `R-GRAN` écrite, `E-17` redevient exigible si une analyse causale reprend | `DECISIONS.md` `D-108` · `614e6dc`→`9f88792` | 🟢 |
 | 2026-09-01 | — | **`D-107`** — `PB#2` fermé : la réparation conserve ses preuves payées, une panne n'est plus classée `terminee`, un artefact porte sa génération | `packages/repair/src/preservation.ts` · **23 cas-tueurs ajoutés** · 4 falsifications | 🟢 |
 
-**Prochaine action à exécuter — au 2026-09-01, après `D-106`.**
+| 2026-09-01 | **10B** | **P10** — génération réelle `coach-fitness` autorisée : `valid=true`, 2,3069 $, 10 appels, 27 diag → 0, 0 amputation. **6/7 gates au vert** ; `fidelite` rouge conservé, hors `coach-fitness` | `DECISIONS.md` `D-109` · journal `campagne-v2-2026-09-01T15-15-53-015Z.jsonl` | 🟢 |
+
+| 2026-09-01 | **sectoriel** | **`D-111`** · **R2** — `screenTraits()` : traits d'écran DÉRIVÉS, cumulables, jamais déclarés. Mesuré : 45 écrans sur 154 (29 %) en portent plusieurs — un champ `role` unique serait faux par construction. `D-086` respecté, aucun champ AIR, aucune migration | `execution-contract/src/graph.ts` · 10 cas-tueurs · 3 falsifications | 🟢 |
+| 2026-09-01 | **instrument** | **`controles-fantomes` corrigé** — le remplissage violait les règles des documents : 28 faux positifs. **183 → 155**, plafond **180 INCHANGÉ** | `saisie-conforme.ts` · 5 cas-tueurs · 3 falsifications | 🟢 |
+| 2026-09-01 | — | **`D-110`** — la marge du cliquet est un AMORTISSEUR de population, pas une tolérance. Abaisser à 155 en ferait un détecteur de croissance | `DECISIONS.md` `D-110` | 🟢 |
+| 2026-09-01 | **10B** | **`D-112`** · **`FORM_SANS_ACTION`** — diagnostic non bloquant : 7 formulaires muets sur 45 contre 0 bouton sur 259. Consommé par la boucle de réparation, mappé sur `actions`, doublé de la règle 28 | `execution-contract` · `repair-scope` · `emit-v3` · 8 cas-tueurs · 3 falsifications | 🟢 |
+
+**Prochaine action à exécuter — au 2026-09-01, après `D-110`.**
 
 > *Énoncé précédent, conservé pour mémoire (2026-08-30)* : « 🛑 point de contrôle
 > C-0 atteint. L'étage 0 est exécuté à l'exception de `RN-01`, qui est un arbitrage
 > humain […] Aucune autre action n'est autorisée. » — **DÉPASSÉ** : `RN-04` a été
 > exécuté sans que `RN-01` soit levée, et le chantier P5→P9 a suivi.
 
-**Ce qui est ouvert** : la génération `coach-fitness` décrite dans `STATUS.md`,
-**sur autorisation explicite du propriétaire**, aucune dépense sans elle.
+**Ce qui est ouvert** : le **chantier sectoriel** — `R6` (chaîne image → détail)
+est le prochain, débloqué et à faible risque ; `R7` ensuite. **`R4` et `R5` sont
+BLOQUÉS** : aucun bloc grille n'existe et `AppImage` n'a que deux variantes fixes,
+donc « 4 images principales visibles » est **inexprimable** sans dégel du registre.
+
+**Également ouvert** : les **7 formulaires muets** restent muets — le diagnostic
+`FORM_SANS_ACTION` ne mord qu'à la prochaine génération. Et un **audit du rouge
+résiduel de `gate:fidelite`** —
+`F1 = 12`, `F4 = 21`, 15 motifs réfutés — pour établir si ce rouge est
+**structurellement attendu** (les 12 documents v2 gelés sont en `1.0.0` et n'ont
+aucune intention) ou s'il constitue un **travail restant de la Phase 10B** sur les
+9 documents v3. **Audit hors ligne, aucune dépense.**
+
+*Exécutée le 2026-09-01* : la génération `coach-fitness` (`D-109`). **Toute nouvelle
+génération exige une autorisation explicite distincte** — aucune dépense sans elle.
 
 **Ce qui reste FERMÉ, et pourquoi** : `EXP-2`, la validation physique, la clôture
 de la Phase 10, `G4`/`G5`, la sévérité et le protocole canonique — par les interdits

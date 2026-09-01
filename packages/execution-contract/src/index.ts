@@ -16,17 +16,23 @@ export type {
   TriggerKind,
 } from "./envelope.ts";
 export {
+  SCREEN_TRAITS,
   controls,
   dataBindings,
   detailScreens,
+  formulairesSansAction,
   rawReferences,
   reachableScreens,
+  screenTraits,
 } from "./graph.ts";
 export type {
   ControlFinding,
   DataBindingFinding,
   DetailScreenFinding,
+  FormulaireSansActionFinding,
   RawReferenceFinding,
+  ScreenTrait,
+  ScreenTraitFinding,
 } from "./graph.ts";
 export {
   FeasibilityRefusedError,

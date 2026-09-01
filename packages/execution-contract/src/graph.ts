@@ -172,6 +172,136 @@ export function detailScreens(air: Air): readonly DetailScreenFinding[] {
     .sort((a, b) => byCodeUnit(a.blockId, b.blockId));
 }
 
+/** Traits STRUCTURELS d'un écran — cumulables, jamais exclusifs. */
+export const SCREEN_TRAITS = ["entry", "detail", "listing", "form", "statique"] as const;
+export type ScreenTrait = (typeof SCREEN_TRAITS)[number];
+
+export interface ScreenTraitFinding {
+  readonly screenId: string;
+  /** Traits portés, dans l'ordre canonique de `SCREEN_TRAITS`. Jamais vide. */
+  readonly traits: readonly ScreenTrait[];
+}
+
+/**
+ * TRAITS STRUCTURELS D'UN ÉCRAN, DÉRIVÉS DE SES BLOCS RÉELS.
+ *
+ * ── POURQUOI CE N'EST PAS UN CHAMP DÉCLARÉ
+ *
+ * `D-086` : **l'AIR ne connaît aucune catégorie métier.** Le contrat porte la
+ * CONCLUSION architecturale, jamais l'étiquette de secteur qui a servi à la
+ * produire — sinon le compilateur devrait connaître les métiers, et le moteur
+ * cesserait d'être agnostique. Le cliquet `agnostic.test.ts` refuse d'ailleurs
+ * jusqu'au NOM d'un secteur dans ce fichier : il a mordu sur la première
+ * rédaction de ce commentaire, qui citait D-086 mot à mot. Il a eu raison. Les traits
+ * ci-dessous sont donc DÉRIVÉS, jamais déclarés : aucun champ n'entre à l'AIR,
+ * aucune migration n'est due, aucun `rootHash` ne bouge.
+ *
+ * ── POURQUOI UN ENSEMBLE, ET NON UNE VALEUR
+ *
+ * `FACT`, mesuré sur les **154 écrans** des corpus v2 et v3 : **45 écrans, soit
+ * 29 %, portent plus d'un trait.** Un écran `detail+listing` — une fiche et la
+ * liste de ses éléments liés — n'est pas un défaut, c'est une composition
+ * normale. Observé : 20 × `detail+listing`, 15 × `listing+form`,
+ * 9 × `detail+form`, 1 × `detail+listing+form`.
+ *
+ * Un champ `role` à valeur unique serait donc **faux par construction** sur près
+ * d'un écran sur trois. Ce module rend un ENSEMBLE, et les règles qui s'y
+ * indexeront devront le traiter comme tel.
+ *
+ * ── D'OÙ VIENNENT LES TRAITS
+ *
+ * Des MÊMES blocs que les mécanismes existants, jamais d'une recopie —
+ * `D-095` : la duplication se supprime à la source, elle ne se surveille pas.
+ *   · `detail`   ← un bloc `detail_header`, exactement la source de `detailScreens`
+ *   · `listing`  ← un bloc `list` (le registre lui impose une entité)
+ *   · `form`     ← un bloc `form`
+ *   · `entry`    ← `navigation.entryScreenId`, seule notion d'accueil du contrat
+ *   · `statique` ← AUCUN des trois traits de contenu ci-dessus
+ *
+ * `entry` est ORTHOGONAL : un écran d'entrée cumule ses traits de contenu, ou
+ * porte `statique` s'il n'en a aucun (mesuré : 2 documents sur 24).
+ *
+ * Ce module ne juge rien. Il DIT ce qu'un écran est, structurellement ; les
+ * verdicts appartiennent aux gates qui le consommeront.
+ */
+export function screenTraits(air: Air): readonly ScreenTraitFinding[] {
+  const entryId = air.navigation.entryScreenId;
+  return air.screens
+    .map((screen) => {
+      const types = new Set(screen.blocks.map((b) => b.blockType));
+      const contenu: ScreenTrait[] = [];
+      if (types.has("detail_header")) contenu.push("detail");
+      if (types.has("list")) contenu.push("listing");
+      if (types.has("form")) contenu.push("form");
+      const traits: ScreenTrait[] = [];
+      if (screen.id === entryId) traits.push("entry");
+      traits.push(...(contenu.length > 0 ? contenu : (["statique"] as const)));
+      // Ordre canonique : le résultat ne dépend pas de l'ordre des blocs.
+      traits.sort((a, b) => SCREEN_TRAITS.indexOf(a) - SCREEN_TRAITS.indexOf(b));
+      return { screenId: screen.id, traits };
+    })
+    .sort((a, b) => byCodeUnit(a.screenId, b.screenId));
+}
+
+export interface FormulaireSansActionFinding {
+  readonly screenId: string;
+  readonly blockId: string;
+}
+
+/**
+ * FORMULAIRES QUI PROMETTENT UNE SOUMISSION QUE RIEN N'EXÉCUTE.
+ *
+ * ── CAUSE RACINE MESURÉE (2026-09-01)
+ *
+ * Le contrat impose qu'un `button` porte son action — `actionId` est REQUIS à son
+ * schéma, avec la mention « un CTA sans action ». Il n'impose RIEN d'équivalent à
+ * un `form` : son `actionRefProps` est VIDE, et le câblage de sa soumission vit
+ * dans une entrée séparée de `actions[]` dont rien n'exige l'existence.
+ *
+ * Le pont de validation ne vérifie d'ailleurs que le sens INVERSE
+ * (`BLOCK_TRIGGER_SANS_AFFORDANCE`, D-104) : une action doit cibler un bloc
+ * actionnable. Jamais qu'un bloc actionnable possède une action.
+ *
+ * `FACT`, mesuré sur les 24 documents : **7 formulaires muets sur 45 (15,6 %)**,
+ * contre **0 bouton muet sur 259 (0 %)**. Cette asymétrie est la signature de la
+ * cause : si le défaut venait de l'inattention du générateur, les boutons seraient
+ * touchés dans les mêmes proportions. Ils ne le sont jamais — leur schéma les
+ * protège. Trois de ces formulaires portent un bouton de paiement ou de
+ * confirmation qui ne fait rien.
+ *
+ * ── POURQUOI `form` SEUL, ET NON TOUT BLOC AFFORDANT
+ *
+ * `FACT` — la même règle appliquée aux quatre blocs affordants
+ * (`button`, `empty_state`, `form`, `list`) signalerait **111 blocs**, dont la
+ * quasi-totalité sont des `list`. Or une liste qui AFFICHE sans ouvrir de détail
+ * est une composition parfaitement légitime, et un `empty_state` sans action
+ * aussi. Seul le `form` rend TOUJOURS un bouton de soumission portant un
+ * `submitLabel` : c'est une PROMESSE faite à l'utilisateur. Élargir la règle
+ * produirait 104 faux positifs et détruirait sa valeur.
+ *
+ * Cette fonction NE JUGE PAS et ne refuse rien : elle DIT. Le pont de validation
+ * du registre reste inchangé, le compilateur n'en voit rien, et aucun document
+ * existant ne devient invalide.
+ */
+export function formulairesSansAction(air: Air): readonly FormulaireSansActionFinding[] {
+  const cibleesParDeclencheur = new Set(
+    air.actions.flatMap((a) => (a.trigger.kind === "ui" ? [a.trigger.blockId] : [])),
+  );
+  return air.screens
+    .flatMap((screen) =>
+      screen.blocks
+        .filter((block) => block.blockType === "form")
+        // Une action peut être atteinte par le déclencheur OU par une prop de
+        // référence d'action — on interroge les DEUX, comme `actionsOfBlock`.
+        .filter(
+          (block) =>
+            !cibleesParDeclencheur.has(block.id) && actionsOfBlock(air, block).length === 0,
+        )
+        .map((block) => ({ screenId: screen.id, blockId: block.id })),
+    )
+    .sort((a, b) => byCodeUnit(a.blockId, b.blockId));
+}
+
 export interface DataBindingFinding {
   readonly screenId: string;
   readonly blockId: string;

@@ -70,6 +70,27 @@ describe("routage — la section qui porte le correctif est réémise", () => {
   });
 });
 
+describe("FORM_SANS_ACTION — la réparation doit viser `actions`", () => {
+  // Ce code ne vit ni dans `validate.ts` ni dans `registry.ts` : il est produit
+  // par la validation de campagne (`emit-v3`), volontairement HORS du pont
+  // consommé en fail-closed par le compilateur. Le cliquet de complétude
+  // ci-dessus ne le voit donc pas — celui-ci l'épingle.
+  it("🔴 un formulaire muet fait réémettre `actions`, jamais seulement `ecrans`", () => {
+    const sections = sectionsAReemettre([
+      { code: "FORM_SANS_ACTION", path: "screens[scr_a].blocks[blk_muet]" },
+    ]);
+    expect(sections).toContain("actions");
+  });
+
+  it("🔴 CONTRÔLE NÉGATIF : sans le mappage, le chemin renverrait vers `ecrans` seul", () => {
+    // Le repli `sectionDuChemin` déduit la section du CHEMIN. Or le défaut
+    // s'observe dans `screens` alors que le correctif vit dans `actions` :
+    // c'est exactement la fourche que D-088 a mesurée, et qui ne laissait au
+    // modèle que la suppression pour issue.
+    expect(sectionDuChemin("screens[scr_a].blocks[blk_muet]")).not.toBe("actions");
+  });
+});
+
 describe("anti-amputation — ce que nul diagnostic ne désigne ne disparaît pas", () => {
   const avant = {
     entities: [{ id: "ent_a", fields: [{ id: "fld_photo" }] }, { id: "ent_b" }],

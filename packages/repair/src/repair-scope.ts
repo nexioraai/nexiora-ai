@@ -103,6 +103,11 @@ export const SECTIONS_CORRECTIVES: Readonly<Record<string, readonly SectionEmiss
   // ou ajouter à l'écran le bouton qui portera l'action (`ecrans`).
   BLOCK_TRIGGER_SANS_AFFORDANCE: ["actions", "ecrans"],
 
+  // Un formulaire dont AUCUNE action ne déclenche la soumission. La réparation
+  // est d'AJOUTER l'action : elle vit donc dans `actions`. Le formulaire, lui,
+  // n'a rien à corriger — et la règle 27 interdit de le retirer.
+  FORM_SANS_ACTION: ["actions"],
+
   // Une action pointe un écran / une entité / un slot absent.
   AIR_ACTION_SCREEN_UNKNOWN: ["actions", "ecrans"],
   AIR_ACTION_TRIGGER_SCREEN_UNKNOWN: ["actions", "ecrans"],

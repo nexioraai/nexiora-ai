@@ -46,6 +46,7 @@ const repairScope = await import(join(REPO, "packages/repair/src/repair-scope.ts
 const budgetUsd = await import(join(REPO, "packages/repair/src/budget-usd.ts"));
 const preservation = await import(join(REPO, "packages/repair/src/preservation.ts"));
 const executionContract = await import(join(REPO, "packages/execution-contract/src/envelope.ts"));
+const executionGraph = await import(join(REPO, "packages/execution-contract/src/graph.ts"));
 
 // D-088 — LE PROMPT LIT L'ENVELOPPE, IL NE LA PARAPHRASE PLUS.
 //
@@ -301,6 +302,10 @@ REGISTRE DES SMART BLOCKS (allowlist FERMÉE — blockType UNIQUEMENT parmi ces 
    désormais fournie. Et toute disparition qu'aucun diagnostic ne nomme est DÉTECTÉE : la réparation est alors
    REJETÉE en bloc et le document fautif conservé. Supprimer ne te fait plus passer ; cela te fait échouer.
 
+28. FORMULAIRE = PROMESSE DE SOUMISSION. Tout bloc \`form\` rend un bouton portant son \`submitLabel\` : cette promesse DOIT être tenue. Déclare, pour CHAQUE formulaire, une action \`{trigger:{kind:"ui",blockId:<le bloc form>}, effect:{kind:"mutation",entityId:<l'entité du formulaire>,operation:"create"|"update"}}\`, avec \`thenScreenId\` vers l'écran atteint une fois l'écriture réussie.
+   MESURÉ : 7 formulaires sur 45 ne déclenchaient RIEN — dont deux boutons « Payer par carte » et une confirmation de rendez-vous. Le contrat impose \`actionId\` à un \`button\` et rien à un \`form\` : 0 bouton muet sur 259, 7 formulaires muets sur 45. Cette lacune est désormais DIAGNOSTIQUÉE (\`FORM_SANS_ACTION\`).
+   Un formulaire sans action est un mensonge de l'interface. La réparation attendue est de CONSTRUIRE l'action — jamais de retirer le formulaire, son bouton ou ses champs (règle 27).
+
 RÈGLES BLOCS NON NÉGOCIABLES :
 A. Tout *FieldId d'un bloc référence un champ (fld_*) DE L'ENTITÉ LIÉE à ce bloc.
 B. Tout actionId référence une action DÉCLARÉE dans la section "actions".
@@ -431,6 +436,30 @@ function validateLocal(document) {
     ...airSchema.validateAir(parsed.data),
     ...registry.validateAirCapabilities(parsed.data),
     ...blocksRegistry.validateAirBlocks(parsed.data),
+    // ── FORM_SANS_ACTION (2026-09-01) — DIAGNOSTIC, JAMAIS UN REFUS DE CONTRAT.
+    //
+    // Un `form` rend TOUJOURS un bouton portant son `submitLabel` : c'est une
+    // promesse faite à l'utilisateur. Or le registre impose `actionId` à un
+    // `button` et RIEN à un `form` — mesuré : 7 formulaires muets sur 45, contre
+    // 0 bouton muet sur 259. Trois portaient un paiement ou une confirmation.
+    //
+    // Le diagnostic vit ICI, dans la validation de la campagne, et NON dans
+    // `validateAirBlocks` : ce pont est consommé en fail-closed par le
+    // compilateur (`resolve-lock`) et par le cliquet du corpus gelé, qui exige
+    // zéro diagnostic. L'y placer aurait REFUSÉ trois documents existants et
+    // détruit la base de comparaison — l'erreur d'étage de D-105, à l'identique.
+    // Même patron que `OVERRIDES_NON_VIDE` ci-dessous.
+    ...executionGraph.formulairesSansAction(parsed.data).map((f) => ({
+      code: "FORM_SANS_ACTION",
+      path: `screens[${f.screenId}].blocks[${f.blockId}]`,
+      message:
+        `le formulaire "${f.blockId}" (écran "${f.screenId}") rend un bouton de ` +
+        `soumission qu'AUCUNE action ne déclenche : la pression ne produit RIEN. ` +
+        `Déclare une action \`{trigger:{kind:"ui",blockId:"${f.blockId}"}, ` +
+        `effect:{kind:"mutation",entityId:<l'entité du formulaire>,operation:"create"|"update"}}\`. ` +
+        `NE RETIRE NI LE FORMULAIRE NI SON BOUTON : la réparation attendue est de ` +
+        `CONSTRUIRE l'action manquante (règle 27).`,
+    })),
   ];
   const overrides = parsed.data.design?.overrides;
   if (overrides !== undefined && overrides.length > 0) {

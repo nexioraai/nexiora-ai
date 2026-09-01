@@ -1,7 +1,30 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-01 (2)** (**GOUVERNANCE RÉCONCILIÉE ET `PB#2` FERMÉ — D-106 / D-107** :
+> **2026-09-01 (4)** (**CHANTIER SECTORIEL OUVERT + DEUX INSTRUMENTS RÉPARÉS** :
+> **R2 `screenTraits`** 🟢 — les traits d'écran sont DÉRIVÉS, jamais déclarés
+> (`D-086` : l'AIR ne connaît aucune catégorie métier) ; mesuré : **45 écrans
+> sur 154 (29 %) portent plusieurs traits**, un champ `role` unique serait faux
+> par construction. · **Instrument `controles-fantomes` corrigé** : il remplissait
+> chaque champ d'une constante qui violait les règles des documents et comptait
+> fantômes des contrôles qui refusaient CORRECTEMENT une saisie invalide —
+> **183 → 155**, 28 faux positifs, **plafond 180 INCHANGÉ** (`D-110`). ·
+> **`FORM_SANS_ACTION`** 🟢 — diagnostic non bloquant : **7 formulaires muets sur
+> 45 (15,6 %)** contre **0 bouton muet sur 259**, dont deux « Payer par carte ».
+> **883 tests · tsc EXIT=0 · lint EXIT=0 · 6/7 gates vertes. Aucun appel API.**)
+>
+> *Entrée précédente —* **2026-09-01 (3)** (**P10 — `coach-fitness` EST VALIDE — `D-109`** : génération
+> réelle autorisée, **`valid=true`**, **2,3069 $**, 10 appels, **27 diagnostics → 0**,
+> **0 amputation**, **0 mutation hors périmètre**, 35/35 promesses vivantes. Le
+> `NON DÉMONTRÉ` central du chantier est **RÉFUTÉ par mesure**. **6 gates sur 7 au
+> vert** — `app-compile` 26/26, `app-rendu` et `invariants` passent au vert.
+> `fidelite` reste ROUGE, **mais plus sur `coach-fitness`** : sur les 12 documents
+> v2 gelés et 9 documents v3. Aucun seuil, aucune gate, aucun corpus historique
+> touché. Corpus v2 **strictement inchangé**. **`PB#2` n'a PAS été éprouvé en
+> conditions réelles — aucun `529` n'est survenu.** 865 tests · tsc EXIT=0 ·
+> lint EXIT=0.)
+>
+> *Entrée précédente —* **2026-09-01 (2)** (**GOUVERNANCE RÉCONCILIÉE ET `PB#2` FERMÉ — D-106 / D-107** :
 > le blocage `C-0` est déclaré **CADUC** — `RN-04` a été exécuté le 2026-08-31
 > (`2f00c00`, 88 fichiers) sans que `RN-01` soit levée, et P5→P9 a suivi.
 > **`RN-01` et `C-0` sont CLOS PAR CADUCITÉ (`D-108`, arbitrage propriétaire)** —
@@ -674,14 +697,17 @@ surveillée. L'invariant *atteignable ⊆ rendable* est tenu sur les 6 blocs.
 
 ## Ce qui reste NON DÉMONTRÉ
 
-🔴 **Aucune génération n'a encore produit un `coach-fitness` valide.** P8 a réussi
-mais portait deux défauts alors invisibles ; P9 les a **évités tous les deux** et
-s'est arrêtée sur une **erreur 529 d'infrastructure** pendant la réparation.
+🟢 **LEVÉ LE 2026-09-01 PAR P10 (`D-109`).** *Énoncé d'origine, conservé :* « 🔴
+Aucune génération n'a encore produit un `coach-fitness` valide. P8 a réussi mais
+portait deux défauts alors invisibles ; P9 les a **évités tous les deux** et s'est
+arrêtée sur une **erreur 529 d'infrastructure** pendant la réparation. »
+**RÉFUTÉ PAR MESURE** : P10 a produit un `coach-fitness` **`valid=true`**, 27
+diagnostics réparés à 0, 0 amputation, 0 mutation hors périmètre.
 🔴 Archétype Réservation · rendu physique sur appareil · largeur des cartes.
 🔴 Phase 10B reste **OUVERTE** : F1/F4/F5 sont désormais câblés en CI, mais les
 gates de fidélité restent rouges sur des défauts RÉELS du corpus.
 
-## Les cinq générations réelles — coût total 14,8831 $
+## Les six générations réelles — coût total 17,1900 $
 
 | | document | issue | coût |
 |---|---|---|---|
@@ -690,6 +716,7 @@ gates de fidélité restent rouges sur des défauts RÉELS du corpus.
 | **P6** | plombier-urgence | `valid=true`, révèle D-099 | 2,7396 $ |
 | **P8** | coach-fitness | `valid=true`, révèle D-104 et D-105 | 2,4805 $ |
 | **P9** | coach-fitness | **529 Overloaded** pendant la réparation | 1,7718 $ |
+| **P10** | coach-fitness | 🟢 **`valid=true`** — 27 diagnostics → 0, 0 amputation | 2,3069 $ |
 
 **Trois générations sur cinq ont révélé un défaut de nos propres instruments.**
 C'est ce constat qui a fondé le **harnais d'invariants** (`gate:invariants`, 7ᵉ gate
@@ -709,6 +736,49 @@ B-ter : incohérences prop ↔ déclencheur       P8 : 4 → P9 : 0
 **Mesure partielle mais concluante sur son objet** : les deux défauts de P8 ont
 disparu du document que le modèle a écrit seul. Ce qui manque est la fin mécanique.
 
+## État P10 — GÉNÉRATION VALIDÉE (`D-109`)
+
+```
+2,3069 $ · 10 appels · 443 s · refus 0 · runId 2026-09-01T15-15-53-015Z
+issue = terminee   valid = TRUE
+27 diagnostics en 1re passe → 0 après réparation
+  23 × AIR_TEST_TARGET_UNKNOWN · 4 × BLOCK_PROPS_INVALID
+sections réémises : cablage, actions, ecrans
+amputations hors périmètre : 0     mutations hors périmètre : 0
+structure attempt1 → attempt2 : 5 / 8 / 14 / 35 / 29  IDENTIQUE
+airHash 968517ceb935251e8b1b50a8a94f0bea13cb4636751867f05f6e975f2522716e
+```
+
+**C'est la fin mécanique qui manquait à P9.** Le générateur produit un
+`coach-fitness` fidèle, et la réparation aboutit sans rien retirer.
+
+**Artefacts CONSERVÉS**, nommés par `runId` (`D-107`), chaîne de garde vérifiée —
+`hashCanonical(attempt2)` = `hashCanonical(corpus)` = `journal.airHash` :
+
+| artefact | SHA-256 |
+|---|---|
+| `campagne-v2-2026-09-01T15-15-53-015Z.jsonl` | `16d32694e78fced3…` |
+| `coach-fitness.…attempt1.air.json` | `4caee4d8a3f5522e…` |
+| `coach-fitness.…attempt2.air.json` | `0464fdcb90d7b101…` |
+
+**Écart ENTRE générations, rapporté sans être qualifié** — P8 → P10 : actions
+24 → 14, promesses 42 → 35, blocs 32 → 29 ; entités et écrans identiques. `D-088`
+déclare cette comparaison **mal fondée** : le modèle a le droit de remodeler, et le
+verdict d'amputation ne vaut qu'**au sein d'une même exécution**, où il est de **0**.
+
+🟠 **P10 NE VALIDE PAS `PB#2` EN CONDITIONS RÉELLES** — et ne doit jamais être
+présentée ainsi. Aucune erreur technique n'est survenue : `erreurTechnique`,
+`assemblagePartiel` et `reparationPartielle` sont **tous `undefined`** au journal.
+Le chemin de conservation **n'a pas été emprunté**. Ce que P10 démontre de `D-107` :
+le **nommage par `runId`** fonctionne en production — 3 artefacts, 0 collision `wx`,
+provenance relisible depuis le nom seul.
+
+🔵 **Observation — dégradation de schéma au premier appel.** `[coach-fitness:base]
+niveau "sans-bornes-numeriques" refusé — dégradation : 400 output_config.format.schema:
+For 'array' type, 'minItems'…`. L'échelle `makeLevels` (`emit-v3.mjs` l.179) a joué
+son rôle ; la génération a abouti. **Comportement de dégradation PRÉVU, non démontré
+comme une anomalie de P10.** Aucune correction entreprise.
+
 ## Vérifications au 2026-09-01
 
 ```
@@ -727,6 +797,35 @@ APRÈS D-106 / D-107 — 2026-09-01, AUCUN APPEL API
           → statuts et motifs IDENTIQUES à l'avant-correction : aucune régression
 corpus v2 GELÉ : empreinte 85612b1f… INCHANGÉE
 preuves P5→P9 (evidence/p5,p6,p8,p9) : empreinte fd97d3d4… INTACTE
+
+APRÈS P10 — 2026-09-01, génération réelle 2,3069 $
+865 tests · 0 échec     typecheck EXIT=0     lint EXIT=0
+7 gates : controles 🟢 · navigation 🟢 · composition 🟢
+          app-compile 🟢 26/26 · app-rendu 🟢 · invariants 🟢 0 désaccord
+          fidelite 🔴 F1=12 · F4=21 · 15 motifs réfutés  ← AUCUN sur coach-fitness
+          → 6 gates sur 7 au VERT     ⚠ VOIR RECTIFICATION CI-DESSOUS
+images ORPHELINES 35 / plafond 38 · boutons nav 106 / plafond 121 · doublons 0
+plafonds INCHANGÉS · aucune gate modifiée · aucun corpus historique touché
+corpus v2 GELÉ : empreinte 85612b1f… INCHANGÉE
+corpus v3 : coach-fitness.air.json réécrit (version P8 récupérable en afd5954)
+
+⚠ RECTIFIÉ — le bloc ci-dessus est CONSERVÉ, il était sincère mais FAUX sur un point.
+  « controles 🟢 » et « 6 gates sur 7 » ont été mesurés sur une compilation PÉRIMÉE
+  à 25 applications : `gate:controles` lit la sortie de `gate:app-compile`, et les
+  gates avaient été lancées dans le mauvais ordre. L'état réel après P10 était
+  **5 gates sur 7** — `controles` était ROUGE à 183/180, `v3-coach-fitness` entrant
+  au recensement pour la première fois (+7). Le cliquet avait donc raison.
+
+AU 2026-09-01 (4) — APRÈS R2, CORRECTION DE L'INSTRUMENT ET FORM_SANS_ACTION
+883 tests · 0 échec · 74 fichiers · 17 paquets     typecheck EXIT=0     lint EXIT=0
+7 gates, RELANCÉES DANS LE BON ORDRE (app-compile en premier) :
+          app-compile 🟢 26/26 · app-rendu 🟢 · controles 🟢 · navigation 🟢
+          composition 🟢 · invariants 🟢 · fidelite 🔴 F1=12 · F4=21 · 15 motifs
+          → 6 gates sur 7 au VERT — cette fois mesuré, pas hérité
+contrôles fantômes : 1155/1310 agissants · 155 / plafond 180 (marge = amortisseur, D-110)
+plafonds INCHANGÉS : FANTÔMES 180 · ORPHELINES 38
+registre de blocs : 0 fichier modifié     schéma AIR : 0 fichier modifié
+corpus v2 GELÉ : empreinte 85612b1f… INCHANGÉE
 ```
 
 🔵 **RECTIFIÉ LE 2026-09-01 par mesure — l'énoncé précédent était FAUX pour une gate
@@ -761,6 +860,13 @@ initiale.** *Constat d'origine, conservé :* le 529 de P9 a frappé pendant la
 symétrique de l'émission ; le harnais n'appelle plus jamais `repairSections` nu, et
 un cliquet lit le **source réel** de `emit-v3.mjs` pour l'imposer.
 
+> 🟠 **NIVEAU DE PREUVE, à ne pas surélever.** La correction est démontrée **par
+> cas-tueurs et falsification**, jamais en conditions réelles. **P10 n'a PAS
+> déclenché ce chemin** — aucun `529` n'est survenu, `erreurTechnique`,
+> `assemblagePartiel` et `reparationPartielle` sont `undefined` au journal. Ne
+> jamais écrire que `PB#2` est validé « en conditions réelles ». Ce que P10
+> démontre en production : le nommage par `runId` et l'écriture `wx`.
+
 > 🔵 **Le sous-constat sur le reliquat était PÉRIMÉ à l'heure où il a été écrit.**
 > `results/coach-fitness.attempt2.air.json` n'est **plus en place** : il a été
 > supprimé par le commit `9f88792` lui-même (4 fichiers, 12 891 suppressions).
@@ -778,7 +884,83 @@ un cliquet lit le **source réel** de `emit-v3.mjs` pour l'imposer.
 (périphrases, synonymes). **Ils n'ouvrent aucune suppression** : la protection
 D-098b est structurelle et ne dépend pas du classifieur.
 
+# CHANTIER SECTORIEL — COMPOSITION PAR SECTEUR (ouvert le 2026-09-01)
+
+> Objectif : passer de « le modèle propose » à **« le modèle propose → le système
+> contraint → les invariants vérifient »**. Analyse complète et architecture de
+> règles `R1` → `R8` conduites le 2026-09-01.
+
+| Règle | État | Preuve |
+|---|---|---|
+| **R2** — traits d'écran | 🟢 **DÉMONTRÉ-VALIDÉ** (`D-111`) | `screenTraits()` dans `@deribfy/execution-contract` · **10 cas-tueurs** · 3 falsifications · cliquet de véracité : `detail` coïncide exactement avec `detailScreens` sur les 24 documents |
+| **R1** — archétype | 🔴 **SANS OBJET** | Contredirait `D-086` : *« l'AIR ne connaît aucune catégorie métier »*. L'archétype reste un raisonnement du GÉNÉRATEUR, hors contrat |
+| **R6** — chaîne image → détail | 🔴 non commencé, **débloqué** | S'indexera sur les traits de R2 |
+| **R7** — CTA par modèle commercial | 🔴 non commencé | — |
+| **R4** — densité d'images | 🔴 **BLOQUÉ** | **Aucun bloc grille n'existe.** Le registre a 6 types ; `list` rend une vignette de **48 px** à gauche d'une ligne. « 4 images principales visibles » est **inexprimable** aujourd'hui |
+| **R5** — ratio / orientation | 🔴 **BLOQUÉ** | `AppImage` n'a que 2 variantes (`thumb` 48×48, `header` pleine largeur). Aucune notion de ratio nulle part |
+| **R8** — structure ≠ contenu | 🔴 non commencé | 🟢 La séparation existe DÉJÀ : l'AIR porte le CHAMP `asset`, jamais l'image. Manque le fournisseur de contenu réel (Phase 5+) |
+| **R3** — contrat de composition | 🔴 non commencé (dernier) | Un contrat bloquant avant mesure serait l'erreur de `D-093` |
+
+**Mesure fondatrice du chantier** — corpus v3 : **27 champs `asset`, 9 affichés,
+18 ORPHELINS**. Seuls 3 documents affichent leurs images, ont une navigation
+primaire et une recherche : `resto-quartier`, `plombier-urgence`, `coach-fitness`
+— **exactement les 3 régénérés après `D-088`**. Les 9 autres sont ceux que
+`gate:fidelite` refuse sur F4. **Le rouge résiduel de `fidelite` est donc une
+DETTE DE GÉNÉRATION, pas un défaut structurel** — hors les 12 documents v2 gelés,
+qui sont en `1.0.0` et n'ont aucune intention.
+
+🔴 **Voyage / Transport est ABSENT du corpus** : aucune des 12 intentions.
+
+## INSTRUMENTS RÉPARÉS LE 2026-09-01
+
+**① `controles-fantomes` — 28 faux positifs supprimés (183 → 155).**
+La gate remplissait **chaque** champ texte de la constante `"0700000000"`. Le
+runtime annule toute mutation qui viole une règle déclarée (`reglesRespectees`,
+`D-062`) : e-mail, énumération, bornes numériques. Des contrôles qui **refusaient
+correctement** une saisie invalide étaient comptés fantômes — le document le mieux
+validé était le plus puni. Correction : `saisie-conforme.ts` choisit, par champ, la
+première valeur qui satisfait **toutes** ses assertions ; un champ sans assertion
+garde la valeur historique. **5 cas-tueurs, 3 falsifications.** `resto-riche` 50/50
+et `cours-cuisine` 16/16 restent à 100 % — la correction ne fabrique aucun vert.
+
+**Décomposition des 155 restants**, par cause dérivée : **65** dette `saisie.id`
+(`update`/`delete` exigent un identifiant que rien ne fournit) · **30** règle
+portant sur un champ que le formulaire ne collecte pas · **30** `create` déclenché
+par un bouton, sans valeur propre (`D-083`) · **20 nœuds = 7 contrôles réellement
+muets** · 10 indéterminés. **Seuls 20 sur 155 sont ce que cette gate a été écrite
+pour détecter.**
+
+**② `FORM_SANS_ACTION` — les formulaires qui promettent sans tenir (`D-112`).**
+`FACT` — **7 formulaires muets sur 45 (15,6 %)** contre **0 bouton muet sur 259
+(0 %)**. Le registre impose `actionId` à un `button` — *« un CTA sans action »* —
+et **rien** à un `form` (`actionRefProps: []`) ; le pont de validation ne vérifie
+que le sens inverse (`BLOCK_TRIGGER_SANS_AFFORDANCE`, `D-104`). L'asymétrie 0 %/259
+contre 15,6 %/45 **réfute** l'hypothèse d'une inattention du modèle et **démontre**
+la lacune du contrat.
+
+Concernés : `billetterie-concerts` (4, dont **« Payer par carte »**),
+`livraison-fruits` (2, dont **« Payer par carte »**), `toiletteur-chiens` (1,
+**« Confirmer le rendez-vous »**). **Ces 7 formulaires restent muets** : le
+diagnostic ne mord qu'à la prochaine génération.
+
+Le diagnostic vit dans la validation de campagne (`emit-v3`), **volontairement
+HORS de `validateAirBlocks`** : ce pont est consommé en fail-closed par le
+compilateur et par le cliquet du corpus gelé qui exige zéro diagnostic — l'y placer
+aurait **refusé 3 documents existants**, l'erreur d'étage de `D-105`. **6 cas-tueurs
++ 2 sur le mappage de réparation, 3 falsifications.**
+
 ## Prochaine étape autorisée
+
+> ### ✅ EXÉCUTÉE LE 2026-09-01 — P10, `D-109`. `valid=true`, 2,3069 $, 10 appels.
+> Le bloc ci-dessous est **conservé** : c'est l'autorisation telle qu'elle était
+> formulée. **Aucune autre génération n'est autorisée** sans un nouvel arbitrage.
+>
+> **Ce qui est ouvert maintenant** : un **audit du rouge résiduel de `fidelite`**
+> — déterminer si `F1 = 12` / `F4 = 21` est **structurellement attendu** (les 12
+> documents v2 gelés sont en `1.0.0` et n'ont aucune intention : ils ne peuvent
+> pas satisfaire un critère qui la suppose) ou s'il constitue un **travail restant
+> de la Phase 10B** portant sur les 9 documents v3. **Aucun seuil, aucune gate,
+> aucun corpus historique ne doit être modifié pour l'obtenir.**
 
 **Une seule génération**, `coach-fitness`, index **2** :
 
