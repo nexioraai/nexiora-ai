@@ -6062,3 +6062,53 @@ régénérations** — 19 détails sans source · 1 formulaire muet · 14 images
 brutes. **Le resserrement prévu par la règle de cadence est appliqué dans ce
 même commit** : plafond orphelins 20 → **19**, `agence-immo` entre dans
 l'ensemble monotone des sains (plancher **5**). Aucun autre cliquet ne bouge.
+
+## D-121 — BOUTIQUE-MODE EST VALIDE : LE SCAN SCINDÉ COMME LA CARTE, LES MOTIFS PARESSEUX CONVERTIS — 2026-09-02
+
+**6ᵉ régénération (« marketplace » du comparatif), validée sur les 10 critères
+du dossier de lancement.** runId `2026-09-02T05-57-53-697Z`, HEAD `597781b` ·
+`terminee` · **`valid=true`** · **2,7711 $ / 4,00 $** · 10 appels · 536 s ·
+0 refus · 0 troncature — le risque historique propre à ce document (timeout
+D-080, 1,47 $ perdus le 2026-08-31) ne s'est pas représenté.
+
+### Mesures
+
+| | |
+|---|---|
+| diagnostics | **30 → 0** (27 UNKNOWN · 1 SECRET_LIKE_KEY · 2 BLOCK_PROPS) |
+| `AIR_TEST_TARGET_MORTE` | **0 → 0** — 0 déclencheur `data` émis, l'ancien `act_notifier_statut_commande` a disparu |
+| `D-088` intra-exécution | 11=11 · 6=6 · 34=34 · 21=21 · promesses **43=43** · **0 perte · 0 amputation · 0 mutation** |
+| chaîne de garde | `hash(attempt2)` = `hash(corpus)` = `journal.airHash` = `93d0d297…` |
+
+### F1 · F4 — vérifiés verts AVANT acceptation
+
+**F1 : 43/43 vivantes.** **F4 : 10 satisfaits · 1 dit · 0 défaillant.** Les 2
+motifs réfutés convertis : `need_articles_par_categorie` — le **motif sans fait
+cité** (classe paresseuse) est devenu une satisfaction par relation réellement
+traversée ; `need_photos_articles` satisfait. **Le scan est SCINDÉ comme la
+carte l'avait été (D-120)** : `need_code_barres_vers_fiche_article`
+**satisfait**, `need_scan_code_barres_camera` **dit** sur motif accepté
+(`capabilitiesEmitCode: false`). Détails 3 orphelins → **0** (2 détails, tous
+sourcés) · images 2 non rendues → **0**, et le document déclare 4 assets tous
+rendus · muets 0 → 0 · `navigation.primary` présent.
+
+### Vérifications
+
+**921/921 · typecheck 0 · lint 0** · cliquets B′ verts SANS édition (5ᵉ
+absorption) · gates : F4 **18 → 17** · motifs réfutés **10 → 8** · F1 = 12.
+
+### Phase 10B — resserrement de cadence dans ce commit
+
+**6/12 documents v3 verts.** Restent **6 régénérations** — stock vérifié :
+**16 détails sans source · 1 formulaire muet · 13 images brutes**. Resserrement :
+plafond orphelins 19 → **16**, `boutique-mode` entre dans l'ensemble des sains
+(plancher **6**). Porteur muet inchangé (`toiletteur-chiens`), aucun autre
+garde-fou modifié.
+
+🔵 **ERRATUM DATÉ (2026-09-02)** — les stocks d'images consignés par D-119
+(« 13 ») et D-120 (« 14 ») étaient erronés au moment de leur écriture : les
+valeurs re-mesurées étaient respectivement **16** et **15** (glissements
+arithmétiques, démontrés par re-census le 2026-09-02). Les textes historiques
+ne sont pas réécrits ; le hasard fait que le stock réel actuel (13) rejoint le
+chiffre de D-119. La rectification documentaire groupée (avec D-117) reste une
+dette ouverte.

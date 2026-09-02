@@ -1,7 +1,20 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-02 (9)** (**`agence-immo` EST VALIDE — `D-120`** : 5ᵉ régénération,
+> **2026-09-02 (10)** (**`boutique-mode` EST VALIDE — `D-121`** : 6ᵉ
+> régénération (« marketplace »), **2,7711 $**, 10 appels, 536 s, `valid=true`,
+> 30 diagnostics → 0, **0 promesse morte**, 0 amputation, 43=43 promesses,
+> 0 troncature — le timeout historique D-080 propre à ce document ne s'est pas
+> représenté. **F1 43/43 · F4 10 ok, 1 dit, 0 réfuté** — le motif « sans fait
+> cité » converti en satisfaction réelle ; **scan SCINDÉ comme la carte** :
+> navigation vers la fiche satisfaite, acquisition caméra dite sur motif
+> accepté. Détails 3 → 0 · images 2 → 0 (4 assets, tous rendus). **6/12 v3
+> verts · F4 17 · motifs réfutés 8.** Resserrement de cadence : orphelins
+> **≤ 16**, sains **6**. Stock : 16 orphelins · 1 muet · 13 images (erratum
+> daté sur les « 13 »/« 14 » historiques consigné en D-121). 921/921 · tsc 0 ·
+> lint 0. **2,7711 $.**)
+>
+> *Entrée précédente —* **2026-09-02 (9)** (**`agence-immo` EST VALIDE — `D-120`** : 5ᵉ régénération,
 > **2,9356 $**, 10 appels, 575 s, `valid=true`, 33 diagnostics → 0, **0 promesse
 > morte**, 0 amputation, 47=47 promesses. **F1 47/47 · F4 12 ok, 1 dit,
 > 0 réfuté** — les 4 défaillants historiques convertis, dont les filtres

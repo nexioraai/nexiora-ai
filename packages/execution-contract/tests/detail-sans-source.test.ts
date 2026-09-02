@@ -117,10 +117,12 @@ describe("cliquet de régression — les défauts du corpus v3 ne remontent jama
   // ÉDITION CONSCIENTE (2026-09-02, commit d'acceptation D-120) : 20 → 19 —
   // agence-immo régénéré, 1 → 0. Règle de cadence : le plafond se resserre
   // dans le commit d'acceptation, volontaire sur vert, jamais forcé par rouge.
-  it("🔴 les écrans de détail SANS SOURCE ne remontent jamais — plafond 19", () => {
+  // ÉDITION CONSCIENTE (2026-09-02, commit d'acceptation D-121) : 19 → 16 —
+  // boutique-mode régénéré, 3 → 0.
+  it("🔴 les écrans de détail SANS SOURCE ne remontent jamais — plafond 16", () => {
     const tous = documents.flatMap((d) => detailScreens(d.air));
     const orphelins = tous.filter((x) => !x.hasItemIdSource);
-    expect(orphelins.length).toBeLessThanOrEqual(19);
+    expect(orphelins.length).toBeLessThanOrEqual(16);
   });
 
   // ÉDITION CONSCIENTE (2026-09-01, B′ après D-117) : égalité exacte →
@@ -141,9 +143,12 @@ describe("cliquet de régression — les défauts du corpus v3 ne remontent jama
     // vérifiés verts avant acceptation. Plancher : 4 documents.
     // ÉDITION CONSCIENTE (2026-09-02, commit d'acceptation D-120) :
     // + `agence-immo` — 2 détails, tous sourcés. Plancher : 5 documents.
+    // ÉDITION CONSCIENTE (2026-09-02, commit d'acceptation D-121) :
+    // + `boutique-mode` — 2 détails, tous sourcés. Plancher : 6 documents.
     for (const attendu of [
       "agence-immo",
       "billetterie-concerts",
+      "boutique-mode",
       "coach-fitness",
       "livraison-fruits",
       "plombier-urgence",
