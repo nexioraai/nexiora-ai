@@ -95,6 +95,13 @@ export const EMBEDDED_SOURCES: readonly EmbeddedSourceSpec[] = [
     rewrites: {},
   },
   {
+    // E3.1 (D-130) — magasin observable PUR : instantané par entité, états
+    // réels, observation. Aucun réseau, aucune horloge, aucun « live ».
+    source: "compiler/runtime/magasin-donnees.ts",
+    target: "lib/runtime/magasin-donnees.ts",
+    rewrites: {},
+  },
+  {
     // E1/E2 (D-129) — pipeline PUR des lignes de liste, prouvé par tests
     // unitaires sans monter react-native.
     source: "compiler/runtime/list-pipeline.ts",

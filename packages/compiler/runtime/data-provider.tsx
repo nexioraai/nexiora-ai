@@ -6,8 +6,12 @@
 // Phase 5 — sans changement de cette interface.
 // Ce fichier est un ARTEFACT DE SORTIE du compilateur (copie régénérable,
 // D-007) : jamais édité dans un projet généré.
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo, useSyncExternalStore } from "react";
 import type { PropsWithChildren } from "react";
+// E3.1 (D-130) — le contrat du magasin vit dans son module PUR ; ici on ne
+// fait qu'en importer le TYPE (le cliquet d'exactitude de l'interface
+// DataProvider ne doit voir que les opérations de données déclarées).
+import type { MagasinDonnees } from "./magasin-donnees";
 
 export interface EntityInstance {
   id: string;
@@ -56,11 +60,45 @@ export const EMPTY_DATA_PROVIDER: DataProvider = {
 
 const DataContext = createContext<DataProvider>(EMPTY_DATA_PROVIDER);
 
+/**
+ * OBSERVATION (E3.1, D-130) — ADDITIVE. Un provider qui expose `abonner` +
+ * `versionGlobale` (le magasin observable) fait re-rendre le sous-arbre à
+ * CHAQUE évolution réelle de ses données ; un provider ordinaire garde le
+ * comportement historique au caractère près. La granularité anti-tempête est
+ * dans le magasin (une évolution sans changement ne notifie pas) — ici on ne
+ * fait qu'écouter.
+ */
+const estObservable = (p: DataProvider): p is DataProvider & MagasinDonnees =>
+  typeof (p as Partial<MagasinDonnees>).abonner === "function" &&
+  typeof (p as Partial<MagasinDonnees>).versionGlobale === "function";
+
+function ObservationRoot({
+  provider,
+  children,
+}: PropsWithChildren<{ provider: DataProvider & MagasinDonnees }>) {
+  const version = useSyncExternalStore(
+    provider.abonner,
+    provider.versionGlobale,
+    provider.versionGlobale,
+  );
+  // CAUSE RACINE DÉMONTRÉE (E3.1) : re-rendre ce composant ne re-rend PAS le
+  // sous-arbre — `children` est le MÊME élément (bail-out React), et un
+  // provider d'identité stable ne propage rien par le contexte. La VALEUR du
+  // contexte change donc d'identité à CHAQUE version réelle : chaque
+  // consommateur (`useDataProvider`) re-rend, et lit des données à jour.
+  const valeur = useMemo<DataProvider>(() => ({ ...provider }), [provider, version]);
+  return <DataContext.Provider value={valeur}>{children}</DataContext.Provider>;
+}
+
 export function DataRoot({
   provider,
   children,
 }: PropsWithChildren<{ provider: DataProvider }>) {
-  return <DataContext.Provider value={provider}>{children}</DataContext.Provider>;
+  return estObservable(provider) ? (
+    <ObservationRoot provider={provider}>{children}</ObservationRoot>
+  ) : (
+    <DataContext.Provider value={provider}>{children}</DataContext.Provider>
+  );
 }
 
 export function useDataProvider(): DataProvider {

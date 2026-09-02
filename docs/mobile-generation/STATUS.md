@@ -1,7 +1,22 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-02 (16)** (**⚙️ E1+E2 SCELLÉS — `D-129`** : recherche PILOTÉE
+> **2026-09-02 (17)** (**🫀 E3.1 SCELLÉ — `D-130`** : le MAGASIN OBSERVABLE —
+> instantané `{rows, status, version}` par entité, transitions pilotées par
+> l'appelant (jamais d'horloge), écritures D-061 à vérité booléenne,
+> anti-tempête (l'identique ne notifie pas), erreur qui CONSERVE l'instantané
+> et dit la vérité. `DataRoot` observe additivement (contexte versionné —
+> bail-out React démontré et traité). **Preuves : pure 9/9 + rendu réel 1/1**
+> sur l'écran ÉMIS `v3-bus-intercites/scr_departs` : loading rendu, v1→v2 SUR
+> PLACE, mutation locale re-rend, JSON byte-identique sur no-op, erreur
+> véridique. **AUCUN réseau, AUCUN `liveData`, AUCUN changement AIR** — la
+> règle de preuve tient. 961/961 · tsc 0 · lint 0 · app-compile 27/27 ·
+> corpus byte-intact · **0 $**. 🟡 réserves visuelles appareil (E1/E2 et
+> E3.1) · ⚠️ dette consciente : obs `corpus-rendu` épingle 26 apps vs 27
+> compilées. Prochain arbitrage : E3.2 (dataset.source + liveData + sondage
+> grammaire). **0 $.**)
+>
+> *Entrée précédente —* **2026-09-02 (16)** (**⚙️ E1+E2 SCELLÉS — `D-129`** : recherche PILOTÉE
 > (≤ 3 filtres en conjonction, valeur vide = inactif, `text`/`choice`) et
 > PORTÉE RELATIONNELLE (`scopeFieldId` → instance du `detail_header`, **vide
 > sans instance — jamais rows[0]**) — fondations transversales AVION+FINTECH

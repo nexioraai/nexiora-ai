@@ -6579,3 +6579,58 @@ jusqu'au premier run consommateur.
 Prochain jalon : **D-130 — dossier d'architecture READ-ONLY E3** (source de
 données vivante : fournisseur asynchrone, loading/error réels, observation,
 inventaire/prix/statuts) — le chantier structurant transversal AVION+FINTECH.
+
+## D-130 — E3.1 : LE MAGASIN OBSERVABLE — LES DONNÉES VIVENT, SANS RÉSEAU NI MENSONGE — 2026-09-02
+
+**Arbitrage propriétaire** : dossier d'architecture E3 validé (architecture
+**A — magasin observable + adaptateur de source**), implémentation du seul lot
+**E3.1** autorisée puis **scellée ici**. E3.2 (contrat AIR `dataset.source` +
+`liveData` + sondage de grammaire) et E3.3 (adaptateur réseau) restent soumis
+à arbitrages séparés.
+
+### Architecture implémentée
+
+`magasin-donnees.ts` — module **PUR, zéro import** (types structuraux locaux,
+doctrine `list-pipeline`) : instantané `{rows, status, version}` par entité ;
+**transitions PILOTÉES PAR L'APPELANT** (`appliquerChargement` /
+`appliquerDonnees` / `appliquerErreur` — l'adaptateur scripté des bancs EST la
+séquence, jamais une horloge) ; écritures locales D-061 à vérité booléenne ;
+**notification uniquement sur changement réel** (anti-tempête) ; en erreur,
+le dernier instantané est CONSERVÉ et l'ÉTAT dit la vérité (D-060/F3).
+`DataRoot` observe **additivement** : un provider ordinaire garde le
+comportement historique au caractère près ; un magasin fait re-rendre par un
+**contexte versionné** — cause racine démontrée en chemin : le bail-out React
+sur `children` exige que la valeur de contexte change d'identité par version.
+
+### Preuves
+
+**Pure 9/9** (`magasin-donnees.test.ts`) : loading réel · v1→v2 versionné ·
+3 notifications pour 3 écritures honorées (et `false` sans optimisme sur cible
+absente) · erreur conserve et reste idempotente · identique ⇒ version stable,
+0 notification · **déterminisme** : trace
+`1:loading:1|2:ready:2|3:error:2|4:error:3` strictement identique sur deux
+exécutions, sans horloge. **Rendu réel 1/1** (`e3-magasin.obs.tsx`, écran ÉMIS
+`v3-bus-intercites/scr_departs` monté au harnais) : « Chargement des
+départs… » rendu → **v1→v2 SUR PLACE sans navigation** → filtre statique
+souverain (`annule` jamais rendu — E1 littéral intact) → **mutation locale
+re-rend** (« Man » apparaît) → identique ⇒ JSON de rendu byte-identique →
+« Départs indisponibles » rendu, lignes non présentées comme fraîches,
+instantané conservé. Falsification supplémentaire en chemin : le cliquet
+d'exactitude de l'interface `DataProvider` a refusé toute déclaration
+étrangère — le magasin est autonome, l'interface historique seule visible.
+
+### Ce qui N'EST PAS dans ce lot — dit expressément
+
+**Aucun réseau. Aucun fait `liveData`. Aucun `dataset.source`, aucun
+changement AIR.** La règle de preuve tient : aucun fait d'enveloppe n'est né
+du seul code — `liveData` attendra E3.2 et ses preuves instrumentées.
+
+### Vérifications · réserves · dette
+
+Suite **961/961** (952 + 9) · typecheck 0 · lint 0 · **app-compile 27/27** ·
+fidélité INCHANGÉE (F1 12 · F4 15) · corpus **byte-intact** · **0 $**.
+🟡 Réserve D-129 MAINTENUE (validation visuelle E1/E2 sur appareil) ·
+🟡 réserve NOUVELLE de même classe : rendu visuel des états E3.1 sur appareil ·
+⚠️ **dette consciente HORS PÉRIMÈTRE, non corrigée ici** : `corpus-rendu.obs.tsx`
+épingle **26** applications alors que `gate:app-compile` en écrit **27** depuis
+l'entrée de `bus-intercites` (D-127) — édition consciente à planifier.
