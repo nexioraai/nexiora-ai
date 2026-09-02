@@ -119,10 +119,12 @@ describe("cliquet de régression — les défauts du corpus v3 ne remontent jama
   // dans le commit d'acceptation, volontaire sur vert, jamais forcé par rouge.
   // ÉDITION CONSCIENTE (2026-09-02, commit d'acceptation D-121) : 19 → 16 —
   // boutique-mode régénéré, 3 → 0.
-  it("🔴 les écrans de détail SANS SOURCE ne remontent jamais — plafond 16", () => {
+  // ÉDITION CONSCIENTE (2026-09-02, commit d'acceptation D-122) : 16 → 14 —
+  // suivi-chantier régénéré, 2 → 0.
+  it("🔴 les écrans de détail SANS SOURCE ne remontent jamais — plafond 14", () => {
     const tous = documents.flatMap((d) => detailScreens(d.air));
     const orphelins = tous.filter((x) => !x.hasItemIdSource);
-    expect(orphelins.length).toBeLessThanOrEqual(16);
+    expect(orphelins.length).toBeLessThanOrEqual(14);
   });
 
   // ÉDITION CONSCIENTE (2026-09-01, B′ après D-117) : égalité exacte →
@@ -145,6 +147,8 @@ describe("cliquet de régression — les défauts du corpus v3 ne remontent jama
     // + `agence-immo` — 2 détails, tous sourcés. Plancher : 5 documents.
     // ÉDITION CONSCIENTE (2026-09-02, commit d'acceptation D-121) :
     // + `boutique-mode` — 2 détails, tous sourcés. Plancher : 6 documents.
+    // ÉDITION CONSCIENTE (2026-09-02, commit d'acceptation D-122) :
+    // + `suivi-chantier` — 3 détails, tous sourcés. Plancher : 7 documents.
     for (const attendu of [
       "agence-immo",
       "billetterie-concerts",
@@ -152,6 +156,7 @@ describe("cliquet de régression — les défauts du corpus v3 ne remontent jama
       "coach-fitness",
       "livraison-fruits",
       "plombier-urgence",
+      "suivi-chantier",
     ]) {
       expect(sains, `document assaini sorti de l'ensemble : ${attendu}`).toContain(attendu);
     }

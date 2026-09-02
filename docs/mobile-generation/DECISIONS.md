@@ -6112,3 +6112,60 @@ arithmétiques, démontrés par re-census le 2026-09-02). Les textes historiques
 ne sont pas réécrits ; le hasard fait que le stock réel actuel (13) rejoint le
 chiffre de D-119. La rectification documentaire groupée (avec D-117) reste une
 dette ouverte.
+
+## D-122 — SUIVI-CHANTIER EST VALIDE : LA FIDÉLITÉ À LA DEMANDE PRIME SUR LA CONSERVATION DES SUR-DÉRIVATIONS — 2026-09-02
+
+**7ᵉ régénération, premier document B2B, acceptée par arbitrage propriétaire
+après une réserve honnêtement posée.** runId `2026-09-02T06-31-43-153Z`, HEAD
+`d14dd87` · `terminee` · **`valid=true`** · **2,5311 $ / 4,00 $** · 10 appels ·
+490 s · 0 refus · 0 troncature.
+
+### Mesures
+
+| | |
+|---|---|
+| diagnostics | **25 → 0** (24 UNKNOWN · 1 BLOCK_PROPS) · `AIR_TEST_TARGET_MORTE` **0 → 0** (0 déclencheur `data`, les 2 anciens disparus) |
+| `D-088` intra-exécution | 9=9 · 4=4 · 31=31 · promesses **41=41** · actions 21→22 (cible CRÉÉE) · **0 perte · 0 amputation · 0 mutation** |
+| chaîne de garde | `hash(attempt2)` = `hash(corpus)` = `journal.airHash` = `1dc37c48…` |
+| défauts | détails 2 orphelins → **0** (3 détails, tous sourcés) · images 3 → **0** (3 assets rendus par `imageFieldId`) · muets 0 → 0 |
+| F1 · F4 | **41/41 vivantes** · **9 ok · 1 dit · 0 réfuté, `passed=true`** · 9/9 écrans atteignables (double audience chef/client mesurée) |
+| hors-ligne | `need_consultation_hors_ligne` **satisfait par 11 nœuds vivants** (intégration sync, champs par entité, blocs cache, `slot_etat_hors_ligne`, test de contrat) — la consultation sur données locales est le mode natif du moteur |
+
+### 🔵 LA RÉSERVE, ET SON ARBITRAGE — LE SORT DES 4 ANCIENS « DITS »
+
+Le dossier de lancement exigeait « les 4 dits restent dits ». Résultat réel,
+consigné sans maquillage :
+
+| Ancien « dit » | Devenu | Pourquoi |
+|---|---|---|
+| capture photo (`camera`) | **toujours DIT**, motif accepté | limitation réelle inchangée (`capabilitiesEmitCode: false`) |
+| synchronisation hors-ligne | **SATISFAIT par preuve réelle** | la consultation locale est exprimable ; seule l'exécution de file ne l'était pas |
+| position GPS | **DISPARU** | **absent de la demande client** — sur-dérivation de l'ancienne génération |
+| alertes/notifications | **DISPARU** | **absent de la demande client** — idem |
+
+`FACT` — la demande (conservée verbatim dans `intent.request`) ne mentionne ni
+GPS ni notification. `FACT` — `F4 passed=true`, 0 besoin perdu à l'instrument,
+0 promotion mensongère (chaque état vérifié sur nœuds).
+
+**Arbitrage propriétaire** : la disparition de GPS/alertes n'est **PAS une
+perte de besoin** — la fidélité à la demande réelle prime sur la conservation
+artificielle de besoins qu'aucun client n'a exprimés.
+
+### 🔵 POINT MÉTHODOLOGIQUE (portée générale, consigné pour les runs suivants)
+
+Une disparition d'un ancien motif ou besoin entre générations **ne doit pas
+être classée automatiquement comme « perte »** : la re-dérivation depuis
+l'intention (D-088) fait foi. La disparition n'est une perte QUE si le besoin
+était exprimé par la demande source — ce qui se vérifie sur `intent.request`,
+jamais sur l'énumération de l'ancienne génération. Les critères d'acceptation
+des prochains dossiers doivent viser la couverture de la DEMANDE, pas la
+stabilité de l'énumération.
+
+### Vérifications et campagne
+
+**921/921 · typecheck 0 · lint 0** · cliquets B′ verts sans édition (6ᵉ
+absorption) · gates : **F4 17 → 16 · motifs réfutés 8 → 6** · F1 = 12.
+**7/12 documents v3 verts.** Restent **5 régénérations** — stock : 14 détails
+sans source · 1 muet · 10 images brutes. **Resserrement de cadence dans ce
+commit** : orphelins 16 → **14**, `suivi-chantier` entre dans les sains
+(plancher **7**). Aucun autre garde-fou modifié.

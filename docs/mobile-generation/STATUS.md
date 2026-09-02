@@ -1,7 +1,19 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-02 (10)** (**`boutique-mode` EST VALIDE — `D-121`** : 6ᵉ
+> **2026-09-02 (11)** (**`suivi-chantier` EST VALIDE — `D-122`, premier B2B** :
+> 7ᵉ régénération, **2,5311 $**, 10 appels, 490 s, `valid=true`, 25 → 0,
+> 0 promesse morte, 41=41, 0 amputation, 0 troncature. **F1 41/41 · F4 9 ok,
+> 1 dit, 0 réfuté** · 9/9 écrans atteignables (double audience) · hors-ligne
+> satisfait par 11 nœuds vivants · détails 2 → 0 · images 3 → 0. **Arbitrage
+> D-122** : GPS/alertes disparus ≠ perte — absents de la demande client
+> (sur-dérivations de l'ancienne génération) ; point méthodologique consigné :
+> la re-dérivation D-088 fait foi, la perte se juge sur `intent.request`.
+> **7/12 v3 verts · F4 16 · réfutés 6.** Resserrement : orphelins **≤ 14**,
+> sains **7**. Stock : 14 orphelins · 1 muet · 10 images. 921/921 · tsc 0 ·
+> lint 0. **2,5311 $.**)
+>
+> *Entrée précédente —* **2026-09-02 (10)** (**`boutique-mode` EST VALIDE — `D-121`** : 6ᵉ
 > régénération (« marketplace »), **2,7711 $**, 10 appels, 536 s, `valid=true`,
 > 30 diagnostics → 0, **0 promesse morte**, 0 amputation, 43=43 promesses,
 > 0 troncature — le timeout historique D-080 propre à ce document ne s'est pas
