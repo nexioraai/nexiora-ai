@@ -31,7 +31,11 @@ export const RELEASE_TRAIN_V1 = {
   // migré en mémoire, aucune liaison inventée.
   // ÉDITION CONSCIENTE (2026-09-02, E3.2 D-130) : AIR 1.7.0 — champ ADDITIF
   // `dataset.source`, migration identité (les 25 documents inchangés).
-  airSchemaVersion: "1.7.0",
+  // ÉDITION CONSCIENTE (2026-09-02, E3.3 D-131) : AIR 1.7.1 — APLANISSEMENT
+  // de la provenance (l'union 1.7.0 dépassait la limite réelle de grammaire
+  // de l'API, sonde différentielle) ; migration identité, sémantique
+  // inchangée, aucun document ne portait la forme union.
+  airSchemaVersion: "1.7.1",
   // Porté à 1.1.0 le 2026-08-31 (D-060) : montée STRICTEMENT ADDITIVE du
   // registre de blocs — `form` gagne `loading`/`empty`, `detail_header` gagne un
   // état, les trois blocs à données gagnent les props de titres. Rien n'est

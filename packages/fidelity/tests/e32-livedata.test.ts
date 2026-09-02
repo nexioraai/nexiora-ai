@@ -1,5 +1,6 @@
 // E3.2 (D-130) — LA RÈGLE ABSOLUE DE VÉRITÉ : `liveData` ne naît pas de la
-// syntaxe. Un `source: remote` déclaré n'allume rien ; une exigence « live »
+// syntaxe. Un `sourceKind: "remote"` déclaré (forme aplanie 1.7.1, D-131)
+// n'allume rien ; une exigence « live »
 // satisfaite sans capacité est réfutée ; la déclarer en citant le fait TIENT.
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -22,22 +23,27 @@ const avecRemote = () => {
     datasets: d.datasets.map((x, i) =>
       i !== 0
         ? x
-        : { ...x, source: { kind: "remote" as const, integrationId: d.integrations[0]?.id ?? "intg_x", domain: d.network.allowedDomains[0] ?? "api.deribfy.app" } },
+        : {
+            ...x,
+            sourceKind: "remote" as const,
+            sourceIntegrationId: d.integrations[0]?.id ?? "intg_x",
+            sourceDomain: d.network.allowedDomains[0] ?? "api.deribfy.app",
+          },
     ),
   };
 };
 
 describe("F — la présence syntaxique ne produit JAMAIS le fait", () => {
-  it("🔴 un document PORTE `source: remote`… et `liveData` reste false", () => {
-    expect(avecRemote().datasets.some((d) => d.source?.kind === "remote")).toBe(true);
+  it("🔴 un document PORTE `sourceKind: \"remote\"`… et `liveData` reste false", () => {
+    expect(avecRemote().datasets.some((d) => d.sourceKind === "remote")).toBe(true);
     expect(EXECUTION_ENVELOPE_V1.liveData).toBe(false); // le fait ne bouge qu'avec E3.3 et ses preuves
   });
 });
 
 describe("A — seed n'est pas live · la trace distingue", () => {
   it("seed : aucune trace remote ; remote synthétique : trace présente", () => {
-    expect(bus().datasets.every((d) => d.source === undefined)).toBe(true);
-    expect(avecRemote().datasets.some((d) => d.source?.kind === "remote")).toBe(true);
+    expect(bus().datasets.every((d) => d.sourceKind === undefined)).toBe(true);
+    expect(avecRemote().datasets.some((d) => d.sourceKind === "remote")).toBe(true);
   });
 });
 

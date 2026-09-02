@@ -303,7 +303,7 @@ const TRACE_ATTENDUE: Readonly<Record<string, (air: ProjectAir) => boolean>> = {
     air.screens.some((s) =>
       s.blocks.some((b) => (b.props ?? []).some((p) => p.key === "scopeFieldId")),
     ),
-  liveData: (air) => air.datasets.some((d) => d.source?.kind === "remote"),
+  liveData: (air) => air.datasets.some((d) => d.sourceKind === "remote"),
 };
 
 /**

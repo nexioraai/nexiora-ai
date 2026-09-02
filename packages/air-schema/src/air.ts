@@ -18,7 +18,10 @@ import {
 } from "./ids.ts";
 
 // 1.7.0 (E3.2, D-130) : `dataset.source` OPTIONNEL — seed | remote déclaré.
-export const AIR_SCHEMA_VERSION = "1.7.0";
+// 1.7.1 (E3.3, D-131) : provenance APLANIE (sourceKind/sourceIntegrationId/
+//   sourceDomain/sourceRefreshSeconds) — l'union 1.7.0 dépassait la limite
+//   réelle de grammaire de l'API (classe D-078) ; sémantique inchangée.
+export const AIR_SCHEMA_VERSION = "1.7.1";
 
 export const semverSchema = z.string().regex(/^\d+\.\d+\.\d+$/);
 export const sha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
@@ -230,31 +233,71 @@ const relationSchema = z.strictObject({
 // Le contenu initial est généré AVANT compilation et stocké hors AIR, adressé
 // par hash — la compilation reste pure (ARCHITECTURE §1).
 /**
- * SOURCE D'UN DATASET (1.7.0, E3.2/D-130) — union FERMÉE, même classe de
- * construction que les unions déjà ÉPROUVÉES par la grammaire d'émission
- * (`actionTriggerSchema`, `slotInputSourceSchema`). ABSENTE = `seed`,
- * comportement historique au caractère près. `remote` DÉCLARE une provenance —
- * il ne la rend pas vivante : le moteur ne consomme pas encore de source
- * distante (`liveData: false`), et AUCUNE présence syntaxique ne vaut preuve.
- * Fail-closed au validateur : intégration existante + domaine autorisé.
+ * PROVENANCE D'UN DATASET (1.7.1, E3.3/D-131) — forme APLANIE, sémantique
+ * E3.2/D-130 INCHANGÉE. L'union fermée 1.7.0 (seed | remote) était refusée
+ * par l'API réelle à TOUS les niveaux de l'échelle (« compiled grammar is
+ * too large », classe D-078) : la partie `donnees` était au bord de la
+ * limite et l'union l'a fait franchir — prouvé par sonde différentielle
+ * même-jour (1.6.0 acceptée · union refusée · forme plate acceptée au
+ * niveau nominal). Champs PLATS optionnels + cohérence par superRefine :
+ * la forme plate n'accepte QUE ce que l'union acceptait, plus l'absence
+ * totale (comportement historique au caractère près). `remote` DÉCLARE une
+ * provenance — il ne la rend pas vivante : le moteur ne consomme pas encore
+ * de source distante (`liveData: false`), et AUCUNE présence syntaxique ne
+ * vaut preuve. Fail-closed au validateur : intégration existante + domaine
+ * autorisé.
  */
-const datasetSourceSchema = z.discriminatedUnion("kind", [
-  z.strictObject({ kind: z.literal("seed") }),
-  z.strictObject({
-    kind: z.literal("remote"),
-    integrationId: integrationIdSchema,
-    domain: z.string().regex(/^([a-z0-9-]+\.)+[a-z]{2,}$/),
-    refreshSeconds: z.number().int().min(5).max(3600).optional(),
-  }),
-]);
-
-const datasetSchema = z.strictObject({
-  id: datasetIdSchema,
-  entityId: entityIdSchema,
-  contentHash: sha256Schema,
-  rowCount: z.number().int().min(0),
-  source: datasetSourceSchema.optional(),
-});
+const datasetSchema = z
+  .strictObject({
+    id: datasetIdSchema,
+    entityId: entityIdSchema,
+    contentHash: sha256Schema,
+    rowCount: z.number().int().min(0),
+    sourceKind: z.enum(["seed", "remote"]).optional(),
+    sourceIntegrationId: integrationIdSchema.optional(),
+    sourceDomain: z
+      .string()
+      .regex(/^([a-z0-9-]+\.)+[a-z]{2,}$/)
+      .optional(),
+    sourceRefreshSeconds: z.number().int().min(5).max(3600).optional(),
+  })
+  .superRefine((d, ctx) => {
+    const remoteFields =
+      d.sourceIntegrationId !== undefined ||
+      d.sourceDomain !== undefined ||
+      d.sourceRefreshSeconds !== undefined;
+    if (d.sourceKind === undefined && remoteFields) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["sourceKind"],
+        message: "champs source* sans sourceKind : provenance incohérente refusée",
+      });
+    }
+    if (d.sourceKind === "seed" && remoteFields) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["sourceKind"],
+        message:
+          'sourceKind "seed" = source locale : sourceIntegrationId/sourceDomain/sourceRefreshSeconds interdits',
+      });
+    }
+    if (d.sourceKind === "remote") {
+      if (d.sourceIntegrationId === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["sourceIntegrationId"],
+          message: 'sourceKind "remote" exige sourceIntegrationId (fail-closed)',
+        });
+      }
+      if (d.sourceDomain === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["sourceDomain"],
+          message: 'sourceKind "remote" exige sourceDomain (fail-closed)',
+        });
+      }
+    }
+  });
 
 const actionTriggerSchema = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("ui"), blockId: blockIdSchema }),

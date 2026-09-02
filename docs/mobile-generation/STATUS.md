@@ -1,7 +1,24 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-02 (18)** (**📡 E3.2 SCELLÉ — `D-130`** : **AIR 1.7.0** —
+> **2026-09-02 (19)** (**🛰️ AMENDEMENT AIR 1.7.1 — `D-131`, NON COMMITTÉ** : la
+> sonde READ-ONLY d'ouverture E3.3 a révélé que l'union `dataset.source` de
+> 1.7.0 était REFUSÉE par l'API réelle à TOUS les niveaux (« compiled grammar
+> is too large », classe D-078) — limite grammaticale CUMULÉE, la partie
+> `donnees` était au bord (attribution différentielle : run bus 1.6.0 accepté
+> le même jour). Sonde comparative arbitrée : contrôle 1.6.0 ✅ · forme
+> APLANIE ✅ au niveau nominal · 0,0314 $. Aplanissement implémenté
+> (`sourceKind`/`sourceIntegrationId`/`sourceDomain`/`sourceRefreshSeconds` +
+> `superRefine`) : sémantique E3.2 INCHANGÉE, fail-closed conservés, forme
+> union historique REFUSÉE au parse, `liveData` toujours `false`. Grammaire
+> émise BYTE-IDENTIQUE à la forme sondée-acceptée. 70 documents inspectés :
+> 0 porteur → migration identité. **978/978 · tsc 0 · lint 0 · app-compile
+> 27/27 · corpus byte-intact · invariants/composition/navigation/contrôles
+> 🟢 · `gate:fidelite` 🔴 et ⚠️ 26/27 PRÉEXISTANTS (différentiels rejoués sur
+> `ca205b6` pur, identiques).** Scellement + reprise E3.3 runtime
+> (adaptateur/LOCK/`liveData`) : SUR ARBITRAGE.)
+>
+> *Entrée précédente —* **2026-09-02 (18)** (**📡 E3.2 SCELLÉ — `D-130`** : **AIR 1.7.0** —
 > `dataset.source` (union fermée `seed | remote{integrationId, domain}`,
 > migration identité, fail-closed intégration+domaine). **La règle absolue de
 > vérité tient : `liveData` est né `false` et RESTE `false`** — la présence

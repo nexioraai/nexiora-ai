@@ -496,25 +496,30 @@ export function validateAir(air: ProjectAir): AirDiagnostic[] {
     if (!entityById.has(d.entityId)) {
       push("AIR_DATASET_ENTITY_UNKNOWN", `datasets[${i}].entityId`, `entité "${d.entityId}" introuvable`);
     }
-    // SOURCE DISTANTE (1.7.0, E3.2/D-130) — FAIL-CLOSED : déclarer une
-    // provenance sans son intégration ni son domaine autorisé serait une
-    // vivacité de façade. Additif : seul un document déclarant `remote` est
-    // concerné — le corpus gelé n'en porte aucun.
-    const source = d.source;
-    if (source?.kind === "remote") {
-      if (!air.integrations.some((g) => g.id === source.integrationId)) {
+    // SOURCE DISTANTE (1.7.1, E3.3/D-131 — sémantique E3.2/D-130 inchangée ;
+    // forme APLANIE : l'union 1.7.0 dépassait la limite réelle de grammaire
+    // de l'API, classe D-078) — FAIL-CLOSED : déclarer une provenance sans
+    // son intégration ni son domaine autorisé serait une vivacité de façade.
+    // Additif : seul un document déclarant `remote` est concerné — le corpus
+    // gelé n'en porte aucun. La cohérence de FORME (remote exige
+    // integrationId + domaine ; seed n'admet rien ; rien sans sourceKind)
+    // est déjà refusée au SCHÉMA (superRefine).
+    if (d.sourceKind === "remote") {
+      const sid = d.sourceIntegrationId;
+      if (sid !== undefined && !air.integrations.some((g) => g.id === sid)) {
         push(
           "AIR_DATASET_SOURCE_INTEGRATION_UNKNOWN",
-          `datasets[${i}].source.integrationId`,
-          `intégration "${source.integrationId}" introuvable : une source distante ` +
+          `datasets[${i}].sourceIntegrationId`,
+          `intégration "${sid}" introuvable : une source distante ` +
             `se déclare par une intégration EXISTANTE, jamais par un nom inventé`,
         );
       }
-      if (!air.network.allowedDomains.includes(source.domain)) {
+      const dom = d.sourceDomain;
+      if (dom !== undefined && !air.network.allowedDomains.includes(dom)) {
         push(
           "AIR_DATASET_SOURCE_DOMAIN",
-          `datasets[${i}].source.domain`,
-          `domaine "${source.domain}" absent de network.allowedDomains ` +
+          `datasets[${i}].sourceDomain`,
+          `domaine "${dom}" absent de network.allowedDomains ` +
             `(deny_by_default) : une provenance hors de la politique réseau déclarée ` +
             `est refusée`,
         );

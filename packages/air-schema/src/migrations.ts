@@ -95,6 +95,21 @@ export const AIR_MIGRATIONS: readonly AirMigration[] = [
       "reste amorcé à la compilation — comportement 1.6.0 au caractère près.",
     migrate: (document) => document,
   },
+  {
+    from: "1.7.0",
+    to: "1.7.1",
+    description:
+      "AIR 1.7.1 (E3.3, D-131) : APLANISSEMENT de la provenance — l'union " +
+      "`dataset.source` de 1.7.0 était refusée par l'API réelle à tous les " +
+      "niveaux de l'échelle (« compiled grammar is too large », classe D-078, " +
+      "sonde différentielle du 2026-09-02) ; forme plate sourceKind/" +
+      "sourceIntegrationId/sourceDomain/sourceRefreshSeconds, sémantique " +
+      "E3.2 inchangée (superRefine + fail-closed). Identité : AUCUN document " +
+      "(corpus, fixtures, journaux) n'a jamais porté la forme union — un " +
+      "document qui la porterait est REFUSÉ au parse (clé inconnue, " +
+      "fail-closed), jamais transformé en silence.",
+    migrate: (document) => document,
+  },
 ];
 
 export class AirMigrationError extends Error {

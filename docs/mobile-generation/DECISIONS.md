@@ -6700,3 +6700,85 @@ Réserves maintenues : 🟡 visuel E1/E2 · 🟡 visuel E3.1 · ⚠️ dette 26/
 (`corpus-rendu.obs`) hors périmètre · 🟡 grammaire sur API réelle au prochain
 run autorisé. **E3.3 (adaptateur réseau émis + bascule prouvée de `liveData`)
 = prochain arbitrage.**
+
+
+## D-131 — AMENDEMENT AIR 1.7.1 : L'UNION `dataset.source` DÉPASSAIT LA LIMITE RÉELLE DE GRAMMAIRE — APLANISSEMENT, SÉMANTIQUE INCHANGÉE — 2026-09-02
+
+**Arbitrage propriétaire** : STOP E3.3 confirmé sur la découverte de la sonde ;
+option (c) — aplanissement — validée ; sonde comparative autorisée (2 requêtes,
+plafond 0,10 $) ; implémentation de l'amendement sur sonde positive ; E3.3
+runtime (adaptateur réseau, LOCK, `liveData`) reste EN ATTENTE d'un nouvel
+arbitrage après ce rapport.
+
+### La découverte — E3.2 scellé, mais refusé par l'API réelle
+
+E3.2 (`D-130`) a été scellé sur `ca205b6` avec la réserve explicite « la
+confirmation ultime appartient à la première génération réelle ». La sonde
+READ-ONLY exigée à l'ouverture d'E3.3 (3 requêtes autorisées, 0,0000 $ — les
+400 ne sont pas facturés) a montré que la partie `donnees` du contrat 1.7.0
+était refusée par l'API réelle **à tous les niveaux de l'échelle** :
+« The compiled grammar is too large » (classe `D-078`), y compris
+`sans-longueurs`.
+
+**Cause racine : limite grammaticale CUMULÉE.** L'union `dataset.source` est
+petite et sa classe de construction était éprouvée (`actionTriggerSchema`,
+`slotInputSourceSchema`) — mais la partie `donnees` était AU BORD de la
+limite, et l'union l'a fait franchir. Le sondage statique par précédent ne
+pouvait pas le voir : la limite porte sur la grammaire compilée TOTALE, pas
+sur la classe du nœud ajouté.
+
+**Attribution différentielle [DÉMONTRÉ]** : le run `bus-intercites` du même
+jour (13 h 38, contrat 1.6.0, journal scellé) avait fait accepter `donnees`
+au niveau nominal ; la sonde comparative a rejoué le contrôle : forme 1.6.0
+✅ ACCEPTÉE · forme aplanie ✅ ACCEPTÉE au niveau nominal `minItems-ramene` ·
+(l'union, elle, refusée aux trois niveaux). Coût réel : 0,0314 $
+(2 requêtes ; total chantier sonde : 0,0314 $).
+
+### La décision — aplanir, ne pas découper, ne pas mentir
+
+- **Forme 1.7.1** : champs PLATS optionnels sur `dataset` — `sourceKind?:
+  "seed"|"remote"`, `sourceIntegrationId?`, `sourceDomain?` (même regex),
+  `sourceRefreshSeconds?` (mêmes bornes 5–3600) — cohérence par `superRefine` :
+  `remote` EXIGE intégration + domaine ; `seed` n'admet aucun champ remote ;
+  aucun champ `source*` sans `sourceKind` ; la forme plate n'accepte QUE ce
+  que l'union acceptait, plus l'absence totale (comportement historique).
+- **Sémantique E3.2 conservée à l'identique** : fail-closed au validateur
+  (`AIR_DATASET_SOURCE_INTEGRATION_UNKNOWN`, `AIR_DATASET_SOURCE_DOMAIN`,
+  mêmes codes, chemins aplanis), règle absolue de vérité intacte (`liveData`
+  né `false`, RESTE `false` — la bascule appartient au runtime E3.3 et à ses
+  preuves), instruments E3.2 adaptés à la forme (trace `liveData` sur
+  `sourceKind === "remote"`).
+- **Rejetés** : option A (`config.path`) et option B (`path` dans la source) —
+  l'adressage reste au LOCK (arbitrage E3.3 ③, doctrine multi-provider) ;
+  découpage de `donnees` (classe D-078) non nécessaire, gardé en repli.
+- **Migration 1.7.0 → 1.7.1 : IDENTITÉ.** 70 documents AIR inspectés
+  structurellement (corpus v1/v2/v3, fixtures, évidences, slices) : **0
+  porteur** d'une provenance, journaux compris — la forme union n'a JAMAIS
+  existé dans un contenu. Un document qui la porterait est REFUSÉ au parse
+  (clé inconnue, fail-closed), jamais transformé en silence.
+- **Histoire non réécrite** : `ca205b6` (E3.2) reste tel quel ; le présent
+  amendement est un commit distinct, consigné ici.
+
+### Preuves
+
+- Grammaire émise par le nouveau zod **BYTE-IDENTIQUE** à la forme
+  sondée-acceptée (comparaison JSON stricte, clés ordonnées comprises) — le
+  verdict de la sonde se transfère exactement, sans requête supplémentaire.
+- Falsifications de FORME (6 nouveaux cas-tueurs) : remote sans intégration ;
+  remote sans domaine ; seed avec champ remote ; champ `source*` orphelin ;
+  `refreshSeconds` sur seed ; **forme union 1.7.0 historique → REFUSÉE au
+  parse**. Plus les 5 cas contractuels E3.2 réécrits à plat.
+- Non-régression : **978/978 tests (82 fichiers) · tsc silencieux · lint 0 ·
+  app-compile 27/27 · corpus byte-intact · invariants 4/4 · composition 🟢 ·
+  navigation 🟢 · contrôles 🟢**. `gate:fidelite` 🔴 et `gate:app-rendu`
+  (26 vs 27) : PRÉEXISTANTS — différentiel rejoué sur `ca205b6` pur,
+  résultats identiques (15 documents / 5 motifs ; épingle 26) — hors
+  périmètre, non touchés.
+
+### Portée
+
+Fichiers : `air.ts` (forme + version 1.7.1) · `migrations.ts` (entrée
+identité) · `validate.ts` (chemins aplanis, mêmes codes) · `intent.ts`
+(trace) · `release-train.ts` (épingle consciente 1.7.1) · `envelope.ts`
+(commentaire de vérité) · `emit-v3.mjs` (surface `liveData` + règle 31) ·
+2 fichiers de tests. AUCUN runtime E3.3 : ni adaptateur, ni LOCK, ni bascule.

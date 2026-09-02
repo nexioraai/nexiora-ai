@@ -78,7 +78,7 @@ export interface ExecutionEnvelope {
   readonly relationScoping: boolean;
   /**
    * E3.2 (D-130) — une entité alimentée et rafraîchie depuis une source
-   * DISTANTE DÉCLARÉE (\`dataset.source: remote\`), avec états réels. FALSE
+   * DISTANTE DÉCLARÉE (\`sourceKind: "remote"\`, forme aplanie 1.7.1), avec états réels. FALSE
    * tant que le runtime ne CONSOMME pas une telle source : \`remote\` déclaré
    * n'est PAS un fournisseur fonctionnel, et aucune présence syntaxique ne
    * vaut preuve. La bascule appartient à E3.3, adossée à ses preuves
