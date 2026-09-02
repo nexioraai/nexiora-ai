@@ -34,7 +34,8 @@ import {
 // recherche, `detail_header` gagne son visuel. Rien n'est retiré, toutes les
 // props sont optionnelles. Motif : 23 champs image declares sur 12 documents,
 // RENDUS NULLE PART — le besoin du premier jour (« menu avec photos »).
-export const BLOCK_REGISTRY_VERSION = "1.2.0";
+// 1.3.0 (E1/E2, D-129) — filtres pilotés + portée relationnelle, ADDITIFS.
+export const BLOCK_REGISTRY_VERSION = "1.3.0";
 
 // Motifs d'identités stables — IDENTIQUES à @deribfy/air-schema (ids.ts) ;
 // redéclarés structurellement (patron AirCapabilitySlice : pas de couplage
@@ -254,7 +255,29 @@ export const BLOCKS: readonly BlockDefinition[] = [
       filterOperator: z.enum(["eq", "neq", "contains"]).optional(),
       filterValue: z.string().min(1).optional(),
       pageSize: z.number().int().positive().max(200).optional(),
-
+      // FILTRES PILOTÉS + PORTÉE RELATIONNELLE (E1/E2, D-129) — additifs et
+      // optionnels : sans eux, la liste rend EXACTEMENT ce qu'elle rendait.
+      // Tableaux PARALLÈLES (le flat config n'admet que des feuilles — le
+      // contrat universel des props reste intouché, grammaire D-019 comprise).
+      userFilterFieldIds: z.array(fieldRef).min(1).max(3).optional(),
+      userFilterOperators: z.array(z.enum(["eq", "neq", "contains"])).max(3).optional(),
+      userFilterInputTypes: z.array(z.enum(["text", "choice"])).max(3).optional(),
+      scopeFieldId: fieldRef.optional(),
+    }).superRefine((v, ctx) => {
+      const n = v.userFilterFieldIds?.length ?? 0;
+      if ((v.userFilterOperators !== undefined || v.userFilterInputTypes !== undefined) && n === 0) {
+        ctx.addIssue({ code: "custom", path: ["userFilterFieldIds"], message: "userFilterOperators/userFilterInputTypes exigent userFilterFieldIds" });
+      }
+      if (v.userFilterOperators !== undefined && v.userFilterOperators.length !== n) {
+        ctx.addIssue({ code: "custom", path: ["userFilterOperators"], message: `longueur ${String(v.userFilterOperators.length)} ≠ userFilterFieldIds (${String(n)})` });
+      }
+      if (v.userFilterInputTypes !== undefined && v.userFilterInputTypes.length !== n) {
+        ctx.addIssue({ code: "custom", path: ["userFilterInputTypes"], message: `longueur ${String(v.userFilterInputTypes.length)} ≠ userFilterFieldIds (${String(n)})` });
+      }
+      const total = n + (v.filterFieldId !== undefined ? 1 : 0);
+      if (total > 3) {
+        ctx.addIssue({ code: "custom", path: ["userFilterFieldIds"], message: `au plus 3 filtres au total (littéral compris), reçu ${String(total)}` });
+      }
     }),
     // D-090 — QUATRE props manquaient ici, pas deux. `imageFieldId` et
     // `searchFieldId` (registre 1.2.0), mais aussi `sortFieldId` et
@@ -271,6 +294,9 @@ export const BLOCKS: readonly BlockDefinition[] = [
       "searchFieldId",
       "sortFieldId",
       "filterFieldId",
+      // E1/E2 (D-129) — la boucle de validation gère déjà les tableaux.
+      "userFilterFieldIds",
+      "scopeFieldId",
     ],
     actionRefProps: [],
     states: LIST_BLOCK_STATES,

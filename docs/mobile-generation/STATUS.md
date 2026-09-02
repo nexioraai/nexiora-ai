@@ -1,7 +1,21 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-02 (15)** (**🚌 SECTEUR VOYAGE OUVERT — `bus-intercites` ACCEPTÉ
+> **2026-09-02 (16)** (**⚙️ E1+E2 SCELLÉS — `D-129`** : recherche PILOTÉE
+> (≤ 3 filtres en conjonction, valeur vide = inactif, `text`/`choice`) et
+> PORTÉE RELATIONNELLE (`scopeFieldId` → instance du `detail_header`, **vide
+> sans instance — jamais rows[0]**) — fondations transversales AVION+FINTECH
+> (option C de D-128). Architecture : module PUR `list-pipeline.ts`, props
+> plats additifs — **écart consigné : PAS de montée AIR 1.7.0**, corpus
+> byte-intact PAR CONSTRUCTION, grammaire D-019 intouchée. Registre 1.3.0 ·
+> faits `listUserFiltering`/`relationScoping` basculés APRÈS preuve (24 tests
+> verts, dont falsifications : fausse recherche réfutable, pseudo-relation de
+> billetterie mesurable, mauvaise entité refusée). **952/952 · tsc 0 · lint 0 ·
+> app-compile 27/27 · fidelite INCHANGÉE (12/15/5)**. 🟡 [À VALIDER] rendu
+> visuel des nouveaux contrôles = étape observation/appareil. Prochain jalon :
+> D-130, architecture E3 (données vivantes). **0 $.**)
+>
+> *Entrée précédente —* **2026-09-02 (15)** (**🚌 SECTEUR VOYAGE OUVERT — `bus-intercites` ACCEPTÉ
 > PAR DOCTRINE, `D-127`** : premier run du pivot sectoriel, **1,7451 $** (coût
 > plancher), 10 appels, 338 s, `valid=true`, 16 → 0, **0 morsure des
 > protections dès la 1ʳᵉ passe**, F1 23/23 · F4 7 ok · 0 défaillant ·

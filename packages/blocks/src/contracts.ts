@@ -32,6 +32,21 @@ export interface ListSearchSpec {
   placeholder?: string;
 }
 
+/**
+ * FILTRE PILOTÉ PAR L'UTILISATEUR (E1, D-129) — même contrat que la
+ * recherche : le bloc ne possède pas la saisie, il la reçoit et la restitue.
+ * `text` rend un champ de saisie ; `choice` rend les options FOURNIES
+ * (valeurs distinctes du périmètre, calculées par l'appelant) — re-presser
+ * l'option active la désactive. Une valeur vide = filtre inactif.
+ */
+export interface ListFilterSpec {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  inputType: "text" | "choice";
+  options?: readonly string[];
+}
+
 export interface ListItemData {
   id: string;
   /** Vignette de la ligne (1.2.0) — absente = ligne purement textuelle. */
@@ -63,6 +78,8 @@ export type ListBlockState =
 export interface ListBlockProps extends BlockA11yProps {
   /** Recherche rendue EN TÊTE de la liste (1.2.0) — absente = pas de champ. */
   search?: ListSearchSpec;
+  /** Filtres pilotés (E1, D-129) — rendus sous la recherche, ≤ 3. */
+  filters?: readonly ListFilterSpec[];
   title?: string;
   items: readonly ListItemData[];
   /** État EXPLICITE (défaut { kind: "ready" }) — jamais déduit des données. */

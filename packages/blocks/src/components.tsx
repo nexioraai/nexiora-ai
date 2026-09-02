@@ -40,6 +40,7 @@ export function ListBlock({
   items,
   state = { kind: "ready" },
   search,
+  filters,
   onItemPress,
   testID,
 }: ListBlockProps) {
@@ -76,6 +77,32 @@ export function ListBlock({
           value={search.value}
           onChangeText={search.onChange}
         />
+      )}
+      {/* E1 (D-129) — filtres pilotés : la saisie appartient à l'appelant. */}
+      {(filters ?? []).map((f, i) =>
+        f.inputType === "text" ? (
+          <TextField
+            key={`${testID ?? "list"}-filter-${String(i)}`}
+            testID={`${testID ?? "list"}-filter-${String(i)}`}
+            label={f.label}
+            value={f.value}
+            onChangeText={f.onChange}
+          />
+        ) : (
+          <Section key={`${testID ?? "list"}-filter-${String(i)}`} title={f.label}>
+            {(f.options ?? []).map((option) => (
+              <AppButton
+                key={option}
+                testID={`${testID ?? "list"}-filter-${String(i)}-${option}`}
+                label={option}
+                kind={f.value === option ? "primary" : "ghost"}
+                onPress={() => {
+                  f.onChange(f.value === option ? "" : option);
+                }}
+              />
+            ))}
+          </Section>
+        ),
       )}
       <FlatList
         // DET-016 (D-039, dimension A étendue) : ajustement natif aux insets

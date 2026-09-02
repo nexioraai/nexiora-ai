@@ -72,6 +72,10 @@ export interface ExecutionEnvelope {
   readonly imageRendering: boolean;
   /** Une liste peut-elle porter une recherche qui FILTRE réellement ses lignes ? */
   readonly listSearch: boolean;
+  /** E1 (D-129) — des filtres de liste dont la VALEUR est saisie par l'utilisateur. */
+  readonly listUserFiltering: boolean;
+  /** E2 (D-129) — une liste limitée aux lignes liées à l'instance courante de l'écran. */
+  readonly relationScoping: boolean;
   /** `navigation.primary` produit-il une barre PERSISTANTE sur chaque écran ? */
   readonly primaryNavigation: boolean;
 }
@@ -237,6 +241,15 @@ export const EXECUTION_ENVELOPE_V1: ExecutionEnvelope = {
   // les lignes, et la saisie FILTRE réellement le rendu — ce n'est pas une
   // barre décorative.
   listSearch: true,
+  // E1/E2 (D-129) — BASCULÉS À TRUE DANS LE LOT MÊME, adossés aux preuves :
+  // pipeline pur (list-pipeline.test.ts — la saisie change réellement les
+  // lignes, deux parents donnent des sous-ensembles disjoints, jamais rows[0])
+  // et émission typée (itemId transmis aux listes). Le cliquet
+  // envelope-truth ② impose l'atomicité prop↔fait : une surface exposée au
+  // registre ne peut pas rester un drapeau muet. Doctrine D-060 respectée —
+  // la preuve précède la bascule, dans le même commit.
+  listUserFiltering: true,
+  relationScoping: true,
 
   // `navigation.primary` (AIR 1.6.0) → `<PrimaryNav>`, dernier enfant de la
   // coquille. Observé : présente sur CHAQUE écran avec les mêmes onglets, dans

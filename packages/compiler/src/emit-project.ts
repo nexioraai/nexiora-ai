@@ -394,7 +394,11 @@ function emitScreen(slice: ScreenSlice, aBarre: boolean): string {
       }),
     ),
   ].sort(byCodeUnit);
-  const usesRoute = slice.screen.blocks.some((b) => b.blockType === "detail_header");
+  // E2 (D-129) — les listes reçoivent aussi l'instance courante : une liste
+  // scopée sans elle est VIDE (jamais rows[0]), le pipeline pur en décide.
+  const usesRoute = slice.screen.blocks.some(
+    (b) => b.blockType === "detail_header" || b.blockType === "list",
+  );
   // DET-006 (D-039) : un écran porteur d'un bloc `list` N'EST PLUS enveloppé
   // dans un ScrollView. Cause démontrée : une FlatList imbriquée dans un
   // ScrollView de même axe reçoit une hauteur NON BORNÉE et rend tous ses
@@ -450,7 +454,10 @@ function emitScreen(slice: ScreenSlice, aBarre: boolean): string {
     containerOpen,
     ...slice.screen.blocks.map((b) => {
       const wrapper = WRAPPER_BY_BLOCK_TYPE[b.blockType] ?? "";
-      const itemId = b.blockType === "detail_header" ? " itemId={route?.params?.itemId}" : "";
+      const itemId =
+        b.blockType === "detail_header" || b.blockType === "list"
+          ? " itemId={route?.params?.itemId}"
+          : "";
       return `        <${wrapper} screen={screenData} blockId="${assertId(b.id, screenId)}"${itemId} />`;
     }),
     containerClose,

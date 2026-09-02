@@ -34,7 +34,10 @@ export const RELEASE_TRAIN_V1 = {
   // registre de blocs — `form` gagne `loading`/`empty`, `detail_header` gagne un
   // état, les trois blocs à données gagnent les props de titres. Rien n'est
   // retiré. Motif : la dimension C d'A++ était INATTEIGNABLE sans cela.
-  blockRegistryVersion: "1.2.0",
+  // ÉDITION CONSCIENTE (2026-09-02, E1/E2 D-129) : registre 1.3.0 — props
+  // ADDITIFS (filtres pilotés, portée relationnelle) ; scellé des sources
+  // recalculé dans le même geste, précédents D-060/D-084.
+  blockRegistryVersion: "1.3.0",
   // Ré-scellé le 2026-08-29 (DET-006 / D-039) : `ListBlock` DÉCLARE désormais
   // `fill` sur sa Section, afin que la liste virtualisée reçoive un parent
   // BORNÉ. Cause démontrée : imbriquée dans un ScrollView de même axe, une
@@ -84,7 +87,7 @@ export const RELEASE_TRAIN_V1 = {
   // désormais un déclencheur `ui` visant un bloc sans gestionnaire, et
   // `controls()` dérive de la même source au lieu d'une liste recopiée.
   // Aucun bloc, aucune prop, aucun état n'est ajouté ni retiré.
-  "413eb66e5be825d9d3cd5dacabe230cabaad0b6f6036dbb8b87767e2720b1b92",
+  "95528917d17b8974517aa7056e7ccdb339b9ca72df730ef69fec7cf858cdb1a4",
   capabilityRegistryVersion: "1.0.0",
   capabilitySourcesHash:
     "6c28599246abde6e7010704f23f273aafe50d17c5483133709c9065f2777346c",

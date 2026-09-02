@@ -39,10 +39,13 @@ describe("cliquets du registre de blocs", () => {
   // partout, défaut inchangé. Un appelant 1.0.0 se comporte à l'identique — ce
   // que le test ci-dessous vérifie explicitement, pour que « additif » soit une
   // propriété MESURÉE et non une intention déclarée.
-  it("DÉGEL ADDITIF (D-060, D-087) : registre 1.2.0, et rien n'a été retiré", () => {
+  // ÉDITION CONSCIENTE (2026-09-02, E1/E2 D-129) : 1.2.0 → 1.3.0 — filtres
+  // pilotés et portée relationnelle, ADDITIFS ; rien n'est retiré, le corps du
+  // test le vérifie comme avant.
+  it("DÉGEL ADDITIF (D-060, D-087, D-129) : registre 1.3.0, et rien n'a été retiré", () => {
     // D-087 : seconde montée additive — `list` gagne vignette et recherche,
     // `detail_header` gagne son visuel. Rien n'est retiré, tout est optionnel.
-    expect(BLOCK_REGISTRY_VERSION).toBe("1.2.0");
+    expect(BLOCK_REGISTRY_VERSION).toBe("1.3.0");
     expect(BLOCKS.map((b) => b.id)).toEqual(V1_BLOCK_IDS);
   });
 

@@ -37,7 +37,14 @@ export interface AirBlockSlice {
       props?: readonly { key: string; value: unknown }[];
     }[];
   }[];
-  entities: readonly { id: string; fields: readonly { id: string }[] }[];
+  entities: readonly {
+    id: string;
+    // E2 (D-129) — champs enrichis OPTIONNELS : le contrôle sémantique du
+    // scope lit le type et la cible d'un champ `reference` quand l'appelant
+    // les fournit (l'AIR complet les porte) ; une tranche minimale reste
+    // acceptée et saute ce contrôle.
+    fields: readonly { id: string; type?: string; referencesEntityId?: string }[];
+  }[];
   // D-104 — la tranche porte désormais le DÉCLENCHEUR : sans lui, le registre
   // ne pouvait pas vérifier qu'une action `ui` vise un bloc actionnable.
   actions?: readonly {
@@ -157,6 +164,38 @@ export function validateAirBlocks(air: AirBlockSlice): BlockDiagnostic[] {
               });
             }
           }
+        }
+      }
+      // E2 (D-129) — PORTÉE RELATIONNELLE : `scopeFieldId` n'a de sens que
+      // sur un écran de DÉTAIL, et doit désigner un champ `reference` de
+      // l'entité listée pointant l'entité de l'instance courante (celle du
+      // `detail_header` de l'écran). Fail-closed : additive, seuls les
+      // documents déclarant le prop sont concernés — le corpus gelé n'en
+      // porte aucun.
+      const scopeRef = record.scopeFieldId;
+      if (typeof scopeRef === "string" && block.blockType === "list") {
+        const entete = screen.blocks.find((x) => x.blockType === "detail_header");
+        const entiteEcran = entete?.entityId;
+        const champ = (air.entities.find((e) => e.id === block.entityId)?.fields ?? []).find(
+          (f) => f.id === scopeRef,
+        );
+        const probleme =
+          entiteEcran === undefined
+            ? `l'écran "${screen.id}" ne porte aucun \`detail_header\` : sans instance courante, une liste scopée n'a pas de parent`
+            : champ?.type !== undefined && champ.type !== "reference"
+              ? `"${scopeRef}" est de type "${champ.type}" — le scope exige un champ \`reference\``
+              : champ?.referencesEntityId !== undefined &&
+                  champ.referencesEntityId !== entiteEcran
+                ? `"${scopeRef}" référence "${champ.referencesEntityId}" mais l'instance courante de l'écran est "${entiteEcran}"`
+                : undefined;
+        if (probleme !== undefined) {
+          diagnostics.push({
+            code: "BLOCK_SCOPE_INVALID",
+            path: `${path}.props.scopeFieldId`,
+            message:
+              `${probleme}. Le contrat E2 : une liste scopée montre les lignes dont ` +
+              `\`scopeFieldId\` vaut l'identifiant de l'instance courante — rien d'autre.`,
+          });
         }
       }
       // Références d'ACTIONS.

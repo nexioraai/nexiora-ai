@@ -6511,3 +6511,71 @@ Restent : avion (2ᵉ sous-secteur), puis fintech (après évolutions moteur ⚪
 puis santé. Évolutions établies par D-126 pour la suite : recherche pilotée
 par l'utilisateur, portée relationnelle des listes, données vivantes,
 exécution des capabilities.
+
+## D-129 — E1+E2 : LA RECHERCHE PILOTÉE ET LA PORTÉE RELATIONNELLE, EN UN LOT — 2026-09-02
+
+**Arbitrage propriétaire** : conception READ-ONLY validée, implémentation du
+lot unique autorisée puis **scellée ici**. Premier volet de l'option C de
+D-128 (fondations transversales AVION+FINTECH), sans réduction de la cible
+ELITE 2027 A++ — E3/E4/E5 restent des gaps consignés.
+
+### Architecture retenue
+
+**E1** : props plats PARALLÈLES sur `list` (`userFilterFieldIds` /
+`userFilterOperators` / `userFilterInputTypes`, ≤ 3 filtres au total littéral
+compris, cohérence par `superRefine`) ; la vérité des lignes vit dans un
+module PUR nouveau (`compiler/runtime/list-pipeline.ts` : scope → recherche →
+filtres en CONJONCTION, valeur vide = inactif → tri → borne) ; `AirList`
+tient les saisies (patron `ListSearchSpec` — « le bloc ne possède pas la
+saisie ») et délègue ; `ListBlock` rend `text` en champ et `choice` en options
+du périmètre scopé (re-presser désactive). **E2** : `scopeFieldId` — champ
+`reference` de l'entité listée pointant l'entité du `detail_header` de
+l'écran ; instance partagée avec l'en-tête (`itemId` transmis aux listes à
+l'émission) ; **sans instance courante, une liste scopée est VIDE — jamais
+`rows[0]`** ; sémantique fail-closed (`BLOCK_SCOPE_INVALID`, réparation
+`ecrans`+`donnees`).
+
+### 🔵 ÉCART CONSIGNÉ vs l'esquisse initiale : PAS de montée AIR 1.7.0
+
+L'esquisse anticipait `filters[]` structuré et une migration 1.7.0. Le contrat
+universel des props (`flatConfig` : feuilles seulement) et la grammaire
+prouvée D-019 imposaient un choix : l'encodage plat les laisse **intouchés**.
+Conséquence plus forte que la migration-identité anticipée : **le corpus est
+byte-intact par construction** (aucun fichier AIR modifié). Registre de blocs
+**1.2.0 → 1.3.0** (additif, rien retiré — re-vérifié par son cliquet).
+
+### Faits d'enveloppe et éditions conscientes
+
+`listUserFiltering` et `relationScoping` **basculés à `true` dans le lot**, la
+preuve précédant la bascule (doctrine D-060) : le cliquet `envelope-truth ②`
+impose l'atomicité prop↔fait. Éditions conscientes datées : scellé du train
+(`blocksSourcesHash`) recalculé · registre 1.3.0 · `PROP_TO_ENVELOPE` +4 ·
+source du test de véracité = runtime ⊕ module pur.
+
+### Preuves
+
+**24 nouveaux tests, tous verts** : pipeline 11 (dont : deux saisies ⇒ deux
+résultats ; littéral byte-compatible ; deux parents ⇒ sous-ensembles
+DISJOINTS ; sans instance ⇒ VIDE) · registre 9 (4ᵉ filtre refusé, longueurs
+inégales refusées, non-`reference` refusé, mauvaise entité refusée) ·
+traces 3 (fausse recherche réfutable ; billetterie scellé mesuré SANS trace de
+scope — la pseudo-relation de D-126 est désormais détectable) · épinglage
+réparation 1. **Suite 952/952 · typecheck 0 · lint 0 · `gate:app-compile`
+27/27 · `gate:fidelite` INCHANGÉE (F1 12 · F4 15 · réfutés 5 — aucun document
+scellé requalifié ; 0 besoin scellé ne contient « critère(s) », vérifié) ·
+corpus v2/v3 byte-intact · 0 perte/amputation/mutation/troncature** (aucun
+run : lot purement local, 0 $).
+
+### 🟡 RÉSERVE EXPLICITE [À VALIDER] — non transformable en 🟢 par inférence
+
+Le niveau de preuve est : pipeline logique + émission compilée (même niveau
+que le précédent D-065). La **validation VISUELLE des nouveaux contrôles**
+(champ de filtre, options `choice`) relève d'une future étape
+d'observation/appareil. L'ergonomie du `choice` en boutons est [INFÉRENCE]
+jusqu'au premier run consommateur.
+
+### Suite
+
+Prochain jalon : **D-130 — dossier d'architecture READ-ONLY E3** (source de
+données vivante : fournisseur asynchrone, loading/error réels, observation,
+inventaire/prix/statuts) — le chantier structurant transversal AVION+FINTECH.

@@ -92,6 +92,10 @@ const FAITS_BOOLEENS = [
   "crossScreenFormState",
   "imageRendering",
   "listSearch",
+  // E1/E2 (D-129) — citables dans un motif dès leur naissance (à `false`,
+  // un motif qui les cite TIENT ; à `true`, il sera réfuté — automatique).
+  "listUserFiltering",
+  "relationScoping",
   "primaryNavigation",
 ] as const;
 
@@ -150,6 +154,12 @@ const SUJETS_PAR_FAIT: Readonly<Record<string, readonly RegExp[]>> = {
     motif("aperçus?"),
   ],
   listSearch: [motif("recherch\\p{L}*"), motif("cherch\\p{L}*"), motif("trouver"), motif("filtr\\p{L}*")],
+  // E1 (D-129) — sujets de HAUTE PRÉCISION seulement : « critères » et
+  // « multicritère » n'ont pas d'autre sens dans ce domaine. Les périphrases
+  // relationnelles (« les X de ce Y ») sont indécidables proprement : la
+  // portée relationnelle n'a PAS de sujets ici — sa trace reste vérifiable
+  // (TRACE_ATTENDUE) et le contrôle d'acceptation garde le reste (D-126 §7).
+  listUserFiltering: [motif("critères?"), motif("multicritères?")],
   primaryNavigation: [motif("onglets?"), motif("barre de navigation")],
 };
 
@@ -279,6 +289,17 @@ const TRACE_ATTENDUE: Readonly<Record<string, (air: ProjectAir) => boolean>> = {
       s.blocks.some((b) => (b.props ?? []).some((p) => p.key === "searchFieldId")),
     ),
   primaryNavigation: (air) => air.navigation.primary !== undefined,
+  // E1/E2 (D-129) — la trace est le PROP déclaré sur une liste, comme pour
+  // `listSearch`. Prétendre des critères pilotés sans un seul
+  // `userFilterFieldIds` est réfutable.
+  listUserFiltering: (air) =>
+    air.screens.some((s) =>
+      s.blocks.some((b) => (b.props ?? []).some((p) => p.key === "userFilterFieldIds")),
+    ),
+  relationScoping: (air) =>
+    air.screens.some((s) =>
+      s.blocks.some((b) => (b.props ?? []).some((p) => p.key === "scopeFieldId")),
+    ),
 };
 
 /** Capacités engagées par le besoin dont le document ne porte AUCUNE trace. */

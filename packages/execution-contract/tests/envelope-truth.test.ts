@@ -19,7 +19,11 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const PKG = join(HERE, "..", "..");
 const read = (rel: string): string => readFileSync(join(PKG, rel), "utf8");
 
-const RUNTIME = read("compiler/runtime/air-runtime.tsx");
+// ÉDITION CONSCIENTE (2026-09-02, E1/E2 D-129) : la vérité des lignes vit
+// désormais dans le module PUR `list-pipeline.ts` — le runtime consommé est
+// la CONCATÉNATION des deux, comme le projet généré les embarque tous deux.
+const RUNTIME =
+  read("compiler/runtime/air-runtime.tsx") + read("compiler/runtime/list-pipeline.ts");
 const DATA_PROVIDER = read("compiler/runtime/data-provider.tsx");
 const EMIT_PROJECT = read("compiler/src/emit-project.ts");
 const EMIT_MANIFESTS = read("compiler/src/emit-manifests.ts");
@@ -343,6 +347,11 @@ const PROP_TO_ENVELOPE: Readonly<Record<string, keyof typeof EXECUTION_ENVELOPE_
   filterOperator: "listFiltering",
   filterValue: "listFiltering",
   pageSize: "listFiltering",
+  // E1/E2 (D-129) — décidés à l'ajout, comme le cliquet l'exige.
+  userFilterFieldIds: "listUserFiltering",
+  userFilterOperators: "listUserFiltering",
+  userFilterInputTypes: "listUserFiltering",
+  scopeFieldId: "relationScoping",
 };
 
 describe("véracité de l'enveloppe — capacités de composition (D-088)", () => {

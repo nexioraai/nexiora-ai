@@ -9,6 +9,9 @@
 // `capability`/`mutation`/`slot` sont des non-opérations STRUCTURÉES
 // (implémentations : Phases 5+/9 — lecture consignée D-028).
 import { useEffect, useMemo, useState } from "react";
+// E1/E2 (D-129) — la vérité des lignes visibles vit dans un module PUR.
+import { lignesVisibles, optionsDistinctes } from "./list-pipeline";
+import type { FiltreEffectif, OperateurFiltre } from "./list-pipeline";
 import { useNavigation } from "@react-navigation/native";
 import {
   ButtonBlock,
@@ -298,6 +301,11 @@ function str(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
+/** E1 (D-129) — lecture sûre d'un prop tableau de chaînes du flat config. */
+function strArray(value: unknown): readonly string[] {
+  return Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
+}
+
 function useDispatch(screen: AirScreenData) {
   const navigation = useNavigation();
   const capabilities = useCapabilityProvider();
@@ -526,7 +534,7 @@ export function AirDetailHeader({
   );
 }
 
-export function AirList({ screen, blockId }: BlockRef) {
+export function AirList({ screen, blockId, itemId }: BlockRef & { itemId?: string }) {
   const visible = useBlockVisible(screen, blockId);
   const b = block(screen, blockId);
   // Props SURCHARGÉES par les sorties des slots liés (1.3.0, D-058).
@@ -537,6 +545,9 @@ export function AirList({ screen, blockId }: BlockRef) {
   // Saisie de recherche — LOCALE à la liste : chercher dans un catalogue n'est
   // pas un état d'application, et le partager entre écrans surprendrait.
   const [recherche, setRecherche] = useState("");
+  // E1 (D-129) — saisies des filtres PILOTÉS, locales à la liste comme la
+  // recherche. Une valeur vide = filtre inactif.
+  const [saisiesFiltres, setSaisiesFiltres] = useState<Readonly<Record<number, string>>>({});
   const onItemNavigate = useItemNavigate(screen, blockId);
   if (!visible) return null;
   if (b.entityId === undefined) throw new Error(`AIR_RUNTIME_ENTITY_MISSING:${blockId}`);
@@ -544,44 +555,65 @@ export function AirList({ screen, blockId }: BlockRef) {
   if (titleFieldId === undefined) {
     throw new Error(`AIR_RUNTIME_PROP_MISSING:${blockId}:titleFieldId`);
   }
-  // TRI / FILTRE / PAGINATION (D-065) — appliqués sur les instances AVANT le
-  // rendu. Fermé par construction : trois opérateurs, une direction, une borne.
-  // Ordre volontaire : filtrer, puis trier, puis borner — l'inverse tronquerait
-  // avant d'avoir vu toutes les lignes.
+  // E1/E2 (D-129) — TRI / FILTRES / PAGINATION / PORTÉE : la vérité vit dans
+  // `lignesVisibles` (module pur, testé sans rendu). Ici : lire les props,
+  // tenir les saisies, déléguer.
   const brutes0 = provider.listInstances(b.entityId);
   const rechercheChamp = str(props.searchFieldId);
-  const brutes =
-    rechercheChamp === undefined || recherche.trim() === ""
-      ? brutes0
-      : brutes0.filter((i) =>
-          (i.values[rechercheChamp] ?? "").toLowerCase().includes(recherche.trim().toLowerCase()),
-        );
   const filtreChamp = str(props.filterFieldId);
   const filtreValeur = str(props.filterValue);
-  const filtrees =
-    filtreChamp === undefined || filtreValeur === undefined
-      ? brutes
-      : brutes.filter((i) => {
-          const v = i.values[filtreChamp] ?? "";
-          if (props.filterOperator === "neq") return v !== filtreValeur;
-          if (props.filterOperator === "contains") return v.includes(filtreValeur);
-          return v === filtreValeur;
-        });
-  const triChamp = str(props.sortFieldId);
-  const triees =
-    triChamp === undefined
-      ? filtrees
-      : [...filtrees].sort((x, y) => {
-          const a = x.values[triChamp] ?? "";
-          const c = y.values[triChamp] ?? "";
-          const na = Number(a);
-          const nc = Number(c);
-          const ordre =
-            Number.isFinite(na) && Number.isFinite(nc) ? na - nc : a.localeCompare(c);
-          return props.sortDirection === "desc" ? -ordre : ordre;
-        });
-  const borne = typeof props.pageSize === "number" ? props.pageSize : undefined;
-  const instances = borne === undefined ? triees : triees.slice(0, borne);
+  const champsPilotes = strArray(props.userFilterFieldIds);
+  const operateursPilotes = strArray(props.userFilterOperators);
+  const typesPilotes = strArray(props.userFilterInputTypes);
+  const filtres: FiltreEffectif[] = [
+    ...(filtreChamp !== undefined && filtreValeur !== undefined
+      ? [{
+          fieldId: filtreChamp,
+          operator: (str(props.filterOperator) ?? "eq") as OperateurFiltre,
+          valeur: filtreValeur,
+        }]
+      : []),
+    ...champsPilotes.map((fieldId, i) => ({
+      fieldId,
+      operator: (operateursPilotes[i] ?? "eq") as OperateurFiltre,
+      valeur: saisiesFiltres[i] ?? "",
+    })),
+  ];
+  const scopeChamp = str(props.scopeFieldId);
+  const instances = lignesVisibles(brutes0, {
+    scopeFieldId: scopeChamp,
+    instanceId: itemId,
+    rechercheChamp,
+    recherche,
+    filtres,
+    triChamp: str(props.sortFieldId),
+    triDesc: props.sortDirection === "desc",
+    borne: typeof props.pageSize === "number" ? props.pageSize : undefined,
+  });
+  // Options des filtres `choice` — valeurs distinctes du PÉRIMÈTRE scopé,
+  // jamais du dataset entier d'un autre parent.
+  const scopees =
+    scopeChamp === undefined
+      ? brutes0
+      : itemId === undefined
+        ? []
+        : brutes0.filter((i) => (i.values[scopeChamp] ?? "") === itemId);
+  const nomsChamps = new Map(
+    (screen.entities[b.entityId]?.fields ?? []).map((f) => [f.id, f.name]),
+  );
+  const filtresSpec =
+    champsPilotes.length === 0
+      ? undefined
+      : champsPilotes.map((fieldId, i) => ({
+          label: nomsChamps.get(fieldId) ?? fieldId,
+          value: saisiesFiltres[i] ?? "",
+          onChange: (v: string) =>
+            setSaisiesFiltres((s) => ({ ...s, [i]: v })),
+          inputType: (typesPilotes[i] === "choice" ? "choice" : "text") as "text" | "choice",
+          ...(typesPilotes[i] === "choice"
+            ? { options: optionsDistinctes(scopees, fieldId) }
+            : {}),
+        }));
   const pick = (fieldId: unknown, values: Readonly<Record<string, string>>) =>
     typeof fieldId === "string" ? resoudre(fieldId, values[fieldId]) : undefined;
   const imageFieldId = str(props.imageFieldId);
@@ -621,6 +653,7 @@ export function AirList({ screen, blockId }: BlockRef) {
           ? undefined
           : { value: recherche, onChange: setRecherche, placeholder: str(props.searchPlaceholder) }
       }
+      filters={filtresSpec}
       onItemPress={onItemNavigate}
     />
   );

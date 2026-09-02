@@ -76,6 +76,11 @@ export const SECTIONS_CORRECTIVES: Readonly<Record<string, readonly SectionEmiss
   // Une promesse sans cible : CRÉER la cible vit dans `actions` ou `screens`.
   AIR_TEST_TARGET_UNKNOWN: ["cablage", "actions", "ecrans"],
 
+  // E2 (D-129) — un scope invalide se répare sur l'écran (le detail_header
+  // manquant), sur les données (le champ reference et sa cible), ou sur la
+  // liste elle-même.
+  BLOCK_SCOPE_INVALID: ["ecrans", "donnees"],
+
   // D-123 — un déclencheur DÉCORATIF (D-105 : `button`/`empty_state`
   // dispatchent par leur prop `actionId`, pas par le déclencheur déclaré).
   // L'alignement vit dans `actions` (re-cibler le déclencheur), `ecrans` (la

@@ -95,6 +95,13 @@ export const EMBEDDED_SOURCES: readonly EmbeddedSourceSpec[] = [
     rewrites: {},
   },
   {
+    // E1/E2 (D-129) — pipeline PUR des lignes de liste, prouvé par tests
+    // unitaires sans monter react-native.
+    source: "compiler/runtime/list-pipeline.ts",
+    target: "lib/runtime/list-pipeline.ts",
+    rewrites: {},
+  },
+  {
     source: "compiler/runtime/air-runtime.tsx",
     target: "lib/runtime/air-runtime.tsx",
     rewrites: {},

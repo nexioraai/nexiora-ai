@@ -103,6 +103,19 @@ describe("DETAIL_SANS_SOURCE — la réparation doit viser `actions`", () => {
   });
 });
 
+describe("BLOCK_SCOPE_INVALID — le scope se répare sur l'écran ou les données", () => {
+  // E2 (D-129) — code du registre (vu par le cliquet d'exhaustivité) : le
+  // correctif vit dans `ecrans` (le detail_header du parent) ou `donnees`
+  // (le champ reference et sa cible).
+  it("🔴 un scope invalide réémet `ecrans` ET `donnees`", () => {
+    const sections = sectionsAReemettre([
+      { code: "BLOCK_SCOPE_INVALID", path: "screens[2].blocks[1].props.scopeFieldId" },
+    ]);
+    expect(sections).toContain("ecrans");
+    expect(sections).toContain("donnees");
+  });
+});
+
 describe("AIR_TEST_TARGET_MORTE — la réparation vit où la cible peut revivre", () => {
   // D-118 : produit par la validation de campagne depuis `evaluatePromises`
   // (l'instrument de la gate F1) — hors du pont fail-closed, donc invisible au
