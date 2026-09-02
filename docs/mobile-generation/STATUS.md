@@ -1,7 +1,19 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-02 (8)** (**`billetterie-concerts` EST VALIDE — `D-119`** : relance
+> **2026-09-02 (9)** (**`agence-immo` EST VALIDE — `D-120`** : 5ᵉ régénération,
+> **2,9356 $**, 10 appels, 575 s, `valid=true`, 33 diagnostics → 0, **0 promesse
+> morte**, 0 amputation, 47=47 promesses. **F1 47/47 · F4 12 ok, 1 dit,
+> 0 réfuté** — les 4 défaillants historiques convertis, dont les filtres
+> désormais RÉELS (`searchFieldId` présent). **`maps` traité honnêtement** :
+> besoin scindé, localisation satisfaite, carte native déclarée inexprimable
+> sur motif ACCEPTÉ. Détails 1 orphelin → 0 (2 détails, tous sourcés) · image
+> 1 → 0. Premier `commerce: none` ; `maps`/`deep_links` entrent au profil
+> validé. **5/12 v3 verts · F4 global 19 → 18 · motifs réfutés 12 → 10.**
+> Resserrement de cadence dans ce commit : orphelins **≤ 19**, sains **5**.
+> 921/921 · tsc 0 · lint 0. **2,9356 $.**)
+>
+> *Entrée précédente —* **2026-09-02 (8)** (**`billetterie-concerts` EST VALIDE — `D-119`** : relance
 > sous le garde `AIR_TEST_TARGET_MORTE` né de son propre rejet. **2,3848 $**,
 > 10 appels, 454 s, `valid=true`, 21 diagnostics → 0, **0 promesse morte**
 > (garde armé, 0 déclencheur `data` émis — la consigne a suffi avant le filet,

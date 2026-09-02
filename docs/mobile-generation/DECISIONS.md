@@ -6011,3 +6011,54 @@ rejoint `coach-fitness`, `livraison-fruits`, `plombier-urgence`. Restent
 **8 régénérations**, portant 20 détails sans source, 1 formulaire muet,
 13 images brutes non rendues. Le resserrement des plafonds B′ (24→20, 5→1)
 reste une décision distincte, non appliquée ici.
+
+## D-120 — AGENCE-IMMO EST VALIDE : LA CARTE DÉCLARÉE HONNÊTEMENT, LES FILTRES RENDUS RÉELS — 2026-09-02
+
+**5ᵉ régénération, validée sur les 10 critères du dossier de lancement.**
+runId `2026-09-02T05-24-34-484Z`, exécuté au HEAD `262c6d6` · `terminee` ·
+**`valid=true`** · **2,9356 $ / 4,00 $** · 10 appels · 575 s · 0 refus ·
+0 troncature.
+
+### Mesures
+
+| | |
+|---|---|
+| diagnostics | **33 → 0** (31 × `AIR_TEST_TARGET_UNKNOWN`, 2 × `BLOCK_PROPS_INVALID`) |
+| `AIR_TEST_TARGET_MORTE` | **0 → 0** — garde armé, **0 déclencheur `data` émis** (l'ancien `act_notifier_demande_transmise` a disparu à la régénération) ; la capacité de DÉTECTION reste couverte par le killer-test de `D-118` |
+| `D-088` intra-exécution | écrans 10=10 · entités 6=6 · blocs 34=34 · actions 22=22 · promesses **47=47** · **0 perte · 0 amputation · 0 mutation** — les 31 cibles inconnues résolues par RE-CÂBLAGE, compte d'actions inchangé |
+| chaîne de garde | `hash(attempt2)` = `hash(corpus)` = `journal.airHash` = `306118a7…` — mtimes à la même seconde, aucune modification post-run |
+
+### F1 · F4 — le document est vert sur ses propres lignes AVANT acceptation
+
+**F1 : 47/47 vivantes · `passed=true`.** **F4 : `passed=true` — 12 satisfaits ·
+1 dit · 0 défaillant.** Les 4 défaillants historiques sont tous convertis :
+photos (motif ex-RÉFUTÉ → satisfait) · filtres prix/quartier (ex-« satisfaits
+SANS TRACE » → `searchFieldId` réellement présent au document) · filtres
+réglables (satisfait).
+
+**Traitement honnête de `maps`** — l'axe central de ce stress-test : le besoin
+a été SCINDÉ. `need_localisation_carte` est **SATISFAIT** (localisation rendue
+par ce que l'enveloppe sait faire) ; `need_carte_interactive_native` est
+**déclaré inexprimable avec un motif que l'enveloppe ACCEPTE**
+(`capabilitiesEmitCode: false` — capacités `maps`/`geolocation` déclarées,
+ouverture native non compilée). **0 motif réfuté.** Ni bloc inventé, ni besoin
+perdu, ni prétention : exactement le comportement que la campagne exige.
+
+Détails : 1 orphelin → **0**, et **2 écrans de détail, tous sourcés** (le
+document n'en avait qu'un, orphelin). Image : 1 → **0** (2 assets, 2 rendus).
+Muets : 0 → 0. Premier `commerce: none` de la campagne ; `maps` et
+`deep_links` entrent pour la première fois dans un document validé.
+
+### Vérifications
+
+**921/921 · typecheck EXIT=0 · lint EXIT=0** · cliquets B′ verts SANS édition
+(4ᵉ absorption réelle) · gates : `F4` **19 → 18** · motifs réfutés **12 → 10** ·
+`F1` = 12 (v2 gelé seul).
+
+### Phase 10B — et resserrement de cadence
+
+**5/12 documents v3 verts** sur leurs propres lignes. Restent **7
+régénérations** — 19 détails sans source · 1 formulaire muet · 14 images
+brutes. **Le resserrement prévu par la règle de cadence est appliqué dans ce
+même commit** : plafond orphelins 20 → **19**, `agence-immo` entre dans
+l'ensemble monotone des sains (plancher **5**). Aucun autre cliquet ne bouge.
