@@ -6229,3 +6229,72 @@ acceptés ; les futures régénérations les corrigeront document par document.
 repair **156/156** (+7 épinglages) · suite **928/928** · typecheck 0 · lint 0 ·
 corpus byte-intact · cliquets B′ intacts. Relance de `cours-cuisine`
 (~2,4–3,5 $) : décision séparée, sous les critères du dossier existant.
+
+## D-124 — LA CONTRE-ÉPREUVE VALIDE LES GARDES MÉCANIQUES ET RÉFUTE LA RÈGLE 30 — 2026-09-02
+
+**Le run `2026-09-02T12-25-05-742Z` (2,9038 $, 10 appels, 648 s, `valid=true`)
+est REFUSÉ au contrôle d'acceptation HORS-F4, et lui seul.** Le corpus est
+restauré byte-intact à `db30056` (protocole D-118), les trois artefacts
+conservés par runId.
+
+### A — Les gardes mécaniques D-123 sont DÉMONTRÉES fonctionnelles
+
+`FACT` — première passe : 37 diagnostics dont **2 `ACTION_DECLENCHEUR_DECORATIF`
+et 1 `AIR_TEST_TARGET_MORTE`** ; après réparation : **0**. L'interception EN
+RÉPARATION RÉELLE — la réserve explicite de D-119 — est démontrée : la classe
+qui avait tué le run `11-33` est désormais corrigée DANS le run. Parité F4
+armée (0 morsure nécessaire). Mécanique irréprochable : hash 3-voies, 47=47
+promesses, 0 amputation, 0 troncature, orphelins 0/3, images 0/3, bilingue
+conservé, 10/10 écrans atteignables, F1 47/47.
+
+### B — L'échec sémantique : la règle 30 est INEFFICACE telle qu'écrite
+
+`need_lecture_videos_achetees` et `need_achat_unitaire_dans_app` classés
+**`satisfied`** — 0 « dit » sur 5 besoins — registre toujours fermé
+(aucun bloc de lecture média), IAP toujours non émis
+(`capabilitiesEmitCode: false`). **La règle 30 ne doit PAS être présentée
+comme validée : elle est réfutée.**
+
+### C — La preuve A/B
+
+Deux runs, même intention, même plafond : `11-33` **sans** règle 30 et `12-25`
+**avec** — **classification menteuse identique** sur les deux besoins
+critiques. Et l'ancienne campagne (avant le durcissement de la règle 11)
+produisait 8 besoins dont 3 `unexpressible` : plus fin et plus honnête que les
+deux runs récents (5 besoins, 0 dit).
+
+### D — Démontré vs indicatif
+
+`DÉMONTRÉ` : la règle 30 était dans le prompt vu par le run (l.303, cœur de
+`SYSTEM_EMIT`) ; la classification est née en attempt1 (l'intention n'est pas
+réémise en réparation) ; le résultat est identique avec et sans la règle ;
+l'instrument F4 accepte le document menteur (`passed=true`) — l'accepter
+rendrait la gate verte en mentant. `INDICATIF` : le mécanisme — la règle 11
+porte toute la force d'incitation (« C'EST L'ISSUE PAR DÉFAUT », menace
+mesurée des 45/130, « ne te rabats PAS sur unexpressible ») et un paragraphe
+séparé ne la contrebalance pas.
+
+### E — Dépenses de preuve
+
+`11-33` : 2,5918 $ · `12-25` : 2,9038 $ — **5,4956 $ payés en preuves, zéro
+corpus modifié** (restaurations D-118 à chaque fois). Le refus n'est PAS un
+défaut du corpus : le corpus est intact.
+
+**Suite autorisée (arbitrage propriétaire)** : option ① — renforcer la règle
+11 ELLE-MÊME (contre-exception symétrique, preuve de rendu exigée par besoin
+`satisfied`), générique, puis UNE contre-épreuve. En cas de nouvel échec :
+option ② (mécanisation au contrat d'intent) soumise à arbitrage, sans
+troisième relance automatique.
+
+### D-124 · Option ① APPLIQUÉE — la règle 11 porte désormais sa contre-exception
+
+Deux alinéas seulement, au lieu du pouvoir : la puce `satisfied` exige la
+**PREUVE DE RENDU** (le comportement central sort d'un bloc du registre fermé,
+présent dans `nodeIds` — « des nœuds vivants ne suffisent pas : ils
+maquillent ») ; le paragraphe MESURÉ porte la **menace symétrique** (deux
+générations refusées à l'acceptation) et la ligne de partage : *« ce n'est pas
+l'hésitation, c'est le RENDU »*. Générique — aucun secteur, aucun exemple
+nommé. La règle 30 reste en place (cohérente, réfutée comme levier isolé).
+Contre-épreuve : UNE relance autorisée ; succès = les besoins irrendables
+déclarés avec fait ❌ ET les besoins rendables toujours satisfaits
+(contre-falsification anti-45/130).

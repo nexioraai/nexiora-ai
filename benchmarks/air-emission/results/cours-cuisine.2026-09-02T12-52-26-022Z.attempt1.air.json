@@ -1,0 +1,3148 @@
+{
+  "airSchemaVersion": "1.6.0",
+  "projectId": "prj_atelier_cuisine",
+  "app": {
+    "name": "Atelier Cuisine",
+    "slug": "atelier-cuisine",
+    "description": [
+      {
+        "locale": "fr",
+        "text": "Achetez des cours de cuisine en vidéo à l'unité, regardez ceux que vous possédez et consultez librement les recettes du chef."
+      },
+      {
+        "locale": "en",
+        "text": "Buy individual cooking video courses, watch the ones you own, and browse the chef's free recipes."
+      }
+    ],
+    "locales": {
+      "userLanguage": "fr",
+      "appLocales": [
+        "fr",
+        "en"
+      ],
+      "defaultAppLocale": "fr",
+      "contentLocales": [
+        "fr",
+        "en"
+      ],
+      "rtlSupported": false
+    }
+  },
+  "navigation": {
+    "entryScreenId": "scr_accueil",
+    "primary": {
+      "destinations": [
+        {
+          "routeId": "nav_accueil",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Accueil"
+            },
+            {
+              "locale": "en",
+              "text": "Home"
+            }
+          ],
+          "order": 0
+        },
+        {
+          "routeId": "nav_cours",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Cours"
+            },
+            {
+              "locale": "en",
+              "text": "Courses"
+            }
+          ],
+          "order": 1
+        },
+        {
+          "routeId": "nav_bibliotheque",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Ma bibliothèque"
+            },
+            {
+              "locale": "en",
+              "text": "My library"
+            }
+          ],
+          "order": 2
+        },
+        {
+          "routeId": "nav_recettes",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Recettes"
+            },
+            {
+              "locale": "en",
+              "text": "Recipes"
+            }
+          ],
+          "order": 3
+        },
+        {
+          "routeId": "nav_compte",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Compte"
+            },
+            {
+              "locale": "en",
+              "text": "Account"
+            }
+          ],
+          "order": 4
+        }
+      ]
+    },
+    "routes": [
+      {
+        "id": "nav_accueil",
+        "screenId": "scr_accueil",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Accueil"
+          },
+          {
+            "locale": "en",
+            "text": "Home"
+          }
+        ]
+      },
+      {
+        "id": "nav_cours",
+        "screenId": "scr_cours",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Catalogue des cours"
+          },
+          {
+            "locale": "en",
+            "text": "Course catalog"
+          }
+        ]
+      },
+      {
+        "id": "nav_bibliotheque",
+        "screenId": "scr_bibliotheque",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Ma bibliothèque"
+          },
+          {
+            "locale": "en",
+            "text": "My library"
+          }
+        ]
+      },
+      {
+        "id": "nav_recettes",
+        "screenId": "scr_recettes",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Recettes en accès libre"
+          },
+          {
+            "locale": "en",
+            "text": "Free recipes"
+          }
+        ]
+      },
+      {
+        "id": "nav_compte",
+        "screenId": "scr_compte",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Mon compte"
+          },
+          {
+            "locale": "en",
+            "text": "My account"
+          }
+        ]
+      },
+      {
+        "id": "nav_cours_detail",
+        "screenId": "scr_cours_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Fiche du cours"
+          },
+          {
+            "locale": "en",
+            "text": "Course details"
+          }
+        ]
+      },
+      {
+        "id": "nav_achat",
+        "screenId": "scr_achat",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Achat du cours"
+          },
+          {
+            "locale": "en",
+            "text": "Course purchase"
+          }
+        ]
+      },
+      {
+        "id": "nav_achat_confirme",
+        "screenId": "scr_achat_confirme",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Achat confirmé"
+          },
+          {
+            "locale": "en",
+            "text": "Purchase confirmed"
+          }
+        ]
+      },
+      {
+        "id": "nav_lecteur",
+        "screenId": "scr_lecteur",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Lecture de la vidéo"
+          },
+          {
+            "locale": "en",
+            "text": "Video playback"
+          }
+        ]
+      },
+      {
+        "id": "nav_recette_detail",
+        "screenId": "scr_recette_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Recette"
+          },
+          {
+            "locale": "en",
+            "text": "Recipe"
+          }
+        ]
+      }
+    ]
+  },
+  "design": {
+    "theme": "culinary_warm"
+  },
+  "network": {
+    "policy": "deny_by_default",
+    "allowedDomains": [
+      "api.ateliercuisine.app"
+    ]
+  },
+  "native": {
+    "minIosVersion": "15.0",
+    "minAndroidSdk": 26
+  },
+  "compliance": {
+    "commerceClass": "digital",
+    "accountDeletionRequired": true,
+    "dataCollected": [
+      "contact_info",
+      "identifiers",
+      "usage_data",
+      "purchases",
+      "diagnostics"
+    ]
+  },
+  "entities": [
+    {
+      "id": "ent_cours",
+      "name": "cours",
+      "fields": [
+        {
+          "id": "fld_cours_titre",
+          "name": "titre",
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        {
+          "id": "fld_cours_chef",
+          "name": "chef",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_cours_visuel",
+          "name": "visuel",
+          "type": "asset",
+          "required": true
+        },
+        {
+          "id": "fld_cours_description",
+          "name": "description",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "fld_cours_prix",
+          "name": "prix",
+          "type": "decimal",
+          "required": true
+        },
+        {
+          "id": "fld_cours_categorie",
+          "name": "categorie",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "patisserie",
+            "cuisine_salee",
+            "boulangerie",
+            "techniques",
+            "vegetarien",
+            "desserts"
+          ]
+        },
+        {
+          "id": "fld_cours_niveau",
+          "name": "niveau",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "debutant",
+            "intermediaire",
+            "avance"
+          ]
+        },
+        {
+          "id": "fld_cours_duree_minutes",
+          "name": "duree_minutes",
+          "type": "number",
+          "required": true
+        },
+        {
+          "id": "fld_cours_nb_lecons",
+          "name": "nb_lecons",
+          "type": "number",
+          "required": true
+        },
+        {
+          "id": "fld_cours_note",
+          "name": "note",
+          "type": "decimal",
+          "required": false
+        },
+        {
+          "id": "fld_cours_publie_le",
+          "name": "publie_le",
+          "type": "date",
+          "required": true
+        },
+        {
+          "id": "fld_cours_mise_en_avant",
+          "name": "mise_en_avant",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "id": "fld_cours_langue",
+          "name": "langue",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "fr",
+            "en"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ent_lecon",
+      "name": "lecon",
+      "fields": [
+        {
+          "id": "fld_lecon_titre",
+          "name": "titre",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_lecon_numero",
+          "name": "numero",
+          "type": "number",
+          "required": true
+        },
+        {
+          "id": "fld_lecon_cours",
+          "name": "cours",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_cours",
+          "referenceDisplayFieldId": "fld_cours_titre"
+        },
+        {
+          "id": "fld_lecon_miniature",
+          "name": "miniature",
+          "type": "asset",
+          "required": true
+        },
+        {
+          "id": "fld_lecon_video_url",
+          "name": "video_url",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_lecon_duree_minutes",
+          "name": "duree_minutes",
+          "type": "number",
+          "required": true
+        },
+        {
+          "id": "fld_lecon_description",
+          "name": "description",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "fld_lecon_apercu_gratuit",
+          "name": "apercu_gratuit",
+          "type": "boolean",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ent_recette",
+      "name": "recette",
+      "fields": [
+        {
+          "id": "fld_recette_titre",
+          "name": "titre",
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        {
+          "id": "fld_recette_photo",
+          "name": "photo",
+          "type": "asset",
+          "required": true
+        },
+        {
+          "id": "fld_recette_resume",
+          "name": "resume",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "fld_recette_ingredients",
+          "name": "ingredients",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "fld_recette_etapes",
+          "name": "etapes",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "fld_recette_categorie",
+          "name": "categorie",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "patisserie",
+            "cuisine_salee",
+            "boulangerie",
+            "techniques",
+            "vegetarien",
+            "desserts"
+          ]
+        },
+        {
+          "id": "fld_recette_difficulte",
+          "name": "difficulte",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "facile",
+            "moyenne",
+            "difficile"
+          ]
+        },
+        {
+          "id": "fld_recette_temps_minutes",
+          "name": "temps_minutes",
+          "type": "number",
+          "required": true
+        },
+        {
+          "id": "fld_recette_cours_associe",
+          "name": "cours_associe",
+          "type": "reference",
+          "required": false,
+          "referencesEntityId": "ent_cours",
+          "referenceDisplayFieldId": "fld_cours_titre"
+        },
+        {
+          "id": "fld_recette_publiee_le",
+          "name": "publiee_le",
+          "type": "date",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ent_achat",
+      "name": "achat",
+      "fields": [
+        {
+          "id": "fld_achat_reference",
+          "name": "reference",
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        {
+          "id": "fld_achat_cours",
+          "name": "cours",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_cours",
+          "referenceDisplayFieldId": "fld_cours_titre"
+        },
+        {
+          "id": "fld_achat_compte",
+          "name": "compte",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_compte",
+          "referenceDisplayFieldId": "fld_compte_email"
+        },
+        {
+          "id": "fld_achat_montant",
+          "name": "montant",
+          "type": "decimal",
+          "required": true
+        },
+        {
+          "id": "fld_achat_date",
+          "name": "date_achat",
+          "type": "datetime",
+          "required": true
+        },
+        {
+          "id": "fld_achat_statut",
+          "name": "statut",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "en_attente",
+            "paye",
+            "rembourse",
+            "echoue"
+          ]
+        },
+        {
+          "id": "fld_achat_email",
+          "name": "email_recu",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_achat_conditions",
+          "name": "conditions_acceptees",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "id": "fld_achat_progression",
+          "name": "progression_pourcent",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "ent_compte",
+      "name": "compte",
+      "fields": [
+        {
+          "id": "fld_compte_nom",
+          "name": "nom",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_compte_email",
+          "name": "email",
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        {
+          "id": "fld_compte_langue",
+          "name": "langue_preferee",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "fr",
+            "en"
+          ]
+        },
+        {
+          "id": "fld_compte_notifications",
+          "name": "recevoir_nouveautes",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "id": "fld_compte_cree_le",
+          "name": "cree_le",
+          "type": "datetime",
+          "required": true
+        },
+        {
+          "id": "fld_compte_nb_cours",
+          "name": "nb_cours_possedes",
+          "type": "number",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel_cours_lecons",
+      "fromEntityId": "ent_cours",
+      "toEntityId": "ent_lecon",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_cours_achats",
+      "fromEntityId": "ent_cours",
+      "toEntityId": "ent_achat",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_compte_achats",
+      "fromEntityId": "ent_compte",
+      "toEntityId": "ent_achat",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_cours_recettes",
+      "fromEntityId": "ent_cours",
+      "toEntityId": "ent_recette",
+      "kind": "one_to_many"
+    }
+  ],
+  "datasets": [
+    {
+      "id": "data_cours_seed",
+      "entityId": "ent_cours",
+      "contentHash": "3f9c1a7be4d052816cb7a90f4d3e28c5417baf60d99e2c8b1704ad6e35fc82b9",
+      "rowCount": 12
+    },
+    {
+      "id": "data_lecon_seed",
+      "entityId": "ent_lecon",
+      "contentHash": "a81d47f0c69b25e3fd8014ca7362bb5901e7d4af3c8620195bd7ce4a0f236d8e",
+      "rowCount": 64
+    },
+    {
+      "id": "data_recette_seed",
+      "entityId": "ent_recette",
+      "contentHash": "c50e93a1b7d6482fa0c31e9d75b48206ff31c7ae5920d84b6ce1730af982d54c",
+      "rowCount": 18
+    },
+    {
+      "id": "data_achat_seed",
+      "entityId": "ent_achat",
+      "contentHash": "7b2f60d9ae14c3850f6ad219b7e4530cc81975def2603a4b8e15cd07926fa3b1",
+      "rowCount": 4
+    },
+    {
+      "id": "data_compte_seed",
+      "entityId": "ent_compte",
+      "contentHash": "14ad83c7f5029be6134d8a70cf29e5b1806d3fa47c2e9051bd63872ae4f01c9d",
+      "rowCount": 1
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule_cours_prix_positif",
+      "description": "Le prix d'un cours doit être renseigné et strictement positif.",
+      "kind": "validation",
+      "entityId": "ent_cours",
+      "assertions": [
+        {
+          "fieldId": "fld_cours_prix",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_cours_prix",
+          "operator": "gt",
+          "value": 0
+        },
+        {
+          "fieldId": "fld_cours_titre",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_cours_visuel",
+          "operator": "required"
+        }
+      ]
+    },
+    {
+      "id": "rule_lecon_numero_valide",
+      "description": "Chaque leçon vidéo porte un numéro d'ordre au moins égal à 1 et une source vidéo.",
+      "kind": "validation",
+      "entityId": "ent_lecon",
+      "assertions": [
+        {
+          "fieldId": "fld_lecon_numero",
+          "operator": "gte",
+          "value": 1
+        },
+        {
+          "fieldId": "fld_lecon_video_url",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_lecon_cours",
+          "operator": "required"
+        }
+      ]
+    },
+    {
+      "id": "rule_recette_complete",
+      "description": "Une recette en accès libre doit avoir un titre, une photo, ses ingrédients et ses étapes.",
+      "kind": "validation",
+      "entityId": "ent_recette",
+      "assertions": [
+        {
+          "fieldId": "fld_recette_titre",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_recette_photo",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_recette_ingredients",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_recette_etapes",
+          "operator": "required"
+        }
+      ]
+    },
+    {
+      "id": "rule_achat_valide",
+      "description": "Un achat exige un cours, un e-mail de reçu valide, l'acceptation des conditions et un montant positif.",
+      "kind": "validation",
+      "entityId": "ent_achat",
+      "assertions": [
+        {
+          "fieldId": "fld_achat_cours",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_achat_email",
+          "operator": "matches",
+          "value": "^[^@\\s]+@[^@\\s]+\\.[a-zA-Z]{2,}$"
+        },
+        {
+          "fieldId": "fld_achat_conditions",
+          "operator": "eq",
+          "value": true
+        },
+        {
+          "fieldId": "fld_achat_montant",
+          "operator": "gt",
+          "value": 0
+        },
+        {
+          "fieldId": "fld_achat_statut",
+          "operator": "in",
+          "value": [
+            "en_attente",
+            "paye",
+            "rembourse",
+            "echoue"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rule_lecture_achat_paye",
+      "description": "Seul un achat au statut payé donne accès à la lecture des vidéos du cours.",
+      "kind": "authorization",
+      "entityId": "ent_achat",
+      "assertions": [
+        {
+          "fieldId": "fld_achat_statut",
+          "operator": "eq",
+          "value": "paye"
+        }
+      ]
+    },
+    {
+      "id": "rule_compte_valide",
+      "description": "Le compte exige un nom, un e-mail valide et une langue prise en charge.",
+      "kind": "validation",
+      "entityId": "ent_compte",
+      "assertions": [
+        {
+          "fieldId": "fld_compte_nom",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_compte_email",
+          "operator": "matches",
+          "value": "^[^@\\s]+@[^@\\s]+\\.[a-zA-Z]{2,}$"
+        },
+        {
+          "fieldId": "fld_compte_langue",
+          "operator": "in",
+          "value": [
+            "fr",
+            "en"
+          ]
+        }
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "id": "slot_resume_catalogue",
+      "description": "Calcule le sous-titre du catalogue à partir des cours disponibles : nombre de cours, fourchette de prix et durée totale, dans la langue demandée.",
+      "inputs": [
+        {
+          "name": "cours",
+          "type": "json"
+        },
+        {
+          "name": "locale",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "resumeCatalogue",
+          "type": "string"
+        },
+        {
+          "name": "prixMinimum",
+          "type": "decimal"
+        }
+      ],
+      "allowedImports": []
+    },
+    {
+      "id": "slot_progression_bibliotheque",
+      "description": "Agrège les achats payés et les leçons du cours pour produire un libellé de progression (leçons vues / total) affiché en tête de la bibliothèque.",
+      "inputs": [
+        {
+          "name": "achats",
+          "type": "json"
+        },
+        {
+          "name": "lecons",
+          "type": "json"
+        },
+        {
+          "name": "locale",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "resumeProgression",
+          "type": "string"
+        },
+        {
+          "name": "nbCoursPossedes",
+          "type": "number"
+        }
+      ],
+      "allowedImports": []
+    },
+    {
+      "id": "slot_recapitulatif_achat",
+      "description": "Prépare le récapitulatif d'achat d'un cours à l'unité : intitulé, montant formaté avec devise et mention d'accès à vie, selon la langue.",
+      "inputs": [
+        {
+          "name": "cours",
+          "type": "json"
+        },
+        {
+          "name": "locale",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "libelleRecapitulatif",
+          "type": "string"
+        },
+        {
+          "name": "montantFormate",
+          "type": "string"
+        }
+      ],
+      "allowedImports": []
+    }
+  ],
+  "screens": [
+    {
+      "id": "scr_accueil",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Accueil"
+        },
+        {
+          "locale": "en",
+          "text": "Home"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_accueil_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Atelier Cuisine"
+            },
+            {
+              "key": "subtitle",
+              "value": "Des cours en vidéo à l'unité et des recettes en accès libre"
+            }
+          ]
+        },
+        {
+          "id": "blk_accueil_cours_avant",
+          "blockType": "list",
+          "entityId": "ent_cours",
+          "props": [
+            {
+              "key": "title",
+              "value": "Les cours mis en avant"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_cours_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_cours_chef"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_cours_prix"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_cours_niveau"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_cours_visuel"
+            },
+            {
+              "key": "filterFieldId",
+              "value": "fld_cours_mise_en_avant"
+            },
+            {
+              "key": "filterOperator",
+              "value": "eq"
+            },
+            {
+              "key": "filterValue",
+              "value": true
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_cours_note"
+            },
+            {
+              "key": "sortDirection",
+              "value": "desc"
+            },
+            {
+              "key": "pageSize",
+              "value": 5
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun cours mis en avant"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Le chef prépare de nouvelles sélections, revenez bientôt."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement des cours…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Cours indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Impossible de charger la sélection de cours pour le moment."
+            }
+          ]
+        },
+        {
+          "id": "blk_accueil_recettes",
+          "blockType": "list",
+          "entityId": "ent_recette",
+          "props": [
+            {
+              "key": "title",
+              "value": "Recettes en accès libre"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_recette_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_recette_resume"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_recette_temps_minutes"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_recette_difficulte"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_recette_photo"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_recette_publiee_le"
+            },
+            {
+              "key": "sortDirection",
+              "value": "desc"
+            },
+            {
+              "key": "pageSize",
+              "value": 4
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune recette publiée"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Les premières recettes gratuites arrivent très vite."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement des recettes…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Recettes indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Impossible de charger les recettes pour le moment."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_cours",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Catalogue des cours"
+        },
+        {
+          "locale": "en",
+          "text": "Course catalog"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_cours_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Cours de cuisine en vidéo"
+            },
+            {
+              "key": "subtitle",
+              "value": "Achat à l'unité, accès à vie aux leçons du cours"
+            }
+          ]
+        },
+        {
+          "id": "blk_cours_liste",
+          "blockType": "list",
+          "entityId": "ent_cours",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_cours_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_cours_chef"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_cours_prix"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_cours_categorie"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_cours_visuel"
+            },
+            {
+              "key": "searchFieldId",
+              "value": "fld_cours_titre"
+            },
+            {
+              "key": "searchPlaceholder",
+              "value": "Rechercher un cours (pâtisserie, pain, techniques…)"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_cours_publie_le"
+            },
+            {
+              "key": "sortDirection",
+              "value": "desc"
+            },
+            {
+              "key": "pageSize",
+              "value": 10
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun cours ne correspond"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Essayez un autre mot-clé ou parcourez toutes les catégories."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du catalogue…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Catalogue indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Impossible de charger le catalogue des cours."
+            }
+          ]
+        },
+        {
+          "id": "blk_cours_vide",
+          "blockType": "empty_state",
+          "visibleWhen": {
+            "kind": "entity_empty",
+            "entityId": "ent_cours"
+          },
+          "props": [
+            {
+              "key": "title",
+              "value": "Catalogue vide"
+            },
+            {
+              "key": "message",
+              "value": "Aucun cours n'est publié pour l'instant."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_cours_detail",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Fiche du cours"
+        },
+        {
+          "locale": "en",
+          "text": "Course details"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_cours_detail_header",
+          "blockType": "detail_header",
+          "entityId": "ent_cours",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_cours_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_cours_description"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_cours_prix"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_cours_niveau",
+                "fld_cours_categorie",
+                "fld_cours_langue"
+              ]
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_cours_visuel"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du cours…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Cours indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Impossible d'afficher ce cours pour le moment."
+            }
+          ]
+        },
+        {
+          "id": "blk_cours_detail_lecons",
+          "blockType": "list",
+          "entityId": "ent_lecon",
+          "props": [
+            {
+              "key": "title",
+              "value": "Les leçons vidéo du cours"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_lecon_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_lecon_description"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_lecon_duree_minutes"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_lecon_apercu_gratuit"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_lecon_miniature"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_lecon_numero"
+            },
+            {
+              "key": "sortDirection",
+              "value": "asc"
+            },
+            {
+              "key": "pageSize",
+              "value": 20
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune leçon publiée"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Les vidéos de ce cours sont en cours de préparation."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement des leçons…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Leçons indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Impossible de charger les leçons de ce cours."
+            }
+          ]
+        },
+        {
+          "id": "blk_cours_detail_acheter",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Acheter ce cours"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_achat"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_achat",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Achat du cours"
+        },
+        {
+          "locale": "en",
+          "text": "Course purchase"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_achat_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Finaliser votre achat"
+            },
+            {
+              "key": "subtitle",
+              "value": "Achat à l'unité, accès immédiat aux vidéos du cours"
+            }
+          ]
+        },
+        {
+          "id": "blk_achat_form",
+          "blockType": "form",
+          "entityId": "ent_achat",
+          "props": [
+            {
+              "key": "title",
+              "value": "Récapitulatif et confirmation"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_achat_cours",
+                "fld_achat_montant",
+                "fld_achat_email",
+                "fld_achat_conditions"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Confirmer l'achat du cours"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Préparation de l'achat…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Achat impossible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Vérifiez votre e-mail et l'acceptation des conditions."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_achat_confirme",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Achat confirmé"
+        },
+        {
+          "locale": "en",
+          "text": "Purchase confirmed"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_confirme_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Merci, votre cours est débloqué"
+            },
+            {
+              "key": "subtitle",
+              "value": "Un reçu vous a été envoyé par e-mail."
+            }
+          ]
+        },
+        {
+          "id": "blk_confirme_liste",
+          "blockType": "list",
+          "entityId": "ent_achat",
+          "props": [
+            {
+              "key": "title",
+              "value": "Votre achat"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_achat_cours"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_achat_reference"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_achat_montant"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_achat_statut"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_achat_date"
+            },
+            {
+              "key": "sortDirection",
+              "value": "desc"
+            },
+            {
+              "key": "pageSize",
+              "value": 3
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun achat enregistré"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Votre achat apparaîtra ici dès sa validation."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Validation de l'achat…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Achat introuvable"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Impossible d'afficher le détail de votre achat."
+            }
+          ]
+        },
+        {
+          "id": "blk_confirme_bibliotheque",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Regarder le cours maintenant"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_bibliotheque"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_bibliotheque",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Ma bibliothèque"
+        },
+        {
+          "locale": "en",
+          "text": "My library"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_biblio_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Ma bibliothèque"
+            },
+            {
+              "key": "subtitle",
+              "value": "Vos cours achetés et votre progression"
+            }
+          ]
+        },
+        {
+          "id": "blk_biblio_liste",
+          "blockType": "list",
+          "entityId": "ent_achat",
+          "props": [
+            {
+              "key": "title",
+              "value": "Cours débloqués"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_achat_cours"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_achat_date"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_achat_progression"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_achat_statut"
+            },
+            {
+              "key": "filterFieldId",
+              "value": "fld_achat_statut"
+            },
+            {
+              "key": "filterOperator",
+              "value": "eq"
+            },
+            {
+              "key": "filterValue",
+              "value": "paye"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_achat_date"
+            },
+            {
+              "key": "sortDirection",
+              "value": "desc"
+            },
+            {
+              "key": "pageSize",
+              "value": 10
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun cours acheté"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Les cours que vous achetez apparaissent ici, accessibles à vie."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de votre bibliothèque…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Bibliothèque indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Impossible de charger vos cours achetés."
+            }
+          ]
+        },
+        {
+          "id": "blk_biblio_vide",
+          "blockType": "empty_state",
+          "visibleWhen": {
+            "kind": "entity_empty",
+            "entityId": "ent_achat"
+          },
+          "props": [
+            {
+              "key": "title",
+              "value": "Votre bibliothèque est vide"
+            },
+            {
+              "key": "message",
+              "value": "Parcourez l'onglet Cours pour acheter votre première formation vidéo."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_lecteur",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Lecture de la vidéo"
+        },
+        {
+          "locale": "en",
+          "text": "Video playback"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_lecteur_header",
+          "blockType": "detail_header",
+          "entityId": "ent_lecon",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_lecon_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_lecon_description"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_lecon_duree_minutes"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_lecon_apercu_gratuit",
+                "fld_lecon_numero"
+              ]
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_lecon_miniature"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Ouverture de la leçon…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Leçon indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Cette vidéo ne peut pas être lue pour le moment."
+            }
+          ]
+        },
+        {
+          "id": "blk_lecteur_suite",
+          "blockType": "list",
+          "entityId": "ent_lecon",
+          "props": [
+            {
+              "key": "title",
+              "value": "Suite du cours"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_lecon_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_lecon_cours"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_lecon_duree_minutes"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_lecon_numero"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_lecon_miniature"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_lecon_numero"
+            },
+            {
+              "key": "sortDirection",
+              "value": "asc"
+            },
+            {
+              "key": "pageSize",
+              "value": 10
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune autre leçon"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Vous êtes à la fin de ce cours."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement des leçons…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Leçons indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Impossible de charger la suite du cours."
+            }
+          ]
+        },
+        {
+          "id": "blk_lecteur_progression",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Marquer cette leçon comme vue"
+            },
+            {
+              "key": "actionId",
+              "value": "act_marquer_progression"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_recettes",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Recettes en accès libre"
+        },
+        {
+          "locale": "en",
+          "text": "Free recipes"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_recettes_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Recettes du chef"
+            },
+            {
+              "key": "subtitle",
+              "value": "Librement accessibles, sans achat"
+            }
+          ]
+        },
+        {
+          "id": "blk_recettes_liste",
+          "blockType": "list",
+          "entityId": "ent_recette",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_recette_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_recette_resume"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_recette_temps_minutes"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_recette_categorie"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_recette_photo"
+            },
+            {
+              "key": "searchFieldId",
+              "value": "fld_recette_titre"
+            },
+            {
+              "key": "searchPlaceholder",
+              "value": "Rechercher une recette"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_recette_publiee_le"
+            },
+            {
+              "key": "sortDirection",
+              "value": "desc"
+            },
+            {
+              "key": "pageSize",
+              "value": 12
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune recette trouvée"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Essayez un autre mot-clé, par exemple « tarte » ou « pain »."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement des recettes…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Recettes indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Impossible de charger les recettes en accès libre."
+            }
+          ]
+        },
+        {
+          "id": "blk_recettes_vide",
+          "blockType": "empty_state",
+          "visibleWhen": {
+            "kind": "entity_empty",
+            "entityId": "ent_recette"
+          },
+          "props": [
+            {
+              "key": "title",
+              "value": "Aucune recette publiée"
+            },
+            {
+              "key": "message",
+              "value": "Les recettes gratuites du chef arriveront très prochainement."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_recette_detail",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Recette"
+        },
+        {
+          "locale": "en",
+          "text": "Recipe"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_recette_detail_header",
+          "blockType": "detail_header",
+          "entityId": "ent_recette",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_recette_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_recette_ingredients"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_recette_temps_minutes"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_recette_categorie",
+                "fld_recette_difficulte"
+              ]
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_recette_photo"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de la recette…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Recette indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Impossible d'afficher cette recette pour le moment."
+            }
+          ]
+        },
+        {
+          "id": "blk_recette_detail_etapes",
+          "blockType": "detail_header",
+          "entityId": "ent_recette",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_recette_etapes"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_recette_resume"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_recette_publiee_le"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement des étapes…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Étapes indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Impossible d'afficher les étapes de préparation."
+            }
+          ]
+        },
+        {
+          "id": "blk_recette_detail_cours",
+          "blockType": "list",
+          "entityId": "ent_cours",
+          "props": [
+            {
+              "key": "title",
+              "value": "Le cours vidéo qui va plus loin"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_cours_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_cours_chef"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_cours_prix"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_cours_niveau"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_cours_visuel"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_cours_note"
+            },
+            {
+              "key": "sortDirection",
+              "value": "desc"
+            },
+            {
+              "key": "pageSize",
+              "value": 3
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun cours associé"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Cette recette n'est rattachée à aucun cours vidéo."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement des cours…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Cours indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Impossible de charger les cours liés à cette recette."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_compte",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Mon compte"
+        },
+        {
+          "locale": "en",
+          "text": "My account"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_compte_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mon compte"
+            },
+            {
+              "key": "subtitle",
+              "value": "Langue de l'application, reçus et historique d'achats"
+            }
+          ]
+        },
+        {
+          "id": "blk_compte_form",
+          "blockType": "form",
+          "entityId": "ent_compte",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes informations"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_compte_nom",
+                "fld_compte_email",
+                "fld_compte_langue",
+                "fld_compte_notifications"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Enregistrer mes préférences"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de votre compte…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Enregistrement impossible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Vérifiez votre e-mail et la langue sélectionnée (français ou anglais)."
+            }
+          ]
+        },
+        {
+          "id": "blk_compte_achats",
+          "blockType": "list",
+          "entityId": "ent_achat",
+          "props": [
+            {
+              "key": "title",
+              "value": "Historique d'achats"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_achat_cours"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_achat_reference"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_achat_montant"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_achat_statut"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_achat_date"
+            },
+            {
+              "key": "sortDirection",
+              "value": "desc"
+            },
+            {
+              "key": "pageSize",
+              "value": 10
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun achat"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Vos achats de cours apparaîtront ici avec leur reçu."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de vos achats…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Historique indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Impossible de charger votre historique d'achats."
+            }
+          ]
+        },
+        {
+          "id": "blk_compte_supprimer",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Supprimer mon compte"
+            },
+            {
+              "key": "actionId",
+              "value": "act_supprimer_compte"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "act_ouvrir_cours_detail_catalogue",
+      "name": "Ouvrir la fiche du cours depuis le catalogue",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_cours_liste"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_cours_detail"
+      }
+    },
+    {
+      "id": "act_ouvrir_cours_detail_accueil",
+      "name": "Ouvrir la fiche du cours depuis la sélection d'accueil",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_accueil_cours_avant"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_cours_detail"
+      }
+    },
+    {
+      "id": "act_ouvrir_cours_depuis_recette",
+      "name": "Ouvrir le cours vidéo lié à la recette",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_recette_detail_cours"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_cours_detail"
+      }
+    },
+    {
+      "id": "act_ouvrir_recette_detail_liste",
+      "name": "Ouvrir la recette depuis la liste des recettes",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_recettes_liste"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_recette_detail"
+      }
+    },
+    {
+      "id": "act_ouvrir_recette_detail_accueil",
+      "name": "Ouvrir la recette depuis l'accueil",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_accueil_recettes"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_recette_detail"
+      }
+    },
+    {
+      "id": "act_ouvrir_achat",
+      "name": "Acheter ce cours à l'unité",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_cours_detail_acheter"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_achat"
+      }
+    },
+    {
+      "id": "act_enregistrer_achat",
+      "name": "Confirmer et enregistrer l'achat du cours",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_achat_form"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_achat",
+        "operation": "create",
+        "thenScreenId": "scr_achat_confirme"
+      }
+    },
+    {
+      "id": "act_ouvrir_bibliotheque",
+      "name": "Regarder le cours acheté maintenant",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_confirme_bibliotheque"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_bibliotheque"
+      }
+    },
+    {
+      "id": "act_ouvrir_lecon_depuis_biblio",
+      "name": "Lire une vidéo d'un cours acheté",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_biblio_liste"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_lecteur"
+      }
+    },
+    {
+      "id": "act_ouvrir_lecon_depuis_cours",
+      "name": "Ouvrir la leçon vidéo depuis la fiche du cours",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_cours_detail_lecons"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_lecteur"
+      }
+    },
+    {
+      "id": "act_ouvrir_lecon_suivante",
+      "name": "Ouvrir la leçon suivante du cours",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_lecteur_suite"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_lecteur"
+      }
+    },
+    {
+      "id": "act_marquer_progression",
+      "name": "Marquer la leçon comme vue",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_lecteur_progression"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_achat",
+        "operation": "update",
+        "thenScreenId": "scr_bibliotheque"
+      }
+    },
+    {
+      "id": "act_enregistrer_compte",
+      "name": "Enregistrer mes préférences de compte",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_compte_form"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_compte",
+        "operation": "update",
+        "thenScreenId": "scr_compte"
+      }
+    },
+    {
+      "id": "act_supprimer_compte",
+      "name": "Supprimer mon compte",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_compte_supprimer"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_compte",
+        "operation": "delete",
+        "thenScreenId": "scr_accueil"
+      }
+    },
+    {
+      "id": "act_ouvrir_achat_depuis_historique",
+      "name": "Rouvrir le cours d'un achat de l'historique",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_compte_achats"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_lecteur"
+      }
+    },
+    {
+      "id": "act_ouvrir_lecteur_depuis_confirmation",
+      "name": "Ouvrir la première vidéo depuis la confirmation d'achat",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_confirme_liste"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_lecteur"
+      }
+    },
+    {
+      "id": "act_resume_catalogue",
+      "name": "Calculer le résumé du catalogue de cours",
+      "trigger": {
+        "kind": "lifecycle",
+        "event": "screen_open",
+        "screenId": "scr_cours"
+      },
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_resume_catalogue",
+        "binding": {
+          "inputs": [
+            {
+              "port": "cours",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_cours"
+              }
+            },
+            {
+              "port": "locale",
+              "source": {
+                "kind": "literal",
+                "value": "fr"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "port": "resumeCatalogue",
+              "blockId": "blk_cours_header",
+              "prop": "subtitle"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "act_resume_progression",
+      "name": "Calculer la progression de ma bibliothèque",
+      "trigger": {
+        "kind": "lifecycle",
+        "event": "screen_open",
+        "screenId": "scr_bibliotheque"
+      },
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_progression_bibliotheque",
+        "binding": {
+          "inputs": [
+            {
+              "port": "achats",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_achat"
+              }
+            },
+            {
+              "port": "lecons",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_lecon"
+              }
+            },
+            {
+              "port": "locale",
+              "source": {
+                "kind": "literal",
+                "value": "fr"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "port": "resumeProgression",
+              "blockId": "blk_biblio_header",
+              "prop": "subtitle"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "act_recap_achat",
+      "name": "Préparer le récapitulatif d'achat",
+      "trigger": {
+        "kind": "lifecycle",
+        "event": "screen_open",
+        "screenId": "scr_achat"
+      },
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_recapitulatif_achat",
+        "binding": {
+          "inputs": [
+            {
+              "port": "cours",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_cours"
+              }
+            },
+            {
+              "port": "locale",
+              "source": {
+                "kind": "literal",
+                "value": "fr"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "port": "libelleRecapitulatif",
+              "blockId": "blk_achat_header",
+              "prop": "subtitle"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "capabilities": [
+    {
+      "capability": "payments.iap",
+      "config": [
+        {
+          "key": "productType",
+          "value": "non_consumable"
+        },
+        {
+          "key": "purchaseScope",
+          "value": "per_course"
+        },
+        {
+          "key": "restorePurchases",
+          "value": true
+        },
+        {
+          "key": "catalogEntityId",
+          "value": "ent_cours"
+        }
+      ]
+    },
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "method",
+          "value": "email"
+        },
+        {
+          "key": "accountEntityId",
+          "value": "ent_compte"
+        },
+        {
+          "key": "accountDeletionSupported",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "scope",
+          "value": "nouveaux_cours_et_recettes"
+        },
+        {
+          "key": "optInFieldId",
+          "value": "fld_compte_notifications"
+        },
+        {
+          "key": "defaultOptIn",
+          "value": false
+        }
+      ]
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "scope",
+          "value": "product_usage"
+        },
+        {
+          "key": "anonymizeIp",
+          "value": true
+        },
+        {
+          "key": "trackedFlows",
+          "value": [
+            "catalogue",
+            "achat",
+            "lecture",
+            "recettes"
+          ]
+        }
+      ]
+    }
+  ],
+  "permissions": [
+    {
+      "platform": "android",
+      "permission": "android.permission.POST_NOTIFICATIONS",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "Pour vous prévenir de la publication d'un nouveau cours de cuisine ou d'une nouvelle recette en accès libre, uniquement si vous l'avez accepté dans votre compte."
+        },
+        {
+          "locale": "en",
+          "text": "To let you know when a new cooking course or a new free recipe is published, only if you opted in from your account."
+        }
+      ],
+      "requiredByCapability": "push_notifications"
+    }
+  ],
+  "integrations": [
+    {
+      "id": "intg_api_backend",
+      "providerClass": "rest_api",
+      "config": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.ateliercuisine.app"
+        },
+        {
+          "key": "timeoutMs",
+          "value": 10000
+        },
+        {
+          "key": "authMode",
+          "value": "bearer_session"
+        },
+        {
+          "key": "defaultLocale",
+          "value": "fr"
+        },
+        {
+          "key": "supportedLocales",
+          "value": [
+            "fr",
+            "en"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "intg_store_billing",
+      "providerClass": "app_store_billing",
+      "capability": "payments.iap",
+      "config": [
+        {
+          "key": "productType",
+          "value": "non_consumable"
+        },
+        {
+          "key": "productIdPrefix",
+          "value": "cours."
+        },
+        {
+          "key": "receiptValidationPath",
+          "value": "/v1/iap/receipts/validate"
+        },
+        {
+          "key": "restoreEndpointPath",
+          "value": "/v1/iap/restore"
+        },
+        {
+          "key": "environment",
+          "value": "sandbox"
+        },
+        {
+          "key": "currency",
+          "value": "EUR"
+        }
+      ]
+    },
+    {
+      "id": "intg_auth_email",
+      "providerClass": "email_identity_provider",
+      "capability": "auth",
+      "config": [
+        {
+          "key": "signInMethod",
+          "value": "email_link"
+        },
+        {
+          "key": "accountEntityId",
+          "value": "ent_compte"
+        },
+        {
+          "key": "sessionLifetimeDays",
+          "value": 90
+        },
+        {
+          "key": "accountDeletionPath",
+          "value": "/v1/accounts/self/delete"
+        }
+      ]
+    },
+    {
+      "id": "intg_push_gateway",
+      "providerClass": "push_gateway",
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "topics",
+          "value": [
+            "nouveaux_cours",
+            "nouvelles_recettes"
+          ]
+        },
+        {
+          "key": "optInFieldId",
+          "value": "fld_compte_notifications"
+        },
+        {
+          "key": "registrationPath",
+          "value": "/v1/devices/register"
+        },
+        {
+          "key": "localePerAccount",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "intg_analytics_produit",
+      "providerClass": "product_analytics",
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "ingestPath",
+          "value": "/v1/analytics/events"
+        },
+        {
+          "key": "anonymizeIp",
+          "value": true
+        },
+        {
+          "key": "trackedFlows",
+          "value": [
+            "catalogue",
+            "achat",
+            "lecture",
+            "recettes"
+          ]
+        },
+        {
+          "key": "batchIntervalSeconds",
+          "value": 30
+        }
+      ]
+    },
+    {
+      "id": "intg_video_delivery",
+      "providerClass": "video_delivery",
+      "config": [
+        {
+          "key": "manifestPathTemplate",
+          "value": "/v1/lecons/{lessonId}/manifest.m3u8"
+        },
+        {
+          "key": "signedUrlTtlSeconds",
+          "value": 900
+        },
+        {
+          "key": "entitlementCheckPath",
+          "value": "/v1/entitlements/check"
+        },
+        {
+          "key": "videoUrlFieldId",
+          "value": "fld_lecon_video_url"
+        }
+      ]
+    },
+    {
+      "id": "intg_media_assets",
+      "providerClass": "asset_cdn",
+      "config": [
+        {
+          "key": "assetPathPrefix",
+          "value": "/v1/assets"
+        },
+        {
+          "key": "imageFormats",
+          "value": [
+            "webp",
+            "jpeg"
+          ]
+        },
+        {
+          "key": "thumbnailWidth",
+          "value": 320
+        },
+        {
+          "key": "headerWidth",
+          "value": 1080
+        }
+      ]
+    }
+  ],
+  "expectedTests": [
+    {
+      "id": "test_catalogue_recherche_filtre",
+      "description": "Sur le catalogue, saisir « pain » dans le champ de recherche du bloc blk_cours_liste ne laisse que les cours dont le titre contient ce mot ; le champ est rendu en tête de liste.",
+      "kind": "deterministic",
+      "targetId": "blk_cours_liste"
+    },
+    {
+      "id": "test_catalogue_vignettes_prix",
+      "description": "Chaque ligne du catalogue affiche la vignette du cours (fld_cours_visuel), le titre, le chef et le prix à droite, triés par date de publication décroissante avec pageSize de 10.",
+      "kind": "deterministic",
+      "targetId": "blk_cours_liste"
+    },
+    {
+      "id": "test_accueil_selection_mise_en_avant",
+      "description": "La liste d'accueil blk_accueil_cours_avant ne montre que les cours dont fld_cours_mise_en_avant vaut true, avec leur visuel et leur prix, limités à 5 lignes.",
+      "kind": "deterministic",
+      "targetId": "blk_accueil_cours_avant"
+    },
+    {
+      "id": "test_ligne_catalogue_ouvre_fiche",
+      "description": "Presser une ligne de blk_cours_liste ouvre scr_cours_detail avec l'identifiant du cours pressé, et non le premier enregistrement.",
+      "kind": "e2e",
+      "targetId": "act_ouvrir_cours_detail_catalogue"
+    },
+    {
+      "id": "test_fiche_cours_visuel_et_badges",
+      "description": "L'en-tête de la fiche cours affiche le visuel fld_cours_visuel, le prix en trailing et les badges niveau, catégorie et langue.",
+      "kind": "deterministic",
+      "targetId": "blk_cours_detail_header"
+    },
+    {
+      "id": "test_fiche_cours_lecons_ordonnees",
+      "description": "La liste des leçons de la fiche cours est triée par fld_lecon_numero croissant et affiche la miniature de chaque leçon.",
+      "kind": "deterministic",
+      "targetId": "blk_cours_detail_lecons"
+    },
+    {
+      "id": "test_bouton_acheter_ouvre_achat",
+      "description": "Le bouton « Acheter ce cours » de la fiche déclenche bien act_ouvrir_achat et navigue vers scr_achat.",
+      "kind": "e2e",
+      "targetId": "act_ouvrir_achat"
+    },
+    {
+      "id": "test_regle_achat_validation",
+      "description": "La règle rule_achat_valide bloque l'écriture si l'e-mail de reçu est mal formé, si les conditions ne sont pas acceptées ou si le montant n'est pas strictement positif.",
+      "kind": "deterministic",
+      "targetId": "rule_achat_valide"
+    },
+    {
+      "id": "test_formulaire_achat_cree_enregistrement",
+      "description": "Soumettre blk_achat_form via act_enregistrer_achat crée une instance de ent_achat puis navigue vers scr_achat_confirme ; l'achat apparaît ensuite dans l'historique.",
+      "kind": "e2e",
+      "targetId": "act_enregistrer_achat"
+    },
+    {
+      "id": "test_reference_achat_lisible",
+      "description": "Le champ de référence fld_achat_cours s'affiche avec le titre du cours (fld_cours_titre) et jamais avec un identifiant brut, dans la liste de confirmation.",
+      "kind": "deterministic",
+      "targetId": "blk_confirme_liste"
+    },
+    {
+      "id": "test_confirmation_vers_bibliotheque",
+      "description": "Depuis l'écran de confirmation, le bouton « Regarder le cours maintenant » exécute act_ouvrir_bibliotheque et affiche scr_bibliotheque.",
+      "kind": "e2e",
+      "targetId": "act_ouvrir_bibliotheque"
+    },
+    {
+      "id": "test_bibliotheque_filtre_payes",
+      "description": "blk_biblio_liste n'affiche que les achats dont fld_achat_statut vaut « paye », triés par date d'achat décroissante.",
+      "kind": "deterministic",
+      "targetId": "blk_biblio_liste"
+    },
+    {
+      "id": "test_bibliotheque_etat_vide",
+      "description": "Quand aucune instance de ent_achat n'existe, blk_biblio_vide s'affiche et disparaît dès qu'un achat est enregistré.",
+      "kind": "deterministic",
+      "targetId": "blk_biblio_vide"
+    },
+    {
+      "id": "test_lecture_depuis_bibliotheque",
+      "description": "Presser une ligne de la bibliothèque exécute act_ouvrir_lecon_depuis_biblio et ouvre scr_lecteur sur la leçon correspondante.",
+      "kind": "e2e",
+      "targetId": "act_ouvrir_lecon_depuis_biblio"
+    },
+    {
+      "id": "test_acces_lecture_reserve_paye",
+      "description": "La règle rule_lecture_achat_paye refuse l'accès aux vidéos tant que l'achat n'est pas au statut « paye ».",
+      "kind": "deterministic",
+      "targetId": "rule_lecture_achat_paye"
+    },
+    {
+      "id": "test_lecteur_entete_lecon",
+      "description": "L'en-tête du lecteur affiche la miniature de la leçon, sa durée et les badges aperçu gratuit / numéro, avec les états de chargement et d'erreur déclarés.",
+      "kind": "deterministic",
+      "targetId": "blk_lecteur_header"
+    },
+    {
+      "id": "test_lecteur_lecon_suivante",
+      "description": "La liste « Suite du cours » permet d'enchaîner : presser une ligne exécute act_ouvrir_lecon_suivante et recharge scr_lecteur sur la leçon choisie.",
+      "kind": "e2e",
+      "targetId": "act_ouvrir_lecon_suivante"
+    },
+    {
+      "id": "test_progression_marquee",
+      "description": "Le bouton « Marquer cette leçon comme vue » exécute act_marquer_progression, met à jour ent_achat et revient sur scr_bibliotheque avec la progression actualisée.",
+      "kind": "e2e",
+      "targetId": "act_marquer_progression"
+    },
+    {
+      "id": "test_recettes_acces_libre",
+      "description": "L'onglet Recettes affiche les recettes sans aucun achat préalable, avec photo, résumé, temps et badge de catégorie.",
+      "kind": "deterministic",
+      "targetId": "blk_recettes_liste"
+    },
+    {
+      "id": "test_recettes_recherche",
+      "description": "La recherche par titre sur blk_recettes_liste filtre réellement les recettes affichées (par exemple « tarte »).",
+      "kind": "deterministic",
+      "targetId": "blk_recettes_liste"
+    },
+    {
+      "id": "test_ligne_recette_ouvre_detail",
+      "description": "Presser une ligne de blk_recettes_liste exécute act_ouvrir_recette_detail_liste et ouvre scr_recette_detail sur la recette pressée.",
+      "kind": "e2e",
+      "targetId": "act_ouvrir_recette_detail_liste"
+    },
+    {
+      "id": "test_recette_detail_photo_etapes",
+      "description": "La fiche recette affiche la photo (fld_recette_photo), les ingrédients en sous-titre puis le bloc des étapes de préparation.",
+      "kind": "deterministic",
+      "targetId": "blk_recette_detail_header"
+    },
+    {
+      "id": "test_recette_vers_cours",
+      "description": "Depuis une recette, presser un cours de la liste « Le cours vidéo qui va plus loin » exécute act_ouvrir_cours_depuis_recette et ouvre la fiche du cours.",
+      "kind": "e2e",
+      "targetId": "act_ouvrir_cours_depuis_recette"
+    },
+    {
+      "id": "test_compte_preferences_enregistrees",
+      "description": "Soumettre blk_compte_form exécute act_enregistrer_compte, met à jour ent_compte (nom, e-mail, langue fr/en, notifications) et reste sur scr_compte.",
+      "kind": "e2e",
+      "targetId": "act_enregistrer_compte"
+    },
+    {
+      "id": "test_regle_compte_langue",
+      "description": "rule_compte_valide rejette un e-mail invalide et toute langue hors de la liste fr / en.",
+      "kind": "deterministic",
+      "targetId": "rule_compte_valide"
+    },
+    {
+      "id": "test_compte_suppression",
+      "description": "Le bouton « Supprimer mon compte » exécute act_supprimer_compte, supprime ent_compte et renvoie vers scr_accueil.",
+      "kind": "e2e",
+      "targetId": "act_supprimer_compte"
+    },
+    {
+      "id": "test_historique_achats_recus",
+      "description": "L'historique du compte liste les achats avec référence, montant et statut, triés par date décroissante, et une ligne ouvre le lecteur via act_ouvrir_achat_depuis_historique.",
+      "kind": "e2e",
+      "targetId": "act_ouvrir_achat_depuis_historique"
+    },
+    {
+      "id": "test_slot_resume_catalogue_invoque",
+      "description": "À l'ouverture de scr_cours, act_resume_catalogue invoque slot_resume_catalogue avec les lignes de ent_cours et écrit resumeCatalogue dans la prop subtitle de blk_cours_header.",
+      "kind": "deterministic",
+      "targetId": "act_resume_catalogue"
+    },
+    {
+      "id": "test_slot_progression_invoque",
+      "description": "À l'ouverture de scr_bibliotheque, act_resume_progression invoque slot_progression_bibliotheque et alimente le sous-titre de blk_biblio_header avec la progression.",
+      "kind": "deterministic",
+      "targetId": "act_resume_progression"
+    },
+    {
+      "id": "test_slot_recap_achat_invoque",
+      "description": "À l'ouverture de scr_achat, act_recap_achat invoque slot_recapitulatif_achat et écrit le libellé de récapitulatif dans le sous-titre de blk_achat_header.",
+      "kind": "deterministic",
+      "targetId": "act_recap_achat"
+    },
+    {
+      "id": "test_navigation_persistante",
+      "description": "Depuis l'écran d'entrée scr_accueil, la barre persistante affiche les cinq destinations Accueil, Cours, Ma bibliothèque, Recettes, Compte dans l'ordre déclaré, sur chaque écran.",
+      "kind": "e2e",
+      "targetId": "scr_accueil"
+    },
+    {
+      "id": "test_bilinguisme_fr_en",
+      "description": "Les libellés de navigation et les descriptions de l'application sont rendus en français par défaut et en anglais lorsque la locale de l'appareil est en.",
+      "kind": "deterministic",
+      "targetId": "prj_atelier_cuisine"
+    },
+    {
+      "id": "test_contrat_api_backend",
+      "description": "L'intégration REST ne contacte que https://api.ateliercuisine.app, respecte le timeout de 10 s et transmet la locale demandée.",
+      "kind": "contract",
+      "targetId": "intg_api_backend"
+    },
+    {
+      "id": "test_contrat_iap_non_consommable",
+      "description": "L'intégration de facturation expose un produit non consommable par cours, valide le reçu côté serveur et sait restaurer les achats.",
+      "kind": "contract",
+      "targetId": "intg_store_billing"
+    },
+    {
+      "id": "test_contrat_auth_email",
+      "description": "L'intégration d'authentification par e-mail crée une session liée à ent_compte et expose la suppression de compte.",
+      "kind": "contract",
+      "targetId": "intg_auth_email"
+    },
+    {
+      "id": "test_contrat_video_delivery",
+      "description": "L'intégration de diffusion vidéo ne renvoie une URL signée pour fld_lecon_video_url qu'après vérification de l'entitlement d'achat.",
+      "kind": "contract",
+      "targetId": "intg_video_delivery"
+    },
+    {
+      "id": "test_contrat_assets_images",
+      "description": "Le CDN d'assets sert les visuels de cours, miniatures de leçons et photos de recettes aux largeurs vignette (320) et en-tête (1080).",
+      "kind": "contract",
+      "targetId": "intg_media_assets"
+    },
+    {
+      "id": "test_contrat_analytics_flux",
+      "description": "L'intégration analytics n'émet que les flux catalogue, achat, lecture et recettes, avec anonymisation de l'IP.",
+      "kind": "contract",
+      "targetId": "intg_analytics_produit"
+    },
+    {
+      "id": "test_contrat_push_optin",
+      "description": "La passerelle push n'enregistre l'appareil que si fld_compte_notifications vaut true et respecte les sujets déclarés.",
+      "kind": "contract",
+      "targetId": "intg_push_gateway"
+    }
+  ],
+  "intent": {
+    "request": "Je vends des cours de cuisine en vidéo. L'app doit proposer les cours à l'achat à l'unité dans l'app, la lecture des vidéos achetées, et mes recettes en accès libre. En français et en anglais.",
+    "requestLocale": "fr",
+    "needs": [
+      {
+        "id": "need_catalogue_cours_video",
+        "statement": "Présenter les cours de cuisine en vidéo proposés à la vente, avec leur visuel, leur prix et leur contenu détaillé.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_cours",
+            "blk_cours_liste",
+            "blk_accueil_cours_avant",
+            "scr_cours_detail",
+            "blk_cours_detail_header",
+            "blk_cours_detail_lecons",
+            "act_ouvrir_cours_detail_catalogue",
+            "ent_cours",
+            "data_cours_seed"
+          ]
+        }
+      },
+      {
+        "id": "need_achat_unite_parcours",
+        "statement": "Permettre l'achat d'un cours à l'unité depuis l'application : récapitulatif, confirmation, enregistrement de l'achat et reçu.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "blk_cours_detail_acheter",
+            "act_ouvrir_achat",
+            "scr_achat",
+            "blk_achat_form",
+            "act_enregistrer_achat",
+            "rule_achat_valide",
+            "scr_achat_confirme",
+            "blk_confirme_liste",
+            "blk_compte_achats",
+            "ent_achat",
+            "data_achat_seed"
+          ]
+        }
+      },
+      {
+        "id": "need_paiement_intgre_store",
+        "statement": "Encaisser réellement le paiement du cours par achat intégré (in-app purchase) auprès de la boutique de l'appareil, y compris la restauration des achats.",
+        "resolution": {
+          "kind": "unexpressible",
+          "reason": "le moteur n'exécute pas encore les effets capability (capabilitiesEmitCode: false) : la capability payments.iap est déclarée dans le document, mais aucune transaction de facturation ne peut être déclenchée à l'exécution."
+        }
+      },
+      {
+        "id": "need_bibliotheque_cours_achetes",
+        "statement": "Donner accès aux cours achetés : bibliothèque personnelle, liste des leçons vidéo du cours et navigation d'une leçon à la suivante.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_bibliotheque",
+            "blk_biblio_liste",
+            "blk_biblio_vide",
+            "act_ouvrir_lecon_depuis_biblio",
+            "scr_lecteur",
+            "blk_lecteur_header",
+            "blk_lecteur_suite",
+            "act_ouvrir_lecon_suivante",
+            "blk_lecteur_progression",
+            "act_marquer_progression",
+            "ent_lecon",
+            "data_lecon_seed"
+          ]
+        }
+      },
+      {
+        "id": "need_lecture_video_achetee",
+        "statement": "Lire effectivement la vidéo d'une leçon achetée dans un lecteur intégré à l'application.",
+        "resolution": {
+          "kind": "unexpressible",
+          "reason": "le registre fermé des smart blocks (header, list, detail_header, form, button, empty_state) ne comporte aucun bloc capable de rendre un lecteur vidéo, et le moteur n'exécute pas encore les effets capability (capabilitiesEmitCode: false) : l'écran de lecture peut présenter la leçon, ses miniatures et sa progression, mais la lecture du flux vidéo lui-même n'est rendue par aucun bloc."
+        }
+      },
+      {
+        "id": "need_acces_reserve_aux_achats",
+        "statement": "Réserver l'accès aux vidéos aux seuls cours effectivement achetés et payés.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "rule_lecture_achat_paye",
+            "blk_biblio_liste",
+            "fld_achat_statut",
+            "intg_video_delivery"
+          ]
+        }
+      },
+      {
+        "id": "need_recettes_acces_libre",
+        "statement": "Publier les recettes du chef en accès libre, consultables sans achat.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_recettes",
+            "blk_recettes_liste",
+            "blk_recettes_vide",
+            "act_ouvrir_recette_detail_liste",
+            "scr_recette_detail",
+            "blk_recette_detail_header",
+            "blk_recette_detail_etapes",
+            "blk_accueil_recettes",
+            "blk_recette_detail_cours",
+            "ent_recette",
+            "data_recette_seed"
+          ]
+        }
+      },
+      {
+        "id": "need_application_bilingue_fr_en",
+        "statement": "Proposer l'application en français et en anglais.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "prj_atelier_cuisine",
+            "nav_cours",
+            "blk_accueil_header",
+            "blk_compte_form",
+            "fld_compte_langue",
+            "rule_compte_valide",
+            "fld_cours_langue",
+            "intg_api_backend"
+          ]
+        }
+      }
+    ]
+  }
+}

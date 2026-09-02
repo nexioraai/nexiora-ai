@@ -121,10 +121,12 @@ describe("cliquet de régression — les défauts du corpus v3 ne remontent jama
   // boutique-mode régénéré, 3 → 0.
   // ÉDITION CONSCIENTE (2026-09-02, commit d'acceptation D-122) : 16 → 14 —
   // suivi-chantier régénéré, 2 → 0.
-  it("🔴 les écrans de détail SANS SOURCE ne remontent jamais — plafond 14", () => {
+  // ÉDITION CONSCIENTE (2026-09-02, commit d'acceptation D-124) : 14 → 11 —
+  // cours-cuisine accepté par preuve A/B/C, 3 → 0.
+  it("🔴 les écrans de détail SANS SOURCE ne remontent jamais — plafond 11", () => {
     const tous = documents.flatMap((d) => detailScreens(d.air));
     const orphelins = tous.filter((x) => !x.hasItemIdSource);
-    expect(orphelins.length).toBeLessThanOrEqual(14);
+    expect(orphelins.length).toBeLessThanOrEqual(11);
   });
 
   // ÉDITION CONSCIENTE (2026-09-01, B′ après D-117) : égalité exacte →
@@ -149,11 +151,14 @@ describe("cliquet de régression — les défauts du corpus v3 ne remontent jama
     // + `boutique-mode` — 2 détails, tous sourcés. Plancher : 6 documents.
     // ÉDITION CONSCIENTE (2026-09-02, commit d'acceptation D-122) :
     // + `suivi-chantier` — 3 détails, tous sourcés. Plancher : 7 documents.
+    // ÉDITION CONSCIENTE (2026-09-02, commit d'acceptation D-124) :
+    // + `cours-cuisine` — 4 détails, tous sourcés. Plancher : 8 documents.
     for (const attendu of [
       "agence-immo",
       "billetterie-concerts",
       "boutique-mode",
       "coach-fitness",
+      "cours-cuisine",
       "livraison-fruits",
       "plombier-urgence",
       "suivi-chantier",

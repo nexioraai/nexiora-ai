@@ -1,7 +1,22 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-02 (12)** (**RUN `cours-cuisine` REFUSÉ, TROIS LACUNES GÉNÉRIQUES
+> **2026-09-02 (13)** (**`cours-cuisine` EST VALIDE PAR PREUVE A/B/C — `D-124`** :
+> trois runs, même intention, même plafond : sans règle 30 → mensonge (2,59 $,
+> refusé) · règle 30 seule → mensonge (2,90 $, refusé, mais gardes mécaniques
+> D-123 DÉMONTRÉES : 2 décoratifs + 1 morte interceptés ET réparés en run) ·
+> **règle 11 RENFORCÉE (preuve de rendu exigée + menace symétrique) →
+> honnêteté** (2,67 $, accepté) : `lecture_video` **unexpressible** citant le
+> registre fermé énuméré + `capabilitiesEmitCode`, achat SCINDÉ
+> (parcours satisfait / transaction store dite), et les 6 besoins rendables
+> RESTENT satisfaits — contre-falsification anti-45/130 tenue. F1 39/39 ·
+> F4 6 ok · 2 dits · 0 réfuté · orphelins 0/4 · images 0/3 · bilingue conservé.
+> **9/12 v3 verts · F4 global 15 · réfutés 5.** Resserrement : orphelins
+> **≤ 11**, sains **8**. Cycle cours-cuisine : **8,16 $** de preuves pour un
+> document accepté, trois protections et une règle prouvées. 928/928 · tsc 0 ·
+> lint 0. **2,6683 $.**)
+>
+> *Entrée précédente —* **2026-09-02 (12)** (**RUN `cours-cuisine` REFUSÉ, TROIS LACUNES GÉNÉRIQUES
 > FERMÉES — `D-123`** : 2,5918 $, `valid=false`, corpus jamais écrit — première
 > morsure réelle d'`AIR_TEST_TARGET_MORTE`, **D-118 validé par l'épreuve**.
 > Trois classes démontrées sur artefacts payés : déclencheur DÉCORATIF (D-105 :
