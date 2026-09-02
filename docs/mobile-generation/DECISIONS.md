@@ -6169,3 +6169,63 @@ absorption) · gates : **F4 17 → 16 · motifs réfutés 8 → 6** · F1 = 12.
 sans source · 1 muet · 10 images brutes. **Resserrement de cadence dans ce
 commit** : orphelins 16 → **14**, `suivi-chantier` entre dans les sains
 (plancher **7**). Aucun autre garde-fou modifié.
+
+## D-123 — LE RUN COURS-CUISINE EST REFUSÉ, ET SES TROIS CLASSES DE DÉFAUT FERMENT TROIS LACUNES GÉNÉRIQUES — 2026-09-02
+
+**Le run `2026-09-02T11-33-00-222Z` (2,5918 $, 10 appels, 487 s) est REFUSÉ
+définitivement** — par le pipeline lui-même : `valid=false`, corpus jamais
+écrit, preuves conservées par runId (convention D-118). **C'est la première
+morsure réelle d'`AIR_TEST_TARGET_MORTE` : D-118 est validé par l'épreuve** —
+sans lui, le document entrait au corpus puis rougissait la gate.
+
+### Trois classes, toutes DÉMONTRÉES sur les artefacts payés
+
+**A — déclencheur décoratif** : la réparation a créé
+`act_ouvrir_catalogue_depuis_achats_vide` (déclencheur `ui` sur
+`blk_achats_vide`, un `empty_state`) alors que le bloc dispatche l'action de
+SA prop `actionId` (= `act_ouvrir_catalogue`) — contrat D-105 : *le
+déclencheur y est décoratif*. `D-104` ne le voit pas (contrôle de TYPE, pas de
+cohérence de dispatch) ; la promesse est morte → refus.
+
+**B — pseudo-satisfaction sémantique** : `need_lecture_videos_achetees` classé
+`satisfied`, rattaché à **14 nœuds tous vivants** (écran lecteur, champs,
+intégration, règle, tests de contrat) — alors qu'aucun bloc du registre fermé
+ne rend un flux vidéo. **Aucun instrument mécanique ne peut le voir** : la vie
+des nœuds est vérifiée, la sémantique du comportement non.
+
+**C — parité F4 manquante** : la section `intention` (émise en attempt1, jamais
+réémise) portait 2 `reference_brisee` après que la réparation a renommé des
+nœuds. `validateLocal` ne contrôlait pas F4 : **la divergence pipeline↔gate
+fermée par D-118 pour F1 existait à l'identique pour F4.**
+
+### Corrections génériques appliquées (ce commit)
+
+| Classe | Correction | Généricité |
+|---|---|---|
+| A | diagnostic `ACTION_DECLENCHEUR_DECORATIF` dans `validateLocal` | condition **dérivée du registre** (`actionRefProps`), aucune liste de types |
+| C (+B mécanisable) | **parité F4** : `AIR_INTENT_{REFERENCE_BRISEE, MOTIF_REFUTE, SATISFACTION_NON_PROUVEE, SATISFAIT_PAR_DU_MORT}` depuis `evaluateIntentCoverage` — l'instrument de la gate lui-même | patron D-118, zéro faux positif nouveau |
+| B (sémantique) | **règle 30** du prompt : `satisfied` exige un comportement RENDU par le registre fermé et des faits ✅ ; sinon `unexpressible` avec fait cité | aucune mention de vidéo, d'IAP ni d'un secteur |
+
+Mappings de réparation : décoratif → `actions/ecrans/cablage` ; parité →
+`intention` (+ sections de construction) — réémission d'`intention` couverte
+par l'anti-amputation (`identifiantsDuDocument` visite `doc.intent`).
+**Aucun seuil F1/F4/B′ modifié ; D-104 et D-118 inchangés dans leur rôle.**
+
+### Killer-tests sur artefacts payés — et une DETTE HISTORIQUE RÉVÉLÉE
+
+Refusé : DECORATIF = **exactement 1** (le cas démontré) · PARITÉ = **exactement
+2** (les `reference_brisee`). Les 5 acceptés : PARITÉ = 0 partout ; DECORATIF =
+0 (agence) mais **3 (livraison) · 4 (billetterie) · 1 (boutique) · 1 (suivi)** :
+**9 CTA d'état vide jamais dispatchés préexistent dans le corpus accepté** —
+non promis, donc tolérés par F1, invisibles jusqu'à ce diagnostic. `FACT` — le
+protocole de non-régression prédisait 0 : la prédiction était sous-informée,
+le diagnostic dit vrai et n'a pas été rétréci pour coller au chiffre.
+**Ces 9 instances sont une dette historique révélée, PAS une requalification
+rétroactive** : le diagnostic est de campagne, les corpus acceptés restent
+acceptés ; les futures régénérations les corrigeront document par document.
+
+### Vérifications
+
+repair **156/156** (+7 épinglages) · suite **928/928** · typecheck 0 · lint 0 ·
+corpus byte-intact · cliquets B′ intacts. Relance de `cours-cuisine`
+(~2,4–3,5 $) : décision séparée, sous les critères du dossier existant.

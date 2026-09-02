@@ -126,6 +126,44 @@ describe("AIR_TEST_TARGET_MORTE — la réparation vit où la cible peut revivre
   });
 });
 
+describe("ACTION_DECLENCHEUR_DECORATIF — l'alignement vit des deux côtés du dispatch", () => {
+  // D-123 : produit par la validation de campagne — hors du pont fail-closed,
+  // invisible au cliquet de complétude ; épinglé ici comme ses voisins.
+  it("🔴 un déclencheur décoratif réémet `actions`, `ecrans` ET `cablage`", () => {
+    const sections = sectionsAReemettre([
+      { code: "ACTION_DECLENCHEUR_DECORATIF", path: "actions[7].trigger.blockId" },
+    ]);
+    expect(sections).toContain("actions");
+    expect(sections).toContain("ecrans");
+    expect(sections).toContain("cablage");
+  });
+
+  it("🔴 CONTRÔLE NÉGATIF : le repli par chemin n'aurait donné que `actions`", () => {
+    expect(sectionDuChemin("actions[7].trigger.blockId")).toBe("actions");
+  });
+});
+
+describe("AIR_INTENT_* — la parité F4 sait où vit chaque correctif", () => {
+  // D-123 : même patron que AIR_TEST_TARGET_MORTE (parité F1). Quatre codes,
+  // chacun épinglé avec la ou les sections où le correctif peut vivre.
+  const CAS = [
+    ["AIR_INTENT_REFERENCE_BRISEE", ["intention"]],
+    ["AIR_INTENT_MOTIF_REFUTE", ["intention", "ecrans", "actions"]],
+    ["AIR_INTENT_SATISFACTION_NON_PROUVEE", ["intention", "ecrans"]],
+    ["AIR_INTENT_SATISFAIT_PAR_DU_MORT", ["intention", "actions", "ecrans"]],
+  ] as const;
+  for (const [code, sections] of CAS) {
+    it(`🔴 ${code} réémet ${sections.join(" + ")}`, () => {
+      const obtenues = sectionsAReemettre([{ code, path: "intent.needs[need_x]" }]);
+      for (const s of sections) expect(obtenues).toContain(s);
+    });
+  }
+
+  it("le chemin d'observation est bien `intention` (repli cohérent)", () => {
+    expect(sectionDuChemin("intent.needs[need_x]")).toBe("intention");
+  });
+});
+
 describe("anti-amputation — ce que nul diagnostic ne désigne ne disparaît pas", () => {
   const avant = {
     entities: [{ id: "ent_a", fields: [{ id: "fld_photo" }] }, { id: "ent_b" }],

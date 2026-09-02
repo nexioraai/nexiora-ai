@@ -76,6 +76,21 @@ export const SECTIONS_CORRECTIVES: Readonly<Record<string, readonly SectionEmiss
   // Une promesse sans cible : CRÉER la cible vit dans `actions` ou `screens`.
   AIR_TEST_TARGET_UNKNOWN: ["cablage", "actions", "ecrans"],
 
+  // D-123 — un déclencheur DÉCORATIF (D-105 : `button`/`empty_state`
+  // dispatchent par leur prop `actionId`, pas par le déclencheur déclaré).
+  // L'alignement vit dans `actions` (re-cibler le déclencheur), `ecrans` (la
+  // prop du bloc) ou `cablage` (re-cibler la promesse vers l'action dispatchée).
+  ACTION_DECLENCHEUR_DECORATIF: ["actions", "ecrans", "cablage"],
+
+  // D-123 — parité F4 à la génération, même patron que AIR_TEST_TARGET_MORTE.
+  // Des nodeIds périmés se réparent dans `intention` (recopier les vrais ids) ;
+  // un motif réfuté ou une satisfaction sans trace peuvent aussi exiger de
+  // CONSTRUIRE la trace (`ecrans`, `actions`).
+  AIR_INTENT_REFERENCE_BRISEE: ["intention"],
+  AIR_INTENT_MOTIF_REFUTE: ["intention", "ecrans", "actions"],
+  AIR_INTENT_SATISFACTION_NON_PROUVEE: ["intention", "ecrans"],
+  AIR_INTENT_SATISFAIT_PAR_DU_MORT: ["intention", "actions", "ecrans"],
+
   // D-118 — une promesse sur cible EXISTANTE mais MORTE : rendre la cible
   // vivante vit dans `actions` (recâbler le déclencheur, câbler le bloc) ou
   // `ecrans` (le bloc porteur) ; re-cibler la promesse vit dans `cablage`.

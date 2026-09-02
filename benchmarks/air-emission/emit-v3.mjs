@@ -300,6 +300,8 @@ REGISTRE DES SMART BLOCKS (allowlist FERMÉE — blockType UNIQUEMENT parmi ces 
    RAISON MESURÉE : seul l'appui sur une LIGNE DE LISTE transmet l'identifiant de l'instance. Une navigation par BOUTON n'en transmet aucun [vérifié dans le runtime]. Sans identifiant, l'écran affiche TOUJOURS le premier enregistrement, sans erreur — 28 écrans de détail sur 34 étaient dans ce cas.
    Un bouton « Voir le détail » ne remplace donc PAS la ligne pressable : il conduit au bon écran avec le mauvais contenu.
 
+30. UN BESOIN N'EST « satisfied » QUE SI LE MOTEUR REND CE QU'IL PROMET — complément d'HONNÊTETÉ de la règle 11, dans l'AUTRE sens. Avant de classer un besoin \`satisfied\`, vérifie CHAQUE comportement qu'il promet : il doit être RENDU par un bloc du registre fermé ci-dessus ET couvert par les faits ✅ de la surface. Un besoin dont le comportement central exigerait un type de rendu qu'AUCUN bloc du registre ne produit, ou un fait ❌, N'EST PAS satisfait — même si tu construis des écrans plausibles autour : une structure d'écrans VIVANTE ne rend pas un comportement que le moteur ne rend pas, elle le maquille. Déclare-le \`unexpressible\` en NOMMANT le fait exact (règle 11) et, si le registre est en cause, en le disant explicitement. Ceci n'inverse PAS la règle 11 : chercher les nœuds reste le réflexe pour tout ce que le moteur SAIT rendre ; seul ce qu'il ne rend pas se déclare.
+
 RÈGLES BLOCS NON NÉGOCIABLES :
 A. Tout *FieldId d'un bloc référence un champ (fld_*) DE L'ENTITÉ LIÉE à ce bloc.
 B. Tout actionId référence une action DÉCLARÉE dans la section "actions".
@@ -535,6 +537,76 @@ function validateLocal(document) {
           `NE RETIRE NI L'ÉCRAN NI SON EN-TÊTE : la réparation attendue est de ` +
           `CÂBLER la ligne (règle 27).`,
       })),
+    // ── ACTION_DECLENCHEUR_DECORATIF (2026-09-02, D-123) — DIAGNOSTIC, même étage.
+    //
+    // CAUSE RACINE PAYÉE (run refusé 2026-09-02T11-33-00-222Z) : la réparation
+    // a créé une action à déclencheur `ui` sur un `empty_state` dont la prop
+    // `actionId` dispatchait une AUTRE action. D-105 le dit : `button` et
+    // `empty_state` dispatchent par LEUR prop — le déclencheur y est DÉCORATIF.
+    // D-104 ne le voit pas (il vérifie le TYPE du bloc, pas la cohérence de
+    // dispatch) ; la promesse visant l'action a fini en AIR_TEST_TARGET_MORTE
+    // après réparation, trop tard pour une seconde passe. La condition est
+    // DÉRIVÉE DU REGISTRE (`actionRefProps`), jamais d'une liste de types.
+    ...parsed.data.actions.flatMap((a, ai) => {
+      if (a.trigger.kind !== "ui") return [];
+      const bloc = parsed.data.screens
+        .flatMap((s) => s.blocks)
+        .find((b) => b.id === a.trigger.blockId);
+      if (bloc === undefined) return []; // référence brisée : refusée ailleurs
+      const def = blocksRegistry.getBlock(bloc.blockType);
+      if (def === undefined || !def.actionRefProps.includes("actionId")) return [];
+      const dispatchee = (bloc.props ?? []).find((p) => p.key === "actionId")?.value;
+      if (dispatchee === a.id) return [];
+      return [
+        {
+          code: "ACTION_DECLENCHEUR_DECORATIF",
+          path: `actions[${ai}].trigger.blockId`,
+          message:
+            `l'action "${a.id}" déclare un déclencheur sur le bloc "${bloc.id}" ` +
+            `(type "${bloc.blockType}"), mais ce type de bloc dispatche l'action nommée ` +
+            `par SA prop \`actionId\`` +
+            (dispatchee === undefined ? ` — qui est ABSENTE` : ` — ici "${String(dispatchee)}"`) +
+            ` : le déclencheur est DÉCORATIF, rien n'exécutera jamais "${a.id}". ` +
+            `Répare en ALIGNANT : fais porter la prop \`actionId\` du bloc sur "${a.id}", ` +
+            `OU re-cible déclencheur et promesses vers l'action réellement dispatchée, ` +
+            `OU place le déclencheur sur un bloc qui dispatche "${a.id}". ` +
+            `NE SUPPRIME NI L'ACTION NI LA PROMESSE QUI LA VISE (règle 27).`,
+        },
+      ];
+    }),
+    // ── PARITÉ F4 À LA GÉNÉRATION (2026-09-02, D-123) — même patron que D-118
+    // pour F1. CAUSE RACINE PAYÉE (même run) : la section `intention` est émise
+    // en attempt1 et jamais réémise ; la réparation renomme des nœuds et les
+    // `nodeIds` des besoins se périment (2 `reference_brisee`) — sans la
+    // promesse morte, ce document serait entré au corpus `valid=true` puis
+    // aurait rougi la gate F4 : la divergence pipeline↔gate que D-118 a fermée
+    // pour F1 existait à l'identique pour F4. L'AUTORITÉ est l'instrument de
+    // la gate LUI-MÊME (`evaluateIntentCoverage`) — aucun faux positif nouveau
+    // par construction. La pseudo-satisfaction SÉMANTIQUE reste hors de portée
+    // de tout instrument (mesuré : 14 nœuds vivants autour d'un comportement
+    // irrendable) — c'est l'objet de la règle 30 et du contrôle d'acceptation.
+    ...(parsed.data.intent === undefined
+      ? []
+      : fidelity.evaluateIntentCoverage(parsed.data, ENV).verdicts.flatMap((v) => {
+          const PARITE = {
+            reference_brisee: "AIR_INTENT_REFERENCE_BRISEE",
+            motif_refute: "AIR_INTENT_MOTIF_REFUTE",
+            satisfaction_non_prouvee: "AIR_INTENT_SATISFACTION_NON_PROUVEE",
+            satisfait_par_du_mort: "AIR_INTENT_SATISFAIT_PAR_DU_MORT",
+          };
+          const code = PARITE[v.state];
+          if (code === undefined) return [];
+          return [
+            {
+              code,
+              path: `intent.needs[${v.needId}]`,
+              message:
+                `${v.motif}. Le besoin "${v.needId}" reste DÛ : satisfais-le sur des ` +
+                `nœuds RÉELS recopiés caractère pour caractère (règle 11), ou déclare-le ` +
+                `avec le fait exact (règles 11 et 30). NE LE SUPPRIME PAS (règle 27).`,
+            },
+          ];
+        })),
     // ── AIR_TEST_TARGET_MORTE (2026-09-02, D-118) — DIAGNOSTIC, même étage.
     //
     // CAUSE RACINE PAYÉE : billetterie-concerts (runId 2026-09-01T22-53-00-610Z)

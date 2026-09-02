@@ -1,7 +1,22 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-02 (11)** (**`suivi-chantier` EST VALIDE — `D-122`, premier B2B** :
+> **2026-09-02 (12)** (**RUN `cours-cuisine` REFUSÉ, TROIS LACUNES GÉNÉRIQUES
+> FERMÉES — `D-123`** : 2,5918 $, `valid=false`, corpus jamais écrit — première
+> morsure réelle d'`AIR_TEST_TARGET_MORTE`, **D-118 validé par l'épreuve**.
+> Trois classes démontrées sur artefacts payés : déclencheur DÉCORATIF (D-105 :
+> le bloc dispatche par sa prop, pas par le déclencheur), pseudo-satisfaction
+> SÉMANTIQUE (14 nœuds vivants autour d'un comportement irrendable — invisible
+> aux instruments), parité F4 absente de `validateLocal` (2 `reference_brisee`
+> nés de la réparation). Corrections génériques : diagnostic
+> `ACTION_DECLENCHEUR_DECORATIF` (dérivé du registre), parité F4 (patron
+> D-118), **règle 30** (un besoin n'est `satisfied` que si le moteur REND ce
+> qu'il promet). Killer-tests exacts sur le refusé (1+2) ; **9 CTA décoratifs
+> préexistants révélés dans les corpus acceptés** — dette historique, aucune
+> requalification rétroactive. repair 156/156 · **928/928** · tsc 0 · lint 0 ·
+> aucun seuil modifié. **2,5918 $ payés en preuves sans corpus.**)
+>
+> *Entrée précédente —* **2026-09-02 (11)** (**`suivi-chantier` EST VALIDE — `D-122`, premier B2B** :
 > 7ᵉ régénération, **2,5311 $**, 10 appels, 490 s, `valid=true`, 25 → 0,
 > 0 promesse morte, 41=41, 0 amputation, 0 troncature. **F1 41/41 · F4 9 ok,
 > 1 dit, 0 réfuté** · 9/9 écrans atteignables (double audience) · hors-ligne
