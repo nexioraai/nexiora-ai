@@ -1,7 +1,20 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-02 (14)** (**🏁 PHASE 10B CLOSE PAR ARBITRAGE — `D-125`** :
+> **2026-09-02 (15)** (**🚌 SECTEUR VOYAGE OUVERT — `bus-intercites` ACCEPTÉ
+> PAR DOCTRINE, `D-127`** : premier run du pivot sectoriel, **1,7451 $** (coût
+> plancher), 10 appels, 338 s, `valid=true`, 16 → 0, **0 morsure des
+> protections dès la 1ʳᵉ passe**, F1 23/23 · F4 7 ok · 0 défaillant ·
+> recherche exactement au périmètre D-126 · billet à code (patron billetterie).
+> **Distinction stricte consignée** : « payer par carte directement dans
+> l'app » [NON DÉMONTRÉ LITTÉRALEMENT] — la frontière du débit est portée par
+> le CANAL-CONTRAT (`test_contrat_paiement_psp`), doctrine D-119/D-121 pour
+> `physical_or_offapp` ; le critère A de D-126 était trop strict, amendé
+> prospectivement. B′ : sains **9**, orphelins ≤ 11 inchangé, ambiguïté
+> 29,8 % > 25 % (168 écrans, 13 docs v3). 928/928 · tsc 0 · lint 0.
+> **1,7451 $.**)
+>
+> *Entrée précédente —* **2026-09-02 (14)** (**🏁 PHASE 10B CLOSE PAR ARBITRAGE — `D-125`** :
 > **9/12 documents v3 verts au standard de gate** (7 régénérations acceptées +
 > `resto-quartier` vert sans run + `cours-cuisine` par preuve A/B/C). Les
 > critères de phase F1–F5 portent sur les INSTRUMENTS : tous satisfaits et

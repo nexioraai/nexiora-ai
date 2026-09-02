@@ -6439,3 +6439,75 @@ texte candidat ci-dessus, sans ajout de besoin hors périmètre ; ② les critè
 annexés font foi à l'acceptation ; ③ la création (intentions.mjs, index 12) est
 un acte d'EXTENSION DU CORPUS consigné par décision propriétaire distincte —
 rien n'est créé par D-126.
+
+> ### ⬆️ AMENDÉ LE 2026-09-02 — CRITÈRE A (PAIEMENT), PROSPECTIVEMENT (D-127)
+>
+> Le critère A (« le besoin paiement-débit est "dit" — jamais satisfied »)
+> était TROP STRICT/INCOMPLET : il généralisait le cadrage `resto-quartier`
+> (scission au niveau de l'intent) sans consigner le CANAL-CONTRAT déjà validé
+> deux fois pour `physical_or_offapp` (D-119 billetterie, D-121 boutique) :
+> frontière du débit portée par un test de CONTRAT visant l'action de paiement.
+> Forme amendée, prospective : *le débit réel est porté soit par un besoin
+> « dit » (fait ❌ cité), soit par un test de contrat explicite — jamais laissé
+> implicite.* Arbitrage et doctrine : D-127. Le texte historique ci-dessus
+> n'est pas réécrit.
+
+## D-127 — BUS-INTERCITES EST ACCEPTÉ PAR DOCTRINE : LE CANAL-CONTRAT PORTE LA FRONTIÈRE DU DÉBIT — 2026-09-02
+
+**Premier document du secteur voyage/transport, accepté par arbitrage
+propriétaire.** runId `2026-09-02T13-38-57-202Z` · `terminee` · `valid=true` ·
+**1,7451 $ / 4,00 $** — le coût plancher des 10 runs modernes · 10 appels ·
+338 s · 0 refus · 0 troncature.
+
+### Résultat réel du run [DÉMONTRÉ]
+
+16 diagnostics → 0 (13 UNKNOWN · 3 SECRET) · **0 `MORTE`, 0 décoratif,
+0 `AIR_INTENT_*` dès la première passe** — premier run où aucune des
+protections D-123/D-124 n'a eu à mordre sur une intention neuve. Intra :
+8=8 · 4=4 · 22=22 · 12=12 · **23=23 promesses, 0 perte, 0 amputation** · hash
+3-voies `0f6a1386…` · F1 **23/23** · F4 **7 ok · 0 dit · 0 défaillant** ·
+recherche EXACTEMENT au périmètre D-126 (`searchFieldId=destination`, filtre
+STATIQUE légitime `statut≠annule`, tri date) · 2 détails tous sourcés · billet
+à code par slot (patron billetterie) · 8/8 écrans atteignables · B′ re-mesurés
+avec le 13ᵉ document : 928/928 · orphelins 11 ≤ 11 · ambiguïté 29,8 % > 25 %.
+
+### Ce qui N'EST PAS démontré — dit sans détour
+
+**« Payer par carte directement dans l'application » N'EST PAS DÉMONTRÉ au
+sens littéral.** [NON DÉMONTRÉ LITTÉRALEMENT] Ce que la preuve montre : un
+formulaire de carte rendu par `form` (réel), une `mutation create` locale
+d'`ent_paiement` (réellement exécutée), et un **test de CONTRAT
+`test_contrat_paiement_psp`** marquant l'obligation externe — le moteur
+n'exécute aucun débit (`capabilitiesEmitCode: false`, registre sans tunnel
+PSP). L'acceptation ne transforme PAS ce besoin littéral en capacité démontrée.
+
+### La doctrine retenue [ACCEPTÉ PAR DOCTRINE — D-119/D-121]
+
+Pour la classe `physical_or_offapp` (règlement hors-app par définition,
+règle 2), **la frontière du débit peut être portée par le canal-contrat** : un
+test `kind:"contract"` visant l'action de paiement, adossé à l'intégration PSP
+déclarée. C'est le patron des deux documents SCELLÉS `billetterie-concerts`
+(D-119) et `boutique-mode` (D-121). La scission au niveau de l'intent (patron
+`resto-quartier` : débit « dit » avec fait ❌) reste la forme la plus fine et
+demeure valable. Le critère A de D-126 était trop strict/incomplet : il
+imposait la seule forme resto en ignorant le canal déjà validé — imprécision
+de rédaction consignée, amendée prospectivement dans D-126.
+
+### Pourquoi ce n'est NI un passe-droit NI une falsification
+
+① Le mécanisme d'honnêteté EXISTE dans le document (contrat explicite — la
+frontière n'est pas implicite) ; ② il est CONFORME à deux décisions scellées
+antérieures — refuser aurait requalifié rétroactivement D-119/D-121 sans
+motif ; ③ la limite est CONSIGNÉE ici même en toutes lettres (« non démontré
+littéralement ») au lieu d'être maquillée ; ④ aucun moteur, registre, gate,
+règle d'honnêteté ni seuil n'est modifié pour ce run — l'amendement est
+documentaire et prospectif.
+
+### Campagne
+
+**Secteur voyage ouvert : 1/1.** `bus-intercites` entre dans les sains B′
+(plancher **9**) ; plafond orphelins inchangé (≤ 11, le document en apporte 0).
+Restent : avion (2ᵉ sous-secteur), puis fintech (après évolutions moteur ⚪),
+puis santé. Évolutions établies par D-126 pour la suite : recherche pilotée
+par l'utilisateur, portée relationnelle des listes, données vivantes,
+exécution des capabilities.

@@ -98,4 +98,20 @@ export const INTENTIONS = [
       "l'avancement, consigne les incidents, et le client consulte l'avancement de son " +
       "chantier hors ligne quand le réseau manque. En français.",
   },
+  // D-126 (2026-09-02) — EXTENSION DU CORPUS, première intention du pivot
+  // sectoriel voyage/transport. Périmètre MINIMAL HONNÊTE par construction :
+  // recherche par destination seule (searchFieldId — le seul mécanisme rendu),
+  // AUCUNE promesse de temps réel, de siège, de notification, de calendrier ni
+  // de confirmation transporteur. Le débit réel sera « dit »
+  // (capabilitiesEmitCode: false). Critères d'acceptation : annexe de D-126.
+  {
+    slug: "bus-intercites",
+    commerce: "physical_or_offapp",
+    text:
+      "Ma compagnie de bus intercités vend des billets : l'app liste les départs à " +
+      "venir avec destination, date, heure et prix, permet de chercher un départ par " +
+      "destination, de réserver un billet au nom du passager, de payer par carte " +
+      "dans l'app, puis présente le billet avec un code à montrer au contrôleur. " +
+      "En français.",
+  },
 ];

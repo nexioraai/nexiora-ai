@@ -153,10 +153,13 @@ describe("cliquet de régression — les défauts du corpus v3 ne remontent jama
     // + `suivi-chantier` — 3 détails, tous sourcés. Plancher : 7 documents.
     // ÉDITION CONSCIENTE (2026-09-02, commit d'acceptation D-124) :
     // + `cours-cuisine` — 4 détails, tous sourcés. Plancher : 8 documents.
+    // ÉDITION CONSCIENTE (2026-09-02, commit d'acceptation D-127) :
+    // + `bus-intercites` — 2 détails, tous sourcés. Plancher : 9 documents.
     for (const attendu of [
       "agence-immo",
       "billetterie-concerts",
       "boutique-mode",
+      "bus-intercites",
       "coach-fitness",
       "cours-cuisine",
       "livraison-fruits",
