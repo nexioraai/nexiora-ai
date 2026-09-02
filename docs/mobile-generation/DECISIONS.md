@@ -6782,3 +6782,73 @@ identité) · `validate.ts` (chemins aplanis, mêmes codes) · `intent.ts`
 (trace) · `release-train.ts` (épingle consciente 1.7.1) · `envelope.ts`
 (commentaire de vérité) · `emit-v3.mjs` (surface `liveData` + règle 31) ·
 2 fichiers de tests. AUCUN runtime E3.3 : ni adaptateur, ni LOCK, ni bascule.
+
+
+## D-132 — E3.3 RUNTIME : LA SOURCE DISTANTE EST CONSOMMÉE — ADAPTATEUR GÉNÉRIQUE, ENDPOINT AU LOCK, `liveData` BASCULE SUR PREUVE AU RENDU — 2026-09-02
+
+**Arbitrage propriétaire** : ouverture E3.3 runtime sur D-131 scellé ; READ-ONLY
+initial confirmant l'architecture ; implémentation A–J autorisée ; scellement
+soumis à arbitrage séparé (le présent état est NON COMMITTÉ à l'écriture).
+
+### Architecture
+
+- **Protocole de données du moteur** (canonique, SECTOR-AGNOSTIC) :
+  `https://{sourceDomain}/air/v1/entities/{entityId}/rows` → tableau JSON
+  d'instances `{id, values}`. La règle vit dans `resolve-lock.ts`
+  (`urlProtocoleDonnees`, `resoudreCiblesRemote`) — l'AIR déclare, le LOCK lie
+  (doctrine multi-provider) ; aucune convention métier, aucun champ AIR ajouté.
+- **Lock 1.1.0** : `resolved.remoteData` OPTIONNEL, ABSENT sans provenance —
+  les locks historiques restent byte-identiques. Épingle fixtures éditée
+  consciemment.
+- **`source-reseau.ts`** (runtime embarqué) : adaptateur générique —
+  admissibilité PROUVÉE avant tout transport (https, hôte EXACT ∈
+  `network.allowedDomains`, forme d'URL saine — port = refus), transport et
+  planificateur INJECTÉS (`transportHttp`/`planificateurIntervalle` appareil
+  par défaut), transitions du magasin E3.1, réponse hors contrat REFUSÉE
+  (jamais de données inventées), nouveauté mesurée sur les LIGNES (le cycle
+  chargement→prêt bouge la version — transition réelle — sans prétendre des
+  données neuves), journal append-only déterministe. POLLING déclaré
+  (`sourceRefreshSeconds`) — JAMAIS présenté comme du temps réel poussé.
+- **Émission** : App.tsx câble `creerMagasin(demoData)` + adaptateur UNIQUEMENT
+  si le lock porte des cibles (additivité stricte D-058 : document seed ⇒
+  sortie au patron historique ; 27/27 corpus inchangés).
+- **Cliquet zéro-réseau** : ÉDITION CONSCIENTE — le chemin de COMPILATION reste
+  intégralement zéro-réseau ; exemption NOMMÉE `runtime/source-reseau.ts`
+  (+ son miroir généré) pour `fetch(` seul, interdits d'import intacts partout.
+
+### La bascule `liveData` — preuve d'abord
+
+Fait précis : **« source distante déclarée et effectivement consommée selon le
+contrat »**. NE couvre PAS : temps réel poussé, fil Internet réel mesuré,
+validation appareil (réserves séparées). Preuves AVANT bascule :
+- falsifications unitaires 12/12 (`source-reseau.test.ts`) + 6/6 lock/émission ;
+- fixture remote ÉMISE par le vrai compilateur et compilée par le vrai `tsc`
+  (49 fichiers, EXIT=0) — `gate:e33-remote` ;
+- **preuve AU RENDU** (`e33-source-reseau.obs.tsx`) : l'écran émis rend des
+  lignes qui n'existent QUE chez le transport injecté — graine remplacée,
+  loading observable, refresh identiques ⇒ rendu byte-identique / changées ⇒
+  nouveau rendu, erreur véridique avec instantané conservé, zéro appel hors
+  allowlist, trace journalisée EXACTE.
+Instruments inversés CONSCIEMMENT : citer `liveData` en motif
+d'inexprimabilité est désormais RÉFUTÉ ; un besoin live satisfait exige la
+TRACE (dataset remote). `gate:fidelite` : 15/5 STRICTEMENT inchangés — la
+bascule ne déplace aucun verdict corpus (mesuré).
+
+### Consignations honnêtes
+
+- **ERRATUM D-131 (né dans le lot D-131, prouvé par diff `ca205b6`→`9dcf5f5`)** :
+  la ligne `liveData` de la surface d'enveloppe d'`emit-v3.mjs` portait un
+  échappement invalide (`\\"` en chaîne double) — SyntaxError latente,
+  invisible car AUCUNE gate ne parsait les scripts du banc ; un run payé
+  l'aurait révélée. Réparée ici ; garde anti-récidive `gate:bench-parse`
+  (node --check sur tous les scripts du banc).
+- Le garde-trace des besoins live protège les besoins de RESTITUTION ; un
+  énoncé d'acquisition pure (« suivre la position », GPS) reste sous le veto
+  D-098 et la doctrine D-122 (volet appareil/E4) — nuance mesurée, consignée,
+  non retouchée.
+- Préview D-013 : les entités remote s'amorcent aux fixtures de démo ; la
+  source les remplace à la première consommation réussie — l'état du magasin
+  dit la vérité entre-temps.
+- HORS PÉRIMÈTRE tenu : ni push, ni WebSocket/SSE, ni E4/E5, ni générations
+  avion/bus, ni retouche des dettes historiques (`gate:fidelite` 15/5, ⚠️
+  26/27, dettes P10B, visuels).

@@ -15,6 +15,7 @@ import { applyThemeOverrides, emitThemeModule, hasThemeOverrides } from "./emit-
 import { EMBEDDED_ASSETS } from "./embedded-assets.generated.ts";
 import { normalizeAir, resolveLock } from "./resolve-lock.ts";
 import { RELEASE_TRAIN_V1, type ReleaseTrain } from "./release-train.ts";
+import type { CibleRemoteResolue } from "./resolve-lock.ts";
 
 // Syntaxe EFFAÇABLE uniquement (pas de parameter properties) : les bancs
 // exécutent ces sources sous le strip-only de Node (patron emit-v2.mjs).
@@ -560,7 +561,12 @@ function emitNavigation(air: ProjectAir): string {
   ].join("\n");
 }
 
-function emitApp(air: ProjectAir, avecSlots: boolean): string {
+function emitApp(
+  air: ProjectAir,
+  avecSlots: boolean,
+  ciblesRemote: readonly CibleRemoteResolue[] = [],
+): string {
+  const avecRemote = ciblesRemote.length > 0;
   return [
     "// GÉNÉRÉ — NE PAS ÉDITER (racine d'app : thème + données + navigation).",
     "// S7 (D-026) : tokens scellés 1.0.0, design.theme transporté sans effet.",
@@ -574,7 +580,21 @@ function emitApp(air: ProjectAir, avecSlots: boolean): string {
     'import { ThemeRoot } from "./lib/primitives";',
     'import { DataRoot } from "./lib/runtime/data-provider";',
     'import { FormStateRoot } from "./lib/runtime/form-state";',
-    'import { buildDemoProvider } from "./lib/runtime/demo-provider";',
+    // Provenance distante (E3.3, D-132) : le magasin observable remplace le
+    // provider figé UNIQUEMENT quand le document déclare une cible remote —
+    // sinon l'app émise reste byte-identique (additivité stricte, patron
+    // D-058). L'adaptateur applique les cibles RÉSOLUES PAR LE LOCK sous la
+    // politique `network.allowedDomains` (fail-closed).
+    ...(avecRemote
+      ? [
+          'import { creerMagasin } from "./lib/runtime/magasin-donnees";',
+          'import {',
+          '  creerAdaptateurReseau,',
+          '  planificateurIntervalle,',
+          '  transportHttp,',
+          '} from "./lib/runtime/source-reseau";',
+        ]
+      : ['import { buildDemoProvider } from "./lib/runtime/demo-provider";']),
     // Registre de slots (1.3.0, D-058) : importé UNIQUEMENT si le projet en
     // embarque — sinon l'app émise resterait identique à 1.2.0 au caractère
     // près, et ce fichier n'a aucune raison de changer.
@@ -590,7 +610,26 @@ function emitApp(air: ProjectAir, avecSlots: boolean): string {
     'import { demoData } from "./demo.data";',
     'import { Navigation } from "./navigation";',
     "",
-    "const provider = buildDemoProvider(demoData);",
+    ...(avecRemote
+      ? [
+          "// Amorçage : fixtures de démo (D-013) — la source distante les",
+          "// remplace dès la première consommation réussie ; en attendant,",
+          "// l'état du magasin dit la vérité (loading/error).",
+          "const provider = creerMagasin(demoData);",
+          `const CIBLES_REMOTE = ${canonicalJson(ciblesRemote)} as const;`,
+          `const DOMAINES_AUTORISES = ${canonicalJson(air.network.allowedDomains)} as const;`,
+          "// Transport et polling APPAREIL fournis par le runtime embarqué —",
+          "// l'adaptateur revérifie chaque hôte contre DOMAINES_AUTORISES.",
+          "const adaptateur = creerAdaptateurReseau({",
+          "  magasin: provider,",
+          "  cibles: CIBLES_REMOTE,",
+          "  domainesAutorises: DOMAINES_AUTORISES,",
+          "  transport: transportHttp,",
+          "  planificateur: planificateurIntervalle,",
+          "});",
+          "void adaptateur.demarrer();",
+        ]
+      : ["const provider = buildDemoProvider(demoData);"]),
     ...(air.app.locales.rtlSupported
       ? [
           "",
@@ -686,7 +725,7 @@ export function emitProject(
   // code). Un slot non déclaré par l'AIR, ou déclaré deux fois, est un
   // refus net — le compilateur n'invente jamais un contrat.
   const bundle = [...(options.slots ?? [])].sort((a, b) => byCodeUnit(a.slotId, b.slotId));
-  files.set("App.tsx", emitApp(air, bundle.length > 0));
+  files.set("App.tsx", emitApp(air, bundle.length > 0, lock.resolved.remoteData ?? []));
   if (bundle.length > 0) {
     const declared = new Set(air.slots.map((s) => s.id));
     const seen = new Set<string>();

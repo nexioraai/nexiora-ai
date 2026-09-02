@@ -35,15 +35,38 @@ const sourceFiles = (dir: string): string[] =>
     .filter((f) => f.endsWith(".ts") || f.endsWith(".tsx"))
     .map((f) => join(dir, f));
 
+// ÉDITION CONSCIENTE (E3.3, D-132) : le runtime embarqué gagne UN module
+// réseau NOMMÉ — `runtime/source-reseau.ts` (transport appareil de
+// l'adaptateur de source distante). Le chemin de COMPILATION reste
+// intégralement zéro-réseau : ce module ne s'exécute que dans l'app émise,
+// sur l'appareil ; les interdits d'IMPORT s'appliquent toujours à lui, et
+// `fetch(` reste interdit partout ailleurs, src/ compris.
+// Le miroir généré des sources embarquées recopie runtime/ BYTE À BYTE — il
+// contient donc la même occurrence de `fetch(` que le module exempté, comme
+// DONNÉE. Le scan de runtime/ ci-dessous fait foi sur l'emplacement réel ;
+// les interdits d'IMPORT restent vérifiés sur le miroir aussi.
+const EXEMPTIONS_FETCH = [
+  join("runtime", "source-reseau.ts"),
+  join("src", "embedded-assets.generated.ts"),
+];
+
 describe("cliquet statique zéro-réseau (chemin de compilation)", () => {
   it("aucun import de module réseau/LLM dans src/ ni runtime/", () => {
+    let exemptionVue = false;
     for (const file of [...sourceFiles("src"), ...sourceFiles("runtime")]) {
       const content = readFileSync(join(PKG, file), "utf8");
       for (const forbidden of FORBIDDEN_SPECIFIERS) {
         expect(content.includes(forbidden), `${file} → ${forbidden}`).toBe(false);
       }
+      if (EXEMPTIONS_FETCH.includes(file)) {
+        if (file === EXEMPTIONS_FETCH[0]) exemptionVue = true;
+        continue; // seules exemptions `fetch(` — voir ÉDITION CONSCIENTE ci-dessus
+      }
       expect(content.includes("fetch("), `${file} → fetch(`).toBe(false);
     }
+    // L'exemption doit exister LÀ où elle est déclarée — un déplacement du
+    // module réseau sans retouche consciente du cliquet doit ÉCHOUER ici.
+    expect(exemptionVue, "runtime/source-reseau.ts absent").toBe(true);
   });
 
   it("dépendances du paquet = allowlist moteur exacte", () => {

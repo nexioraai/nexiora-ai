@@ -164,7 +164,7 @@ export function buildValidAir(): ProjectAir {
 
 export function buildValidLock(): ProjectLock {
   return {
-    lockSchemaVersion: "1.0.0",
+    lockSchemaVersion: "1.1.0", // ÉDITION CONSCIENTE (E3.3, D-132) : lock 1.1.0
     airSchemaVersion: "1.0.0",
     airHash: HEX_A,
     resolved: {

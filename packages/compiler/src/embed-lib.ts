@@ -102,6 +102,12 @@ export const EMBEDDED_SOURCES: readonly EmbeddedSourceSpec[] = [
     rewrites: {},
   },
   {
+    // E3.3 (D-132) : adaptateur de source distante — générique, fail-closed.
+    source: "compiler/runtime/source-reseau.ts",
+    target: "lib/runtime/source-reseau.ts",
+    rewrites: {},
+  },
+  {
     // E1/E2 (D-129) — pipeline PUR des lignes de liste, prouvé par tests
     // unitaires sans monter react-native.
     source: "compiler/runtime/list-pipeline.ts",

@@ -24,6 +24,7 @@
 //    vérifiée statiquement ET mesurée sur les 12 documents.
 import {
   AIR_SCHEMA_VERSION,
+  LOCK_SCHEMA_VERSION,
   canonicalJson,
   applyAirMigrations,
   projectAirSchema,
@@ -46,6 +47,57 @@ export interface LockDiagnostic {
   code: string;
   path: string;
   message: string;
+}
+
+/**
+ * PROTOCOLE DE DONNÉES DU MOTEUR (E3.3, D-132) — canonique et
+ * SECTOR-AGNOSTIC : l'endpoint d'une cible distante est dérivé du contrat
+ * seul (domaine déclaré + entité), JAMAIS d'une convention métier. L'AIR
+ * reste neutre (ni chemin, ni URL) : la règle vit ICI, dans le résolveur —
+ * « le provider concret est résolu dans le lock ». La réponse attendue est
+ * le tableau JSON des instances `{id, values}` de l'entité.
+ */
+export function urlProtocoleDonnees(domaine: string, entityId: string): string {
+  return `https://${domaine}/air/v1/entities/${entityId}/rows`;
+}
+
+export interface CibleRemoteResolue {
+  readonly datasetId: string;
+  readonly entityId: string;
+  readonly integrationId: string;
+  readonly url: string;
+  readonly refreshSeconds?: number;
+}
+
+/**
+ * Cibles distantes d'un document, triées par datasetId (déterminisme).
+ * PURE : ne lit que l'AIR validé — les champs de provenance sont garantis
+ * cohérents par le schéma 1.7.1 (superRefine) et le validateur (intégration
+ * existante, domaine autorisé). Fail-closed défensif malgré tout.
+ */
+export function resoudreCiblesRemote(air: ProjectAir): readonly CibleRemoteResolue[] {
+  return air.datasets
+    .filter((d) => d.sourceKind === "remote")
+    .map((d) => {
+      if (d.sourceIntegrationId === undefined || d.sourceDomain === undefined) {
+        throw new LockResolutionError([
+          {
+            source: "resolver",
+            code: "REMOTE_SOURCE_INCOHERENTE_AT_RESOLVE",
+            path: `datasets.${d.id}`,
+            message: `provenance distante incomplète sur "${d.id}" — état théoriquement impossible après parse 1.7.1`,
+          },
+        ]);
+      }
+      return {
+        datasetId: d.id,
+        entityId: d.entityId,
+        integrationId: d.sourceIntegrationId,
+        url: urlProtocoleDonnees(d.sourceDomain, d.entityId),
+        ...(d.sourceRefreshSeconds === undefined ? {} : { refreshSeconds: d.sourceRefreshSeconds }),
+      };
+    })
+    .sort((a, b) => (a.datasetId < b.datasetId ? -1 : a.datasetId > b.datasetId ? 1 : 0));
 }
 
 export class LockResolutionError extends Error {
@@ -272,14 +324,18 @@ export function resolveLock(
 
   // 6. Lock complet, revalidé contre le schéma gelé 1.0.0 (fail-closed en
   //    sortie aussi : un lock non conforme ne sort jamais d'ici).
+  const remoteData = resoudreCiblesRemote(air);
   return projectLockSchema.parse({
-    lockSchemaVersion: "1.0.0",
+    lockSchemaVersion: LOCK_SCHEMA_VERSION,
     airSchemaVersion: air.airSchemaVersion,
     airHash: sha256Hex(canonicalJson(air)),
     resolved: {
       blocks,
       capabilities,
       providers: selectProviders(air, options.providerOverrides ?? {}),
+      // ABSENT (pas []) sans provenance distante : les locks historiques
+      // restent byte-identiques (patron additif 1.7.1).
+      ...(remoteData.length === 0 ? {} : { remoteData }),
       releaseTrain: { id: train.id, version: train.version },
       toolchain: { ...train.toolchain },
     },

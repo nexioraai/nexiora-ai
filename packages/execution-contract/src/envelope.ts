@@ -77,12 +77,17 @@ export interface ExecutionEnvelope {
   /** E2 (D-129) — une liste limitée aux lignes liées à l'instance courante de l'écran. */
   readonly relationScoping: boolean;
   /**
-   * E3.2 (D-130) — une entité alimentée et rafraîchie depuis une source
-   * DISTANTE DÉCLARÉE (\`sourceKind: "remote"\`, forme aplanie 1.7.1), avec états réels. FALSE
-   * tant que le runtime ne CONSOMME pas une telle source : \`remote\` déclaré
-   * n'est PAS un fournisseur fonctionnel, et aucune présence syntaxique ne
-   * vaut preuve. La bascule appartient à E3.3, adossée à ses preuves
-   * instrumentées — jamais au seul code.
+   * E3.3 (D-132) — LE FAIT PRÉCIS : « source distante déclarée
+   * (\`sourceKind: "remote"\`, 1.7.1) et effectivement CONSOMMÉE selon le
+   * contrat » — endpoint résolu par le LOCK, \`network.allowedDomains\`
+   * fail-closed, états loading/données/erreur réels, rafraîchissement par
+   * POLLING déclaré. Ce fait NE couvre PAS : temps réel poussé (server
+   * push), fil Internet réel mesuré, validation appareil — réserves
+   * séparées. Né FALSE (E3.2, D-130 : la présence syntaxique ne vaut
+   * pas preuve) ; basculé TRUE avec les preuves E3.3 : falsifications
+   * unitaires (source-reseau, e33-lock-emission) + preuve AU RENDU sur
+   * app émise (gate:e33-remote — lignes existant uniquement chez le
+   * transport rendues à l'écran, trace instrumentée exacte).
    */
   readonly liveData: boolean;
   /** `navigation.primary` produit-il une barre PERSISTANTE sur chaque écran ? */
@@ -259,7 +264,9 @@ export const EXECUTION_ENVELOPE_V1: ExecutionEnvelope = {
   // la preuve précède la bascule, dans le même commit.
   listUserFiltering: true,
   relationScoping: true,
-  liveData: false,
+  // E3.3 (D-132) : bascule ADOSSÉE À LA PREUVE AU RENDU (gate:e33-remote),
+  // dans le même commit — doctrine D-060. Polling déclaré ≠ push.
+  liveData: true,
 
   // `navigation.primary` (AIR 1.6.0) → `<PrimaryNav>`, dernier enfant de la
   // coquille. Observé : présente sur CHAQUE écran avec les mêmes onglets, dans

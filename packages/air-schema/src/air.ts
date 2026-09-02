@@ -242,10 +242,11 @@ const relationSchema = z.strictObject({
  * niveau nominal). Champs PLATS optionnels + cohérence par superRefine :
  * la forme plate n'accepte QUE ce que l'union acceptait, plus l'absence
  * totale (comportement historique au caractère près). `remote` DÉCLARE une
- * provenance — il ne la rend pas vivante : le moteur ne consomme pas encore
- * de source distante (`liveData: false`), et AUCUNE présence syntaxique ne
- * vaut preuve. Fail-closed au validateur : intégration existante + domaine
- * autorisé.
+ * provenance — la CONSOMMATION est l'affaire du runtime (adaptateur E3.3/
+ * D-132, fait d'enveloppe `liveData`) : AUCUNE présence syntaxique ne vaut
+ * preuve de vivacité — les instruments exigent la trace ET le moteur a dû
+ * prouver la sienne au rendu. Fail-closed au validateur : intégration
+ * existante + domaine autorisé.
  */
 const datasetSchema = z
   .strictObject({

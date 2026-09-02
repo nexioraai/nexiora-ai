@@ -1,7 +1,25 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-02 (19)** (**🛰️ AMENDEMENT AIR 1.7.1 — `D-131`, NON COMMITTÉ** : la
+> **2026-09-02 (20)** (**📶 E3.3 RUNTIME IMPLÉMENTÉ — `D-132`, NON COMMITTÉ** :
+> adaptateur de source distante générique (`source-reseau.ts`, embarqué),
+> endpoint résolu AU LOCK (`resolved.remoteData`, lock 1.1.0, protocole moteur
+> `/air/v1/entities/{entityId}/rows`), `allowedDomains` fail-closed au runtime
+> (hôte exact, https, port refusé), transport/planificateur INJECTÉS, états
+> loading/données/erreur réels, nouveauté mesurée sur les lignes, journal
+> déterministe. **`liveData` : false → TRUE, bascule ADOSSÉE à la preuve au
+> rendu** (`gate:e33-remote` : fixture remote émise + tsc EXIT=0 + écran émis
+> rendant des lignes n'existant QUE chez le transport) — le fait couvre le
+> POLLING consommé selon contrat, JAMAIS le push (réserves : fil réel,
+> appareil). Instruments inversés consciemment (motif `liveData` → réfuté ;
+> satisfait → trace exigée) ; `gate:fidelite` 15/5 INCHANGÉS. ERRATUM D-131
+> consigné et réparé (SyntaxError latente emit-v3 l.68) + `gate:bench-parse`.
+> Cliquet zéro-réseau : exemption NOMMÉE, chemin de compilation intact.
+> **997/997 · tsc 0 · lint 0 · app-compile 27/27 · e33-remote 🟢 · e3-magasin
+> 🟢 · invariants/composition/navigation/contrôles 🟢 · corpus byte-intact ·
+> 0 $.** Scellement : SUR ARBITRAGE.)
+>
+> *Entrée précédente —* **2026-09-02 (19)** (**🛰️ AMENDEMENT AIR 1.7.1 — `D-131`, NON COMMITTÉ** : la
 > sonde READ-ONLY d'ouverture E3.3 a révélé que l'union `dataset.source` de
 > 1.7.0 était REFUSÉE par l'API réelle à TOUS les niveaux (« compiled grammar
 > is too large », classe D-078) — limite grammaticale CUMULÉE, la partie
