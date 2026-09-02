@@ -84,6 +84,17 @@ export const AIR_MIGRATIONS: readonly AirMigration[] = [
       "barre — comportement 1.5.0 inchangé au caractère près.",
     migrate: (document) => document,
   },
+  {
+    from: "1.6.0",
+    to: "1.7.0",
+    description:
+      "AIR 1.7.0 (E3.2, D-130) : ajout du champ OPTIONNEL `dataset.source` — " +
+      "seed | remote(integrationId, domain, refreshSeconds?). Identité : un " +
+      "document 1.6.0 n'a déclaré aucune provenance, et lui en inventer une " +
+      "prétendrait une vivacité que rien ne fonde. Sans `source`, le dataset " +
+      "reste amorcé à la compilation — comportement 1.6.0 au caractère près.",
+    migrate: (document) => document,
+  },
 ];
 
 export class AirMigrationError extends Error {

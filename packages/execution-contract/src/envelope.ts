@@ -76,6 +76,15 @@ export interface ExecutionEnvelope {
   readonly listUserFiltering: boolean;
   /** E2 (D-129) — une liste limitée aux lignes liées à l'instance courante de l'écran. */
   readonly relationScoping: boolean;
+  /**
+   * E3.2 (D-130) — une entité alimentée et rafraîchie depuis une source
+   * DISTANTE DÉCLARÉE (\`dataset.source: remote\`), avec états réels. FALSE
+   * tant que le runtime ne CONSOMME pas une telle source : \`remote\` déclaré
+   * n'est PAS un fournisseur fonctionnel, et aucune présence syntaxique ne
+   * vaut preuve. La bascule appartient à E3.3, adossée à ses preuves
+   * instrumentées — jamais au seul code.
+   */
+  readonly liveData: boolean;
   /** `navigation.primary` produit-il une barre PERSISTANTE sur chaque écran ? */
   readonly primaryNavigation: boolean;
 }
@@ -250,6 +259,7 @@ export const EXECUTION_ENVELOPE_V1: ExecutionEnvelope = {
   // la preuve précède la bascule, dans le même commit.
   listUserFiltering: true,
   relationScoping: true,
+  liveData: false,
 
   // `navigation.primary` (AIR 1.6.0) → `<PrimaryNav>`, dernier enfant de la
   // coquille. Observé : présente sur CHAQUE écran avec les mêmes onglets, dans

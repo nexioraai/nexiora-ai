@@ -96,6 +96,7 @@ const FAITS_BOOLEENS = [
   // un motif qui les cite TIENT ; à `true`, il sera réfuté — automatique).
   "listUserFiltering",
   "relationScoping",
+  "liveData",
   "primaryNavigation",
 ] as const;
 
@@ -160,6 +161,8 @@ const SUJETS_PAR_FAIT: Readonly<Record<string, readonly RegExp[]>> = {
   // portée relationnelle n'a PAS de sujets ici — sa trace reste vérifiable
   // (TRACE_ATTENDUE) et le contrôle d'acceptation garde le reste (D-126 §7).
   listUserFiltering: [motif("critères?"), motif("multicritères?")],
+  // E3.2 (D-130) — haute précision : « temps réel », « en direct », « live ».
+  liveData: [motif("temps réel"), motif("en direct"), motif("live")],
   primaryNavigation: [motif("onglets?"), motif("barre de navigation")],
 };
 
@@ -300,7 +303,29 @@ const TRACE_ATTENDUE: Readonly<Record<string, (air: ProjectAir) => boolean>> = {
     air.screens.some((s) =>
       s.blocks.some((b) => (b.props ?? []).some((p) => p.key === "scopeFieldId")),
     ),
+  liveData: (air) => air.datasets.some((d) => d.source?.kind === "remote"),
 };
+
+/**
+ * E3.2 (D-130) — CAPACITÉ ABSENTE ≠ SATISFAITE. `capacitesMisesEnJeu` ne
+ * retient que les faits ✅ ; un besoin `satisfied` dont le sujet exige un
+ * fait ❌ passait donc sans contrôle. Or aucune trace documentaire ne peut
+ * prouver une capacité que l'enveloppe n'a pas : un tel besoin ne peut être
+ * que déclaré, jamais satisfait.
+ */
+export function capacitesAbsentesEngagees(
+  statement: string,
+  envelope: ExecutionEnvelope,
+): readonly string[] {
+  // PAS de veto acquisition/restitution ici — il existe (D-089) pour ne pas
+  // exiger une trace d'AFFICHAGE d'un besoin d'acquisition. Une capacité que
+  // l'enveloppe N'A PAS ne peut être satisfaite sous aucune formulation :
+  // « suivre en temps réel » reste un mensonge, verbe d'acquisition ou non.
+  return Object.entries(SUJETS_PAR_FAIT)
+    .filter(([fait]) => envelope[fait as keyof ExecutionEnvelope] === false)
+    .filter(([, motifs]) => motifs.some((r) => r.test(statement)))
+    .map(([fait]) => fait);
+}
 
 /** Capacités engagées par le besoin dont le document ne porte AUCUNE trace. */
 export function tracesManquantes(
@@ -462,6 +487,17 @@ export function evaluateIntentCoverage(
         ...base,
         state: "inexprimable" as const,
         motif: `déclaré hors de portée : ${need.resolution.reason}`,
+      };
+    }
+    const absentes = capacitesAbsentesEngagees(need.statement, envelope);
+    if (absentes.length > 0) {
+      return {
+        ...base,
+        state: "satisfaction_non_prouvee" as const,
+        motif:
+          `déclaré satisfait, mais la capacité \`${absentes.join("\`, \`")}\` est ` +
+          "ABSENTE de l'enveloppe (fait ❌) : un besoin qui l'exige ne peut pas être " +
+          "satisfait — il doit être déclaré, avec ce fait cité",
       };
     }
     const sansTrace = tracesManquantes(need.statement, air, envelope);

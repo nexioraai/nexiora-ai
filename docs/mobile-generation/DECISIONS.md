@@ -6634,3 +6634,69 @@ fidélité INCHANGÉE (F1 12 · F4 15) · corpus **byte-intact** · **0 $**.
 ⚠️ **dette consciente HORS PÉRIMÈTRE, non corrigée ici** : `corpus-rendu.obs.tsx`
 épingle **26** applications alors que `gate:app-compile` en écrit **27** depuis
 l'entrée de `bus-intercites` (D-127) — édition consciente à planifier.
+
+## D-130 · E3.2 — LA PROVENANCE SE DÉCLARE, LA VIVACITÉ SE PROUVE : `dataset.source` ET `liveData` — 2026-09-02
+
+**Sondage de grammaire d'abord (étape imposée par l'arbitrage), implémentation
+ensuite.** Verdict du sondage : la grammaire d'émission est GÉNÉRIQUE
+(`z.toJSONSchema` + transformations d'échelle) et les unions discriminées sont
+DÉJÀ ÉPROUVÉES par 10+ runs payés (`actionTriggerSchema`,
+`slotInputSourceSchema` — dans la partie `donnees` même). `dataset.source` est
+la même classe de construction : **aucun changement architectural à D-130**.
+Réserve : la confirmation ultime sur l'API réelle appartient au prochain run
+payé autorisé (taille de la grammaire `donnees`, D-078).
+
+### Contrat
+
+**AIR 1.7.0** : `dataset.source` OPTIONNEL, union fermée `seed |
+remote{integrationId, domain, refreshSeconds?}` (champ ajouté EN DERNIER —
+ordre d'émission préservé) · migration 1.6.0 → 1.7.0 **identité** (patron
+1.5.0/1.6.0) · fail-closed : `AIR_DATASET_SOURCE_INTEGRATION_UNKNOWN`
+(intégration existante exigée) et `AIR_DATASET_SOURCE_DOMAIN` (domaine dans
+`network.allowedDomains`, deny_by_default) · pin du train 1.7.0 (édition
+consciente) · mappings repair (`donnees`+`cablage` / `donnees`+`base`).
+
+### La règle absolue de vérité — tenue
+
+**`liveData` est né `false` et RESTE `false`** : le runtime ne consomme pas de
+source distante, un `remote` déclaré n'est PAS un fournisseur fonctionnel, et
+la présence syntaxique n'allume rien (testé : un document portant `remote` →
+fait inchangé). La bascule appartient à E3.3, adossée à ses preuves. `seed` ≠
+live ; interrogation ≠ temps réel poussé. Règle 31 du prompt : les besoins
+« temps réel / en direct / live » se déclarent en citant `liveData`.
+
+### Extension d'honnêteté de l'instrument — et sa cause racine
+
+`capacitesMisesEnJeu` ne retient que les faits ✅ : un besoin `satisfied`
+exigeant un fait ❌ passait sans contrôle. Nouvelle fonction
+`capacitesAbsentesEngagees` : un tel besoin est RÉFUTÉ
+(`satisfaction_non_prouvee`, « capacité ABSENTE de l'enveloppe »). **Décision
+en chemin, consignée** : le veto acquisition/restitution (D-089) ne s'applique
+PAS aux capacités absentes — « suivre le bus en temps réel » satisfait reste
+un mensonge quel que soit le verbe ; portée bornée (seul fait ❌ à sujets :
+`liveData`). Killer prouvé : besoin temps-réel `satisfied` AVEC trace
+syntaxique `remote` → réfuté ; le même besoin DÉCLARÉ en citant `liveData` →
+tient.
+
+### Vérité historique du chantier — rien d'effacé
+
+① Première insertion du contrôle de source tombée DANS le `if` d'entité
+inconnue — détectée par les tests de refus, corrigée en structure. ② Deux
+tests parsaient les documents BRUT (fragilité de version latente, révélée par
+la montée) : `p6-navigation-primaire` aligné sur le chemin canonique ;
+`orpheline-porteur` (fixture VOLONTAIREMENT défectueuse, preuve gelée pré-P8)
+sur `applyAirMigrations` SANS gate sémantique — préservant son objet. ③ Nuance
+mesurée : le hash canonique d'un document MIGRÉ change avec le champ de
+version (`bus` migré : `0f6a1386…` → `13c609d0…`) ; aucun cliquet ne
+re-vérifie les hashes historiques contre des re-migrations — les journaux
+scellés restent des faits d'époque, le corpus sur disque est byte-intact.
+
+### Vérifications · réserves
+
+Suite **972/972** (961 + 11) · typecheck 0 · lint 0 · **app-compile 27/27** ·
+obs E3.1 re-verte · fidélité INCHANGÉE (F1 12 · F4 15 · réfutés 5 ; 0 besoin
+scellé ne contient de terme « live », vérifié) · corpus byte-intact · **0 $**.
+Réserves maintenues : 🟡 visuel E1/E2 · 🟡 visuel E3.1 · ⚠️ dette 26/27
+(`corpus-rendu.obs`) hors périmètre · 🟡 grammaire sur API réelle au prochain
+run autorisé. **E3.3 (adaptateur réseau émis + bascule prouvée de `liveData`)
+= prochain arbitrage.**

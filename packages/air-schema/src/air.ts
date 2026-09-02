@@ -17,7 +17,8 @@ import {
   testIdSchema,
 } from "./ids.ts";
 
-export const AIR_SCHEMA_VERSION = "1.6.0";
+// 1.7.0 (E3.2, D-130) : `dataset.source` OPTIONNEL — seed | remote déclaré.
+export const AIR_SCHEMA_VERSION = "1.7.0";
 
 export const semverSchema = z.string().regex(/^\d+\.\d+\.\d+$/);
 export const sha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
@@ -228,11 +229,31 @@ const relationSchema = z.strictObject({
 
 // Le contenu initial est généré AVANT compilation et stocké hors AIR, adressé
 // par hash — la compilation reste pure (ARCHITECTURE §1).
+/**
+ * SOURCE D'UN DATASET (1.7.0, E3.2/D-130) — union FERMÉE, même classe de
+ * construction que les unions déjà ÉPROUVÉES par la grammaire d'émission
+ * (`actionTriggerSchema`, `slotInputSourceSchema`). ABSENTE = `seed`,
+ * comportement historique au caractère près. `remote` DÉCLARE une provenance —
+ * il ne la rend pas vivante : le moteur ne consomme pas encore de source
+ * distante (`liveData: false`), et AUCUNE présence syntaxique ne vaut preuve.
+ * Fail-closed au validateur : intégration existante + domaine autorisé.
+ */
+const datasetSourceSchema = z.discriminatedUnion("kind", [
+  z.strictObject({ kind: z.literal("seed") }),
+  z.strictObject({
+    kind: z.literal("remote"),
+    integrationId: integrationIdSchema,
+    domain: z.string().regex(/^([a-z0-9-]+\.)+[a-z]{2,}$/),
+    refreshSeconds: z.number().int().min(5).max(3600).optional(),
+  }),
+]);
+
 const datasetSchema = z.strictObject({
   id: datasetIdSchema,
   entityId: entityIdSchema,
   contentHash: sha256Schema,
   rowCount: z.number().int().min(0),
+  source: datasetSourceSchema.optional(),
 });
 
 const actionTriggerSchema = z.discriminatedUnion("kind", [

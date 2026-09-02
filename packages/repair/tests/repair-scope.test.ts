@@ -103,6 +103,16 @@ describe("DETAIL_SANS_SOURCE — la réparation doit viser `actions`", () => {
   });
 });
 
+describe("AIR_DATASET_SOURCE_* — une provenance se répare là où elle se déclare", () => {
+  // E3.2 (D-130) — codes de validate.ts (vus par le cliquet d'exhaustivité).
+  it("🔴 intégration inconnue → `donnees` + `cablage` · domaine → `donnees` + `base`", () => {
+    expect(sectionsAReemettre([{ code: "AIR_DATASET_SOURCE_INTEGRATION_UNKNOWN", path: "datasets[0].source.integrationId" }]))
+      .toContain("cablage");
+    expect(sectionsAReemettre([{ code: "AIR_DATASET_SOURCE_DOMAIN", path: "datasets[0].source.domain" }]))
+      .toContain("base");
+  });
+});
+
 describe("BLOCK_SCOPE_INVALID — le scope se répare sur l'écran ou les données", () => {
   // E2 (D-129) — code du registre (vu par le cliquet d'exhaustivité) : le
   // correctif vit dans `ecrans` (le detail_header du parent) ou `donnees`

@@ -12,12 +12,15 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { projectAirSchema } from "@deribfy/air-schema";
+// 1.7.0 (E3.2) : lecture par le chemin CANONIQUE — un parse brut ne
+// tolérait que les documents à la version exacte du schéma (fragilité
+// latente, révélée par la montée de version).
+import { migrateAirDocument } from "@deribfy/air-schema";
 import { EXECUTION_ENVELOPE_V1, reachableScreens } from "@deribfy/execution-contract";
 import { evaluateIntentCoverage, evaluatePromises } from "../src/index.ts";
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
-const air = projectAirSchema.parse(
+const air = migrateAirDocument(
   JSON.parse(
     readFileSync(join(RACINE, "packages/golden-corpus/corpus-v3/plombier-urgence.air.json"), "utf8"),
   ),

@@ -496,6 +496,30 @@ export function validateAir(air: ProjectAir): AirDiagnostic[] {
     if (!entityById.has(d.entityId)) {
       push("AIR_DATASET_ENTITY_UNKNOWN", `datasets[${i}].entityId`, `entité "${d.entityId}" introuvable`);
     }
+    // SOURCE DISTANTE (1.7.0, E3.2/D-130) — FAIL-CLOSED : déclarer une
+    // provenance sans son intégration ni son domaine autorisé serait une
+    // vivacité de façade. Additif : seul un document déclarant `remote` est
+    // concerné — le corpus gelé n'en porte aucun.
+    const source = d.source;
+    if (source?.kind === "remote") {
+      if (!air.integrations.some((g) => g.id === source.integrationId)) {
+        push(
+          "AIR_DATASET_SOURCE_INTEGRATION_UNKNOWN",
+          `datasets[${i}].source.integrationId`,
+          `intégration "${source.integrationId}" introuvable : une source distante ` +
+            `se déclare par une intégration EXISTANTE, jamais par un nom inventé`,
+        );
+      }
+      if (!air.network.allowedDomains.includes(source.domain)) {
+        push(
+          "AIR_DATASET_SOURCE_DOMAIN",
+          `datasets[${i}].source.domain`,
+          `domaine "${source.domain}" absent de network.allowedDomains ` +
+            `(deny_by_default) : une provenance hors de la politique réseau déclarée ` +
+            `est refusée`,
+        );
+      }
+    }
   });
 
   // 7. Actions : déclencheurs et effets référencent des nœuds existants ; un

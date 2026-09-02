@@ -76,6 +76,11 @@ export const SECTIONS_CORRECTIVES: Readonly<Record<string, readonly SectionEmiss
   // Une promesse sans cible : CRÉER la cible vit dans `actions` ou `screens`.
   AIR_TEST_TARGET_UNKNOWN: ["cablage", "actions", "ecrans"],
 
+  // E3.2 (D-130) — une source distante mal déclarée : l'intégration vit dans
+  // `cablage`, le domaine dans `base` (network), le dataset dans `donnees`.
+  AIR_DATASET_SOURCE_INTEGRATION_UNKNOWN: ["donnees", "cablage"],
+  AIR_DATASET_SOURCE_DOMAIN: ["donnees", "base"],
+
   // E2 (D-129) — un scope invalide se répare sur l'écran (le detail_header
   // manquant), sur les données (le champ reference et sa cible), ou sur la
   // liste elle-même.

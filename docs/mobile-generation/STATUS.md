@@ -1,7 +1,22 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-02 (17)** (**🫀 E3.1 SCELLÉ — `D-130`** : le MAGASIN OBSERVABLE —
+> **2026-09-02 (18)** (**📡 E3.2 SCELLÉ — `D-130`** : **AIR 1.7.0** —
+> `dataset.source` (union fermée `seed | remote{integrationId, domain}`,
+> migration identité, fail-closed intégration+domaine). **La règle absolue de
+> vérité tient : `liveData` est né `false` et RESTE `false`** — la présence
+> syntaxique n'allume rien (testé), la bascule appartient à E3.3. Instrument
+> renforcé : `capacitesAbsentesEngagees` — un besoin `satisfied` exigeant un
+> fait ❌ est RÉFUTÉ (killer : « temps réel » satisfait avec trace `remote` →
+> réfuté ; déclaré en citant `liveData` → tient) ; veto D-089 non applicable
+> aux capacités absentes (consigné). Sondage de grammaire : unions déjà
+> éprouvées — aucun changement à D-130 ; confirmation API réelle au prochain
+> run. Vérité historique conservée : insertion corrigée, 2 lectures brutes
+> fragiles alignées, nuance hash-migré mesurée. **972/972 · tsc 0 · lint 0 ·
+> app-compile 27/27 · corpus byte-intact · 0 $.** Réserves : 🟡 visuels
+> E1/E2 et E3.1 · ⚠️ 26/27. **E3.3 = prochain arbitrage.**)
+>
+> *Entrée précédente —* **2026-09-02 (17)** (**🫀 E3.1 SCELLÉ — `D-130`** : le MAGASIN OBSERVABLE —
 > instantané `{rows, status, version}` par entité, transitions pilotées par
 > l'appelant (jamais d'horloge), écritures D-061 à vérité booléenne,
 > anti-tempête (l'identique ne notifie pas), erreur qui CONSERVE l'instantané

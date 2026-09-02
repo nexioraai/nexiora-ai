@@ -65,6 +65,7 @@ const surfaceEnveloppe = () => {
     ["listSearch", "UNE RECHERCHE QUI FILTRE", "`searchFieldId` + `searchPlaceholder` sur `list` — le filtrage est RÉEL, pas décoratif"],
     ["listUserFiltering", "DES FILTRES RÉGLÉS PAR L'UTILISATEUR", "\`userFilterFieldIds\`/\`userFilterOperators\`/\`userFilterInputTypes\` sur \`list\` — au plus 3, conjonction, valeur vide = inactif"],
     ["relationScoping", "UNE LISTE LIMITÉE À L'INSTANCE COURANTE", "\`scopeFieldId\` sur la \`list\` d'un écran de détail — champ \`reference\` vers l'entité de l'écran"],
+    ["liveData", "DES DONNÉES VIVANTES D'UNE SOURCE DISTANTE", "\`dataset.source: remote\` déclaré — mais le moteur ne CONSOMME pas encore de source distante"],
     ["primaryNavigation", "UNE BARRE PERSISTANTE", "`navigation.primary` — 3 à 5 destinations, présentes sur chaque écran"],
     ["listFiltering", "TRIER, FILTRER, BORNER", "`sortFieldId`/`sortDirection`, `filterFieldId`/`filterOperator`/`filterValue`, `pageSize`"],
     ["relationTraversal", "AFFICHER UNE RÉFÉRENCE LISIBLE", "`referenceDisplayFieldId` sur le champ de référence"],
@@ -304,6 +305,8 @@ REGISTRE DES SMART BLOCKS (allowlist FERMÉE — blockType UNIQUEMENT parmi ces 
    Un bouton « Voir le détail » ne remplace donc PAS la ligne pressable : il conduit au bon écran avec le mauvais contenu.
 
 30. UN BESOIN N'EST « satisfied » QUE SI LE MOTEUR REND CE QU'IL PROMET — complément d'HONNÊTETÉ de la règle 11, dans l'AUTRE sens. Avant de classer un besoin \`satisfied\`, vérifie CHAQUE comportement qu'il promet : il doit être RENDU par un bloc du registre fermé ci-dessus ET couvert par les faits ✅ de la surface. Un besoin dont le comportement central exigerait un type de rendu qu'AUCUN bloc du registre ne produit, ou un fait ❌, N'EST PAS satisfait — même si tu construis des écrans plausibles autour : une structure d'écrans VIVANTE ne rend pas un comportement que le moteur ne rend pas, elle le maquille. Déclare-le \`unexpressible\` en NOMMANT le fait exact (règle 11) et, si le registre est en cause, en le disant explicitement. Ceci n'inverse PAS la règle 11 : chercher les nœuds reste le réflexe pour tout ce que le moteur SAIT rendre ; seul ce qu'il ne rend pas se déclare.
+
+31. DONNÉES VIVANTES — DÉCLARER UNE PROVENANCE N'EST PAS PROUVER UNE VIVACITÉ. Un dataset PEUT déclarer d'où viendraient ses données : \`source: {kind:"remote", integrationId, domain}\` — intégration EXISTANTE et domaine PRÉSENT dans \`network.allowedDomains\`, sinon refus. Mais le moteur ne consomme pas encore de source distante (\`liveData\` ❌) : tout besoin de « temps réel », « en direct » ou de données vivantes se déclare \`unexpressible\` en citant \`liveData\` — le classer \`satisfied\` est le mensonge exact que la règle 30 interdit. Sans \`source\`, un dataset reste amorcé à la compilation : c'est le comportement historique, et il ne prétend rien.
 
 RÈGLES BLOCS NON NÉGOCIABLES :
 A. Tout *FieldId d'un bloc référence un champ (fld_*) DE L'ENTITÉ LIÉE à ce bloc.

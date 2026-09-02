@@ -13,7 +13,10 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { projectAirSchema, validateAir } from "@deribfy/air-schema";
+// 1.7.0 (E3.2) : migration SANS gate sémantique — cette fixture est un
+// artefact VOLONTAIREMENT défectueux (orphelines gelées comme preuve pré-P8) ;
+// la valider sémantiquement la rejetterait, vidant le test de son objet.
+import { applyAirMigrations, projectAirSchema, validateAir } from "@deribfy/air-schema";
 import { amputationsHorsPerimetre, mutationsHorsPerimetre } from "../src/repair-scope.ts";
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
@@ -26,7 +29,7 @@ const brut: unknown = JSON.parse(
     "utf8",
   ),
 );
-const air = projectAirSchema.parse(brut);
+const air = projectAirSchema.parse(applyAirMigrations(brut));
 const diagnostics = validateAir(air).filter((d) => d.code === "AIR_IMAGE_ORPHELINE");
 
 const refus = (mut: (d: typeof air) => void) => {
