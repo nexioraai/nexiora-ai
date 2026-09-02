@@ -76,6 +76,13 @@ export const SECTIONS_CORRECTIVES: Readonly<Record<string, readonly SectionEmiss
   // Une promesse sans cible : CRÉER la cible vit dans `actions` ou `screens`.
   AIR_TEST_TARGET_UNKNOWN: ["cablage", "actions", "ecrans"],
 
+  // D-118 — une promesse sur cible EXISTANTE mais MORTE : rendre la cible
+  // vivante vit dans `actions` (recâbler le déclencheur, câbler le bloc) ou
+  // `ecrans` (le bloc porteur) ; re-cibler la promesse vit dans `cablage`.
+  // Même périmètre que AIR_TEST_TARGET_UNKNOWN : l'autre moitié de la même
+  // paire — l'existence là-bas, la vie ici.
+  AIR_TEST_TARGET_MORTE: ["cablage", "actions", "ecrans"],
+
   // Une destination qu'aucune action n'atteint : la navigation vit dans `actions`.
   AIR_NAV_DESTINATION_DEAD: ["base", "actions"],
   AIR_NAV_TAB_DUPLICATE: ["base", "actions", "ecrans"],

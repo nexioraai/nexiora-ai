@@ -5882,3 +5882,74 @@ muets, 24 détails sans source et 17 images orphelines**.
 C'est la même prudence qui a fait refuser toute conclusion sur la troncature à
 partir de deux exécutions. Une réussite n'autorise pas plus de généralisation
 qu'un échec.
+
+## D-118 — LA 4ᵉ RÉGÉNÉRATION EST REJETÉE : UNE PROMESSE SUR CIBLE MORTE — 2026-09-01
+
+**Arbitrage propriétaire (Option 2).** La génération réelle de
+`billetterie-concerts` (runId `2026-09-01T22-53-00-610Z`, autorisée à 4,00 $)
+s'est exécutée proprement et a atteint ses trois objectifs de mesure — mais le
+document produit **régresse sur `F1`** et est **ÉCARTÉ du corpus**. Le corpus
+est restauré à l'identique de `70d5787` ; les trois artefacts payés sont
+conservés, nommés par runId.
+
+### Mesures du run
+
+| | |
+|---|---|
+| issue · valid | `terminee` · `true` — 10 appels · **2,4740 $** · 492 s · 0 refus · 0 troncature |
+| diagnostics | **25 → 0** (24 × `AIR_TEST_TARGET_UNKNOWN`, 1 × `AIR_INTEGRATION_SECRET_LIKE_KEY`) |
+| `D-088` intra-exécution | attempt1 = attempt2 (écrans 9 · entités 5 · blocs 28 · actions 18 · promesses 40) · **0 promesse perdue · 0 amputation** |
+| chaîne de garde | `hash(attempt2)` = `hash(corpus écrit)` = `journal.airHash` = `a9aedfa5c8b2ff7e…` |
+| trois familles visées | `DETAIL_SANS_SOURCE` **4 → 0** · `FORM_SANS_ACTION` **4 → 0** · image orpheline **1 → 0** (diagnostic ACTIF : `navigation.primary` présent) |
+
+### 🔴 LE FAIT CENTRAL : `valid=true` N'EST PAS « GATES VERTES »
+
+`FACT` — la gate `fidelite`, relancée après le run, donne au document neuf
+**39/40 promesses vivantes**. La morte : `test_billet_emis_apres_paiement` →
+`act_billet_emis_apres_paiement`, déclencheur `{kind:"data", event:"created"}`.
+L'enveloppe n'exécute que `triggers: ["ui", "lifecycle"]`
+(`execution-contract/src/envelope.ts`) : l'action est **schéma-valide et jamais
+exécutée**. `F1` passait de 12 à **13** documents ; `F4` classait
+`need_billet_code_a_scanner` **`satisfait_par_du_mort`**.
+
+`FACT` — aucun des 25 diagnostics ne pouvait le voir :
+`AIR_TEST_TARGET_UNKNOWN` vérifie que la cible **existe**, pas qu'elle **vit**.
+**La vivacité (`F1`) est une gate de corpus, absente de `validateLocal`** — le
+pipeline peut accepter un document que les gates refusent. C'est une LACUNE
+D'INSTRUMENT, désormais démontrée sur une génération payée.
+
+`FACT` — la classe est répandue : **45 actions à déclencheur `data`** dans le
+corpus (33 en v2 gelé, 12 en v3 d'origine), **0 dans les trois documents
+régénérés sous `D-088`**. L'ancien `billetterie` en porte 2 — mais **aucune
+promesse dessus** : c'est la promesse sur l'action morte qui fait la
+régression, pas l'action seule.
+
+### Pourquoi le rejet
+
+Les trois documents précédemment acceptés (`D-109`, `D-117`,
+`plombier-urgence`) sont **verts sur leurs propres lignes de gates**. Accepter
+celui-ci aurait créé le premier précédent inverse — une dette connue scellée
+dans le corpus de référence, contraire au standard ELITE 2027 A++. Les gains
+des trois familles sont reproductibles (démontré sur deux runs consécutifs par
+les règles 28/29) ; la découverte de la lacune et sa preuve payée sont le
+rendement réel de ce run.
+
+### État après restauration — mesuré, pas déduit
+
+`F1` **12** (v2 seul ; `v3/billetterie` 26/26 vivantes 🟢) · `F4` **20**
+(12 v2 + 8 v3) · 13 motifs réfutés · cliquets B′ et suite **919/919** verts
+sans aucune édition — première validation en conditions réelles du régime B′.
+
+🟠 **Observation à vérifier** (classée C) : `v3/resto-quartier` mesure `F4`
+🟢 sans avoir été régénéré (fichier inchangé depuis la migration 1.6.0), alors
+que la mise à jour ROADMAP du 2026-09-01 (3) comptait 9 documents v3 rouges.
+Probable effet des réparations d'instruments intervenues depuis ; à trancher
+avant la prochaine mise à jour de STATUS sur ce point.
+
+### 🔴 CE QUE CETTE DÉCISION NE FAIT PAS
+
+Aucune correction n'est appliquée. Le chantier « diagnostic de vivacité à la
+génération » (parité `F1` dans `validateLocal`, et/ou déclencheur hors
+enveloppe) est une **décision distincte** : l'analyse est produite, l'exécution
+attend une autorisation séparée. `billetterie-concerts` reste candidat à une
+régénération **après** fermeture de la lacune.

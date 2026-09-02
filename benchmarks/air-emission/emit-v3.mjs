@@ -48,6 +48,7 @@ const preservation = await import(join(REPO, "packages/repair/src/preservation.t
 const { makeLevels } = await import(join(HERE, "schema-levels.mjs"));
 const executionContract = await import(join(REPO, "packages/execution-contract/src/envelope.ts"));
 const executionGraph = await import(join(REPO, "packages/execution-contract/src/graph.ts"));
+const fidelity = await import(join(REPO, "packages/fidelity/src/index.ts"));
 
 // D-088 — LE PROMPT LIT L'ENVELOPPE, IL NE LA PARAPHRASE PLUS.
 //
@@ -534,6 +535,41 @@ function validateLocal(document) {
           `NE RETIRE NI L'ÉCRAN NI SON EN-TÊTE : la réparation attendue est de ` +
           `CÂBLER la ligne (règle 27).`,
       })),
+    // ── AIR_TEST_TARGET_MORTE (2026-09-02, D-118) — DIAGNOSTIC, même étage.
+    //
+    // CAUSE RACINE PAYÉE : billetterie-concerts (runId 2026-09-01T22-53-00-610Z)
+    // a promis `test_billet_emis_apres_paiement` sur une action à déclencheur
+    // `data` — schéma-valide, JAMAIS exécutée (l'enveloppe n'exécute que
+    // `ui`/`lifecycle`). `AIR_TEST_TARGET_UNKNOWN` vérifie que la cible EXISTE,
+    // jamais qu'elle VIT : le pipeline a dit `valid=true`, la gate F1 a dit
+    // rouge. Un document ne doit plus pouvoir être accepté ici et refusé là.
+    //
+    // L'AUTORITÉ EST L'INSTRUMENT DE LA GATE LUI-MÊME : `evaluatePromises`,
+    // même contrat, mêmes verdicts — aucun faux positif nouveau par
+    // construction, et le diagnostic se relâche TOUT SEUL quand l'enveloppe
+    // gagne un déclencheur. Seul `cible_morte` est rapporté ici : l'inexistence
+    // appartient à `AIR_TEST_TARGET_UNKNOWN` — jamais deux signaux par
+    // promesse. Une action morte que RIEN ne promet n'est pas rapportée : la
+    // gate F1 la tolère, le diagnostic ne juge pas plus sévèrement qu'elle.
+    ...fidelity
+      .evaluatePromises(parsed.data, ENV)
+      .verdicts.flatMap((v, i) =>
+        v.state === "cible_morte"
+          ? [
+              {
+                code: "AIR_TEST_TARGET_MORTE",
+                path: `expectedTests[${i}].targetId`,
+                message:
+                  `la promesse "${v.testId}" cible "${v.targetId}", qui EXISTE mais ne VIT pas : ` +
+                  `${v.motif}. NE SUPPRIME NI LA PROMESSE NI SA CIBLE : rends la cible ` +
+                  `VIVANTE — recâble son déclencheur dans l'enveloppe (\`ui\` sur un bloc ` +
+                  `existant, ou \`lifecycle\`), câble l'action sur un bloc, relie l'écran ` +
+                  `depuis un chemin exécutable — ou re-cible la promesse vers le nœud ` +
+                  `VIVANT qui rend le même service (règle 27).`,
+              },
+            ]
+          : [],
+      ),
   ];
   const overrides = parsed.data.design?.overrides;
   if (overrides !== undefined && overrides.length > 0) {

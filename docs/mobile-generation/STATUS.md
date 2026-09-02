@@ -1,7 +1,21 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-01 (6)** (**EXPÉRIENCE DIAGNOSTIQUE — `D-116`** : la troncature
+> **2026-09-01 (7)** (**4ᵉ RÉGÉNÉRATION EXÉCUTÉE ET REJETÉE — `D-118`** :
+> `billetterie-concerts` régénéré en réel (**2,4740 $**, 10 appels, `valid=true`,
+> 25 diagnostics → 0, 0 amputation, 0 troncature) et les trois familles visées
+> tombent à zéro — mais la gate `fidelite` révèle **une promesse sur CIBLE
+> MORTE** (`test_billet_emis_apres_paiement` → action à déclencheur `data`,
+> hors `triggers: ["ui","lifecycle"]` de l'enveloppe) : `F1` régressait de 12 à
+> 13 documents. **Document ÉCARTÉ du corpus (arbitrage propriétaire), corpus
+> restauré à `70d5787`, preuves conservées par runId.** LACUNE D'INSTRUMENT
+> DÉMONTRÉE : `validateLocal` ne contrôle pas la VIVACITÉ des cibles promises —
+> `valid=true` n'implique pas « gates vertes ». Chantier de fermeture : analyse
+> produite, autorisation séparée. Cliquets B′ : premier passage réel, **919/919
+> sans aucune édition**, dans les deux sens (amélioration absorbée, retour
+> d'état absorbé). **2,4740 $.**)
+>
+> *Entrée précédente —* **2026-09-01 (6)** (**EXPÉRIENCE DIAGNOSTIQUE — `D-116`** : la troncature
 > **NE S'EST PAS REPRODUITE**. Même document, même prompt, même niveau de schéma
 > final : `ecrans` a été émise en **6 309 jetons, 39 % du plafond**, contre
 > ≥ 16 000 la fois précédente. **Écart d'un facteur ≥ 2,5 sans cause identifiée.**

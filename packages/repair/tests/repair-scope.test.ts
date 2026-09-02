@@ -103,6 +103,29 @@ describe("DETAIL_SANS_SOURCE — la réparation doit viser `actions`", () => {
   });
 });
 
+describe("AIR_TEST_TARGET_MORTE — la réparation vit où la cible peut revivre", () => {
+  // D-118 : produit par la validation de campagne depuis `evaluatePromises`
+  // (l'instrument de la gate F1) — hors du pont fail-closed, donc invisible au
+  // cliquet de complétude des codes ; ce bloc l'épingle, comme ses deux
+  // voisins. Une promesse sur cible morte se répare en recâblant la cible
+  // (`actions`, `ecrans`) ou en re-ciblant la promesse (`cablage`) — jamais en
+  // supprimant l'une ou l'autre (règle 27).
+  it("🔴 une promesse sur cible morte réémet `cablage`, `actions` ET `ecrans`", () => {
+    const sections = sectionsAReemettre([
+      { code: "AIR_TEST_TARGET_MORTE", path: "expectedTests[21].targetId" },
+    ]);
+    expect(sections).toContain("cablage");
+    expect(sections).toContain("actions");
+    expect(sections).toContain("ecrans");
+  });
+
+  it("🔴 CONTRÔLE NÉGATIF : le repli par chemin n'aurait donné que `cablage`", () => {
+    // Sans l'entrée de matrice, l'observation (`expectedTests`) aurait borné la
+    // réparation à `cablage` : re-cibler resterait possible, REVIVRE non.
+    expect(sectionDuChemin("expectedTests[21].targetId")).toBe("cablage");
+  });
+});
+
 describe("anti-amputation — ce que nul diagnostic ne désigne ne disparaît pas", () => {
   const avant = {
     entities: [{ id: "ent_a", fields: [{ id: "fld_photo" }] }, { id: "ent_b" }],
