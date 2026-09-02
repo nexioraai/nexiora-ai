@@ -311,6 +311,30 @@ elles peut toujours être compilé et livré.
 > (28 faux positifs) et `FORM_SANS_ACTION` (7 formulaires muets démasqués).
 > Détail : `STATUS.md`, § « INSTRUMENTS RÉPARÉS ».
 
+> ### ⬆️ MISE À JOUR 2026-09-02 (4) — PHASE 10B CLOSE PAR ARBITRAGE (`D-125`) · PROGRAMME TRANSVERSAL E1→E3.3 SCELLÉ
+>
+> **Clôture propriétaire `D-125`** : gate au standard tenue sur **9/12 documents
+> v3** ; `salon-coiffure`, `toiletteur-chiens`, `tuteur-langues` **DIFFÉRÉS**
+> (dette consignée non bloquante — régénération sous arbitrage futur) ;
+> `resto-quartier` vert d'origine, jamais rerun. Aucun seuil abaissé. Détail :
+> `DECISIONS.md D-125`.
+>
+> **Programme transversal E1→E3.3** (hors-phase, arbitré `D-128` option C,
+> consigné `D-129`→`D-132`, scellé jusqu'à `e254ee4`) : filtres pilotés (E1) ·
+> portée relationnelle (E2) · magasin observable (E3.1) · provenance déclarée
+> AIR 1.7.0→**1.7.1** (E3.2 + amendement `D-131` — l'union dépassait la limite
+> réelle de grammaire de l'API, prouvé par sonde différentielle) · **adaptateur
+> de source distante consommée, endpoint résolu au LOCK 1.1.0, `liveData`
+> basculé sur preuve au rendu** (E3.3, `D-132`). Corpus gelé byte-intact,
+> moteur STRICTEMENT sector-agnostic. Ces capacités n'appartiennent à aucune
+> phase 0→14 : elles étendent l'enveloppe que 10B mesure.
+>
+> **Chantier ouvert (arbitré 2026-09-02) : VALIDATION APPAREIL & FIL RÉEL** —
+> ferme le critère 7 de la Phase 10 et rend exécutables les 2 critères OTA
+> restants de la Phase 11. Lot préparatoire : `slices/validation-appareil/`
+> (app-fixture 4 surfaces émise + endpoint statique NON déployé + batterie
+> `verifier.mjs`) · protocole : `PROTOCOLE_VALIDATION_APPAREIL.md`.
+
 ### Ce que cette phase NE fait PAS
 
 Elle **ne mesure pas l'énoncé** des promesses (« le total additionne

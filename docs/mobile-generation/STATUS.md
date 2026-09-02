@@ -1,7 +1,26 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-02 (20)** (**📶 E3.3 RUNTIME IMPLÉMENTÉ — `D-132`, NON COMMITTÉ** :
+> **2026-09-02 (21)** (**📱 CHANTIER APPAREIL & FIL RÉEL — LOT PRÉPARATOIRE
+> PRÊT, NON COMMITTÉ, 0 $** : arbitrage propriétaire — option ③ endpoint
+> statique sur domaine possédé (`www.deribfy.com`, metadataBase canonique
+> d'apps/web, gravé en UNE constante remplaçable) + quota EAS 1-2 builds
+> autorisé au principe (AUCUN build lancé). Livré : app-fixture UNIQUE
+> `slices/validation-appareil/` portant les 4 surfaces (E1 filtres statut+
+> destination · E2 billets scopés au départ courant, vide hors instance ·
+> E3.1 états du magasin · E3.3 `data_departs` remote, refresh 30 s), émise
+> par le VRAI compilateur (49 fichiers, lock 1.1.0, tsc app EXIT=0) ;
+> endpoint statique double-état (`rows` + `rows.apres-modification` : prix
+> Bouaké 6500→7500 + statut retarde + Odienné apparaît — preuve de polling)
+> **NON DÉPLOYÉ** ; batterie pré-build `verifier.mjs` 21/21 🟢 (lock/
+> allowlist/câblage/seed≠distant/table E2/tsc) ; protocole imprimable
+> `PROTOCOLE_VALIDATION_APPAREIL.md` (A1→A11, iOS par QR, preuves à
+> conserver). ROADMAP consignée : 10B close (D-125) + programme E1→E3.3 +
+> chantier appareil. Vise P10 crit. 7 et rend exécutables les 2 critères OTA
+> de P11. Prochaine étape : GO build EAS + déploiement endpoint =
+> **exécution physique propriétaire**.)
+>
+> *Entrée précédente —* **2026-09-02 (20)** (**📶 E3.3 RUNTIME IMPLÉMENTÉ — `D-132`, NON COMMITTÉ** :
 > adaptateur de source distante générique (`source-reseau.ts`, embarqué),
 > endpoint résolu AU LOCK (`resolved.remoteData`, lock 1.1.0, protocole moteur
 > `/air/v1/entities/{entityId}/rows`), `allowedDomains` fail-closed au runtime
