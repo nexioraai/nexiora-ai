@@ -5953,3 +5953,61 @@ génération » (parité `F1` dans `validateLocal`, et/ou déclencheur hors
 enveloppe) est une **décision distincte** : l'analyse est produite, l'exécution
 attend une autorisation séparée. `billetterie-concerts` reste candidat à une
 régénération **après** fermeture de la lacune.
+
+## D-119 — BILLETTERIE-CONCERTS EST VALIDE, SOUS LE GARDE NÉ DE SON PROPRE REJET — 2026-09-02
+
+**Relance autorisée après D-118.** Même commande, même plafond, même document —
+mais le pipeline porte désormais `AIR_TEST_TARGET_MORTE`. Le document produit
+est le **premier accepté avec `F1` ET `F4` vérifiés VERTS avant acceptation** :
+le standard que le rejet a établi.
+
+### Mesures du run (runId `2026-09-02T04-24-58-220Z`, HEAD `7e93e97`)
+
+| | |
+|---|---|
+| issue · valid | `terminee` · **`true`** — 10 appels · **2,3848 $** / 4,00 $ · 454 s · 0 refus · 0 troncature |
+| diagnostics | **21 → 0** (20 × `AIR_TEST_TARGET_UNKNOWN`, 1 × `BLOCK_PROPS_INVALID`) |
+| `AIR_TEST_TARGET_MORTE` | **0 → 0** — première passe et finale |
+| réparation | cibles CRÉÉES, jamais supprimées : actions 16 → 20 (+4) · sections `cablage`/`actions`/`ecrans` |
+| `D-088` intra-exécution | écrans 9=9 · entités 7=7 · blocs 30=30 · promesses **31=31** · **0 perte · 0 amputation · 0 mutation hors périmètre** |
+| chaîne de garde | `hash(attempt2)` = `hash(corpus)` = `journal.airHash` = `8632c0a9…` — vérifiée |
+
+### Les trois familles et les gates, re-mesurées sur le document accepté
+
+| Critère | Avant | Après |
+|---|---|---|
+| `DETAIL_SANS_SOURCE` | 4 | **0** 🟢 (3 détails, tous sourcés) |
+| `FORM_SANS_ACTION` | 4 | **0** 🟢 |
+| Image orpheline (diagnostic ACTIF + mesure brute) | 1 | **0** 🟢 (3 assets, 3 rendus) |
+| `F1` | 🟢 26/26 (ancien) | **🟢 31/31 vivantes · `passed=true`** |
+| `F4` | 🔴 (1 motif réfuté) | **🟢 6 satisfaits · 1 déclaré à motif accepté · 0 réfuté** |
+
+Totaux : `F1` **12** (v2 gelé seul) · `F4` **21 → 19** · motifs réfutés 13 → **12**.
+Cliquets B′ et suite : **921/921 sans une édition** — 3ᵉ absorption réelle
+(orphelins 24 → 20 · muets 5 → 1 · sains = 4 documents).
+
+### 🔵 CE QUE CE RUN DÉMONTRE — ET CE QU'IL NE DÉMONTRE PAS
+
+`FACT` — le garde n'a **pas eu à mordre** : le modèle n'a émis **aucun
+déclencheur `data`** (0 sur 20 actions). Comme en `D-117`, la consigne a suffi
+avant le filet. **Ce run ne prouve donc PAS que le garde intercepte** — il
+prouve que le défaut ne s'est pas représenté ici.
+
+La capacité de détection reste établie par le **killer-test sur l'artefact payé
+du run rejeté** (`D-118`) : exactement 1 `AIR_TEST_TARGET_MORTE`
+(`test_billet_emis_apres_paiement`), 0 sur le contrôle positif, séparation
+UNKNOWN/MORTE démontrée. Les deux preuves sont complémentaires et aucune ne
+remplace l'autre. L'interception EN RÉPARATION RÉELLE reste non éprouvée — elle
+le sera le jour où un run émettra la classe.
+
+Le nombre de promesses (26 → 40 → 31 selon les générations) est rapporté **sans
+qualification** : `D-088` déclare la comparaison inter-générations mal fondée ;
+le critère est « toutes vivantes », pas un compte.
+
+### Campagne
+
+**4 documents v3 verts sur leurs propres lignes** : `billetterie-concerts`
+rejoint `coach-fitness`, `livraison-fruits`, `plombier-urgence`. Restent
+**8 régénérations**, portant 20 détails sans source, 1 formulaire muet,
+13 images brutes non rendues. Le resserrement des plafonds B′ (24→20, 5→1)
+reste une décision distincte, non appliquée ici.

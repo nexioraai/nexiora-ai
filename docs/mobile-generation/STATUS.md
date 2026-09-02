@@ -1,7 +1,19 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-01 (7)** (**4ᵉ RÉGÉNÉRATION EXÉCUTÉE ET REJETÉE — `D-118`** :
+> **2026-09-02 (8)** (**`billetterie-concerts` EST VALIDE — `D-119`** : relance
+> sous le garde `AIR_TEST_TARGET_MORTE` né de son propre rejet. **2,3848 $**,
+> 10 appels, 454 s, `valid=true`, 21 diagnostics → 0, **0 promesse morte**
+> (garde armé, 0 déclencheur `data` émis — la consigne a suffi avant le filet,
+> l'interception en réparation réelle reste non éprouvée). **Premier document
+> accepté avec `F1` ET `F4` vérifiés VERTS avant acceptation** : F1 31/31
+> vivantes · F4 6 ok, 1 dit, 0 réfuté. Trois familles : 4→0 · 4→0 · 1→0.
+> Intra-exécution : 0 perte, 0 amputation, actions 16→20 (cibles CRÉÉES).
+> Chaîne de hash vérifiée. **4/12 documents v3 verts** sur leurs propres
+> lignes ; F4 global 21→19. Cliquets B′ : 3ᵉ absorption réelle, **921/921 sans
+> une édition**. **2,3848 $.**)
+>
+> *Entrée précédente —* **2026-09-01 (7)** (**4ᵉ RÉGÉNÉRATION EXÉCUTÉE ET REJETÉE — `D-118`** :
 > `billetterie-concerts` régénéré en réel (**2,4740 $**, 10 appels, `valid=true`,
 > 25 diagnostics → 0, 0 amputation, 0 troncature) et les trois familles visées
 > tombent à zéro — mais la gate `fidelite` révèle **une promesse sur CIBLE
