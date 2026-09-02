@@ -6354,3 +6354,88 @@ critères de phase sont satisfaits, chaque report est une décision datée.
 **voyage/transport** (dossier read-only d'abord — toute création d'intention
 reste une décision d'extension du corpus) → fintech (précédé des évolutions
 moteur : déclencheurs `data`, exécution des capabilities) → santé.
+
+## D-126 — CONCEPTION READ-ONLY DE L'INTENTION BUS MINIMALE — 2026-09-02 (SPÉCIFICATION, EN ATTENTE D'ARBITRAGE — AUCUNE INTENTION CRÉÉE)
+
+### Le point [À VALIDER] est tranché : PAS de portée relationnelle des listes
+
+`FACT` — runtime embarqué (`embedded-assets.generated.ts`) : la source d'une
+liste est `provider.listInstances(b.entityId)` — **toutes les lignes de
+l'entité** — puis recherche (UN champ, saisie utilisateur), **filtre à valeur
+STATIQUE** écrite dans le document, tri, borne. `itemId` circule uniquement
+ligne→détail (`getInstance(entityId, instanceId?)`, repli `rows[0]`). **Une
+liste posée sur un écran de détail N'EST PAS restreinte à l'instance
+courante.** Le patron « lieu → concerts du lieu » de billetterie est vivant au
+sens F1 mais non scopé sémantiquement. **Conséquence de conception : le
+parcours « destination → trajets de cette destination » est EXCLU** (🔴
+aujourd'hui · ⚪ évolution runtime : liste scopée par relation à l'instance
+courante — même famille que D-064). Remplacement honnête : **un catalogue
+unique de trajets, recherché par destination** (`searchFieldId` sur le champ
+destination — comportement réellement rendu).
+
+### Intention BUS minimale proposée (texte candidat — NON créée)
+
+> « Ma compagnie de bus intercités vend des billets : l'app liste les départs
+> à venir avec destination, date, heure et prix, permet de chercher un départ
+> par destination, de réserver un billet au nom du passager, de payer par
+> carte dans l'app, puis présente le billet avec un code à montrer au
+> contrôleur. En français. »
+
+`commerce: physical_or_offapp` (service consommé hors app) · `payments.psp`.
+L'intention NE MENTIONNE ni temps réel, ni suivi du bus, ni siège, ni
+notification, ni calendrier, ni confirmation transporteur — pour ne forcer
+aucun « dit » en cascade : le périmètre minimal est honnête PAR CONSTRUCTION.
+
+### Cartographie besoin → rendu (règle 11 renforcée appliquée a priori)
+
+| Besoin | Bloc(s) qui RENDENT | Données/actions | Statut · preuve |
+|---|---|---|---|
+| Catalogue des départs (dest., date, heure, prix) | `list` (title/subtitle/trailing) + `header` | `ent_trajet` + dataset amorcé | 🟢 [DÉMONTRÉ] |
+| Recherche par destination | `list.searchFieldId` = champ destination | — | 🟢 [DÉMONTRÉ] |
+| Tri par date/heure | `list.sortFieldId` | champ horaire triable | 🟢 [DÉMONTRÉ] |
+| Détail du trajet | ligne→détail (`itemId`) + `detail_header` | règles 18/29 | 🟢 [DÉMONTRÉ ×9] |
+| Réservation passager | `form` + `mutation create` + `thenScreenId` | `ent_reservation` (réf. trajet) | 🟢 [DÉMONTRÉ — patron visite/RDV/commande] |
+| État multi-écrans | `crossScreenFormState` ✅ enveloppe | — | 🟠 [DÉMONTRÉ au fait d'enveloppe · À VALIDER sur enchaînement réel] |
+| Mes billets | `list` sur `ent_reservation` (app mono-utilisateur locale : toutes les lignes = les siennes) | — | 🟢 [DÉMONTRÉ — patron commandes] |
+| Billet avec code | `detail_header` + slot code (liaison) | patron billetterie VALIDÉ | 🟢 [DÉMONTRÉ] |
+| Paiement — parcours | `form`/`button` + mutation + test de contrat | patron D-121/D-124 | 🟢 [DÉMONTRÉ] |
+| Paiement — débit réel | AUCUN bloc ; `capabilitiesEmitCode: false` | — | 🔴 → **« dit »** motif cité [DÉMONTRÉ] |
+
+### RISQUES DE FAUX SATISFIED — BUS
+
+① **« trajets de cette destination »** : liste vivante sur détail ≠ scopée —
+tout besoin ainsi formulé serait un faux `satisfied` INDÉTECTABLE aux
+instruments [DÉMONTRÉ] → exclu de l'intention, contrôle HORS-F4 dédié.
+② **Recherche** : un `form` de critères serait une façade (filtre statique) —
+seul `searchFieldId` rend une recherche. ③ **Réservation** : l'enregistrement
+LOCAL est réellement exécuté (mutation) — satisfiable ; toute « confirmation
+par la compagnie » serait externe → dit ou exclue (exclue ici). ④ **Paiement** :
+scission obligatoire (précédent A/B/C D-124). ⑤ **Siège** : exclu (pas de plan ;
+pas promis). ⑥ **Horaires** : statiques par construction — ne jamais promettre
+« à jour »/« en direct ». ⑦ **Billet** : le CODE affiché est rendu (slot) ; le
+SCAN par le contrôleur est un acte externe — l'intention dit « montrer », pas
+« scanner dans l'app » (précédent scission boutique).
+
+### Critères d'acceptation du futur run (annexés, opposables)
+
+`terminee` · `valid=true` · ≤ 4,00 $ · F1 `passed=true` · 0 `AIR_TEST_TARGET_MORTE` ·
+0 `ACTION_DECLENCHEUR_DECORATIF` restant · parité F4 : 0 `AIR_INTENT_*` restant ·
+F4 `passed=true` · **contrôles HORS-F4** : ① le besoin paiement-débit (ou
+équivalent re-dérivé) est « dit » avec fait ❌ cité — jamais `satisfied` ; ② AUCUN
+besoin `satisfied` ne promet une liste scopée par destination ni un critère
+saisi au-delà du champ de recherche ; ③ chaque `satisfied` nomme dans ses nœuds
+le bloc qui rend le comportement central (règle 11 renforcée) · 0 amputation ·
+0 mutation hors périmètre · 0 promesse perdue · 0 troncature · hash 3-voies ·
+suite complète · typecheck 0 · lint 0 · **B′ verts sans édition** — impacts
+d'extension à re-mesurer à l'acceptation : le 13ᵉ document entre dans les
+instruments (orphelins ≤11 : exige 0 défaut au nouveau document ; ambiguïté
+> 25 % : à re-vérifier avec ses écrans) · budget estimé 2,4–3,5 $ (ancrage :
+9 runs modernes 2,31–2,94 $), plafond 4,00 $.
+
+### Recommandation
+
+**GO CONDITIONNEL — création d'intention autorisable** aux conditions : ① le
+texte candidat ci-dessus, sans ajout de besoin hors périmètre ; ② les critères
+annexés font foi à l'acceptation ; ③ la création (intentions.mjs, index 12) est
+un acte d'EXTENSION DU CORPUS consigné par décision propriétaire distincte —
+rien n'est créé par D-126.
