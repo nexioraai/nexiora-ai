@@ -109,12 +109,16 @@ describe("cliquet de régression — l'état des deux corpus ne se dégrade jama
   // (nouveau document porteur) même à total constant — le trou de
   // compensation d'un plafond seul. Le plafond se resserre à chaque
   // régénération réussie, ne monte jamais.
-  it("🔴 les formulaires muets ne remontent jamais — plafond 5, deux documents porteurs connus", () => {
+  // ÉDITION CONSCIENTE (2026-09-02, resserrement post-D-119) : 5 → 1 et
+  // porteurs réduits à `toiletteur-chiens` seul — billetterie-concerts a purgé
+  // ses 4 formulaires muets (`d74d600`) ; sa rechute fait désormais mordre les
+  // DEUX gardes (plafond et ensemble).
+  it("🔴 les formulaires muets ne remontent jamais — plafond 1, un document porteur connu", () => {
     const trouves = charger("corpus-v3").flatMap((d) =>
       formulairesSansAction(d.air).map((f) => ({ document: d.nom, blockId: f.blockId })),
     );
-    expect(trouves.length).toBeLessThanOrEqual(5);
-    const PORTEURS_CONNUS = ["corpus-v3/billetterie-concerts", "corpus-v3/toiletteur-chiens"];
+    expect(trouves.length).toBeLessThanOrEqual(1);
+    const PORTEURS_CONNUS = ["corpus-v3/toiletteur-chiens"];
     for (const t of trouves) {
       expect(PORTEURS_CONNUS, `document nouvellement contaminé : ${t.document}`).toContain(
         t.document,

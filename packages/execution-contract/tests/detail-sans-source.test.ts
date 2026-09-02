@@ -110,10 +110,14 @@ describe("cliquet de régression — les défauts du corpus v3 ne remontent jama
   // Aucun plancher sur la population : `livraison-fruits` a PERDU 2
   // `detail_header` mal posés — une amélioration qu'un plancher aurait
   // déclarée amputation.
-  it("🔴 les écrans de détail SANS SOURCE ne remontent jamais — plafond 24", () => {
+  // ÉDITION CONSCIENTE (2026-09-02, resserrement post-D-119) : 24 → 20, la
+  // valeur scellée par `d74d600` (billetterie-concerts régénéré, 4 → 0).
+  // Mesure déterministe sur population FIXE : le mou de 4 masquait une
+  // régression mécanique jusqu'à +4.
+  it("🔴 les écrans de détail SANS SOURCE ne remontent jamais — plafond 20", () => {
     const tous = documents.flatMap((d) => detailScreens(d.air));
     const orphelins = tous.filter((x) => !x.hasItemIdSource);
-    expect(orphelins.length).toBeLessThanOrEqual(24);
+    expect(orphelins.length).toBeLessThanOrEqual(20);
   });
 
   // ÉDITION CONSCIENTE (2026-09-01, B′ après D-117) : égalité exacte →
@@ -129,7 +133,15 @@ describe("cliquet de régression — les défauts du corpus v3 ne remontent jama
       })
       .map((d) => d.nom);
     expect(sains.length).toBeGreaterThan(0);
-    for (const attendu of ["coach-fitness", "livraison-fruits", "plombier-urgence"]) {
+    // ÉDITION CONSCIENTE (2026-09-02, resserrement post-D-119) :
+    // + `billetterie-concerts` — premier document accepté avec F1 ET F4
+    // vérifiés verts avant acceptation. Plancher : 4 documents.
+    for (const attendu of [
+      "billetterie-concerts",
+      "coach-fitness",
+      "livraison-fruits",
+      "plombier-urgence",
+    ]) {
       expect(sains, `document assaini sorti de l'ensemble : ${attendu}`).toContain(attendu);
     }
   });
