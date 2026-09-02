@@ -6298,3 +6298,59 @@ nommé. La règle 30 reste en place (cohérente, réfutée comme levier isolé).
 Contre-épreuve : UNE relance autorisée ; succès = les besoins irrendables
 déclarés avec fait ❌ ET les besoins rendables toujours satisfaits
 (contre-falsification anti-45/130).
+
+## D-125 — CLÔTURE DE LA PHASE 10B PAR ARBITRAGE : 9/12, DETTE DIFFÉRÉE CONSIGNÉE — 2026-09-02
+
+**Arbitrage propriétaire rendu le 2026-09-02 : la clôture est AUTORISÉE.**
+Références : preuve A/B/C et acceptation `cours-cuisine` scellées par `D-124`
+(commit `bbe66e4`).
+
+### Ce que la clôture exige — et ce qu'elle n'exige pas
+
+Les critères de sortie F1–F5 portent sur les **instruments** (gates existantes,
+véridiques, vues échouer) : **tous SATISFAITS** depuis D-088→D-105, et
+re-éprouvés depuis par cinq acceptations et trois refus. Le corollaire
+« régénérer 9 documents » (ROADMAP, 2026-09-01) était une convention de
+campagne antérieure au pivot sectoriel — pas un critère de phase. `FACT`
+décisif : la gate `fidelite` ne peut PAS devenir verte quelle que soit l'action
+sur v3 — les 12 documents v2 gelés sont rouges par construction
+(« structurellement attendu », tranché). La clôture est donc, par nature, un
+ARBITRAGE consigné. Précédent du programme : le Mode 2 a été FERMÉ le
+2026-08-25 avec M2-06 🟡 et M2-10 ⚪ ouverts et non bloquants.
+
+### L'état au standard de gate — 9/12 documents v3 verts sur leurs propres lignes
+
+7 régénérations acceptées (coach, livraison, plombier, billetterie, agence,
+boutique, suivi) + `resto-quartier` (vert SANS régénération — mesuré) +
+`cours-cuisine` (accepté par preuve A/B/C, D-124). F1 = 12 (v2 seul) ·
+F4 = 15 (12 v2 + 3 v3 différés) · motifs réfutés = 5.
+
+### La preuve qui autorise le pivot
+
+Le cycle `cours-cuisine` (8,16 $ : 2,59 refusé + 2,90 refusé + 2,67 accepté) a
+établi par différentiel A/B/C : les gardes mécaniques D-123 interceptent et
+réparent EN RUN (décoratif ×2, morte ×1) ; le renforcement de la règle 11
+(preuve de rendu + menace symétrique) produit l'honnêteté sémantique que la
+règle 30 seule ne produisait pas — besoins irrendables déclarés avec faits
+cités, besoins rendables toujours satisfaits. **L'infrastructure d'honnêteté
+dont la campagne sectorielle dépend est éprouvée.**
+
+### La dette différée — consignée, jamais maquillée
+
+| Dette | Nature | Traitement |
+|---|---|---|
+| `salon-coiffure` (F4 : 2 motifs réfutés · 5 orphelins) · `toiletteur-chiens` (2 réfutés · 2 orph. · 4 img · dernier muet) · `tuteur-langues` (1 réfuté · 3 orph. · 3 img) | **DIFFÉRÉS par décision** (hors portefeuille sectoriel) — le rouge F4 v3 restant leur appartient en totalité | régénération ultérieure, en lot d'hygiène ou à l'occasion ; cliquets B′ (≤11 · ≤1 · 8 sains · porteur toiletteur) les tiennent |
+| `resto-quartier` : 1 orphelin | hygiène B′, gates vertes | aucun run — réexamen au besoin |
+| 9 CTA décoratifs non promis (docs acceptés) | dette historique révélée par D-123 | corrigés si ces documents sont un jour régénérés |
+| Résiduel v2 (F1 12 · F4 12) | structurel, corpus gelé 1.0.0 | permanent par construction |
+| Dettes documentaires (rectification D-117, errata images) | consignées (D-121) | lot documentaire séparé |
+
+**Ces lignes sont une dette OUVERTE de programme, pas un échec de phase** : les
+critères de phase sont satisfaits, chaque report est une décision datée.
+
+### Décision proposée
+
+**La Phase 10B est CLOSE.** Le programme pivote sur l'ordre sectoriel consigné :
+**voyage/transport** (dossier read-only d'abord — toute création d'intention
+reste une décision d'extension du corpus) → fintech (précédé des évolutions
+moteur : déclencheurs `data`, exécution des capabilities) → santé.

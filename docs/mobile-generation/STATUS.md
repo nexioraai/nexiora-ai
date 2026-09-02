@@ -1,7 +1,21 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-02 (13)** (**`cours-cuisine` EST VALIDE PAR PREUVE A/B/C — `D-124`** :
+> **2026-09-02 (14)** (**🏁 PHASE 10B CLOSE PAR ARBITRAGE — `D-125`** :
+> **9/12 documents v3 verts au standard de gate** (7 régénérations acceptées +
+> `resto-quartier` vert sans run + `cours-cuisine` par preuve A/B/C). Les
+> critères de phase F1–F5 portent sur les INSTRUMENTS : tous satisfaits et
+> ré-éprouvés par 5 acceptations et 3 refus. La gate `fidelite` ne peut jamais
+> être verte (résiduel v2 structurel) — la clôture est un arbitrage, précédent
+> Mode 2/M2-06. **Dette différée CONSIGNÉE sans maquillage** : `salon-coiffure`,
+> `toiletteur-chiens`, `tuteur-langues` différés (le rouge F4 v3 restant leur
+> appartient en totalité) · resto 1 orphelin · 9 CTA décoratifs historiques ·
+> résiduel v2 permanent · dettes documentaires. B′ scellés : ≤11 · ≤1 ·
+> 8 sains · `{toiletteur}` · >25 %. **Le programme pivote : voyage/transport →
+> fintech (après évolutions moteur) → santé.** Cycle cours-cuisine : 8,16 $ de
+> preuves. **0 $.**)
+>
+> *Entrée précédente —* **2026-09-02 (13)** (**`cours-cuisine` EST VALIDE PAR PREUVE A/B/C — `D-124`** :
 > trois runs, même intention, même plafond : sans règle 30 → mensonge (2,59 $,
 > refusé) · règle 30 seule → mensonge (2,90 $, refusé, mais gardes mécaniques
 > D-123 DÉMONTRÉES : 2 décoratifs + 1 morte interceptés ET réparés en run) ·
