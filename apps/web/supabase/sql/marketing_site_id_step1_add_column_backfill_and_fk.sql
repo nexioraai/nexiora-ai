@@ -108,8 +108,13 @@
 --     reprend a l'identique les actions `ON DELETE` / `ON UPDATE` de la FK
 --     `slug` deja en place, resolues depuis `pg_constraint`. Rien n'est
 --     suppose, et la semantique de suppression d'un site est INCHANGEE.
---     (Si `ON DELETE CASCADE` est souhaite, comme sur `site_blog_posts`,
---     c'est une decision distincte, a prendre explicitement.) ;
+--     MESURE APRES COUP (releve 0.B, 2026-08-26) : les deux FK `slug`
+--     portaient deja `ON DELETE CASCADE` (`confdeltype = c`) et
+--     `ON UPDATE NO ACTION` (`confupdtype = a`). La recopie a donc pose
+--     exactement ces actions sur les FK `site_id` -- verifie en 6.C, puis
+--     en 3.B a l'etape 2. Supprimer un site supprimait deja ses lignes
+--     marketing ; il continue, ni plus ni moins. Les deux chemins de
+--     cascade atteignent les memes lignes ;
 --   * il ne touche AUCUNE autre table, aucune policy, aucun grant, aucune
 --     vue, aucune fonction ;
 --   * il n'ajoute aucun trigger. Un trigger qui deriverait `site_id` du
