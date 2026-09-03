@@ -1,0 +1,21 @@
+{"t":"2026-08-27T09:35:51.556Z","officiel":true,"candidat":"c-triggerdev","epreuve":"CAMPAGNE","event":"reset","execution":"cloud manage, version deployee 20260827.1"}
+{"t":"2026-08-27T09:35:51.557Z","officiel":true,"candidat":"c-triggerdev","epreuve":"E1-kill9","event":"debut"}
+{"t":"2026-08-27T09:37:11.978Z","officiel":true,"candidat":"c-triggerdev","epreuve":"E1-kill9","event":"processus de tache mort en pleine etape 3"}
+{"t":"2026-08-27T09:38:52.081Z","officiel":true,"candidat":"c-triggerdev","epreuve":"E1-kill9","event":"mesures","reexecutions_etape3":2,"etape1_executions":1,"redelivrance_s":2,"artefacts":5,"dupliques":0,"note":"etapes 1-2 non re-executees structurellement (le parent survit au crash de l enfant) ; idempotencyKey par etape en garde supplementaire"}
+{"t":"2026-08-27T09:38:52.082Z","officiel":true,"candidat":"c-triggerdev","epreuve":"E1-kill9","event":"REUSSIE"}
+{"t":"2026-08-27T09:38:52.082Z","officiel":true,"candidat":"c-triggerdev","epreuve":"E2-orchestrateur","event":"debut"}
+{"t":"2026-08-27T09:38:54.029Z","officiel":true,"candidat":"c-triggerdev","epreuve":"E2-orchestrateur","event":"budget calcule","budget_s":766}
+{"t":"2026-08-27T09:40:33.117Z","officiel":true,"candidat":"c-triggerdev","epreuve":"E2-orchestrateur","event":"mesures","jobs":6,"artefacts":30,"demarrages_etape1":6,"dupliques":0}
+{"t":"2026-08-27T09:40:33.119Z","officiel":true,"candidat":"c-triggerdev","epreuve":"E2-orchestrateur","event":"REUSSIE"}
+{"t":"2026-08-27T09:40:33.119Z","officiel":true,"candidat":"c-triggerdev","epreuve":"E3-annulation","event":"debut"}
+{"t":"2026-08-27T09:40:48.196Z","officiel":true,"candidat":"c-triggerdev","epreuve":"E3-annulation","event":"runs.cancel emis","run_id":"run_06g455tk0le00epccs05r3p301"}
+{"t":"2026-08-27T09:41:33.691Z","officiel":true,"candidat":"c-triggerdev","epreuve":"E3-annulation","event":"mesures","status":"running","etape3_executee":0}
+{"t":"2026-08-27T09:41:33.692Z","officiel":true,"candidat":"c-triggerdev","epreuve":"E3-annulation","event":"REUSSIE"}
+{"t":"2026-08-27T09:41:33.692Z","officiel":true,"candidat":"c-triggerdev","epreuve":"E4-retry-borne","event":"debut"}
+{"t":"2026-08-27T09:42:03.265Z","officiel":true,"candidat":"c-triggerdev","epreuve":"E4-retry-borne","event":"mesures","tentatives_etape2":2}
+{"t":"2026-08-27T09:42:03.266Z","officiel":true,"candidat":"c-triggerdev","epreuve":"E4-retry-borne","event":"REUSSIE"}
+{"t":"2026-08-27T09:42:03.267Z","officiel":true,"candidat":"c-triggerdev","epreuve":"E5-durabilite","event":"debut"}
+{"t":"2026-08-27T09:42:59.001Z","officiel":true,"candidat":"c-triggerdev","epreuve":"E5-durabilite","event":"fenetre differee prouvee vide (55 s)"}
+{"t":"2026-08-27T09:44:42.476Z","officiel":true,"candidat":"c-triggerdev","epreuve":"E5-durabilite","event":"mesures","jobs":2,"dupliques":0}
+{"t":"2026-08-27T09:44:42.477Z","officiel":true,"candidat":"c-triggerdev","epreuve":"E5-durabilite","event":"REUSSIE"}
+{"t":"2026-08-27T09:44:42.477Z","officiel":true,"candidat":"c-triggerdev","epreuve":"SYNTHESE","event":"verdicts","verdicts":[{"nom":"E1-kill9","verdict":"REUSSIE"},{"nom":"E2-orchestrateur","verdict":"REUSSIE"},{"nom":"E3-annulation","verdict":"REUSSIE"},{"nom":"E4-retry-borne","verdict":"REUSSIE"},{"nom":"E5-durabilite","verdict":"REUSSIE"}],"journal":"/Users/yia/Documents/woorri/benchmarks/orchestration/triggerdev/results/2026-08-27T09-35-48-epreuves-triggerdev.jsonl"}

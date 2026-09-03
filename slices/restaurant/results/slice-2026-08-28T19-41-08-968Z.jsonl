@@ -1,0 +1,12 @@
+{"etape":"intention-air","projectId":"prj_resto_quartier_abidjan","slug":"maquis-express","ecrans":4,"entites":3,"capabilities":5}
+{"etape":"gates","dureeMs":1,"ok":true}
+{"etape":"compile","dureeMs":4,"ok":true}
+{"etape":"artefacts","rootHash":"343a94d994c44b2256750f824a40bf202f686063455771cb679ce3c64e07ec43","fichiers":31,"manifestHash":"343a94d994c44b22"}
+{"etape":"sql-genere","sqlHash":"15dd88ffef507151","tables":["ent_commande","ent_ligne_commande","ent_plat"],"seed":{"ent_plat":24}}
+{"etape":"backend-verif","ref":"tzxysndzixoagaxnysiw","tables":["ent_commande","ent_ligne_commande","ent_plat"],"rls":3,"seeds":{"ent_commande":0,"ent_ligne_commande":0,"ent_plat":24},"conforme":true}
+{"etape":"backend","dureeMs":169673,"ok":true}
+{"etape":"sandbox","dureeMs":32224,"ok":true}
+{"etape":"sandbox-detail","ok":true,"teardown":true,"steps":[{"name":"extract","exitCode":0,"durationMs":271,"timedOut":false},{"name":"npm_ci","exitCode":0,"durationMs":11338,"timedOut":false},{"name":"typecheck","exitCode":0,"durationMs":2060,"timedOut":false},{"name":"bundle","exitCode":0,"durationMs":16616,"timedOut":false}]}
+{"etape":"oracle","dureeMs":18,"ok":true}
+{"etape":"oracle-detail","passed":true,"checks":["validateurs:true","determinisme:true","permissions_vs_air:true","backend_vs_air:true"]}
+{"etape":"teardown-preuve","ref":"tzxysndzixoagaxnysiw","absent":true}

@@ -1,0 +1,30 @@
+{
+  "arm": "A5-sonnet",
+  "model": "claude-sonnet-5",
+  "grammar": true,
+  "sid": "scr_article",
+  "blocsAttendus": 7,
+  "stop": "end_turn",
+  "usage": {
+    "input_tokens": 120,
+    "cache_creation_input_tokens": 15092,
+    "cache_read_input_tokens": 0,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 15092,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "output_tokens": 87,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "service_tier": "standard",
+    "inference_geo": "global"
+  },
+  "coutUSD": 0.0583,
+  "raw": "{\"screen\":{\"id\":\"scr_article\",\"title\":[{\"locale\":\"fr\",\"text\":\"Fiche article\"}],\"blocks\":[{\"id\":\"blk_article_galerie\",\"blockType\":\"image_gallery\",\"entityId\":\"ent_articleapal\"}]}}",
+  "blocsEmis": 1,
+  "idsEmis": [
+    "blk_article_galerie"
+  ],
+  "dernierBlocEmis": "blk_article_galerie"
+}

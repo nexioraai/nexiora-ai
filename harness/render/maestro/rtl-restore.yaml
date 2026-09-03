@@ -1,0 +1,9 @@
+# Retour LTR (état de sortie déterministe du harnais).
+appId: ${APP_ID}
+---
+- launchApp
+- tapOn:
+    id: "toggle-rtl"
+- stopApp
+- launchApp
+- assertVisible: "RTL : inactif"

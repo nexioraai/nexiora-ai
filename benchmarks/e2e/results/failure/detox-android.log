@@ -1,0 +1,32 @@
+00:15:14.148 detox[5866] B DETOX_IOS_APP="/Users/yia/Library/Developer/Xcode/DerivedData/e2ebench-bsrokrunbthgqrespubnoylixwsj/Build/Products/Release-iphonesimulator/e2ebench.app" jest --config e2e/jest.config.js e2e/failure.test.js
+00:15:14.149 detox[5866] i (node:5866) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+00:15:16.184 detox[5867] i failure.test.js is assigned to emulator-5554 (bench_pixel)
+00:15:24.745 detox[5867] i sonde-echec: assertion volontairement fausse
+00:15:32.769 detox[5867] i sonde-echec: assertion volontairement fausse [FAIL]
+
+FAIL e2e/failure.test.js (18.33 s)
+  sonde-echec
+    ✕ assertion volontairement fausse (8023 ms)
+
+  ● sonde-echec › assertion volontairement fausse
+
+    Test Failed: 8.0sec timeout expired without matching of given matcher: (view has effective visibility <VISIBLE> and view.getGlobalVisibleRect() covers at least <75> percent of the view's area)
+
+      4 |   beforeAll(async () => { await device.launchApp({ newInstance: true }); });
+      5 |   it("assertion volontairement fausse", async () => {
+    > 6 |     await waitFor(element(by.id("element-inexistant"))).toBeVisible().withTimeout(8000);
+        |                                                                       ^
+      7 |   });
+      8 | });
+      9 |
+
+      at Object.withTimeout (e2e/failure.test.js:6:71)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 1 total
+Snapshots:   0 total
+Time:        18.382 s, estimated 24 s
+Ran all test suites matching /e2e\/failure.test.js/i.
+00:15:32.896 detox[5866] E Command failed with exit code = 1:
+DETOX_IOS_APP="/Users/yia/Library/Developer/Xcode/DerivedData/e2ebench-bsrokrunbthgqrespubnoylixwsj/Build/Products/Release-iphonesimulator/e2ebench.app" jest --config e2e/jest.config.js e2e/failure.test.js

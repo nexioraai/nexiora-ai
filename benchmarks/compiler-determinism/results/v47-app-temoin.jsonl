@@ -1,0 +1,7 @@
+{"etape":"ecriture","rootHash":"814492c00ee260f0d21a07a65797166d31de878d2db5af15c6d8c772b9a31366","fileCount":31}
+{"etape":"npm-ci","ok":true}
+{"etape":"ecriture","rootHash":"343a94d994c44b2256750f824a40bf202f686063455771cb679ce3c64e07ec43","fileCount":31}
+{"etape":"npm-ci","ok":true}
+{"etape":"maestro-android","parcours":"launch -> scr_menu -> fixture row_1 visible -> scroll -> tap blk_menu_bouton_panier -> scr_panier -> back systeme -> scr_menu","verdict":"PASS 10/10 pas"}
+{"etape":"maestro-ios","parcours":"identique, pop par geste de bord","verdict":"PASS 10/10 pas"}
+{"rootHash_temoin":"343a94d994c44b2256750f824a40bf202f686063455771cb679ce3c64e07ec43","builds":"Release iOS+Android EXIT=0","captures":"results/v47-captures/ (4)"}

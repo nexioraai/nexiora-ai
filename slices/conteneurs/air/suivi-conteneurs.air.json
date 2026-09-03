@@ -1,0 +1,1663 @@
+{
+  "actions": [
+    {
+      "effect": {
+        "capability": "auth",
+        "kind": "capability",
+        "method": "restoreSession",
+        "params": [
+          {
+            "key": "scope",
+            "value": "importateur"
+          },
+          {
+            "key": "allowAnonymous",
+            "value": false
+          }
+        ]
+      },
+      "id": "act_authentifier_importateur",
+      "name": "Authentifier l'importateur au démarrage",
+      "trigger": {
+        "event": "app_start",
+        "kind": "lifecycle"
+      }
+    },
+    {
+      "effect": {
+        "capability": "offline_storage",
+        "kind": "capability",
+        "method": "prefetchEntities",
+        "params": [
+          {
+            "key": "entities",
+            "value": [
+              "ent_conteneur",
+              "ent_navire",
+              "ent_alerte_statut"
+            ]
+          },
+          {
+            "key": "maxAgeMinutes",
+            "value": 1440
+          }
+        ]
+      },
+      "id": "act_precharger_hors_ligne",
+      "name": "Précharger les conteneurs pour consultation hors réseau",
+      "trigger": {
+        "event": "app_start",
+        "kind": "lifecycle"
+      }
+    },
+    {
+      "effect": {
+        "capability": "push_notifications",
+        "kind": "capability",
+        "method": "requestPermission",
+        "params": [
+          {
+            "key": "channel",
+            "value": "statuts_douane"
+          },
+          {
+            "key": "channelLabel",
+            "value": "Statuts de dédouanement"
+          }
+        ]
+      },
+      "id": "act_activer_notifications_push",
+      "name": "Activer les notifications de changement de statut",
+      "trigger": {
+        "blockId": "blk_alertes_vide",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "analytics",
+        "kind": "capability",
+        "method": "trackScreenView",
+        "params": [
+          {
+            "key": "screen",
+            "value": "scr_conteneurs"
+          },
+          {
+            "key": "section",
+            "value": "suivi"
+          }
+        ]
+      },
+      "id": "act_journaliser_ouverture_liste",
+      "name": "Journaliser l'ouverture de la liste des conteneurs",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_conteneurs"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_eta_lisible"
+      },
+      "id": "act_afficher_eta",
+      "name": "Formater les dates d'arrivée estimée",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_conteneurs"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_etat_synchronisation"
+      },
+      "id": "act_etat_synchronisation",
+      "name": "Calculer l'indicateur de fraîcheur hors-ligne",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_notifications"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_libelle_statut_douane"
+      },
+      "id": "act_libeller_statuts",
+      "name": "Traduire les statuts douaniers en libellés lisibles",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_conteneur_detail"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_suivi_ajout"
+      },
+      "id": "act_ouvrir_suivi_ajout",
+      "name": "Ouvrir l'écran de suivi d'un nouveau conteneur",
+      "trigger": {
+        "blockId": "blk_conteneurs_ajouter",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "offline_storage",
+        "kind": "capability",
+        "method": "synchronize",
+        "params": [
+          {
+            "key": "entities",
+            "value": [
+              "ent_conteneur",
+              "ent_alerte_statut"
+            ]
+          },
+          {
+            "key": "direction",
+            "value": "pull"
+          }
+        ]
+      },
+      "id": "act_synchroniser_conteneurs",
+      "name": "Actualiser les statuts depuis le serveur",
+      "trigger": {
+        "blockId": "blk_conteneurs_synchroniser",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_conteneur",
+        "kind": "mutation",
+        "operation": "create"
+      },
+      "id": "act_enregistrer_suivi",
+      "name": "Enregistrer le suivi d'un conteneur",
+      "trigger": {
+        "blockId": "blk_ajout_formulaire",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "push_notifications",
+        "kind": "capability",
+        "method": "subscribeTopic",
+        "params": [
+          {
+            "key": "topicPrefix",
+            "value": "conteneur"
+          },
+          {
+            "key": "channel",
+            "value": "statuts_douane"
+          }
+        ]
+      },
+      "id": "act_activer_alertes_conteneur",
+      "name": "S'abonner aux alertes d'un conteneur",
+      "trigger": {
+        "blockId": "blk_detail_notifications",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "share",
+        "kind": "capability",
+        "method": "shareText",
+        "params": [
+          {
+            "key": "subject",
+            "value": "Suivi de conteneur"
+          },
+          {
+            "key": "includeDeepLink",
+            "value": true
+          }
+        ]
+      },
+      "id": "act_partager_suivi_conteneur",
+      "name": "Partager le suivi du conteneur",
+      "trigger": {
+        "blockId": "blk_detail_partager",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_alerte_statut",
+        "kind": "mutation",
+        "operation": "update"
+      },
+      "id": "act_marquer_alertes_lues",
+      "name": "Marquer toutes les alertes comme lues",
+      "trigger": {
+        "blockId": "blk_alertes_tout_lu",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_message_notification_statut"
+      },
+      "id": "act_composer_message_alerte",
+      "name": "Composer le message d'alerte de changement de statut",
+      "trigger": {
+        "entityId": "ent_alerte_statut",
+        "event": "created",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "capability": "push_notifications",
+        "kind": "capability",
+        "method": "notify",
+        "params": [
+          {
+            "key": "channel",
+            "value": "statuts_douane"
+          },
+          {
+            "key": "watchedFieldId",
+            "value": "fld_conteneur_statut_douane"
+          },
+          {
+            "key": "targetScreenId",
+            "value": "scr_conteneur_detail"
+          }
+        ]
+      },
+      "id": "act_notifier_changement_statut",
+      "name": "Notifier l'importateur d'un changement de statut",
+      "trigger": {
+        "entityId": "ent_conteneur",
+        "event": "updated",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "capability": "analytics",
+        "kind": "capability",
+        "method": "trackEvent",
+        "params": [
+          {
+            "key": "event",
+            "value": "alerte_statut_creee"
+          },
+          {
+            "key": "entity",
+            "value": "ent_alerte_statut"
+          }
+        ]
+      },
+      "id": "act_tracer_alerte_recue",
+      "name": "Journaliser la réception d'une alerte de statut",
+      "trigger": {
+        "entityId": "ent_alerte_statut",
+        "event": "created",
+        "kind": "data"
+      }
+    }
+  ],
+  "airSchemaVersion": "1.1.0",
+  "app": {
+    "description": [
+      {
+        "locale": "fr",
+        "text": "Application de suivi de conteneurs pour les importateurs : navire, ports de départ et d'arrivée, date d'arrivée estimée et statut du dédouanement, avec notifications de changement de statut et consultation hors-ligne."
+      }
+    ],
+    "locales": {
+      "appLocales": [
+        "fr"
+      ],
+      "contentLocales": [
+        "fr"
+      ],
+      "defaultAppLocale": "fr",
+      "rtlSupported": false,
+      "userLanguage": "fr"
+    },
+    "name": "Suivi Conteneurs Abidjan",
+    "slug": "suivi-conteneurs-abidjan"
+  },
+  "capabilities": [
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "methods",
+          "value": [
+            "email_otp",
+            "password"
+          ]
+        },
+        {
+          "key": "accountDeletionEnabled",
+          "value": true
+        },
+        {
+          "key": "sessionPersistence",
+          "value": "secure_storage"
+        }
+      ]
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "channels",
+          "value": [
+            "statuts_douane"
+          ]
+        },
+        {
+          "key": "defaultChannel",
+          "value": "statuts_douane"
+        },
+        {
+          "key": "scheduledLocalEnabled",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "cachedEntities",
+          "value": [
+            "ent_conteneur",
+            "ent_navire",
+            "ent_alerte_statut"
+          ]
+        },
+        {
+          "key": "mode",
+          "value": "read_through_cache"
+        },
+        {
+          "key": "maxCacheDays",
+          "value": 30
+        }
+      ]
+    },
+    {
+      "capability": "share",
+      "config": [
+        {
+          "key": "channels",
+          "value": [
+            "system_sheet"
+          ]
+        }
+      ]
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "collectDiagnostics",
+          "value": true
+        },
+        {
+          "key": "anonymizeIdentifiers",
+          "value": true
+        }
+      ]
+    }
+  ],
+  "compliance": {
+    "accountDeletionRequired": true,
+    "commerceClass": "none",
+    "dataCollected": [
+      "contact_info",
+      "identifiers",
+      "usage_data",
+      "diagnostics"
+    ]
+  },
+  "datasets": [
+    {
+      "contentHash": "3f9c1a47b0e26d58a4f7c19be03d825147ac6b9f2e0d7a3c58b14f6902de7ab1",
+      "entityId": "ent_navire",
+      "id": "data_navires_initiaux",
+      "rowCount": 3
+    },
+    {
+      "contentHash": "c48b70d51e9a2f6380bd47ac1259e0f7364a8bd1902ec5f7a63b0d8417fe2c95",
+      "entityId": "ent_conteneur",
+      "id": "data_conteneurs_demo",
+      "rowCount": 6
+    },
+    {
+      "contentHash": "8a1e5d0c7b394f26a80d5c1937fe4b62d09a7c48153eb6f027d4a9c81b3e560f",
+      "entityId": "ent_alerte_statut",
+      "id": "data_alertes_demo",
+      "rowCount": 8
+    }
+  ],
+  "design": {
+    "overrides": [
+      {
+        "key": "color.light.primary",
+        "value": "#0B5E8A"
+      },
+      {
+        "key": "color.dark.primary",
+        "value": "#3FA9D6"
+      },
+      {
+        "key": "radius.sm",
+        "value": 4
+      },
+      {
+        "key": "radius.md",
+        "value": 10
+      },
+      {
+        "key": "radius.lg",
+        "value": 16
+      }
+    ],
+    "theme": "maritime_logistics",
+    "tokensVersion": "1.1.0"
+  },
+  "entities": [
+    {
+      "fields": [
+        {
+          "id": "fld_navire_nom",
+          "name": "nom",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_navire_numero_voyage",
+          "name": "numero_voyage",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_navire_compagnie",
+          "name": "compagnie_maritime",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "id": "fld_navire_imo",
+          "name": "numero_imo",
+          "required": false,
+          "type": "string",
+          "unique": true
+        }
+      ],
+      "id": "ent_navire",
+      "name": "navire"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_conteneur_numero",
+          "name": "numero_conteneur",
+          "required": true,
+          "type": "string",
+          "unique": true
+        },
+        {
+          "id": "fld_conteneur_navire",
+          "name": "navire",
+          "referencesEntityId": "ent_navire",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "id": "fld_conteneur_port_depart",
+          "name": "port_depart",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_conteneur_port_arrivee",
+          "name": "port_arrivee",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_conteneur_eta",
+          "name": "date_arrivee_estimee",
+          "required": true,
+          "type": "date"
+        },
+        {
+          "enumValues": [
+            "en_attente_documents",
+            "declaration_deposee",
+            "en_cours_verification",
+            "droits_a_payer",
+            "dedouane",
+            "litige"
+          ],
+          "id": "fld_conteneur_statut_douane",
+          "name": "statut_douane",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_conteneur_reference_client",
+          "name": "reference_client",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_conteneur_transitaire",
+          "name": "transitaire_en_charge",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "id": "fld_conteneur_maj_le",
+          "name": "mis_a_jour_le",
+          "required": true,
+          "type": "datetime"
+        },
+        {
+          "id": "fld_conteneur_notes",
+          "name": "notes",
+          "required": false,
+          "type": "text"
+        }
+      ],
+      "id": "ent_conteneur",
+      "name": "conteneur"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_alerte_conteneur",
+          "name": "conteneur",
+          "referencesEntityId": "ent_conteneur",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "enumValues": [
+            "en_attente_documents",
+            "declaration_deposee",
+            "en_cours_verification",
+            "droits_a_payer",
+            "dedouane",
+            "litige"
+          ],
+          "id": "fld_alerte_ancien_statut",
+          "name": "ancien_statut",
+          "required": false,
+          "type": "enum"
+        },
+        {
+          "enumValues": [
+            "en_attente_documents",
+            "declaration_deposee",
+            "en_cours_verification",
+            "droits_a_payer",
+            "dedouane",
+            "litige"
+          ],
+          "id": "fld_alerte_nouveau_statut",
+          "name": "nouveau_statut",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_alerte_titre",
+          "name": "titre",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_alerte_message",
+          "name": "message",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "id": "fld_alerte_survenue_le",
+          "name": "survenue_le",
+          "required": true,
+          "type": "datetime"
+        },
+        {
+          "id": "fld_alerte_lue",
+          "name": "lue",
+          "required": true,
+          "type": "boolean"
+        }
+      ],
+      "id": "ent_alerte_statut",
+      "name": "alerte_statut"
+    }
+  ],
+  "expectedTests": [
+    {
+      "description": "Vérifie que la validation de l'entité conteneur rejette un numéro non conforme au format ISO 6346 (4 lettres majuscules + 7 chiffres) et accepte « MSCU1234567 ».",
+      "id": "test_numero_conteneur_iso6346",
+      "kind": "deterministic",
+      "targetId": "ent_conteneur"
+    },
+    {
+      "description": "Vérifie que l'enregistrement d'un suivi échoue si le navire, un port ou la date d'arrivée estimée est absent.",
+      "id": "test_trajet_complet_requis",
+      "kind": "deterministic",
+      "targetId": "act_enregistrer_suivi"
+    },
+    {
+      "description": "Vérifie qu'un statut de dédouanement hors de la liste reconnue est refusé et que la date de mise à jour du conteneur est obligatoire.",
+      "id": "test_statut_douane_valide",
+      "kind": "deterministic",
+      "targetId": "ent_conteneur"
+    },
+    {
+      "description": "Vérifie qu'un importateur authentifié ne voit que les conteneurs portant sa référence client et aucun autre.",
+      "id": "test_cloisonnement_conteneurs_client",
+      "kind": "deterministic",
+      "targetId": "act_authentifier_importateur"
+    },
+    {
+      "description": "Vérifie que l'action de libellé traduit chaque code de statut douanier en libellé français lisible et retourne un ton de badge cohérent.",
+      "id": "test_libelle_statut_douane",
+      "kind": "deterministic",
+      "targetId": "act_libeller_statuts"
+    },
+    {
+      "description": "Vérifie le formatage français de la date d'arrivée estimée et le calcul des jours restants au fuseau d'Abidjan (UTC+0), y compris pour une ETA dépassée.",
+      "id": "test_eta_lisible_fuseau_abidjan",
+      "kind": "deterministic",
+      "targetId": "act_afficher_eta"
+    },
+    {
+      "description": "Vérifie que le message d'alerte composé mentionne le numéro de conteneur, l'ancien et le nouveau statut dans son titre et son corps.",
+      "id": "test_message_notification_statut",
+      "kind": "deterministic",
+      "targetId": "act_composer_message_alerte"
+    },
+    {
+      "description": "Vérifie que l'indicateur de fraîcheur signale des données obsolètes au-delà du seuil et affiche le nombre d'éléments en attente.",
+      "id": "test_indicateur_synchronisation",
+      "kind": "deterministic",
+      "targetId": "act_etat_synchronisation"
+    },
+    {
+      "description": "Vérifie que sur l'écran des conteneurs l'état vide n'est affiché que lorsque l'entité conteneur est vide, et masqué dès qu'un conteneur est suivi.",
+      "id": "test_etat_vide_conteneurs_conditionne",
+      "kind": "deterministic",
+      "targetId": "scr_conteneurs"
+    },
+    {
+      "description": "Vérifie que le bouton « Actualiser les statuts » de l'écran des conteneurs n'apparaît que si au moins un conteneur est suivi.",
+      "id": "test_cta_actualiser_visible_avec_donnees",
+      "kind": "deterministic",
+      "targetId": "scr_conteneurs"
+    },
+    {
+      "description": "Vérifie que sur l'écran des alertes l'état vide s'affiche uniquement en l'absence d'alerte et que le bouton « Tout marquer comme lu » s'affiche uniquement en présence d'alertes.",
+      "id": "test_etat_vide_alertes_conditionne",
+      "kind": "deterministic",
+      "targetId": "scr_notifications"
+    },
+    {
+      "description": "Vérifie qu'une alerte de statut exige un conteneur référencé, un nouveau statut et une date de survenue, et que son marquage comme lue met bien à jour l'indicateur de lecture.",
+      "id": "test_alerte_changement_statut_coherente",
+      "kind": "deterministic",
+      "targetId": "ent_alerte_statut"
+    },
+    {
+      "description": "Parcours complet : depuis la liste, ouvrir « Suivre un conteneur », renseigner le formulaire avec un numéro ISO valide, enregistrer, puis retrouver le conteneur dans la liste.",
+      "id": "test_parcours_ajout_suivi",
+      "kind": "e2e",
+      "targetId": "act_enregistrer_suivi"
+    },
+    {
+      "description": "Parcours complet : un changement de statut de dédouanement côté serveur déclenche une notification push dont l'ouverture mène à l'écran de détail du conteneur concerné.",
+      "id": "test_parcours_notification_changement_statut",
+      "kind": "e2e",
+      "targetId": "act_notifier_changement_statut"
+    },
+    {
+      "description": "Parcours complet : après un préchargement réussi, couper le réseau et vérifier que la liste et le détail des conteneurs restent consultables avec l'indicateur de dernière synchronisation.",
+      "id": "test_consultation_hors_ligne",
+      "kind": "e2e",
+      "targetId": "act_precharger_hors_ligne"
+    },
+    {
+      "description": "Parcours complet : depuis le détail, déclencher le partage et vérifier que le texte partagé contient le numéro de conteneur et un lien de suivi valide.",
+      "id": "test_partage_suivi_deep_link",
+      "kind": "e2e",
+      "targetId": "act_partager_suivi_conteneur"
+    },
+    {
+      "description": "Contrat de synchronisation : l'endpoint renvoie les conteneurs, navires et alertes attendus avec les champs requis, et la politique server_wins est respectée en cas de conflit.",
+      "id": "test_contrat_synchronisation_offline",
+      "kind": "contract",
+      "targetId": "act_synchroniser_conteneurs"
+    },
+    {
+      "description": "Contrat d'intégration push : l'enregistrement de l'appareil sur le canal statuts_douane réussit et aucun secret n'est transmis depuis le client.",
+      "id": "test_contrat_enregistrement_push",
+      "kind": "contract",
+      "targetId": "act_activer_notifications_push"
+    },
+    {
+      "description": "Contrat d'authentification : restauration de session, renouvellement de session et appel de suppression de compte conformes au backend.",
+      "id": "test_contrat_session_auth",
+      "kind": "contract",
+      "targetId": "act_authentifier_importateur"
+    },
+    {
+      "description": "Contrat réseau : lors de l'actualisation des statuts, toute requête vers un domaine autre que api.suivi-conteneurs-abidjan.app est bloquée par la politique deny_by_default.",
+      "id": "test_contrat_reseau_deny_by_default",
+      "kind": "contract",
+      "targetId": "act_synchroniser_conteneurs"
+    }
+  ],
+  "integrations": [
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "provider_mode",
+          "value": "hosted"
+        },
+        {
+          "key": "identity_source",
+          "value": "email"
+        },
+        {
+          "key": "session_storage",
+          "value": "secure_keystore"
+        },
+        {
+          "key": "account_deletion_endpoint",
+          "value": "https://api.suivi-conteneurs-abidjan.app/v1/compte/suppression"
+        },
+        {
+          "key": "session_renewal_mode",
+          "value": "automatic"
+        }
+      ],
+      "id": "intg_auth_importateur",
+      "providerClass": "managed_auth"
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "transport",
+          "value": [
+            "apns",
+            "fcm"
+          ]
+        },
+        {
+          "key": "channels",
+          "value": [
+            "statuts_douane"
+          ]
+        },
+        {
+          "key": "registration_endpoint",
+          "value": "https://api.suivi-conteneurs-abidjan.app/v1/appareils"
+        },
+        {
+          "key": "topic_prefix",
+          "value": "conteneur"
+        },
+        {
+          "key": "signing_material_location",
+          "value": "server_side_only"
+        }
+      ],
+      "id": "intg_push_statuts_douane",
+      "providerClass": "push_gateway"
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "engine",
+          "value": "embedded_sql"
+        },
+        {
+          "key": "cached_entities",
+          "value": [
+            "ent_conteneur",
+            "ent_navire",
+            "ent_alerte_statut"
+          ]
+        },
+        {
+          "key": "sync_endpoint",
+          "value": "https://api.suivi-conteneurs-abidjan.app/v1/synchronisation"
+        },
+        {
+          "key": "conflict_policy",
+          "value": "server_wins"
+        },
+        {
+          "key": "encryption_at_rest",
+          "value": true
+        }
+      ],
+      "id": "intg_cache_hors_ligne",
+      "providerClass": "local_database"
+    },
+    {
+      "capability": "share",
+      "config": [
+        {
+          "key": "channels",
+          "value": [
+            "system_sheet"
+          ]
+        },
+        {
+          "key": "content_type",
+          "value": "text_with_link"
+        }
+      ],
+      "id": "intg_partage_systeme",
+      "providerClass": "system_share_sheet"
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "ingest_endpoint",
+          "value": "https://api.suivi-conteneurs-abidjan.app/v1/analytics"
+        },
+        {
+          "key": "anonymize_identifiers",
+          "value": true
+        },
+        {
+          "key": "collect_diagnostics",
+          "value": true
+        },
+        {
+          "key": "batch_interval_seconds",
+          "value": 60
+        }
+      ],
+      "id": "intg_analytics_produit",
+      "providerClass": "product_analytics"
+    },
+    {
+      "config": [
+        {
+          "key": "base_url",
+          "value": "https://api.suivi-conteneurs-abidjan.app"
+        },
+        {
+          "key": "api_version",
+          "value": "v1"
+        },
+        {
+          "key": "auth_scheme",
+          "value": "bearer_session_token"
+        },
+        {
+          "key": "timeout_seconds",
+          "value": 20
+        },
+        {
+          "key": "retry_policy",
+          "value": "exponential_backoff"
+        }
+      ],
+      "id": "intg_api_transit_backend",
+      "providerClass": "rest_backend"
+    }
+  ],
+  "native": {
+    "minAndroidSdk": 26,
+    "minIosVersion": "15.0"
+  },
+  "navigation": {
+    "entryScreenId": "scr_conteneurs",
+    "routes": [
+      {
+        "id": "nav_conteneurs",
+        "screenId": "scr_conteneurs",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Mes conteneurs"
+          }
+        ]
+      },
+      {
+        "id": "nav_conteneur_detail",
+        "screenId": "scr_conteneur_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Détail du conteneur"
+          }
+        ]
+      },
+      {
+        "id": "nav_suivi_ajout",
+        "screenId": "scr_suivi_ajout",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Suivre un conteneur"
+          }
+        ]
+      },
+      {
+        "id": "nav_notifications",
+        "screenId": "scr_notifications",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Alertes de statut"
+          }
+        ]
+      }
+    ]
+  },
+  "network": {
+    "allowedDomains": [
+      "api.suivi-conteneurs-abidjan.app"
+    ],
+    "policy": "deny_by_default"
+  },
+  "permissions": [
+    {
+      "permission": "android.permission.POST_NOTIFICATIONS",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "Pour vous prévenir immédiatement dès que le statut de dédouanement d'un de vos conteneurs change."
+        }
+      ],
+      "requiredByCapability": "push_notifications"
+    }
+  ],
+  "projectId": "prj_transit_abidjan_tracking",
+  "relations": [
+    {
+      "fromEntityId": "ent_navire",
+      "id": "rel_navire_conteneurs",
+      "kind": "one_to_many",
+      "toEntityId": "ent_conteneur"
+    },
+    {
+      "fromEntityId": "ent_conteneur",
+      "id": "rel_conteneur_alertes",
+      "kind": "one_to_many",
+      "toEntityId": "ent_alerte_statut"
+    }
+  ],
+  "rules": [
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_conteneur_numero",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_conteneur_numero",
+          "operator": "matches",
+          "value": "^[A-Z]{4}[0-9]{7}$"
+        }
+      ],
+      "description": "Le numéro de conteneur doit respecter le format ISO 6346 : 4 lettres majuscules suivies de 7 chiffres (ex. MSCU1234567).",
+      "entityId": "ent_conteneur",
+      "id": "rule_conteneur_numero_iso6346",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_conteneur_navire",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_conteneur_port_depart",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_conteneur_port_arrivee",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_conteneur_eta",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_conteneur_port_arrivee",
+          "operator": "neq",
+          "value": ""
+        }
+      ],
+      "description": "Un conteneur suivi doit indiquer son navire, ses ports de départ et d'arrivée ainsi que sa date d'arrivée estimée.",
+      "entityId": "ent_conteneur",
+      "id": "rule_conteneur_trajet_complet",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_conteneur_statut_douane",
+          "operator": "in",
+          "value": [
+            "en_attente_documents",
+            "declaration_deposee",
+            "en_cours_verification",
+            "droits_a_payer",
+            "dedouane",
+            "litige"
+          ]
+        },
+        {
+          "fieldId": "fld_conteneur_maj_le",
+          "operator": "required"
+        }
+      ],
+      "description": "Le statut de dédouanement doit appartenir à la liste des étapes douanières reconnues.",
+      "entityId": "ent_conteneur",
+      "id": "rule_conteneur_statut_valide",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_alerte_conteneur",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_alerte_nouveau_statut",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_alerte_survenue_le",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_alerte_titre",
+          "operator": "required"
+        }
+      ],
+      "description": "Une alerte doit référencer un conteneur, porter un nouveau statut différent de l'ancien et une date de survenue.",
+      "entityId": "ent_alerte_statut",
+      "id": "rule_alerte_changement_statut",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_navire_nom",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_navire_numero_voyage",
+          "operator": "required"
+        }
+      ],
+      "description": "Un navire doit porter un nom et un numéro de voyage pour être rattaché à des conteneurs.",
+      "entityId": "ent_navire",
+      "id": "rule_navire_identification",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_conteneur_reference_client",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_conteneur_reference_client",
+          "operator": "eq",
+          "value": "@current_user.reference_client"
+        }
+      ],
+      "description": "Un importateur connecté ne peut consulter que les conteneurs dont la référence client correspond à son compte.",
+      "entityId": "ent_conteneur",
+      "id": "rule_acces_conteneurs_client",
+      "kind": "authorization"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_alerte_conteneur",
+          "operator": "required"
+        }
+      ],
+      "description": "Les alertes de statut ne sont lisibles que par le destinataire du conteneur concerné.",
+      "entityId": "ent_alerte_statut",
+      "id": "rule_acces_alertes_client",
+      "kind": "authorization"
+    }
+  ],
+  "screens": [
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_conteneurs_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes conteneurs"
+            },
+            {
+              "key": "subtitle",
+              "value": "Suivi navire, ports et dédouanement — consultable hors réseau"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_conteneur",
+          "id": "blk_conteneurs_liste",
+          "props": [
+            {
+              "key": "title",
+              "value": "Conteneurs en cours"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_conteneur_numero"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_conteneur_port_arrivee"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_conteneur_eta"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_conteneur_statut_douane"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun conteneur suivi"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Ajoutez un numéro de conteneur pour commencer le suivi."
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_conteneurs_vide",
+          "props": [
+            {
+              "key": "title",
+              "value": "Aucun conteneur suivi"
+            },
+            {
+              "key": "message",
+              "value": "Saisissez le numéro de conteneur figurant sur votre connaissement pour recevoir les mises à jour de dédouanement."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Suivre un conteneur"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_suivi_ajout"
+            }
+          ],
+          "visibleWhen": {
+            "entityId": "ent_conteneur",
+            "kind": "entity_empty"
+          }
+        },
+        {
+          "blockType": "button",
+          "id": "blk_conteneurs_synchroniser",
+          "props": [
+            {
+              "key": "label",
+              "value": "Actualiser les statuts"
+            },
+            {
+              "key": "actionId",
+              "value": "act_synchroniser_conteneurs"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ],
+          "visibleWhen": {
+            "entityId": "ent_conteneur",
+            "kind": "entity_not_empty"
+          }
+        },
+        {
+          "blockType": "button",
+          "id": "blk_conteneurs_ajouter",
+          "props": [
+            {
+              "key": "label",
+              "value": "Suivre un conteneur"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_suivi_ajout"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ],
+      "id": "scr_conteneurs",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Mes conteneurs"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "detail_header",
+          "entityId": "ent_conteneur",
+          "id": "blk_detail_entete",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_conteneur_numero"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_conteneur_port_arrivee"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_conteneur_eta"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_conteneur_statut_douane",
+                "fld_conteneur_maj_le"
+              ]
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_alerte_statut",
+          "id": "blk_detail_alertes",
+          "props": [
+            {
+              "key": "title",
+              "value": "Historique des statuts"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_alerte_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_alerte_message"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_alerte_survenue_le"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_alerte_nouveau_statut"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun changement enregistré"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Les changements de statut de dédouanement apparaîtront ici."
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_detail_notifications",
+          "props": [
+            {
+              "key": "label",
+              "value": "Être alerté des changements de statut"
+            },
+            {
+              "key": "actionId",
+              "value": "act_activer_alertes_conteneur"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_detail_partager",
+          "props": [
+            {
+              "key": "label",
+              "value": "Partager le suivi"
+            },
+            {
+              "key": "actionId",
+              "value": "act_partager_suivi_conteneur"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ],
+      "id": "scr_conteneur_detail",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Détail du conteneur"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_ajout_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Suivre un conteneur"
+            },
+            {
+              "key": "subtitle",
+              "value": "Renseignez les informations du connaissement pour activer le suivi"
+            }
+          ]
+        },
+        {
+          "blockType": "form",
+          "entityId": "ent_conteneur",
+          "id": "blk_ajout_formulaire",
+          "props": [
+            {
+              "key": "title",
+              "value": "Informations d'expédition"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_conteneur_numero",
+                "fld_conteneur_navire",
+                "fld_conteneur_port_depart",
+                "fld_conteneur_port_arrivee",
+                "fld_conteneur_eta",
+                "fld_conteneur_reference_client",
+                "fld_conteneur_notes"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Enregistrer le suivi"
+            }
+          ]
+        }
+      ],
+      "id": "scr_suivi_ajout",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Suivre un conteneur"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_alertes_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Alertes de statut"
+            },
+            {
+              "key": "subtitle",
+              "value": "Chaque changement de dédouanement vous est notifié"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_alerte_statut",
+          "id": "blk_alertes_liste",
+          "props": [
+            {
+              "key": "title",
+              "value": "Notifications reçues"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_alerte_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_alerte_message"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_alerte_survenue_le"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_alerte_nouveau_statut"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune alerte"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Vous serez prévenu dès qu'un statut de dédouanement évolue."
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_alertes_vide",
+          "props": [
+            {
+              "key": "title",
+              "value": "Aucune alerte pour le moment"
+            },
+            {
+              "key": "message",
+              "value": "Activez les notifications pour être prévenu dès qu'un conteneur change de statut douanier."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Activer les notifications"
+            },
+            {
+              "key": "actionId",
+              "value": "act_activer_notifications_push"
+            }
+          ],
+          "visibleWhen": {
+            "entityId": "ent_alerte_statut",
+            "kind": "entity_empty"
+          }
+        },
+        {
+          "blockType": "button",
+          "id": "blk_alertes_tout_lu",
+          "props": [
+            {
+              "key": "label",
+              "value": "Tout marquer comme lu"
+            },
+            {
+              "key": "actionId",
+              "value": "act_marquer_alertes_lues"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ],
+          "visibleWhen": {
+            "entityId": "ent_alerte_statut",
+            "kind": "entity_not_empty"
+          }
+        }
+      ],
+      "id": "scr_notifications",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Alertes de statut"
+        }
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "allowedImports": [],
+      "description": "Convertit un code de statut douanier en libellé français lisible et en couleur de badge pour l'affichage en liste et en détail.",
+      "id": "slot_libelle_statut_douane",
+      "inputs": [
+        {
+          "name": "statutDouane",
+          "type": "enum"
+        },
+        {
+          "name": "miseAJourLe",
+          "type": "datetime"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "libelle",
+          "type": "string"
+        },
+        {
+          "name": "tonBadge",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "allowedImports": [
+        "date-fns"
+      ],
+      "description": "Formate la date d'arrivée estimée en français (ex. « arrivée prévue le 14 juin, dans 5 jours ») en tenant compte du fuseau d'Abidjan.",
+      "id": "slot_eta_lisible",
+      "inputs": [
+        {
+          "name": "dateArriveeEstimee",
+          "type": "date"
+        },
+        {
+          "name": "maintenant",
+          "type": "datetime"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "texteEta",
+          "type": "string"
+        },
+        {
+          "name": "joursRestants",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "allowedImports": [],
+      "description": "Compose le titre et le corps de la notification push envoyée lors d'un changement de statut de dédouanement.",
+      "id": "slot_message_notification_statut",
+      "inputs": [
+        {
+          "name": "numeroConteneur",
+          "type": "string"
+        },
+        {
+          "name": "ancienStatut",
+          "type": "enum"
+        },
+        {
+          "name": "nouveauStatut",
+          "type": "enum"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "titre",
+          "type": "string"
+        },
+        {
+          "name": "corps",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "allowedImports": [
+        "date-fns"
+      ],
+      "description": "Calcule l'indicateur de fraîcheur des données hors-ligne (dernière synchronisation réussie et nombre d'éléments en attente).",
+      "id": "slot_etat_synchronisation",
+      "inputs": [
+        {
+          "name": "derniereSynchro",
+          "type": "datetime"
+        },
+        {
+          "name": "elementsEnAttente",
+          "type": "number"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "texteSynchro",
+          "type": "string"
+        },
+        {
+          "name": "donneesObsoletes",
+          "type": "boolean"
+        }
+      ]
+    }
+  ]
+}

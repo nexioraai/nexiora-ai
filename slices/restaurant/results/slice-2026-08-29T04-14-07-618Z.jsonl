@@ -1,0 +1,14 @@
+{"etape":"intention-air","projectId":"prj_resto_quartier_abidjan","slug":"maquis-express","ecrans":4,"entites":3,"capabilities":5}
+{"etape":"gates","dureeMs":1,"ok":true}
+{"etape":"compile","dureeMs":4,"ok":true}
+{"etape":"artefacts","rootHash":"29e0af787afe7d2d82e7e346f45b09213e776a501b7df3c27c8581a8f6c2bf5b","fichiers":31,"manifestHash":"29e0af787afe7d2d"}
+{"etape":"sql-genere","sqlHash":"15dd88ffef507151","tables":["ent_commande","ent_ligne_commande","ent_plat"],"seed":{"ent_plat":24}}
+{"etape":"backend-verif","ref":"vcfunptdhoplysrxoadw","tables":["ent_commande","ent_ligne_commande","ent_plat"],"rls":3,"seeds":{"ent_commande":0,"ent_ligne_commande":0,"ent_plat":24},"conforme":true}
+{"etape":"backend","dureeMs":154050,"ok":true}
+{"etape":"sandbox","dureeMs":28121,"ok":true}
+{"etape":"sandbox-detail","ok":true,"teardown":true,"steps":[{"name":"extract","exitCode":0,"durationMs":103,"timedOut":false},{"name":"npm_ci","exitCode":0,"durationMs":9641,"timedOut":false},{"name":"typecheck","exitCode":0,"durationMs":1845,"timedOut":false},{"name":"bundle","exitCode":0,"durationMs":15135,"timedOut":false}]}
+{"etape":"oracle","dureeMs":17,"ok":true}
+{"etape":"oracle-detail","passed":true,"checks":["validateurs:true","determinisme:true","permissions_vs_air:true","backend_vs_air:true"]}
+{"etape":"teardown-preuve","ref":"vcfunptdhoplysrxoadw","absent":true}
+{"etape":"projet-ecrit","dossier":"slices/restaurant/app","fichiers":31}
+{"VERDICT":"SLICE 1 — CHAÎNE BOUT-EN-BOUT VERTE (hors device)","journal":"/Users/yia/Documents/woorri/slices/restaurant/results/slice-2026-08-29T04-14-07-618Z.jsonl"}

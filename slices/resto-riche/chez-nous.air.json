@@ -1,0 +1,1118 @@
+{
+  "airSchemaVersion": "1.5.0",
+  "projectId": "prj_resto_riche",
+  "app": {
+    "name": "Chez Nous",
+    "slug": "chez-nous",
+    "locales": {
+      "userLanguage": "fr-FR",
+      "appLocales": [
+        "fr-FR"
+      ],
+      "defaultAppLocale": "fr-FR",
+      "contentLocales": [
+        "fr-FR"
+      ],
+      "rtlSupported": false
+    }
+  },
+  "screens": [
+    {
+      "id": "scr_menu",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Menu"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_menu_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Notre carte"
+            },
+            {
+              "key": "subtitle",
+              "value": "Cuisine maison, préparée à la commande"
+            }
+          ]
+        },
+        {
+          "id": "blk_menu_liste",
+          "blockType": "list",
+          "entityId": "ent_plat",
+          "props": [
+            {
+              "key": "title",
+              "value": "Plats du jour"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_plat_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_plat_description"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_plat_prix"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Carte indisponible"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Le service reprend à 11h30."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de la carte"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Carte indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Vérifiez votre connexion."
+            }
+          ]
+        },
+        {
+          "id": "blk_menu_panier",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Voir mon panier"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_panier"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "id": "blk_menu_commandes",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Mes commandes"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_commandes"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_plat",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Le plat"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_plat_entete",
+          "blockType": "detail_header",
+          "entityId": "ent_plat",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_plat_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_plat_description"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_plat_prix"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_plat_temps_preparation"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "blk_plat_ajouter",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Ajouter au panier"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ajouter_panier"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "id": "blk_plat_retour",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Retour à la carte"
+            },
+            {
+              "key": "actionId",
+              "value": "act_retour_menu"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_panier",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Panier"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_panier_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Votre panier"
+            },
+            {
+              "key": "subtitle",
+              "value": "Vérifiez avant de commander"
+            }
+          ]
+        },
+        {
+          "id": "blk_panier_lignes",
+          "blockType": "list",
+          "entityId": "ent_ligne",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_ligne_plat"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_ligne_quantite"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_ligne_prix_ligne"
+            }
+          ]
+        },
+        {
+          "id": "blk_panier_vide",
+          "blockType": "empty_state",
+          "visibleWhen": {
+            "kind": "entity_empty",
+            "entityId": "ent_ligne"
+          },
+          "props": [
+            {
+              "key": "title",
+              "value": "Panier vide"
+            },
+            {
+              "key": "message",
+              "value": "Ajoutez un plat depuis la carte."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Voir la carte"
+            },
+            {
+              "key": "actionId",
+              "value": "act_retour_menu"
+            }
+          ]
+        },
+        {
+          "id": "blk_panier_commander",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Commander"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_form"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_form",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Vos coordonnées"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_form_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Pour vous prévenir"
+            },
+            {
+              "key": "subtitle",
+              "value": "Quand la commande est prête"
+            }
+          ]
+        },
+        {
+          "id": "blk_form_client",
+          "blockType": "form",
+          "entityId": "ent_client",
+          "props": [
+            {
+              "key": "title",
+              "value": "Vos coordonnées"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_client_nom",
+                "fld_client_telephone",
+                "fld_client_email"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Valider la commande"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_confirmation",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Commande envoyée"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_conf_entete",
+          "blockType": "detail_header",
+          "entityId": "ent_commande",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_commande_numero"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_commande_statut"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_commande_total"
+            }
+          ]
+        },
+        {
+          "id": "blk_conf_suivi",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Suivre ma commande"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_commandes"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_commandes",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Mes commandes"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_cmd_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes commandes"
+            },
+            {
+              "key": "subtitle",
+              "value": "En cours et passées"
+            }
+          ]
+        },
+        {
+          "id": "blk_cmd_liste",
+          "blockType": "list",
+          "entityId": "ent_commande",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_commande_numero"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_commande_statut"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_commande_total"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_commande_statut"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune commande"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Vos commandes apparaîtront ici."
+            }
+          ]
+        },
+        {
+          "id": "blk_cmd_vide",
+          "blockType": "empty_state",
+          "visibleWhen": {
+            "kind": "entity_empty",
+            "entityId": "ent_commande"
+          },
+          "props": [
+            {
+              "key": "title",
+              "value": "Aucune commande"
+            },
+            {
+              "key": "message",
+              "value": "Passez votre première commande."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Voir la carte"
+            },
+            {
+              "key": "actionId",
+              "value": "act_retour_menu"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_commande",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Détail de la commande"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_det_entete",
+          "blockType": "detail_header",
+          "entityId": "ent_commande",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_commande_numero"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_commande_note"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_commande_total"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_commande_statut"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "blk_det_lignes",
+          "blockType": "list",
+          "entityId": "ent_ligne",
+          "props": [
+            {
+              "key": "title",
+              "value": "Ce que vous avez commandé"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_ligne_plat"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_ligne_quantite"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_ligne_prix_ligne"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "navigation": {
+    "entryScreenId": "scr_menu",
+    "routes": [
+      {
+        "id": "nav_menu",
+        "screenId": "scr_menu"
+      },
+      {
+        "id": "nav_plat",
+        "screenId": "scr_plat"
+      },
+      {
+        "id": "nav_panier",
+        "screenId": "scr_panier"
+      },
+      {
+        "id": "nav_form",
+        "screenId": "scr_form"
+      },
+      {
+        "id": "nav_confirmation",
+        "screenId": "scr_confirmation"
+      },
+      {
+        "id": "nav_commandes",
+        "screenId": "scr_commandes"
+      },
+      {
+        "id": "nav_commande",
+        "screenId": "scr_commande"
+      }
+    ]
+  },
+  "entities": [
+    {
+      "id": "ent_plat",
+      "name": "plat",
+      "fields": [
+        {
+          "id": "fld_plat_nom",
+          "name": "nom",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_plat_description",
+          "name": "description",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "fld_plat_prix",
+          "name": "prix",
+          "type": "number",
+          "required": true
+        },
+        {
+          "id": "fld_plat_categorie",
+          "name": "categorie",
+          "type": "reference",
+          "required": false,
+          "referencesEntityId": "ent_categorie"
+        },
+        {
+          "id": "fld_plat_allergenes",
+          "name": "allergenes",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "fld_plat_disponible",
+          "name": "disponible",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "id": "fld_plat_temps_preparation",
+          "name": "temps_preparation",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "fld_plat_photo",
+          "name": "photo",
+          "type": "asset",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "ent_categorie",
+      "name": "categorie",
+      "fields": [
+        {
+          "id": "fld_categorie_nom",
+          "name": "nom",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_categorie_ordre",
+          "name": "ordre",
+          "type": "number",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ent_commande",
+      "name": "commande",
+      "fields": [
+        {
+          "id": "fld_commande_numero",
+          "name": "numero",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_commande_statut",
+          "name": "statut",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "recue",
+            "en_preparation",
+            "prete",
+            "retiree"
+          ]
+        },
+        {
+          "id": "fld_commande_total",
+          "name": "total",
+          "type": "number",
+          "required": true
+        },
+        {
+          "id": "fld_commande_passee_le",
+          "name": "passee_le",
+          "type": "datetime",
+          "required": true
+        },
+        {
+          "id": "fld_commande_retrait_prevu",
+          "name": "retrait_prevu",
+          "type": "datetime",
+          "required": false
+        },
+        {
+          "id": "fld_commande_note",
+          "name": "note",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "ent_ligne",
+      "name": "ligne",
+      "fields": [
+        {
+          "id": "fld_ligne_plat",
+          "name": "plat",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_plat",
+          "referenceDisplayFieldId": "fld_plat_nom"
+        },
+        {
+          "id": "fld_ligne_quantite",
+          "name": "quantite",
+          "type": "number",
+          "required": true
+        },
+        {
+          "id": "fld_ligne_prix_ligne",
+          "name": "prix_ligne",
+          "type": "number",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ent_client",
+      "name": "client",
+      "fields": [
+        {
+          "id": "fld_client_nom",
+          "name": "nom",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_client_telephone",
+          "name": "telephone",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_client_email",
+          "name": "email",
+          "type": "string",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "relations": [],
+  "datasets": [
+    {
+      "id": "data_plat",
+      "entityId": "ent_plat",
+      "contentHash": "00000000000000000000000000000000000000000000000000ef8e194a8b0173",
+      "rowCount": 12
+    },
+    {
+      "id": "data_categorie",
+      "entityId": "ent_categorie",
+      "contentHash": "000000000000000000000000000000000000000000000000eff7d2921a6dc44f",
+      "rowCount": 4
+    },
+    {
+      "id": "data_commande",
+      "entityId": "ent_commande",
+      "contentHash": "0000000000000000000000000000000000000000000000008c94b50342b740b6",
+      "rowCount": 3
+    },
+    {
+      "id": "data_ligne",
+      "entityId": "ent_ligne",
+      "contentHash": "0000000000000000000000000000000000000000000000007a95b6f0de858b4d",
+      "rowCount": 7
+    },
+    {
+      "id": "data_client",
+      "entityId": "ent_client",
+      "contentHash": "000000000000000000000000000000000000000000000000ba9c9cf13b9b0943",
+      "rowCount": 1
+    }
+  ],
+  "actions": [
+    {
+      "id": "act_ouvrir_plat",
+      "name": "ouvrir un plat",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_menu_liste"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_plat"
+      }
+    },
+    {
+      "id": "act_ouvrir_panier",
+      "name": "ouvrir le panier",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_menu_panier"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_panier"
+      }
+    },
+    {
+      "id": "act_ouvrir_commandes",
+      "name": "mes commandes",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_menu_commandes"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_commandes"
+      }
+    },
+    {
+      "id": "act_ajouter_panier",
+      "name": "ajouter au panier",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_plat_ajouter"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_panier"
+      }
+    },
+    {
+      "id": "act_retour_menu",
+      "name": "retour carte",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_plat_retour"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_menu"
+      }
+    },
+    {
+      "id": "act_ouvrir_form",
+      "name": "ouvrir le formulaire",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_panier_commander"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_form"
+      }
+    },
+    {
+      "id": "act_valider",
+      "name": "valider",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_form_client"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_client",
+        "operation": "create",
+        "thenScreenId": "scr_confirmation"
+      }
+    },
+    {
+      "id": "act_suivre",
+      "name": "suivre",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_conf_suivi"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_commandes"
+      }
+    },
+    {
+      "id": "act_ouvrir_commande",
+      "name": "ouvrir une commande",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_cmd_liste"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_commande"
+      }
+    },
+    {
+      "id": "act_total_panier",
+      "name": "Calcul du total du panier",
+      "trigger": {
+        "kind": "lifecycle",
+        "event": "screen_open",
+        "screenId": "scr_panier"
+      },
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_total_panier",
+        "binding": {
+          "inputs": [
+            {
+              "port": "lignes",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_ligne"
+              }
+            },
+            {
+              "port": "devise",
+              "source": {
+                "kind": "literal",
+                "value": "FCFA"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "port": "totalAffiche",
+              "blockId": "blk_panier_header",
+              "prop": "subtitle"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule_client_tel",
+      "description": "Le téléphone est obligatoire pour rappeler le client.",
+      "kind": "validation",
+      "entityId": "ent_client",
+      "assertions": [
+        {
+          "fieldId": "fld_client_telephone",
+          "operator": "required"
+        }
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "id": "slot_total_panier",
+      "description": "Calcule le total du panier depuis les lignes et le formate en FCFA.",
+      "inputs": [
+        {
+          "name": "lignes",
+          "type": "json"
+        },
+        {
+          "name": "devise",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "totalAffiche",
+          "type": "string"
+        }
+      ],
+      "allowedImports": []
+    }
+  ],
+  "capabilities": [],
+  "permissions": [],
+  "design": {
+    "theme": "chez_nous",
+    "overrides": [
+      {
+        "key": "radius.sm",
+        "value": 10
+      },
+      {
+        "key": "color.light.primary",
+        "value": "#0B5E8A"
+      }
+    ]
+  },
+  "integrations": [],
+  "network": {
+    "policy": "deny_by_default",
+    "allowedDomains": []
+  },
+  "native": {
+    "minIosVersion": "16.4",
+    "minAndroidSdk": 26
+  },
+  "compliance": {
+    "commerceClass": "none",
+    "accountDeletionRequired": false,
+    "dataCollected": []
+  },
+  "expectedTests": [
+    {
+      "id": "test_e2e_menu_ouvre_plat",
+      "description": "Depuis la carte, appuyer sur un plat ouvre sa fiche détaillée.",
+      "kind": "e2e",
+      "targetId": "scr_plat"
+    },
+    {
+      "id": "test_e2e_plat_vers_panier",
+      "description": "Depuis la fiche d'un plat, « Ajouter au panier » ouvre le panier.",
+      "kind": "e2e",
+      "targetId": "scr_panier"
+    },
+    {
+      "id": "test_e2e_panier_vers_form",
+      "description": "Depuis le panier, « Commander » ouvre la saisie des coordonnées.",
+      "kind": "e2e",
+      "targetId": "scr_form"
+    },
+    {
+      "id": "test_e2e_form_vers_confirmation",
+      "description": "La validation du formulaire mène à l'écran de confirmation.",
+      "kind": "e2e",
+      "targetId": "scr_confirmation"
+    },
+    {
+      "id": "test_e2e_confirmation_vers_suivi",
+      "description": "Depuis la confirmation, « Suivre ma commande » ouvre la liste des commandes.",
+      "kind": "e2e",
+      "targetId": "scr_commandes"
+    },
+    {
+      "id": "test_e2e_commandes_vers_detail",
+      "description": "Appuyer sur une commande ouvre son détail avec ses lignes.",
+      "kind": "e2e",
+      "targetId": "scr_commande"
+    },
+    {
+      "id": "test_e2e_retour_carte",
+      "description": "Depuis la fiche d'un plat, « Retour à la carte » ramène à la carte.",
+      "kind": "e2e",
+      "targetId": "scr_menu"
+    },
+    {
+      "id": "test_action_ouvrir_plat",
+      "description": "L'ouverture d'un plat est câblée sur le bloc liste de la carte.",
+      "kind": "contract",
+      "targetId": "act_ouvrir_plat"
+    },
+    {
+      "id": "test_donnees_plats",
+      "description": "La carte affiche les plats avec leur nom, leur description et leur prix.",
+      "kind": "contract",
+      "targetId": "ent_plat"
+    },
+    {
+      "id": "test_donnees_commandes",
+      "description": "L'historique affiche les commandes avec leur numéro, leur statut et leur total.",
+      "kind": "contract",
+      "targetId": "ent_commande"
+    }
+  ],
+  "intent": {
+    "request": "Je veux une application pour mon restaurant : la carte avec des photos et les prix, pouvoir chercher un plat, un panier, passer commande en laissant mes coordonnées, et pouvoir suivre mes commandes.",
+    "requestLocale": "fr-FR",
+    "needs": [
+      {
+        "id": "need_carte",
+        "statement": "voir la carte du restaurant",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_menu",
+            "ent_plat"
+          ]
+        }
+      },
+      {
+        "id": "need_prix",
+        "statement": "voir les prix des plats",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "ent_plat",
+            "scr_plat"
+          ]
+        }
+      },
+      {
+        "id": "need_panier",
+        "statement": "un panier",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_panier",
+            "act_ajouter_panier"
+          ]
+        }
+      },
+      {
+        "id": "need_commander",
+        "statement": "passer commande en laissant mes coordonnées",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_form",
+            "act_valider",
+            "scr_confirmation"
+          ]
+        }
+      },
+      {
+        "id": "need_suivi",
+        "statement": "suivre mes commandes",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_commandes",
+            "scr_commande",
+            "ent_commande"
+          ]
+        }
+      },
+      {
+        "id": "need_photos",
+        "statement": "des photos sur les plats de la carte",
+        "resolution": {
+          "kind": "unexpressible",
+          "reason": "le registre de Smart Blocks v1.0.0 est GELE a 6 types (header, list, detail_header, form, button, empty_state) et ne comporte aucun bloc image. Leve par le registre v2 (LOT D) ; jusque-la, le besoin est porte au document, pas a l'application."
+        }
+      },
+      {
+        "id": "need_recherche",
+        "statement": "chercher un plat",
+        "resolution": {
+          "kind": "unexpressible",
+          "reason": "aucun bloc de recherche au registre gele, et l'enveloppe d'execution n'expose aucune operation de filtrage (dataOperations = list, get)."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "date": "2026-08-27T06:15:00.657Z",
+  "synthese": {
+    "modele": "claude-opus-5",
+    "bras_thinking": "adaptive",
+    "refus": 4,
+    "protocole": "docs/mobile-generation/benchmarks/couts-unitaires.md VOLET 1",
+    "prefixe_tokens_factures_baseline": 6866,
+    "cache_hit_prouve": true,
+    "cout_appel_sans_cache_usd": 0.035905,
+    "cout_appel_lecture_cache_usd_moyen": 0.005485,
+    "facteur_economie_entree": 6.55,
+    "cout_total_campagne_usd": 0.0971
+  },
+  "runs": [
+    {
+      "label": "A-baseline-sans-cache",
+      "cached": false,
+      "latence_ms": 3114,
+      "usage": {
+        "input_tokens": 6866,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 63
+      },
+      "cout_usd": 0.035905,
+      "stop_reason": "refusal",
+      "stop_details": {
+        "type": "refusal",
+        "category": "cyber",
+        "explanation": "This request triggered restrictions on violative cyber content and was blocked under Anthropic's Usage Policy. To learn more, see https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback. API integrators: you can reduce refusals for your users by configuring a fallback model — see https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback"
+      }
+    },
+    {
+      "label": "B-ecriture-cache",
+      "cached": true,
+      "latence_ms": 3372,
+      "usage": {
+        "input_tokens": 40,
+        "cache_creation_input_tokens": 6826,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 76
+      },
+      "cout_usd": 0.044762,
+      "stop_reason": "refusal",
+      "stop_details": {
+        "type": "refusal",
+        "category": "cyber",
+        "explanation": "This request triggered restrictions on violative cyber content and was blocked under Anthropic's Usage Policy. To learn more, see https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback. API integrators: you can reduce refusals for your users by configuring a fallback model — see https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback"
+      }
+    },
+    {
+      "label": "C-lecture-cache",
+      "cached": true,
+      "latence_ms": 1569,
+      "usage": {
+        "input_tokens": 37,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 6826,
+        "output_tokens": 0
+      },
+      "cout_usd": 0.003598,
+      "stop_reason": "refusal",
+      "stop_details": {
+        "type": "refusal",
+        "category": "cyber",
+        "explanation": "This request triggered restrictions on violative cyber content and was blocked under Anthropic's Usage Policy. To learn more, see https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback. API integrators: you can reduce refusals for your users by configuring a fallback model — see https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback"
+      }
+    },
+    {
+      "label": "D-lecture-cache",
+      "cached": true,
+      "latence_ms": 5517,
+      "usage": {
+        "input_tokens": 44,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 6826,
+        "output_tokens": 225
+      },
+      "cout_usd": 0.009258,
+      "stop_reason": "end_turn",
+      "stop_details": null
+    },
+    {
+      "label": "E-lecture-cache",
+      "cached": true,
+      "latence_ms": 1542,
+      "usage": {
+        "input_tokens": 37,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 6826,
+        "output_tokens": 0
+      },
+      "cout_usd": 0.003598,
+      "stop_reason": "refusal",
+      "stop_details": {
+        "type": "refusal",
+        "category": "cyber",
+        "explanation": "This request triggered restrictions on violative cyber content and was blocked under Anthropic's Usage Policy. To learn more, see https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback. API integrators: you can reduce refusals for your users by configuring a fallback model — see https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback"
+      }
+    }
+  ]
+}

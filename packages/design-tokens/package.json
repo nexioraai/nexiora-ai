@@ -1,0 +1,27 @@
+{
+  "name": "@deribfy/design-tokens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Design tokens \u2014 source JSON unique \u2192 codegen double cible (th\u00e8me RN 3.1a, CSS web 3.1b) ; ROADMAP Phase 3, D-021 StyleSheet + tokens maison",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "node scripts/generate.mjs",
+    "generate:web": "node scripts/generate-web.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "eslint": "^9.39.0",
+    "typescript": "^5",
+    "typescript-eslint": "^8.60.0",
+    "vitest": "^4.1.10"
+  }
+}

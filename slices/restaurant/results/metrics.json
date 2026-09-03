@@ -1,0 +1,16 @@
+{
+  "rootHash": "8da987ee01691540db4ee702e434c0704d5eae54c7d164c58a1569817e27800d",
+  "sqlHash": "f49801f0fcab23bbde37d94695e53248223d8a9f5e5d3af2cb8fe71cef5f53d4",
+  "manifestHash": "8da987ee01691540db4ee702e434c0704d5eae54c7d164c58a1569817e27800d",
+  "steps": {
+    "gates": 1,
+    "compile": 4,
+    "backend": 167620,
+    "sandbox": 28177,
+    "oracle": 24
+  },
+  "oraclePassed": true,
+  "sandboxOk": true,
+  "repairs": 0,
+  "manualWorkarounds": []
+}

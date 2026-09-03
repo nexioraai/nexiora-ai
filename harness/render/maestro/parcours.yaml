@@ -1,0 +1,96 @@
+# HARNAIS 3.4 — PARCOURS D'ASSERTIONS (V2). Couvre les 5 écrans (M1), les
+# 6 blocs gelés, les 4 compositions, les états loading/empty/error, le tap
+# RÉEL List→Detail (réserve D-024) et la bascule light/dark. Ce flow est
+# REJOUÉ À L'IDENTIQUE après bascule RTL (critère : rejeu inchangé).
+# Variables : APP_ID, OUTPUT (répertoire des captures).
+appId: ${APP_ID}
+---
+- launchApp:
+    stopApp: true
+# ——— état initial : thème light ———
+- assertVisible: "thème : light"
+# ——— AuthFlow ———
+- tapOn:
+    id: "nav-auth"
+- assertVisible: "Connexion"
+- assertVisible:
+    id: "auth-field-fld_password"
+- takeScreenshot: ${OUTPUT}/01-auth
+- tapOn:
+    id: "auth-submit"
+- assertVisible: "connexion demandée"
+- tapOn:
+    id: "auth-register"
+- assertVisible: "inscription demandée"
+# ——— List/Detail : TAP RÉEL sur une ligne → détail (preuve D-024) ———
+- tapOn:
+    id: "nav-listdetail"
+- assertVisible: "Catalogue"
+- takeScreenshot: ${OUTPUT}/02-catalogue
+- tapOn:
+    id: "catalogue-row-itm_3"
+- assertVisible:
+    id: "detail-screen"
+- assertVisible: "Plat n°3 maison"
+- assertVisible: "Maison"
+- takeScreenshot: ${OUTPUT}/03-detail
+- tapOn:
+    id: "detail-retour"
+- assertVisible:
+    id: "catalogue-row-itm_1"
+# ——— Form : états error + submitting ———
+- tapOn:
+    id: "nav-form"
+- assertVisible: "Format invalide"
+- assertVisible: "Le serveur est injoignable"
+- assertVisible: "Envoi en cours"
+- takeScreenshot: ${OUTPUT}/04-form
+# ——— Profile ———
+- tapOn:
+    id: "nav-profile"
+- tapOn:
+    id: "reglages-row-itm_langue"
+- assertVisible: "choix : itm_langue"
+- tapOn:
+    id: "logout"
+- assertVisible: "choix : deconnexion"
+- takeScreenshot: ${OUTPUT}/05-profile
+# ——— États : loading / empty / error assertés + actions ———
+- tapOn:
+    id: "nav-etats"
+- assertVisible: "Chargement des plats"
+- assertVisible: "Aucun plat"
+- assertVisible: "Réseau indisponible"
+- takeScreenshot: ${OUTPUT}/06-etats
+- tapOn: "Réessayer"
+- assertVisible: "retry demandé"
+- tapOn: "Parcourir la carte"
+- assertVisible: "parcourir demandé"
+# ——— Bascule DARK : assertion mécanique + captures des 5 écrans ———
+- tapOn:
+    id: "toggle-theme"
+- assertVisible: "thème : dark"
+- tapOn:
+    id: "nav-auth"
+- assertVisible: "Connexion"
+- takeScreenshot: ${OUTPUT}/07-auth-dark
+- tapOn:
+    id: "nav-listdetail"
+- assertVisible: "Catalogue"
+- takeScreenshot: ${OUTPUT}/08-catalogue-dark
+- tapOn:
+    id: "nav-form"
+- assertVisible: "Format invalide"
+- takeScreenshot: ${OUTPUT}/09-form-dark
+- tapOn:
+    id: "nav-profile"
+- assertVisible: "Awa K."
+- takeScreenshot: ${OUTPUT}/10-profile-dark
+- tapOn:
+    id: "nav-etats"
+- assertVisible: "Aucun plat"
+- takeScreenshot: ${OUTPUT}/11-etats-dark
+# ——— retour light (état de sortie déterministe) ———
+- tapOn:
+    id: "toggle-theme"
+- assertVisible: "thème : light"

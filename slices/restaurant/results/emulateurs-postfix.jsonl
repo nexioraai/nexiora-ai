@@ -1,0 +1,4 @@
+{"cible":"emulateur Android","flow":"nav-android","completed":13,"failed":0,"verdict":"PASS"}
+{"cible":"emulateur Android","flow":"rtl-android","completed":13,"failed":0,"verdict":"PASS"}
+{"cible":"simulateur iOS (artefact EAS, code corrige)","flow":"nav-ios","completed":13,"failed":0,"verdict":"PASS"}
+{"cible":"simulateur iOS (artefact EAS, code corrige)","flow":"rtl-ios","completed":13,"failed":0,"verdict":"PASS"}

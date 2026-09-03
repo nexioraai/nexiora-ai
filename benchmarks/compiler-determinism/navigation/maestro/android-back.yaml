@@ -1,0 +1,13 @@
+# V4 B-NAV — critère 5 : comportement back RÉEL (Android, bouton système).
+appId: ${APP_ID}
+---
+- launchApp
+- assertVisible:
+    id: "scr_menu"
+- tapOn:
+    id: "nav_to_scr_plat_detail"
+- assertVisible:
+    id: "scr_plat_detail"
+- back
+- assertVisible:
+    id: "scr_menu"

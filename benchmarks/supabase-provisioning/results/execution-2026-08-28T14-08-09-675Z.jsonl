@@ -1,0 +1,9 @@
+{"etape":1,"status":200,"rate":{"x-ratelimit-limit":"120","x-ratelimit-remaining":"119","x-ratelimit-reset":"60"}}
+{"etape":1,"orgTrouvee":true,"plan":"free","detailStatus":200}
+{"etape":2,"status":201,"rate":{"x-ratelimit-limit":"120","x-ratelimit-remaining":"119","x-ratelimit-reset":"60"}}
+{"etape":2,"refCree":"huemcwynskzyqeulieek","region":"us-east-1"}
+{"etape":3,"statut":"ACTIVE_HEALTHY","dureeCreationMs":10488}
+{"etape":4,"postgrestStatus":401}
+{"MESURE_1":"création → PostgREST servie","totalMs":12787,"detail":{"acceptationMs":9969,"healthyMs":10488,"postgrestMs":12787}}
+{"MESURE_2":"teardown","deleteStatus":200,"getApresDelete":403,"relistingAbsent":true,"dureeMs":4836,"teardownProuve":true}
+{"fin":true,"journal":"/Users/yia/Documents/woorri/benchmarks/supabase-provisioning/results/execution-2026-08-28T14-08-09-675Z.jsonl"}

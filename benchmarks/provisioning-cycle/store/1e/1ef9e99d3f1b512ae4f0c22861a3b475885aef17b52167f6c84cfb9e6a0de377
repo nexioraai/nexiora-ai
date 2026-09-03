@@ -1,0 +1,173 @@
+-- GÉNÉRÉ PAR @deribfy/provisioner (D-032) — NE PAS ÉDITER.
+-- projectId: prj_agence_immo_annonces
+-- airHash: fa6e79feaa7524d1f9b1edfa81b4d5daa5461e13d5455d819877660a0168b506
+-- releaseTrain: rt-2026.08@1.0.0
+-- Idempotent-rejouable ; barrières fail-closed par section.
+
+-- ===== SECTION 1 : TABLES =====
+CREATE TABLE IF NOT EXISTS "ent_bien" (
+  "id" text PRIMARY KEY,
+  "fld_bien_reference" text,
+  "fld_bien_titre" text,
+  "fld_bien_description" text,
+  "fld_bien_type" text,
+  "fld_bien_transaction" text,
+  "fld_bien_prix" numeric(12,2),
+  "fld_bien_surface" numeric(12,2),
+  "fld_bien_pieces" bigint,
+  "fld_bien_quartier" text,
+  "fld_bien_adresse" text,
+  "fld_bien_code_postal" text,
+  "fld_bien_ville" text,
+  "fld_bien_latitude" numeric(12,2),
+  "fld_bien_longitude" numeric(12,2),
+  "fld_bien_photo_principale" text,
+  "fld_bien_galerie" jsonb,
+  "fld_bien_dpe" text,
+  "fld_bien_statut" text,
+  "fld_bien_publie" boolean,
+  "fld_bien_date_publication" date
+);
+CREATE TABLE IF NOT EXISTS "ent_demande_visite" (
+  "id" text PRIMARY KEY,
+  "fld_dv_bien" text,
+  "fld_dv_nom" text,
+  "fld_dv_email" text,
+  "fld_dv_telephone" text,
+  "fld_dv_creneau_debut" timestamptz,
+  "fld_dv_creneau_fin" timestamptz,
+  "fld_dv_message" text,
+  "fld_dv_canal" text,
+  "fld_dv_statut" text,
+  "fld_dv_date_creation" timestamptz,
+  "fld_dv_consentement" boolean
+);
+CREATE TABLE IF NOT EXISTS "ent_favori" (
+  "id" text PRIMARY KEY,
+  "fld_fav_bien" text,
+  "fld_fav_libelle" text,
+  "fld_fav_note" text,
+  "fld_fav_date_ajout" timestamptz,
+  "fld_fav_alerte_prix" boolean
+);
+DO $$ BEGIN
+  IF NOT (to_regclass('public.ent_bien') IS NOT NULL AND to_regclass('public.ent_demande_visite') IS NOT NULL AND to_regclass('public.ent_favori') IS NOT NULL) THEN
+    RAISE EXCEPTION 'BARRIER:tables: table manquante';
+  END IF;
+END $$;
+
+-- ===== SECTION 2 : CONTRAINTES (CHECK énums, FK) =====
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_ent_bien_fld_bien_type') THEN
+    ALTER TABLE "ent_bien" ADD CONSTRAINT "chk_ent_bien_fld_bien_type" CHECK ("fld_bien_type" IS NULL OR "fld_bien_type" IN ('appartement', 'maison', 'studio', 'loft', 'terrain', 'local_commercial'));
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_ent_bien_fld_bien_transaction') THEN
+    ALTER TABLE "ent_bien" ADD CONSTRAINT "chk_ent_bien_fld_bien_transaction" CHECK ("fld_bien_transaction" IS NULL OR "fld_bien_transaction" IN ('vente', 'location'));
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_ent_bien_fld_bien_quartier') THEN
+    ALTER TABLE "ent_bien" ADD CONSTRAINT "chk_ent_bien_fld_bien_quartier" CHECK ("fld_bien_quartier" IS NULL OR "fld_bien_quartier" IN ('centre_ville', 'vieille_ville', 'bords_de_seine', 'quartier_gare', 'parc_nord', 'coteaux_sud', 'zone_pavillonnaire'));
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_ent_bien_fld_bien_dpe') THEN
+    ALTER TABLE "ent_bien" ADD CONSTRAINT "chk_ent_bien_fld_bien_dpe" CHECK ("fld_bien_dpe" IS NULL OR "fld_bien_dpe" IN ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'non_soumis'));
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_ent_bien_fld_bien_statut') THEN
+    ALTER TABLE "ent_bien" ADD CONSTRAINT "chk_ent_bien_fld_bien_statut" CHECK ("fld_bien_statut" IS NULL OR "fld_bien_statut" IN ('disponible', 'sous_offre', 'archive'));
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_ent_demande_visite_fld_dv_bien') THEN
+    ALTER TABLE "ent_demande_visite" ADD CONSTRAINT "fk_ent_demande_visite_fld_dv_bien" FOREIGN KEY ("fld_dv_bien") REFERENCES "ent_bien"("id");
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_ent_demande_visite_fld_dv_canal') THEN
+    ALTER TABLE "ent_demande_visite" ADD CONSTRAINT "chk_ent_demande_visite_fld_dv_canal" CHECK ("fld_dv_canal" IS NULL OR "fld_dv_canal" IN ('telephone', 'email', 'sms'));
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_ent_demande_visite_fld_dv_statut') THEN
+    ALTER TABLE "ent_demande_visite" ADD CONSTRAINT "chk_ent_demande_visite_fld_dv_statut" CHECK ("fld_dv_statut" IS NULL OR "fld_dv_statut" IN ('en_attente', 'confirmee', 'refusee', 'annulee'));
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_ent_favori_fld_fav_bien') THEN
+    ALTER TABLE "ent_favori" ADD CONSTRAINT "fk_ent_favori_fld_fav_bien" FOREIGN KEY ("fld_fav_bien") REFERENCES "ent_bien"("id");
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT ((SELECT count(*) FROM pg_constraint WHERE conname LIKE 'fk\_%' OR conname LIKE 'chk\_%') >= 9) THEN
+    RAISE EXCEPTION 'BARRIER:constraints: contraintes manquantes';
+  END IF;
+END $$;
+
+-- ===== SECTION 3 : INDEX (colonnes FK) =====
+CREATE INDEX IF NOT EXISTS "ix_ent_demande_visite_fld_dv_bien" ON "ent_demande_visite" ("fld_dv_bien");
+CREATE INDEX IF NOT EXISTS "ix_ent_favori_fld_fav_bien" ON "ent_favori" ("fld_fav_bien");
+
+-- ===== SECTION 4 : RLS deny-by-default (D-032) =====
+ALTER TABLE "ent_bien" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "ent_demande_visite" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "ent_favori" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  IF NOT ((SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'public' AND c.relkind = 'r' AND c.relrowsecurity) >= 3) THEN
+    RAISE EXCEPTION 'BARRIER:rls: RLS inactif sur au moins une table';
+  END IF;
+END $$;
+
+-- ===== SECTION 5 : SEED (fixtures déterministes D-030) =====
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_1', 'reference 1', 'titre 1', 'description 1', 'appartement', 'vente', '455.07', '279.30', '645', 'vieille_ville', 'adresse 1', 'code_postal 1', 'ville 1', '469.93', '685.97', NULL, '{}', 'F', 'disponible', 'true', '2026-08-17') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_2', 'reference 2', 'titre 2', 'description 2', 'maison', 'vente', '592.17', '340.93', '416', 'centre_ville', 'adresse 2', 'code_postal 2', 'ville 2', '46.02', '136.62', NULL, '{}', 'B', 'sous_offre', 'true', '2026-09-22') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_3', 'reference 3', 'titre 3', 'description 3', 'maison', 'vente', '468.78', '715.98', '131', 'coteaux_sud', 'adresse 3', 'code_postal 3', 'ville 3', '954.53', '323.50', NULL, '{}', 'B', 'sous_offre', 'true', '2026-02-06') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_4', 'reference 4', 'titre 4', 'description 4', 'maison', 'vente', '858.57', '309.52', '751', 'bords_de_seine', 'adresse 4', 'code_postal 4', 'ville 4', '875.54', '815.21', NULL, '{}', 'G', 'sous_offre', 'false', '2026-08-13') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_5', 'reference 5', 'titre 5', 'description 5', 'local_commercial', 'vente', '401.29', '282.04', '459', 'vieille_ville', 'adresse 5', 'code_postal 5', 'ville 5', '228.93', '150.27', NULL, '{}', 'G', 'sous_offre', 'true', '2026-06-29') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_6', 'reference 6', 'titre 6', 'description 6', 'studio', 'vente', '375.93', '968.22', '867', 'parc_nord', 'adresse 6', 'code_postal 6', 'ville 6', '414.23', '597.38', NULL, '{}', 'B', 'sous_offre', 'false', '2026-10-18') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_7', 'reference 7', 'titre 7', 'description 7', 'appartement', 'vente', '833.16', '219.11', '124', 'centre_ville', 'adresse 7', 'code_postal 7', 'ville 7', '792.89', '973.08', NULL, '{}', 'A', 'archive', 'false', '2026-02-04') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_8', 'reference 8', 'titre 8', 'description 8', 'studio', 'vente', '718.18', '81.74', '935', 'bords_de_seine', 'adresse 8', 'code_postal 8', 'ville 8', '279.13', '524.39', NULL, '{}', 'C', 'archive', 'false', '2026-11-21') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_9', 'reference 9', 'titre 9', 'description 9', 'maison', 'location', '658.16', '40.81', '350', 'centre_ville', 'adresse 9', 'code_postal 9', 'ville 9', '546.74', '442.26', NULL, '{}', 'D', 'archive', 'false', '2026-12-10') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_10', 'reference 10', 'titre 10', 'description 10', 'local_commercial', 'vente', '491.19', '219.85', '967', 'vieille_ville', 'adresse 10', 'code_postal 10', 'ville 10', '805.63', '741.15', NULL, '{}', 'non_soumis', 'sous_offre', 'true', '2026-06-30') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_11', 'reference 11', 'titre 11', 'description 11', 'appartement', 'location', '300.81', '488.10', '478', 'parc_nord', 'adresse 11', 'code_postal 11', 'ville 11', '260.90', '30.25', NULL, '{}', 'B', 'sous_offre', 'false', '2026-01-15') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_12', 'reference 12', 'titre 12', 'description 12', 'maison', 'location', '805.27', '934.90', '430', 'coteaux_sud', 'adresse 12', 'code_postal 12', 'ville 12', '604.62', '20.17', NULL, '{}', 'C', 'sous_offre', 'false', '2026-07-24') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_13', 'reference 13', 'titre 13', 'description 13', 'local_commercial', 'location', '803.58', '621.22', '209', 'parc_nord', 'adresse 13', 'code_postal 13', 'ville 13', '776.63', '816.19', NULL, '{}', 'E', 'sous_offre', 'false', '2026-11-30') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_14', 'reference 14', 'titre 14', 'description 14', 'appartement', 'vente', '415.82', '581.38', '790', 'coteaux_sud', 'adresse 14', 'code_postal 14', 'ville 14', '114.99', '993.03', NULL, '{}', 'A', 'sous_offre', 'true', '2026-06-20') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_15', 'reference 15', 'titre 15', 'description 15', 'loft', 'vente', '495.28', '901.02', '216', 'quartier_gare', 'adresse 15', 'code_postal 15', 'ville 15', '138.10', '959.92', NULL, '{}', 'F', 'archive', 'false', '2026-04-07') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_16', 'reference 16', 'titre 16', 'description 16', 'loft', 'vente', '387.25', '844.78', '283', 'vieille_ville', 'adresse 16', 'code_postal 16', 'ville 16', '182.05', '471.71', NULL, '{}', 'A', 'disponible', 'false', '2026-06-18') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_17', 'reference 17', 'titre 17', 'description 17', 'studio', 'vente', '734.61', '268.73', '126', 'bords_de_seine', 'adresse 17', 'code_postal 17', 'ville 17', '976.46', '125.74', NULL, '{}', 'B', 'sous_offre', 'true', '2026-04-19') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_18', 'reference 18', 'titre 18', 'description 18', 'studio', 'location', '604.65', '683.06', '575', 'centre_ville', 'adresse 18', 'code_postal 18', 'ville 18', '858.47', '227.93', NULL, '{}', 'D', 'disponible', 'true', '2026-08-21') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_19', 'reference 19', 'titre 19', 'description 19', 'studio', 'vente', '542.60', '986.25', '550', 'bords_de_seine', 'adresse 19', 'code_postal 19', 'ville 19', '867.92', '985.95', NULL, '{}', 'B', 'disponible', 'true', '2026-06-21') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_20', 'reference 20', 'titre 20', 'description 20', 'terrain', 'vente', '364.96', '209.56', '948', 'parc_nord', 'adresse 20', 'code_postal 20', 'ville 20', '282.16', '982.14', NULL, '{}', 'C', 'sous_offre', 'false', '2026-04-20') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_21', 'reference 21', 'titre 21', 'description 21', 'loft', 'vente', '899.33', '764.04', '840', 'centre_ville', 'adresse 21', 'code_postal 21', 'ville 21', '675.71', '223.66', NULL, '{}', 'A', 'disponible', 'true', '2026-12-11') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_22', 'reference 22', 'titre 22', 'description 22', 'studio', 'vente', '293.54', '223.89', '29', 'parc_nord', 'adresse 22', 'code_postal 22', 'ville 22', '696.92', '214.90', NULL, '{}', 'F', 'sous_offre', 'false', '2026-05-01') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_23', 'reference 23', 'titre 23', 'description 23', 'local_commercial', 'vente', '300.72', '322.79', '273', 'quartier_gare', 'adresse 23', 'code_postal 23', 'ville 23', '89.79', '153.46', NULL, '{}', 'non_soumis', 'archive', 'true', '2026-06-11') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_bien" ("id", "fld_bien_reference", "fld_bien_titre", "fld_bien_description", "fld_bien_type", "fld_bien_transaction", "fld_bien_prix", "fld_bien_surface", "fld_bien_pieces", "fld_bien_quartier", "fld_bien_adresse", "fld_bien_code_postal", "fld_bien_ville", "fld_bien_latitude", "fld_bien_longitude", "fld_bien_photo_principale", "fld_bien_galerie", "fld_bien_dpe", "fld_bien_statut", "fld_bien_publie", "fld_bien_date_publication") VALUES ('ent_bien_row_24', 'reference 24', 'titre 24', 'description 24', 'loft', 'location', '232.20', '517.22', '456', 'centre_ville', 'adresse 24', 'code_postal 24', 'ville 24', '197.51', '98.71', NULL, '{}', 'D', 'disponible', 'true', '2026-01-31') ON CONFLICT ("id") DO NOTHING;
+DO $$ BEGIN
+  IF NOT ((SELECT count(*) FROM "ent_bien") >= 24) THEN
+    RAISE EXCEPTION 'BARRIER:seed_ent_bien: seed incomplet pour ent_bien';
+  END IF;
+END $$;
+INSERT INTO "ent_demande_visite" ("id", "fld_dv_bien", "fld_dv_nom", "fld_dv_email", "fld_dv_telephone", "fld_dv_creneau_debut", "fld_dv_creneau_fin", "fld_dv_message", "fld_dv_canal", "fld_dv_statut", "fld_dv_date_creation", "fld_dv_consentement") VALUES ('ent_demande_visite_row_1', 'ent_bien_row_4', 'nom_complet 1', 'email 1', 'telephone 1', '2026-09-19T08:39:00.000Z', '2026-10-28T08:47:00.000Z', 'message 1', 'email', 'refusee', '2026-12-02T15:20:00.000Z', 'false') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_demande_visite" ("id", "fld_dv_bien", "fld_dv_nom", "fld_dv_email", "fld_dv_telephone", "fld_dv_creneau_debut", "fld_dv_creneau_fin", "fld_dv_message", "fld_dv_canal", "fld_dv_statut", "fld_dv_date_creation", "fld_dv_consentement") VALUES ('ent_demande_visite_row_2', 'ent_bien_row_6', 'nom_complet 2', 'email 2', 'telephone 2', '2026-05-30T01:05:00.000Z', '2026-03-28T13:34:00.000Z', 'message 2', 'email', 'confirmee', '2026-05-05T17:16:00.000Z', 'true') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_demande_visite" ("id", "fld_dv_bien", "fld_dv_nom", "fld_dv_email", "fld_dv_telephone", "fld_dv_creneau_debut", "fld_dv_creneau_fin", "fld_dv_message", "fld_dv_canal", "fld_dv_statut", "fld_dv_date_creation", "fld_dv_consentement") VALUES ('ent_demande_visite_row_3', 'ent_bien_row_3', 'nom_complet 3', 'email 3', 'telephone 3', '2026-11-17T22:21:00.000Z', '2026-06-04T14:39:00.000Z', 'message 3', 'sms', 'refusee', '2026-07-01T20:14:00.000Z', 'false') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_demande_visite" ("id", "fld_dv_bien", "fld_dv_nom", "fld_dv_email", "fld_dv_telephone", "fld_dv_creneau_debut", "fld_dv_creneau_fin", "fld_dv_message", "fld_dv_canal", "fld_dv_statut", "fld_dv_date_creation", "fld_dv_consentement") VALUES ('ent_demande_visite_row_4', 'ent_bien_row_19', 'nom_complet 4', 'email 4', 'telephone 4', '2026-03-18T06:35:00.000Z', '2026-12-19T02:09:00.000Z', 'message 4', 'telephone', 'refusee', '2026-04-04T06:18:00.000Z', 'true') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_demande_visite" ("id", "fld_dv_bien", "fld_dv_nom", "fld_dv_email", "fld_dv_telephone", "fld_dv_creneau_debut", "fld_dv_creneau_fin", "fld_dv_message", "fld_dv_canal", "fld_dv_statut", "fld_dv_date_creation", "fld_dv_consentement") VALUES ('ent_demande_visite_row_5', 'ent_bien_row_11', 'nom_complet 5', 'email 5', 'telephone 5', '2026-08-16T03:41:00.000Z', '2026-12-20T17:59:00.000Z', 'message 5', 'sms', 'refusee', '2026-01-08T07:51:00.000Z', 'false') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_demande_visite" ("id", "fld_dv_bien", "fld_dv_nom", "fld_dv_email", "fld_dv_telephone", "fld_dv_creneau_debut", "fld_dv_creneau_fin", "fld_dv_message", "fld_dv_canal", "fld_dv_statut", "fld_dv_date_creation", "fld_dv_consentement") VALUES ('ent_demande_visite_row_6', 'ent_bien_row_8', 'nom_complet 6', 'email 6', 'telephone 6', '2026-08-23T02:30:00.000Z', '2026-01-31T11:14:00.000Z', 'message 6', 'email', 'confirmee', '2026-09-12T06:12:00.000Z', 'false') ON CONFLICT ("id") DO NOTHING;
+DO $$ BEGIN
+  IF NOT ((SELECT count(*) FROM "ent_demande_visite") >= 6) THEN
+    RAISE EXCEPTION 'BARRIER:seed_ent_demande_visite: seed incomplet pour ent_demande_visite';
+  END IF;
+END $$;
+INSERT INTO "ent_favori" ("id", "fld_fav_bien", "fld_fav_libelle", "fld_fav_note", "fld_fav_date_ajout", "fld_fav_alerte_prix") VALUES ('ent_favori_row_1', 'ent_bien_row_2', 'libelle 1', 'note_personnelle 1', '2026-08-19T09:53:00.000Z', 'false') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_favori" ("id", "fld_fav_bien", "fld_fav_libelle", "fld_fav_note", "fld_fav_date_ajout", "fld_fav_alerte_prix") VALUES ('ent_favori_row_2', 'ent_bien_row_22', 'libelle 2', 'note_personnelle 2', '2026-12-01T17:25:00.000Z', 'true') ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "ent_favori" ("id", "fld_fav_bien", "fld_fav_libelle", "fld_fav_note", "fld_fav_date_ajout", "fld_fav_alerte_prix") VALUES ('ent_favori_row_3', 'ent_bien_row_9', 'libelle 3', 'note_personnelle 3', '2026-01-16T02:30:00.000Z', 'true') ON CONFLICT ("id") DO NOTHING;
+DO $$ BEGIN
+  IF NOT ((SELECT count(*) FROM "ent_favori") >= 3) THEN
+    RAISE EXCEPTION 'BARRIER:seed_ent_favori: seed incomplet pour ent_favori';
+  END IF;
+END $$;

@@ -1,0 +1,2101 @@
+{
+  "actions": [
+    {
+      "effect": {
+        "capability": "auth",
+        "kind": "capability",
+        "method": "ensureSession",
+        "params": [
+          {
+            "key": "anonymousAllowed",
+            "value": true
+          },
+          {
+            "key": "redirectScreenId",
+            "value": "scr_paniers_semaine"
+          }
+        ]
+      },
+      "id": "act_session_demarrage",
+      "name": "Initialiser la session utilisateur au lancement",
+      "trigger": {
+        "event": "app_start",
+        "kind": "lifecycle"
+      }
+    },
+    {
+      "effect": {
+        "capability": "offline_storage",
+        "kind": "capability",
+        "method": "syncEntity",
+        "params": [
+          {
+            "key": "entityId",
+            "value": "ent_panier"
+          },
+          {
+            "key": "maxAgeMinutes",
+            "value": 60
+          }
+        ]
+      },
+      "id": "act_synchroniser_paniers",
+      "name": "Synchroniser les paniers de la semaine hors-ligne",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_paniers_semaine"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_panier_detail"
+      },
+      "id": "act_ouvrir_detail_panier",
+      "name": "Ouvrir le détail d'un panier",
+      "trigger": {
+        "blockId": "blk_liste_paniers",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_livraison"
+      },
+      "id": "act_lien_gerer_adresse",
+      "name": "Ouvrir la gestion de l'adresse de livraison",
+      "trigger": {
+        "blockId": "blk_lien_adresse",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "analytics",
+        "kind": "capability",
+        "method": "trackScreen",
+        "params": [
+          {
+            "key": "screenId",
+            "value": "scr_panier_detail"
+          },
+          {
+            "key": "eventName",
+            "value": "panier_consulte"
+          }
+        ]
+      },
+      "id": "act_suivi_vue_panier",
+      "name": "Enregistrer la consultation d'un panier",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_panier_detail"
+      }
+    },
+    {
+      "effect": {
+        "capability": "share",
+        "kind": "capability",
+        "method": "shareContent",
+        "params": [
+          {
+            "key": "title",
+            "value": "Panier de fruits et légumes"
+          },
+          {
+            "key": "includeDeepLink",
+            "value": true
+          }
+        ]
+      },
+      "id": "act_partager_panier",
+      "name": "Partager un panier",
+      "trigger": {
+        "blockId": "blk_detail_partage",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_commande"
+      },
+      "id": "act_aller_commande",
+      "name": "Passer à la commande",
+      "trigger": {
+        "blockId": "blk_detail_cta_commander",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_calcul_montant_commande"
+      },
+      "id": "act_calculer_montant",
+      "name": "Calculer le montant total de la commande",
+      "trigger": {
+        "blockId": "blk_commande_recap",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_format_creneau_livraison"
+      },
+      "id": "act_formater_creneau",
+      "name": "Formater le créneau de livraison choisi",
+      "trigger": {
+        "blockId": "blk_commande_creneau",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_livraison"
+      },
+      "id": "act_choisir_adresse",
+      "name": "Gérer ou choisir l'adresse de livraison",
+      "trigger": {
+        "blockId": "blk_commande_adresse_selection",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_commande",
+        "kind": "mutation",
+        "operation": "create"
+      },
+      "id": "act_creer_commande",
+      "name": "Créer la commande à la validation",
+      "trigger": {
+        "blockId": "blk_commande_valider",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "payments.psp",
+        "kind": "capability",
+        "method": "createPayment",
+        "params": [
+          {
+            "key": "amountFieldId",
+            "value": "fld_commande_montant_total"
+          },
+          {
+            "key": "currency",
+            "value": "EUR"
+          },
+          {
+            "key": "methods",
+            "value": [
+              "card"
+            ]
+          },
+          {
+            "key": "statusFieldId",
+            "value": "fld_commande_statut_paiement"
+          },
+          {
+            "key": "referenceFieldId",
+            "value": "fld_commande_reference"
+          }
+        ]
+      },
+      "id": "act_payer_commande",
+      "name": "Déclencher le paiement par carte",
+      "trigger": {
+        "entityId": "ent_commande",
+        "event": "created",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "capability": "push_notifications",
+        "kind": "capability",
+        "method": "requestPermission",
+        "params": [
+          {
+            "key": "rationale",
+            "value": "Pour vous prévenir dès que votre panier est livré."
+          }
+        ]
+      },
+      "id": "act_activer_notifications",
+      "name": "Activer les notifications de livraison",
+      "trigger": {
+        "blockId": "blk_commande_alerte_notif",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "push_notifications",
+        "kind": "capability",
+        "method": "sendNotification",
+        "params": [
+          {
+            "key": "whenFieldId",
+            "value": "fld_commande_statut"
+          },
+          {
+            "key": "whenValue",
+            "value": "livree"
+          },
+          {
+            "key": "title",
+            "value": "Votre panier est livré"
+          },
+          {
+            "key": "body",
+            "value": "Bonne dégustation ! Votre panier de fruits et légumes vient d'être déposé."
+          },
+          {
+            "key": "targetScreenId",
+            "value": "scr_commande"
+          }
+        ]
+      },
+      "id": "act_notifier_livraison",
+      "name": "Notifier le client à la livraison du panier",
+      "trigger": {
+        "entityId": "ent_commande",
+        "event": "updated",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "capability": "maps",
+        "kind": "capability",
+        "method": "centerMap",
+        "params": [
+          {
+            "key": "latitudeFieldId",
+            "value": "fld_adresse_latitude"
+          },
+          {
+            "key": "longitudeFieldId",
+            "value": "fld_adresse_longitude"
+          },
+          {
+            "key": "zoom",
+            "value": 14
+          }
+        ]
+      },
+      "id": "act_afficher_carte_livraison",
+      "name": "Centrer la carte sur la zone de livraison",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_livraison"
+      }
+    },
+    {
+      "effect": {
+        "capability": "geolocation",
+        "kind": "capability",
+        "method": "getCurrentPosition",
+        "params": [
+          {
+            "key": "accuracy",
+            "value": "high"
+          },
+          {
+            "key": "latitudeFieldId",
+            "value": "fld_adresse_latitude"
+          },
+          {
+            "key": "longitudeFieldId",
+            "value": "fld_adresse_longitude"
+          },
+          {
+            "key": "timeoutSeconds",
+            "value": 15
+          }
+        ]
+      },
+      "id": "act_position_actuelle",
+      "name": "Récupérer la position actuelle du client",
+      "trigger": {
+        "blockId": "blk_livraison_position_actuelle",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_verification_zone_livraison"
+      },
+      "id": "act_verifier_zone_livraison",
+      "name": "Vérifier que l'adresse est dans une zone desservie",
+      "trigger": {
+        "blockId": "blk_livraison_zone_verification",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_adresse_livraison",
+        "kind": "mutation",
+        "operation": "create"
+      },
+      "id": "act_enregistrer_adresse",
+      "name": "Enregistrer l'adresse de livraison",
+      "trigger": {
+        "blockId": "blk_livraison_formulaire",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_commande"
+      },
+      "id": "act_retour_commande",
+      "name": "Revenir à l'écran de commande",
+      "trigger": {
+        "blockId": "blk_livraison_retour_commande",
+        "kind": "ui"
+      }
+    }
+  ],
+  "airSchemaVersion": "1.0.0",
+  "app": {
+    "description": [
+      {
+        "locale": "fr",
+        "text": "Application de commande et de livraison de paniers hebdomadaires de fruits et légumes frais, avec paiement par carte, adresse de livraison géolocalisée et notification à la livraison."
+      }
+    ],
+    "locales": {
+      "appLocales": [
+        "fr"
+      ],
+      "contentLocales": [
+        "fr"
+      ],
+      "defaultAppLocale": "fr",
+      "rtlSupported": false,
+      "userLanguage": "fr"
+    },
+    "name": "Paniers Frais",
+    "slug": "paniers-frais"
+  },
+  "capabilities": [
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "providers",
+          "value": [
+            "email",
+            "otp_sms"
+          ]
+        },
+        {
+          "key": "anonymousSessions",
+          "value": true
+        },
+        {
+          "key": "accountDeletionEnabled",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "payments.psp",
+      "config": [
+        {
+          "key": "methods",
+          "value": [
+            "card"
+          ]
+        },
+        {
+          "key": "currency",
+          "value": "EUR"
+        },
+        {
+          "key": "captureMode",
+          "value": "automatic"
+        },
+        {
+          "key": "strongCustomerAuthentication",
+          "value": true
+        },
+        {
+          "key": "merchantCountry",
+          "value": "FR"
+        }
+      ]
+    },
+    {
+      "capability": "geolocation",
+      "config": [
+        {
+          "key": "mode",
+          "value": "when_in_use"
+        },
+        {
+          "key": "accuracy",
+          "value": "high"
+        },
+        {
+          "key": "backgroundUpdates",
+          "value": false
+        }
+      ]
+    },
+    {
+      "capability": "maps",
+      "config": [
+        {
+          "key": "defaultZoom",
+          "value": 14
+        },
+        {
+          "key": "showUserLocation",
+          "value": true
+        },
+        {
+          "key": "interactive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "channels",
+          "value": [
+            "commandes",
+            "livraisons"
+          ]
+        },
+        {
+          "key": "defaultChannel",
+          "value": "livraisons"
+        },
+        {
+          "key": "provisionalAuthorization",
+          "value": false
+        }
+      ]
+    },
+    {
+      "capability": "share",
+      "config": [
+        {
+          "key": "contentTypes",
+          "value": [
+            "text",
+            "url"
+          ]
+        }
+      ]
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "cachedEntities",
+          "value": [
+            "ent_panier",
+            "ent_adresse_livraison"
+          ]
+        },
+        {
+          "key": "maxCacheSizeMb",
+          "value": 25
+        },
+        {
+          "key": "encrypted",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "anonymizeIp",
+          "value": true
+        },
+        {
+          "key": "consentRequired",
+          "value": true
+        },
+        {
+          "key": "trackScreens",
+          "value": true
+        }
+      ]
+    }
+  ],
+  "compliance": {
+    "accountDeletionRequired": true,
+    "commerceClass": "physical_or_offapp",
+    "dataCollected": [
+      "contact_info",
+      "identifiers",
+      "location",
+      "purchases",
+      "usage_data"
+    ]
+  },
+  "datasets": [
+    {
+      "contentHash": "3f8a1c47b90d2e6511ac74be0d39f52c8a17e4bb6cf90312d5a7e84c19bf6d20",
+      "entityId": "ent_panier",
+      "id": "data_paniers_semaine_seed",
+      "rowCount": 6
+    }
+  ],
+  "design": {
+    "overrides": [
+      {
+        "key": "color.primary",
+        "value": "#2E7D32"
+      },
+      {
+        "key": "color.secondary",
+        "value": "#F9A825"
+      },
+      {
+        "key": "radius.card",
+        "value": 16
+      },
+      {
+        "key": "font.family.base",
+        "value": "Inter"
+      }
+    ],
+    "theme": "fresh_market",
+    "tokensVersion": "1.0.0"
+  },
+  "entities": [
+    {
+      "fields": [
+        {
+          "id": "fld_panier_nom",
+          "name": "nom",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_panier_description",
+          "name": "description",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "enumValues": [
+            "petit",
+            "moyen",
+            "familial"
+          ],
+          "id": "fld_panier_taille",
+          "name": "taille",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_panier_prix",
+          "name": "prix",
+          "required": true,
+          "type": "decimal"
+        },
+        {
+          "id": "fld_panier_photo",
+          "name": "photo",
+          "required": false,
+          "type": "asset"
+        },
+        {
+          "id": "fld_panier_semaine_debut",
+          "name": "semaine_debut",
+          "required": true,
+          "type": "date"
+        },
+        {
+          "id": "fld_panier_contenu",
+          "name": "contenu",
+          "required": false,
+          "type": "json"
+        },
+        {
+          "id": "fld_panier_stock",
+          "name": "stock",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "id": "fld_panier_disponible",
+          "name": "disponible",
+          "required": true,
+          "type": "boolean"
+        }
+      ],
+      "id": "ent_panier",
+      "name": "panier"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_adresse_libelle",
+          "name": "libelle",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_adresse_rue",
+          "name": "rue",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_adresse_complement",
+          "name": "complement",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "id": "fld_adresse_code_postal",
+          "name": "code_postal",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_adresse_ville",
+          "name": "ville",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_adresse_latitude",
+          "name": "latitude",
+          "required": false,
+          "type": "decimal"
+        },
+        {
+          "id": "fld_adresse_longitude",
+          "name": "longitude",
+          "required": false,
+          "type": "decimal"
+        },
+        {
+          "id": "fld_adresse_instructions",
+          "name": "instructions",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "id": "fld_adresse_par_defaut",
+          "name": "par_defaut",
+          "required": true,
+          "type": "boolean"
+        }
+      ],
+      "id": "ent_adresse_livraison",
+      "name": "adresse_livraison"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_commande_reference",
+          "name": "reference",
+          "required": true,
+          "type": "string",
+          "unique": true
+        },
+        {
+          "id": "fld_commande_panier",
+          "name": "panier",
+          "referencesEntityId": "ent_panier",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "id": "fld_commande_adresse",
+          "name": "adresse",
+          "referencesEntityId": "ent_adresse_livraison",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "id": "fld_commande_quantite",
+          "name": "quantite",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "id": "fld_commande_montant_total",
+          "name": "montant_total",
+          "required": true,
+          "type": "decimal"
+        },
+        {
+          "enumValues": [
+            "en_attente",
+            "payee",
+            "preparee",
+            "en_livraison",
+            "livree",
+            "annulee"
+          ],
+          "id": "fld_commande_statut",
+          "name": "statut",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "enumValues": [
+            "non_paye",
+            "autorise",
+            "capture",
+            "rembourse",
+            "echoue"
+          ],
+          "id": "fld_commande_statut_paiement",
+          "name": "statut_paiement",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_commande_creneau_livraison",
+          "name": "creneau_livraison",
+          "required": true,
+          "type": "datetime"
+        },
+        {
+          "id": "fld_commande_creee_le",
+          "name": "creee_le",
+          "required": true,
+          "type": "datetime"
+        },
+        {
+          "id": "fld_commande_note",
+          "name": "note",
+          "required": false,
+          "type": "text"
+        }
+      ],
+      "id": "ent_commande",
+      "name": "commande"
+    }
+  ],
+  "expectedTests": [
+    {
+      "description": "Vérifie que la validation du panier (rule_panier_prix_positif) rejette un prix nul ou négatif, un stock négatif ou un nom manquant.",
+      "id": "test_regle_prix_stock_panier",
+      "kind": "deterministic",
+      "targetId": "ent_panier"
+    },
+    {
+      "description": "Vérifie que seule une taille parmi petit, moyen et familial est acceptée pour un panier (rule_panier_taille_valide).",
+      "id": "test_regle_taille_panier",
+      "kind": "deterministic",
+      "targetId": "ent_panier"
+    },
+    {
+      "description": "Vérifie que l'adresse de livraison refuse un code postal non composé de 5 chiffres et exige rue et ville (rule_adresse_code_postal).",
+      "id": "test_regle_code_postal_adresse",
+      "kind": "deterministic",
+      "targetId": "ent_adresse_livraison"
+    },
+    {
+      "description": "Vérifie que la quantité commandée reste entre 1 et 5, que le montant total est strictement positif et que l'adresse est obligatoire (rule_commande_quantite_montant).",
+      "id": "test_regle_quantite_montant_commande",
+      "kind": "deterministic",
+      "targetId": "ent_commande"
+    },
+    {
+      "description": "Vérifie qu'une commande en livraison ou livrée n'est plus modifiable ni annulable par le client (rule_commande_modifiable).",
+      "id": "test_regle_commande_modifiable",
+      "kind": "deterministic",
+      "targetId": "ent_commande"
+    },
+    {
+      "description": "Vérifie qu'une commande sans paiement autorisé ou capturé, ou sans créneau, ne peut pas passer en préparation (rule_commande_paiement_avant_preparation).",
+      "id": "test_regle_paiement_avant_preparation",
+      "kind": "deterministic",
+      "targetId": "ent_commande"
+    },
+    {
+      "description": "Vérifie via l'action de calcul le montant total (prix unitaire × quantité + frais) et le passage à livraison offerte au-delà du seuil.",
+      "id": "test_slot_calcul_montant",
+      "kind": "deterministic",
+      "targetId": "act_calculer_montant"
+    },
+    {
+      "description": "Vérifie que la vérification de zone renvoie zoneDesservie=false et un message en français pour un code postal hors zone.",
+      "id": "test_slot_zone_livraison",
+      "kind": "deterministic",
+      "targetId": "act_verifier_zone_livraison"
+    },
+    {
+      "description": "Vérifie que le créneau de livraison est formaté en libellé français lisible et stable selon la locale fr.",
+      "id": "test_slot_format_creneau",
+      "kind": "deterministic",
+      "targetId": "act_formater_creneau"
+    },
+    {
+      "description": "Vérifie le contrat de l'API backend lors de la synchronisation des paniers de la semaine : schéma des champs, domaine autorisé et gestion des erreurs.",
+      "id": "test_contrat_api_paniers",
+      "kind": "contract",
+      "targetId": "act_synchroniser_paniers"
+    },
+    {
+      "description": "Vérifie le contrat du PSP : création d'intention de paiement en EUR, retour des statuts autorise/capture/echoue et absence de données de carte stockées.",
+      "id": "test_contrat_paiement_carte",
+      "kind": "contract",
+      "targetId": "act_payer_commande"
+    },
+    {
+      "description": "Vérifie le contrat d'enregistrement d'appareil et l'émission d'une notification sur le canal livraisons.",
+      "id": "test_contrat_push_livraison",
+      "kind": "contract",
+      "targetId": "act_notifier_livraison"
+    },
+    {
+      "description": "Vérifie que le géocodage renvoie une adresse normalisée française à partir des coordonnées obtenues et un code d'erreur exploitable hors couverture.",
+      "id": "test_contrat_geocodage",
+      "kind": "contract",
+      "targetId": "act_position_actuelle"
+    },
+    {
+      "description": "Parcours e2e : au lancement, l'écran des paniers de la semaine affiche les paniers disponibles, le filtre par taille fonctionne et l'état vide s'affiche sans données.",
+      "id": "test_e2e_liste_paniers_semaine",
+      "kind": "e2e",
+      "targetId": "scr_paniers_semaine"
+    },
+    {
+      "description": "Parcours e2e : ouverture du détail d'un panier, consultation du contenu, choix d'une quantité entre 1 et 5 puis accès à l'écran de commande.",
+      "id": "test_e2e_detail_et_quantite",
+      "kind": "e2e",
+      "targetId": "scr_panier_detail"
+    },
+    {
+      "description": "Parcours e2e : sur l'écran de livraison, l'utilisateur accorde la géolocalisation, la position remplit latitude/longitude, l'adresse est validée et enregistrée.",
+      "id": "test_e2e_adresse_avec_position",
+      "kind": "e2e",
+      "targetId": "scr_livraison"
+    },
+    {
+      "description": "Parcours e2e : récapitulatif, sélection de l'adresse et du créneau, paiement par carte réussi puis commande créée avec statut payée.",
+      "id": "test_e2e_commande_paiement_carte",
+      "kind": "e2e",
+      "targetId": "scr_commande"
+    },
+    {
+      "description": "Parcours e2e : lorsque le statut de la commande passe à livree, une notification push « Votre panier est livré » est reçue et ouvre l'écran de commande.",
+      "id": "test_e2e_notification_livraison",
+      "kind": "e2e",
+      "targetId": "act_notifier_livraison"
+    },
+    {
+      "description": "Parcours e2e : un paiement refusé laisse la commande non payée, affiche le message d'erreur et permet de réessayer sans doublon de commande.",
+      "id": "test_e2e_paiement_echoue",
+      "kind": "e2e",
+      "targetId": "act_payer_commande"
+    }
+  ],
+  "integrations": [
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.paniersfrais.app"
+        },
+        {
+          "key": "apiVersion",
+          "value": "v1"
+        },
+        {
+          "key": "timeoutMs",
+          "value": 15000
+        },
+        {
+          "key": "retryPolicy",
+          "value": "exponential_backoff"
+        },
+        {
+          "key": "maxRetries",
+          "value": 3
+        },
+        {
+          "key": "authScheme",
+          "value": "bearer_session"
+        }
+      ],
+      "id": "intg_backend_api",
+      "providerClass": "rest_api"
+    },
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "sessionEndpoint",
+          "value": "https://api.paniersfrais.app/v1/auth/session"
+        },
+        {
+          "key": "methods",
+          "value": [
+            "email",
+            "otp_sms"
+          ]
+        },
+        {
+          "key": "sessionTtlMinutes",
+          "value": 10080
+        },
+        {
+          "key": "anonymousSessions",
+          "value": true
+        },
+        {
+          "key": "accountDeletionEndpoint",
+          "value": "https://api.paniersfrais.app/v1/auth/account/delete"
+        }
+      ],
+      "id": "intg_auth_provider",
+      "providerClass": "managed_auth"
+    },
+    {
+      "capability": "payments.psp",
+      "config": [
+        {
+          "key": "intentEndpoint",
+          "value": "https://api.paniersfrais.app/v1/payments/intents"
+        },
+        {
+          "key": "webhookEndpoint",
+          "value": "https://api.paniersfrais.app/v1/payments/webhook"
+        },
+        {
+          "key": "methods",
+          "value": [
+            "card"
+          ]
+        },
+        {
+          "key": "currency",
+          "value": "EUR"
+        },
+        {
+          "key": "captureMode",
+          "value": "automatic"
+        },
+        {
+          "key": "scaEnabled",
+          "value": true
+        },
+        {
+          "key": "merchantCountry",
+          "value": "FR"
+        }
+      ],
+      "id": "intg_paiement_carte",
+      "providerClass": "payment_psp"
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "registrationEndpoint",
+          "value": "https://api.paniersfrais.app/v1/devices"
+        },
+        {
+          "key": "channels",
+          "value": [
+            "commandes",
+            "livraisons"
+          ]
+        },
+        {
+          "key": "defaultChannel",
+          "value": "livraisons"
+        },
+        {
+          "key": "apnsEnvironment",
+          "value": "production"
+        }
+      ],
+      "id": "intg_push_livraison",
+      "providerClass": "push_service"
+    },
+    {
+      "capability": "maps",
+      "config": [
+        {
+          "key": "tileStyle",
+          "value": "streets"
+        },
+        {
+          "key": "defaultZoom",
+          "value": 14
+        },
+        {
+          "key": "defaultCenterLatitude",
+          "value": 48.8566
+        },
+        {
+          "key": "defaultCenterLongitude",
+          "value": 2.3522
+        },
+        {
+          "key": "attributionRequired",
+          "value": true
+        }
+      ],
+      "id": "intg_cartographie",
+      "providerClass": "map_tiles"
+    },
+    {
+      "capability": "geolocation",
+      "config": [
+        {
+          "key": "endpoint",
+          "value": "https://api.paniersfrais.app/v1/geocode"
+        },
+        {
+          "key": "mode",
+          "value": "forward_and_reverse"
+        },
+        {
+          "key": "countryFilter",
+          "value": "FR"
+        },
+        {
+          "key": "resultLimit",
+          "value": 5
+        },
+        {
+          "key": "language",
+          "value": "fr"
+        }
+      ],
+      "id": "intg_geocodage_adresse",
+      "providerClass": "geocoding"
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "ingestEndpoint",
+          "value": "https://api.paniersfrais.app/v1/analytics/events"
+        },
+        {
+          "key": "anonymizeIp",
+          "value": true
+        },
+        {
+          "key": "consentRequired",
+          "value": true
+        },
+        {
+          "key": "batchSize",
+          "value": 20
+        },
+        {
+          "key": "flushIntervalSeconds",
+          "value": 60
+        }
+      ],
+      "id": "intg_analytics_produit",
+      "providerClass": "analytics_sdk"
+    }
+  ],
+  "native": {
+    "minAndroidSdk": 26,
+    "minIosVersion": "15.0"
+  },
+  "navigation": {
+    "entryScreenId": "scr_paniers_semaine",
+    "routes": [
+      {
+        "id": "nav_paniers_semaine",
+        "screenId": "scr_paniers_semaine",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Paniers de la semaine"
+          }
+        ]
+      },
+      {
+        "id": "nav_panier_detail",
+        "screenId": "scr_panier_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Détail du panier"
+          }
+        ]
+      },
+      {
+        "id": "nav_commande",
+        "screenId": "scr_commande",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Commande et paiement"
+          }
+        ]
+      },
+      {
+        "id": "nav_livraison",
+        "screenId": "scr_livraison",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Adresse de livraison"
+          }
+        ]
+      }
+    ]
+  },
+  "network": {
+    "allowedDomains": [
+      "api.paniersfrais.app"
+    ],
+    "policy": "deny_by_default"
+  },
+  "permissions": [
+    {
+      "permission": "NSLocationWhenInUseUsageDescription",
+      "platform": "ios",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "Votre position sert uniquement à pré-remplir votre adresse de livraison et à vérifier que vous êtes dans une zone desservie."
+        }
+      ],
+      "requiredByCapability": "geolocation"
+    },
+    {
+      "permission": "android.permission.ACCESS_FINE_LOCATION",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "Votre position sert uniquement à pré-remplir votre adresse de livraison et à vérifier que vous êtes dans une zone desservie."
+        }
+      ],
+      "requiredByCapability": "geolocation"
+    },
+    {
+      "permission": "android.permission.POST_NOTIFICATIONS",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "Les notifications vous préviennent du suivi de votre commande et du dépôt de votre panier à la livraison."
+        }
+      ],
+      "requiredByCapability": "push_notifications"
+    }
+  ],
+  "projectId": "prj_paniers_fruits_legumes",
+  "relations": [
+    {
+      "fromEntityId": "ent_panier",
+      "id": "rel_panier_commandes",
+      "kind": "one_to_many",
+      "toEntityId": "ent_commande"
+    },
+    {
+      "fromEntityId": "ent_adresse_livraison",
+      "id": "rel_adresse_commandes",
+      "kind": "one_to_many",
+      "toEntityId": "ent_commande"
+    }
+  ],
+  "rules": [
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_panier_prix",
+          "operator": "gt",
+          "value": 0
+        },
+        {
+          "fieldId": "fld_panier_stock",
+          "operator": "gte",
+          "value": 0
+        },
+        {
+          "fieldId": "fld_panier_nom",
+          "operator": "required"
+        }
+      ],
+      "description": "Le prix d'un panier doit être strictement supérieur à 0 et le stock ne peut pas être négatif.",
+      "entityId": "ent_panier",
+      "id": "rule_panier_prix_positif",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_panier_taille",
+          "operator": "in",
+          "value": [
+            "petit",
+            "moyen",
+            "familial"
+          ]
+        }
+      ],
+      "description": "La taille du panier doit appartenir aux tailles proposées.",
+      "entityId": "ent_panier",
+      "id": "rule_panier_taille_valide",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_adresse_code_postal",
+          "operator": "matches",
+          "value": "^[0-9]{5}$"
+        },
+        {
+          "fieldId": "fld_adresse_ville",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_adresse_rue",
+          "operator": "required"
+        }
+      ],
+      "description": "Le code postal doit être composé de 5 chiffres et la ville est obligatoire.",
+      "entityId": "ent_adresse_livraison",
+      "id": "rule_adresse_code_postal",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_commande_quantite",
+          "operator": "gte",
+          "value": 1
+        },
+        {
+          "fieldId": "fld_commande_quantite",
+          "operator": "lte",
+          "value": 5
+        },
+        {
+          "fieldId": "fld_commande_montant_total",
+          "operator": "gt",
+          "value": 0
+        },
+        {
+          "fieldId": "fld_commande_adresse",
+          "operator": "required"
+        }
+      ],
+      "description": "Une commande porte sur au moins un panier, au maximum cinq, avec un montant total positif et une adresse de livraison.",
+      "entityId": "ent_commande",
+      "id": "rule_commande_quantite_montant",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_commande_statut",
+          "operator": "in",
+          "value": [
+            "en_attente",
+            "payee"
+          ]
+        }
+      ],
+      "description": "Une commande ne peut être modifiée ou annulée par le client que tant qu'elle n'est pas en livraison ou livrée.",
+      "entityId": "ent_commande",
+      "id": "rule_commande_modifiable",
+      "kind": "authorization"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_commande_statut_paiement",
+          "operator": "in",
+          "value": [
+            "autorise",
+            "capture"
+          ]
+        },
+        {
+          "fieldId": "fld_commande_creneau_livraison",
+          "operator": "required"
+        }
+      ],
+      "description": "Le passage en préparation exige un paiement capturé.",
+      "entityId": "ent_commande",
+      "id": "rule_commande_paiement_avant_preparation",
+      "kind": "validation"
+    }
+  ],
+  "screens": [
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_entete_semaine",
+          "props": [
+            {
+              "key": "title",
+              "value": "Les paniers de la semaine"
+            },
+            {
+              "key": "subtitle",
+              "value": "Fruits et légumes de saison, livrés près de chez vous"
+            },
+            {
+              "key": "showBackButton",
+              "value": false
+            }
+          ]
+        },
+        {
+          "blockType": "filter_bar",
+          "entityId": "ent_panier",
+          "id": "blk_filtre_taille",
+          "props": [
+            {
+              "key": "fieldId",
+              "value": "fld_panier_taille"
+            },
+            {
+              "key": "options",
+              "value": [
+                "petit",
+                "moyen",
+                "familial"
+              ]
+            },
+            {
+              "key": "optionLabels",
+              "value": [
+                "Petit",
+                "Moyen",
+                "Familial"
+              ]
+            },
+            {
+              "key": "allowClear",
+              "value": true
+            },
+            {
+              "key": "label",
+              "value": "Filtrer par taille"
+            }
+          ]
+        },
+        {
+          "blockType": "entity_list",
+          "entityId": "ent_panier",
+          "id": "blk_liste_paniers",
+          "props": [
+            {
+              "key": "layout",
+              "value": "card_grid"
+            },
+            {
+              "key": "columns",
+              "value": 2
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_panier_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_panier_taille"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_panier_photo"
+            },
+            {
+              "key": "priceFieldId",
+              "value": "fld_panier_prix"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_panier_stock"
+            },
+            {
+              "key": "filterFieldId",
+              "value": "fld_panier_disponible"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_panier_semaine_debut"
+            },
+            {
+              "key": "sortDirection",
+              "value": "desc"
+            },
+            {
+              "key": "pullToRefresh",
+              "value": true
+            },
+            {
+              "key": "targetScreenId",
+              "value": "scr_panier_detail"
+            },
+            {
+              "key": "offlineCache",
+              "value": true
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_liste_paniers_vide",
+          "props": [
+            {
+              "key": "title",
+              "value": "Aucun panier disponible cette semaine"
+            },
+            {
+              "key": "message",
+              "value": "Revenez lundi prochain pour découvrir la nouvelle sélection de saison."
+            },
+            {
+              "key": "icon",
+              "value": "basket"
+            }
+          ]
+        },
+        {
+          "blockType": "link_row",
+          "id": "blk_lien_adresse",
+          "props": [
+            {
+              "key": "label",
+              "value": "Gérer mon adresse de livraison"
+            },
+            {
+              "key": "targetScreenId",
+              "value": "scr_livraison"
+            },
+            {
+              "key": "icon",
+              "value": "map_pin"
+            }
+          ]
+        }
+      ],
+      "id": "scr_paniers_semaine",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Paniers de la semaine"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "image_hero",
+          "entityId": "ent_panier",
+          "id": "blk_detail_photo",
+          "props": [
+            {
+              "key": "fieldId",
+              "value": "fld_panier_photo"
+            },
+            {
+              "key": "aspectRatio",
+              "value": "4:3"
+            },
+            {
+              "key": "placeholder",
+              "value": "basket"
+            }
+          ]
+        },
+        {
+          "blockType": "entity_detail",
+          "entityId": "ent_panier",
+          "id": "blk_detail_infos",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_panier_nom"
+            },
+            {
+              "key": "descriptionFieldId",
+              "value": "fld_panier_description"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_panier_taille",
+                "fld_panier_prix",
+                "fld_panier_semaine_debut",
+                "fld_panier_stock"
+              ]
+            },
+            {
+              "key": "fieldLabels",
+              "value": [
+                "Taille",
+                "Prix",
+                "Semaine du",
+                "Paniers restants"
+              ]
+            }
+          ]
+        },
+        {
+          "blockType": "content_list",
+          "entityId": "ent_panier",
+          "id": "blk_detail_contenu",
+          "props": [
+            {
+              "key": "fieldId",
+              "value": "fld_panier_contenu"
+            },
+            {
+              "key": "title",
+              "value": "Contenu du panier"
+            },
+            {
+              "key": "emptyText",
+              "value": "Le contenu détaillé sera publié en début de semaine."
+            }
+          ]
+        },
+        {
+          "blockType": "share_button",
+          "id": "blk_detail_partage",
+          "props": [
+            {
+              "key": "label",
+              "value": "Partager ce panier"
+            },
+            {
+              "key": "messageTemplate",
+              "value": "Regarde ce panier de fruits et légumes : {nom}"
+            }
+          ]
+        },
+        {
+          "blockType": "stepper",
+          "entityId": "ent_commande",
+          "id": "blk_detail_quantite",
+          "props": [
+            {
+              "key": "label",
+              "value": "Quantité"
+            },
+            {
+              "key": "min",
+              "value": 1
+            },
+            {
+              "key": "max",
+              "value": 5
+            },
+            {
+              "key": "defaultValue",
+              "value": 1
+            },
+            {
+              "key": "fieldId",
+              "value": "fld_commande_quantite"
+            }
+          ]
+        },
+        {
+          "blockType": "primary_button",
+          "entityId": "ent_panier",
+          "id": "blk_detail_cta_commander",
+          "props": [
+            {
+              "key": "label",
+              "value": "Commander ce panier"
+            },
+            {
+              "key": "targetScreenId",
+              "value": "scr_commande"
+            },
+            {
+              "key": "disabledWhenFieldId",
+              "value": "fld_panier_disponible"
+            },
+            {
+              "key": "disabledMessage",
+              "value": "Ce panier n'est plus disponible cette semaine."
+            }
+          ]
+        }
+      ],
+      "id": "scr_panier_detail",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Détail du panier"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "order_summary",
+          "entityId": "ent_commande",
+          "id": "blk_commande_recap",
+          "props": [
+            {
+              "key": "panierFieldId",
+              "value": "fld_commande_panier"
+            },
+            {
+              "key": "quantiteFieldId",
+              "value": "fld_commande_quantite"
+            },
+            {
+              "key": "montantFieldId",
+              "value": "fld_commande_montant_total"
+            },
+            {
+              "key": "computeSlotId",
+              "value": "slot_calcul_montant_commande"
+            },
+            {
+              "key": "title",
+              "value": "Récapitulatif de la commande"
+            }
+          ]
+        },
+        {
+          "blockType": "address_picker",
+          "entityId": "ent_commande",
+          "id": "blk_commande_adresse_selection",
+          "props": [
+            {
+              "key": "fieldId",
+              "value": "fld_commande_adresse"
+            },
+            {
+              "key": "label",
+              "value": "Adresse de livraison"
+            },
+            {
+              "key": "manageScreenId",
+              "value": "scr_livraison"
+            },
+            {
+              "key": "required",
+              "value": true
+            }
+          ]
+        },
+        {
+          "blockType": "datetime_picker",
+          "entityId": "ent_commande",
+          "id": "blk_commande_creneau",
+          "props": [
+            {
+              "key": "fieldId",
+              "value": "fld_commande_creneau_livraison"
+            },
+            {
+              "key": "label",
+              "value": "Créneau de livraison"
+            },
+            {
+              "key": "formatSlotId",
+              "value": "slot_format_creneau_livraison"
+            },
+            {
+              "key": "minLeadHours",
+              "value": 24
+            },
+            {
+              "key": "required",
+              "value": true
+            }
+          ]
+        },
+        {
+          "blockType": "text_area",
+          "entityId": "ent_commande",
+          "id": "blk_commande_note",
+          "props": [
+            {
+              "key": "fieldId",
+              "value": "fld_commande_note"
+            },
+            {
+              "key": "label",
+              "value": "Note pour le livreur"
+            },
+            {
+              "key": "placeholder",
+              "value": "Ex. : laisser le panier chez le voisin"
+            },
+            {
+              "key": "maxLength",
+              "value": 300
+            }
+          ]
+        },
+        {
+          "blockType": "payment_form",
+          "entityId": "ent_commande",
+          "id": "blk_commande_paiement_carte",
+          "props": [
+            {
+              "key": "provider",
+              "value": "psp"
+            },
+            {
+              "key": "methods",
+              "value": [
+                "card"
+              ]
+            },
+            {
+              "key": "amountFieldId",
+              "value": "fld_commande_montant_total"
+            },
+            {
+              "key": "statusFieldId",
+              "value": "fld_commande_statut_paiement"
+            },
+            {
+              "key": "title",
+              "value": "Paiement par carte bancaire"
+            },
+            {
+              "key": "legalNotice",
+              "value": "Paiement sécurisé. Aucune donnée de carte n'est stockée dans l'application."
+            }
+          ]
+        },
+        {
+          "blockType": "primary_button",
+          "entityId": "ent_commande",
+          "id": "blk_commande_valider",
+          "props": [
+            {
+              "key": "label",
+              "value": "Payer et valider la commande"
+            },
+            {
+              "key": "actionKind",
+              "value": "submit_order"
+            },
+            {
+              "key": "successMessage",
+              "value": "Commande confirmée, vous recevrez une notification à la livraison."
+            },
+            {
+              "key": "errorMessage",
+              "value": "Le paiement n'a pas abouti. Merci de réessayer."
+            }
+          ]
+        },
+        {
+          "blockType": "status_timeline",
+          "entityId": "ent_commande",
+          "id": "blk_commande_suivi",
+          "props": [
+            {
+              "key": "fieldId",
+              "value": "fld_commande_statut"
+            },
+            {
+              "key": "steps",
+              "value": [
+                "en_attente",
+                "payee",
+                "preparee",
+                "en_livraison",
+                "livree"
+              ]
+            },
+            {
+              "key": "stepLabels",
+              "value": [
+                "En attente",
+                "Payée",
+                "Préparée",
+                "En livraison",
+                "Livrée"
+              ]
+            },
+            {
+              "key": "referenceFieldId",
+              "value": "fld_commande_reference"
+            }
+          ]
+        },
+        {
+          "blockType": "notice",
+          "id": "blk_commande_alerte_notif",
+          "props": [
+            {
+              "key": "tone",
+              "value": "info"
+            },
+            {
+              "key": "message",
+              "value": "Activez les notifications pour être prévenu dès que votre panier est livré."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Activer les notifications"
+            }
+          ]
+        }
+      ],
+      "id": "scr_commande",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Commande et paiement"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "map_view",
+          "entityId": "ent_adresse_livraison",
+          "id": "blk_livraison_carte",
+          "props": [
+            {
+              "key": "latitudeFieldId",
+              "value": "fld_adresse_latitude"
+            },
+            {
+              "key": "longitudeFieldId",
+              "value": "fld_adresse_longitude"
+            },
+            {
+              "key": "initialZoom",
+              "value": 14
+            },
+            {
+              "key": "showUserLocation",
+              "value": true
+            },
+            {
+              "key": "draggablePin",
+              "value": true
+            },
+            {
+              "key": "height",
+              "value": 220
+            }
+          ]
+        },
+        {
+          "blockType": "secondary_button",
+          "entityId": "ent_adresse_livraison",
+          "id": "blk_livraison_position_actuelle",
+          "props": [
+            {
+              "key": "label",
+              "value": "Utiliser ma position actuelle"
+            },
+            {
+              "key": "icon",
+              "value": "crosshair"
+            },
+            {
+              "key": "targetLatitudeFieldId",
+              "value": "fld_adresse_latitude"
+            },
+            {
+              "key": "targetLongitudeFieldId",
+              "value": "fld_adresse_longitude"
+            },
+            {
+              "key": "permissionRationale",
+              "value": "Votre position sert uniquement à pré-remplir et vérifier votre adresse de livraison."
+            }
+          ]
+        },
+        {
+          "blockType": "entity_form",
+          "entityId": "ent_adresse_livraison",
+          "id": "blk_livraison_formulaire",
+          "props": [
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_adresse_libelle",
+                "fld_adresse_rue",
+                "fld_adresse_complement",
+                "fld_adresse_code_postal",
+                "fld_adresse_ville",
+                "fld_adresse_instructions",
+                "fld_adresse_par_defaut"
+              ]
+            },
+            {
+              "key": "fieldLabels",
+              "value": [
+                "Libellé (Maison, Bureau…)",
+                "Rue et numéro",
+                "Complément d'adresse",
+                "Code postal",
+                "Ville",
+                "Instructions de livraison",
+                "Définir comme adresse par défaut"
+              ]
+            },
+            {
+              "key": "validationRuleId",
+              "value": "rule_adresse_code_postal"
+            },
+            {
+              "key": "submitLabel",
+              "value": "Enregistrer l'adresse"
+            }
+          ]
+        },
+        {
+          "blockType": "notice",
+          "id": "blk_livraison_zone_verification",
+          "props": [
+            {
+              "key": "tone",
+              "value": "warning"
+            },
+            {
+              "key": "message",
+              "value": "Nous vérifions que votre adresse se situe dans une zone desservie."
+            },
+            {
+              "key": "computeSlotId",
+              "value": "slot_verification_zone_livraison"
+            }
+          ]
+        },
+        {
+          "blockType": "link_row",
+          "id": "blk_livraison_retour_commande",
+          "props": [
+            {
+              "key": "label",
+              "value": "Revenir à ma commande"
+            },
+            {
+              "key": "targetScreenId",
+              "value": "scr_commande"
+            },
+            {
+              "key": "icon",
+              "value": "arrow_left"
+            }
+          ]
+        }
+      ],
+      "id": "scr_livraison",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Adresse de livraison"
+        }
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "allowedImports": [],
+      "description": "Calcule le montant total d'une commande à partir du prix unitaire du panier, de la quantité et des frais de livraison (livraison offerte au-delà d'un seuil).",
+      "id": "slot_calcul_montant_commande",
+      "inputs": [
+        {
+          "name": "prixUnitaire",
+          "type": "decimal"
+        },
+        {
+          "name": "quantite",
+          "type": "number"
+        },
+        {
+          "name": "fraisLivraison",
+          "type": "decimal"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "montantTotal",
+          "type": "decimal"
+        },
+        {
+          "name": "livraisonOfferte",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "allowedImports": [],
+      "description": "Vérifie que la position ou le code postal saisi appartient à une zone de livraison desservie et renvoie un message explicatif en français.",
+      "id": "slot_verification_zone_livraison",
+      "inputs": [
+        {
+          "name": "latitude",
+          "type": "decimal"
+        },
+        {
+          "name": "longitude",
+          "type": "decimal"
+        },
+        {
+          "name": "codePostal",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "zoneDesservie",
+          "type": "boolean"
+        },
+        {
+          "name": "message",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "allowedImports": [
+        "intl"
+      ],
+      "description": "Formate un créneau de livraison en libellé lisible en français (ex. « jeudi 12 juin, 17h-19h »).",
+      "id": "slot_format_creneau_livraison",
+      "inputs": [
+        {
+          "name": "creneau",
+          "type": "datetime"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "libelle",
+          "type": "string"
+        }
+      ]
+    }
+  ]
+}

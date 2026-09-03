@@ -1,0 +1,1460 @@
+{
+  "actions": [
+    {
+      "effect": {
+        "capability": "auth",
+        "kind": "capability",
+        "method": "restoreSession",
+        "params": [
+          {
+            "key": "allowAnonymous",
+            "value": true
+          }
+        ]
+      },
+      "id": "act_authentifier_utilisateur",
+      "name": "Authentifier l'utilisateur au démarrage",
+      "trigger": {
+        "event": "app_start",
+        "kind": "lifecycle"
+      }
+    },
+    {
+      "effect": {
+        "capability": "analytics",
+        "kind": "capability",
+        "method": "trackScreen",
+        "params": [
+          {
+            "key": "screen",
+            "value": "programmes"
+          },
+          {
+            "key": "section",
+            "value": "catalogue"
+          }
+        ]
+      },
+      "id": "act_suivre_ouverture_programmes",
+      "name": "Suivre l'ouverture du catalogue de programmes",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_programmes"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_abonnement"
+      },
+      "id": "act_ouvrir_abonnement",
+      "name": "Ouvrir l'écran d'abonnement",
+      "trigger": {
+        "blockId": "blk_programmes_cta_abonnement",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "offline_storage",
+        "kind": "capability",
+        "method": "prefetchAsset",
+        "params": [
+          {
+            "key": "collection",
+            "value": "programmes_video"
+          },
+          {
+            "key": "maxSizeMb",
+            "value": 600
+          },
+          {
+            "key": "requiresEntitlement",
+            "value": true
+          }
+        ]
+      },
+      "id": "act_lire_video_programme",
+      "name": "Lancer la vidéo du programme",
+      "trigger": {
+        "blockId": "blk_programme_detail_lire",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_seances"
+      },
+      "id": "act_planifier_seance",
+      "name": "Planifier une séance depuis un programme",
+      "trigger": {
+        "blockId": "blk_programme_detail_planifier",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_progression_hebdomadaire"
+      },
+      "id": "act_calculer_progression",
+      "name": "Calculer la progression hebdomadaire",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_seances"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_seance",
+        "kind": "mutation",
+        "operation": "create"
+      },
+      "id": "act_enregistrer_seance",
+      "name": "Enregistrer une nouvelle séance",
+      "trigger": {
+        "blockId": "blk_seances_form",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "push_notifications",
+        "kind": "capability",
+        "method": "scheduleLocalNotification",
+        "params": [
+          {
+            "key": "title",
+            "value": "Séance à venir"
+          },
+          {
+            "key": "body",
+            "value": "Votre séance d'entraînement commence bientôt. Prêt à vous dépasser ?"
+          },
+          {
+            "key": "offsetMinutes",
+            "value": -60
+          },
+          {
+            "key": "channel",
+            "value": "rappels_seances"
+          }
+        ]
+      },
+      "id": "act_rappel_seance_planifiee",
+      "name": "Programmer un rappel de séance",
+      "trigger": {
+        "entityId": "ent_seance",
+        "event": "created",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_statut_abonnement"
+      },
+      "id": "act_verifier_statut_abonnement",
+      "name": "Vérifier le statut de l'abonnement",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_abonnement"
+      }
+    },
+    {
+      "effect": {
+        "capability": "payments.iap",
+        "kind": "capability",
+        "method": "purchaseSubscription",
+        "params": [
+          {
+            "key": "productId",
+            "value": "coach_fit_studio_mensuel"
+          },
+          {
+            "key": "offerType",
+            "value": "mensuel"
+          }
+        ]
+      },
+      "id": "act_souscrire_abonnement",
+      "name": "Souscrire à l'abonnement mensuel",
+      "trigger": {
+        "blockId": "blk_abonnement_souscrire",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "payments.iap",
+        "kind": "capability",
+        "method": "restorePurchases",
+        "params": [
+          {
+            "key": "productId",
+            "value": "coach_fit_studio_mensuel"
+          }
+        ]
+      },
+      "id": "act_restaurer_achats",
+      "name": "Restaurer les achats intégrés",
+      "trigger": {
+        "blockId": "blk_abonnement_restaurer",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "offline_storage",
+        "kind": "capability",
+        "method": "put",
+        "params": [
+          {
+            "key": "collection",
+            "value": "abonnement"
+          },
+          {
+            "key": "encrypted",
+            "value": true
+          }
+        ]
+      },
+      "id": "act_maj_abonnement_local",
+      "name": "Mettre à jour l'abonnement local après achat",
+      "trigger": {
+        "entityId": "ent_abonnement",
+        "event": "updated",
+        "kind": "data"
+      }
+    }
+  ],
+  "airSchemaVersion": "1.0.0",
+  "app": {
+    "description": [
+      {
+        "locale": "fr",
+        "text": "Application de coaching sportif : abonnement mensuel intégré débloquant les programmes d'entraînement en vidéo et le suivi des séances réalisées."
+      }
+    ],
+    "locales": {
+      "appLocales": [
+        "fr"
+      ],
+      "contentLocales": [
+        "fr"
+      ],
+      "defaultAppLocale": "fr",
+      "rtlSupported": false,
+      "userLanguage": "fr"
+    },
+    "name": "Coach Fit Studio",
+    "slug": "coach-fit-studio"
+  },
+  "capabilities": [
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "methods",
+          "value": [
+            "email_otp",
+            "apple",
+            "google"
+          ]
+        },
+        {
+          "key": "accountDeletionEnabled",
+          "value": true
+        },
+        {
+          "key": "sessionPersistence",
+          "value": "secure_store"
+        }
+      ]
+    },
+    {
+      "capability": "payments.iap",
+      "config": [
+        {
+          "key": "productIds",
+          "value": [
+            "coach_fit_studio_mensuel"
+          ]
+        },
+        {
+          "key": "subscriptionGroup",
+          "value": "coach_fit_studio_acces"
+        },
+        {
+          "key": "restoreOnLaunch",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "collections",
+          "value": [
+            "programmes",
+            "seances",
+            "abonnement",
+            "programmes_video"
+          ]
+        },
+        {
+          "key": "maxCacheSizeMb",
+          "value": 800
+        },
+        {
+          "key": "encryptAtRest",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "channels",
+          "value": [
+            "rappels_seances",
+            "nouveautes_programmes"
+          ]
+        },
+        {
+          "key": "defaultChannel",
+          "value": "rappels_seances"
+        },
+        {
+          "key": "allowLocalScheduling",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "events",
+          "value": [
+            "screen_view",
+            "programme_ouvert",
+            "video_lancee",
+            "seance_enregistree",
+            "abonnement_souscrit"
+          ]
+        },
+        {
+          "key": "anonymizeIp",
+          "value": true
+        }
+      ]
+    }
+  ],
+  "compliance": {
+    "accountDeletionRequired": true,
+    "commerceClass": "digital",
+    "dataCollected": [
+      "contact_info",
+      "identifiers",
+      "usage_data",
+      "user_content",
+      "purchases",
+      "diagnostics"
+    ]
+  },
+  "datasets": [
+    {
+      "contentHash": "3f9a1c7d2b48e05f6a1d9c3e7b25f84a0d6c1e93b7a25f48c0d9e6137a4b28f5",
+      "entityId": "ent_programme",
+      "id": "data_programmes_initiaux",
+      "rowCount": 6
+    },
+    {
+      "contentHash": "8c4e1b90d7a35f26c8b0e491d3a67f52b19c0d84e7a63f150c92b8d41e70a3f6",
+      "entityId": "ent_seance",
+      "id": "data_seances_demo",
+      "rowCount": 4
+    }
+  ],
+  "design": {
+    "theme": "fitness_energy",
+    "tokensVersion": "1.0.0"
+  },
+  "entities": [
+    {
+      "fields": [
+        {
+          "id": "fld_programme_titre",
+          "name": "titre",
+          "required": true,
+          "type": "string",
+          "unique": true
+        },
+        {
+          "id": "fld_programme_resume",
+          "name": "resume",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "enumValues": [
+            "debutant",
+            "intermediaire",
+            "avance"
+          ],
+          "id": "fld_programme_niveau",
+          "name": "niveau",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_programme_duree_minutes",
+          "name": "duree_minutes",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "id": "fld_programme_nb_seances",
+          "name": "nb_seances",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "id": "fld_programme_video_url",
+          "name": "video_url",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "id": "fld_programme_couverture",
+          "name": "couverture",
+          "required": false,
+          "type": "asset"
+        },
+        {
+          "id": "fld_programme_premium",
+          "name": "premium",
+          "required": true,
+          "type": "boolean"
+        },
+        {
+          "id": "fld_programme_publie_le",
+          "name": "publie_le",
+          "required": false,
+          "type": "date"
+        }
+      ],
+      "id": "ent_programme",
+      "name": "programme"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_seance_programme",
+          "name": "programme",
+          "referencesEntityId": "ent_programme",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "id": "fld_seance_titre",
+          "name": "titre",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_seance_date",
+          "name": "date",
+          "required": true,
+          "type": "datetime"
+        },
+        {
+          "enumValues": [
+            "planifiee",
+            "realisee",
+            "annulee"
+          ],
+          "id": "fld_seance_statut",
+          "name": "statut",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_seance_duree_minutes",
+          "name": "duree_minutes",
+          "required": false,
+          "type": "number"
+        },
+        {
+          "id": "fld_seance_ressenti",
+          "name": "ressenti",
+          "required": false,
+          "type": "number"
+        },
+        {
+          "id": "fld_seance_notes",
+          "name": "notes",
+          "required": false,
+          "type": "text"
+        }
+      ],
+      "id": "ent_seance",
+      "name": "seance"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_abonnement_produit",
+          "name": "produit",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "enumValues": [
+            "mensuel"
+          ],
+          "id": "fld_abonnement_offre",
+          "name": "offre",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "enumValues": [
+            "essai",
+            "actif",
+            "expire",
+            "annule"
+          ],
+          "id": "fld_abonnement_statut",
+          "name": "statut",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_abonnement_debut_le",
+          "name": "debut_le",
+          "required": true,
+          "type": "date"
+        },
+        {
+          "id": "fld_abonnement_fin_le",
+          "name": "fin_le",
+          "required": false,
+          "type": "date"
+        },
+        {
+          "id": "fld_abonnement_renouvellement_auto",
+          "name": "renouvellement_auto",
+          "required": true,
+          "type": "boolean"
+        },
+        {
+          "id": "fld_abonnement_prix",
+          "name": "prix",
+          "required": false,
+          "type": "decimal"
+        }
+      ],
+      "id": "ent_abonnement",
+      "name": "abonnement"
+    }
+  ],
+  "expectedTests": [
+    {
+      "description": "Vérifie qu'un programme sans titre, avec un niveau inconnu ou une durée nulle/négative est rejeté par la validation (règle rule_programme_valide).",
+      "id": "test_rule_programme_valide",
+      "kind": "deterministic",
+      "targetId": "ent_programme"
+    },
+    {
+      "description": "Vérifie qu'une séance sans programme rattaché ou sans date est refusée et qu'un ressenti hors de l'intervalle 1-5 est invalide (règle rule_seance_valide).",
+      "id": "test_rule_seance_valide",
+      "kind": "deterministic",
+      "targetId": "ent_seance"
+    },
+    {
+      "description": "Vérifie qu'un abonnement doit porter un produit d'achat intégré, l'offre « mensuel » et une date de début renseignée (règle rule_abonnement_coherent).",
+      "id": "test_rule_abonnement_coherent",
+      "kind": "deterministic",
+      "targetId": "ent_abonnement"
+    },
+    {
+      "description": "Vérifie que l'accès aux programmes premium est autorisé uniquement pour un abonnement en essai ou actif, et refusé si expiré ou annulé (règle rule_acces_contenu_premium).",
+      "id": "test_rule_acces_contenu_premium",
+      "kind": "deterministic",
+      "targetId": "act_verifier_statut_abonnement"
+    },
+    {
+      "description": "Vérifie que les programmes non premium restent consultables sans abonnement actif depuis le catalogue (règle rule_programme_gratuit_visible).",
+      "id": "test_rule_programme_gratuit_visible",
+      "kind": "deterministic",
+      "targetId": "scr_programmes"
+    },
+    {
+      "description": "Vérifie que le slot slot_statut_abonnement déduit correctement le statut (essai, actif, expiré, annulé), la fin de période et le renouvellement automatique à partir d'un état d'achat intégré restauré.",
+      "id": "test_slot_statut_abonnement",
+      "kind": "deterministic",
+      "targetId": "act_verifier_statut_abonnement"
+    },
+    {
+      "description": "Vérifie l'agrégation du slot slot_progression_hebdomadaire : nombre de séances réalisées, minutes cumulées et pourcentage d'objectif atteint.",
+      "id": "test_slot_progression_hebdomadaire",
+      "kind": "deterministic",
+      "targetId": "act_calculer_progression"
+    },
+    {
+      "description": "Vérifie le formatage français des durées affichées dans les listes via slot_libelle_duree (ex. 65 → « 1 h 05 », 45 → « 45 min »).",
+      "id": "test_slot_libelle_duree",
+      "kind": "deterministic",
+      "targetId": "scr_programmes"
+    },
+    {
+      "description": "Contrat d'achat intégré : la souscription au produit mensuel renvoie un état d'entitlement exploitable et la validation de reçu est appelée sur le domaine autorisé.",
+      "id": "test_contract_iap_abonnement",
+      "kind": "contract",
+      "targetId": "act_souscrire_abonnement"
+    },
+    {
+      "description": "Contrat d'authentification : restauration de session au démarrage, connexion par email OTP/Apple/Google et disponibilité de la suppression de compte.",
+      "id": "test_contract_auth_session",
+      "kind": "contract",
+      "targetId": "act_authentifier_utilisateur"
+    },
+    {
+      "description": "Contrat de notifications : enregistrement de l'appareil et programmation d'un rappel local sur le canal « rappels_seances ».",
+      "id": "test_contract_push_rappels",
+      "kind": "contract",
+      "targetId": "act_rappel_seance_planifiee"
+    },
+    {
+      "description": "Contrat de stockage hors-ligne : écriture chiffrée de l'abonnement et respect de la limite de taille de cache configurée.",
+      "id": "test_contract_cache_local",
+      "kind": "contract",
+      "targetId": "act_maj_abonnement_local"
+    },
+    {
+      "description": "Parcours complet : depuis le catalogue, ouvrir l'écran d'abonnement, souscrire à l'offre mensuelle et constater le déblocage des programmes premium.",
+      "id": "test_e2e_souscription_abonnement",
+      "kind": "e2e",
+      "targetId": "act_souscrire_abonnement"
+    },
+    {
+      "description": "Sans abonnement actif, l'écran de détail affiche l'état verrouillé et la lecture vidéo redirige vers l'offre d'abonnement.",
+      "id": "test_e2e_lecture_video_verrouillee",
+      "kind": "e2e",
+      "targetId": "scr_programme_detail"
+    },
+    {
+      "description": "Parcours de suivi : enregistrer une séance depuis le formulaire, la retrouver dans l'historique et vérifier la programmation du rappel.",
+      "id": "test_e2e_enregistrer_seance",
+      "kind": "e2e",
+      "targetId": "act_enregistrer_seance"
+    },
+    {
+      "description": "Parcours de restauration : appuyer sur « Restaurer mes achats » recalcule le statut d'abonnement affiché sur l'écran dédié.",
+      "id": "test_e2e_restauration_achats",
+      "kind": "e2e",
+      "targetId": "scr_abonnement"
+    }
+  ],
+  "integrations": [
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "methods",
+          "value": [
+            "email_otp",
+            "apple",
+            "google"
+          ]
+        },
+        {
+          "key": "sessionPersistence",
+          "value": "secure_store"
+        },
+        {
+          "key": "accountDeletionEndpoint",
+          "value": "https://api.coachfitstudio.app/v1/compte/suppression"
+        },
+        {
+          "key": "sessionRefreshMinutes",
+          "value": 60
+        }
+      ],
+      "id": "intg_auth_identite",
+      "providerClass": "identity_provider"
+    },
+    {
+      "capability": "payments.iap",
+      "config": [
+        {
+          "key": "productIds",
+          "value": [
+            "coach_fit_studio_mensuel"
+          ]
+        },
+        {
+          "key": "subscriptionGroup",
+          "value": "coach_fit_studio_acces"
+        },
+        {
+          "key": "receiptValidationEndpoint",
+          "value": "https://api.coachfitstudio.app/v1/iap/validation"
+        },
+        {
+          "key": "restoreOnLaunch",
+          "value": true
+        },
+        {
+          "key": "sandboxMode",
+          "value": false
+        }
+      ],
+      "id": "intg_iap_boutique",
+      "providerClass": "app_store_billing"
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "channels",
+          "value": [
+            "rappels_seances",
+            "nouveautes_programmes"
+          ]
+        },
+        {
+          "key": "defaultChannel",
+          "value": "rappels_seances"
+        },
+        {
+          "key": "deviceRegistrationEndpoint",
+          "value": "https://api.coachfitstudio.app/v1/push/enregistrement"
+        }
+      ],
+      "id": "intg_push_rappels",
+      "providerClass": "push_gateway"
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "events",
+          "value": [
+            "screen_view",
+            "programme_ouvert",
+            "video_lancee",
+            "seance_enregistree",
+            "abonnement_souscrit"
+          ]
+        },
+        {
+          "key": "anonymizeIp",
+          "value": true
+        },
+        {
+          "key": "collectorEndpoint",
+          "value": "https://api.coachfitstudio.app/v1/analytics/evenements"
+        }
+      ],
+      "id": "intg_analytics_produit",
+      "providerClass": "product_analytics"
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "collections",
+          "value": [
+            "programmes",
+            "seances",
+            "abonnement",
+            "programmes_video"
+          ]
+        },
+        {
+          "key": "maxCacheSizeMb",
+          "value": 800
+        },
+        {
+          "key": "encryptAtRest",
+          "value": true
+        },
+        {
+          "key": "syncEndpoint",
+          "value": "https://api.coachfitstudio.app/v1/synchronisation"
+        }
+      ],
+      "id": "intg_cache_local",
+      "providerClass": "encrypted_local_store"
+    },
+    {
+      "config": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.coachfitstudio.app"
+        },
+        {
+          "key": "apiVersion",
+          "value": "v1"
+        },
+        {
+          "key": "timeoutMs",
+          "value": 15000
+        },
+        {
+          "key": "authScheme",
+          "value": "bearer_session"
+        }
+      ],
+      "id": "intg_api_backend",
+      "providerClass": "rest_backend"
+    }
+  ],
+  "native": {
+    "minAndroidSdk": 24,
+    "minIosVersion": "15.0"
+  },
+  "navigation": {
+    "entryScreenId": "scr_programmes",
+    "routes": [
+      {
+        "id": "nav_programmes",
+        "screenId": "scr_programmes",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Programmes"
+          }
+        ]
+      },
+      {
+        "id": "nav_programme_detail",
+        "screenId": "scr_programme_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Détail du programme"
+          }
+        ]
+      },
+      {
+        "id": "nav_seances",
+        "screenId": "scr_seances",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Mes séances"
+          }
+        ]
+      },
+      {
+        "id": "nav_abonnement",
+        "screenId": "scr_abonnement",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Abonnement"
+          }
+        ]
+      }
+    ]
+  },
+  "network": {
+    "allowedDomains": [
+      "api.coachfitstudio.app"
+    ],
+    "policy": "deny_by_default"
+  },
+  "permissions": [
+    {
+      "permission": "android.permission.POST_NOTIFICATIONS",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "Pour vous envoyer les rappels de vos séances planifiées et vous informer des nouveaux programmes vidéo publiés par votre coach."
+        }
+      ],
+      "requiredByCapability": "push_notifications"
+    }
+  ],
+  "projectId": "prj_coach_fit_studio",
+  "relations": [
+    {
+      "fromEntityId": "ent_programme",
+      "id": "rel_programme_seances",
+      "kind": "one_to_many",
+      "toEntityId": "ent_seance"
+    }
+  ],
+  "rules": [
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_programme_titre",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_programme_niveau",
+          "operator": "in",
+          "value": [
+            "debutant",
+            "intermediaire",
+            "avance"
+          ]
+        },
+        {
+          "fieldId": "fld_programme_duree_minutes",
+          "operator": "gt",
+          "value": 0
+        }
+      ],
+      "description": "Un programme doit avoir un titre, un niveau reconnu et une durée strictement positive.",
+      "entityId": "ent_programme",
+      "id": "rule_programme_valide",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_seance_programme",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_seance_date",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_seance_statut",
+          "operator": "in",
+          "value": [
+            "planifiee",
+            "realisee",
+            "annulee"
+          ]
+        },
+        {
+          "fieldId": "fld_seance_ressenti",
+          "operator": "gte",
+          "value": 1
+        },
+        {
+          "fieldId": "fld_seance_ressenti",
+          "operator": "lte",
+          "value": 5
+        }
+      ],
+      "description": "Une séance doit être rattachée à un programme, datée, avec un statut connu et un ressenti compris entre 1 et 5.",
+      "entityId": "ent_seance",
+      "id": "rule_seance_valide",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_abonnement_produit",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_abonnement_offre",
+          "operator": "eq",
+          "value": "mensuel"
+        },
+        {
+          "fieldId": "fld_abonnement_debut_le",
+          "operator": "required"
+        }
+      ],
+      "description": "Un abonnement doit référencer un produit d'achat intégré mensuel avec une date de début renseignée.",
+      "entityId": "ent_abonnement",
+      "id": "rule_abonnement_coherent",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_abonnement_statut",
+          "operator": "in",
+          "value": [
+            "essai",
+            "actif"
+          ]
+        }
+      ],
+      "description": "L'accès aux programmes vidéo premium exige un abonnement en cours (essai ou actif).",
+      "entityId": "ent_abonnement",
+      "id": "rule_acces_contenu_premium",
+      "kind": "authorization"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_programme_premium",
+          "operator": "eq",
+          "value": false
+        }
+      ],
+      "description": "Les programmes non premium restent consultables sans abonnement.",
+      "entityId": "ent_programme",
+      "id": "rule_programme_gratuit_visible",
+      "kind": "authorization"
+    }
+  ],
+  "screens": [
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_programmes_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes programmes d'entraînement"
+            },
+            {
+              "key": "subtitle",
+              "value": "Séances vidéo guidées par votre coach"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_programme",
+          "id": "blk_programmes_list",
+          "props": [
+            {
+              "key": "title",
+              "value": "Catalogue"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_programme_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_programme_resume"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_programme_duree_minutes"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_programme_niveau"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun programme disponible"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "De nouveaux programmes vidéo seront publiés très prochainement."
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_programmes_cta_abonnement",
+          "props": [
+            {
+              "key": "label",
+              "value": "Débloquer tous les programmes"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_abonnement"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ],
+      "id": "scr_programmes",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Programmes"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "detail_header",
+          "entityId": "ent_programme",
+          "id": "blk_programme_detail_header",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_programme_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_programme_resume"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_programme_duree_minutes"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_programme_niveau",
+                "fld_programme_premium"
+              ]
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_programme_detail_lire",
+          "props": [
+            {
+              "key": "label",
+              "value": "Lancer la vidéo"
+            },
+            {
+              "key": "actionId",
+              "value": "act_lire_video_programme"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_programme_detail_planifier",
+          "props": [
+            {
+              "key": "label",
+              "value": "Planifier une séance"
+            },
+            {
+              "key": "actionId",
+              "value": "act_planifier_seance"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_programme_detail_verrou",
+          "props": [
+            {
+              "key": "title",
+              "value": "Contenu réservé aux abonnés"
+            },
+            {
+              "key": "message",
+              "value": "Activez l'abonnement mensuel pour accéder à cette vidéo et au suivi complet."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Voir l'abonnement"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_abonnement"
+            }
+          ]
+        }
+      ],
+      "id": "scr_programme_detail",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Détail du programme"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_seances_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Suivi des séances"
+            },
+            {
+              "key": "subtitle",
+              "value": "Enregistrez vos entraînements et suivez votre progression"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_seance",
+          "id": "blk_seances_list",
+          "props": [
+            {
+              "key": "title",
+              "value": "Historique"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_seance_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_seance_date"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_seance_duree_minutes"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_seance_statut"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune séance enregistrée"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Ajoutez votre première séance pour démarrer le suivi."
+            }
+          ]
+        },
+        {
+          "blockType": "form",
+          "entityId": "ent_seance",
+          "id": "blk_seances_form",
+          "props": [
+            {
+              "key": "title",
+              "value": "Ajouter une séance"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_seance_programme",
+                "fld_seance_titre",
+                "fld_seance_date",
+                "fld_seance_statut",
+                "fld_seance_duree_minutes",
+                "fld_seance_ressenti",
+                "fld_seance_notes"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Enregistrer la séance"
+            }
+          ]
+        }
+      ],
+      "id": "scr_seances",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Mes séances"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_abonnement_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Abonnement mensuel"
+            },
+            {
+              "key": "subtitle",
+              "value": "Accès illimité aux programmes vidéo et au suivi des séances"
+            }
+          ]
+        },
+        {
+          "blockType": "detail_header",
+          "entityId": "ent_abonnement",
+          "id": "blk_abonnement_detail",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_abonnement_produit"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_abonnement_debut_le"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_abonnement_prix"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_abonnement_statut",
+                "fld_abonnement_renouvellement_auto"
+              ]
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_abonnement_souscrire",
+          "props": [
+            {
+              "key": "label",
+              "value": "S'abonner pour 1 mois"
+            },
+            {
+              "key": "actionId",
+              "value": "act_souscrire_abonnement"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_abonnement_restaurer",
+          "props": [
+            {
+              "key": "label",
+              "value": "Restaurer mes achats"
+            },
+            {
+              "key": "actionId",
+              "value": "act_restaurer_achats"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_abonnement_vide",
+          "props": [
+            {
+              "key": "title",
+              "value": "Aucun abonnement actif"
+            },
+            {
+              "key": "message",
+              "value": "Souscrivez à l'offre mensuelle pour débloquer l'ensemble des programmes."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Découvrir l'offre"
+            },
+            {
+              "key": "actionId",
+              "value": "act_souscrire_abonnement"
+            }
+          ]
+        }
+      ],
+      "id": "scr_abonnement",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Abonnement"
+        }
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "allowedImports": [],
+      "description": "Calcule le statut d'abonnement affichable (essai, actif, expiré, annulé) et la date de fin de période à partir de l'état d'achat intégré restauré.",
+      "id": "slot_statut_abonnement",
+      "inputs": [
+        {
+          "name": "achatIntegre",
+          "type": "json"
+        },
+        {
+          "name": "dateReference",
+          "type": "datetime"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "statut",
+          "type": "enum"
+        },
+        {
+          "name": "finPeriode",
+          "type": "date"
+        },
+        {
+          "name": "renouvellementAuto",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "allowedImports": [],
+      "description": "Agrège les séances réalisées de la semaine pour produire le nombre de séances, les minutes cumulées et le pourcentage d'objectif atteint.",
+      "id": "slot_progression_hebdomadaire",
+      "inputs": [
+        {
+          "name": "seances",
+          "type": "json"
+        },
+        {
+          "name": "objectifSeances",
+          "type": "number"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "seancesRealisees",
+          "type": "number"
+        },
+        {
+          "name": "minutesCumulees",
+          "type": "number"
+        },
+        {
+          "name": "pourcentageObjectif",
+          "type": "decimal"
+        }
+      ]
+    },
+    {
+      "allowedImports": [],
+      "description": "Formate une durée en minutes en libellé lisible en français (ex. « 1 h 05 ») pour les listes de programmes et de séances.",
+      "id": "slot_libelle_duree",
+      "inputs": [
+        {
+          "name": "dureeMinutes",
+          "type": "number"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "libelle",
+          "type": "string"
+        }
+      ]
+    }
+  ]
+}

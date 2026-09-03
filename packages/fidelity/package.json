@@ -1,0 +1,24 @@
+{
+  "name": "@deribfy/fidelity",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Gates de FIDELITE (PHASE 10B) — F1 : chaque `expectedTests` est confronte a l'etat REEL de sa cible ; F4 : chaque besoin de `intent` est satisfait par un noeud vivant ou declare inexprimable avec motif, jamais perdu. Fonction PURE : ni execution, ni compilation. N'etablit qu'une CONDITION NECESSAIRE.",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@deribfy/air-schema": "*",
+    "@deribfy/execution-contract": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "eslint": "^9.39.0",
+    "typescript": "^5",
+    "typescript-eslint": "^8.60.0",
+    "vitest": "^4.1.10"
+  }
+}

@@ -1,0 +1,5 @@
+{"etape":"create","sandboxId":"sb-JzpBowdg5nTCXcl7PmRxPa","coldStartMs":4075}
+{"etape":"exec","exitCode":0,"attendu":"deribfy-42","obtenu":"deribfy-42"}
+{"etape":"terminate","sandboxId":"sb-JzpBowdg5nTCXcl7PmRxPa"}
+{"etape":"preuve-absence","sandboxsActifs":0,"notreResiduel":false}
+{"VERDICT":"SMOKE MODAL : VERT","journal":"/Users/yia/Documents/woorri/benchmarks/sandbox-bench/results/modal-smoke-2026-08-28T16-29-20-219Z.jsonl"}

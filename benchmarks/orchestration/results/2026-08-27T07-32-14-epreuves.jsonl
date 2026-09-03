@@ -1,0 +1,25 @@
+{"t":"2026-08-27T07:32:17.247Z","officiel":true,"epreuve":"CAMPAGNE","event":"reset","vt_s":60}
+{"t":"2026-08-27T07:32:17.372Z","officiel":true,"epreuve":"E1-kill9","event":"isolation","queue_length":"0","workers_actifs":0}
+{"t":"2026-08-27T07:32:17.373Z","officiel":true,"epreuve":"E1-kill9","event":"debut"}
+{"t":"2026-08-27T07:33:19.483Z","officiel":true,"epreuve":"E1-kill9","event":"worker tue en pleine etape 3 (SIGKILL)"}
+{"t":"2026-08-27T07:35:52.128Z","officiel":true,"epreuve":"E1-kill9","event":"mesures","reexecutions_etape3":2,"artefacts":5,"dupliques":0}
+{"t":"2026-08-27T07:35:52.129Z","officiel":true,"epreuve":"E1-kill9","event":"REUSSIE"}
+{"t":"2026-08-27T07:35:52.518Z","officiel":true,"epreuve":"E2-orchestrateur","event":"isolation","queue_length":"0","workers_actifs":0}
+{"t":"2026-08-27T07:35:52.518Z","officiel":true,"epreuve":"E2-orchestrateur","event":"debut"}
+{"t":"2026-08-27T07:35:53.344Z","officiel":true,"epreuve":"E2-orchestrateur","event":"budget calcule","workers":2,"budget_s":471}
+{"t":"2026-08-27T07:41:34.345Z","officiel":true,"epreuve":"E2-orchestrateur","event":"mesures","jobs":6,"artefacts":30,"dupliques":0}
+{"t":"2026-08-27T07:41:34.347Z","officiel":true,"epreuve":"E2-orchestrateur","event":"REUSSIE"}
+{"t":"2026-08-27T07:41:35.114Z","officiel":true,"epreuve":"E3-annulation","event":"isolation","queue_length":"0","workers_actifs":0}
+{"t":"2026-08-27T07:41:35.115Z","officiel":true,"epreuve":"E3-annulation","event":"debut"}
+{"t":"2026-08-27T07:42:24.664Z","officiel":true,"epreuve":"E3-annulation","event":"mesures","status":"cancelled","etape3_executee":0}
+{"t":"2026-08-27T07:42:24.665Z","officiel":true,"epreuve":"E3-annulation","event":"REUSSIE"}
+{"t":"2026-08-27T07:42:24.977Z","officiel":true,"epreuve":"E4-retry-borne","event":"isolation","queue_length":"0","workers_actifs":0}
+{"t":"2026-08-27T07:42:24.978Z","officiel":true,"epreuve":"E4-retry-borne","event":"debut"}
+{"t":"2026-08-27T07:42:51.843Z","officiel":true,"epreuve":"E4-retry-borne","event":"mesures","tentatives_etape2":2}
+{"t":"2026-08-27T07:42:51.844Z","officiel":true,"epreuve":"E4-retry-borne","event":"REUSSIE"}
+{"t":"2026-08-27T07:42:52.135Z","officiel":true,"epreuve":"E5-durabilite","event":"isolation","queue_length":"0","workers_actifs":0}
+{"t":"2026-08-27T07:42:52.135Z","officiel":true,"epreuve":"E5-durabilite","event":"debut"}
+{"t":"2026-08-27T07:43:52.771Z","officiel":true,"epreuve":"E5-durabilite","event":"fenetre sans worker prouvee vide"}
+{"t":"2026-08-27T07:46:37.678Z","officiel":true,"epreuve":"E5-durabilite","event":"mesures","jobs":2,"dupliques":0}
+{"t":"2026-08-27T07:46:37.679Z","officiel":true,"epreuve":"E5-durabilite","event":"REUSSIE"}
+{"t":"2026-08-27T07:46:37.881Z","officiel":true,"epreuve":"SYNTHESE","event":"verdicts","verdicts":[{"nom":"E1-kill9","verdict":"REUSSIE"},{"nom":"E2-orchestrateur","verdict":"REUSSIE"},{"nom":"E3-annulation","verdict":"REUSSIE"},{"nom":"E4-retry-borne","verdict":"REUSSIE"},{"nom":"E5-durabilite","verdict":"REUSSIE"}],"journal":"/Users/yia/Documents/woorri/benchmarks/orchestration/results/2026-08-27T07-32-14-epreuves.jsonl"}

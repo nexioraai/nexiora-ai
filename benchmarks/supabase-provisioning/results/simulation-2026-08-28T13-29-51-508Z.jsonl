@@ -1,0 +1,11 @@
+{"mode":"SIMULATION","reseau":"AUCUN APPEL ÉMIS","protocole":"protocole.md"}
+{"parametres":{"projet":"supabase-provisioning-bench","region":"us-east-1","plafondUsd":0},"gardeFous":["plan Free vérifié par API AVANT création, sinon STOP","allowlist d'org (slug du fichier d'env)","DELETE limité au ref créé par CE run (nexiora-ai hors d'atteinte par construction)","teardown en finally + vérification 404 + relisting","timeout sondage 15 min","≥1,1 s entre appels Management API","aucun secret journalisé"]}
+{"etape":1,"appel":"GET /v1/organizations","facturable":false,"but":"vérifier slug d'org (allowlist) + PLAN FREE (sinon STOP avant toute création)"}
+{"etape":2,"appel":"POST /v1/projects","facturable":"0 $ SI plan Free (vérifié à l'étape 1) — SEUL appel créateur","but":"créer 'supabase-provisioning-bench' en us-east-1 ; t0 = envoi, t1 = acceptation ; relever X-RateLimit-*"}
+{"etape":3,"appel":"GET /v1/projects/{ref} (sondage ≤15 min, 1 appel/5 s)","facturable":false,"but":"t2 = ACTIVE_HEALTHY"}
+{"etape":4,"appel":"GET /v1/projects/{ref}/api-keys puis GET https://{ref}.supabase.co/rest/v1/","facturable":false,"but":"t3 = première réponse PostgREST servie (<500 avec clé anon)"}
+{"etape":5,"appel":"DELETE /v1/projects/{ref} (ref créé à l'étape 2 UNIQUEMENT)","facturable":false,"but":"t4 = teardown ; en FINALLY même si 3-4 échouent"}
+{"etape":6,"appel":"GET /v1/projects/{ref} (404 attendu) + GET /v1/projects (relisting)","facturable":false,"but":"preuve d'absence — teardown prouvé"}
+{"analyseFacturation":"Seule l'étape 2 crée une ressource. Sur plan Free (vérifié étape 1) : 0 $ — le projet occupe la place libre (1 seul actif : nexiora-ai) et est détruit en fin de run. Tout plan ≠ free ⇒ STOP avant l'étape 2."}
+{"preconditions":{"fichierEnv":"/Users/yia/.deribfy-supabase-bench.env","present":false,"permissions600":false,"tokenFourni":false,"orgSlugFourni":false}}
+{"verdictSimulation":"PRÉCONDITIONS INCOMPLÈTES — fournir le fichier d'env (mode 600) avant tout GO"}

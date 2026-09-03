@@ -1,0 +1,20 @@
+# V4 B-NAV — critère 5 : comportement back RÉEL (iOS).
+# Geste de retour par bord d'écran (interactive pop) : seul le geste natif
+# de la stack peut ramener scr_menu — un tapOn texte serait ambigu (le
+# libellé du bouton retour d'en-tête = titre de route, aussi présent sur
+# les boutons d'écran ; une PUSH satisferait le même assert qu'une POP).
+appId: ${APP_ID}
+---
+- launchApp
+- assertVisible:
+    id: "scr_menu"
+- tapOn:
+    id: "nav_to_scr_plat_detail"
+- assertVisible:
+    id: "scr_plat_detail"
+- swipe:
+    start: 1%, 50%
+    end: 90%, 50%
+    duration: 400
+- assertVisible:
+    id: "scr_menu"

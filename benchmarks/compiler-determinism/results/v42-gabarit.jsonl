@@ -1,0 +1,16 @@
+{"etape":"ci-A","lockfileIntact":true,"fileCount":22641,"treeRoot":"325daddfdae3491070dae20cad9565e6296d90149076b12c53bf2b4a2aaab675"}
+{"etape":"ci-B","lockfileIntact":true,"fileCount":22641,"treeRoot":"325daddfdae3491070dae20cad9565e6296d90149076b12c53bf2b4a2aaab675"}
+{"etape":"verdict-npmci","verdict":"ARBRES IDENTIQUES 2/2"}
+{"etape":"fumee-export","bundles":[{"plat":"ios","count":1},{"plat":"android","count":1}],"verdict":"EXPORT OK ios+android"}
+{"etape":"ci-A","lockfileIntact":true,"fileCount":22775,"treeRoot":"8a0d5204293a2b530ef620a2a22d2feb04e1448e720c2aef58824fa3f35c8fce"}
+{"etape":"ci-B","lockfileIntact":true,"fileCount":22775,"treeRoot":"8a0d5204293a2b530ef620a2a22d2feb04e1448e720c2aef58824fa3f35c8fce"}
+{"etape":"verdict-npmci","verdict":"ARBRES IDENTIQUES 2/2"}
+{"etape":"fumee-export","bundles":[{"plat":"ios","count":1},{"plat":"android","count":1}],"verdict":"EXPORT OK ios+android"}
+{"etape":"ci-A","lockfileIntact":true,"fileCount":22796,"treeRoot":"8c6fc8ebcba95a9cf55601ef5bf80a0bf42d271aab7d311b9009ec006776af46"}
+{"etape":"ci-B","lockfileIntact":true,"fileCount":22796,"treeRoot":"8c6fc8ebcba95a9cf55601ef5bf80a0bf42d271aab7d311b9009ec006776af46"}
+{"etape":"verdict-npmci","verdict":"ARBRES IDENTIQUES 2/2"}
+{"etape":"fumee-export","bundles":[{"plat":"ios","count":1},{"plat":"android","count":1}],"verdict":"EXPORT OK ios+android"}
+{"etape":"ci-A","lockfileIntact":true,"fileCount":22828,"treeRoot":"f2e03df01e475f98a488507fe98a3bc0d4548fe992b58d1441ce500509697c95"}
+{"etape":"ci-B","lockfileIntact":true,"fileCount":22828,"treeRoot":"f2e03df01e475f98a488507fe98a3bc0d4548fe992b58d1441ce500509697c95"}
+{"etape":"verdict-npmci","verdict":"ARBRES IDENTIQUES 2/2"}
+{"etape":"fumee-export","bundles":[{"plat":"ios","count":1},{"plat":"android","count":1}],"verdict":"EXPORT OK ios+android"}

@@ -1,0 +1,4 @@
+{"etape":"generation-lockfile","identiques":true,"sha256":"eb9ec6160b4ddade"}
+{"etape":"ci-A","lockfileIntact":true,"fileCount":19666,"treeRoot":"48d6849330ed8c3886c17f65bc7369aa071a43721ee711f655e9865b32e83705"}
+{"etape":"ci-B","lockfileIntact":true,"fileCount":19666,"treeRoot":"48d6849330ed8c3886c17f65bc7369aa071a43721ee711f655e9865b32e83705"}
+{"etape":"verdict","verdict":"ARBRES IDENTIQUES 2/2"}

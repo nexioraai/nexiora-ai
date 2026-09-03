@@ -1,0 +1,34 @@
+# GÉNÉRÉ DEPUIS L'AIR — rejeu RTL (rtlSupported=false).
+appId: com.deribfy.preview.maquis_express
+---
+- launchApp:
+    arguments:
+      forceRTL: true
+- assertVisible:
+    id: "scr_menu"
+- assertVisible:
+    id: "blk_menu_liste-row-ent_plat_row_1"
+- scrollUntilVisible:
+    element:
+      id: "blk_menu_bouton_commandes"
+    timeout: 60000
+    speed: 70
+- tapOn:
+    id: "blk_menu_bouton_commandes"
+- assertVisible:
+    id: "scr_commandes"
+- back
+- assertVisible:
+    id: "scr_menu"
+- scrollUntilVisible:
+    element:
+      id: "blk_menu_bouton_panier"
+    timeout: 60000
+    speed: 70
+- tapOn:
+    id: "blk_menu_bouton_panier"
+- assertVisible:
+    id: "scr_panier"
+- back
+- assertVisible:
+    id: "scr_menu"

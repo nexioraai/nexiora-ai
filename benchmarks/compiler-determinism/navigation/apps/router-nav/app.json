@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "bnav-router",
+    "slug": "bnav-router",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.deribfy.bnav.router"
+    },
+    "android": {
+      "package": "com.deribfy.bnav.router",
+      "predictiveBackGestureEnabled": false
+    },
+    "scheme": "bnav",
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}

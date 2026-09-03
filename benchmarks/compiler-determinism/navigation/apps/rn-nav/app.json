@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "bnav-rn",
+    "slug": "bnav-rn",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": { "supportsTablet": false, "bundleIdentifier": "com.deribfy.bnav.rn" },
+    "android": { "package": "com.deribfy.bnav.rn", "predictiveBackGestureEnabled": false }
+  }
+}

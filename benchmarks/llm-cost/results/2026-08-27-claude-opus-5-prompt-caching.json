@@ -1,0 +1,80 @@
+{
+  "date": "2026-08-27T06:13:51.673Z",
+  "synthese": {
+    "modele": "claude-opus-5",
+    "protocole": "docs/mobile-generation/benchmarks/couts-unitaires.md VOLET 1",
+    "prefixe_tokens_factures_baseline": 6866,
+    "cache_hit_prouve": false,
+    "cout_appel_sans_cache_usd": 0.03433,
+    "cout_appel_lecture_cache_usd_moyen": 0.030926,
+    "facteur_economie_entree": 1.11,
+    "cout_total_campagne_usd": 0.17
+  },
+  "runs": [
+    {
+      "label": "A-baseline-sans-cache",
+      "cached": false,
+      "latence_ms": 2009,
+      "usage": {
+        "input_tokens": 6866,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 0
+      },
+      "cout_usd": 0.03433,
+      "stop_reason": "refusal"
+    },
+    {
+      "label": "B-ecriture-cache",
+      "cached": true,
+      "latence_ms": 1622,
+      "usage": {
+        "input_tokens": 40,
+        "cache_creation_input_tokens": 6826,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 0
+      },
+      "cout_usd": 0.042862,
+      "stop_reason": "refusal"
+    },
+    {
+      "label": "C-lecture-cache",
+      "cached": true,
+      "latence_ms": 915,
+      "usage": {
+        "input_tokens": 37,
+        "cache_creation_input_tokens": 6826,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 0
+      },
+      "cout_usd": 0.042847,
+      "stop_reason": "refusal"
+    },
+    {
+      "label": "D-lecture-cache",
+      "cached": true,
+      "latence_ms": 4024,
+      "usage": {
+        "input_tokens": 44,
+        "cache_creation_input_tokens": 6826,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 138
+      },
+      "cout_usd": 0.046332,
+      "stop_reason": "end_turn"
+    },
+    {
+      "label": "E-lecture-cache",
+      "cached": true,
+      "latence_ms": 1001,
+      "usage": {
+        "input_tokens": 37,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 6826,
+        "output_tokens": 0
+      },
+      "cout_usd": 0.003598,
+      "stop_reason": "refusal"
+    }
+  ]
+}

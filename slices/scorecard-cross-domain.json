@@ -1,0 +1,180 @@
+{
+  "date": "2026-08-29",
+  "phase": 10,
+  "slices": [
+    {
+      "cle": "restaurant",
+      "famille": "commerce de proximité (famille du corpus)",
+      "ecrans": 4,
+      "entites": 3,
+      "actions": 17,
+      "slots": 5,
+      "capabilities": [
+        "auth",
+        "payments.psp",
+        "push_notifications",
+        "offline_storage",
+        "analytics"
+      ],
+      "providers": [
+        {
+          "providerClass": "analytics",
+          "provider": "posthog-react-native"
+        },
+        {
+          "providerClass": "auth",
+          "provider": "@supabase/supabase-js"
+        },
+        {
+          "providerClass": "offline_storage",
+          "provider": "expo-sqlite"
+        },
+        {
+          "providerClass": "payments_psp",
+          "provider": "@stripe/stripe-react-native"
+        },
+        {
+          "providerClass": "push_notifications",
+          "provider": "expo-notifications"
+        }
+      ],
+      "rootHash": "8da987ee01691540db4ee702e434c0704d5eae54c7d164c58a1569817e27800d",
+      "fichiers": 31,
+      "determinisme": "5/5",
+      "oracle": {
+        "passed": true,
+        "checks": 7
+      },
+      "apxx": [
+        {
+          "dimension": "A",
+          "etat": "conforme"
+        },
+        {
+          "dimension": "B",
+          "etat": "conforme"
+        },
+        {
+          "dimension": "C",
+          "etat": "conforme"
+        },
+        {
+          "dimension": "D",
+          "etat": "conforme"
+        },
+        {
+          "dimension": "E",
+          "etat": "conforme"
+        },
+        {
+          "dimension": "F",
+          "etat": "conforme"
+        },
+        {
+          "dimension": "G",
+          "etat": "conforme"
+        },
+        {
+          "dimension": "H",
+          "etat": "conforme"
+        }
+      ],
+      "silhouette": "b81507bafd0d8fe67816502aad549642bfa0cf3ade390a3aaccc0f1ec63db606",
+      "identiteVisuelle": "ed87b070c5d3f29977c7905cbc3b305061f5310a563806feb67ba981be98f1f0"
+    },
+    {
+      "cle": "conteneurs",
+      "famille": "logistique B2B (HORS-TEMPLATE, D-042)",
+      "ecrans": 4,
+      "entites": 3,
+      "actions": 16,
+      "slots": 4,
+      "capabilities": [
+        "auth",
+        "push_notifications",
+        "offline_storage",
+        "share",
+        "analytics"
+      ],
+      "providers": [
+        {
+          "providerClass": "analytics",
+          "provider": "posthog-react-native"
+        },
+        {
+          "providerClass": "auth",
+          "provider": "@supabase/supabase-js"
+        },
+        {
+          "providerClass": "backend_rest",
+          "provider": "supabase"
+        },
+        {
+          "providerClass": "offline_storage",
+          "provider": "expo-sqlite"
+        },
+        {
+          "providerClass": "push_notifications",
+          "provider": "expo-notifications"
+        },
+        {
+          "providerClass": "share",
+          "provider": "expo-sharing"
+        }
+      ],
+      "rootHash": "2482d93d976c95c0110245fcd8b8dae4397b3bc3cc78631c6ee5f1b78f5411a2",
+      "fichiers": 31,
+      "determinisme": "5/5",
+      "oracle": {
+        "passed": true,
+        "checks": 7
+      },
+      "apxx": [
+        {
+          "dimension": "A",
+          "etat": "conforme"
+        },
+        {
+          "dimension": "B",
+          "etat": "conforme"
+        },
+        {
+          "dimension": "C",
+          "etat": "conforme"
+        },
+        {
+          "dimension": "D",
+          "etat": "conforme"
+        },
+        {
+          "dimension": "E",
+          "etat": "conforme"
+        },
+        {
+          "dimension": "F",
+          "etat": "conforme"
+        },
+        {
+          "dimension": "G",
+          "etat": "conforme"
+        },
+        {
+          "dimension": "H",
+          "etat": "conforme"
+        }
+      ],
+      "silhouette": "5891205da3af0206ca1d9e954d458e3bebf2df9cd849a9f595abb46631ff02b0",
+      "identiteVisuelle": "3a2c148e9fd5dd4f973f276cd570704b4d9dbd8df107c2ed3ec8c0b50754ef78"
+    }
+  ],
+  "dimensionH": {
+    "verdict": "conforme",
+    "detail": "2 domaines · structure : 2 silhouettes distinctes, 0 collision(s) · visuel : 2 identité(s) pour 2 thème(s) déclaré(s)",
+    "collisions": [],
+    "identitesVisuelles": 2,
+    "themes": [
+      "maritime_logistics",
+      "warm_bistro"
+    ]
+  }
+}

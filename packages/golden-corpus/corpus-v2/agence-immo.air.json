@@ -1,0 +1,2034 @@
+{
+  "actions": [
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_annonces"
+      },
+      "id": "act_ouvrir_annonces",
+      "name": "Parcourir les annonces",
+      "trigger": {
+        "blockId": "blk_favoris_empty",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_filtre_annonces"
+      },
+      "id": "act_appliquer_filtres",
+      "name": "Appliquer les filtres prix et quartier",
+      "trigger": {
+        "blockId": "blk_annonces_btn_filtres",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_filtre_annonces"
+      },
+      "id": "act_reinitialiser_filtres",
+      "name": "Réinitialiser les filtres",
+      "trigger": {
+        "blockId": "blk_annonces_empty",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "maps",
+        "kind": "capability",
+        "method": "showMarkers",
+        "params": [
+          {
+            "key": "zoom",
+            "value": 13
+          },
+          {
+            "key": "clusterByQuartier",
+            "value": true
+          },
+          {
+            "key": "showUserLocation",
+            "value": true
+          }
+        ]
+      },
+      "id": "act_ouvrir_carte",
+      "name": "Afficher les biens sur la carte",
+      "trigger": {
+        "blockId": "blk_annonces_btn_carte",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_marqueurs_carte"
+      },
+      "id": "act_charger_marqueurs_carte",
+      "name": "Préparer les marqueurs cartographiques",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_bien_detail"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_resume_bien"
+      },
+      "id": "act_resume_bien",
+      "name": "Composer le résumé du bien",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_bien_detail"
+      }
+    },
+    {
+      "effect": {
+        "capability": "geolocation",
+        "kind": "capability",
+        "method": "getCurrentPosition",
+        "params": [
+          {
+            "key": "accuracy",
+            "value": "balanced"
+          },
+          {
+            "key": "timeoutMs",
+            "value": 8000
+          }
+        ]
+      },
+      "id": "act_localiser_utilisateur",
+      "name": "Localiser l'utilisateur pour trier par proximité",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_annonces"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_demande_visite"
+      },
+      "id": "act_ouvrir_demande_visite",
+      "name": "Ouvrir la demande de visite",
+      "trigger": {
+        "blockId": "blk_detail_btn_visite",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_creneaux_visite"
+      },
+      "id": "act_generer_creneaux",
+      "name": "Générer les créneaux de visite disponibles",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_demande_visite"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_demande_visite",
+        "kind": "mutation",
+        "operation": "create"
+      },
+      "id": "act_enregistrer_demande_visite",
+      "name": "Enregistrer la demande de visite",
+      "trigger": {
+        "blockId": "blk_visite_form",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "calendar",
+        "kind": "capability",
+        "method": "createEvent",
+        "params": [
+          {
+            "key": "titre",
+            "value": "Visite immobilière — Vitrine Immo"
+          },
+          {
+            "key": "rappelMinutesAvant",
+            "value": 60
+          },
+          {
+            "key": "dureeMinutesParDefaut",
+            "value": 45
+          }
+        ]
+      },
+      "id": "act_ajouter_creneau_agenda",
+      "name": "Ajouter le créneau à l'agenda de l'appareil",
+      "trigger": {
+        "blockId": "blk_visite_btn_agenda",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "push_notifications",
+        "kind": "capability",
+        "method": "scheduleLocalNotification",
+        "params": [
+          {
+            "key": "titre",
+            "value": "Demande de visite envoyée"
+          },
+          {
+            "key": "corps",
+            "value": "L'agence vous confirme votre créneau sous 24 heures."
+          },
+          {
+            "key": "delaiMinutes",
+            "value": 1
+          }
+        ]
+      },
+      "id": "act_notifier_demande_visite",
+      "name": "Notifier la prise en compte de la demande",
+      "trigger": {
+        "entityId": "ent_demande_visite",
+        "event": "created",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_favori",
+        "kind": "mutation",
+        "operation": "create"
+      },
+      "id": "act_ajouter_favori",
+      "name": "Ajouter le bien aux favoris",
+      "trigger": {
+        "blockId": "blk_detail_btn_favori",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_favori",
+        "kind": "mutation",
+        "operation": "delete"
+      },
+      "id": "act_retirer_favori",
+      "name": "Retirer le bien des favoris",
+      "trigger": {
+        "blockId": "blk_favoris_btn_retirer",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "offline_storage",
+        "kind": "capability",
+        "method": "saveRecord",
+        "params": [
+          {
+            "key": "collection",
+            "value": "favoris"
+          },
+          {
+            "key": "conserverPhotoPrincipale",
+            "value": true
+          }
+        ]
+      },
+      "id": "act_sync_favoris_hors_ligne",
+      "name": "Conserver les favoris hors connexion",
+      "trigger": {
+        "entityId": "ent_favori",
+        "event": "created",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "capability": "push_notifications",
+        "kind": "capability",
+        "method": "scheduleLocalNotification",
+        "params": [
+          {
+            "key": "titre",
+            "value": "Baisse de prix sur un favori"
+          },
+          {
+            "key": "corps",
+            "value": "Le prix d'un bien enregistré vient d'évoluer."
+          },
+          {
+            "key": "delaiMinutes",
+            "value": 0
+          }
+        ]
+      },
+      "id": "act_alerte_baisse_prix",
+      "name": "Alerter sur une baisse de prix d'un bien favori",
+      "trigger": {
+        "entityId": "ent_bien",
+        "event": "updated",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "capability": "share",
+        "kind": "capability",
+        "method": "shareLink",
+        "params": [
+          {
+            "key": "sujet",
+            "value": "Annonce Vitrine Immo"
+          },
+          {
+            "key": "inclureReference",
+            "value": true
+          }
+        ]
+      },
+      "id": "act_partager_bien",
+      "name": "Partager l'annonce",
+      "trigger": {
+        "blockId": "blk_detail_btn_partage",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "deep_links",
+        "kind": "capability",
+        "method": "handleIncomingLink",
+        "params": [
+          {
+            "key": "pattern",
+            "value": "/bien/:reference"
+          },
+          {
+            "key": "ecranCible",
+            "value": "scr_bien_detail"
+          }
+        ]
+      },
+      "id": "act_gerer_lien_profond",
+      "name": "Ouvrir une annonce depuis un lien partagé",
+      "trigger": {
+        "event": "app_start",
+        "kind": "lifecycle"
+      }
+    },
+    {
+      "effect": {
+        "capability": "auth",
+        "kind": "capability",
+        "method": "restoreSession",
+        "params": [
+          {
+            "key": "anonymeAutorise",
+            "value": true
+          }
+        ]
+      },
+      "id": "act_restaurer_session",
+      "name": "Restaurer la session utilisateur",
+      "trigger": {
+        "event": "app_start",
+        "kind": "lifecycle"
+      }
+    },
+    {
+      "effect": {
+        "capability": "analytics",
+        "kind": "capability",
+        "method": "trackEvent",
+        "params": [
+          {
+            "key": "event",
+            "value": "app_ouverte"
+          },
+          {
+            "key": "source",
+            "value": "lifecycle"
+          }
+        ]
+      },
+      "id": "act_suivi_ouverture_app",
+      "name": "Mesurer l'ouverture de l'application",
+      "trigger": {
+        "event": "app_start",
+        "kind": "lifecycle"
+      }
+    },
+    {
+      "effect": {
+        "capability": "analytics",
+        "kind": "capability",
+        "method": "trackEvent",
+        "params": [
+          {
+            "key": "event",
+            "value": "bien_consulte"
+          },
+          {
+            "key": "ecran",
+            "value": "scr_bien_detail"
+          }
+        ]
+      },
+      "id": "act_suivi_consultation_bien",
+      "name": "Mesurer la consultation d'une annonce",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_bien_detail"
+      }
+    }
+  ],
+  "airSchemaVersion": "1.0.0",
+  "app": {
+    "description": [
+      {
+        "locale": "fr-FR",
+        "text": "Application d'annonces immobilières : consultez les biens avec photos et carte, filtrez par prix et quartier, enregistrez vos favoris et demandez une visite sur un créneau. Aucune transaction n'est réalisée dans l'application."
+      }
+    ],
+    "locales": {
+      "appLocales": [
+        "fr-FR"
+      ],
+      "contentLocales": [
+        "fr-FR"
+      ],
+      "defaultAppLocale": "fr-FR",
+      "rtlSupported": false,
+      "userLanguage": "fr-FR"
+    },
+    "name": "Vitrine Immo",
+    "slug": "vitrine-immo"
+  },
+  "capabilities": [
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "methods",
+          "value": [
+            "email_otp",
+            "anonymous"
+          ]
+        },
+        {
+          "key": "accountDeletionEnabled",
+          "value": true
+        },
+        {
+          "key": "sessionDurationDays",
+          "value": 90
+        }
+      ]
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "anonymizeIp",
+          "value": true
+        },
+        {
+          "key": "collectDeviceModel",
+          "value": false
+        },
+        {
+          "key": "consentRequired",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "geolocation",
+      "config": [
+        {
+          "key": "accuracy",
+          "value": "balanced"
+        },
+        {
+          "key": "backgroundUpdates",
+          "value": false
+        }
+      ]
+    },
+    {
+      "capability": "maps",
+      "config": [
+        {
+          "key": "defaultZoom",
+          "value": 13
+        },
+        {
+          "key": "markerClustering",
+          "value": true
+        },
+        {
+          "key": "showUserLocation",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "calendar",
+      "config": [
+        {
+          "key": "defaultReminderMinutes",
+          "value": 60
+        },
+        {
+          "key": "writeEnabled",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "localSchedulingEnabled",
+          "value": true
+        },
+        {
+          "key": "topics",
+          "value": [
+            "alertes_prix",
+            "confirmations_visite"
+          ]
+        }
+      ]
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "collections",
+          "value": [
+            "biens",
+            "favoris"
+          ]
+        },
+        {
+          "key": "maxCacheMb",
+          "value": 80
+        },
+        {
+          "key": "encryptAtRest",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "share",
+      "config": [
+        {
+          "key": "channels",
+          "value": [
+            "system_sheet"
+          ]
+        }
+      ]
+    },
+    {
+      "capability": "deep_links",
+      "config": [
+        {
+          "key": "scheme",
+          "value": "vitrineimmo"
+        },
+        {
+          "key": "universalLinkDomain",
+          "value": "api.vitrine-immo.app"
+        }
+      ]
+    }
+  ],
+  "compliance": {
+    "accountDeletionRequired": true,
+    "commerceClass": "none",
+    "dataCollected": [
+      "contact_info",
+      "identifiers",
+      "usage_data",
+      "location",
+      "user_content"
+    ]
+  },
+  "datasets": [
+    {
+      "contentHash": "9f2c41b7ae08d5236c0be1794a53f8d1c6b0e4728af35519dd0c7a6b41e29358",
+      "entityId": "ent_bien",
+      "id": "data_biens_catalogue_initial",
+      "rowCount": 24
+    },
+    {
+      "contentHash": "3ad7c9051e6b48f2ba17d0c85e39472fa6d81b0c47e593628fd10ab4c72e5f61",
+      "entityId": "ent_demande_visite",
+      "id": "data_demandes_visite_exemples",
+      "rowCount": 6
+    },
+    {
+      "contentHash": "c418e07b52d9a63f10cb84e27d5f9a3b6108c47ed29b5f30a71c6de84b092f75",
+      "entityId": "ent_favori",
+      "id": "data_favoris_initiaux",
+      "rowCount": 3
+    }
+  ],
+  "design": {
+    "theme": "immo_clair",
+    "tokensVersion": "1.0.0"
+  },
+  "entities": [
+    {
+      "fields": [
+        {
+          "id": "fld_bien_reference",
+          "name": "reference",
+          "required": true,
+          "type": "string",
+          "unique": true
+        },
+        {
+          "id": "fld_bien_titre",
+          "name": "titre",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_bien_description",
+          "name": "description",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "enumValues": [
+            "appartement",
+            "maison",
+            "studio",
+            "loft",
+            "terrain",
+            "local_commercial"
+          ],
+          "id": "fld_bien_type",
+          "name": "type_bien",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "enumValues": [
+            "vente",
+            "location"
+          ],
+          "id": "fld_bien_transaction",
+          "name": "transaction",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_bien_prix",
+          "name": "prix",
+          "required": true,
+          "type": "decimal"
+        },
+        {
+          "id": "fld_bien_surface",
+          "name": "surface_m2",
+          "required": true,
+          "type": "decimal"
+        },
+        {
+          "id": "fld_bien_pieces",
+          "name": "nombre_pieces",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "enumValues": [
+            "centre_ville",
+            "vieille_ville",
+            "bords_de_seine",
+            "quartier_gare",
+            "parc_nord",
+            "coteaux_sud",
+            "zone_pavillonnaire"
+          ],
+          "id": "fld_bien_quartier",
+          "name": "quartier",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_bien_adresse",
+          "name": "adresse",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_bien_code_postal",
+          "name": "code_postal",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_bien_ville",
+          "name": "ville",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_bien_latitude",
+          "name": "latitude",
+          "required": true,
+          "type": "decimal"
+        },
+        {
+          "id": "fld_bien_longitude",
+          "name": "longitude",
+          "required": true,
+          "type": "decimal"
+        },
+        {
+          "id": "fld_bien_photo_principale",
+          "name": "photo_principale",
+          "required": false,
+          "type": "asset"
+        },
+        {
+          "id": "fld_bien_galerie",
+          "name": "galerie_photos",
+          "required": false,
+          "type": "json"
+        },
+        {
+          "enumValues": [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G",
+            "non_soumis"
+          ],
+          "id": "fld_bien_dpe",
+          "name": "classe_energie",
+          "required": false,
+          "type": "enum"
+        },
+        {
+          "enumValues": [
+            "disponible",
+            "sous_offre",
+            "archive"
+          ],
+          "id": "fld_bien_statut",
+          "name": "statut",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_bien_publie",
+          "name": "publie",
+          "required": true,
+          "type": "boolean"
+        },
+        {
+          "id": "fld_bien_date_publication",
+          "name": "date_publication",
+          "required": true,
+          "type": "date"
+        }
+      ],
+      "id": "ent_bien",
+      "name": "bien"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_dv_bien",
+          "name": "bien",
+          "referencesEntityId": "ent_bien",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "id": "fld_dv_nom",
+          "name": "nom_complet",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_dv_email",
+          "name": "email",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_dv_telephone",
+          "name": "telephone",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_dv_creneau_debut",
+          "name": "creneau_debut",
+          "required": true,
+          "type": "datetime"
+        },
+        {
+          "id": "fld_dv_creneau_fin",
+          "name": "creneau_fin",
+          "required": true,
+          "type": "datetime"
+        },
+        {
+          "id": "fld_dv_message",
+          "name": "message",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "enumValues": [
+            "telephone",
+            "email",
+            "sms"
+          ],
+          "id": "fld_dv_canal",
+          "name": "canal_preference",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "enumValues": [
+            "en_attente",
+            "confirmee",
+            "refusee",
+            "annulee"
+          ],
+          "id": "fld_dv_statut",
+          "name": "statut",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_dv_date_creation",
+          "name": "date_creation",
+          "required": true,
+          "type": "datetime"
+        },
+        {
+          "id": "fld_dv_consentement",
+          "name": "consentement_contact",
+          "required": true,
+          "type": "boolean"
+        }
+      ],
+      "id": "ent_demande_visite",
+      "name": "demande_visite"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_fav_bien",
+          "name": "bien",
+          "referencesEntityId": "ent_bien",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "id": "fld_fav_libelle",
+          "name": "libelle",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_fav_note",
+          "name": "note_personnelle",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "id": "fld_fav_date_ajout",
+          "name": "date_ajout",
+          "required": true,
+          "type": "datetime"
+        },
+        {
+          "id": "fld_fav_alerte_prix",
+          "name": "alerte_baisse_prix",
+          "required": true,
+          "type": "boolean"
+        }
+      ],
+      "id": "ent_favori",
+      "name": "favori"
+    }
+  ],
+  "expectedTests": [
+    {
+      "description": "L'action d'application des filtres ne retourne que les biens dont le prix est compris dans la fourchette demandée et dont le quartier, le type et le nombre de pièces correspondent aux critères, et le nombre de résultats est cohérent avec la liste filtrée.",
+      "id": "test_slot_filtre_prix_quartier",
+      "kind": "deterministic",
+      "targetId": "act_appliquer_filtres"
+    },
+    {
+      "description": "La préparation des marqueurs produit un marqueur par bien filtré, un prix formaté en euros et un centre de carte situé dans les bornes des coordonnées fournies.",
+      "id": "test_slot_marqueurs_carte",
+      "kind": "deterministic",
+      "targetId": "act_charger_marqueurs_carte"
+    },
+    {
+      "description": "La génération des créneaux exclut les créneaux déjà occupés et les jours de fermeture de l'agence, et renvoie un premier créneau disponible postérieur à la date de début fournie.",
+      "id": "test_slot_creneaux_visite",
+      "kind": "deterministic",
+      "targetId": "act_generer_creneaux"
+    },
+    {
+      "description": "La composition du résumé produit un titre et un sous-titre non vides intégrant surface, pièces, quartier et classe énergie, avec un prix formaté en euros.",
+      "id": "test_slot_resume_bien",
+      "kind": "deterministic",
+      "targetId": "act_resume_bien"
+    },
+    {
+      "description": "La validation d'un bien rejette un prix nul ou négatif et une surface inférieure à 5 m².",
+      "id": "test_rule_prix_surface_valides",
+      "kind": "deterministic",
+      "targetId": "ent_bien"
+    },
+    {
+      "description": "La liste des annonces exclut tout bien non publié ou au statut archivé.",
+      "id": "test_rule_publication_annonces",
+      "kind": "deterministic",
+      "targetId": "scr_annonces"
+    },
+    {
+      "description": "La validation d'une demande de visite refuse un email ou un téléphone mal formé, ou l'absence de consentement au recontact.",
+      "id": "test_rule_demande_visite_coordonnees",
+      "kind": "deterministic",
+      "targetId": "ent_demande_visite"
+    },
+    {
+      "description": "Depuis l'écran des annonces, l'application des filtres prix et quartier met à jour la liste, et l'ouverture d'un bien affiche l'en-tête de détail avec prix, adresse et badges.",
+      "id": "test_e2e_parcours_filtre_detail",
+      "kind": "e2e",
+      "targetId": "scr_annonces"
+    },
+    {
+      "description": "Depuis le détail d'un bien, l'utilisateur ouvre la demande de visite, choisit un créneau proposé, remplit ses coordonnées avec consentement et reçoit la confirmation d'envoi de la demande.",
+      "id": "test_e2e_demande_visite_creneau",
+      "kind": "e2e",
+      "targetId": "act_enregistrer_demande_visite"
+    },
+    {
+      "description": "L'ajout d'un bien aux favoris depuis le détail le fait apparaître dans l'écran Favoris, il reste consultable sans connexion réseau et son retrait vide la liste avec affichage de l'état vide.",
+      "id": "test_e2e_favoris_hors_ligne",
+      "kind": "e2e",
+      "targetId": "scr_favoris"
+    },
+    {
+      "description": "L'ouverture d'un lien universel /bien/:reference lance l'application sur l'écran de détail du bien correspondant.",
+      "id": "test_e2e_lien_profond_annonce",
+      "kind": "e2e",
+      "targetId": "act_gerer_lien_profond"
+    },
+    {
+      "description": "L'API backend expose les biens publiés avec tous les champs requis (référence, prix, surface, quartier, coordonnées, statut) et respecte les codes d'erreur et délais configurés.",
+      "id": "test_contract_api_biens",
+      "kind": "contract",
+      "targetId": "ent_bien"
+    },
+    {
+      "description": "Le fournisseur de tuiles cartographiques accepte le style, le zoom par défaut et le regroupement de marqueurs configurés et renvoie une carte affichable avec attribution.",
+      "id": "test_contract_carte_marqueurs",
+      "kind": "contract",
+      "targetId": "act_ouvrir_carte"
+    },
+    {
+      "description": "La passerelle de notifications enregistre le jeton de l'appareil et planifie une notification locale de confirmation de visite conformément aux sujets déclarés.",
+      "id": "test_contract_push_planification",
+      "kind": "contract",
+      "targetId": "act_notifier_demande_visite"
+    },
+    {
+      "description": "L'intégration calendrier crée un évènement de visite de 45 minutes avec rappel à 60 minutes uniquement après octroi des permissions de lecture et d'écriture.",
+      "id": "test_contract_calendrier_evenement",
+      "kind": "contract",
+      "targetId": "act_ajouter_creneau_agenda"
+    }
+  ],
+  "integrations": [
+    {
+      "config": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.vitrine-immo.app/v1"
+        },
+        {
+          "key": "authScheme",
+          "value": "bearer_session"
+        },
+        {
+          "key": "timeoutMs",
+          "value": 10000
+        },
+        {
+          "key": "retryCount",
+          "value": 2
+        },
+        {
+          "key": "resources",
+          "value": [
+            "biens",
+            "demandes_visite",
+            "favoris"
+          ]
+        }
+      ],
+      "id": "intg_api_backend",
+      "providerClass": "rest_api"
+    },
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "methods",
+          "value": [
+            "email_otp",
+            "anonymous"
+          ]
+        },
+        {
+          "key": "otpLength",
+          "value": 6
+        },
+        {
+          "key": "otpTtlSeconds",
+          "value": 600
+        },
+        {
+          "key": "sessionDurationDays",
+          "value": 90
+        },
+        {
+          "key": "accountDeletionEndpoint",
+          "value": "https://api.vitrine-immo.app/v1/compte/suppression"
+        }
+      ],
+      "id": "intg_auth_email_otp",
+      "providerClass": "managed_auth"
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "ingestionEndpoint",
+          "value": "https://api.vitrine-immo.app/v1/analytics/events"
+        },
+        {
+          "key": "consentRequired",
+          "value": true
+        },
+        {
+          "key": "anonymizeIp",
+          "value": true
+        },
+        {
+          "key": "collectDeviceModel",
+          "value": false
+        },
+        {
+          "key": "events",
+          "value": [
+            "app_ouverte",
+            "bien_consulte",
+            "filtres_appliques",
+            "favori_ajoute",
+            "demande_visite_envoyee"
+          ]
+        }
+      ],
+      "id": "intg_analytics_produit",
+      "providerClass": "product_analytics"
+    },
+    {
+      "capability": "maps",
+      "config": [
+        {
+          "key": "tileStyle",
+          "value": "immo_clair"
+        },
+        {
+          "key": "defaultZoom",
+          "value": 13
+        },
+        {
+          "key": "markerClustering",
+          "value": true
+        },
+        {
+          "key": "attributionRequired",
+          "value": true
+        }
+      ],
+      "id": "intg_cartographie",
+      "providerClass": "map_tiles"
+    },
+    {
+      "capability": "geolocation",
+      "config": [
+        {
+          "key": "accuracy",
+          "value": "balanced"
+        },
+        {
+          "key": "timeoutMs",
+          "value": 8000
+        },
+        {
+          "key": "backgroundUpdates",
+          "value": false
+        }
+      ],
+      "id": "intg_geolocalisation_appareil",
+      "providerClass": "device_location"
+    },
+    {
+      "capability": "calendar",
+      "config": [
+        {
+          "key": "defaultReminderMinutes",
+          "value": 60
+        },
+        {
+          "key": "defaultDurationMinutes",
+          "value": 45
+        },
+        {
+          "key": "writeEnabled",
+          "value": true
+        }
+      ],
+      "id": "intg_calendrier_appareil",
+      "providerClass": "device_calendar"
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "registrationEndpoint",
+          "value": "https://api.vitrine-immo.app/v1/push/tokens"
+        },
+        {
+          "key": "localSchedulingEnabled",
+          "value": true
+        },
+        {
+          "key": "topics",
+          "value": [
+            "alertes_prix",
+            "confirmations_visite"
+          ]
+        }
+      ],
+      "id": "intg_push_gateway",
+      "providerClass": "push_gateway"
+    },
+    {
+      "capability": "deep_links",
+      "config": [
+        {
+          "key": "scheme",
+          "value": "vitrineimmo"
+        },
+        {
+          "key": "universalLinkDomain",
+          "value": "api.vitrine-immo.app"
+        },
+        {
+          "key": "patterns",
+          "value": [
+            "/bien/:reference",
+            "/favoris"
+          ]
+        }
+      ],
+      "id": "intg_liens_profonds",
+      "providerClass": "universal_links"
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "collections",
+          "value": [
+            "biens",
+            "favoris"
+          ]
+        },
+        {
+          "key": "maxCacheMb",
+          "value": 80
+        },
+        {
+          "key": "encryptAtRest",
+          "value": true
+        },
+        {
+          "key": "evictionPolicy",
+          "value": "lru"
+        }
+      ],
+      "id": "intg_stockage_hors_ligne",
+      "providerClass": "local_store"
+    },
+    {
+      "capability": "share",
+      "config": [
+        {
+          "key": "channels",
+          "value": [
+            "system_sheet"
+          ]
+        },
+        {
+          "key": "linkBase",
+          "value": "https://api.vitrine-immo.app/bien"
+        }
+      ],
+      "id": "intg_partage_systeme",
+      "providerClass": "system_share"
+    }
+  ],
+  "native": {
+    "minAndroidSdk": 26,
+    "minIosVersion": "16.0"
+  },
+  "navigation": {
+    "entryScreenId": "scr_annonces",
+    "routes": [
+      {
+        "id": "nav_annonces",
+        "screenId": "scr_annonces",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Annonces"
+          }
+        ]
+      },
+      {
+        "id": "nav_bien_detail",
+        "screenId": "scr_bien_detail",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Détail du bien"
+          }
+        ]
+      },
+      {
+        "id": "nav_demande_visite",
+        "screenId": "scr_demande_visite",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Demande de visite"
+          }
+        ]
+      },
+      {
+        "id": "nav_favoris",
+        "screenId": "scr_favoris",
+        "title": [
+          {
+            "locale": "fr-FR",
+            "text": "Favoris"
+          }
+        ]
+      }
+    ]
+  },
+  "network": {
+    "allowedDomains": [
+      "api.vitrine-immo.app"
+    ],
+    "policy": "deny_by_default"
+  },
+  "permissions": [
+    {
+      "permission": "NSLocationWhenInUseUsageDescription",
+      "platform": "ios",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "Votre position sert à afficher les biens proches de vous sur la carte et à trier les annonces par proximité."
+        }
+      ],
+      "requiredByCapability": "geolocation"
+    },
+    {
+      "permission": "android.permission.ACCESS_FINE_LOCATION",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "Votre position sert à afficher les biens proches de vous sur la carte et à trier les annonces par proximité."
+        }
+      ],
+      "requiredByCapability": "geolocation"
+    },
+    {
+      "permission": "NSCalendarsFullAccessUsageDescription",
+      "platform": "ios",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "L'accès au calendrier permet d'ajouter le créneau de visite demandé à votre agenda."
+        }
+      ],
+      "requiredByCapability": "calendar"
+    },
+    {
+      "permission": "android.permission.READ_CALENDAR",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "La lecture du calendrier permet de vérifier votre disponibilité avant d'enregistrer un créneau de visite."
+        }
+      ],
+      "requiredByCapability": "calendar"
+    },
+    {
+      "permission": "android.permission.WRITE_CALENDAR",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "L'écriture dans le calendrier permet d'ajouter le créneau de visite confirmé à votre agenda."
+        }
+      ],
+      "requiredByCapability": "calendar"
+    },
+    {
+      "permission": "android.permission.POST_NOTIFICATIONS",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr-FR",
+          "text": "Les notifications servent à confirmer vos demandes de visite et à vous signaler une baisse de prix sur un bien favori."
+        }
+      ],
+      "requiredByCapability": "push_notifications"
+    }
+  ],
+  "projectId": "prj_agence_immo_annonces",
+  "relations": [
+    {
+      "fromEntityId": "ent_bien",
+      "id": "rel_bien_demandes",
+      "kind": "one_to_many",
+      "toEntityId": "ent_demande_visite"
+    },
+    {
+      "fromEntityId": "ent_bien",
+      "id": "rel_bien_favoris",
+      "kind": "one_to_many",
+      "toEntityId": "ent_favori"
+    }
+  ],
+  "rules": [
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_bien_prix",
+          "operator": "gt",
+          "value": 0
+        },
+        {
+          "fieldId": "fld_bien_surface",
+          "operator": "gte",
+          "value": 5
+        }
+      ],
+      "description": "Le prix d'un bien doit être strictement supérieur à 0 et la surface d'au moins 5 m².",
+      "entityId": "ent_bien",
+      "id": "rule_bien_prix_positif",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_bien_latitude",
+          "operator": "gte",
+          "value": -90
+        },
+        {
+          "fieldId": "fld_bien_latitude",
+          "operator": "lte",
+          "value": 90
+        },
+        {
+          "fieldId": "fld_bien_longitude",
+          "operator": "gte",
+          "value": -180
+        },
+        {
+          "fieldId": "fld_bien_longitude",
+          "operator": "lte",
+          "value": 180
+        },
+        {
+          "fieldId": "fld_bien_quartier",
+          "operator": "required"
+        }
+      ],
+      "description": "Les coordonnées de géolocalisation doivent être renseignées et rester dans les bornes valides pour l'affichage sur la carte.",
+      "entityId": "ent_bien",
+      "id": "rule_bien_localisation_valide",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_bien_publie",
+          "operator": "eq",
+          "value": true
+        },
+        {
+          "fieldId": "fld_bien_statut",
+          "operator": "neq",
+          "value": "archive"
+        }
+      ],
+      "description": "Seul un bien publié et non archivé peut apparaître dans la liste des annonces.",
+      "entityId": "ent_bien",
+      "id": "rule_bien_publication",
+      "kind": "authorization"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_dv_email",
+          "operator": "matches",
+          "value": "^[^@\\s]+@[^@\\s]+\\.[A-Za-z]{2,}$"
+        },
+        {
+          "fieldId": "fld_dv_telephone",
+          "operator": "matches",
+          "value": "^(\\+33|0)[1-9](\\s?\\d{2}){4}$"
+        },
+        {
+          "fieldId": "fld_dv_consentement",
+          "operator": "eq",
+          "value": true
+        },
+        {
+          "fieldId": "fld_dv_nom",
+          "operator": "required"
+        }
+      ],
+      "description": "Une demande de visite exige un email valide, un téléphone au format français et le consentement au recontact.",
+      "entityId": "ent_demande_visite",
+      "id": "rule_demande_visite_coordonnees",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_dv_creneau_debut",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_dv_creneau_fin",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_dv_statut",
+          "operator": "in",
+          "value": [
+            "en_attente",
+            "annulee"
+          ]
+        }
+      ],
+      "description": "Le créneau demandé doit être complet et son statut initial limité aux valeurs autorisées côté application.",
+      "entityId": "ent_demande_visite",
+      "id": "rule_demande_visite_creneau",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_fav_bien",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_fav_libelle",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_fav_date_ajout",
+          "operator": "required"
+        }
+      ],
+      "description": "Un favori doit toujours référencer un bien existant et porter un libellé lisible.",
+      "entityId": "ent_favori",
+      "id": "rule_favori_unicite",
+      "kind": "validation"
+    }
+  ],
+  "screens": [
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_annonces_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Nos biens à la vente et à la location"
+            },
+            {
+              "key": "subtitle",
+              "value": "Filtrez par prix, quartier et type de bien"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_annonces_btn_filtres",
+          "props": [
+            {
+              "key": "label",
+              "value": "Filtrer les annonces"
+            },
+            {
+              "key": "actionId",
+              "value": "act_appliquer_filtres"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_annonces_btn_carte",
+          "props": [
+            {
+              "key": "label",
+              "value": "Voir sur la carte"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_carte"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_bien",
+          "id": "blk_annonces_liste",
+          "props": [
+            {
+              "key": "title",
+              "value": "Biens disponibles"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_bien_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_bien_quartier"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_bien_prix"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_bien_transaction"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun bien ne correspond"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Élargissez votre fourchette de prix ou choisissez un autre quartier."
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_annonces_empty",
+          "props": [
+            {
+              "key": "title",
+              "value": "Aucune annonce à afficher"
+            },
+            {
+              "key": "message",
+              "value": "Réinitialisez vos filtres pour retrouver l'ensemble du catalogue de l'agence."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Réinitialiser les filtres"
+            },
+            {
+              "key": "actionId",
+              "value": "act_reinitialiser_filtres"
+            }
+          ]
+        }
+      ],
+      "id": "scr_annonces",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Annonces"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "detail_header",
+          "entityId": "ent_bien",
+          "id": "blk_detail_entete",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_bien_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_bien_adresse"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_bien_prix"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_bien_statut",
+                "fld_bien_type",
+                "fld_bien_dpe"
+              ]
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_detail_btn_carte",
+          "props": [
+            {
+              "key": "label",
+              "value": "Localiser sur la carte"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_carte"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_detail_btn_visite",
+          "props": [
+            {
+              "key": "label",
+              "value": "Demander une visite"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_demande_visite"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_detail_btn_favori",
+          "props": [
+            {
+              "key": "label",
+              "value": "Ajouter aux favoris"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ajouter_favori"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_detail_btn_partage",
+          "props": [
+            {
+              "key": "label",
+              "value": "Partager cette annonce"
+            },
+            {
+              "key": "actionId",
+              "value": "act_partager_bien"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ],
+      "id": "scr_bien_detail",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Détail du bien"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_visite_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Réserver un créneau de visite"
+            },
+            {
+              "key": "subtitle",
+              "value": "Un conseiller de l'agence vous confirme le rendez-vous sous 24 heures. Aucun paiement n'est demandé."
+            }
+          ]
+        },
+        {
+          "blockType": "form",
+          "entityId": "ent_demande_visite",
+          "id": "blk_visite_form",
+          "props": [
+            {
+              "key": "title",
+              "value": "Vos coordonnées et votre créneau"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_dv_bien",
+                "fld_dv_nom",
+                "fld_dv_email",
+                "fld_dv_telephone",
+                "fld_dv_creneau_debut",
+                "fld_dv_creneau_fin",
+                "fld_dv_canal",
+                "fld_dv_message",
+                "fld_dv_consentement"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Envoyer ma demande"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_visite_btn_agenda",
+          "props": [
+            {
+              "key": "label",
+              "value": "Ajouter le créneau à mon agenda"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ajouter_creneau_agenda"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ],
+      "id": "scr_demande_visite",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Demande de visite"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_favoris_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes favoris"
+            },
+            {
+              "key": "subtitle",
+              "value": "Retrouvez hors connexion les biens que vous avez enregistrés"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_favori",
+          "id": "blk_favoris_liste",
+          "props": [
+            {
+              "key": "title",
+              "value": "Biens enregistrés"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_fav_libelle"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_fav_note"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_fav_date_ajout"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_fav_alerte_prix"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun favori enregistré"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Touchez « Ajouter aux favoris » depuis une annonce pour la retrouver ici."
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_favoris_btn_retirer",
+          "props": [
+            {
+              "key": "label",
+              "value": "Retirer des favoris"
+            },
+            {
+              "key": "actionId",
+              "value": "act_retirer_favori"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_favoris_empty",
+          "props": [
+            {
+              "key": "title",
+              "value": "Votre liste est vide"
+            },
+            {
+              "key": "message",
+              "value": "Parcourez les annonces de l'agence et enregistrez les biens qui vous intéressent."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Parcourir les annonces"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_annonces"
+            }
+          ]
+        }
+      ],
+      "id": "scr_favoris",
+      "title": [
+        {
+          "locale": "fr-FR",
+          "text": "Favoris"
+        }
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "allowedImports": [],
+      "description": "Filtre et trie la liste des annonces selon la fourchette de prix, le quartier, le type de bien et le nombre de pièces choisis par l'utilisateur.",
+      "id": "slot_filtre_annonces",
+      "inputs": [
+        {
+          "name": "biens",
+          "type": "json"
+        },
+        {
+          "name": "prixMin",
+          "type": "decimal"
+        },
+        {
+          "name": "prixMax",
+          "type": "decimal"
+        },
+        {
+          "name": "quartier",
+          "type": "enum"
+        },
+        {
+          "name": "typeBien",
+          "type": "enum"
+        },
+        {
+          "name": "piecesMin",
+          "type": "number"
+        },
+        {
+          "name": "tri",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "biensFiltres",
+          "type": "json"
+        },
+        {
+          "name": "nombreResultats",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "allowedImports": [
+        "dart:math",
+        "package:intl/intl.dart"
+      ],
+      "description": "Transforme les biens filtrés en marqueurs cartographiques regroupés par quartier, avec libellé de prix formaté en euros.",
+      "id": "slot_marqueurs_carte",
+      "inputs": [
+        {
+          "name": "biensFiltres",
+          "type": "json"
+        },
+        {
+          "name": "zoom",
+          "type": "number"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "marqueurs",
+          "type": "json"
+        },
+        {
+          "name": "centre",
+          "type": "json"
+        }
+      ]
+    },
+    {
+      "allowedImports": [
+        "package:intl/intl.dart"
+      ],
+      "description": "Génère les créneaux de visite proposés pour un bien sur les quatorze jours à venir, en excluant les créneaux déjà réservés et les jours de fermeture de l'agence.",
+      "id": "slot_creneaux_visite",
+      "inputs": [
+        {
+          "name": "bienId",
+          "type": "reference"
+        },
+        {
+          "name": "dateDebut",
+          "type": "date"
+        },
+        {
+          "name": "creneauxOccupes",
+          "type": "json"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "creneauxDisponibles",
+          "type": "json"
+        },
+        {
+          "name": "premierCreneau",
+          "type": "datetime"
+        }
+      ]
+    },
+    {
+      "allowedImports": [
+        "package:intl/intl.dart"
+      ],
+      "description": "Compose le résumé lisible d'un bien (prix formaté, surface, pièces, quartier, classe énergie) affiché en tête de l'écran de détail.",
+      "id": "slot_resume_bien",
+      "inputs": [
+        {
+          "name": "bien",
+          "type": "json"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "titreResume",
+          "type": "string"
+        },
+        {
+          "name": "sousTitreResume",
+          "type": "string"
+        },
+        {
+          "name": "prixFormate",
+          "type": "string"
+        }
+      ]
+    }
+  ]
+}

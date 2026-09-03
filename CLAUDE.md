@@ -263,3 +263,93 @@ Les zones non demandées doivent rester inchangées.
   - vérifications exécutées ;
   - résultat ;
   - éventuels risques ou éléments non vérifiés.
+
+---
+
+## Protocole de référence ELITE 2027 A+ — RÈGLE PERMANENTE
+
+Le PROTOCOLE DE PREUVE qui certifie le chantier possède sa propre source de
+vérité, versionnée et SÉPARÉE :
+
+`docs/elite-protocol/`
+(README.md · REFERENCE_PROTOCOL_ELITE_2027.md · CHANGELOG.md · registers/)
+
+1. Toute session travaillant sur le PROTOCOLE commence par
+   `docs/elite-protocol/README.md`, qui porte la SESSION CONTINUITY RULE.
+2. Ce dossier est PARALLÈLE à `docs/mobile-generation/`, jamais subordonné :
+   le protocole doit rester indépendant de ce qu'il certifie. Les périmètres
+   ne se recouvrent pas — `docs/mobile-generation/` porte le CHANTIER (plan,
+   architecture, roadmap, statut, décisions) ; `docs/elite-protocol/` porte
+   le PROTOCOLE qui l'évalue.
+3. Le protocole n'a AUCUNE autorité pour modifier la ROADMAP ni une décision
+   du chantier : il les évalue. Toute évolution du chantier reste régie par
+   la règle 3 ci-dessous et par D-017.
+4. DEUX COLLISIONS DE VOCABULAIRE, à ne jamais confondre :
+   - « PREMIUM / ELITE 2027 A++ » (deux plus) = exigence de QUALITE PRODUIT,
+     grille des 8 dimensions, D-039 — définie dans docs/mobile-generation/ ;
+   - « ELITE 2027 A+ » (un plus) = standard du PROTOCOLE DE PREUVE ;
+   - « Guardian » désigne le LIVE APP GUARDIAN (ARCHITECTURE §26, Phase 13).
+     Le rôle de conformité du protocole s'appelle MOTEUR DE CONFORMITE.
+5. Statut au 2026-08-30 : PROTOCOLE NON CERTIFIE, ACCORD TECHNIQUE : NON.
+   Ne jamais convertir ce statut en PASS sans les preuves exigees.
+
+## Chantier Mobile Generation — RÈGLE PERMANENTE
+
+Le chantier de génération d'applications mobiles natives possède une
+SOURCE DE VÉRITÉ PERMANENTE, versionnée dans le repository :
+
+`docs/mobile-generation/`
+(MASTER_PLAN.md · ARCHITECTURE.md · ROADMAP.md · STATUS.md · DECISIONS.md · CHANGELOG.md)
+
+Règles obligatoires :
+
+1. Toute session consacrée à ce chantier COMMENCE par lire, dans l'ordre :
+   MASTER_PLAN.md, ARCHITECTURE.md, ROADMAP.md, STATUS.md — puis
+   DECISIONS.md si nécessaire. Ensuite seulement, travailler.
+2. STATUS.md doit refléter l'état RÉEL du chantier : le mettre à jour après
+   chaque étape significative et avant la fin de toute session de travail.
+3. Le plan est FIGÉ. Aucune décision architecturale figée ne se modifie
+   silencieusement. Toute proposition d'évolution est soumise explicitement
+   (problème · solution actuelle · alternative · démonstration technique ·
+   conséquences), attend une validation explicite, puis est consignée dans
+   DECISIONS.md avant toute modification du plan.
+4. Aucune étape de ROADMAP.md n'est marquée TERMINÉE sans vérification
+   objective de ses critères de sortie. Aucun saut de phase silencieux :
+   une étape jugée inutile est signalée, argumentée, et attend validation.
+5. La mémoire d'une conversation ne constitue JAMAIS la source de vérité du
+   projet — seul le repository fait foi. Une nouvelle session doit pouvoir
+   reprendre le chantier en lisant uniquement `docs/mobile-generation/`.
+6. **Progression (D-017)** : ROADMAP.md est la référence d'ordre STRICTE —
+   n'anticiper, n'inventer, ne sauter ni commencer aucune étape non
+   autorisée, quelle qu'en soit la provenance (propriétaire, Claude Code,
+   assistant tiers — contester explicitement toute proposition
+   hors-ROADMAP). Tout rapport important et toute fin d'étape affichent le
+   bloc PROGRESSION GLOBALE (phases · terminé · en cours · prérequis des
+   étapes bloquées · prochaine étape EXACTEMENT autorisée · interdits du
+   moment), vérifié contre l'état réel du dépôt ; chaque fin d'étape
+   énonce : terminé / où / prochaine étape exacte / prérequis /
+   exécutable ou bloquée. Détail : MASTER_PLAN.md §5.
+7bis. **Protocole de preuve (D-018)** : niveaux de preuve jamais confondus
+   (hypothèse → observation → corrélation → cause probable → cause
+   confirmée → correction proposée/testée/validée → non-régression →
+   validation finale) ; diagnostic avant correction ; simulation ≠
+   validation réelle (elle valide moteur/gardes, jamais le vrai modèle) ;
+   « résolu » exige vérification indépendante + critères ROADMAP ; preuve
+   contraire ⇒ abandon immédiat de l'hypothèse ; incertitude énoncée
+   explicitement ; dépense API : option la moins chère d'abord +
+   autorisation ; jamais fermer une étape pour finir. **Standard 100 %** :
+   trois états seuls (🟢 PROUVÉ / 🔴 RÉFUTÉ / 🟠 NON DÉTERMINÉ) ;
+   vocabulaire de conjecture interdit hors section « HYPOTHÈSES NON
+   PROUVÉES » ; une simulation ne prouve que ce qu'elle simule ; chercher
+   à DÉTRUIRE ses hypothèses, pas à les confirmer. Détail :
+   DECISIONS.md D-018.
+7. **Pilotage opérationnel (complément D-017)** : Claude Code pilote
+   l'exécution du plan — croiser ROADMAP/MASTER_PLAN/STATUS/DECISIONS et
+   l'état réel, déterminer soi-même la prochaine étape autorisée et
+   l'EXÉCUTER si elle est exécutable ; jamais d'attente passive ni de
+   demande de choix que la ROADMAP détermine déjà. Solliciter le
+   propriétaire UNIQUEMENT pour un vrai prérequis externe (étape bloquée
+   précisée, après vérification qu'aucune autre action autorisée n'est
+   disponible) ou une vraie décision propriétaire. Plusieurs chemins
+   autorisés → brève présentation + recommandation technique. Détail :
+   MASTER_PLAN.md §5.

@@ -1,0 +1,269 @@
+// RUNTIME COPIÉ (compilateur 4.3, D-026 Option C) — pont UNIQUE et TESTÉ
+// entre les données canoniques d'écran (modules .data générés) et les
+// contrats des Smart Blocks gelés. Les écrans générés restent du code
+// STRUCTUREL lisible (séquence de blocs explicite, points d'insertion de
+// slots) ; toute la logique de correspondance vit ici, écrite une fois.
+// F3 : AUCUN texte naturel dans ce module — tous les libellés viennent des
+// données AIR ; les erreurs internes sont des codes.
+// Effets d'actions en v1 compilateur : `navigate` est câblé ; les effets
+// `capability`/`mutation`/`slot` sont des non-opérations STRUCTURÉES
+// (implémentations : Phases 5+/9 — lecture consignée D-028).
+import { useMemo, useState } from "react";
+import { useNavigation } from "@react-navigation/native";
+import {
+  ButtonBlock,
+  DetailHeaderBlock,
+  EmptyStateBlock,
+  FormBlock,
+  HeaderBlock,
+  ListBlock,
+} from "../blocks/components";
+import type { FormFieldSpec, ListItemData } from "../blocks/contracts";
+import { useDataProvider } from "./data-provider";
+
+export interface AirEffectData {
+  kind: "navigate" | "capability" | "mutation" | "slot";
+  screenId?: string;
+}
+
+export interface AirBlockVisibility {
+  kind: "entity_empty" | "entity_not_empty";
+  entityId: string;
+}
+
+export interface AirBlockInstanceData {
+  id: string;
+  blockType: string;
+  entityId?: string;
+  /** Condition de rendu (AIR 1.1.0) — absente = bloc toujours visible. */
+  visibleWhen?: AirBlockVisibility;
+  props: Readonly<Record<string, unknown>>;
+}
+
+export interface AirFieldData {
+  id: string;
+  name: string;
+  type: string;
+}
+
+export interface AirScreenData {
+  screenId: string;
+  title: string;
+  blocks: readonly AirBlockInstanceData[];
+  actions: Readonly<Record<string, AirEffectData>>;
+  uiActionsByBlock: Readonly<Record<string, string>>;
+  entities: Readonly<Record<string, { fields: readonly AirFieldData[] }>>;
+}
+
+export interface AirScreenProps {
+  route?: { params?: { itemId?: string } };
+}
+
+interface BlockRef {
+  screen: AirScreenData;
+  blockId: string;
+}
+
+function block(screen: AirScreenData, blockId: string): AirBlockInstanceData {
+  const found = screen.blocks.find((b) => b.id === blockId);
+  if (found === undefined) throw new Error(`AIR_RUNTIME_BLOCK_MISSING:${blockId}`);
+  return found;
+}
+
+/**
+ * Visibilité conditionnelle d'un bloc (AIR 1.1.0, D-044).
+ *
+ * Défaut corrigé : un bloc `empty_state` était rendu SANS condition, donc un
+ * état vide s'affichait pendant que des données étaient présentes — observé
+ * sur appareil, mesuré sur 19 écrans. Le prédicat est évalué sur la MÊME
+ * source que la liste (le provider de données) : les deux ne peuvent donc
+ * pas se contredire.
+ */
+function useBlockVisible(screen: AirScreenData, blockId: string): boolean {
+  const provider = useDataProvider();
+  const condition = block(screen, blockId).visibleWhen;
+  if (condition === undefined) return true;
+  const vide = provider.listInstances(condition.entityId).length === 0;
+  return condition.kind === "entity_empty" ? vide : !vide;
+}
+
+function str(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+function useDispatch(screen: AirScreenData) {
+  const navigation = useNavigation();
+  return useMemo(
+    () => (actionId: string | undefined) => {
+      if (actionId === undefined) return;
+      const effect = screen.actions[actionId];
+      if (effect?.kind === "navigate" && effect.screenId !== undefined) {
+        (navigation.navigate as (name: string) => void)(effect.screenId);
+      }
+      // capability / mutation / slot : non-opération v1 (Phases 5+/9).
+    },
+    [navigation, screen],
+  );
+}
+
+function useItemNavigate(screen: AirScreenData, blockId: string) {
+  const navigation = useNavigation();
+  const actionId = screen.uiActionsByBlock[blockId];
+  const effect = actionId === undefined ? undefined : screen.actions[actionId];
+  return (itemId: string) => {
+    if (effect?.kind === "navigate" && effect.screenId !== undefined) {
+      (
+        navigation.navigate as (name: string, params: { itemId: string }) => void
+      )(effect.screenId, { itemId });
+    }
+  };
+}
+
+export function AirHeader({ screen, blockId }: BlockRef) {
+  const visible = useBlockVisible(screen, blockId);
+  const b = block(screen, blockId);
+  if (!visible) return null;
+  const title = str(b.props.title);
+  if (title === undefined) throw new Error(`AIR_RUNTIME_PROP_MISSING:${blockId}:title`);
+  return <HeaderBlock testID={b.id} title={title} subtitle={str(b.props.subtitle)} />;
+}
+
+export function AirButton({ screen, blockId }: BlockRef) {
+  const visible = useBlockVisible(screen, blockId);
+  const b = block(screen, blockId);
+  const dispatch = useDispatch(screen);
+  if (!visible) return null;
+  const label = str(b.props.label);
+  const actionId = str(b.props.actionId);
+  if (label === undefined || actionId === undefined) {
+    throw new Error(`AIR_RUNTIME_PROP_MISSING:${blockId}:label|actionId`);
+  }
+  const kind = b.props.kind === "ghost" ? ("ghost" as const) : ("primary" as const);
+  return (
+    <ButtonBlock testID={b.id} label={label} kind={kind} onPress={() => dispatch(actionId)} />
+  );
+}
+
+export function AirEmptyState({ screen, blockId }: BlockRef) {
+  const visible = useBlockVisible(screen, blockId);
+  const b = block(screen, blockId);
+  const dispatch = useDispatch(screen);
+  if (!visible) return null;
+  const title = str(b.props.title);
+  if (title === undefined) throw new Error(`AIR_RUNTIME_PROP_MISSING:${blockId}:title`);
+  const actionId = str(b.props.actionId);
+  return (
+    <EmptyStateBlock
+      testID={b.id}
+      title={title}
+      message={str(b.props.message)}
+      actionLabel={str(b.props.actionLabel)}
+      onAction={actionId === undefined ? undefined : () => dispatch(actionId)}
+    />
+  );
+}
+
+export function AirDetailHeader({
+  screen,
+  blockId,
+  itemId,
+}: BlockRef & { itemId?: string }) {
+  const visible = useBlockVisible(screen, blockId);
+  const b = block(screen, blockId);
+  const provider = useDataProvider();
+  if (!visible) return null;
+  if (b.entityId === undefined) throw new Error(`AIR_RUNTIME_ENTITY_MISSING:${blockId}`);
+  const instance = provider.getInstance(b.entityId, itemId);
+  const value = (fieldId: unknown): string =>
+    typeof fieldId === "string" ? (instance?.values[fieldId] ?? "") : "";
+  const badgeIds = Array.isArray(b.props.badgeFieldIds) ? b.props.badgeFieldIds : undefined;
+  return (
+    <DetailHeaderBlock
+      testID={b.id}
+      title={value(b.props.titleFieldId)}
+      subtitle={
+        b.props.subtitleFieldId === undefined ? undefined : value(b.props.subtitleFieldId)
+      }
+      badges={badgeIds?.map((id) => value(id))}
+      trailing={
+        b.props.trailingFieldId === undefined ? undefined : value(b.props.trailingFieldId)
+      }
+    />
+  );
+}
+
+export function AirList({ screen, blockId }: BlockRef) {
+  const visible = useBlockVisible(screen, blockId);
+  const b = block(screen, blockId);
+  const provider = useDataProvider();
+  const onItemNavigate = useItemNavigate(screen, blockId);
+  if (!visible) return null;
+  if (b.entityId === undefined) throw new Error(`AIR_RUNTIME_ENTITY_MISSING:${blockId}`);
+  const titleFieldId = str(b.props.titleFieldId);
+  if (titleFieldId === undefined) {
+    throw new Error(`AIR_RUNTIME_PROP_MISSING:${blockId}:titleFieldId`);
+  }
+  const instances = provider.listInstances(b.entityId);
+  const pick = (fieldId: unknown, values: Readonly<Record<string, string>>) =>
+    typeof fieldId === "string" ? values[fieldId] : undefined;
+  const items: ListItemData[] = instances.map((instance) => ({
+    id: instance.id,
+    title: instance.values[titleFieldId] ?? "",
+    subtitle: pick(b.props.subtitleFieldId, instance.values),
+    trailing: pick(b.props.trailingFieldId, instance.values),
+    badge: pick(b.props.badgeFieldId, instance.values),
+  }));
+  const emptyTitle = str(b.props.emptyTitle);
+  const state =
+    items.length === 0 && emptyTitle !== undefined
+      ? ({ kind: "empty", title: emptyTitle, message: str(b.props.emptyMessage) } as const)
+      : ({ kind: "ready" } as const);
+  return (
+    <ListBlock
+      testID={b.id}
+      title={str(b.props.title)}
+      items={items}
+      state={state}
+      onItemPress={onItemNavigate}
+    />
+  );
+}
+
+export function AirForm({ screen, blockId }: BlockRef) {
+  const visible = useBlockVisible(screen, blockId);
+  const b = block(screen, blockId);
+  const dispatch = useDispatch(screen);
+  const [values, setValues] = useState<Readonly<Record<string, string>>>({});
+  if (!visible) return null;
+  if (b.entityId === undefined) throw new Error(`AIR_RUNTIME_ENTITY_MISSING:${blockId}`);
+  const fieldsById = new Map(
+    (screen.entities[b.entityId]?.fields ?? []).map((f) => [f.id, f]),
+  );
+  const fieldIds = Array.isArray(b.props.fieldIds) ? b.props.fieldIds : [];
+  // Lecture D-028 : l'AIR v1 ne porte pas de libellés humains de champs —
+  // le libellé rendu est `field.name` (donnée AIR), jamais un texte moteur.
+  const fields: FormFieldSpec[] = fieldIds.flatMap((fieldId) => {
+    if (typeof fieldId !== "string") return [];
+    const field = fieldsById.get(fieldId);
+    return field === undefined ? [] : [{ id: field.id, label: field.name }];
+  });
+  const submitLabel = str(b.props.submitLabel);
+  if (submitLabel === undefined) {
+    throw new Error(`AIR_RUNTIME_PROP_MISSING:${blockId}:submitLabel`);
+  }
+  const actionId = screen.uiActionsByBlock[blockId];
+  return (
+    <FormBlock
+      testID={b.id}
+      title={str(b.props.title)}
+      fields={fields}
+      values={values}
+      onChangeField={(fieldId, value) =>
+        setValues((prev) => ({ ...prev, [fieldId]: value }))
+      }
+      submitLabel={submitLabel}
+      onSubmit={() => dispatch(actionId)}
+      state="ready"
+    />
+  );
+}

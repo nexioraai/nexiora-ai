@@ -1,0 +1,1602 @@
+{
+  "actions": [
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_catalogue"
+      },
+      "id": "act_ouvrir_catalogue",
+      "name": "Ouvrir le catalogue des cours",
+      "trigger": {
+        "blockId": "blk_recettes_vers_catalogue",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "payments.iap",
+        "kind": "capability",
+        "method": "purchaseProduct",
+        "params": [
+          {
+            "key": "productIdFieldId",
+            "value": "fld_cours_produit_iap"
+          },
+          {
+            "key": "productType",
+            "value": "non_consumable"
+          },
+          {
+            "key": "quantity",
+            "value": 1
+          }
+        ]
+      },
+      "id": "act_acheter_cours",
+      "name": "Acheter le cours affiché",
+      "trigger": {
+        "blockId": "blk_cours_detail_acheter",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "payments.iap",
+        "kind": "capability",
+        "method": "restorePurchases",
+        "params": [
+          {
+            "key": "showResultMessage",
+            "value": true
+          }
+        ]
+      },
+      "id": "act_restaurer_achats",
+      "name": "Restaurer les achats existants",
+      "trigger": {
+        "blockId": "blk_catalogue_restaurer",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_lecteur"
+      },
+      "id": "act_lire_cours",
+      "name": "Ouvrir le lecteur du cours acheté",
+      "trigger": {
+        "blockId": "blk_cours_detail_lire",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_url_lecture_securisee"
+      },
+      "id": "act_resoudre_url_lecture",
+      "name": "Résoudre l'URL de lecture sécurisée",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_lecteur"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_progression_reprise"
+      },
+      "id": "act_calculer_reprise",
+      "name": "Calculer la position de reprise",
+      "trigger": {
+        "blockId": "blk_lecteur_reprendre",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_achat",
+        "kind": "mutation",
+        "operation": "update"
+      },
+      "id": "act_enregistrer_progression",
+      "name": "Enregistrer la progression de lecture",
+      "trigger": {
+        "event": "screen_close",
+        "kind": "lifecycle",
+        "screenId": "scr_lecteur"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_prix_localise"
+      },
+      "id": "act_afficher_prix_localise",
+      "name": "Formater les prix du catalogue selon la locale",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_catalogue"
+      }
+    },
+    {
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_filtre_recettes"
+      },
+      "id": "act_filtrer_recettes",
+      "name": "Filtrer les recettes en accès libre",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_recettes"
+      }
+    },
+    {
+      "effect": {
+        "capability": "offline_storage",
+        "kind": "capability",
+        "method": "cacheEntity",
+        "params": [
+          {
+            "key": "entityId",
+            "value": "ent_recette"
+          },
+          {
+            "key": "ttlMinutes",
+            "value": 1440
+          }
+        ]
+      },
+      "id": "act_cacher_recettes_hors_ligne",
+      "name": "Mettre les recettes en cache hors-ligne",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_recettes"
+      }
+    },
+    {
+      "effect": {
+        "capability": "auth",
+        "kind": "capability",
+        "method": "restoreSession",
+        "params": [
+          {
+            "key": "allowAnonymous",
+            "value": true
+          }
+        ]
+      },
+      "id": "act_restaurer_session",
+      "name": "Restaurer la session utilisateur au démarrage",
+      "trigger": {
+        "event": "app_start",
+        "kind": "lifecycle"
+      }
+    },
+    {
+      "effect": {
+        "capability": "deep_links",
+        "kind": "capability",
+        "method": "resolveInitialLink",
+        "params": [
+          {
+            "key": "fallbackScreenId",
+            "value": "scr_catalogue"
+          }
+        ]
+      },
+      "id": "act_resoudre_lien_profond",
+      "name": "Résoudre le lien profond d'ouverture",
+      "trigger": {
+        "event": "app_start",
+        "kind": "lifecycle"
+      }
+    },
+    {
+      "effect": {
+        "capability": "push_notifications",
+        "kind": "capability",
+        "method": "requestAuthorization",
+        "params": [
+          {
+            "key": "provisional",
+            "value": true
+          }
+        ]
+      },
+      "id": "act_demander_notifications",
+      "name": "Demander l'autorisation de notifications",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_catalogue"
+      }
+    },
+    {
+      "effect": {
+        "capability": "analytics",
+        "kind": "capability",
+        "method": "trackEvent",
+        "params": [
+          {
+            "key": "event",
+            "value": "achat_cours_cree"
+          },
+          {
+            "key": "entityId",
+            "value": "ent_achat"
+          }
+        ]
+      },
+      "id": "act_suivre_achat_valide",
+      "name": "Suivre la validation d'un achat",
+      "trigger": {
+        "entityId": "ent_achat",
+        "event": "created",
+        "kind": "data"
+      }
+    },
+    {
+      "effect": {
+        "capability": "push_notifications",
+        "kind": "capability",
+        "method": "scheduleLocalNotification",
+        "params": [
+          {
+            "key": "titleKey",
+            "value": "nouveau_cours_disponible"
+          },
+          {
+            "key": "delayMinutes",
+            "value": 0
+          }
+        ]
+      },
+      "id": "act_suivre_nouveau_cours",
+      "name": "Notifier la publication d'un nouveau cours",
+      "trigger": {
+        "entityId": "ent_cours",
+        "event": "created",
+        "kind": "data"
+      }
+    }
+  ],
+  "airSchemaVersion": "1.0.0",
+  "app": {
+    "description": [
+      {
+        "locale": "fr",
+        "text": "Achetez des cours de cuisine en vidéo à l'unité, regardez vos cours achetés et consultez les recettes en accès libre."
+      },
+      {
+        "locale": "en",
+        "text": "Buy video cooking classes individually, watch your purchased classes and browse free recipes."
+      }
+    ],
+    "locales": {
+      "appLocales": [
+        "fr",
+        "en"
+      ],
+      "contentLocales": [
+        "fr",
+        "en"
+      ],
+      "defaultAppLocale": "fr",
+      "rtlSupported": false,
+      "userLanguage": "fr"
+    },
+    "name": "Cuisine Studio",
+    "slug": "cuisine-studio"
+  },
+  "capabilities": [
+    {
+      "capability": "payments.iap",
+      "config": [
+        {
+          "key": "productType",
+          "value": "non_consumable"
+        },
+        {
+          "key": "restoreEnabled",
+          "value": true
+        },
+        {
+          "key": "productIdFieldId",
+          "value": "fld_cours_produit_iap"
+        }
+      ]
+    },
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "methods",
+          "value": [
+            "email_otp",
+            "apple",
+            "google"
+          ]
+        },
+        {
+          "key": "accountDeletionEnabled",
+          "value": true
+        },
+        {
+          "key": "anonymousBrowsing",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "entities",
+          "value": [
+            "ent_recette",
+            "ent_cours",
+            "ent_achat"
+          ]
+        },
+        {
+          "key": "maxSizeMb",
+          "value": 80
+        }
+      ]
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "anonymizeIp",
+          "value": true
+        },
+        {
+          "key": "collectPurchaseEvents",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "deep_links",
+      "config": [
+        {
+          "key": "scheme",
+          "value": "cuisine-studio"
+        },
+        {
+          "key": "universalLinkDomain",
+          "value": "api.cuisine-studio.app"
+        }
+      ]
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "localSchedulingEnabled",
+          "value": true
+        },
+        {
+          "key": "defaultChannel",
+          "value": "nouveautes"
+        }
+      ]
+    }
+  ],
+  "compliance": {
+    "accountDeletionRequired": true,
+    "commerceClass": "digital",
+    "dataCollected": [
+      "contact_info",
+      "identifiers",
+      "usage_data",
+      "purchases",
+      "diagnostics"
+    ]
+  },
+  "datasets": [
+    {
+      "contentHash": "9b1f4c07ad3e5628cf0a71d4e8b2593c6f47a0d1b8e93425cc7ab61d0f582e34",
+      "entityId": "ent_cours",
+      "id": "data_cours_seed",
+      "rowCount": 8
+    },
+    {
+      "contentHash": "3c7de915b04af286e1d5c8397b6042fa5e18d9c037ab41628ef50d9a7c3b1e62",
+      "entityId": "ent_recette",
+      "id": "data_recettes_seed",
+      "rowCount": 24
+    }
+  ],
+  "design": {
+    "theme": "culinary_warm",
+    "tokensVersion": "1.0.0"
+  },
+  "entities": [
+    {
+      "fields": [
+        {
+          "id": "fld_cours_titre",
+          "name": "titre",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_cours_sous_titre",
+          "name": "sous_titre",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "id": "fld_cours_description",
+          "name": "description",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "id": "fld_cours_chef",
+          "name": "chef",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "enumValues": [
+            "debutant",
+            "intermediaire",
+            "avance"
+          ],
+          "id": "fld_cours_niveau",
+          "name": "niveau",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_cours_duree_minutes",
+          "name": "duree_minutes",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "id": "fld_cours_prix_affiche",
+          "name": "prix_affiche",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "id": "fld_cours_produit_iap",
+          "name": "produit_iap",
+          "required": true,
+          "type": "string",
+          "unique": true
+        },
+        {
+          "id": "fld_cours_visuel",
+          "name": "visuel",
+          "required": false,
+          "type": "asset"
+        },
+        {
+          "id": "fld_cours_video_reference",
+          "name": "video_reference",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_cours_publie",
+          "name": "publie",
+          "required": true,
+          "type": "boolean"
+        },
+        {
+          "id": "fld_cours_date_publication",
+          "name": "date_publication",
+          "required": false,
+          "type": "date"
+        }
+      ],
+      "id": "ent_cours",
+      "name": "cours"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_recette_titre",
+          "name": "titre",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_recette_resume",
+          "name": "resume",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "enumValues": [
+            "entree",
+            "plat",
+            "dessert",
+            "boulangerie",
+            "sauce"
+          ],
+          "id": "fld_recette_categorie",
+          "name": "categorie",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_recette_temps_minutes",
+          "name": "temps_minutes",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "id": "fld_recette_ingredients",
+          "name": "ingredients",
+          "required": true,
+          "type": "text"
+        },
+        {
+          "id": "fld_recette_etapes",
+          "name": "etapes",
+          "required": true,
+          "type": "text"
+        },
+        {
+          "id": "fld_recette_image",
+          "name": "image",
+          "required": false,
+          "type": "asset"
+        },
+        {
+          "id": "fld_recette_publiee",
+          "name": "publiee",
+          "required": true,
+          "type": "boolean"
+        },
+        {
+          "id": "fld_recette_cours_lie",
+          "name": "cours_lie",
+          "referencesEntityId": "ent_cours",
+          "required": false,
+          "type": "reference"
+        }
+      ],
+      "id": "ent_recette",
+      "name": "recette"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_achat_cours",
+          "name": "cours",
+          "referencesEntityId": "ent_cours",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "id": "fld_achat_transaction_id",
+          "name": "transaction_id",
+          "required": true,
+          "type": "string",
+          "unique": true
+        },
+        {
+          "enumValues": [
+            "en_attente",
+            "valide",
+            "rembourse",
+            "annule"
+          ],
+          "id": "fld_achat_statut",
+          "name": "statut",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "enumValues": [
+            "ios",
+            "android"
+          ],
+          "id": "fld_achat_plateforme",
+          "name": "plateforme",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_achat_date",
+          "name": "date_achat",
+          "required": true,
+          "type": "datetime"
+        },
+        {
+          "id": "fld_achat_progression",
+          "name": "progression_pourcent",
+          "required": false,
+          "type": "decimal"
+        },
+        {
+          "id": "fld_achat_derniere_lecture",
+          "name": "derniere_lecture",
+          "required": false,
+          "type": "datetime"
+        }
+      ],
+      "id": "ent_achat",
+      "name": "achat"
+    }
+  ],
+  "expectedTests": [
+    {
+      "description": "Vérifie qu'un cours sans titre, sans identifiant de produit d'achat intégré conforme, non publié ou de durée nulle est rejeté par la règle de publication.",
+      "id": "test_rule_cours_publiable",
+      "kind": "deterministic",
+      "targetId": "ent_cours"
+    },
+    {
+      "description": "Vérifie qu'un achat sans identifiant de transaction, avec un statut ou une plateforme inconnus, ou une progression supérieure à 100, est refusé.",
+      "id": "test_rule_achat_coherent",
+      "kind": "deterministic",
+      "targetId": "ent_achat"
+    },
+    {
+      "description": "Vérifie que la lecture est autorisée uniquement pour un achat au statut validé rattaché au cours demandé, et refusée pour les statuts en_attente, rembourse et annule.",
+      "id": "test_rule_lecture_reservee",
+      "kind": "deterministic",
+      "targetId": "act_lire_cours"
+    },
+    {
+      "description": "Vérifie que les recettes publiées sont lisibles sans compte ni achat et que les recettes non publiées restent inaccessibles.",
+      "id": "test_rule_recette_acces_libre",
+      "kind": "deterministic",
+      "targetId": "ent_recette"
+    },
+    {
+      "description": "Vérifie qu'une recette sans titre, sans ingrédients, sans étapes ou avec un temps de préparation inférieur à 1 minute est invalide.",
+      "id": "test_rule_recette_contenu",
+      "kind": "deterministic",
+      "targetId": "ent_recette"
+    },
+    {
+      "description": "Vérifie que le prix d'un cours est formaté selon la locale active, en français par défaut et en anglais en secondaire.",
+      "id": "test_slot_prix_localise",
+      "kind": "deterministic",
+      "targetId": "act_afficher_prix_localise"
+    },
+    {
+      "description": "Vérifie le calcul du pourcentage de progression et de la position de reprise, bornes incluses (0 seconde et durée complète).",
+      "id": "test_slot_progression_reprise",
+      "kind": "deterministic",
+      "targetId": "act_calculer_reprise"
+    },
+    {
+      "description": "Vérifie le filtrage des recettes par catégorie et temps maximum, ainsi que le tri stable des résultats.",
+      "id": "test_slot_filtre_recettes",
+      "kind": "deterministic",
+      "targetId": "act_filtrer_recettes"
+    },
+    {
+      "description": "Contrat de l'intégration d'achats intégrés : achat d'un produit non consommable, validation du reçu et création d'un achat au statut attendu.",
+      "id": "test_contract_iap_achat",
+      "kind": "contract",
+      "targetId": "act_acheter_cours"
+    },
+    {
+      "description": "Contrat de restauration des achats : les cours déjà acquis sont rétablis et aucun doublon de transaction n'est créé.",
+      "id": "test_contract_iap_restauration",
+      "kind": "contract",
+      "targetId": "act_restaurer_achats"
+    },
+    {
+      "description": "Contrat de résolution de l'URL de lecture signée : URL valide et date d'expiration renvoyées pour un achat validé, erreur sinon.",
+      "id": "test_contract_url_lecture",
+      "kind": "contract",
+      "targetId": "act_resoudre_url_lecture"
+    },
+    {
+      "description": "Contrat d'authentification : restauration de session, navigation anonyme autorisée et suppression de compte disponible.",
+      "id": "test_contract_auth_session",
+      "kind": "contract",
+      "targetId": "act_restaurer_session"
+    },
+    {
+      "description": "Contrat des notifications : demande d'autorisation provisoire et programmation d'une notification locale de nouveau cours en français et en anglais.",
+      "id": "test_contract_push_gateway",
+      "kind": "contract",
+      "targetId": "act_demander_notifications"
+    },
+    {
+      "description": "Contrat des liens profonds : un lien vers un cours ouvre l'écran de détail, un lien inconnu retombe sur le catalogue.",
+      "id": "test_contract_deep_links",
+      "kind": "contract",
+      "targetId": "act_resoudre_lien_profond"
+    },
+    {
+      "description": "Parcours complet : depuis le catalogue, ouvrir un cours, l'acheter via l'achat intégré, puis lancer la lecture de la vidéo débloquée.",
+      "id": "test_e2e_achat_puis_lecture",
+      "kind": "e2e",
+      "targetId": "scr_cours_detail"
+    },
+    {
+      "description": "Parcours : un cours non acheté affiche l'état verrouillé du lecteur avec l'appel à l'achat au lieu de la vidéo.",
+      "id": "test_e2e_lecture_verrouillee",
+      "kind": "e2e",
+      "targetId": "scr_lecteur"
+    },
+    {
+      "description": "Parcours : consulter la liste des recettes publiées sans compte, filtrer par catégorie, puis rejoindre le catalogue des cours.",
+      "id": "test_e2e_recettes_acces_libre",
+      "kind": "e2e",
+      "targetId": "scr_recettes"
+    },
+    {
+      "description": "Parcours : quitter le lecteur en cours de vidéo puis y revenir et reprendre la lecture à la position enregistrée.",
+      "id": "test_e2e_reprise_progression",
+      "kind": "e2e",
+      "targetId": "act_enregistrer_progression"
+    },
+    {
+      "description": "Parcours : les recettes mises en cache restent consultables sans réseau après un premier affichage de l'écran Recettes.",
+      "id": "test_e2e_recettes_hors_ligne",
+      "kind": "e2e",
+      "targetId": "act_cacher_recettes_hors_ligne"
+    },
+    {
+      "description": "Parcours : basculer l'application de français à anglais et vérifier les titres d'écrans, libellés de boutons et prix affichés.",
+      "id": "test_e2e_bascule_langue",
+      "kind": "e2e",
+      "targetId": "scr_catalogue"
+    }
+  ],
+  "integrations": [
+    {
+      "capability": "payments.iap",
+      "config": [
+        {
+          "key": "platforms",
+          "value": [
+            "ios",
+            "android"
+          ]
+        },
+        {
+          "key": "productType",
+          "value": "non_consumable"
+        },
+        {
+          "key": "productIdFieldId",
+          "value": "fld_cours_produit_iap"
+        },
+        {
+          "key": "restoreEnabled",
+          "value": true
+        },
+        {
+          "key": "receiptValidationEndpoint",
+          "value": "https://api.cuisine-studio.app/iap/verifier-recu"
+        },
+        {
+          "key": "purchaseEntityId",
+          "value": "ent_achat"
+        },
+        {
+          "key": "sandboxModeAllowed",
+          "value": true
+        }
+      ],
+      "id": "intg_iap_store",
+      "providerClass": "managed_iap_billing"
+    },
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "methods",
+          "value": [
+            "email_otp",
+            "apple",
+            "google"
+          ]
+        },
+        {
+          "key": "anonymousBrowsing",
+          "value": true
+        },
+        {
+          "key": "accountDeletionEndpoint",
+          "value": "https://api.cuisine-studio.app/compte/suppression"
+        },
+        {
+          "key": "sessionRefreshMinutes",
+          "value": 60
+        }
+      ],
+      "id": "intg_auth_identity",
+      "providerClass": "managed_identity"
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "manifestEndpoint",
+          "value": "https://api.cuisine-studio.app/cours/lecture-manifest"
+        },
+        {
+          "key": "signedUrlTtlSeconds",
+          "value": 900
+        },
+        {
+          "key": "entities",
+          "value": [
+            "ent_recette",
+            "ent_cours",
+            "ent_achat"
+          ]
+        },
+        {
+          "key": "maxSizeMb",
+          "value": 80
+        },
+        {
+          "key": "encryptAtRest",
+          "value": true
+        }
+      ],
+      "id": "intg_video_delivery",
+      "providerClass": "signed_media_delivery"
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "ingestEndpoint",
+          "value": "https://api.cuisine-studio.app/analytics/evenements"
+        },
+        {
+          "key": "anonymizeIp",
+          "value": true
+        },
+        {
+          "key": "collectPurchaseEvents",
+          "value": true
+        },
+        {
+          "key": "defaultLocale",
+          "value": "fr"
+        }
+      ],
+      "id": "intg_analytics_produit",
+      "providerClass": "product_analytics"
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "registrationEndpoint",
+          "value": "https://api.cuisine-studio.app/push/enregistrement"
+        },
+        {
+          "key": "defaultChannel",
+          "value": "nouveautes"
+        },
+        {
+          "key": "localSchedulingEnabled",
+          "value": true
+        },
+        {
+          "key": "localesSupported",
+          "value": [
+            "fr",
+            "en"
+          ]
+        }
+      ],
+      "id": "intg_push_gateway",
+      "providerClass": "push_gateway"
+    },
+    {
+      "capability": "deep_links",
+      "config": [
+        {
+          "key": "scheme",
+          "value": "cuisine-studio"
+        },
+        {
+          "key": "universalLinkDomain",
+          "value": "api.cuisine-studio.app"
+        },
+        {
+          "key": "associationFilePath",
+          "value": "/.well-known/apple-app-site-association"
+        },
+        {
+          "key": "fallbackScreenId",
+          "value": "scr_catalogue"
+        }
+      ],
+      "id": "intg_deep_links",
+      "providerClass": "universal_links"
+    }
+  ],
+  "native": {
+    "minAndroidSdk": 26,
+    "minIosVersion": "16.0"
+  },
+  "navigation": {
+    "entryScreenId": "scr_catalogue",
+    "routes": [
+      {
+        "id": "nav_catalogue",
+        "screenId": "scr_catalogue",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Cours"
+          },
+          {
+            "locale": "en",
+            "text": "Classes"
+          }
+        ]
+      },
+      {
+        "id": "nav_cours_detail",
+        "screenId": "scr_cours_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Détail du cours"
+          },
+          {
+            "locale": "en",
+            "text": "Class details"
+          }
+        ]
+      },
+      {
+        "id": "nav_lecteur",
+        "screenId": "scr_lecteur",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Lecture"
+          },
+          {
+            "locale": "en",
+            "text": "Player"
+          }
+        ]
+      },
+      {
+        "id": "nav_recettes",
+        "screenId": "scr_recettes",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Recettes"
+          },
+          {
+            "locale": "en",
+            "text": "Recipes"
+          }
+        ]
+      }
+    ]
+  },
+  "network": {
+    "allowedDomains": [
+      "api.cuisine-studio.app"
+    ],
+    "policy": "deny_by_default"
+  },
+  "permissions": [
+    {
+      "permission": "android.permission.POST_NOTIFICATIONS",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "Pour vous prévenir de la mise en ligne d'un nouveau cours de cuisine et de la disponibilité de vos achats."
+        },
+        {
+          "locale": "en",
+          "text": "To let you know when a new cooking class is released and when your purchases are ready to watch."
+        }
+      ],
+      "requiredByCapability": "push_notifications"
+    }
+  ],
+  "projectId": "prj_cours_cuisine_video",
+  "relations": [
+    {
+      "fromEntityId": "ent_cours",
+      "id": "rel_cours_achats",
+      "kind": "one_to_many",
+      "toEntityId": "ent_achat"
+    },
+    {
+      "fromEntityId": "ent_cours",
+      "id": "rel_cours_recettes",
+      "kind": "one_to_many",
+      "toEntityId": "ent_recette"
+    }
+  ],
+  "rules": [
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_cours_titre",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_cours_produit_iap",
+          "operator": "matches",
+          "value": "^[a-z0-9_.]{6,64}$"
+        },
+        {
+          "fieldId": "fld_cours_publie",
+          "operator": "eq",
+          "value": true
+        },
+        {
+          "fieldId": "fld_cours_duree_minutes",
+          "operator": "gt",
+          "value": 0
+        }
+      ],
+      "description": "Un cours n'est visible au catalogue que s'il est publié et rattaché à un identifiant de produit achat intégré valide.",
+      "entityId": "ent_cours",
+      "id": "rule_cours_publiable",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_achat_transaction_id",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_achat_statut",
+          "operator": "in",
+          "value": [
+            "en_attente",
+            "valide",
+            "rembourse",
+            "annule"
+          ]
+        },
+        {
+          "fieldId": "fld_achat_plateforme",
+          "operator": "in",
+          "value": [
+            "ios",
+            "android"
+          ]
+        },
+        {
+          "fieldId": "fld_achat_progression",
+          "operator": "lte",
+          "value": 100
+        }
+      ],
+      "description": "Un achat doit porter un statut connu, un identifiant de transaction et une plateforme supportée.",
+      "entityId": "ent_achat",
+      "id": "rule_achat_coherent",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_achat_statut",
+          "operator": "eq",
+          "value": "valide"
+        },
+        {
+          "fieldId": "fld_achat_cours",
+          "operator": "required"
+        }
+      ],
+      "description": "La lecture de la vidéo d'un cours n'est autorisée que si l'utilisateur possède un achat au statut validé pour ce cours.",
+      "entityId": "ent_achat",
+      "id": "rule_lecture_reservee",
+      "kind": "authorization"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_recette_publiee",
+          "operator": "eq",
+          "value": true
+        }
+      ],
+      "description": "Les recettes publiées sont consultables librement, sans compte ni achat.",
+      "entityId": "ent_recette",
+      "id": "rule_recette_acces_libre",
+      "kind": "authorization"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_recette_titre",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_recette_ingredients",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_recette_etapes",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_recette_temps_minutes",
+          "operator": "gte",
+          "value": 1
+        }
+      ],
+      "description": "Une recette doit comporter un titre, ses ingrédients et ses étapes.",
+      "entityId": "ent_recette",
+      "id": "rule_recette_contenu",
+      "kind": "validation"
+    }
+  ],
+  "screens": [
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_catalogue_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Cours de cuisine en vidéo"
+            },
+            {
+              "key": "subtitle",
+              "value": "Achetez à l'unité, regardez quand vous voulez"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_cours",
+          "id": "blk_catalogue_liste",
+          "props": [
+            {
+              "key": "title",
+              "value": "Catalogue"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_cours_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_cours_chef"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_cours_prix_affiche"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_cours_niveau"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun cours disponible"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "De nouveaux cours arrivent très bientôt."
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_catalogue_restaurer",
+          "props": [
+            {
+              "key": "label",
+              "value": "Restaurer mes achats"
+            },
+            {
+              "key": "actionId",
+              "value": "act_restaurer_achats"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ],
+      "id": "scr_catalogue",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Cours de cuisine"
+        },
+        {
+          "locale": "en",
+          "text": "Cooking classes"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "detail_header",
+          "entityId": "ent_cours",
+          "id": "blk_cours_detail_entete",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_cours_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_cours_sous_titre"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_cours_prix_affiche"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_cours_niveau",
+                "fld_cours_duree_minutes"
+              ]
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_cours_detail_acheter",
+          "props": [
+            {
+              "key": "label",
+              "value": "Acheter ce cours"
+            },
+            {
+              "key": "actionId",
+              "value": "act_acheter_cours"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_cours_detail_lire",
+          "props": [
+            {
+              "key": "label",
+              "value": "Regarder le cours"
+            },
+            {
+              "key": "actionId",
+              "value": "act_lire_cours"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_recette",
+          "id": "blk_cours_detail_recettes",
+          "props": [
+            {
+              "key": "title",
+              "value": "Recettes liées en accès libre"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_recette_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_recette_resume"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_recette_temps_minutes"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune recette liée"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Ce cours n'a pas encore de recette associée."
+            }
+          ]
+        }
+      ],
+      "id": "scr_cours_detail",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Détail du cours"
+        },
+        {
+          "locale": "en",
+          "text": "Class details"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "detail_header",
+          "entityId": "ent_cours",
+          "id": "blk_lecteur_entete",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_cours_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_cours_chef"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_cours_duree_minutes"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_cours_niveau"
+              ]
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_lecteur_reprendre",
+          "props": [
+            {
+              "key": "label",
+              "value": "Reprendre la lecture"
+            },
+            {
+              "key": "actionId",
+              "value": "act_lire_cours"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_lecteur_verrou",
+          "props": [
+            {
+              "key": "title",
+              "value": "Cours non débloqué"
+            },
+            {
+              "key": "message",
+              "value": "Achetez ce cours pour accéder à la vidéo complète."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Acheter ce cours"
+            },
+            {
+              "key": "actionId",
+              "value": "act_acheter_cours"
+            }
+          ]
+        }
+      ],
+      "id": "scr_lecteur",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Lecture du cours"
+        },
+        {
+          "locale": "en",
+          "text": "Class player"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_recettes_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Recettes en accès libre"
+            },
+            {
+              "key": "subtitle",
+              "value": "Consultables sans compte ni achat"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_recette",
+          "id": "blk_recettes_liste",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_recette_titre"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_recette_resume"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_recette_temps_minutes"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_recette_categorie"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune recette publiée"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Revenez bientôt pour découvrir de nouvelles recettes."
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_recettes_vers_catalogue",
+          "props": [
+            {
+              "key": "title",
+              "value": "Envie d'aller plus loin ?"
+            },
+            {
+              "key": "message",
+              "value": "Découvrez les cours en vidéo du chef, à acheter à l'unité."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Voir les cours"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_catalogue"
+            }
+          ]
+        }
+      ],
+      "id": "scr_recettes",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Recettes"
+        },
+        {
+          "locale": "en",
+          "text": "Recipes"
+        }
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "allowedImports": [
+        "@air/runtime/intl"
+      ],
+      "description": "Formate le prix d'un cours à partir des informations de la boutique d'achats intégrés selon la locale active (fr par défaut, en secondaire).",
+      "id": "slot_prix_localise",
+      "inputs": [
+        {
+          "name": "produitIap",
+          "type": "string"
+        },
+        {
+          "name": "locale",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prixAffiche",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "allowedImports": [
+        "@air/runtime/http"
+      ],
+      "description": "Résout l'URL de lecture signée et sa date d'expiration pour un cours acheté et validé.",
+      "id": "slot_url_lecture_securisee",
+      "inputs": [
+        {
+          "name": "coursId",
+          "type": "reference"
+        },
+        {
+          "name": "transactionId",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "urlLecture",
+          "type": "string"
+        },
+        {
+          "name": "expireLe",
+          "type": "datetime"
+        }
+      ]
+    },
+    {
+      "allowedImports": [],
+      "description": "Calcule le pourcentage de progression et la position de reprise d'un cours à partir de la dernière position lue.",
+      "id": "slot_progression_reprise",
+      "inputs": [
+        {
+          "name": "positionSecondes",
+          "type": "number"
+        },
+        {
+          "name": "dureeMinutes",
+          "type": "number"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "progressionPourcent",
+          "type": "decimal"
+        },
+        {
+          "name": "repriseSecondes",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "allowedImports": [],
+      "description": "Filtre et trie la liste des recettes en accès libre par catégorie et temps de préparation.",
+      "id": "slot_filtre_recettes",
+      "inputs": [
+        {
+          "name": "categorie",
+          "type": "enum"
+        },
+        {
+          "name": "tempsMax",
+          "type": "number"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "resultats",
+          "type": "json"
+        }
+      ]
+    }
+  ]
+}

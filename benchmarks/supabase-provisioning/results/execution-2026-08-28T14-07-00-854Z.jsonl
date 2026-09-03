@@ -1,0 +1,10 @@
+{"etape":1,"status":200,"rate":{"x-ratelimit-limit":"120","x-ratelimit-remaining":"119","x-ratelimit-reset":"60"}}
+{"etape":1,"orgTrouvee":true,"plan":"free","detailStatus":200}
+{"etape":2,"status":201,"rate":{"x-ratelimit-limit":"120","x-ratelimit-remaining":"119","x-ratelimit-reset":"60"}}
+{"etape":2,"refCree":"bqkbdgizxscnqerzqbqe","region":"us-east-1"}
+{"etape":3,"statut":"ACTIVE_HEALTHY","dureeCreationMs":8080}
+{"etape":4,"postgrestStatus":401}
+{"MESURE_1":"création → PostgREST servie","totalMs":10454,"detail":{"acceptationMs":7717,"healthyMs":8080,"postgrestMs":10454}}
+{"MESURE_2":"teardown","deleteStatus":200,"get404":403,"relistingAbsent":true,"dureeMs":5057,"teardownProuve":false}
+{"ALERTE_ROUGE":"TEARDOWN NON PROUVÉ — supprimer manuellement le projet 'supabase-provisioning-bench' (ref bqkbdgizxscnqerzqbqe) au dashboard"}
+{"fin":true,"journal":"/Users/yia/Documents/woorri/benchmarks/supabase-provisioning/results/execution-2026-08-28T14-07-00-854Z.jsonl"}

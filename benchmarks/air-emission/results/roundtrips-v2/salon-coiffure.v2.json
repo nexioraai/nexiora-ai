@@ -1,0 +1,1629 @@
+{
+  "identical": true,
+  "document": {
+    "airSchemaVersion": "1.0.0",
+    "projectId": "prj_salon_rdv",
+    "app": {
+      "name": "Salon RDV",
+      "slug": "salon-rdv",
+      "description": [
+        {
+          "locale": "fr",
+          "text": "Application de prise de rendez-vous pour salon de coiffure : catalogue des prestations avec durée, sélection d'un créneau disponible et rappel par notification la veille. Le paiement s'effectue sur place au salon."
+        },
+        {
+          "locale": "en",
+          "text": "Hair salon appointment booking app: service catalogue with duration, available time-slot selection and a reminder notification the day before. Payment is made on site at the salon."
+        }
+      ],
+      "locales": {
+        "userLanguage": "fr",
+        "appLocales": [
+          "fr",
+          "en"
+        ],
+        "defaultAppLocale": "fr",
+        "contentLocales": [
+          "fr",
+          "en"
+        ],
+        "rtlSupported": false
+      }
+    },
+    "screens": [
+      {
+        "id": "scr_prestations",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Prestations"
+          },
+          {
+            "locale": "en",
+            "text": "Services"
+          }
+        ],
+        "blocks": [
+          {
+            "id": "blk_prestations_entete",
+            "blockType": "header",
+            "props": [
+              {
+                "key": "title.fr",
+                "value": "Nos prestations"
+              },
+              {
+                "key": "title.en",
+                "value": "Our services"
+              },
+              {
+                "key": "subtitle.fr",
+                "value": "Choisissez une prestation, le paiement se fait sur place au salon."
+              },
+              {
+                "key": "subtitle.en",
+                "value": "Pick a service; payment is made on site at the salon."
+              },
+              {
+                "key": "showBackButton",
+                "value": false
+              }
+            ]
+          },
+          {
+            "id": "blk_prestations_filtre_categorie",
+            "blockType": "filter_chips",
+            "entityId": "ent_prestation"
+          },
+          {
+            "id": "blk_prestations_recherche",
+            "blockType": "search_field",
+            "props": [
+              {
+                "key": "placeholder.fr",
+                "value": "Rechercher une prestation"
+              },
+              {
+                "key": "placeholder.en",
+                "value": "Search for a service"
+              },
+              {
+                "key": "targetBlockId",
+                "value": "blk_prestations_liste"
+              },
+              {
+                "key": "searchFieldIds",
+                "value": [
+                  "fld_prestation_nom",
+                  "fld_prestation_description"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "blk_prestations_liste",
+            "blockType": "list",
+            "entityId": "ent_prestation"
+          },
+          {
+            "id": "blk_prestations_vide",
+            "blockType": "empty_state",
+            "props": [
+              {
+                "key": "title.fr",
+                "value": "Aucune prestation ne correspond"
+              },
+              {
+                "key": "title.en",
+                "value": "No matching service"
+              },
+              {
+                "key": "message.fr",
+                "value": "Modifiez votre recherche ou changez de catégorie."
+              },
+              {
+                "key": "message.en",
+                "value": "Change your search or pick another category."
+              },
+              {
+                "key": "visibleWhen",
+                "value": "blk_prestations_liste.isEmpty"
+              }
+            ]
+          },
+          {
+            "id": "blk_prestations_lien_mes_rdv",
+            "blockType": "button",
+            "props": [
+              {
+                "key": "label.fr",
+                "value": "Mes rendez-vous"
+              },
+              {
+                "key": "label.en",
+                "value": "My appointments"
+              },
+              {
+                "key": "style",
+                "value": "secondary"
+              },
+              {
+                "key": "navigateToRouteId",
+                "value": "nav_mes_rdv"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "scr_creneaux",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Choix du créneau"
+          },
+          {
+            "locale": "en",
+            "text": "Pick a time slot"
+          }
+        ],
+        "blocks": [
+          {
+            "id": "blk_creneaux_entete",
+            "blockType": "header",
+            "props": [
+              {
+                "key": "title.fr",
+                "value": "Choisissez un créneau"
+              },
+              {
+                "key": "title.en",
+                "value": "Choose a time slot"
+              },
+              {
+                "key": "subtitle.fr",
+                "value": "Les créneaux affichés tiennent compte de la durée de la prestation choisie."
+              },
+              {
+                "key": "subtitle.en",
+                "value": "Displayed slots take the selected service duration into account."
+              },
+              {
+                "key": "showBackButton",
+                "value": true
+              }
+            ]
+          },
+          {
+            "id": "blk_creneaux_resume_prestation",
+            "blockType": "summary_card",
+            "entityId": "ent_prestation"
+          },
+          {
+            "id": "blk_creneaux_selecteur_jour",
+            "blockType": "date_picker",
+            "props": [
+              {
+                "key": "label.fr",
+                "value": "Jour du rendez-vous"
+              },
+              {
+                "key": "label.en",
+                "value": "Appointment day"
+              },
+              {
+                "key": "boundFieldId",
+                "value": "fld_creneau_jour"
+              },
+              {
+                "key": "minOffsetDays",
+                "value": 0
+              },
+              {
+                "key": "maxOffsetDays",
+                "value": 60
+              }
+            ]
+          },
+          {
+            "id": "blk_creneaux_liste",
+            "blockType": "list",
+            "entityId": "ent_creneau"
+          },
+          {
+            "id": "blk_creneaux_vide",
+            "blockType": "empty_state",
+            "props": [
+              {
+                "key": "title.fr",
+                "value": "Aucun créneau disponible"
+              },
+              {
+                "key": "title.en",
+                "value": "No slot available"
+              },
+              {
+                "key": "message.fr",
+                "value": "Essayez un autre jour ou une autre prestation."
+              },
+              {
+                "key": "message.en",
+                "value": "Try another day or another service."
+              },
+              {
+                "key": "visibleWhen",
+                "value": "blk_creneaux_liste.isEmpty"
+              }
+            ]
+          },
+          {
+            "id": "blk_creneaux_continuer",
+            "blockType": "button",
+            "props": [
+              {
+                "key": "label.fr",
+                "value": "Continuer"
+              },
+              {
+                "key": "label.en",
+                "value": "Continue"
+              },
+              {
+                "key": "style",
+                "value": "primary"
+              },
+              {
+                "key": "enabledWhen",
+                "value": "blk_creneaux_liste.hasSelection"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "scr_confirmation",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Confirmation"
+          },
+          {
+            "locale": "en",
+            "text": "Confirmation"
+          }
+        ],
+        "blocks": [
+          {
+            "id": "blk_confirmation_entete",
+            "blockType": "header",
+            "props": [
+              {
+                "key": "title.fr",
+                "value": "Confirmez votre rendez-vous"
+              },
+              {
+                "key": "title.en",
+                "value": "Confirm your appointment"
+              },
+              {
+                "key": "subtitle.fr",
+                "value": "Le paiement s'effectue sur place au salon."
+              },
+              {
+                "key": "subtitle.en",
+                "value": "Payment is made on site at the salon."
+              },
+              {
+                "key": "showBackButton",
+                "value": true
+              }
+            ]
+          },
+          {
+            "id": "blk_confirmation_recapitulatif",
+            "blockType": "summary_card",
+            "entityId": "ent_rendez_vous"
+          },
+          {
+            "id": "blk_confirmation_formulaire_client",
+            "blockType": "form",
+            "entityId": "ent_rendez_vous"
+          }
+        ]
+      }
+    ],
+    "navigation": {
+      "entryScreenId": "scr_prestations",
+      "routes": [
+        {
+          "id": "nav_prestations",
+          "screenId": "scr_prestations",
+          "title": [
+            {
+              "locale": "fr",
+              "text": "Prestations"
+            },
+            {
+              "locale": "en",
+              "text": "Services"
+            }
+          ]
+        }
+      ]
+    },
+    "entities": [
+      {
+        "id": "ent_prestation",
+        "name": "prestation",
+        "fields": [
+          {
+            "id": "fld_prestation_nom",
+            "name": "nom",
+            "type": "string",
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "fld_prestation_description",
+            "name": "description",
+            "type": "text",
+            "required": false
+          },
+          {
+            "id": "fld_prestation_categorie",
+            "name": "categorie",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "coupe",
+              "couleur",
+              "coiffage",
+              "soin",
+              "barbe"
+            ]
+          },
+          {
+            "id": "fld_prestation_duree_minutes",
+            "name": "duree_minutes",
+            "type": "number",
+            "required": true
+          },
+          {
+            "id": "fld_prestation_prix",
+            "name": "prix",
+            "type": "decimal",
+            "required": true
+          },
+          {
+            "id": "fld_prestation_photo",
+            "name": "photo",
+            "type": "asset",
+            "required": false
+          },
+          {
+            "id": "fld_prestation_active",
+            "name": "active",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "id": "fld_prestation_ordre",
+            "name": "ordre_affichage",
+            "type": "number",
+            "required": false
+          }
+        ]
+      },
+      {
+        "id": "ent_creneau",
+        "name": "creneau",
+        "fields": [
+          {
+            "id": "fld_creneau_debut",
+            "name": "debut",
+            "type": "datetime",
+            "required": true
+          },
+          {
+            "id": "fld_creneau_fin",
+            "name": "fin",
+            "type": "datetime",
+            "required": true
+          },
+          {
+            "id": "fld_creneau_coiffeur",
+            "name": "coiffeur",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_creneau_duree_minutes",
+            "name": "duree_minutes",
+            "type": "number",
+            "required": true
+          },
+          {
+            "id": "fld_creneau_disponible",
+            "name": "disponible",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "id": "fld_creneau_jour",
+            "name": "jour",
+            "type": "date",
+            "required": true
+          }
+        ]
+      },
+      {
+        "id": "ent_rendez_vous",
+        "name": "rendez_vous",
+        "fields": [
+          {
+            "id": "fld_rdv_reference",
+            "name": "reference",
+            "type": "string",
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "fld_rdv_client_nom",
+            "name": "client_nom",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_rdv_client_telephone",
+            "name": "client_telephone",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_rdv_client_email",
+            "name": "client_email",
+            "type": "string",
+            "required": false
+          },
+          {
+            "id": "fld_rdv_prestation",
+            "name": "prestation",
+            "type": "reference",
+            "required": true,
+            "referencesEntityId": "ent_prestation"
+          },
+          {
+            "id": "fld_rdv_creneau",
+            "name": "creneau",
+            "type": "reference",
+            "required": true,
+            "referencesEntityId": "ent_creneau"
+          },
+          {
+            "id": "fld_rdv_debut",
+            "name": "debut",
+            "type": "datetime",
+            "required": true
+          },
+          {
+            "id": "fld_rdv_statut",
+            "name": "statut",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "confirme",
+              "annule",
+              "honore",
+              "absent"
+            ]
+          },
+          {
+            "id": "fld_rdv_rappel_actif",
+            "name": "rappel_actif",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "id": "fld_rdv_rappel_planifie_le",
+            "name": "rappel_planifie_le",
+            "type": "datetime",
+            "required": false
+          },
+          {
+            "id": "fld_rdv_notes",
+            "name": "notes",
+            "type": "text",
+            "required": false
+          },
+          {
+            "id": "fld_rdv_cree_le",
+            "name": "cree_le",
+            "type": "datetime",
+            "required": true
+          }
+        ]
+      }
+    ],
+    "relations": [
+      {
+        "id": "rel_prestation_rendez_vous",
+        "fromEntityId": "ent_prestation",
+        "toEntityId": "ent_rendez_vous",
+        "kind": "one_to_many"
+      },
+      {
+        "id": "rel_creneau_rendez_vous",
+        "fromEntityId": "ent_creneau",
+        "toEntityId": "ent_rendez_vous",
+        "kind": "one_to_one"
+      },
+      {
+        "id": "rel_prestation_creneau",
+        "fromEntityId": "ent_prestation",
+        "toEntityId": "ent_creneau",
+        "kind": "many_to_many"
+      }
+    ],
+    "datasets": [
+      {
+        "id": "data_prestations_initiales",
+        "entityId": "ent_prestation",
+        "contentHash": "9f2c41b7ae08d35c6e1b47a90f3d2c85be74a1d0c93f6e28ab5710d4f8c62e3b",
+        "rowCount": 12
+      },
+      {
+        "id": "data_creneaux_modele_semaine",
+        "entityId": "ent_creneau",
+        "contentHash": "4d81ea37c05b9f2671a3c8d0e4f5b9628c30d7a1fe264b9503ab6c7d81e4f902",
+        "rowCount": 84
+      }
+    ],
+    "actions": [
+      {
+        "id": "act_ouvrir_creneaux",
+        "name": "Préparer les créneaux disponibles pour la prestation sélectionnée",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_prestations_liste"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_calcul_creneaux_disponibles"
+        }
+      },
+      {
+        "id": "act_voir_mes_rendez_vous",
+        "name": "Charger mes rendez-vous depuis le cache local",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_prestations_lien_mes_rdv"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "offline_storage",
+          "method": "syncEntities",
+          "params": [
+            {
+              "key": "entityIds",
+              "value": [
+                "ent_rendez_vous"
+              ]
+            },
+            {
+              "key": "strategy",
+              "value": "cache_first"
+            },
+            {
+              "key": "maxAgeMinutes",
+              "value": 60
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_formater_catalogue",
+        "name": "Formater durées et prix du catalogue selon la locale",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "screen_open",
+          "screenId": "scr_prestations"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_format_duree_prix"
+        }
+      },
+      {
+        "id": "act_calculer_creneaux",
+        "name": "Recalculer les créneaux disponibles au changement de jour",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_creneaux_selecteur_jour"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_calcul_creneaux_disponibles"
+        }
+      },
+      {
+        "id": "act_generer_reference",
+        "name": "Générer la référence du rendez-vous",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_creneaux_continuer"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_generation_reference_rdv"
+        }
+      },
+      {
+        "id": "act_enregistrer_rendez_vous",
+        "name": "Enregistrer le rendez-vous confirmé",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_confirmation_formulaire_client"
+        },
+        "effect": {
+          "kind": "mutation",
+          "entityId": "ent_rendez_vous",
+          "operation": "create"
+        }
+      },
+      {
+        "id": "act_bloquer_creneau",
+        "name": "Marquer le créneau réservé comme indisponible",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_rendez_vous",
+          "event": "created"
+        },
+        "effect": {
+          "kind": "mutation",
+          "entityId": "ent_creneau",
+          "operation": "update"
+        }
+      },
+      {
+        "id": "act_planifier_rappel_veille",
+        "name": "Calculer la date et le contenu du rappel de la veille",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_rendez_vous",
+          "event": "created"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_planification_rappel_veille"
+        }
+      },
+      {
+        "id": "act_programmer_notification_rappel",
+        "name": "Programmer la notification de rappel la veille à 18h",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_rendez_vous",
+          "event": "created"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "push_notifications",
+          "method": "scheduleLocalNotification",
+          "params": [
+            {
+              "key": "channelId",
+              "value": "rappels_rdv"
+            },
+            {
+              "key": "scheduleAtField",
+              "value": "fld_rdv_rappel_planifie_le"
+            },
+            {
+              "key": "titleSource",
+              "value": "slot_planification_rappel_veille.titre"
+            },
+            {
+              "key": "bodySource",
+              "value": "slot_planification_rappel_veille.corps"
+            },
+            {
+              "key": "groupKey",
+              "value": "rappel_rendez_vous"
+            },
+            {
+              "key": "respectUserOptIn",
+              "value": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_ajouter_au_calendrier",
+        "name": "Ajouter le rendez-vous au calendrier de l'appareil",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_rendez_vous",
+          "event": "created"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "calendar",
+          "method": "createEvent",
+          "params": [
+            {
+              "key": "startField",
+              "value": "fld_rdv_debut"
+            },
+            {
+              "key": "durationFieldId",
+              "value": "fld_prestation_duree_minutes"
+            },
+            {
+              "key": "titlePrefix",
+              "value": "Salon"
+            },
+            {
+              "key": "requireUserConfirmation",
+              "value": true
+            },
+            {
+              "key": "alarmMinutesBefore",
+              "value": 120
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_annuler_notification_rappel",
+        "name": "Annuler le rappel lorsqu'un rendez-vous est annulé",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_rendez_vous",
+          "event": "updated"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "push_notifications",
+          "method": "cancelScheduledNotification",
+          "params": [
+            {
+              "key": "groupKey",
+              "value": "rappel_rendez_vous"
+            },
+            {
+              "key": "whenStatusEquals",
+              "value": "annule"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_liberer_creneau_annule",
+        "name": "Libérer le créneau d'un rendez-vous annulé",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_rendez_vous",
+          "event": "deleted"
+        },
+        "effect": {
+          "kind": "mutation",
+          "entityId": "ent_creneau",
+          "operation": "update"
+        }
+      },
+      {
+        "id": "act_precharger_hors_ligne",
+        "name": "Précharger prestations et créneaux pour l'usage hors-ligne",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "app_start"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "offline_storage",
+          "method": "syncEntities",
+          "params": [
+            {
+              "key": "entityIds",
+              "value": [
+                "ent_prestation",
+                "ent_creneau",
+                "ent_rendez_vous"
+              ]
+            },
+            {
+              "key": "strategy",
+              "value": "stale_while_revalidate"
+            },
+            {
+              "key": "maxAgeMinutes",
+              "value": 60
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_mesurer_ouverture_app",
+        "name": "Mesurer l'ouverture de l'application",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "app_start"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "analytics",
+          "method": "trackEvent",
+          "params": [
+            {
+              "key": "eventName",
+              "value": "app_open"
+            },
+            {
+              "key": "screen",
+              "value": "scr_prestations"
+            },
+            {
+              "key": "containsPersonalData",
+              "value": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_mesurer_reservation",
+        "name": "Mesurer la confirmation d'un rendez-vous",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_rendez_vous",
+          "event": "created"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "analytics",
+          "method": "trackEvent",
+          "params": [
+            {
+              "key": "eventName",
+              "value": "appointment_confirmed"
+            },
+            {
+              "key": "screen",
+              "value": "scr_prestations"
+            },
+            {
+              "key": "containsPersonalData",
+              "value": false
+            }
+          ]
+        }
+      }
+    ],
+    "rules": [
+      {
+        "id": "rule_prestation_duree_valide",
+        "description": "La durée d'une prestation doit être comprise entre 10 et 240 minutes et son prix ne peut pas être négatif.",
+        "kind": "validation",
+        "entityId": "ent_prestation",
+        "assertions": [
+          {
+            "fieldId": "fld_prestation_duree_minutes",
+            "operator": "gte",
+            "value": 10
+          },
+          {
+            "fieldId": "fld_prestation_duree_minutes",
+            "operator": "lte",
+            "value": 240
+          },
+          {
+            "fieldId": "fld_prestation_prix",
+            "operator": "gte",
+            "value": 0
+          }
+        ]
+      },
+      {
+        "id": "rule_prestation_reservable",
+        "description": "Seules les prestations actives et rattachées à une catégorie connue peuvent être réservées.",
+        "kind": "validation",
+        "entityId": "ent_prestation",
+        "assertions": [
+          {
+            "fieldId": "fld_prestation_active",
+            "operator": "eq",
+            "value": true
+          },
+          {
+            "fieldId": "fld_prestation_categorie",
+            "operator": "in",
+            "value": [
+              "coupe",
+              "couleur",
+              "coiffage",
+              "soin",
+              "barbe"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "rule_creneau_reservable",
+        "description": "Un créneau ne peut être proposé que s'il est marqué disponible et possède une date de début et un coiffeur.",
+        "kind": "validation",
+        "entityId": "ent_creneau",
+        "assertions": [
+          {
+            "fieldId": "fld_creneau_disponible",
+            "operator": "eq",
+            "value": true
+          },
+          {
+            "fieldId": "fld_creneau_debut",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_creneau_coiffeur",
+            "operator": "required"
+          }
+        ]
+      },
+      {
+        "id": "rule_rdv_contact_client",
+        "description": "Le nom du client est obligatoire et le téléphone doit être un numéro valide (format international ou national à 10 chiffres).",
+        "kind": "validation",
+        "entityId": "ent_rendez_vous",
+        "assertions": [
+          {
+            "fieldId": "fld_rdv_client_nom",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_rdv_client_telephone",
+            "operator": "matches",
+            "value": "^(\\+[1-9][0-9]{7,14}|0[1-9][0-9]{8})$"
+          },
+          {
+            "fieldId": "fld_rdv_client_email",
+            "operator": "matches",
+            "value": "^$|^[^@\\s]+@[^@\\s]+\\.[a-zA-Z]{2,}$"
+          }
+        ]
+      },
+      {
+        "id": "rule_rdv_coherence_reservation",
+        "description": "Un rendez-vous doit référencer une prestation et un créneau, porter un statut connu et déclarer si le rappel de la veille est actif.",
+        "kind": "validation",
+        "entityId": "ent_rendez_vous",
+        "assertions": [
+          {
+            "fieldId": "fld_rdv_prestation",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_rdv_creneau",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_rdv_debut",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_rdv_statut",
+            "operator": "in",
+            "value": [
+              "confirme",
+              "annule",
+              "honore",
+              "absent"
+            ]
+          },
+          {
+            "fieldId": "fld_rdv_rappel_actif",
+            "operator": "required"
+          }
+        ]
+      },
+      {
+        "id": "rule_rdv_annulation_client",
+        "description": "Seul le propriétaire du rendez-vous (identifié par son téléphone enregistré) peut consulter ou annuler un rendez-vous non encore honoré.",
+        "kind": "authorization",
+        "entityId": "ent_rendez_vous",
+        "assertions": [
+          {
+            "fieldId": "fld_rdv_client_telephone",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_rdv_statut",
+            "operator": "neq",
+            "value": "honore"
+          }
+        ]
+      }
+    ],
+    "slots": [
+      {
+        "id": "slot_calcul_creneaux_disponibles",
+        "description": "Calcule la liste des créneaux réservables pour une journée donnée en fonction de la durée de la prestation, des horaires d'ouverture du salon et des rendez-vous déjà pris.",
+        "inputs": [
+          {
+            "name": "jour",
+            "type": "date"
+          },
+          {
+            "name": "dureePrestationMinutes",
+            "type": "number"
+          },
+          {
+            "name": "creneauxBruts",
+            "type": "json"
+          },
+          {
+            "name": "rendezVousExistants",
+            "type": "json"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "creneauxDisponibles",
+            "type": "json"
+          },
+          {
+            "name": "premierCreneau",
+            "type": "datetime"
+          }
+        ],
+        "allowedImports": [
+          "date-fns",
+          "date-fns-tz"
+        ]
+      },
+      {
+        "id": "slot_format_duree_prix",
+        "description": "Formate la durée (en minutes) et le prix d'une prestation en libellés lisibles selon la locale fr ou en.",
+        "inputs": [
+          {
+            "name": "dureeMinutes",
+            "type": "number"
+          },
+          {
+            "name": "prix",
+            "type": "decimal"
+          },
+          {
+            "name": "locale",
+            "type": "string"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "libelleDuree",
+            "type": "string"
+          },
+          {
+            "name": "libellePrix",
+            "type": "string"
+          }
+        ],
+        "allowedImports": []
+      },
+      {
+        "id": "slot_planification_rappel_veille",
+        "description": "Détermine la date/heure d'envoi du rappel la veille du rendez-vous (18h00 heure locale du salon) et compose le titre et le corps localisés de la notification.",
+        "inputs": [
+          {
+            "name": "debutRendezVous",
+            "type": "datetime"
+          },
+          {
+            "name": "nomPrestation",
+            "type": "string"
+          },
+          {
+            "name": "locale",
+            "type": "string"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "rappelPlanifieLe",
+            "type": "datetime"
+          },
+          {
+            "name": "titre",
+            "type": "string"
+          },
+          {
+            "name": "corps",
+            "type": "string"
+          },
+          {
+            "name": "planifiable",
+            "type": "boolean"
+          }
+        ],
+        "allowedImports": [
+          "date-fns",
+          "date-fns-tz"
+        ]
+      },
+      {
+        "id": "slot_generation_reference_rdv",
+        "description": "Génère une référence de rendez-vous courte, lisible et non devinable à partir de la date du créneau et d'un aléa local.",
+        "inputs": [
+          {
+            "name": "debutRendezVous",
+            "type": "datetime"
+          },
+          {
+            "name": "identifiantPrestation",
+            "type": "string"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "reference",
+            "type": "string"
+          }
+        ],
+        "allowedImports": [
+          "nanoid"
+        ]
+      }
+    ],
+    "capabilities": [
+      {
+        "capability": "push_notifications",
+        "config": [
+          {
+            "key": "defaultChannelId",
+            "value": "rappels_rdv"
+          },
+          {
+            "key": "channelName.fr",
+            "value": "Rappels de rendez-vous"
+          },
+          {
+            "key": "channelName.en",
+            "value": "Appointment reminders"
+          },
+          {
+            "key": "allowLocalScheduling",
+            "value": true
+          },
+          {
+            "key": "optInRequired",
+            "value": true
+          }
+        ]
+      },
+      {
+        "capability": "calendar",
+        "config": [
+          {
+            "key": "targetCalendar",
+            "value": "device_default"
+          },
+          {
+            "key": "writeEnabled",
+            "value": true
+          },
+          {
+            "key": "readEnabled",
+            "value": true
+          }
+        ]
+      },
+      {
+        "capability": "offline_storage",
+        "config": [
+          {
+            "key": "cachedEntityIds",
+            "value": [
+              "ent_prestation",
+              "ent_creneau",
+              "ent_rendez_vous"
+            ]
+          },
+          {
+            "key": "maxCacheDays",
+            "value": 30
+          },
+          {
+            "key": "encryptAtRest",
+            "value": true
+          }
+        ]
+      },
+      {
+        "capability": "analytics",
+        "config": [
+          {
+            "key": "anonymizeIdentifiers",
+            "value": true
+          },
+          {
+            "key": "collectUsageData",
+            "value": true
+          },
+          {
+            "key": "consentRequired",
+            "value": true
+          }
+        ]
+      }
+    ],
+    "permissions": [
+      {
+        "platform": "android",
+        "permission": "android.permission.POST_NOTIFICATIONS",
+        "reason": [
+          {
+            "locale": "fr",
+            "text": "Pour vous envoyer le rappel de votre rendez-vous la veille au soir."
+          },
+          {
+            "locale": "en",
+            "text": "To send you a reminder of your appointment the evening before."
+          }
+        ],
+        "requiredByCapability": "push_notifications"
+      },
+      {
+        "platform": "ios",
+        "permission": "NSCalendarsFullAccessUsageDescription",
+        "reason": [
+          {
+            "locale": "fr",
+            "text": "Pour ajouter votre rendez-vous au salon dans le calendrier de votre appareil."
+          },
+          {
+            "locale": "en",
+            "text": "To add your salon appointment to your device calendar."
+          }
+        ],
+        "requiredByCapability": "calendar"
+      },
+      {
+        "platform": "android",
+        "permission": "android.permission.READ_CALENDAR",
+        "reason": [
+          {
+            "locale": "fr",
+            "text": "Pour vérifier que votre rendez-vous n'entre pas en conflit avec un événement existant."
+          },
+          {
+            "locale": "en",
+            "text": "To check that your appointment does not clash with an existing event."
+          }
+        ],
+        "requiredByCapability": "calendar"
+      },
+      {
+        "platform": "android",
+        "permission": "android.permission.WRITE_CALENDAR",
+        "reason": [
+          {
+            "locale": "fr",
+            "text": "Pour enregistrer votre rendez-vous au salon dans votre calendrier."
+          },
+          {
+            "locale": "en",
+            "text": "To save your salon appointment in your calendar."
+          }
+        ],
+        "requiredByCapability": "calendar"
+      }
+    ],
+    "design": {
+      "theme": "salon_elegant",
+      "tokensVersion": "1.0.0",
+      "overrides": [
+        {
+          "key": "color.primary",
+          "value": "#1F2933"
+        },
+        {
+          "key": "color.accent",
+          "value": "#C9A227"
+        },
+        {
+          "key": "radius.card",
+          "value": 12
+        },
+        {
+          "key": "typography.headingFamily",
+          "value": "Inter"
+        }
+      ]
+    },
+    "integrations": [
+      {
+        "id": "intg_backend_api",
+        "providerClass": "rest_api",
+        "capability": "offline_storage",
+        "config": [
+          {
+            "key": "baseUrl",
+            "value": "https://api.salon-rdv.app/v1"
+          },
+          {
+            "key": "authMode",
+            "value": "none"
+          },
+          {
+            "key": "timeoutMs",
+            "value": 10000
+          },
+          {
+            "key": "retryCount",
+            "value": 2
+          },
+          {
+            "key": "syncEndpoints",
+            "value": [
+              "/prestations",
+              "/creneaux",
+              "/rendez-vous"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "intg_push_local_scheduler",
+        "providerClass": "local_notifications",
+        "capability": "push_notifications",
+        "config": [
+          {
+            "key": "channelId",
+            "value": "rappels_rdv"
+          },
+          {
+            "key": "channelImportance",
+            "value": "high"
+          },
+          {
+            "key": "schedulingMode",
+            "value": "exact_local_time"
+          },
+          {
+            "key": "timezone",
+            "value": "Europe/Paris"
+          },
+          {
+            "key": "reminderHourLocal",
+            "value": 18
+          }
+        ]
+      },
+      {
+        "id": "intg_device_calendar",
+        "providerClass": "device_calendar",
+        "capability": "calendar",
+        "config": [
+          {
+            "key": "calendarSelection",
+            "value": "device_default"
+          },
+          {
+            "key": "eventTitleTemplate.fr",
+            "value": "Salon — {prestation}"
+          },
+          {
+            "key": "eventTitleTemplate.en",
+            "value": "Salon — {service}"
+          },
+          {
+            "key": "alarmMinutesBefore",
+            "value": 120
+          }
+        ]
+      },
+      {
+        "id": "intg_analytics_produit",
+        "providerClass": "analytics_sdk",
+        "capability": "analytics",
+        "config": [
+          {
+            "key": "ingestionEndpoint",
+            "value": "https://api.salon-rdv.app/v1/analytics"
+          },
+          {
+            "key": "anonymizeIp",
+            "value": true
+          },
+          {
+            "key": "consentGated",
+            "value": true
+          },
+          {
+            "key": "batchIntervalSeconds",
+            "value": 60
+          }
+        ]
+      },
+      {
+        "id": "intg_cache_local",
+        "providerClass": "encrypted_key_value_store",
+        "capability": "offline_storage",
+        "config": [
+          {
+            "key": "storeName",
+            "value": "salon_rdv_cache"
+          },
+          {
+            "key": "encryptAtRest",
+            "value": true
+          },
+          {
+            "key": "maxCacheDays",
+            "value": 30
+          },
+          {
+            "key": "evictionPolicy",
+            "value": "lru"
+          }
+        ]
+      }
+    ],
+    "network": {
+      "policy": "deny_by_default",
+      "allowedDomains": [
+        "api.salon-rdv.app"
+      ]
+    },
+    "native": {
+      "minIosVersion": "15.0",
+      "minAndroidSdk": 26
+    },
+    "compliance": {
+      "commerceClass": "none",
+      "accountDeletionRequired": true,
+      "dataCollected": [
+        "contact_info",
+        "identifiers",
+        "usage_data"
+      ]
+    },
+    "expectedTests": [
+      {
+        "id": "test_slot_creneaux_duree",
+        "description": "act_calculer_creneaux ne retient que des créneaux dont la plage libre couvre la durée de la prestation, sans chevaucher un rendez-vous existant.",
+        "kind": "deterministic",
+        "targetId": "act_calculer_creneaux"
+      },
+      {
+        "id": "test_slot_creneaux_journee_complete",
+        "description": "act_calculer_creneaux produit une liste vide et aucun premier créneau lorsque tous les créneaux du jour sont déjà réservés ou hors horaires d'ouverture.",
+        "kind": "deterministic",
+        "targetId": "act_calculer_creneaux"
+      },
+      {
+        "id": "test_slot_format_locales",
+        "description": "act_formater_catalogue formate durée et prix correctement en fr (« 45 min », « 32,00 € ») et en en (« 45 min », « €32.00 ») pour les mêmes entrées.",
+        "kind": "deterministic",
+        "targetId": "act_formater_catalogue"
+      },
+      {
+        "id": "test_slot_rappel_veille_18h",
+        "description": "act_planifier_rappel_veille place le rappel la veille à 18h00 heure locale du salon, y compris lors d'un changement d'heure, et renvoie titre et corps dans la locale demandée.",
+        "kind": "deterministic",
+        "targetId": "act_planifier_rappel_veille"
+      },
+      {
+        "id": "test_slot_rappel_non_planifiable",
+        "description": "act_planifier_rappel_veille marque le rappel comme non planifiable quand la veille 18h est déjà passée (rendez-vous pris le jour même ou le lendemain matin).",
+        "kind": "deterministic",
+        "targetId": "act_planifier_rappel_veille"
+      },
+      {
+        "id": "test_slot_reference_unicite",
+        "description": "act_generer_reference produit des références uniques, non séquentielles et au format lisible attendu sur 10 000 générations.",
+        "kind": "deterministic",
+        "targetId": "act_generer_reference"
+      },
+      {
+        "id": "test_rule_duree_prestation",
+        "description": "La validation de ent_prestation rejette une durée hors de l'intervalle 10–240 minutes et un prix négatif.",
+        "kind": "deterministic",
+        "targetId": "ent_prestation"
+      },
+      {
+        "id": "test_rule_telephone_client",
+        "description": "La validation de ent_rendez_vous accepte les téléphones au format international (+33...) ou national à 10 chiffres et rejette les autres, en tolérant un email vide.",
+        "kind": "deterministic",
+        "targetId": "ent_rendez_vous"
+      },
+      {
+        "id": "test_rule_creneau_reservable",
+        "description": "La validation de ent_creneau interdit la réservation d'un créneau marqué indisponible ou sans coiffeur assigné.",
+        "kind": "deterministic",
+        "targetId": "ent_creneau"
+      },
+      {
+        "id": "test_rule_autorisation_annulation",
+        "description": "L'autorisation sur ent_rendez_vous empêche l'accès et l'annulation d'un rendez-vous par un téléphone différent de celui enregistré, et bloque l'annulation d'un rendez-vous honoré.",
+        "kind": "deterministic",
+        "targetId": "ent_rendez_vous"
+      },
+      {
+        "id": "test_e2e_reservation_complete",
+        "description": "Parcours complet : sélection d'une prestation, choix d'un créneau puis confirmation déclenchant act_enregistrer_rendez_vous, avec création du rendez-vous et affichage de la référence.",
+        "kind": "e2e",
+        "targetId": "act_enregistrer_rendez_vous"
+      },
+      {
+        "id": "test_e2e_creneau_bloque_apres_reservation",
+        "description": "Après act_enregistrer_rendez_vous, act_bloquer_creneau rend le créneau indisponible et celui-ci n'apparaît plus dans la liste des créneaux proposés.",
+        "kind": "e2e",
+        "targetId": "act_bloquer_creneau"
+      },
+      {
+        "id": "test_e2e_rappel_programme",
+        "description": "À la création d'un rendez-vous, act_programmer_notification_rappel programme une notification locale sur le canal rappels_rdv à la date calculée, uniquement si l'utilisateur a donné son accord.",
+        "kind": "e2e",
+        "targetId": "act_programmer_notification_rappel"
+      },
+      {
+        "id": "test_e2e_annulation_libere_et_annule_rappel",
+        "description": "L'annulation d'un rendez-vous déclenche act_annuler_notification_rappel et libère le créneau correspondant.",
+        "kind": "e2e",
+        "targetId": "act_annuler_notification_rappel"
+      },
+      {
+        "id": "test_e2e_recherche_et_etat_vide",
+        "description": "Une recherche sans résultat sur scr_prestations affiche l'état vide et masque la liste des prestations.",
+        "kind": "e2e",
+        "targetId": "scr_prestations"
+      },
+      {
+        "id": "test_e2e_mes_rendez_vous_hors_ligne",
+        "description": "Sans connexion réseau, act_voir_mes_rendez_vous restitue les rendez-vous préalablement mis en cache par act_precharger_hors_ligne.",
+        "kind": "e2e",
+        "targetId": "act_voir_mes_rendez_vous"
+      },
+      {
+        "id": "test_e2e_bascule_fr_en",
+        "description": "Le basculement de la locale fr vers en met à jour les titres d'écrans, les libellés de blocs et les formats de durée/prix sans redémarrage.",
+        "kind": "e2e",
+        "targetId": "scr_prestations"
+      },
+      {
+        "id": "test_contract_api_prestations_creneaux",
+        "description": "La synchronisation déclenchée par act_precharger_hors_ligne consomme des prestations et créneaux conformes à ent_prestation et ent_creneau (types, énumérations, champs requis) et refuse tout domaine autre que api.salon-rdv.app.",
+        "kind": "contract",
+        "targetId": "act_precharger_hors_ligne"
+      },
+      {
+        "id": "test_contract_creation_rendez_vous",
+        "description": "act_enregistrer_rendez_vous respecte le schéma ent_rendez_vous, obtient une référence unique et un statut « confirme », et remonte un conflit si le créneau est déjà pris.",
+        "kind": "contract",
+        "targetId": "act_enregistrer_rendez_vous"
+      },
+      {
+        "id": "test_contract_calendrier_evenement",
+        "description": "act_ajouter_au_calendrier crée un événement dont la durée correspond à fld_prestation_duree_minutes, avec une alarme 120 minutes avant et une confirmation utilisateur préalable.",
+        "kind": "contract",
+        "targetId": "act_ajouter_au_calendrier"
+      },
+      {
+        "id": "test_contract_analytics_sans_donnees_perso",
+        "description": "act_mesurer_reservation n'émet aucun identifiant personnel (nom, téléphone, email) et n'envoie rien sans consentement.",
+        "kind": "contract",
+        "targetId": "act_mesurer_reservation"
+      },
+      {
+        "id": "test_contract_cache_chiffre",
+        "description": "Le cache alimenté par act_precharger_hors_ligne chiffre les données au repos, respecte la rétention de 30 jours et purge les entrées selon la politique LRU.",
+        "kind": "contract",
+        "targetId": "act_precharger_hors_ligne"
+      },
+      {
+        "id": "test_contract_permissions_declarees",
+        "description": "act_programmer_notification_rappel n'opère qu'avec POST_NOTIFICATIONS déclarée et justifiée en fr et en, et les permissions calendrier (READ_CALENDAR, WRITE_CALENDAR, NSCalendarsFullAccessUsageDescription) restent rattachées à la capability calendar.",
+        "kind": "contract",
+        "targetId": "act_programmer_notification_rappel"
+      }
+    ]
+  }
+}

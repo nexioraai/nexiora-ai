@@ -1,0 +1,30 @@
+{
+  "name": "@deribfy/compiler",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Compilateur déterministe v1 (Phase 4, D-026) — release train v1 et résolveur AIR→lock ; étages d'émission ajoutés en 4.2+",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@deribfy/air-schema": "*",
+    "@deribfy/blocks": "*",
+    "@deribfy/capability-registry": "*",
+    "@deribfy/design-tokens": "*",
+    "@deribfy/provider-registry": "*",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "eslint": "^9.39.0",
+    "typescript": "^5",
+    "typescript-eslint": "^8.60.0",
+    "vitest": "^4.1.10"
+  }
+}

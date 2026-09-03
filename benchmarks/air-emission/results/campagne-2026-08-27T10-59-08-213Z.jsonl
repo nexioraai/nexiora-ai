@@ -1,0 +1,1 @@
+{"intention":"resto-quartier","commerce":"physical_or_offapp","erreur":"400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"output_config.format.schema: Schema type 'oneOf' is not supported\"},\"request_id\":\"req_011CeT8qQ8h6PW7SNonGYBUN\"}","valid":false,"dureeMs":751}

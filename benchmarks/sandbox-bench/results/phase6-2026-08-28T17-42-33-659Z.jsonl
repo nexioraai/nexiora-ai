@@ -1,0 +1,5 @@
+{"etape":"compile","rootHash":"343a94d994c44b2256750f824a40bf202f686063455771cb679ce3c64e07ec43","fichiers":31}
+{"etape":"6.3-pipeline","ok":true,"failedStep":null,"teardownProved":true,"totalMs":28618,"steps":[{"name":"extract","exitCode":0,"durationMs":120,"timedOut":false},{"name":"npm_ci","exitCode":0,"durationMs":9729,"timedOut":false},{"name":"typecheck","exitCode":0,"durationMs":1914,"timedOut":false},{"name":"bundle","exitCode":0,"durationMs":15435,"timedOut":false}]}
+{"etape":"oracle-L1","passed":true,"checks":[{"name":"validateurs","passed":true,"detail":"0 diagnostic aux 4 validateurs"},{"name":"determinisme","passed":true,"detail":"rootHash stable 343a94d994c44b22"},{"name":"permissions_vs_air","passed":true,"detail":"manifeste conforme (1 Android, 0 iOS)"},{"name":"backend_vs_air","passed":true,"detail":"3 tables ⇔ 3 entités"}]}
+{"etape":"6.5-sans-secrets","envProbe":"NONE","metaProbe":"BLOCKED","secretsAbsent":true,"teardownProved":true}
+{"VERDICT":"PHASE 6.3+6.5 : VERT","journal":"/Users/yia/Documents/woorri/benchmarks/sandbox-bench/results/phase6-2026-08-28T17-42-33-659Z.jsonl"}

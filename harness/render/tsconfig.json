@@ -1,0 +1,15 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "paths": {
+      "react-native": ["./node_modules/react-native"],
+      "@deribfy/design-tokens": ["../../packages/design-tokens/src/index.ts"],
+      "@deribfy/primitives": ["../../packages/primitives/src/index.ts"],
+      "@deribfy/blocks": ["../../packages/blocks/src/index.ts"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", "../../packages/*/src/**/*.ts", "../../packages/*/src/**/*.tsx"]
+}

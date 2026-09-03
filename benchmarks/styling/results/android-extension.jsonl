@@ -1,0 +1,2 @@
+{"candidate":"restyle","platform":"android","ttiListMs":31.9,"scroll":{"frames":360,"droppedOver17ms":143,"droppedOver34ms":0,"maxFrameMs":24.1,"durationMs":6003},"themeToggleMsMedian":66.9,"themeToggleRuns":[93.6,63.3,65.1,65.7,66.9,66.9,65.8,67.8,68,64.7]}
+{"candidate":"uniwind","platform":"android","ttiListMs":24.7,"scroll":{"frames":360,"droppedOver17ms":131,"droppedOver34ms":0,"maxFrameMs":23.9,"durationMs":6000},"themeToggleMsMedian":55.8,"themeToggleRuns":[69.9,55.8,49.7,52,37.3,59.8,50.8,57.2,59,49.8]}

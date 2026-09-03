@@ -1,0 +1,21 @@
+{
+  "name": "restyle-candidate",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "@shopify/restyle": "^2.4.5",
+    "expo": "~57.0.17",
+    "expo-file-system": "~57.0.6",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.3"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start"
+  },
+  "private": true
+}

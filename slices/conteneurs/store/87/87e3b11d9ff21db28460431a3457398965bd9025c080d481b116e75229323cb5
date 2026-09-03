@@ -1,0 +1,25 @@
+// GÉNÉRÉ — NE PAS ÉDITER (navigation : verdict S1 D-026 — native-stack,
+// config EXPLICITE émise depuis l'AIR, patron prouvé au banc V4).
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { navData } from "./nav.data";
+import ScrConteneursScreen from "./screens/scr_conteneurs";
+import ScrDetailConteneurScreen from "./screens/scr_detail_conteneur";
+import ScrNotificationsScreen from "./screens/scr_notifications";
+
+const Stack = createNativeStackNavigator();
+
+export function Navigation() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="scr_conteneurs">
+      <Stack.Screen name="scr_conteneurs" component={ScrConteneursScreen}
+        options={{ title: navData.routes.find((x) => x.screenId === "scr_conteneurs")!.title }} />
+      <Stack.Screen name="scr_detail_conteneur" component={ScrDetailConteneurScreen}
+        options={{ title: navData.routes.find((x) => x.screenId === "scr_detail_conteneur")!.title }} />
+      <Stack.Screen name="scr_notifications" component={ScrNotificationsScreen}
+        options={{ title: navData.routes.find((x) => x.screenId === "scr_notifications")!.title }} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}

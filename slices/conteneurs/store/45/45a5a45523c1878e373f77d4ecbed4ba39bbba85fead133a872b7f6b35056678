@@ -1,0 +1,2 @@
+// GÉNÉRÉ — NE PAS ÉDITER (données canoniques de navigation).
+export const navData = {"entryScreenId":"scr_containers","locale":"fr","routes":[{"routeId":"nav_container_detail","screenId":"scr_container_detail","title":"Détail du conteneur"},{"routeId":"nav_containers","screenId":"scr_containers","title":"Mes conteneurs"},{"routeId":"nav_notifications","screenId":"scr_notifications","title":"Alertes"},{"routeId":"nav_settings","screenId":"scr_settings","title":"Réglages"}]} as const;

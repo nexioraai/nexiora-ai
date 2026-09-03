@@ -1,0 +1,1363 @@
+{
+  "identical": false,
+  "schemaValid": true,
+  "diagnostics": [
+    {
+      "code": "AIR_ACTION_TRIGGER_BLOCK_UNKNOWN",
+      "path": "actions[0].trigger.blockId",
+      "message": "bloc \"blk_plat_ajouter_panier\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_TRIGGER_SCREEN_UNKNOWN",
+      "path": "actions[2].trigger.screenId",
+      "message": "écran \"scr_panier\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_TRIGGER_BLOCK_UNKNOWN",
+      "path": "actions[3].trigger.blockId",
+      "message": "bloc \"blk_panier_payer_carte\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_SCREEN_UNKNOWN",
+      "path": "actions[4].effect.screenId",
+      "message": "écran \"scr_suivi_commande\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_TRIGGER_SCREEN_UNKNOWN",
+      "path": "actions[5].trigger.screenId",
+      "message": "écran \"scr_suivi_commande\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_TRIGGER_BLOCK_UNKNOWN",
+      "path": "actions[6].trigger.blockId",
+      "message": "bloc \"blk_suivi_optin_push\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_TRIGGER_BLOCK_UNKNOWN",
+      "path": "actions[9].trigger.blockId",
+      "message": "bloc \"blk_suivi_annuler\" introuvable"
+    },
+    {
+      "code": "AIR_TEST_TARGET_UNKNOWN",
+      "path": "expectedTests[10].targetId",
+      "message": "cible \"scr_plat_detail\" introuvable (écran, action ou entité)"
+    },
+    {
+      "code": "AIR_TEST_TARGET_UNKNOWN",
+      "path": "expectedTests[15].targetId",
+      "message": "cible \"scr_panier\" introuvable (écran, action ou entité)"
+    },
+    {
+      "code": "AIR_TEST_TARGET_UNKNOWN",
+      "path": "expectedTests[8].targetId",
+      "message": "cible \"scr_suivi_commande\" introuvable (écran, action ou entité)"
+    },
+    {
+      "code": "AIR_NAV_SCREEN_UNKNOWN",
+      "path": "navigation.routes[1].screenId",
+      "message": "écran \"scr_plat_detail\" introuvable"
+    },
+    {
+      "code": "AIR_NAV_SCREEN_UNKNOWN",
+      "path": "navigation.routes[2].screenId",
+      "message": "écran \"scr_panier\" introuvable"
+    },
+    {
+      "code": "AIR_NAV_SCREEN_UNKNOWN",
+      "path": "navigation.routes[3].screenId",
+      "message": "écran \"scr_suivi_commande\" introuvable"
+    }
+  ],
+  "document": {
+    "airSchemaVersion": "1.0.0",
+    "projectId": "prj_resto_quartier_abidjan",
+    "app": {
+      "name": "Maquis Express",
+      "slug": "maquis-express",
+      "description": [
+        {
+          "locale": "fr",
+          "text": "Application du restaurant de quartier : consultez le menu en photos avec les prix, commandez à emporter, payez par carte et recevez une notification dès que votre commande est prête."
+        }
+      ],
+      "locales": {
+        "userLanguage": "fr",
+        "appLocales": [
+          "fr"
+        ],
+        "defaultAppLocale": "fr",
+        "contentLocales": [
+          "fr"
+        ],
+        "rtlSupported": false
+      }
+    },
+    "navigation": {
+      "entryScreenId": "scr_menu",
+      "routes": [
+        {
+          "id": "nav_menu",
+          "screenId": "scr_menu",
+          "title": [
+            {
+              "locale": "fr",
+              "text": "Menu"
+            }
+          ]
+        },
+        {
+          "id": "nav_plat_detail",
+          "screenId": "scr_plat_detail",
+          "title": [
+            {
+              "locale": "fr",
+              "text": "Détail du plat"
+            }
+          ]
+        },
+        {
+          "id": "nav_panier",
+          "screenId": "scr_panier",
+          "title": [
+            {
+              "locale": "fr",
+              "text": "Panier et paiement"
+            }
+          ]
+        },
+        {
+          "id": "nav_suivi",
+          "screenId": "scr_suivi_commande",
+          "title": [
+            {
+              "locale": "fr",
+              "text": "Suivi de commande"
+            }
+          ]
+        }
+      ]
+    },
+    "design": {
+      "theme": "warm_food",
+      "tokensVersion": "1.0.0",
+      "overrides": [
+        {
+          "key": "color.primary",
+          "value": "#D96B1F"
+        },
+        {
+          "key": "color.accent",
+          "value": "#137A4B"
+        },
+        {
+          "key": "radius.card",
+          "value": 16
+        },
+        {
+          "key": "font.heading",
+          "value": "Inter"
+        }
+      ]
+    },
+    "network": {
+      "policy": "deny_by_default",
+      "allowedDomains": [
+        "api.maquis-express.app"
+      ]
+    },
+    "native": {
+      "minIosVersion": "15.0",
+      "minAndroidSdk": 24
+    },
+    "compliance": {
+      "commerceClass": "physical_or_offapp",
+      "accountDeletionRequired": true,
+      "dataCollected": [
+        "contact_info",
+        "identifiers",
+        "purchases",
+        "usage_data",
+        "diagnostics"
+      ]
+    },
+    "entities": [
+      {
+        "id": "ent_plat",
+        "name": "plat",
+        "fields": [
+          {
+            "id": "fld_plat_nom",
+            "name": "nom",
+            "type": "string",
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "fld_plat_description",
+            "name": "description",
+            "type": "text",
+            "required": false
+          },
+          {
+            "id": "fld_plat_categorie",
+            "name": "categorie",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "entree",
+              "plat_principal",
+              "grillade",
+              "accompagnement",
+              "dessert",
+              "boisson"
+            ]
+          },
+          {
+            "id": "fld_plat_prix_xof",
+            "name": "prix_xof",
+            "type": "decimal",
+            "required": true
+          },
+          {
+            "id": "fld_plat_photo",
+            "name": "photo",
+            "type": "asset",
+            "required": false
+          },
+          {
+            "id": "fld_plat_disponible",
+            "name": "disponible",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "id": "fld_plat_delai_minutes",
+            "name": "delai_preparation_minutes",
+            "type": "number",
+            "required": false
+          },
+          {
+            "id": "fld_plat_ordre_affichage",
+            "name": "ordre_affichage",
+            "type": "number",
+            "required": false
+          }
+        ]
+      },
+      {
+        "id": "ent_commande",
+        "name": "commande",
+        "fields": [
+          {
+            "id": "fld_cmd_numero",
+            "name": "numero",
+            "type": "string",
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "fld_cmd_client_nom",
+            "name": "client_nom",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_cmd_client_telephone",
+            "name": "client_telephone",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_cmd_statut",
+            "name": "statut",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "brouillon",
+              "en_attente_paiement",
+              "payee",
+              "en_preparation",
+              "prete",
+              "retiree",
+              "annulee"
+            ]
+          },
+          {
+            "id": "fld_cmd_statut_paiement",
+            "name": "statut_paiement",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "non_paye",
+              "autorise",
+              "paye",
+              "rembourse",
+              "echoue"
+            ]
+          },
+          {
+            "id": "fld_cmd_total_xof",
+            "name": "total_xof",
+            "type": "decimal",
+            "required": true
+          },
+          {
+            "id": "fld_cmd_heure_retrait",
+            "name": "heure_retrait_souhaitee",
+            "type": "datetime",
+            "required": false
+          },
+          {
+            "id": "fld_cmd_note",
+            "name": "note_client",
+            "type": "text",
+            "required": false
+          },
+          {
+            "id": "fld_cmd_creee_le",
+            "name": "creee_le",
+            "type": "datetime",
+            "required": true
+          },
+          {
+            "id": "fld_cmd_notifiee_prete",
+            "name": "notifiee_prete",
+            "type": "boolean",
+            "required": true
+          }
+        ]
+      },
+      {
+        "id": "ent_ligne_commande",
+        "name": "ligne_commande",
+        "fields": [
+          {
+            "id": "fld_lig_commande",
+            "name": "commande",
+            "type": "reference",
+            "required": true,
+            "referencesEntityId": "ent_commande"
+          },
+          {
+            "id": "fld_lig_plat",
+            "name": "plat",
+            "type": "reference",
+            "required": true,
+            "referencesEntityId": "ent_plat"
+          },
+          {
+            "id": "fld_lig_quantite",
+            "name": "quantite",
+            "type": "number",
+            "required": true
+          },
+          {
+            "id": "fld_lig_prix_unitaire_xof",
+            "name": "prix_unitaire_xof",
+            "type": "decimal",
+            "required": true
+          },
+          {
+            "id": "fld_lig_sous_total_xof",
+            "name": "sous_total_xof",
+            "type": "decimal",
+            "required": true
+          },
+          {
+            "id": "fld_lig_instructions",
+            "name": "instructions",
+            "type": "text",
+            "required": false
+          }
+        ]
+      }
+    ],
+    "relations": [
+      {
+        "id": "rel_commande_lignes",
+        "fromEntityId": "ent_commande",
+        "toEntityId": "ent_ligne_commande",
+        "kind": "one_to_many"
+      },
+      {
+        "id": "rel_plat_lignes",
+        "fromEntityId": "ent_plat",
+        "toEntityId": "ent_ligne_commande",
+        "kind": "one_to_many"
+      }
+    ],
+    "datasets": [
+      {
+        "id": "data_plats_catalogue_initial",
+        "entityId": "ent_plat",
+        "contentHash": "6f1c9ad4be27305e8c41d9b0a7f52e3c8d94b1670af23c5de81b47a9c02f6d3e",
+        "rowCount": 18
+      }
+    ],
+    "rules": [
+      {
+        "id": "rule_plat_prix_positif",
+        "description": "Le prix d'un plat doit être strictement supérieur à 0 FCFA et sa disponibilité doit être renseignée.",
+        "kind": "validation",
+        "entityId": "ent_plat",
+        "assertions": [
+          {
+            "fieldId": "fld_plat_prix_xof",
+            "operator": "gt",
+            "value": 0
+          },
+          {
+            "fieldId": "fld_plat_nom",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_plat_disponible",
+            "operator": "required"
+          }
+        ]
+      },
+      {
+        "id": "rule_commande_client_valide",
+        "description": "Une commande doit porter un nom de client et un numéro de téléphone ivoirien valide (format international ou local).",
+        "kind": "validation",
+        "entityId": "ent_commande",
+        "assertions": [
+          {
+            "fieldId": "fld_cmd_client_nom",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_cmd_client_telephone",
+            "operator": "matches",
+            "value": "^(\\+225)?[0-9]{8,10}$"
+          },
+          {
+            "fieldId": "fld_cmd_total_xof",
+            "operator": "gt",
+            "value": 0
+          }
+        ]
+      },
+      {
+        "id": "rule_ligne_quantite_bornee",
+        "description": "Chaque ligne de commande doit comporter entre 1 et 20 unités du même plat.",
+        "kind": "validation",
+        "entityId": "ent_ligne_commande",
+        "assertions": [
+          {
+            "fieldId": "fld_lig_quantite",
+            "operator": "gte",
+            "value": 1
+          },
+          {
+            "fieldId": "fld_lig_quantite",
+            "operator": "lte",
+            "value": 20
+          },
+          {
+            "fieldId": "fld_lig_prix_unitaire_xof",
+            "operator": "gt",
+            "value": 0
+          }
+        ]
+      },
+      {
+        "id": "rule_commande_preparation_apres_paiement",
+        "description": "Une commande ne peut entrer en préparation ou être déclarée prête que si le paiement par carte est encaissé.",
+        "kind": "validation",
+        "entityId": "ent_commande",
+        "assertions": [
+          {
+            "fieldId": "fld_cmd_statut_paiement",
+            "operator": "eq",
+            "value": "paye"
+          },
+          {
+            "fieldId": "fld_cmd_statut",
+            "operator": "in",
+            "value": [
+              "en_preparation",
+              "prete",
+              "retiree"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "rule_auth_suivi_commande_proprietaire",
+        "description": "Seul le client authentifié propriétaire de la commande peut consulter son suivi ; les commandes annulées ne sont pas accessibles.",
+        "kind": "authorization",
+        "entityId": "ent_commande",
+        "assertions": [
+          {
+            "fieldId": "fld_cmd_client_telephone",
+            "operator": "required"
+          },
+          {
+            "fieldId": "fld_cmd_statut",
+            "operator": "neq",
+            "value": "annulee"
+          }
+        ]
+      }
+    ],
+    "slots": [
+      {
+        "id": "slot_calcul_total_panier",
+        "description": "Calcule le sous-total de chaque ligne et le total de la commande en FCFA à partir des articles du panier (quantités et prix unitaires), sans arrondi décimal car le franc CFA n'a pas de subdivision.",
+        "inputs": [
+          {
+            "name": "lignesPanier",
+            "type": "json"
+          },
+          {
+            "name": "codeDevise",
+            "type": "string"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "totalXof",
+            "type": "decimal"
+          },
+          {
+            "name": "lignesCalculees",
+            "type": "json"
+          }
+        ],
+        "allowedImports": []
+      },
+      {
+        "id": "slot_format_prix_fcfa",
+        "description": "Formate un montant numérique en libellé de prix lisible en français ivoirien, par exemple « 2 500 FCFA ».",
+        "inputs": [
+          {
+            "name": "montant",
+            "type": "decimal"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "prixFormate",
+            "type": "string"
+          }
+        ],
+        "allowedImports": [
+          "intl"
+        ]
+      },
+      {
+        "id": "slot_libelle_statut_commande",
+        "description": "Traduit le statut technique d'une commande en libellé et message français affichés sur l'écran de suivi et dans la notification push « commande prête ».",
+        "inputs": [
+          {
+            "name": "statut",
+            "type": "enum"
+          },
+          {
+            "name": "numeroCommande",
+            "type": "string"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "libelle",
+            "type": "string"
+          },
+          {
+            "name": "messageNotification",
+            "type": "text"
+          }
+        ],
+        "allowedImports": []
+      },
+      {
+        "id": "slot_estimation_temps_retrait",
+        "description": "Estime l'heure de retrait à emporter à partir des délais de préparation des plats commandés et de l'horodatage de paiement.",
+        "inputs": [
+          {
+            "name": "lignesPanier",
+            "type": "json"
+          },
+          {
+            "name": "paiementLe",
+            "type": "datetime"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "heureRetraitEstimee",
+            "type": "datetime"
+          },
+          {
+            "name": "delaiMinutes",
+            "type": "number"
+          }
+        ],
+        "allowedImports": []
+      }
+    ],
+    "screens": [
+      {
+        "id": "scr_menu",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Menu du jour"
+          }
+        ],
+        "blocks": [
+          {
+            "id": "blk_menu_entete",
+            "blockType": "header",
+            "props": [
+              {
+                "key": "title",
+                "value": "Maquis Express"
+              },
+              {
+                "key": "subtitle",
+                "value": "Commande à emporter — retrait au restaurant"
+              },
+              {
+                "key": "showLogo",
+                "value": true
+              }
+            ]
+          },
+          {
+            "id": "blk_menu_recherche",
+            "blockType": "search_field",
+            "entityId": "ent_plat"
+          },
+          {
+            "id": "blk_menu_filtres_categorie",
+            "blockType": "filter_chips"
+          }
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "act_ajouter_au_panier",
+        "name": "Ajouter le plat au panier",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_plat_ajouter_panier"
+        },
+        "effect": {
+          "kind": "mutation",
+          "entityId": "ent_ligne_commande",
+          "operation": "create"
+        }
+      },
+      {
+        "id": "act_recalculer_total_panier",
+        "name": "Recalculer le total du panier",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_ligne_commande",
+          "event": "created"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_calcul_total_panier"
+        }
+      },
+      {
+        "id": "act_estimer_heure_retrait",
+        "name": "Estimer l'heure de retrait",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "screen_open",
+          "screenId": "scr_panier"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_estimation_temps_retrait"
+        }
+      },
+      {
+        "id": "act_payer_commande",
+        "name": "Payer la commande par carte",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_panier_payer_carte"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "payments.psp",
+          "method": "createCheckout",
+          "params": [
+            {
+              "key": "currency",
+              "value": "XOF"
+            },
+            {
+              "key": "amountFieldId",
+              "value": "fld_cmd_total_xof"
+            },
+            {
+              "key": "orderReferenceFieldId",
+              "value": "fld_cmd_numero"
+            },
+            {
+              "key": "captureMode",
+              "value": "automatic"
+            },
+            {
+              "key": "fulfillmentType",
+              "value": "pickup"
+            },
+            {
+              "key": "returnRouteId",
+              "value": "nav_suivi"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_ouvrir_suivi_apres_paiement",
+        "name": "Ouvrir le suivi après paiement",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_commande",
+          "event": "created"
+        },
+        "effect": {
+          "kind": "navigate",
+          "screenId": "scr_suivi_commande"
+        }
+      },
+      {
+        "id": "act_authentifier_client_suivi",
+        "name": "Vérifier la session du client au suivi",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "screen_open",
+          "screenId": "scr_suivi_commande"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "auth",
+          "method": "requireSession",
+          "params": [
+            {
+              "key": "methods",
+              "value": [
+                "phone_otp",
+                "email"
+              ]
+            },
+            {
+              "key": "allowAccountDeletion",
+              "value": true
+            },
+            {
+              "key": "redirectRouteId",
+              "value": "nav_suivi"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_activer_notifications",
+        "name": "Activer les notifications de commande prête",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_suivi_optin_push"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "push_notifications",
+          "method": "requestPermission",
+          "params": [
+            {
+              "key": "topic",
+              "value": "commande_statut"
+            },
+            {
+              "key": "promptIfDenied",
+              "value": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_libeller_statut_commande",
+        "name": "Traduire le statut de la commande",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_commande",
+          "event": "updated"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_libelle_statut_commande"
+        }
+      },
+      {
+        "id": "act_notifier_commande_prete",
+        "name": "Notifier que la commande est prête",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_commande",
+          "event": "updated"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "push_notifications",
+          "method": "sendNotification",
+          "params": [
+            {
+              "key": "topic",
+              "value": "commande_statut"
+            },
+            {
+              "key": "whenFieldId",
+              "value": "fld_cmd_statut"
+            },
+            {
+              "key": "whenValue",
+              "value": "prete"
+            },
+            {
+              "key": "title",
+              "value": "Votre commande est prête !"
+            },
+            {
+              "key": "bodySlotId",
+              "value": "slot_libelle_statut_commande"
+            },
+            {
+              "key": "deduplicationFieldId",
+              "value": "fld_cmd_notifiee_prete"
+            },
+            {
+              "key": "targetRouteId",
+              "value": "nav_suivi"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_annuler_commande",
+        "name": "Annuler la commande",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_suivi_annuler"
+        },
+        "effect": {
+          "kind": "mutation",
+          "entityId": "ent_commande",
+          "operation": "update"
+        }
+      },
+      {
+        "id": "act_precharger_menu_hors_ligne",
+        "name": "Précharger le menu hors-ligne",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "app_start"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "offline_storage",
+          "method": "prefetchEntity",
+          "params": [
+            {
+              "key": "entityId",
+              "value": "ent_plat"
+            },
+            {
+              "key": "maxAgeMinutes",
+              "value": 120
+            },
+            {
+              "key": "includeAssets",
+              "value": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_suivre_consultation_menu",
+        "name": "Mesurer la consultation du menu",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "screen_open",
+          "screenId": "scr_menu"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "analytics",
+          "method": "trackScreen",
+          "params": [
+            {
+              "key": "screenName",
+              "value": "menu"
+            },
+            {
+              "key": "includeSearchTerm",
+              "value": false
+            }
+          ]
+        }
+      }
+    ],
+    "capabilities": [
+      {
+        "capability": "auth",
+        "config": [
+          {
+            "key": "methods",
+            "value": [
+              "phone_otp",
+              "email"
+            ]
+          },
+          {
+            "key": "guestBrowsing",
+            "value": true
+          },
+          {
+            "key": "accountDeletionRouteId",
+            "value": "nav_suivi"
+          },
+          {
+            "key": "sessionDurationDays",
+            "value": 30
+          }
+        ]
+      },
+      {
+        "capability": "payments.psp",
+        "config": [
+          {
+            "key": "currency",
+            "value": "XOF"
+          },
+          {
+            "key": "commerceClass",
+            "value": "physical_or_offapp"
+          },
+          {
+            "key": "methods",
+            "value": [
+              "card"
+            ]
+          },
+          {
+            "key": "threeDSecure",
+            "value": "required"
+          },
+          {
+            "key": "receiptLocale",
+            "value": "fr"
+          }
+        ]
+      },
+      {
+        "capability": "push_notifications",
+        "config": [
+          {
+            "key": "topics",
+            "value": [
+              "commande_statut"
+            ]
+          },
+          {
+            "key": "defaultLocale",
+            "value": "fr"
+          },
+          {
+            "key": "promptStrategy",
+            "value": "contextual"
+          }
+        ]
+      },
+      {
+        "capability": "offline_storage",
+        "config": [
+          {
+            "key": "cachedEntityIds",
+            "value": [
+              "ent_plat"
+            ]
+          },
+          {
+            "key": "maxCacheMb",
+            "value": 50
+          },
+          {
+            "key": "encrypted",
+            "value": true
+          }
+        ]
+      },
+      {
+        "capability": "analytics",
+        "config": [
+          {
+            "key": "anonymizeIp",
+            "value": true
+          },
+          {
+            "key": "collectPii",
+            "value": false
+          },
+          {
+            "key": "events",
+            "value": [
+              "screen_view",
+              "add_to_cart",
+              "checkout_started",
+              "order_ready"
+            ]
+          }
+        ]
+      }
+    ],
+    "permissions": [
+      {
+        "platform": "android",
+        "permission": "android.permission.POST_NOTIFICATIONS",
+        "reason": [
+          {
+            "locale": "fr",
+            "text": "Pour vous prévenir dès que votre commande à emporter est prête à être retirée au restaurant."
+          }
+        ],
+        "requiredByCapability": "push_notifications"
+      }
+    ],
+    "integrations": [
+      {
+        "id": "intg_auth_client",
+        "providerClass": "auth_provider",
+        "capability": "auth",
+        "config": [
+          {
+            "key": "methods",
+            "value": [
+              "phone_otp",
+              "email"
+            ]
+          },
+          {
+            "key": "otpChannel",
+            "value": "sms"
+          },
+          {
+            "key": "otpLength",
+            "value": 6
+          },
+          {
+            "key": "otpTtlSeconds",
+            "value": 300
+          },
+          {
+            "key": "defaultCountryCode",
+            "value": "+225"
+          },
+          {
+            "key": "guestBrowsing",
+            "value": true
+          },
+          {
+            "key": "accountDeletionEndpoint",
+            "value": "https://api.maquis-express.app/v1/compte/suppression"
+          },
+          {
+            "key": "sessionDurationDays",
+            "value": 30
+          }
+        ]
+      },
+      {
+        "id": "intg_paiement_carte",
+        "providerClass": "payment_psp",
+        "capability": "payments.psp",
+        "config": [
+          {
+            "key": "currency",
+            "value": "XOF"
+          },
+          {
+            "key": "methods",
+            "value": [
+              "card"
+            ]
+          },
+          {
+            "key": "threeDSecure",
+            "value": "required"
+          },
+          {
+            "key": "captureMode",
+            "value": "automatic"
+          },
+          {
+            "key": "checkoutEndpoint",
+            "value": "https://api.maquis-express.app/v1/paiements/checkout"
+          },
+          {
+            "key": "webhookEndpoint",
+            "value": "https://api.maquis-express.app/v1/paiements/webhook"
+          },
+          {
+            "key": "receiptLocale",
+            "value": "fr"
+          },
+          {
+            "key": "fulfillmentType",
+            "value": "pickup"
+          }
+        ]
+      },
+      {
+        "id": "intg_push_commande",
+        "providerClass": "push_provider",
+        "capability": "push_notifications",
+        "config": [
+          {
+            "key": "topics",
+            "value": [
+              "commande_statut"
+            ]
+          },
+          {
+            "key": "platforms",
+            "value": [
+              "ios",
+              "android"
+            ]
+          },
+          {
+            "key": "defaultLocale",
+            "value": "fr"
+          },
+          {
+            "key": "registrationEndpoint",
+            "value": "https://api.maquis-express.app/v1/appareils/enregistrement"
+          },
+          {
+            "key": "collapseKey",
+            "value": "commande_prete"
+          }
+        ]
+      },
+      {
+        "id": "intg_cache_menu",
+        "providerClass": "local_store",
+        "capability": "offline_storage",
+        "config": [
+          {
+            "key": "cachedEntityIds",
+            "value": [
+              "ent_plat"
+            ]
+          },
+          {
+            "key": "maxCacheMb",
+            "value": 50
+          },
+          {
+            "key": "encrypted",
+            "value": true
+          },
+          {
+            "key": "evictionPolicy",
+            "value": "lru"
+          },
+          {
+            "key": "assetCache",
+            "value": true
+          }
+        ]
+      },
+      {
+        "id": "intg_analytics_produit",
+        "providerClass": "analytics_provider",
+        "capability": "analytics",
+        "config": [
+          {
+            "key": "anonymizeIp",
+            "value": true
+          },
+          {
+            "key": "collectPii",
+            "value": false
+          },
+          {
+            "key": "events",
+            "value": [
+              "screen_view",
+              "add_to_cart",
+              "checkout_started",
+              "order_ready"
+            ]
+          },
+          {
+            "key": "ingestEndpoint",
+            "value": "https://api.maquis-express.app/v1/analytics/evenements"
+          },
+          {
+            "key": "batchIntervalSeconds",
+            "value": 30
+          }
+        ]
+      },
+      {
+        "id": "intg_api_backend",
+        "providerClass": "rest_api",
+        "config": [
+          {
+            "key": "baseUrl",
+            "value": "https://api.maquis-express.app/v1"
+          },
+          {
+            "key": "timeoutMs",
+            "value": 10000
+          },
+          {
+            "key": "retryCount",
+            "value": 2
+          },
+          {
+            "key": "authScheme",
+            "value": "bearer_session"
+          },
+          {
+            "key": "resources",
+            "value": [
+              "plats",
+              "commandes",
+              "lignes_commande"
+            ]
+          },
+          {
+            "key": "defaultLocaleHeader",
+            "value": "fr"
+          }
+        ]
+      }
+    ],
+    "expectedTests": [
+      {
+        "id": "test_slot_total_panier_xof",
+        "description": "Le recalcul du panier retourne des sous-totaux quantité × prix unitaire et un total en FCFA sans décimale (ex. 2 plats à 2 500 + 1 boisson à 1 000 = 6 000).",
+        "kind": "deterministic",
+        "targetId": "act_recalculer_total_panier"
+      },
+      {
+        "id": "test_slot_format_prix_fcfa",
+        "description": "Les prix du menu s'affichent « 2 500 FCFA » pour 2500 et « 0 FCFA » pour 0, avec séparateur de milliers français et aucune décimale.",
+        "kind": "deterministic",
+        "targetId": "scr_menu"
+      },
+      {
+        "id": "test_slot_libelle_statut",
+        "description": "Chaque statut de commande produit le libellé français attendu et le message de notification contenant le numéro de commande pour le statut « prete ».",
+        "kind": "deterministic",
+        "targetId": "act_libeller_statut_commande"
+      },
+      {
+        "id": "test_slot_estimation_retrait",
+        "description": "L'heure de retrait estimée vaut l'horodatage de paiement plus le délai de préparation maximal des plats commandés, en minutes entières.",
+        "kind": "deterministic",
+        "targetId": "act_estimer_heure_retrait"
+      },
+      {
+        "id": "test_rule_plat_prix_positif",
+        "description": "Un plat sans nom ou avec un prix inférieur ou égal à 0 FCFA est rejeté par la validation du catalogue.",
+        "kind": "deterministic",
+        "targetId": "ent_plat"
+      },
+      {
+        "id": "test_rule_telephone_ivoirien",
+        "description": "La validation de commande accepte « +2250700000000 » et « 07000000 » et rejette « 0700 » ou un numéro contenant des lettres.",
+        "kind": "deterministic",
+        "targetId": "ent_commande"
+      },
+      {
+        "id": "test_rule_quantite_bornee",
+        "description": "Une ligne de commande avec quantité 0 ou 21 est refusée, une quantité entre 1 et 20 est acceptée.",
+        "kind": "deterministic",
+        "targetId": "ent_ligne_commande"
+      },
+      {
+        "id": "test_rule_preparation_apres_paiement",
+        "description": "Une commande dont le paiement n'est pas encaissé ne peut pas passer aux statuts en_preparation, prete ou retiree.",
+        "kind": "deterministic",
+        "targetId": "ent_commande"
+      },
+      {
+        "id": "test_rule_auth_suivi_proprietaire",
+        "description": "Un client authentifié n'accède qu'au suivi de ses propres commandes ; les commandes annulées renvoient un refus d'accès.",
+        "kind": "deterministic",
+        "targetId": "scr_suivi_commande"
+      },
+      {
+        "id": "test_action_ajout_panier",
+        "description": "Appuyer sur « Ajouter au panier » crée une ligne de commande avec le plat, la quantité choisie et les instructions saisies.",
+        "kind": "deterministic",
+        "targetId": "act_ajouter_au_panier"
+      },
+      {
+        "id": "test_action_bouton_desactive_plat_epuise",
+        "description": "Sur un plat marqué indisponible, le bouton d'ajout au panier de l'écran de détail est désactivé et affiche « Plat momentanément épuisé ».",
+        "kind": "deterministic",
+        "targetId": "scr_plat_detail"
+      },
+      {
+        "id": "test_contract_psp_checkout",
+        "description": "La création de paiement envoie devise XOF, montant total, référence de commande, capture automatique et retourne un statut de paiement exploitable.",
+        "kind": "contract",
+        "targetId": "act_payer_commande"
+      },
+      {
+        "id": "test_contract_push_envoi",
+        "description": "L'envoi push accepte le topic commande_statut, un titre et un corps en français et retourne un identifiant de message.",
+        "kind": "contract",
+        "targetId": "act_notifier_commande_prete"
+      },
+      {
+        "id": "test_contract_api_menu",
+        "description": "Le backend expose la liste des plats disponibles avec nom, prix, catégorie et photo, et tout appel vers un domaine hors api.maquis-express.app est refusé.",
+        "kind": "contract",
+        "targetId": "ent_plat"
+      },
+      {
+        "id": "test_contract_auth_otp",
+        "description": "L'authentification envoie un code OTP à 6 chiffres vers un numéro +225 et ouvre une session valide 30 jours avant l'accès au suivi.",
+        "kind": "contract",
+        "targetId": "act_authentifier_client_suivi"
+      },
+      {
+        "id": "test_e2e_commande_paiement_notification",
+        "description": "Parcours complet : consultation du menu, ajout de deux plats, saisie des coordonnées, paiement par carte réussi, arrivée sur le suivi et réception de la notification « Votre commande est prête ! ».",
+        "kind": "e2e",
+        "targetId": "scr_panier"
+      },
+      {
+        "id": "test_e2e_notification_unique",
+        "description": "Le passage au statut « prete » n'envoie qu'une seule notification grâce au drapeau notifiee_prete, même après plusieurs mises à jour de la commande.",
+        "kind": "e2e",
+        "targetId": "act_notifier_commande_prete"
+      },
+      {
+        "id": "test_e2e_menu_hors_ligne",
+        "description": "Après un premier lancement en ligne, le menu et ses photos restent consultables sans réseau et le paiement affiche un message d'indisponibilité.",
+        "kind": "e2e",
+        "targetId": "scr_menu"
+      },
+      {
+        "id": "test_e2e_annulation_avant_preparation",
+        "description": "L'annulation aboutit tant que la commande est au statut payee et est refusée dès le passage en préparation.",
+        "kind": "e2e",
+        "targetId": "act_annuler_commande"
+      }
+    ]
+  }
+}

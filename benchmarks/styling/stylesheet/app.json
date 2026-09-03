@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "stylesheet",
+    "slug": "stylesheet",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.deribfy.bench.stylesheet"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.deribfy.bench.stylesheet"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

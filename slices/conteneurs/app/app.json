@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "android": {
+      "package": "com.deribfy.preview.suivi_conteneurs_abidjan",
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS"
+      ],
+      "predictiveBackGestureEnabled": false,
+      "softwareKeyboardLayoutMode": "resize"
+    },
+    "ios": {
+      "bundleIdentifier": "com.deribfy.preview.suivi-conteneurs-abidjan",
+      "supportsTablet": false
+    },
+    "name": "Suivi Conteneurs Abidjan",
+    "newArchEnabled": true,
+    "orientation": "portrait",
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          },
+          "ios": {
+            "deploymentTarget": "16.4"
+          }
+        }
+      ]
+    ],
+    "slug": "suivi-conteneurs",
+    "userInterfaceStyle": "light",
+    "version": "1.0.0",
+    "owner": "deribfy-apps-team",
+    "extra": {
+      "eas": {
+        "projectId": "ef523f29-58e6-4f16-a5d0-c1e0e263573c"
+      }
+    }
+  }
+}

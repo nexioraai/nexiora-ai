@@ -1,0 +1,21 @@
+# 4.7 — APP TÉMOIN Android : lancement, fixtures rendues, action navigate
+# réelle (bouton), retour système. Captures versionnées.
+appId: com.deribfy.preview.maquis_express
+---
+- launchApp
+- assertVisible:
+    id: "scr_menu"
+- assertVisible:
+    id: "blk_menu_liste-row-ent_plat_row_1"
+- takeScreenshot: temoin-android-menu
+- scrollUntilVisible:
+    element:
+      id: "blk_menu_bouton_panier"
+- tapOn:
+    id: "blk_menu_bouton_panier"
+- assertVisible:
+    id: "scr_panier"
+- takeScreenshot: temoin-android-panier
+- back
+- assertVisible:
+    id: "scr_menu"

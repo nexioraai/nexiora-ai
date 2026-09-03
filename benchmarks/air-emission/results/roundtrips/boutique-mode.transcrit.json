@@ -1,0 +1,1655 @@
+{
+  "identical": false,
+  "schemaValid": true,
+  "diagnostics": [
+    {
+      "code": "AIR_ACTION_TRIGGER_BLOCK_UNKNOWN",
+      "path": "actions[10].trigger.blockId",
+      "message": "bloc \"blk_panier_livraison\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_TRIGGER_BLOCK_UNKNOWN",
+      "path": "actions[11].trigger.blockId",
+      "message": "bloc \"blk_panier_paiement\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_TRIGGER_BLOCK_UNKNOWN",
+      "path": "actions[12].trigger.blockId",
+      "message": "bloc \"blk_panier_etat_vide\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_TRIGGER_BLOCK_UNKNOWN",
+      "path": "actions[15].trigger.blockId",
+      "message": "bloc \"blk_commandes_suivi\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_TRIGGER_BLOCK_UNKNOWN",
+      "path": "actions[16].trigger.blockId",
+      "message": "bloc \"blk_commandes_rafraichir\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_TRIGGER_BLOCK_UNKNOWN",
+      "path": "actions[17].trigger.blockId",
+      "message": "bloc \"blk_commandes_etat_vide\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_TRIGGER_BLOCK_UNKNOWN",
+      "path": "actions[2].trigger.blockId",
+      "message": "bloc \"blk_catalogue_scan_bouton\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_TRIGGER_SCREEN_UNKNOWN",
+      "path": "actions[3].trigger.screenId",
+      "message": "écran \"scr_article\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_SCREEN_UNKNOWN",
+      "path": "actions[4].effect.screenId",
+      "message": "écran \"scr_article\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_TRIGGER_BLOCK_UNKNOWN",
+      "path": "actions[4].trigger.blockId",
+      "message": "bloc \"blk_catalogue_grille_articles\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_TRIGGER_SCREEN_UNKNOWN",
+      "path": "actions[5].trigger.screenId",
+      "message": "écran \"scr_article\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_TRIGGER_BLOCK_UNKNOWN",
+      "path": "actions[6].trigger.blockId",
+      "message": "bloc \"blk_article_tailles\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_TRIGGER_BLOCK_UNKNOWN",
+      "path": "actions[7].trigger.blockId",
+      "message": "bloc \"blk_article_partage\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_TRIGGER_BLOCK_UNKNOWN",
+      "path": "actions[8].trigger.blockId",
+      "message": "bloc \"blk_article_ajout_panier\" introuvable"
+    },
+    {
+      "code": "AIR_ACTION_TRIGGER_BLOCK_UNKNOWN",
+      "path": "actions[9].trigger.blockId",
+      "message": "bloc \"blk_panier_code_promo\" introuvable"
+    },
+    {
+      "code": "AIR_TEST_TARGET_UNKNOWN",
+      "path": "expectedTests[13].targetId",
+      "message": "cible \"scr_panier\" introuvable (écran, action ou entité)"
+    },
+    {
+      "code": "AIR_TEST_TARGET_UNKNOWN",
+      "path": "expectedTests[15].targetId",
+      "message": "cible \"scr_commandes\" introuvable (écran, action ou entité)"
+    },
+    {
+      "code": "AIR_TEST_TARGET_UNKNOWN",
+      "path": "expectedTests[16].targetId",
+      "message": "cible \"scr_article\" introuvable (écran, action ou entité)"
+    },
+    {
+      "code": "AIR_NAV_SCREEN_UNKNOWN",
+      "path": "navigation.routes[1].screenId",
+      "message": "écran \"scr_article\" introuvable"
+    },
+    {
+      "code": "AIR_NAV_SCREEN_UNKNOWN",
+      "path": "navigation.routes[2].screenId",
+      "message": "écran \"scr_panier\" introuvable"
+    },
+    {
+      "code": "AIR_NAV_SCREEN_UNKNOWN",
+      "path": "navigation.routes[3].screenId",
+      "message": "écran \"scr_commandes\" introuvable"
+    }
+  ],
+  "document": {
+    "airSchemaVersion": "1.0.0",
+    "projectId": "prj_boutique_mode_catalogue",
+    "app": {
+      "name": "Boutique Mode",
+      "slug": "boutique-mode",
+      "description": [
+        {
+          "locale": "fr",
+          "text": "Application catalogue de la boutique de vêtements : parcours des articles par catégorie avec photos, panier, paiement par carte, suivi de l'état des commandes et scan de code-barres en magasin pour afficher la fiche d'un article."
+        }
+      ],
+      "locales": {
+        "userLanguage": "fr",
+        "appLocales": [
+          "fr"
+        ],
+        "defaultAppLocale": "fr",
+        "contentLocales": [
+          "fr"
+        ],
+        "rtlSupported": false
+      }
+    },
+    "navigation": {
+      "entryScreenId": "scr_catalogue",
+      "routes": [
+        {
+          "id": "nav_catalogue",
+          "screenId": "scr_catalogue",
+          "title": [
+            {
+              "locale": "fr",
+              "text": "Catalogue"
+            }
+          ]
+        },
+        {
+          "id": "nav_article",
+          "screenId": "scr_article",
+          "title": [
+            {
+              "locale": "fr",
+              "text": "Fiche article"
+            }
+          ]
+        },
+        {
+          "id": "nav_panier",
+          "screenId": "scr_panier",
+          "title": [
+            {
+              "locale": "fr",
+              "text": "Panier"
+            }
+          ]
+        },
+        {
+          "id": "nav_commandes",
+          "screenId": "scr_commandes",
+          "title": [
+            {
+              "locale": "fr",
+              "text": "Mes commandes"
+            }
+          ]
+        }
+      ]
+    },
+    "design": {
+      "theme": "boutique_mode_clair",
+      "tokensVersion": "1.0.0",
+      "overrides": [
+        {
+          "key": "color.brand.primary",
+          "value": "#1F2933"
+        },
+        {
+          "key": "color.brand.accent",
+          "value": "#C08457"
+        },
+        {
+          "key": "radius.card",
+          "value": 12
+        },
+        {
+          "key": "font.heading.family",
+          "value": "Inter"
+        }
+      ]
+    },
+    "network": {
+      "policy": "deny_by_default",
+      "allowedDomains": [
+        "api.boutique-mode.app"
+      ]
+    },
+    "native": {
+      "minIosVersion": "16.0",
+      "minAndroidSdk": 26
+    },
+    "compliance": {
+      "commerceClass": "physical_or_offapp",
+      "accountDeletionRequired": true,
+      "dataCollected": [
+        "contact_info",
+        "identifiers",
+        "purchases",
+        "usage_data",
+        "diagnostics"
+      ]
+    },
+    "entities": [
+      {
+        "id": "ent_categorie",
+        "name": "categorie",
+        "fields": [
+          {
+            "id": "fld_categorie_nom",
+            "name": "nom",
+            "type": "string",
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "fld_categorie_slug",
+            "name": "slug",
+            "type": "string",
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "fld_categorie_description",
+            "name": "description",
+            "type": "text",
+            "required": false
+          },
+          {
+            "id": "fld_categorie_visuel",
+            "name": "visuel",
+            "type": "asset",
+            "required": false
+          },
+          {
+            "id": "fld_categorie_ordre",
+            "name": "ordre_affichage",
+            "type": "number",
+            "required": true
+          },
+          {
+            "id": "fld_categorie_active",
+            "name": "active",
+            "type": "boolean",
+            "required": true
+          }
+        ]
+      },
+      {
+        "id": "ent_article",
+        "name": "article",
+        "fields": [
+          {
+            "id": "fld_article_reference",
+            "name": "reference",
+            "type": "string",
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "fld_article_nom",
+            "name": "nom",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_article_description",
+            "name": "description",
+            "type": "text",
+            "required": false
+          },
+          {
+            "id": "fld_article_prix",
+            "name": "prix",
+            "type": "decimal",
+            "required": true
+          },
+          {
+            "id": "fld_article_devise",
+            "name": "devise",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "EUR"
+            ]
+          },
+          {
+            "id": "fld_article_code_barres",
+            "name": "code_barres",
+            "type": "string",
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "fld_article_categorie",
+            "name": "categorie",
+            "type": "reference",
+            "required": true,
+            "referencesEntityId": "ent_categorie"
+          },
+          {
+            "id": "fld_article_photo_principale",
+            "name": "photo_principale",
+            "type": "asset",
+            "required": true
+          },
+          {
+            "id": "fld_article_photos",
+            "name": "photos_supplementaires",
+            "type": "json",
+            "required": false
+          },
+          {
+            "id": "fld_article_tailles",
+            "name": "tailles_disponibles",
+            "type": "json",
+            "required": true
+          },
+          {
+            "id": "fld_article_couleur",
+            "name": "couleur",
+            "type": "string",
+            "required": false
+          },
+          {
+            "id": "fld_article_stock",
+            "name": "stock",
+            "type": "number",
+            "required": true
+          },
+          {
+            "id": "fld_article_disponible",
+            "name": "disponible",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "id": "fld_article_mise_a_jour",
+            "name": "mise_a_jour",
+            "type": "datetime",
+            "required": true
+          }
+        ]
+      },
+      {
+        "id": "ent_commande",
+        "name": "commande",
+        "fields": [
+          {
+            "id": "fld_commande_numero",
+            "name": "numero",
+            "type": "string",
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "fld_commande_date",
+            "name": "date_creation",
+            "type": "datetime",
+            "required": true
+          },
+          {
+            "id": "fld_commande_statut",
+            "name": "statut",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "panier",
+              "en_attente_paiement",
+              "payee",
+              "en_preparation",
+              "expediee",
+              "livree",
+              "annulee",
+              "remboursee"
+            ]
+          },
+          {
+            "id": "fld_commande_lignes",
+            "name": "lignes",
+            "type": "json",
+            "required": true
+          },
+          {
+            "id": "fld_commande_total",
+            "name": "total",
+            "type": "decimal",
+            "required": true
+          },
+          {
+            "id": "fld_commande_devise",
+            "name": "devise",
+            "type": "enum",
+            "required": true,
+            "enumValues": [
+              "EUR"
+            ]
+          },
+          {
+            "id": "fld_commande_email",
+            "name": "email_client",
+            "type": "string",
+            "required": true
+          },
+          {
+            "id": "fld_commande_telephone",
+            "name": "telephone_client",
+            "type": "string",
+            "required": false
+          },
+          {
+            "id": "fld_commande_adresse_livraison",
+            "name": "adresse_livraison",
+            "type": "text",
+            "required": true
+          },
+          {
+            "id": "fld_commande_transporteur",
+            "name": "transporteur",
+            "type": "string",
+            "required": false
+          },
+          {
+            "id": "fld_commande_suivi",
+            "name": "numero_suivi",
+            "type": "string",
+            "required": false
+          },
+          {
+            "id": "fld_commande_paiement_reference",
+            "name": "reference_paiement",
+            "type": "string",
+            "required": false
+          },
+          {
+            "id": "fld_commande_livraison_estimee",
+            "name": "livraison_estimee",
+            "type": "date",
+            "required": false
+          }
+        ]
+      }
+    ],
+    "relations": [
+      {
+        "id": "rel_categorie_articles",
+        "fromEntityId": "ent_categorie",
+        "toEntityId": "ent_article",
+        "kind": "one_to_many"
+      },
+      {
+        "id": "rel_commande_articles",
+        "fromEntityId": "ent_commande",
+        "toEntityId": "ent_article",
+        "kind": "many_to_many"
+      }
+    ],
+    "datasets": [
+      {
+        "id": "data_categories_initiales",
+        "entityId": "ent_categorie",
+        "contentHash": "9f2c4a7b1e8d3056af41cb27de905b6c3841fa72cd0b95e6172a4d8f3b0e5c19",
+        "rowCount": 6
+      },
+      {
+        "id": "data_articles_initiaux",
+        "entityId": "ent_article",
+        "contentHash": "4d1b8e970ca35f26b7e941083fa6d25c81e07b439d2c6a5fe0483b7156cf9a2d",
+        "rowCount": 24
+      }
+    ],
+    "rules": [
+      {
+        "id": "rule_article_prix_positif",
+        "description": "Le prix d'un article doit être strictement positif et exprimé en euros.",
+        "kind": "validation",
+        "entityId": "ent_article",
+        "assertions": [
+          {
+            "fieldId": "fld_article_prix",
+            "operator": "gt",
+            "value": 0
+          },
+          {
+            "fieldId": "fld_article_devise",
+            "operator": "eq",
+            "value": "EUR"
+          }
+        ]
+      },
+      {
+        "id": "rule_article_stock_valide",
+        "description": "Le stock ne peut pas être négatif et un article sans stock ne peut pas être marqué disponible.",
+        "kind": "validation",
+        "entityId": "ent_article",
+        "assertions": [
+          {
+            "fieldId": "fld_article_stock",
+            "operator": "gte",
+            "value": 0
+          },
+          {
+            "fieldId": "fld_article_disponible",
+            "operator": "required"
+          }
+        ]
+      },
+      {
+        "id": "rule_article_code_barres_format",
+        "description": "Le code-barres scanné en magasin doit respecter le format EAN-8 ou EAN-13 (8 à 13 chiffres).",
+        "kind": "validation",
+        "entityId": "ent_article",
+        "assertions": [
+          {
+            "fieldId": "fld_article_code_barres",
+            "operator": "matches",
+            "value": "^[0-9]{8,13}$"
+          },
+          {
+            "fieldId": "fld_article_code_barres",
+            "operator": "required"
+          }
+        ]
+      },
+      {
+        "id": "rule_commande_coherence",
+        "description": "Une commande doit avoir un statut connu, un total non négatif, un email client valide et une adresse de livraison.",
+        "kind": "validation",
+        "entityId": "ent_commande",
+        "assertions": [
+          {
+            "fieldId": "fld_commande_statut",
+            "operator": "in",
+            "value": [
+              "panier",
+              "en_attente_paiement",
+              "payee",
+              "en_preparation",
+              "expediee",
+              "livree",
+              "annulee",
+              "remboursee"
+            ]
+          },
+          {
+            "fieldId": "fld_commande_total",
+            "operator": "gte",
+            "value": 0
+          },
+          {
+            "fieldId": "fld_commande_email",
+            "operator": "matches",
+            "value": "^[^@\\s]+@[^@\\s]+\\.[a-zA-Z]{2,}$"
+          },
+          {
+            "fieldId": "fld_commande_adresse_livraison",
+            "operator": "required"
+          }
+        ]
+      },
+      {
+        "id": "rule_commande_expediee_suivi",
+        "description": "Une commande expédiée doit porter un numéro de suivi transporteur pour permettre le suivi dans l'app.",
+        "kind": "validation",
+        "entityId": "ent_commande",
+        "assertions": [
+          {
+            "fieldId": "fld_commande_statut",
+            "operator": "eq",
+            "value": "expediee"
+          },
+          {
+            "fieldId": "fld_commande_suivi",
+            "operator": "required"
+          }
+        ]
+      },
+      {
+        "id": "rule_commande_acces_proprietaire",
+        "description": "Un client ne peut consulter et suivre que les commandes rattachées à son propre compte (email authentifié).",
+        "kind": "authorization",
+        "entityId": "ent_commande",
+        "assertions": [
+          {
+            "fieldId": "fld_commande_email",
+            "operator": "eq",
+            "value": "$currentUser.email"
+          }
+        ]
+      },
+      {
+        "id": "rule_catalogue_lecture_publique",
+        "description": "Seuls les articles actifs et disponibles sont exposés dans le catalogue public de l'app.",
+        "kind": "authorization",
+        "entityId": "ent_article",
+        "assertions": [
+          {
+            "fieldId": "fld_article_disponible",
+            "operator": "eq",
+            "value": true
+          }
+        ]
+      }
+    ],
+    "slots": [
+      {
+        "id": "slot_recherche_par_code_barres",
+        "description": "Résout un code-barres scanné en magasin vers la référence de l'article correspondant du catalogue.",
+        "inputs": [
+          {
+            "name": "codeBarres",
+            "type": "string"
+          },
+          {
+            "name": "formatCode",
+            "type": "string"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "articleReference",
+            "type": "string"
+          },
+          {
+            "name": "trouve",
+            "type": "boolean"
+          },
+          {
+            "name": "messageErreur",
+            "type": "string"
+          }
+        ],
+        "allowedImports": []
+      },
+      {
+        "id": "slot_calcul_total_panier",
+        "description": "Calcule le sous-total, la remise éventuelle, les frais de livraison et le total TTC du panier en euros.",
+        "inputs": [
+          {
+            "name": "lignesPanier",
+            "type": "json"
+          },
+          {
+            "name": "codePromo",
+            "type": "string"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "sousTotal",
+            "type": "decimal"
+          },
+          {
+            "name": "remise",
+            "type": "decimal"
+          },
+          {
+            "name": "fraisLivraison",
+            "type": "decimal"
+          },
+          {
+            "name": "totalTtc",
+            "type": "decimal"
+          }
+        ],
+        "allowedImports": []
+      },
+      {
+        "id": "slot_libelle_statut_commande",
+        "description": "Produit le libellé français et la progression (0 à 1) affichés dans le suivi de l'état d'une commande.",
+        "inputs": [
+          {
+            "name": "statut",
+            "type": "enum"
+          },
+          {
+            "name": "livraisonEstimee",
+            "type": "date"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "libelle",
+            "type": "string"
+          },
+          {
+            "name": "progression",
+            "type": "decimal"
+          },
+          {
+            "name": "afficherSuivi",
+            "type": "boolean"
+          }
+        ],
+        "allowedImports": []
+      },
+      {
+        "id": "slot_disponibilite_taille",
+        "description": "Détermine les tailles réellement commandables d'un article à partir du stock et des tailles déclarées.",
+        "inputs": [
+          {
+            "name": "taillesDisponibles",
+            "type": "json"
+          },
+          {
+            "name": "stock",
+            "type": "number"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "taillesCommandables",
+            "type": "json"
+          },
+          {
+            "name": "ruptureTotale",
+            "type": "boolean"
+          }
+        ],
+        "allowedImports": []
+      }
+    ],
+    "screens": [
+      {
+        "id": "scr_catalogue",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Catalogue"
+          }
+        ],
+        "blocks": [
+          {
+            "id": "blk_catalogue_entete",
+            "blockType": "header",
+            "props": [
+              {
+                "key": "titre",
+                "value": "Boutique Mode"
+              },
+              {
+                "key": "sousTitre",
+                "value": "Nouvelle collection"
+              },
+              {
+                "key": "afficherLogo",
+                "value": true
+              },
+              {
+                "key": "actionsSecondaires",
+                "value": [
+                  "panier",
+                  "commandes"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "blk_catalogue_recherche",
+            "blockType": "search_field",
+            "entityId": "ent_article"
+          }
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "act_restaurer_session",
+        "name": "Restaurer la session client au démarrage",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "app_start"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "auth",
+          "method": "restoreSession",
+          "params": [
+            {
+              "key": "silent",
+              "value": true
+            },
+            {
+              "key": "redirectScreenId",
+              "value": "scr_catalogue"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_synchroniser_catalogue",
+        "name": "Synchroniser le catalogue hors-ligne",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "screen_open",
+          "screenId": "scr_catalogue"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "offline_storage",
+          "method": "syncCollection",
+          "params": [
+            {
+              "key": "entityId",
+              "value": "ent_article"
+            },
+            {
+              "key": "maxAgeSeconds",
+              "value": 3600
+            },
+            {
+              "key": "strategy",
+              "value": "stale_while_revalidate"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_ouvrir_scanner",
+        "name": "Ouvrir le scanner de code-barres en magasin",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_catalogue_scan_bouton"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "barcode_scan",
+          "method": "scanCode",
+          "params": [
+            {
+              "key": "formats",
+              "value": [
+                "ean_8",
+                "ean_13"
+              ]
+            },
+            {
+              "key": "torchAutorisee",
+              "value": true
+            },
+            {
+              "key": "messageGuide",
+              "value": "Placez l'étiquette de l'article dans le cadre"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_resoudre_code_barres",
+        "name": "Résoudre le code-barres scanné vers un article",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "screen_open",
+          "screenId": "scr_article"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_recherche_par_code_barres"
+        }
+      },
+      {
+        "id": "act_ouvrir_fiche_article",
+        "name": "Ouvrir la fiche d'un article du catalogue",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_catalogue_grille_articles"
+        },
+        "effect": {
+          "kind": "navigate",
+          "screenId": "scr_article"
+        }
+      },
+      {
+        "id": "act_suivre_consultation_article",
+        "name": "Mesurer la consultation d'une fiche article",
+        "trigger": {
+          "kind": "lifecycle",
+          "event": "screen_open",
+          "screenId": "scr_article"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "analytics",
+          "method": "trackScreen",
+          "params": [
+            {
+              "key": "screenId",
+              "value": "scr_article"
+            },
+            {
+              "key": "nomEvenement",
+              "value": "fiche_article_vue"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_calculer_tailles",
+        "name": "Calculer les tailles commandables",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_article_tailles"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_disponibilite_taille"
+        }
+      },
+      {
+        "id": "act_partager_article",
+        "name": "Partager la fiche d'un article",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_article_partage"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "share",
+          "method": "shareLink",
+          "params": [
+            {
+              "key": "titre",
+              "value": "Découvrez cet article Boutique Mode"
+            },
+            {
+              "key": "domaineLien",
+              "value": "api.boutique-mode.app"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_ajouter_au_panier",
+        "name": "Ajouter l'article sélectionné au panier",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_article_ajout_panier"
+        },
+        "effect": {
+          "kind": "mutation",
+          "entityId": "ent_commande",
+          "operation": "update"
+        }
+      },
+      {
+        "id": "act_calculer_total_panier",
+        "name": "Recalculer le total du panier",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_panier_code_promo"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_calcul_total_panier"
+        }
+      },
+      {
+        "id": "act_enregistrer_livraison",
+        "name": "Enregistrer les informations de livraison",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_panier_livraison"
+        },
+        "effect": {
+          "kind": "mutation",
+          "entityId": "ent_commande",
+          "operation": "update"
+        }
+      },
+      {
+        "id": "act_payer_par_carte",
+        "name": "Payer la commande par carte bancaire",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_panier_paiement"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "payments.psp",
+          "method": "createPayment",
+          "params": [
+            {
+              "key": "entityId",
+              "value": "ent_commande"
+            },
+            {
+              "key": "champMontant",
+              "value": "fld_commande_total"
+            },
+            {
+              "key": "champDevise",
+              "value": "fld_commande_devise"
+            },
+            {
+              "key": "moyensPaiement",
+              "value": [
+                "card"
+              ]
+            },
+            {
+              "key": "ecranRetour",
+              "value": "scr_commandes"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_retour_catalogue_panier_vide",
+        "name": "Retourner au catalogue depuis un panier vide",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_panier_etat_vide"
+        },
+        "effect": {
+          "kind": "navigate",
+          "screenId": "scr_catalogue"
+        }
+      },
+      {
+        "id": "act_abonner_suivi_commande",
+        "name": "Abonner le client aux notifications de sa commande",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_commande",
+          "event": "created"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "push_notifications",
+          "method": "subscribeTopic",
+          "params": [
+            {
+              "key": "topic",
+              "value": "suivi_commande"
+            },
+            {
+              "key": "entityId",
+              "value": "ent_commande"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_notifier_changement_statut",
+        "name": "Notifier le changement d'état d'une commande",
+        "trigger": {
+          "kind": "data",
+          "entityId": "ent_commande",
+          "event": "updated"
+        },
+        "effect": {
+          "kind": "capability",
+          "capability": "push_notifications",
+          "method": "sendNotification",
+          "params": [
+            {
+              "key": "titre",
+              "value": "Votre commande a été mise à jour"
+            },
+            {
+              "key": "corps",
+              "value": "Consultez le suivi de votre commande dans l'application."
+            },
+            {
+              "key": "ecranCible",
+              "value": "scr_commandes"
+            }
+          ]
+        }
+      },
+      {
+        "id": "act_afficher_libelle_statut",
+        "name": "Afficher le libellé et la progression du statut",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_commandes_suivi"
+        },
+        "effect": {
+          "kind": "slot",
+          "slotId": "slot_libelle_statut_commande"
+        }
+      },
+      {
+        "id": "act_rafraichir_commandes",
+        "name": "Actualiser le statut des commandes",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_commandes_rafraichir"
+        },
+        "effect": {
+          "kind": "mutation",
+          "entityId": "ent_commande",
+          "operation": "update"
+        }
+      },
+      {
+        "id": "act_retour_catalogue_sans_commande",
+        "name": "Découvrir le catalogue depuis l'écran commandes vide",
+        "trigger": {
+          "kind": "ui",
+          "blockId": "blk_commandes_etat_vide"
+        },
+        "effect": {
+          "kind": "navigate",
+          "screenId": "scr_catalogue"
+        }
+      }
+    ],
+    "capabilities": [
+      {
+        "capability": "auth",
+        "config": [
+          {
+            "key": "methodes",
+            "value": [
+              "email_otp",
+              "email_password"
+            ]
+          },
+          {
+            "key": "suppressionCompteActivee",
+            "value": true
+          },
+          {
+            "key": "locale",
+            "value": "fr"
+          }
+        ]
+      },
+      {
+        "capability": "offline_storage",
+        "config": [
+          {
+            "key": "entitesMisesEnCache",
+            "value": [
+              "ent_categorie",
+              "ent_article"
+            ]
+          },
+          {
+            "key": "tailleMaxMo",
+            "value": 80
+          },
+          {
+            "key": "chiffrementAuRepos",
+            "value": true
+          }
+        ]
+      },
+      {
+        "capability": "camera",
+        "config": [
+          {
+            "key": "positionParDefaut",
+            "value": "arriere"
+          },
+          {
+            "key": "captureAudio",
+            "value": false
+          },
+          {
+            "key": "resolution",
+            "value": "720p"
+          }
+        ]
+      },
+      {
+        "capability": "barcode_scan",
+        "config": [
+          {
+            "key": "formats",
+            "value": [
+              "ean_8",
+              "ean_13"
+            ]
+          },
+          {
+            "key": "vibrationSucces",
+            "value": true
+          },
+          {
+            "key": "delaiExpirationMs",
+            "value": 20000
+          }
+        ]
+      },
+      {
+        "capability": "payments.psp",
+        "config": [
+          {
+            "key": "devise",
+            "value": "EUR"
+          },
+          {
+            "key": "moyensPaiement",
+            "value": [
+              "card"
+            ]
+          },
+          {
+            "key": "modeCapture",
+            "value": "automatique"
+          },
+          {
+            "key": "authentification3ds",
+            "value": true
+          },
+          {
+            "key": "domaineApi",
+            "value": "api.boutique-mode.app"
+          }
+        ]
+      },
+      {
+        "capability": "push_notifications",
+        "config": [
+          {
+            "key": "topics",
+            "value": [
+              "suivi_commande"
+            ]
+          },
+          {
+            "key": "demandePermissionDifferee",
+            "value": true
+          },
+          {
+            "key": "locale",
+            "value": "fr"
+          }
+        ]
+      },
+      {
+        "capability": "share",
+        "config": [
+          {
+            "key": "typesPartage",
+            "value": [
+              "lien",
+              "texte"
+            ]
+          }
+        ]
+      },
+      {
+        "capability": "analytics",
+        "config": [
+          {
+            "key": "collecteAnonymisee",
+            "value": true
+          },
+          {
+            "key": "evenementsSuivis",
+            "value": [
+              "fiche_article_vue",
+              "ajout_panier",
+              "paiement_valide",
+              "scan_code_barres"
+            ]
+          }
+        ]
+      }
+    ],
+    "permissions": [
+      {
+        "platform": "ios",
+        "permission": "NSCameraUsageDescription",
+        "reason": [
+          {
+            "locale": "fr",
+            "text": "La caméra est utilisée pour scanner le code-barres d'un article en magasin et afficher sa fiche."
+          }
+        ],
+        "requiredByCapability": "camera"
+      },
+      {
+        "platform": "ios",
+        "permission": "NSMicrophoneUsageDescription",
+        "reason": [
+          {
+            "locale": "fr",
+            "text": "Le microphone est requis par le module caméra du système ; aucun son n'est enregistré lors du scan d'un code-barres."
+          }
+        ],
+        "requiredByCapability": "camera"
+      },
+      {
+        "platform": "android",
+        "permission": "android.permission.CAMERA",
+        "reason": [
+          {
+            "locale": "fr",
+            "text": "L'accès à la caméra permet de scanner le code-barres d'un article en magasin pour ouvrir sa fiche produit."
+          }
+        ],
+        "requiredByCapability": "camera"
+      },
+      {
+        "platform": "android",
+        "permission": "android.permission.RECORD_AUDIO",
+        "reason": [
+          {
+            "locale": "fr",
+            "text": "Permission requise par le module caméra du système ; l'application n'enregistre aucun contenu audio."
+          }
+        ],
+        "requiredByCapability": "camera"
+      },
+      {
+        "platform": "android",
+        "permission": "android.permission.POST_NOTIFICATIONS",
+        "reason": [
+          {
+            "locale": "fr",
+            "text": "Les notifications vous informent de l'évolution de l'état de votre commande (paiement, préparation, expédition, livraison)."
+          }
+        ],
+        "requiredByCapability": "push_notifications"
+      }
+    ],
+    "integrations": [
+      {
+        "id": "intg_auth_clients",
+        "providerClass": "auth_provider",
+        "capability": "auth",
+        "config": [
+          {
+            "key": "methodes",
+            "value": [
+              "email_otp",
+              "email_password"
+            ]
+          },
+          {
+            "key": "domaineApi",
+            "value": "api.boutique-mode.app"
+          },
+          {
+            "key": "dureeSessionJours",
+            "value": 30
+          },
+          {
+            "key": "suppressionCompteEndpoint",
+            "value": "/v1/compte/suppression"
+          },
+          {
+            "key": "locale",
+            "value": "fr"
+          }
+        ]
+      },
+      {
+        "id": "intg_paiement_carte",
+        "providerClass": "payment_psp",
+        "capability": "payments.psp",
+        "config": [
+          {
+            "key": "devise",
+            "value": "EUR"
+          },
+          {
+            "key": "moyensPaiement",
+            "value": [
+              "card"
+            ]
+          },
+          {
+            "key": "authentification3ds",
+            "value": true
+          },
+          {
+            "key": "modeCapture",
+            "value": "automatique"
+          },
+          {
+            "key": "endpointIntention",
+            "value": "/v1/paiements/intentions"
+          },
+          {
+            "key": "endpointWebhook",
+            "value": "/v1/paiements/webhook"
+          },
+          {
+            "key": "identifiantsFournisParServeur",
+            "value": true
+          }
+        ]
+      },
+      {
+        "id": "intg_push_suivi_commande",
+        "providerClass": "push_provider",
+        "capability": "push_notifications",
+        "config": [
+          {
+            "key": "topics",
+            "value": [
+              "suivi_commande"
+            ]
+          },
+          {
+            "key": "endpointEnregistrementJeton",
+            "value": "/v1/notifications/jetons"
+          },
+          {
+            "key": "locale",
+            "value": "fr"
+          },
+          {
+            "key": "demandePermissionDifferee",
+            "value": true
+          }
+        ]
+      },
+      {
+        "id": "intg_analytics_produit",
+        "providerClass": "analytics_provider",
+        "capability": "analytics",
+        "config": [
+          {
+            "key": "collecteAnonymisee",
+            "value": true
+          },
+          {
+            "key": "evenementsSuivis",
+            "value": [
+              "fiche_article_vue",
+              "ajout_panier",
+              "paiement_valide",
+              "scan_code_barres"
+            ]
+          },
+          {
+            "key": "endpointCollecte",
+            "value": "/v1/analytics/evenements"
+          },
+          {
+            "key": "consentementRequis",
+            "value": true
+          }
+        ]
+      },
+      {
+        "id": "intg_scanner_code_barres",
+        "providerClass": "barcode_scanner",
+        "capability": "barcode_scan",
+        "config": [
+          {
+            "key": "formats",
+            "value": [
+              "ean_8",
+              "ean_13"
+            ]
+          },
+          {
+            "key": "delaiExpirationMs",
+            "value": 20000
+          },
+          {
+            "key": "vibrationSucces",
+            "value": true
+          },
+          {
+            "key": "resolutionCapture",
+            "value": "720p"
+          }
+        ]
+      },
+      {
+        "id": "intg_cache_catalogue",
+        "providerClass": "offline_store",
+        "capability": "offline_storage",
+        "config": [
+          {
+            "key": "entitesMisesEnCache",
+            "value": [
+              "ent_categorie",
+              "ent_article"
+            ]
+          },
+          {
+            "key": "tailleMaxMo",
+            "value": 80
+          },
+          {
+            "key": "chiffrementAuRepos",
+            "value": true
+          },
+          {
+            "key": "strategie",
+            "value": "stale_while_revalidate"
+          }
+        ]
+      },
+      {
+        "id": "intg_partage_systeme",
+        "providerClass": "share_sheet",
+        "capability": "share",
+        "config": [
+          {
+            "key": "typesPartage",
+            "value": [
+              "lien",
+              "texte"
+            ]
+          },
+          {
+            "key": "domaineLien",
+            "value": "api.boutique-mode.app"
+          }
+        ]
+      },
+      {
+        "id": "intg_api_boutique",
+        "providerClass": "rest_backend",
+        "config": [
+          {
+            "key": "domaine",
+            "value": "api.boutique-mode.app"
+          },
+          {
+            "key": "versionApi",
+            "value": "v1"
+          },
+          {
+            "key": "delaiExpirationMs",
+            "value": 15000
+          }
+        ]
+      }
+    ],
+    "expectedTests": [
+      {
+        "id": "test_prix_positif_refuse_zero",
+        "description": "La validation de l'entité article rejette un prix nul ou négatif et n'accepte que la devise EUR.",
+        "kind": "deterministic",
+        "targetId": "ent_article"
+      },
+      {
+        "id": "test_stock_negatif_refuse",
+        "description": "Un article avec un stock négatif est rejeté et un article à stock nul ne peut pas être marqué disponible.",
+        "kind": "deterministic",
+        "targetId": "ent_article"
+      },
+      {
+        "id": "test_code_barres_format_ean",
+        "description": "Le format du code-barres de l'article accepte 8 à 13 chiffres et rejette lettres, espaces et longueurs invalides.",
+        "kind": "deterministic",
+        "targetId": "ent_article"
+      },
+      {
+        "id": "test_slot_resolution_code_barres",
+        "description": "L'action de résolution du code-barres retourne la référence attendue pour un code connu et signale trouve=false avec message d'erreur pour un code inconnu.",
+        "kind": "deterministic",
+        "targetId": "act_resoudre_code_barres"
+      },
+      {
+        "id": "test_slot_total_panier",
+        "description": "Le recalcul du panier produit sous-total, remise, frais de livraison et total TTC cohérents, y compris sans code promo.",
+        "kind": "deterministic",
+        "targetId": "act_calculer_total_panier"
+      },
+      {
+        "id": "test_slot_libelle_statut",
+        "description": "Chaque statut de commande produit le libellé français attendu et une progression croissante entre 0 et 1.",
+        "kind": "deterministic",
+        "targetId": "act_afficher_libelle_statut"
+      },
+      {
+        "id": "test_slot_tailles_commandables",
+        "description": "Le calcul des tailles ne retourne que les tailles commandables et signale la rupture totale quand le stock est à zéro.",
+        "kind": "deterministic",
+        "targetId": "act_calculer_tailles"
+      },
+      {
+        "id": "test_commande_expediee_exige_suivi",
+        "description": "Une commande passée au statut expédiée sans numéro de suivi est rejetée par la validation de l'entité commande.",
+        "kind": "deterministic",
+        "targetId": "ent_commande"
+      },
+      {
+        "id": "test_acces_commandes_proprietaire",
+        "description": "Un client authentifié ne peut lire que les commandes rattachées à son propre email.",
+        "kind": "deterministic",
+        "targetId": "ent_commande"
+      },
+      {
+        "id": "test_catalogue_articles_disponibles",
+        "description": "Le catalogue public n'expose que les articles marqués disponibles.",
+        "kind": "deterministic",
+        "targetId": "ent_article"
+      },
+      {
+        "id": "test_contrat_paiement_psp",
+        "description": "Contrat du PSP via l'action de paiement : création d'intention en EUR par carte avec 3DS, puis réception du webhook de confirmation.",
+        "kind": "contract",
+        "targetId": "act_payer_par_carte"
+      },
+      {
+        "id": "test_contrat_api_catalogue",
+        "description": "Contrat REST du backend lors de la synchronisation : listes des catégories et articles conformes aux entités et limitées au domaine autorisé.",
+        "kind": "contract",
+        "targetId": "act_synchroniser_catalogue"
+      },
+      {
+        "id": "test_contrat_push_jetons",
+        "description": "Contrat du fournisseur push : enregistrement du jeton et abonnement au topic suivi_commande à la création d'une commande.",
+        "kind": "contract",
+        "targetId": "act_abonner_suivi_commande"
+      },
+      {
+        "id": "test_e2e_parcours_achat",
+        "description": "Parcours complet : catalogue, ouverture d'une fiche article, choix d'une taille, ajout au panier, saisie livraison, paiement par carte puis affichage de la commande dans le suivi.",
+        "kind": "e2e",
+        "targetId": "scr_panier"
+      },
+      {
+        "id": "test_e2e_scan_magasin",
+        "description": "Depuis le catalogue, le scan d'un code-barres EAN-13 ouvre la fiche de l'article correspondant.",
+        "kind": "e2e",
+        "targetId": "scr_catalogue"
+      },
+      {
+        "id": "test_e2e_suivi_commande",
+        "description": "L'écran Mes commandes affiche la progression du statut et les informations transporteur, et l'actualisation met à jour l'état.",
+        "kind": "e2e",
+        "targetId": "scr_commandes"
+      },
+      {
+        "id": "test_e2e_catalogue_hors_ligne",
+        "description": "Sans réseau, le catalogue mis en cache reste consultable et la fiche article s'ouvre avec les données locales.",
+        "kind": "e2e",
+        "targetId": "scr_article"
+      }
+    ]
+  }
+}

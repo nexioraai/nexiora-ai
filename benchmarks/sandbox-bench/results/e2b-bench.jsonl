@@ -1,0 +1,9 @@
+{"provider":"e2b","debut":true,"ts_local":"n/a"}
+{"provider":"e2b","epreuve":"E1","run":1,"coldStartMs":1868,"steps":{"extract":{"ms":289,"exit":0},"node_version":{"ms":473,"exit":0},"npm_ci":{"ms":13848,"exit":0},"tsc":{"ms":2907,"exit":0},"expo_export":{"ms":35981,"exit":0}},"ok":true}
+{"provider":"e2b","epreuve":"E1","run":2,"coldStartMs":157,"steps":{"extract":{"ms":124,"exit":0},"node_version":{"ms":221,"exit":0},"npm_ci":{"ms":17168,"exit":0},"tsc":{"ms":3404,"exit":0},"expo_export":{"ms":51613,"exit":0}},"ok":true}
+{"provider":"e2b","epreuve":"E1","run":3,"coldStartMs":190,"steps":{"extract":{"ms":110,"exit":0},"node_version":{"ms":297,"exit":0},"npm_ci":{"ms":15480,"exit":0},"tsc":{"ms":3325,"exit":0},"expo_export":{"ms":44216,"exit":0}},"ok":true}
+{"provider":"e2b","epreuve":"E2","mecanisme":"cache npm ~/.npm dans la même sandbox","timings":[{"i":1,"ms":20020,"exit":0},{"i":2,"ms":325569,"exit":-1},{"i":3,"ms":43781,"exit":-1}]}
+{"provider":"e2b","epreuve":"E3","mode":"allowInternetAccess=false","results":[{"probe":"domaine_tiers","code":"BLOCKED"},{"probe":"ip_directe","code":"BLOCKED"},{"probe":"dns_exotique","code":"disable the timeout."}],"tousBloques":false}
+{"provider":"e2b","epreuve":"E4","results":[{"probe":"env_sensibles","out":"NONE"},{"probe":"metadata_service","out":"401"}],"aucunSecretLisible":true}
+{"provider":"e2b","epreuve":"E5","crees":20,"actifsRestants":0,"orphelins":0,"zeroOrphelin":true}
+{"provider":"e2b","fin":true}

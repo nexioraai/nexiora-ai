@@ -1,0 +1,72 @@
+{
+  "slice": "conteneurs-maritimes",
+  "domaine": "hors-template",
+  "phase": 10,
+  "airHash": "c202f8488d4640c6b94f9109d1139b14f6cab4b7acbb5e4773fec689b9186719",
+  "rootHash": "2482d93d976c95c0110245fcd8b8dae4397b3bc3cc78631c6ee5f1b78f5411a2",
+  "sqlHash": "82469e583db93297b3da850135159fb8f7a0b3024d9c0327962f05e84c97fcb2",
+  "manifestHash": "2482d93d976c95c0110245fcd8b8dae4397b3bc3cc78631c6ee5f1b78f5411a2",
+  "fichiers": 31,
+  "determinisme": "5/5",
+  "steps": {
+    "gates": 2,
+    "compile": 4,
+    "backend": 193227,
+    "sandbox": 37787,
+    "oracle": 14
+  },
+  "backend": {
+    "ok": true,
+    "demonte": true
+  },
+  "sandboxOk": true,
+  "oraclePassed": true,
+  "apxx": [
+    {
+      "dimension": "A",
+      "etat": "conforme",
+      "detail": "tapTarget=48 (min 48), 3 surface(s) contrainte(s)"
+    },
+    {
+      "dimension": "B",
+      "etat": "conforme",
+      "detail": "36 paires / 0 échec"
+    },
+    {
+      "dimension": "C",
+      "etat": "conforme",
+      "detail": "états rendus par le bloc liste : loading/empty/error"
+    },
+    {
+      "dimension": "D",
+      "etat": "conforme",
+      "detail": "0 valeur en dur (couleurs, espacements, rayons, typographie)"
+    },
+    {
+      "dimension": "E",
+      "etat": "conforme",
+      "detail": "échelle strictement croissante (12 < 14 < 17 < 22), 0 verrou d'agrandissement"
+    },
+    {
+      "dimension": "F",
+      "etat": "conforme",
+      "detail": "0 propriété physique"
+    },
+    {
+      "dimension": "G",
+      "etat": "conforme",
+      "detail": "3 écran(s) à liste, 0 encapsulé dans un ScrollView, parent borné=true"
+    },
+    {
+      "dimension": "H",
+      "etat": "conforme",
+      "detail": "2 domaines · structure : 2 silhouettes distinctes, 0 collision(s) · visuel : 2 identité(s) pour 2 thème(s) déclaré(s)"
+    }
+  ],
+  "dimensionH": {
+    "verdict": "conforme",
+    "detail": "2 domaines · structure : 2 silhouettes distinctes, 0 collision(s) · visuel : 2 identité(s) pour 2 thème(s) déclaré(s)"
+  },
+  "repairs": 0,
+  "manualWorkarounds": []
+}

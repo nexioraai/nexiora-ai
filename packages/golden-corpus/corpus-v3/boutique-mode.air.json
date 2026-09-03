@@ -1,0 +1,3110 @@
+{
+  "actions": [
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_article_detail"
+      },
+      "id": "act_ouvrir_article",
+      "name": "Ouvrir la fiche article",
+      "trigger": {
+        "blockId": "blk_catalogue_btn_article",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_scan"
+      },
+      "id": "act_ouvrir_scan",
+      "name": "Ouvrir l'écran de scan",
+      "trigger": {
+        "blockId": "blk_catalogue_btn_scan",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_panier"
+      },
+      "id": "act_ouvrir_panier",
+      "name": "Ouvrir le panier",
+      "trigger": {
+        "blockId": "blk_catalogue_btn_panier",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_commandes"
+      },
+      "id": "act_ouvrir_commandes",
+      "name": "Ouvrir mes commandes",
+      "trigger": {
+        "blockId": "blk_catalogue_btn_commandes",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_catalogue"
+      },
+      "id": "act_retour_catalogue",
+      "name": "Retour au catalogue",
+      "trigger": {
+        "blockId": "blk_article_btn_retour",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_panier_item",
+        "kind": "mutation",
+        "operation": "create",
+        "thenScreenId": "scr_panier"
+      },
+      "id": "act_ajouter_au_panier",
+      "name": "Ajouter l'article au panier",
+      "trigger": {
+        "blockId": "blk_article_form_panier",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "barcode_scan",
+        "kind": "capability",
+        "method": "scan",
+        "params": [
+          {
+            "key": "formats",
+            "value": [
+              "ean13",
+              "code128",
+              "qr"
+            ]
+          },
+          {
+            "key": "prompt",
+            "value": "Placez l'étiquette de l'article dans le cadre"
+          },
+          {
+            "key": "continuous",
+            "value": false
+          }
+        ]
+      },
+      "id": "act_scanner_code",
+      "name": "Lancer le scan du code-barres",
+      "trigger": {
+        "blockId": "blk_scan_btn_scanner",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "binding": {
+          "inputs": [
+            {
+              "port": "codeBarres",
+              "source": {
+                "kind": "literal",
+                "value": ""
+              }
+            },
+            {
+              "port": "articles",
+              "source": {
+                "entityId": "ent_article",
+                "kind": "entity_rows"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "blockId": "blk_scan_resultat",
+              "port": "articleNom",
+              "prop": "title"
+            },
+            {
+              "blockId": "blk_scan_header",
+              "port": "messageResultat",
+              "prop": "subtitle"
+            }
+          ]
+        },
+        "kind": "slot",
+        "slotId": "slot_recherche_code_barres"
+      },
+      "id": "act_resoudre_code_barres",
+      "name": "Résoudre le code-barres scanné",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_scan"
+      }
+    },
+    {
+      "effect": {
+        "binding": {
+          "inputs": [
+            {
+              "port": "lignesPanier",
+              "source": {
+                "entityId": "ent_panier_item",
+                "kind": "entity_rows"
+              }
+            },
+            {
+              "port": "devise",
+              "source": {
+                "kind": "literal",
+                "value": "EUR"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "blockId": "blk_panier_header",
+              "port": "totalAffiche",
+              "prop": "subtitle"
+            },
+            {
+              "blockId": "blk_panier_liste",
+              "port": "nombreArticles",
+              "prop": "title"
+            }
+          ]
+        },
+        "kind": "slot",
+        "slotId": "slot_total_panier"
+      },
+      "id": "act_calculer_total",
+      "name": "Recalculer le total du panier",
+      "trigger": {
+        "blockId": "blk_panier_btn_total",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_paiement"
+      },
+      "id": "act_aller_paiement",
+      "name": "Passer au paiement",
+      "trigger": {
+        "blockId": "blk_panier_btn_paiement",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "entityId": "ent_commande",
+        "kind": "mutation",
+        "operation": "create",
+        "thenScreenId": "scr_commande_confirmee"
+      },
+      "id": "act_valider_commande",
+      "name": "Enregistrer la commande et payer par carte",
+      "trigger": {
+        "blockId": "blk_paiement_form",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "binding": {
+          "inputs": [
+            {
+              "port": "lignesCommande",
+              "source": {
+                "entityId": "ent_commande_ligne",
+                "kind": "entity_rows"
+              }
+            },
+            {
+              "port": "totalCommande",
+              "source": {
+                "kind": "literal",
+                "value": 0
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "blockId": "blk_confirmee_lignes",
+              "port": "recapitulatifTitre",
+              "prop": "title"
+            },
+            {
+              "blockId": "blk_confirmee_header",
+              "port": "recapitulatifMessage",
+              "prop": "subtitle"
+            }
+          ]
+        },
+        "kind": "slot",
+        "slotId": "slot_recapitulatif_commande"
+      },
+      "id": "act_recapituler_commande",
+      "name": "Construire le récapitulatif de la commande",
+      "trigger": {
+        "event": "screen_open",
+        "kind": "lifecycle",
+        "screenId": "scr_commande_confirmee"
+      }
+    },
+    {
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_commande_suivi"
+      },
+      "id": "act_ouvrir_suivi",
+      "name": "Ouvrir le suivi de commande",
+      "trigger": {
+        "blockId": "blk_confirmee_btn_suivi",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "binding": {
+          "inputs": [
+            {
+              "port": "statut",
+              "source": {
+                "kind": "literal",
+                "value": ""
+              }
+            },
+            {
+              "port": "majStatut",
+              "source": {
+                "kind": "literal",
+                "value": null
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "blockId": "blk_suivi_header",
+              "port": "statutLibelle",
+              "prop": "title"
+            },
+            {
+              "blockId": "blk_suivi_header",
+              "port": "messageSuivi",
+              "prop": "subtitle"
+            }
+          ]
+        },
+        "kind": "slot",
+        "slotId": "slot_libelle_statut_commande"
+      },
+      "id": "act_rafraichir_suivi",
+      "name": "Actualiser l'état de la commande",
+      "trigger": {
+        "blockId": "blk_suivi_btn_actualiser",
+        "kind": "ui"
+      }
+    },
+    {
+      "effect": {
+        "capability": "push_notifications",
+        "kind": "capability",
+        "method": "sendLocal",
+        "params": [
+          {
+            "key": "title",
+            "value": "Votre commande a changé d'état"
+          },
+          {
+            "key": "body",
+            "value": "Ouvrez l'application pour consulter le suivi de votre commande."
+          },
+          {
+            "key": "channel",
+            "value": "suivi_commande"
+          }
+        ]
+      },
+      "id": "act_notifier_statut_commande",
+      "name": "Notifier le changement d'état de la commande",
+      "trigger": {
+        "entityId": "ent_commande",
+        "event": "updated",
+        "kind": "data"
+      }
+    }
+  ],
+  "airSchemaVersion": "1.5.0",
+  "app": {
+    "description": [
+      {
+        "locale": "fr",
+        "text": "Application catalogue de la boutique de vêtements : articles classés par catégorie avec photos, panier, paiement par carte, suivi de l'état des commandes et scan de code-barres en magasin pour consulter la fiche d'un article."
+      }
+    ],
+    "locales": {
+      "appLocales": [
+        "fr"
+      ],
+      "contentLocales": [
+        "fr"
+      ],
+      "defaultAppLocale": "fr",
+      "rtlSupported": false,
+      "userLanguage": "fr"
+    },
+    "name": "Boutique Mode",
+    "slug": "boutique-mode"
+  },
+  "capabilities": [
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "methods",
+          "value": [
+            "email_password"
+          ]
+        },
+        {
+          "key": "accountDeletionEnabled",
+          "value": true
+        },
+        {
+          "key": "sessionPersistence",
+          "value": "secure_storage"
+        }
+      ]
+    },
+    {
+      "capability": "payments.psp",
+      "config": [
+        {
+          "key": "commerceClass",
+          "value": "physical_or_offapp"
+        },
+        {
+          "key": "methods",
+          "value": [
+            "card"
+          ]
+        },
+        {
+          "key": "currency",
+          "value": "EUR"
+        },
+        {
+          "key": "captureMode",
+          "value": "automatic"
+        }
+      ]
+    },
+    {
+      "capability": "barcode_scan",
+      "config": [
+        {
+          "key": "formats",
+          "value": [
+            "ean13",
+            "code128",
+            "qr"
+          ]
+        },
+        {
+          "key": "continuous",
+          "value": false
+        }
+      ]
+    },
+    {
+      "capability": "camera",
+      "config": [
+        {
+          "key": "usage",
+          "value": "barcode_scan_only"
+        },
+        {
+          "key": "defaultFacing",
+          "value": "back"
+        },
+        {
+          "key": "audioCapture",
+          "value": false
+        }
+      ]
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "channels",
+          "value": [
+            "suivi_commande"
+          ]
+        },
+        {
+          "key": "localScheduling",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "cachedEntities",
+          "value": [
+            "ent_categorie",
+            "ent_article",
+            "ent_panier_item"
+          ]
+        },
+        {
+          "key": "maxCacheDays",
+          "value": 7
+        }
+      ]
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "scope",
+          "value": "product_usage"
+        },
+        {
+          "key": "anonymizeIp",
+          "value": true
+        }
+      ]
+    }
+  ],
+  "compliance": {
+    "accountDeletionRequired": true,
+    "commerceClass": "physical_or_offapp",
+    "dataCollected": [
+      "contact_info",
+      "identifiers",
+      "usage_data",
+      "purchases",
+      "diagnostics"
+    ]
+  },
+  "datasets": [
+    {
+      "contentHash": "9f2c7a41b83de5061c4b8e7d20af6935d7e0a4c9b1682f530b53e8c6a97d142f",
+      "entityId": "ent_categorie",
+      "id": "data_categories",
+      "rowCount": 6
+    },
+    {
+      "contentHash": "4a1d9e07c3b5286fe82f5c31d90ab7647b6c04e2a1f39d581f30d6b8945ce27a",
+      "entityId": "ent_article",
+      "id": "data_articles",
+      "rowCount": 48
+    },
+    {
+      "contentHash": "c5e81a3f072d9b4638b7d4e05a1c6f926d29f0c8b473e1a5a0147bd6e29f83c5",
+      "entityId": "ent_panier_item",
+      "id": "data_panier_items",
+      "rowCount": 3
+    },
+    {
+      "contentHash": "72d4c0a95e13bf680e9b6d17c48a2f53b41f7e28d05c9a365c8a3f0d16b74e29",
+      "entityId": "ent_commande",
+      "id": "data_commandes",
+      "rowCount": 5
+    },
+    {
+      "contentHash": "e60b2d97a4f81c3513c7f5a0d8b62e49a9d1e4b7302f6c854f82c60b9d15a73e",
+      "entityId": "ent_commande_ligne",
+      "id": "data_commande_lignes",
+      "rowCount": 11
+    }
+  ],
+  "design": {
+    "theme": "boutique_mode"
+  },
+  "entities": [
+    {
+      "fields": [
+        {
+          "id": "fld_categorie_nom",
+          "name": "nom",
+          "required": true,
+          "type": "string",
+          "unique": true
+        },
+        {
+          "id": "fld_categorie_description",
+          "name": "description",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "id": "fld_categorie_visuel",
+          "name": "visuel",
+          "required": false,
+          "type": "asset"
+        },
+        {
+          "id": "fld_categorie_ordre",
+          "name": "ordre",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "id": "fld_categorie_nb_articles",
+          "name": "nb_articles",
+          "required": false,
+          "type": "number"
+        },
+        {
+          "id": "fld_categorie_active",
+          "name": "active",
+          "required": true,
+          "type": "boolean"
+        }
+      ],
+      "id": "ent_categorie",
+      "name": "categorie"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_article_nom",
+          "name": "nom",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_article_reference",
+          "name": "reference",
+          "required": true,
+          "type": "string",
+          "unique": true
+        },
+        {
+          "id": "fld_article_code_barres",
+          "name": "code_barres",
+          "required": true,
+          "type": "string",
+          "unique": true
+        },
+        {
+          "id": "fld_article_photo",
+          "name": "photo",
+          "required": false,
+          "type": "asset"
+        },
+        {
+          "id": "fld_article_description",
+          "name": "description",
+          "required": false,
+          "type": "text"
+        },
+        {
+          "id": "fld_article_prix",
+          "name": "prix",
+          "required": true,
+          "type": "decimal"
+        },
+        {
+          "id": "fld_article_prix_affiche",
+          "name": "prix_affiche",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "enumValues": [
+            "XS",
+            "S",
+            "M",
+            "L",
+            "XL",
+            "XXL",
+            "taille_unique"
+          ],
+          "id": "fld_article_taille",
+          "name": "taille",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_article_couleur",
+          "name": "couleur",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "id": "fld_article_stock",
+          "name": "stock",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "id": "fld_article_disponible",
+          "name": "disponible",
+          "required": true,
+          "type": "boolean"
+        },
+        {
+          "id": "fld_article_categorie",
+          "name": "categorie",
+          "referenceDisplayFieldId": "fld_categorie_nom",
+          "referencesEntityId": "ent_categorie",
+          "required": true,
+          "type": "reference"
+        }
+      ],
+      "id": "ent_article",
+      "name": "article"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_panier_libelle",
+          "name": "libelle",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_panier_article",
+          "name": "article",
+          "referenceDisplayFieldId": "fld_article_nom",
+          "referencesEntityId": "ent_article",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "enumValues": [
+            "XS",
+            "S",
+            "M",
+            "L",
+            "XL",
+            "XXL",
+            "taille_unique"
+          ],
+          "id": "fld_panier_taille",
+          "name": "taille",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_panier_quantite",
+          "name": "quantite",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "id": "fld_panier_prix_unitaire",
+          "name": "prix_unitaire",
+          "required": true,
+          "type": "decimal"
+        },
+        {
+          "id": "fld_panier_sous_total",
+          "name": "sous_total",
+          "required": true,
+          "type": "decimal"
+        },
+        {
+          "id": "fld_panier_sous_total_affiche",
+          "name": "sous_total_affiche",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "id": "fld_panier_ajoute_le",
+          "name": "ajoute_le",
+          "required": true,
+          "type": "datetime"
+        }
+      ],
+      "id": "ent_panier_item",
+      "name": "panier_item"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_commande_numero",
+          "name": "numero",
+          "required": true,
+          "type": "string",
+          "unique": true
+        },
+        {
+          "enumValues": [
+            "en_attente_paiement",
+            "payee",
+            "en_preparation",
+            "expediee",
+            "livree",
+            "annulee"
+          ],
+          "id": "fld_commande_statut",
+          "name": "statut",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_commande_statut_libelle",
+          "name": "statut_libelle",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "id": "fld_commande_total",
+          "name": "total",
+          "required": true,
+          "type": "decimal"
+        },
+        {
+          "id": "fld_commande_total_affiche",
+          "name": "total_affiche",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "id": "fld_commande_date",
+          "name": "date_commande",
+          "required": true,
+          "type": "datetime"
+        },
+        {
+          "id": "fld_commande_client_nom",
+          "name": "client_nom",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_commande_email",
+          "name": "email",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_commande_telephone",
+          "name": "telephone",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "id": "fld_commande_adresse",
+          "name": "adresse",
+          "required": true,
+          "type": "text"
+        },
+        {
+          "id": "fld_commande_code_postal",
+          "name": "code_postal",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_commande_ville",
+          "name": "ville",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "enumValues": [
+            "carte_bancaire"
+          ],
+          "id": "fld_commande_mode_paiement",
+          "name": "mode_paiement",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "id": "fld_commande_transporteur",
+          "name": "transporteur",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "id": "fld_commande_numero_suivi",
+          "name": "numero_suivi",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "id": "fld_commande_maj_statut",
+          "name": "maj_statut",
+          "required": false,
+          "type": "datetime"
+        }
+      ],
+      "id": "ent_commande",
+      "name": "commande"
+    },
+    {
+      "fields": [
+        {
+          "id": "fld_ligne_libelle",
+          "name": "libelle",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": "fld_ligne_commande",
+          "name": "commande",
+          "referenceDisplayFieldId": "fld_commande_numero",
+          "referencesEntityId": "ent_commande",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "id": "fld_ligne_article",
+          "name": "article",
+          "referenceDisplayFieldId": "fld_article_nom",
+          "referencesEntityId": "ent_article",
+          "required": true,
+          "type": "reference"
+        },
+        {
+          "id": "fld_ligne_taille",
+          "name": "taille",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "id": "fld_ligne_quantite",
+          "name": "quantite",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "id": "fld_ligne_prix_unitaire",
+          "name": "prix_unitaire",
+          "required": true,
+          "type": "decimal"
+        },
+        {
+          "id": "fld_ligne_montant",
+          "name": "montant",
+          "required": true,
+          "type": "decimal"
+        },
+        {
+          "id": "fld_ligne_montant_affiche",
+          "name": "montant_affiche",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "id": "ent_commande_ligne",
+      "name": "commande_ligne"
+    }
+  ],
+  "expectedTests": [
+    {
+      "description": "Depuis l'écran d'entrée Catalogue, le bouton « Voir la fiche article » navigue vers l'écran scr_article_detail.",
+      "id": "test_nav_catalogue_vers_article",
+      "kind": "deterministic",
+      "targetId": "act_ouvrir_article"
+    },
+    {
+      "description": "Le bouton « Scanner un code-barres » du catalogue navigue vers l'écran scr_scan.",
+      "id": "test_nav_catalogue_vers_scan",
+      "kind": "deterministic",
+      "targetId": "act_ouvrir_scan"
+    },
+    {
+      "description": "Le bouton « Voir mon panier » navigue vers l'écran scr_panier.",
+      "id": "test_nav_catalogue_vers_panier",
+      "kind": "deterministic",
+      "targetId": "act_ouvrir_panier"
+    },
+    {
+      "description": "Le bouton « Mes commandes » navigue vers l'écran scr_commandes.",
+      "id": "test_nav_catalogue_vers_commandes",
+      "kind": "deterministic",
+      "targetId": "act_ouvrir_commandes"
+    },
+    {
+      "description": "Le bouton de retour ramène l'utilisateur à l'écran scr_catalogue depuis la fiche article, le panier vide, le scan et la confirmation de commande.",
+      "id": "test_nav_retour_catalogue",
+      "kind": "deterministic",
+      "targetId": "act_retour_catalogue"
+    },
+    {
+      "description": "Le bouton « Passer au paiement » du panier navigue vers l'écran scr_paiement.",
+      "id": "test_nav_panier_vers_paiement",
+      "kind": "deterministic",
+      "targetId": "act_aller_paiement"
+    },
+    {
+      "description": "Le bouton « Suivre ma commande » navigue vers l'écran scr_commande_suivi.",
+      "id": "test_nav_vers_suivi_commande",
+      "kind": "deterministic",
+      "targetId": "act_ouvrir_suivi"
+    },
+    {
+      "description": "La soumission du formulaire d'ajout crée bien une instance de ent_panier_item puis affiche l'écran scr_panier avec la nouvelle ligne.",
+      "id": "test_ajout_article_au_panier",
+      "kind": "e2e",
+      "targetId": "act_ajouter_au_panier"
+    },
+    {
+      "description": "La soumission du formulaire de paiement crée une instance de ent_commande (statut initial et mode carte_bancaire) puis affiche scr_commande_confirmee.",
+      "id": "test_creation_commande_paiement",
+      "kind": "e2e",
+      "targetId": "act_valider_commande"
+    },
+    {
+      "description": "Le slot de calcul du total renvoie un total et un libellé en euros cohérents avec les lignes de ent_panier_item et alimente le sous-titre du panier.",
+      "id": "test_slot_total_panier",
+      "kind": "deterministic",
+      "targetId": "act_calculer_total"
+    },
+    {
+      "description": "Le slot de résolution de code-barres retrouve l'article dont fld_article_code_barres correspond et alimente le bloc résultat blk_scan_resultat, ou renvoie un message d'absence de correspondance.",
+      "id": "test_slot_resolution_code_barres",
+      "kind": "deterministic",
+      "targetId": "act_resoudre_code_barres"
+    },
+    {
+      "description": "Le slot de libellé de statut traduit chaque valeur de fld_commande_statut en libellé français et en message d'étape de suivi.",
+      "id": "test_slot_libelle_statut",
+      "kind": "deterministic",
+      "targetId": "act_rafraichir_suivi"
+    },
+    {
+      "description": "Le slot de récapitulatif construit titre et message à partir des lignes de ent_commande_ligne à l'ouverture de l'écran de confirmation.",
+      "id": "test_slot_recapitulatif_commande",
+      "kind": "deterministic",
+      "targetId": "act_recapituler_commande"
+    },
+    {
+      "description": "Règle rule_article_prix_positif sur l'entité article : un article dont le prix est nul ou négatif, ou dont le nom, la référence ou le code-barres manque, est rejeté.",
+      "id": "test_regle_prix_article_positif",
+      "kind": "deterministic",
+      "targetId": "ent_article"
+    },
+    {
+      "description": "Règle rule_panier_quantite_minimale sur l'entité panier_item : une ligne de panier avec une quantité inférieure à 1 ou supérieure à 10 est rejetée.",
+      "id": "test_regle_quantite_panier",
+      "kind": "deterministic",
+      "targetId": "ent_panier_item"
+    },
+    {
+      "description": "Règle rule_commande_coordonnees_completes sur l'entité commande : une commande sans nom, avec un e-mail invalide ou un code postal non conforme à 5 chiffres est rejetée au paiement.",
+      "id": "test_regle_coordonnees_commande",
+      "kind": "deterministic",
+      "targetId": "ent_commande"
+    },
+    {
+      "description": "Règle rule_commande_statut_connu sur l'entité commande : seuls les statuts du cycle de suivi défini sont acceptés et le total doit être strictement positif.",
+      "id": "test_regle_statut_commande",
+      "kind": "deterministic",
+      "targetId": "ent_commande"
+    },
+    {
+      "description": "Règle rule_suivi_expedition_renseigne sur l'entité commande : une commande expédiée porte obligatoirement un transporteur et un numéro de suivi.",
+      "id": "test_regle_expedition_suivie",
+      "kind": "deterministic",
+      "targetId": "ent_commande"
+    },
+    {
+      "description": "Sur l'écran catalogue, le bloc liste des articles blk_catalogue_articles rend ses états de chargement, d'erreur et de liste vide à partir des textes déclarés dans ses props.",
+      "id": "test_liste_articles_etats",
+      "kind": "deterministic",
+      "targetId": "scr_catalogue"
+    },
+    {
+      "description": "Sur l'écran panier, le bloc d'état vide blk_panier_vide ne s'affiche que lorsque ent_panier_item ne contient aucune ligne.",
+      "id": "test_etat_vide_panier",
+      "kind": "deterministic",
+      "targetId": "scr_panier"
+    },
+    {
+      "description": "Sur l'écran mes commandes, le bloc d'état vide blk_commandes_vide ne s'affiche que lorsque ent_commande ne contient aucune commande.",
+      "id": "test_etat_vide_commandes",
+      "kind": "deterministic",
+      "targetId": "scr_commandes"
+    },
+    {
+      "description": "Sur l'écran de suivi, le bloc de détail blk_suivi_detail affiche le numéro, le libellé de statut, le numéro de suivi et les badges statut/transporteur de la commande.",
+      "id": "test_suivi_detail_commande",
+      "kind": "deterministic",
+      "targetId": "scr_commande_suivi"
+    },
+    {
+      "description": "Contrat de l'API backend (intg_api_boutique) pour les données du catalogue : les endpoints catégories et articles répondent au schéma attendu de ent_article sur api.boutique-mode.app uniquement.",
+      "id": "test_contrat_api_boutique",
+      "kind": "contract",
+      "targetId": "ent_article"
+    },
+    {
+      "description": "Contrat du prestataire de paiement (intg_paiement_carte) déclenché par la validation de commande : création d'une intention de paiement carte en EUR et réception du webhook de confirmation mettant la commande au statut payée.",
+      "id": "test_contrat_paiement_carte",
+      "kind": "contract",
+      "targetId": "act_valider_commande"
+    },
+    {
+      "description": "Contrat d'authentification (intg_auth_boutique) exercé au passage en caisse : connexion e-mail/mot de passe, persistance sécurisée de session et endpoint de suppression de compte disponible.",
+      "id": "test_contrat_auth_boutique",
+      "kind": "contract",
+      "targetId": "scr_paiement"
+    },
+    {
+      "description": "Besoin non couvert : le client demande des articles « avec photos ». Les champs fld_article_photo et fld_categorie_visuel (type asset) sont déclarés sur l'entité article, mais le registre de blocs (header, list, detail_header, form, button, empty_state) ne sait afficher aucune image ; les photos ne sont donc pas rendues à l'écran.",
+      "id": "test_besoin_non_rendable_photos_articles",
+      "kind": "deterministic",
+      "targetId": "ent_article"
+    },
+    {
+      "description": "Besoin non couvert : le client demande un catalogue « par catégorie ». Le registre de blocs n'offre ni onglets, ni sections, ni filtrage par catégorie ; sur l'écran catalogue, les catégories (blk_catalogue_categories) et les articles (blk_catalogue_articles) sont affichés en deux listes distinctes sans regroupement ni navigation catégorie → articles filtrés.",
+      "id": "test_besoin_non_rendable_categories_onglets",
+      "kind": "deterministic",
+      "targetId": "scr_catalogue"
+    }
+  ],
+  "integrations": [
+    {
+      "config": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.boutique-mode.app"
+        },
+        {
+          "key": "authMode",
+          "value": "bearer_session"
+        },
+        {
+          "key": "timeoutMs",
+          "value": 15000
+        },
+        {
+          "key": "retryCount",
+          "value": 2
+        },
+        {
+          "key": "resources",
+          "value": [
+            "categories",
+            "articles",
+            "panier",
+            "commandes",
+            "commande_lignes"
+          ]
+        }
+      ],
+      "id": "intg_api_boutique",
+      "providerClass": "rest_api"
+    },
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.boutique-mode.app"
+        },
+        {
+          "key": "methods",
+          "value": [
+            "email_password"
+          ]
+        },
+        {
+          "key": "accountDeletionEndpoint",
+          "value": "/v1/compte/suppression"
+        },
+        {
+          "key": "sessionStorage",
+          "value": "secure_storage"
+        },
+        {
+          "key": "sessionTtlDays",
+          "value": 30
+        }
+      ],
+      "id": "intg_auth_boutique",
+      "providerClass": "managed_auth"
+    },
+    {
+      "capability": "payments.psp",
+      "config": [
+        {
+          "key": "commerceClass",
+          "value": "physical_or_offapp"
+        },
+        {
+          "key": "methods",
+          "value": [
+            "card"
+          ]
+        },
+        {
+          "key": "currency",
+          "value": "EUR"
+        },
+        {
+          "key": "captureMode",
+          "value": "automatic"
+        },
+        {
+          "key": "intentEndpoint",
+          "value": "https://api.boutique-mode.app/v1/paiements/intentions"
+        },
+        {
+          "key": "webhookEndpoint",
+          "value": "https://api.boutique-mode.app/v1/paiements/webhook"
+        },
+        {
+          "key": "threeDSecure",
+          "value": true
+        }
+      ],
+      "id": "intg_paiement_carte",
+      "providerClass": "psp_card_gateway"
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "channels",
+          "value": [
+            "suivi_commande"
+          ]
+        },
+        {
+          "key": "localScheduling",
+          "value": true
+        },
+        {
+          "key": "registrationEndpoint",
+          "value": "https://api.boutique-mode.app/v1/notifications/appareils"
+        },
+        {
+          "key": "defaultChannel",
+          "value": "suivi_commande"
+        }
+      ],
+      "id": "intg_push_suivi_commande",
+      "providerClass": "push_gateway"
+    },
+    {
+      "capability": "barcode_scan",
+      "config": [
+        {
+          "key": "formats",
+          "value": [
+            "ean13",
+            "code128",
+            "qr"
+          ]
+        },
+        {
+          "key": "continuous",
+          "value": false
+        },
+        {
+          "key": "vibrateOnResult",
+          "value": true
+        }
+      ],
+      "id": "intg_scan_code_barres",
+      "providerClass": "device_barcode_scanner"
+    },
+    {
+      "capability": "camera",
+      "config": [
+        {
+          "key": "usage",
+          "value": "barcode_scan_only"
+        },
+        {
+          "key": "defaultFacing",
+          "value": "back"
+        },
+        {
+          "key": "audioCapture",
+          "value": false
+        },
+        {
+          "key": "torchToggle",
+          "value": true
+        }
+      ],
+      "id": "intg_camera_appareil",
+      "providerClass": "device_camera"
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "cachedEntities",
+          "value": [
+            "ent_categorie",
+            "ent_article",
+            "ent_panier_item"
+          ]
+        },
+        {
+          "key": "maxCacheDays",
+          "value": 7
+        },
+        {
+          "key": "evictionPolicy",
+          "value": "lru"
+        },
+        {
+          "key": "encryptAtRest",
+          "value": true
+        }
+      ],
+      "id": "intg_cache_local",
+      "providerClass": "local_store"
+    },
+    {
+      "capability": "analytics",
+      "config": [
+        {
+          "key": "scope",
+          "value": "product_usage"
+        },
+        {
+          "key": "anonymizeIp",
+          "value": true
+        },
+        {
+          "key": "collectorEndpoint",
+          "value": "https://api.boutique-mode.app/v1/analytics"
+        },
+        {
+          "key": "events",
+          "value": [
+            "catalogue_ouvert",
+            "article_consulte",
+            "panier_modifie",
+            "commande_payee",
+            "suivi_consulte"
+          ]
+        }
+      ],
+      "id": "intg_analytics_produit",
+      "providerClass": "product_analytics"
+    }
+  ],
+  "intent": {
+    "needs": [
+      {
+        "id": "need_catalogue_articles",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_catalogue",
+            "nav_catalogue",
+            "blk_catalogue_header",
+            "blk_catalogue_articles",
+            "ent_article",
+            "data_articles",
+            "act_ouvrir_article",
+            "scr_article_detail",
+            "nav_article_detail",
+            "blk_article_detail_header",
+            "rule_article_prix_positif",
+            "rule_article_stock_non_negatif",
+            "test_nav_catalogue_vers_article",
+            "test_liste_articles_etats"
+          ]
+        },
+        "statement": "Disposer d'une application catalogue présentant les articles de la boutique de vêtements, avec la possibilité de consulter la fiche détaillée d'un article."
+      },
+      {
+        "id": "need_articles_par_categorie",
+        "resolution": {
+          "kind": "unexpressible",
+          "reason": "Le registre de blocs fermé (header, list, detail_header, form, button, empty_state) n'offre ni onglets, ni sections, ni filtrage : le regroupement des articles par catégorie ne peut pas être rendu. Le modèle de données porte le besoin (ent_categorie, fld_article_categorie, rel_categorie_articles, data_categories, blk_catalogue_categories) et le manque d'affichage est énoncé par le test test_besoin_non_rendable_categories_onglets, mais les catégories et les articles restent affichés en deux listes distinctes sans navigation catégorie → articles filtrés."
+        },
+        "statement": "Présenter les articles classés par catégorie (navigation ou regroupement du catalogue par catégorie)."
+      },
+      {
+        "id": "need_photos_articles",
+        "resolution": {
+          "kind": "unexpressible",
+          "reason": "Aucun bloc du registre fermé ne sait afficher une image : les champs fld_article_photo et fld_categorie_visuel (type asset) sont déclarés sur les entités, mais aucune photo ne peut être rendue à l'écran. Le manque est énoncé par le test test_besoin_non_rendable_photos_articles."
+        },
+        "statement": "Afficher les articles avec leurs photos."
+      },
+      {
+        "id": "need_panier",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "ent_panier_item",
+            "data_panier_items",
+            "blk_article_form_panier",
+            "act_ajouter_au_panier",
+            "scr_panier",
+            "nav_panier",
+            "blk_panier_liste",
+            "blk_panier_vide",
+            "act_ouvrir_panier",
+            "slot_total_panier",
+            "act_calculer_total",
+            "rule_panier_quantite_minimale",
+            "rule_panier_sous_total_positif",
+            "test_ajout_article_au_panier",
+            "test_slot_total_panier",
+            "test_etat_vide_panier"
+          ]
+        },
+        "statement": "Permettre au client d'ajouter des articles à un panier, de consulter son contenu et son total avant de commander."
+      },
+      {
+        "id": "need_paiement_carte",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_paiement",
+            "nav_paiement",
+            "blk_paiement_form",
+            "act_aller_paiement",
+            "act_valider_commande",
+            "ent_commande",
+            "fld_commande_mode_paiement",
+            "rule_commande_paiement_carte",
+            "rule_commande_coordonnees_completes",
+            "intg_paiement_carte",
+            "scr_commande_confirmee",
+            "blk_confirmee_detail",
+            "test_creation_commande_paiement",
+            "test_contrat_paiement_carte",
+            "test_regle_coordonnees_commande"
+          ]
+        },
+        "statement": "Permettre le paiement de la commande par carte bancaire."
+      },
+      {
+        "id": "need_suivi_etat_commande",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_commandes",
+            "nav_commandes",
+            "blk_commandes_liste",
+            "blk_commandes_vide",
+            "act_ouvrir_commandes",
+            "scr_commande_suivi",
+            "nav_commande_suivi",
+            "blk_suivi_detail",
+            "blk_suivi_lignes",
+            "act_ouvrir_suivi",
+            "fld_commande_statut",
+            "fld_commande_transporteur",
+            "fld_commande_numero_suivi",
+            "slot_libelle_statut_commande",
+            "act_rafraichir_suivi",
+            "data_commandes",
+            "data_commande_lignes",
+            "rule_commande_statut_connu",
+            "rule_suivi_expedition_renseigne",
+            "test_nav_vers_suivi_commande",
+            "test_slot_libelle_statut",
+            "test_regle_expedition_suivie",
+            "test_suivi_detail_commande"
+          ]
+        },
+        "statement": "Suivre l'état d'avancement de la commande (payée, en préparation, expédiée, livrée) après l'achat."
+      },
+      {
+        "id": "need_scan_code_barres_magasin",
+        "resolution": {
+          "kind": "unexpressible",
+          "reason": "le moteur n'exécute pas encore les effets capability (capabilitiesEmitCode: false) : la capacité barcode_scan et la caméra sont déclarées (capabilities barcode_scan et camera, action act_scanner_code, intégrations intg_scan_code_barres et intg_camera_appareil, permissions caméra iOS/Android), mais l'acquisition réelle du code-barres n'est pas exécutée par le moteur."
+        },
+        "statement": "Scanner le code-barres d'un article en magasin avec la caméra de l'appareil."
+      },
+      {
+        "id": "need_fiche_article_depuis_code_barres",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_scan",
+            "nav_scan",
+            "blk_scan_header",
+            "blk_scan_resultat",
+            "blk_scan_vide",
+            "act_ouvrir_scan",
+            "slot_recherche_code_barres",
+            "act_resoudre_code_barres",
+            "fld_article_code_barres",
+            "blk_scan_btn_fiche",
+            "act_ouvrir_article",
+            "scr_article_detail",
+            "test_nav_catalogue_vers_scan",
+            "test_slot_resolution_code_barres"
+          ]
+        },
+        "statement": "Afficher la fiche de l'article correspondant au code-barres scanné."
+      },
+      {
+        "id": "need_application_en_francais",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "prj_boutique_vetements"
+          ]
+        },
+        "statement": "Livrer l'application entièrement en français."
+      }
+    ],
+    "request": "Ma boutique de vêtements veut une app catalogue : articles par catégorie avec photos, panier, paiement par carte, suivi de l'état de la commande, et scan d'un code-barres en magasin pour voir la fiche d'un article. En français.",
+    "requestLocale": "fr"
+  },
+  "native": {
+    "minAndroidSdk": 26,
+    "minIosVersion": "16.0"
+  },
+  "navigation": {
+    "entryScreenId": "scr_catalogue",
+    "routes": [
+      {
+        "id": "nav_catalogue",
+        "screenId": "scr_catalogue",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Catalogue"
+          }
+        ]
+      },
+      {
+        "id": "nav_article_detail",
+        "screenId": "scr_article_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Fiche article"
+          }
+        ]
+      },
+      {
+        "id": "nav_scan",
+        "screenId": "scr_scan",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Scanner un code-barres"
+          }
+        ]
+      },
+      {
+        "id": "nav_panier",
+        "screenId": "scr_panier",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Panier"
+          }
+        ]
+      },
+      {
+        "id": "nav_paiement",
+        "screenId": "scr_paiement",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Paiement"
+          }
+        ]
+      },
+      {
+        "id": "nav_commande_confirmee",
+        "screenId": "scr_commande_confirmee",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Commande confirmée"
+          }
+        ]
+      },
+      {
+        "id": "nav_commandes",
+        "screenId": "scr_commandes",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Mes commandes"
+          }
+        ]
+      },
+      {
+        "id": "nav_commande_suivi",
+        "screenId": "scr_commande_suivi",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Suivi de commande"
+          }
+        ]
+      }
+    ]
+  },
+  "network": {
+    "allowedDomains": [
+      "api.boutique-mode.app"
+    ],
+    "policy": "deny_by_default"
+  },
+  "permissions": [
+    {
+      "permission": "NSCameraUsageDescription",
+      "platform": "ios",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "La caméra est utilisée pour scanner le code-barres d'un article en magasin et afficher sa fiche."
+        }
+      ],
+      "requiredByCapability": "camera"
+    },
+    {
+      "permission": "NSMicrophoneUsageDescription",
+      "platform": "ios",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "Le module de caméra requiert cette autorisation ; l'application n'enregistre aucun son lors du scan d'un code-barres."
+        }
+      ],
+      "requiredByCapability": "camera"
+    },
+    {
+      "permission": "android.permission.CAMERA",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "L'accès à la caméra permet de scanner le code-barres d'un article en magasin pour consulter sa fiche."
+        }
+      ],
+      "requiredByCapability": "camera"
+    },
+    {
+      "permission": "android.permission.RECORD_AUDIO",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "Autorisation exigée par le composant caméra ; aucun enregistrement audio n'est effectué par l'application."
+        }
+      ],
+      "requiredByCapability": "camera"
+    },
+    {
+      "permission": "android.permission.POST_NOTIFICATIONS",
+      "platform": "android",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "Les notifications informent le client des changements d'état de sa commande (payée, en préparation, expédiée, livrée)."
+        }
+      ],
+      "requiredByCapability": "push_notifications"
+    }
+  ],
+  "projectId": "prj_boutique_vetements",
+  "relations": [
+    {
+      "fromEntityId": "ent_categorie",
+      "id": "rel_categorie_articles",
+      "kind": "one_to_many",
+      "toEntityId": "ent_article"
+    },
+    {
+      "fromEntityId": "ent_article",
+      "id": "rel_article_panier_items",
+      "kind": "one_to_many",
+      "toEntityId": "ent_panier_item"
+    },
+    {
+      "fromEntityId": "ent_commande",
+      "id": "rel_commande_lignes",
+      "kind": "one_to_many",
+      "toEntityId": "ent_commande_ligne"
+    },
+    {
+      "fromEntityId": "ent_article",
+      "id": "rel_article_lignes",
+      "kind": "one_to_many",
+      "toEntityId": "ent_commande_ligne"
+    }
+  ],
+  "rules": [
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_article_prix",
+          "operator": "gt",
+          "value": 0
+        },
+        {
+          "fieldId": "fld_article_nom",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_article_reference",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_article_code_barres",
+          "operator": "required"
+        }
+      ],
+      "description": "Le prix d'un article doit être strictement supérieur à 0 et sa référence, son nom et son code-barres sont obligatoires.",
+      "entityId": "ent_article",
+      "id": "rule_article_prix_positif",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_article_stock",
+          "operator": "gte",
+          "value": 0
+        },
+        {
+          "fieldId": "fld_article_disponible",
+          "operator": "required"
+        }
+      ],
+      "description": "Le stock d'un article ne peut pas être négatif et un article présenté comme disponible doit avoir du stock.",
+      "entityId": "ent_article",
+      "id": "rule_article_stock_non_negatif",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_article_categorie",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_article_taille",
+          "operator": "in",
+          "value": [
+            "XS",
+            "S",
+            "M",
+            "L",
+            "XL",
+            "XXL",
+            "taille_unique"
+          ]
+        }
+      ],
+      "description": "Chaque article doit être rattaché à une catégorie pour apparaître au catalogue.",
+      "entityId": "ent_article",
+      "id": "rule_article_categorie_obligatoire",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_categorie_nom",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_categorie_ordre",
+          "operator": "gte",
+          "value": 0
+        }
+      ],
+      "description": "Une catégorie doit porter un nom et un ordre d'affichage positif.",
+      "entityId": "ent_categorie",
+      "id": "rule_categorie_nom_requis",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_panier_quantite",
+          "operator": "gte",
+          "value": 1
+        },
+        {
+          "fieldId": "fld_panier_quantite",
+          "operator": "lte",
+          "value": 10
+        },
+        {
+          "fieldId": "fld_panier_article",
+          "operator": "required"
+        }
+      ],
+      "description": "Une ligne de panier porte au moins une unité et au plus dix unités du même article.",
+      "entityId": "ent_panier_item",
+      "id": "rule_panier_quantite_minimale",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_panier_sous_total",
+          "operator": "gt",
+          "value": 0
+        },
+        {
+          "fieldId": "fld_panier_prix_unitaire",
+          "operator": "gt",
+          "value": 0
+        }
+      ],
+      "description": "Le sous-total d'une ligne de panier doit être strictement positif.",
+      "entityId": "ent_panier_item",
+      "id": "rule_panier_sous_total_positif",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_commande_client_nom",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_commande_email",
+          "operator": "matches",
+          "value": "^[^@\\s]+@[^@\\s]+\\.[a-z]{2,}$"
+        },
+        {
+          "fieldId": "fld_commande_adresse",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_commande_code_postal",
+          "operator": "matches",
+          "value": "^[0-9]{5}$"
+        },
+        {
+          "fieldId": "fld_commande_ville",
+          "operator": "required"
+        }
+      ],
+      "description": "Une commande exige le nom du client, un e-mail valide et une adresse de livraison complète.",
+      "entityId": "ent_commande",
+      "id": "rule_commande_coordonnees_completes",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_commande_statut",
+          "operator": "in",
+          "value": [
+            "en_attente_paiement",
+            "payee",
+            "en_preparation",
+            "expediee",
+            "livree",
+            "annulee"
+          ]
+        },
+        {
+          "fieldId": "fld_commande_total",
+          "operator": "gt",
+          "value": 0
+        },
+        {
+          "fieldId": "fld_commande_numero",
+          "operator": "required"
+        }
+      ],
+      "description": "Le statut d'une commande appartient au cycle de suivi défini et le total est strictement positif.",
+      "entityId": "ent_commande",
+      "id": "rule_commande_statut_connu",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_commande_mode_paiement",
+          "operator": "eq",
+          "value": "carte_bancaire"
+        }
+      ],
+      "description": "Le seul mode de paiement accepté est la carte bancaire via le prestataire de paiement.",
+      "entityId": "ent_commande",
+      "id": "rule_commande_paiement_carte",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_ligne_commande",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_ligne_article",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_ligne_quantite",
+          "operator": "gte",
+          "value": 1
+        },
+        {
+          "fieldId": "fld_ligne_montant",
+          "operator": "gt",
+          "value": 0
+        }
+      ],
+      "description": "Chaque ligne de commande référence une commande et un article, avec une quantité et un montant positifs.",
+      "entityId": "ent_commande_ligne",
+      "id": "rule_ligne_commande_coherente",
+      "kind": "validation"
+    },
+    {
+      "assertions": [
+        {
+          "fieldId": "fld_commande_transporteur",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_commande_numero_suivi",
+          "operator": "required"
+        }
+      ],
+      "description": "Une commande expédiée doit porter un transporteur et un numéro de suivi pour être suivie par le client.",
+      "entityId": "ent_commande",
+      "id": "rule_suivi_expedition_renseigne",
+      "kind": "validation"
+    }
+  ],
+  "screens": [
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_catalogue_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Boutique Mode"
+            },
+            {
+              "key": "subtitle",
+              "value": "Nos articles classés par catégorie"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_categorie",
+          "id": "blk_catalogue_categories",
+          "props": [
+            {
+              "key": "title",
+              "value": "Catégories"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_categorie_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_categorie_description"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_categorie_nb_articles"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_categorie_ordre"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune catégorie"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Les catégories de la boutique ne sont pas encore publiées."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement des catégories…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Catégories indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Impossible de charger les catégories. Vérifiez votre connexion puis réessayez."
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_article",
+          "id": "blk_catalogue_articles",
+          "props": [
+            {
+              "key": "title",
+              "value": "Articles"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_article_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_article_categorie"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_article_prix_affiche"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_article_taille"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun article"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Aucun article n'est disponible pour le moment."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement des articles…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Catalogue indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Le catalogue n'a pas pu être chargé. Réessayez dans un instant."
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_catalogue_vide",
+          "props": [
+            {
+              "key": "title",
+              "value": "Catalogue vide"
+            },
+            {
+              "key": "message",
+              "value": "Aucun article n'est encore en ligne. Vous pouvez scanner le code-barres d'un article en magasin pour afficher sa fiche."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Scanner un code-barres"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_scan"
+            }
+          ],
+          "visibleWhen": {
+            "entityId": "ent_article",
+            "kind": "entity_empty"
+          }
+        },
+        {
+          "blockType": "button",
+          "id": "blk_catalogue_btn_article",
+          "props": [
+            {
+              "key": "label",
+              "value": "Voir la fiche article"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_article"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_catalogue_btn_scan",
+          "props": [
+            {
+              "key": "label",
+              "value": "Scanner un code-barres"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_scan"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_catalogue_btn_panier",
+          "props": [
+            {
+              "key": "label",
+              "value": "Voir mon panier"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_panier"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_catalogue_btn_commandes",
+          "props": [
+            {
+              "key": "label",
+              "value": "Mes commandes"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_commandes"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ],
+      "id": "scr_catalogue",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Catalogue"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "detail_header",
+          "entityId": "ent_article",
+          "id": "blk_article_detail_header",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_article_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_article_description"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_article_prix_affiche"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_article_taille",
+                "fld_article_couleur",
+                "fld_article_categorie"
+              ]
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de la fiche article…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Fiche indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "La fiche de cet article n'a pas pu être chargée."
+            }
+          ]
+        },
+        {
+          "blockType": "form",
+          "entityId": "ent_panier_item",
+          "id": "blk_article_form_panier",
+          "props": [
+            {
+              "key": "title",
+              "value": "Ajouter cet article au panier"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_panier_libelle",
+                "fld_panier_article",
+                "fld_panier_taille",
+                "fld_panier_quantite",
+                "fld_panier_prix_unitaire",
+                "fld_panier_sous_total",
+                "fld_panier_ajoute_le"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Ajouter au panier"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Préparation de l'ajout au panier…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Ajout impossible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "L'article n'a pas pu être ajouté au panier. Vérifiez la taille et la quantité."
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_article_btn_panier",
+          "props": [
+            {
+              "key": "label",
+              "value": "Voir mon panier"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_panier"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_article_btn_retour",
+          "props": [
+            {
+              "key": "label",
+              "value": "Retour au catalogue"
+            },
+            {
+              "key": "actionId",
+              "value": "act_retour_catalogue"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ],
+      "id": "scr_article_detail",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Fiche article"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_scan_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Scan en magasin"
+            },
+            {
+              "key": "subtitle",
+              "value": "Scannez l'étiquette d'un article pour afficher sa fiche"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_scan_btn_scanner",
+          "props": [
+            {
+              "key": "label",
+              "value": "Lancer le scan"
+            },
+            {
+              "key": "actionId",
+              "value": "act_scanner_code"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_article",
+          "id": "blk_scan_resultat",
+          "props": [
+            {
+              "key": "title",
+              "value": "Résultat du scan"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_article_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_article_reference"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_article_prix_affiche"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_article_code_barres"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun article scanné"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Lancez le scan d'un code-barres pour afficher l'article correspondant."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Recherche de l'article scanné…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Recherche impossible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Le code-barres n'a pas pu être résolu. Réessayez ou recherchez l'article dans le catalogue."
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_scan_vide",
+          "props": [
+            {
+              "key": "title",
+              "value": "Aucun article trouvé"
+            },
+            {
+              "key": "message",
+              "value": "Aucun article du catalogue ne correspond à ce code-barres."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Retour au catalogue"
+            },
+            {
+              "key": "actionId",
+              "value": "act_retour_catalogue"
+            }
+          ],
+          "visibleWhen": {
+            "entityId": "ent_article",
+            "kind": "entity_empty"
+          }
+        },
+        {
+          "blockType": "button",
+          "id": "blk_scan_btn_fiche",
+          "props": [
+            {
+              "key": "label",
+              "value": "Ouvrir la fiche article"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_article"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ],
+      "id": "scr_scan",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Scanner un code-barres"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_panier_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mon panier"
+            },
+            {
+              "key": "subtitle",
+              "value": "Vérifiez vos articles avant le paiement"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_panier_item",
+          "id": "blk_panier_liste",
+          "props": [
+            {
+              "key": "title",
+              "value": "Articles du panier"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_panier_libelle"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_panier_taille"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_panier_sous_total_affiche"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_panier_quantite"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Panier vide"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Vous n'avez encore ajouté aucun article."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du panier…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Panier indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Le contenu du panier n'a pas pu être chargé."
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_panier_vide",
+          "props": [
+            {
+              "key": "title",
+              "value": "Votre panier est vide"
+            },
+            {
+              "key": "message",
+              "value": "Parcourez le catalogue pour ajouter des articles à votre panier."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Parcourir le catalogue"
+            },
+            {
+              "key": "actionId",
+              "value": "act_retour_catalogue"
+            }
+          ],
+          "visibleWhen": {
+            "entityId": "ent_panier_item",
+            "kind": "entity_empty"
+          }
+        },
+        {
+          "blockType": "button",
+          "id": "blk_panier_btn_total",
+          "props": [
+            {
+              "key": "label",
+              "value": "Recalculer le total"
+            },
+            {
+              "key": "actionId",
+              "value": "act_calculer_total"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_panier_btn_paiement",
+          "props": [
+            {
+              "key": "label",
+              "value": "Passer au paiement"
+            },
+            {
+              "key": "actionId",
+              "value": "act_aller_paiement"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ],
+      "id": "scr_panier",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Panier"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_paiement_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Paiement par carte"
+            },
+            {
+              "key": "subtitle",
+              "value": "Coordonnées de livraison et règlement sécurisé"
+            }
+          ]
+        },
+        {
+          "blockType": "form",
+          "entityId": "ent_commande",
+          "id": "blk_paiement_form",
+          "props": [
+            {
+              "key": "title",
+              "value": "Vos informations"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_commande_numero",
+                "fld_commande_client_nom",
+                "fld_commande_email",
+                "fld_commande_telephone",
+                "fld_commande_adresse",
+                "fld_commande_code_postal",
+                "fld_commande_ville",
+                "fld_commande_mode_paiement",
+                "fld_commande_total",
+                "fld_commande_statut",
+                "fld_commande_date"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Payer par carte bancaire"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Préparation du paiement…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Paiement impossible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Le paiement n'a pas pu être finalisé. Vérifiez vos informations puis réessayez."
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_paiement_btn_retour",
+          "props": [
+            {
+              "key": "label",
+              "value": "Retour au panier"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_panier"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ],
+      "id": "scr_paiement",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Paiement"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_confirmee_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Merci pour votre commande"
+            },
+            {
+              "key": "subtitle",
+              "value": "Votre paiement par carte a été enregistré"
+            }
+          ]
+        },
+        {
+          "blockType": "detail_header",
+          "entityId": "ent_commande",
+          "id": "blk_confirmee_detail",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_commande_numero"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_commande_statut_libelle"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_commande_total_affiche"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_commande_statut",
+                "fld_commande_mode_paiement"
+              ]
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de la commande…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Commande indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Le récapitulatif de la commande n'a pas pu être chargé."
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_commande_ligne",
+          "id": "blk_confirmee_lignes",
+          "props": [
+            {
+              "key": "title",
+              "value": "Récapitulatif"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_ligne_libelle"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_ligne_taille"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_ligne_montant_affiche"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_ligne_quantite"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune ligne"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Cette commande ne contient aucune ligne."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du récapitulatif…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Récapitulatif indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Les lignes de la commande n'ont pas pu être chargées."
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_confirmee_btn_suivi",
+          "props": [
+            {
+              "key": "label",
+              "value": "Suivre ma commande"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_suivi"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_confirmee_btn_catalogue",
+          "props": [
+            {
+              "key": "label",
+              "value": "Retour au catalogue"
+            },
+            {
+              "key": "actionId",
+              "value": "act_retour_catalogue"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ],
+      "id": "scr_commande_confirmee",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Commande confirmée"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_commandes_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes commandes"
+            },
+            {
+              "key": "subtitle",
+              "value": "Historique et état d'avancement"
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_commande",
+          "id": "blk_commandes_liste",
+          "props": [
+            {
+              "key": "title",
+              "value": "Commandes"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_commande_numero"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_commande_statut_libelle"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_commande_total_affiche"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_commande_statut"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune commande"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Vous n'avez encore passé aucune commande."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de vos commandes…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Commandes indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Vos commandes n'ont pas pu être chargées. Réessayez plus tard."
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_commandes_vide",
+          "props": [
+            {
+              "key": "title",
+              "value": "Pas encore de commande"
+            },
+            {
+              "key": "message",
+              "value": "Vos futures commandes et leur suivi apparaîtront ici."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Parcourir le catalogue"
+            },
+            {
+              "key": "actionId",
+              "value": "act_retour_catalogue"
+            }
+          ],
+          "visibleWhen": {
+            "entityId": "ent_commande",
+            "kind": "entity_empty"
+          }
+        },
+        {
+          "blockType": "button",
+          "id": "blk_commandes_btn_suivi",
+          "props": [
+            {
+              "key": "label",
+              "value": "Voir le suivi"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_suivi"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ],
+      "id": "scr_commandes",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Mes commandes"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_suivi_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Suivi de commande"
+            },
+            {
+              "key": "subtitle",
+              "value": "État d'avancement et expédition"
+            }
+          ]
+        },
+        {
+          "blockType": "detail_header",
+          "entityId": "ent_commande",
+          "id": "blk_suivi_detail",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_commande_numero"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_commande_statut_libelle"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_commande_numero_suivi"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_commande_statut",
+                "fld_commande_transporteur"
+              ]
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du suivi…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Suivi indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "L'état de la commande n'a pas pu être récupéré."
+            }
+          ]
+        },
+        {
+          "blockType": "list",
+          "entityId": "ent_commande_ligne",
+          "id": "blk_suivi_lignes",
+          "props": [
+            {
+              "key": "title",
+              "value": "Articles commandés"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_ligne_libelle"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_ligne_taille"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_ligne_montant_affiche"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_ligne_quantite"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune ligne"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Aucun article n'est rattaché à cette commande."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement des articles commandés…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Articles indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Le détail des articles n'a pas pu être chargé."
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_suivi_btn_actualiser",
+          "props": [
+            {
+              "key": "label",
+              "value": "Actualiser le suivi"
+            },
+            {
+              "key": "actionId",
+              "value": "act_rafraichir_suivi"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_suivi_btn_commandes",
+          "props": [
+            {
+              "key": "label",
+              "value": "Retour à mes commandes"
+            },
+            {
+              "key": "actionId",
+              "value": "act_ouvrir_commandes"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ],
+      "id": "scr_commande_suivi",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Suivi de commande"
+        }
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "allowedImports": [],
+      "description": "Calcule le nombre d'articles et le total du panier à partir des lignes de panier, et renvoie un libellé monétaire formaté en euros pour l'affichage.",
+      "id": "slot_total_panier",
+      "inputs": [
+        {
+          "name": "lignesPanier",
+          "type": "json"
+        },
+        {
+          "name": "devise",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "totalPanier",
+          "type": "decimal"
+        },
+        {
+          "name": "totalAffiche",
+          "type": "string"
+        },
+        {
+          "name": "nombreArticles",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "allowedImports": [],
+      "description": "Résout un code-barres scanné en magasin vers l'article correspondant du catalogue et renvoie son nom, sa référence et un message si aucun article ne correspond.",
+      "id": "slot_recherche_code_barres",
+      "inputs": [
+        {
+          "name": "codeBarres",
+          "type": "string"
+        },
+        {
+          "name": "articles",
+          "type": "json"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "articleNom",
+          "type": "string"
+        },
+        {
+          "name": "articleReference",
+          "type": "string"
+        },
+        {
+          "name": "messageResultat",
+          "type": "string"
+        },
+        {
+          "name": "trouve",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "allowedImports": [],
+      "description": "Traduit le statut technique d'une commande en libellé français lisible et en message d'étape de suivi (en préparation, expédiée, livrée...).",
+      "id": "slot_libelle_statut_commande",
+      "inputs": [
+        {
+          "name": "statut",
+          "type": "string"
+        },
+        {
+          "name": "majStatut",
+          "type": "datetime"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "statutLibelle",
+          "type": "string"
+        },
+        {
+          "name": "messageSuivi",
+          "type": "string"
+        },
+        {
+          "name": "etape",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "allowedImports": [],
+      "description": "Construit le récapitulatif d'une commande à partir de ses lignes : libellés d'articles, quantités, montants formatés et total à payer.",
+      "id": "slot_recapitulatif_commande",
+      "inputs": [
+        {
+          "name": "lignesCommande",
+          "type": "json"
+        },
+        {
+          "name": "totalCommande",
+          "type": "decimal"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "recapitulatifTitre",
+          "type": "string"
+        },
+        {
+          "name": "recapitulatifMessage",
+          "type": "text"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "render-harness",
+    "slug": "render-harness",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": { "supportsTablet": false, "bundleIdentifier": "com.deribfy.harness.render" },
+    "android": { "package": "com.deribfy.harness.render", "predictiveBackGestureEnabled": false }
+  }
+}

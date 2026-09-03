@@ -1,0 +1,18 @@
+{
+  "name": "@deribfy/router",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Routeur OTA / rebuild natif par EMPREINTE CALCULEE (Phase 11). Decide, entre deux versions d'une application, si le changement est livrable en OTA ou exige un rebuild natif. FAIL-CLOSED : tout changement non reconnu impose le rebuild. Fonction PURE.",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc --noEmit", "lint": "eslint . --max-warnings 0", "test": "vitest run" },
+  "dependencies": {
+    "@deribfy/air-schema": "*",
+    "@deribfy/capability-registry": "*",
+    "@deribfy/compiler": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^20", "eslint": "^9.39.0", "typescript": "^5",
+    "typescript-eslint": "^8.60.0", "vitest": "^4.1.10"
+  }
+}

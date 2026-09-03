@@ -1,0 +1,2 @@
+{"candidate":"restyle","platform":"ios","ttiListMs":33.9,"scroll":{"frames":361,"droppedOver17ms":80,"droppedOver34ms":0,"maxFrameMs":18.7,"durationMs":6017},"themeToggleMsMedian":66.7,"themeToggleRuns":[83.1,65.3,68,66.7,66.7,66.7,64.9,50.3,49.9,68.2]}
+{"candidate":"uniwind","platform":"ios","ttiListMs":26.1,"scroll":{"frames":361,"droppedOver17ms":64,"droppedOver34ms":0,"maxFrameMs":17.9,"durationMs":6017},"themeToggleMsMedian":83.3,"themeToggleRuns":[83.3,83.3,65.7,84.3,83.3,83.3,83.3,83.3,83.4,83.3]}
