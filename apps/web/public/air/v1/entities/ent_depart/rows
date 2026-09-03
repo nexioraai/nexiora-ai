@@ -1,0 +1,7 @@
+[
+  { "id": "ent_depart_row_1",  "values": { "fld_depart_destination": "Bouaké",       "fld_depart_ville_depart": "Abidjan", "fld_depart_date": "2026-09-05", "fld_depart_heure_arrivee": "11:30", "fld_depart_duree": "5 h 30", "fld_depart_prix": "6500", "fld_depart_statut": "a_l_heure" } },
+  { "id": "ent_depart_row_2",  "values": { "fld_depart_destination": "Korhogo",      "fld_depart_ville_depart": "Abidjan", "fld_depart_date": "2026-09-05", "fld_depart_heure_arrivee": "16:45", "fld_depart_duree": "9 h 15", "fld_depart_prix": "9000", "fld_depart_statut": "a_l_heure" } },
+  { "id": "ent_depart_row_3",  "values": { "fld_depart_destination": "San-Pédro",    "fld_depart_ville_depart": "Abidjan", "fld_depart_date": "2026-09-06", "fld_depart_heure_arrivee": "13:10", "fld_depart_duree": "6 h 40", "fld_depart_prix": "8000", "fld_depart_statut": "retarde" } },
+  { "id": "ent_depart_row_12", "values": { "fld_depart_destination": "Man",          "fld_depart_ville_depart": "Abidjan", "fld_depart_date": "2026-09-06", "fld_depart_heure_arrivee": "17:20", "fld_depart_duree": "9 h 50", "fld_depart_prix": "10000", "fld_depart_statut": "a_l_heure" } },
+  { "id": "ent_depart_row_16", "values": { "fld_depart_destination": "Yamoussoukro", "fld_depart_ville_depart": "Abidjan", "fld_depart_date": "2026-09-07", "fld_depart_heure_arrivee": "09:55", "fld_depart_duree": "3 h 25", "fld_depart_prix": "5000", "fld_depart_statut": "a_l_heure" } }
+]
