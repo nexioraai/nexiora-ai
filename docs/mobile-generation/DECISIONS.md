@@ -7079,6 +7079,18 @@ feuille de style ; verdict `conforme` si `N ≥ 48` **et** `occurrences ≥ 3`.
 Mesuré sur l'artefact du slice 1 : `tapTarget = 48`, **exactement 3** surfaces
 (`button`, `field`, `row`) — du code réel, vérifié, **la clause ③ est donc
 authentiquement mesurée**, et le compte est **au seuil, sans marge**.
+
+> 🔴 *Rectifié le 2026-09-04 — le compte « 3 » et la mention « au seuil, sans
+> marge » sont FAUX pour l'émetteur courant.* Ils ont été relevés sur
+> l'artefact VERSIONNÉ sous `slices/restaurant/app/`, qui est **périmé** :
+> recompilé à neuf depuis `resto-quartier`, le même fichier
+> `lib/primitives/styles.ts` porte **5** surfaces contraintes, et les deux
+> versions ne sont pas identiques. `tapTarget = 48` est inchangé. **La
+> conclusion de `D-135` n'est pas affectée** — elle repose sur la NATURE de la
+> preuve (analyse statique là où la grille exige une géométrie mesurée sur
+> appareil), jamais sur ce comptage. Seule tombe l'alerte « au seuil » : la
+> marge réelle est de 5 pour un minimum de 3. Écart d'artefact consigné à
+> part ; aucun artefact de slice n'est régénéré par cette rectification.
 `FACT` — **les clauses ① et ② ne sont regardées par aucune ligne de
 l'instrument.** Le mécanisme de zones sûres de l'artefact vit dans
 `screens/*.tsx` (`useSafeAreaInsets`, présent sur **4 écrans sur 4** du slice 1)
