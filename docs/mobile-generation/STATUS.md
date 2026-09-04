@@ -1,7 +1,57 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-04 (23)** (**🔧 CI RENDUE HONNÊTE — `D-134`, NON COMMITTÉ.**
+> **2026-09-04 (24)** (**🔬 LA GRILLE A++ CESSE DE MENTIR · CANAL DE PREUVE APPAREIL
+> OUVERT · PREMIER DOCUMENT DE LA DETTE DE FIDÉLITÉ REDEVENU FIDÈLE.**
+> **`D-135`** — la grille exige pour **A** une « géométrie mesurée sur appareil
+> réel » et pour **G** une « mesure sur appareil » ; l'instrument ne lisait que
+> du source. Trois volets, tous commités et poussés. **V1** : le bornage de la
+> liste était testé par `blocks.includes("fill")` — FALSIFIÉ sur l'artefact
+> réel, un COMMENTAIRE suffisait à le satisfaire, donc réintroduire `DET-025`
+> ne déclenchait rien ; mesure portée sur l'ARBRE SYNTAXIQUE, le faux positif
+> par commentaire devient IMPOSSIBLE, pas seulement improbable. **V2** : `A` et
+> `G` ne concluent plus à la conformité — pré-condition en échec ⇒
+> `non_conforme` (défaut démontré), tenue ⇒ `non_determinee`, **jamais
+> `conforme`** ; le pouvoir de détection est conservé, aucune dette masquée.
+> **V3** : canal de preuve appareil `deribfy.preuve-appareil/1` — 9 contrôles
+> de recevabilité, cibles tactiles DÉRIVÉES DU DOCUMENT (jamais déclarées par
+> la preuve, qui s'auto-attesterait), `airHash` recalculé comme rattachement
+> vérifiable ; **`G` ne peut PAS devenir conforme par ce minimum** (clause jank
+> hors mesure) et la borne de réfutation est DÉRIVÉE de la géométrie
+> (`21 × écran / ligne`, défaut `windowSize ?? 21` de la dépendance installée),
+> après qu'une constante arbitraire de 50 se soit révélée produire un FAUX
+> NÉGATIF d'un facteur ~5. **Outil de capture `A12`/`A13`** livré : relève
+> densité, insets, dimensions par `adb`, soumet l'artefact au LECTEUR avant
+> d'écrire — irrecevable ⇒ rien n'est écrit — et REFUSE mécaniquement les
+> émulateurs. **`listGrouping: false`** ajouté à l'enveloppe : un besoin de
+> présentation groupée était réellement inexprimable mais AUCUN fait ne
+> permettait de le démontrer — une inexprimabilité non citable est une lacune
+> de l'enveloppe, pas un défaut du document. **`DET-029` mesurée** : la
+> divergence `main` ↔ campagne est QUASI UNILATÉRALE — 44 commits / 233
+> fichiers côté branche, **un seul fichier réellement divergent** côté `main`
+> (sept lignes de commentaire SQL). **DETTE DE FIDÉLITÉ — PREMIER RECUL RÉEL :
+> `F4 3 → 2` · motifs réfutés `5 → 3`**, `v3/toiletteur-chiens` passe de
+> 🔴 6 ok / 2 réfutés à 🟢 **39/39 vivantes · 9 ok · 0 motif réfuté** ; photo et
+> historique passent d'`unexpressible` à `satisfied`. Trois causes DÉMONTRÉES
+> et corrigées pour y parvenir : troncature (`MAX_TOKENS` 16000 → 24000, la
+> section `ecrans` atteignait exactement le plafond), budget de filtres COMMUN
+> (le prompt disait « au plus 3 » sans dire que le littéral compte — le
+> générateur avait obéi à la lettre), et **absence de mode reprise**
+> (`--reparer` ajouté : 29 diagnostics → 0 en **3 appels / 1,40 $** là où une
+> régénération coûtait 2,8 $ sans garantie). **Coût total du lot : 8,53 $**,
+> dont 7,13 $ ont payé les trois causes sans rien livrer. **DEUX LOTS ARRÊTÉS
+> AVEC MOTIF, pas par prudence** : lint web (36 hooks) — aucun défaut
+> ATTEIGNABLE démontré, le cas le plus flagrant étant le motif SSR CORRECT de
+> `CookieConsent` ; et régénération des artefacts de slice — ma propre mesure
+> était biaisée (compilée sans l'option `slots`) et réécrire aurait effacé une
+> preuve datée. **`G8` étudiée** : `gfxinfo` et `xctrace` sont présents sur la
+> machine, la gate reste `NON IMPLÉMENTÉE` — mais le verrou de `G` n'est PAS le
+> jank, c'est la clause ② : `pageSize` plafonne le rendu à 20 lignes et le
+> contrat gelé à 200, sous une capacité de fenêtre de 237-310. **A++ TOUJOURS
+> NON ÉTABLI · A et G NON DÉTERMINÉES · aucune validation physique, aucune
+> preuve fabriquée, aucun émulateur employé comme substitut au Samsung.**)
+>
+> *Entrée précédente —* **2026-09-04 (23)** (**🔧 CI RENDUE HONNÊTE — `D-134`, NON COMMITTÉ.**
 > *(Rectifié le 2026-09-04 : « NON COMMITTÉ » valait à la rédaction de cette entrée. Ce lot est
 > **committé depuis en `044ba4d`**, poussé sur `fix/xss-jsonld` — **CI run #53 `success`**.)*
 > Diagnostic depuis la racine, 14 étapes bloquantes reproduites localement :
