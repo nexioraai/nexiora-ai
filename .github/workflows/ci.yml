@@ -179,7 +179,17 @@ jobs:
       # SATISFAITS dans la ROADMAP -- et n'etaient appeles par AUCUNE gate.
       # Les cinq gates precedentes mesurent le MOTEUR ; celle-ci mesure la
       # FIDELITE : le document tient-il ce que la demande exprimait ?
-      - name: Apps emises — fidelite (F1/F4/F5)
+      # D (arbitrage 2026-09-04, D-134) — POLITIQUE CI, PAS une exigence
+      # réécrite. Cette gate s'exécute INTÉGRALEMENT et publie TOUT (F1, F4,
+      # motifs réfutés, rapport document par document) ; son verdict et son
+      # `exit 1` sont inchangés. Seul son caractère BLOQUANT est suspendu sur
+      # les branches de chantier, où le rouge résiduel est composé de dettes
+      # ARBITRÉES : 12 documents v2 gelés (promesses mortes réelles, corpus
+      # non retouchable) + 3 documents v3 DIFFÉRÉS par D-125. Elle reste
+      # BLOQUANTE sur `main` et sur toute pull_request vers `main`.
+      # RETOUR AU CARACTÈRE BLOQUANT (condition explicite) : régénération des
+      # 3 documents différés ET décision propriétaire sur le corpus v2 gelé.
+      - name: Apps emises — fidelite (F1/F4/F5) — bloquante sur main et PR
         id: app_fidelite
         continue-on-error: true
         working-directory: .
@@ -208,8 +218,23 @@ jobs:
 
       - name: Gate — échoue si une étape bloquante a échoué
         if: always()
+        env:
+          # `main` et les pull_request vers `main` restent gouvernées par la
+          # fidélité ; les push de branches de chantier ne le sont plus (D-134).
+          FIDELITE_BLOQUANTE: ${{ github.ref_name == 'main' || github.event_name == 'pull_request' }}
         run: |
-          if [ "${{ steps.typecheck.outcome }}" != "success" ] || [ "${{ steps.test.outcome }}" != "success" ] || [ "${{ steps.build.outcome }}" != "success" ] || [ "${{ steps.apidocs.outcome }}" != "success" ] || [ "${{ steps.pkg_typecheck.outcome }}" != "success" ] || [ "${{ steps.pkg_lint.outcome }}" != "success" ] || [ "${{ steps.pkg_test.outcome }}" != "success" ] || [ "${{ steps.app_compile.outcome }}" != "success" ] || [ "${{ steps.app_rendu.outcome }}" != "success" ] || [ "${{ steps.app_controles.outcome }}" != "success" ] || [ "${{ steps.app_navigation.outcome }}" != "success" ] || [ "${{ steps.app_composition.outcome }}" != "success" ] || [ "${{ steps.app_fidelite.outcome }}" != "success" ] || [ "${{ steps.app_invariants.outcome }}" != "success" ]; then
+          # Un échec de fidélité est TOUJOURS signalé, qu'il bloque ou non —
+          # aucune donnée masquée, aucun silence (règle 3 de l'arbitrage).
+          if [ "${{ steps.app_fidelite.outcome }}" != "success" ]; then
+            echo "🔴 FIDÉLITÉ EN ÉCHEC (app_fidelite=${{ steps.app_fidelite.outcome }}) — le rapport complet est publié ci-dessus."
+            echo "   Dette ARBITRÉE : 12 documents v2 gelés (F1, promesses mortes réelles) + 3 documents v3 différés (D-125)."
+            echo "   BLOQUANT ici ? ${FIDELITE_BLOQUANTE} (bloquant sur main et pull_request ; non bloquant sur les branches de chantier — D-134)."
+          fi
+          fidelite_ko=false
+          if [ "${FIDELITE_BLOQUANTE}" = "true" ] && [ "${{ steps.app_fidelite.outcome }}" != "success" ]; then
+            fidelite_ko=true
+          fi
+          if [ "$fidelite_ko" = "true" ] || [ "${{ steps.typecheck.outcome }}" != "success" ] || [ "${{ steps.test.outcome }}" != "success" ] || [ "${{ steps.build.outcome }}" != "success" ] || [ "${{ steps.apidocs.outcome }}" != "success" ] || [ "${{ steps.pkg_typecheck.outcome }}" != "success" ] || [ "${{ steps.pkg_lint.outcome }}" != "success" ] || [ "${{ steps.pkg_test.outcome }}" != "success" ] || [ "${{ steps.app_compile.outcome }}" != "success" ] || [ "${{ steps.app_rendu.outcome }}" != "success" ] || [ "${{ steps.app_controles.outcome }}" != "success" ] || [ "${{ steps.app_navigation.outcome }}" != "success" ] || [ "${{ steps.app_composition.outcome }}" != "success" ] || [ "${{ steps.app_invariants.outcome }}" != "success" ]; then
             echo "Étape(s) en échec — typecheck=${{ steps.typecheck.outcome }} test=${{ steps.test.outcome }} build=${{ steps.build.outcome }} apidocs=${{ steps.apidocs.outcome }} pkg_typecheck=${{ steps.pkg_typecheck.outcome }} pkg_lint=${{ steps.pkg_lint.outcome }} pkg_test=${{ steps.pkg_test.outcome }} app_compile=${{ steps.app_compile.outcome }} app_rendu=${{ steps.app_rendu.outcome }} app_controles=${{ steps.app_controles.outcome }} app_navigation=${{ steps.app_navigation.outcome }} app_composition=${{ steps.app_composition.outcome }} app_fidelite=${{ steps.app_fidelite.outcome }} app_invariants=${{ steps.app_invariants.outcome }}"
             exit 1
           fi

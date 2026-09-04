@@ -6975,3 +6975,72 @@ corrigerait un fantôme.
 base, dimensions A/E/G) → ② lot de corrections MOTEUR gaté A++ (navigation
 empilée en tête) → ③ arbitrage des règles de génération → ④ arbitrage de la
 capacité « parcours + états utilisateur ». **Chaque étape exige un GO.**
+
+
+## D-134 — CI HONNÊTE : UNE CORRECTION DE MESURE (B) ET UNE POLITIQUE DE BLOCAGE (D), JAMAIS CONFONDUES — 2026-09-04
+
+**Arbitrage propriétaire** : CI rouge depuis deux jours, diagnostiquée depuis la
+racine. **Aucune régression de code, aucun problème d'environnement** : sur les
+14 étapes bloquantes reproduites localement, 12 étaient vertes et 2 rouges —
+`app_rendu` (cliquet périmé) et `app_fidelite` (dettes arbitrées). Règle
+directrice : **CI honnête, stricte et utile — jamais verte artificiellement.**
+
+### Lot 1 — `app_rendu` : un cliquet périmé DÉSARME ce qu'il précède
+
+Épingle à 26 applications alors que 27 compilent depuis l'entrée de
+`bus-intercites` (D-126/D-127). **Découverte aggravante mesurée** : l'assertion
+de comptage précède la boucle de montage — tant qu'elle échouait, **aucun écran
+n'était monté**, la gate racine ne prouvait plus rien tout en faisant échouer la
+CI. Épingle portée à 27 (**édition consciente**, motif inscrit dans le code) :
+le cliquet reste EXACT, les assertions de fond (`problemes === []`,
+`ecrans > 150`) sont intactes — la réparation **réarme** au lieu d'assouplir.
+Preuve : 27 applications réellement montées, > 150 écrans, 0 problème.
+
+### Lot 2 · B — CORRECTION DE MESURE (périmètre F4)
+
+`gate-fidelite.mjs` se contredisait : il reconnaît les artefacts gelés
+antérieurs à 1.2.0 comme « légitimement dépourvus » d'intention et les EXCLUT
+de `sansIntention` (l. 134-135), puis les comptait en échec F4 (l. 155), car
+`evaluateIntentCoverage` retourne `passed: false` dès que `intent === undefined`.
+Or F4 mesure « tout besoin **EXPRIMÉ** est satisfait ou déclaré » : un document
+qui n'exprime aucun besoin ne peut en perdre aucun. Correction d'**une ligne** :
+`if (!f4.passed && !horsContrat) f4KO++;`.
+**F1 EST INTOUCHÉ** — les 12 documents v2 déclarent de vraies promesses et
+leurs cibles mortes sont RÉELLES (mesuré : `v2/agence-immo` 6/15 vivantes) ;
+les exclure aurait masqué un défaut authentique, ce qui a été explicitement
+refusé. **Mesures avant → après : F1 12 → 12 · F4 15 → 3 · motifs réfutés
+5 → 5 · sortie `exit 1` inchangée.** Le rapport document par document reste
+COMPLET (25 documents listés, `v2/… 🔴 aucune intention` toujours affiché) :
+seul le DÉCOMPTE change, aucune donnée n'est masquée. Le rouge résiduel est
+désormais composé EXCLUSIVEMENT de défauts réels.
+
+### Lot 2 · D — POLITIQUE DE BLOCAGE CI (la conformité n'est PAS touchée)
+
+`app_fidelite` reste exécutée intégralement, publie tout, et **son échec est
+TOUJOURS signalé explicitement** dans la Gate — y compris là où il ne bloque
+pas. Seul change son caractère bloquant : **BLOQUANTE sur `main` et sur toute
+pull_request vers `main`** (`FIDELITE_BLOQUANTE = ref_name == 'main' ||
+event_name == 'pull_request'`), **non bloquante sur les push de branches de
+chantier**, où le rouge est composé de dettes ARBITRÉES : 12 documents v2 gelés
+(corpus non retouchable) + 3 documents v3 DIFFÉRÉS par `D-125`. Patron repris
+du lint web (« informatif, non bloquant ») ; les **13 autres** étapes restent
+bloquantes partout — vérifié une par une.
+
+**Distinction non négociable** : B est une **correction de mesure** (le
+périmètre F4 était faux) ; D est une **politique CI** (la conformité reste
+identique, la fidélité reste NON TENUE). Elles ne se confondent pas.
+
+### Conformité réelle vs politique CI
+
+- **Conformité : TOUJOURS ROUGE** — F1 12 · F4 3 · 5 motifs réfutés · `exit 1`.
+- **Politique CI chantier : non bloquante**, échec signalé, rapport intégral.
+- **RETOUR AU CARACTÈRE BLOQUANT — condition explicite** : régénération des 3
+  documents différés (`salon-coiffure`, `toiletteur-chiens`, `tuteur-langues`)
+  ET décision propriétaire sur les 12 documents v2 gelés. Tant que ces deux
+  conditions ne sont pas remplies, la dette reste inscrite au registre.
+
+**Risque assumé, énoncé sans détour** : une FUTURE régression de fidélité ne
+bloquerait plus un push de chantier — elle resterait visible dans les logs et
+bloquante à la PR vers `main`, mais dépendrait d'une lecture humaine
+entre-temps. Garde-fous : nom d'étape explicite, signalement systématique dans
+la Gate, condition de retour au blocage écrite ici, revue à chaque STATUS.

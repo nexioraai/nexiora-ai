@@ -1,7 +1,32 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-04 (22)** (**🚀 PRODUCTION MIGRÉE · ENDPOINT E3.3 EN LIGNE · DEUX
+> **2026-09-04 (23)** (**🔧 CI RENDUE HONNÊTE — `D-134`, NON COMMITTÉ.**
+> Diagnostic depuis la racine, 14 étapes bloquantes reproduites localement :
+> **aucune régression de code**, 12 vertes, 2 rouges. **Lot 1 `app_rendu`** :
+> épingle 26 → **27** (édition consciente, `b4f1b2b`) — découverte aggravante,
+> l'assertion de comptage précédant la boucle de montage, **aucun écran
+> n'était monté** tant qu'elle échouait ; la gate est RÉARMÉE (27 apps montées,
+> > 150 écrans, 0 problème), le cliquet reste EXACT. **Lot 2 · B** (correction
+> de MESURE) : `gate-fidelite.mjs` excusait les artefacts gelés sans intention
+> (l. 134-135) puis les sanctionnait en F4 (l. 155) — contradiction interne
+> corrigée en UNE ligne (`&& !horsContrat`). **F1 INTOUCHÉ**. Mesuré :
+> **F1 12 → 12 · F4 15 → 3 · motifs 5 → 5 · `exit 1` inchangé** ; rapport
+> document par document COMPLET (25 documents, `🔴 aucune intention` toujours
+> affiché) — aucune donnée masquée. **Lot 2 · D** (politique CI) :
+> `app_fidelite` s'exécute intégralement, son échec est TOUJOURS signalé, et
+> reste **BLOQUANTE sur `main` et sur toute PR** ; non bloquante sur les push
+> de branches de chantier, où le rouge = dettes ARBITRÉES (12 v2 gelés en F1 +
+> 3 v3 différés `D-125`). Les 13 autres étapes restent bloquantes partout.
+> **CONFORMITÉ RÉELLE : TOUJOURS ROUGE** (fidélité NON TENUE) — seule la
+> politique de blocage change. **Retour au blocage** : régénération des 3
+> différés ET décision sur le corpus v2 gelé. Non-régression : typecheck 0 ·
+> **4071/4071** · build 0 · apidocs 0 · packages 0 · app-compile **27/27** ·
+> app-rendu 0 · controles/navigation/composition/invariants 0 · fidelite 1
+> (voulu). **13/14 vertes ; la 14e est désormais non bloquante en chantier,
+> jamais silencieuse.** Aucun document régénéré, aucun seuil touché, 0 $.)
+>
+> *Entrée précédente —* **2026-09-04 (22)** (**🚀 PRODUCTION MIGRÉE · ENDPOINT E3.3 EN LIGNE · DEUX
 > ARTEFACTS APPAREIL — `D-133`. SESSION PHYSIQUE `A1→A11` : NON COMMENCÉE.**
 > Découverte en servant l'endpoint : `main` n'était plus déployable (projet
 > Vercel `rootDirectory: apps/web`, risque consigné `D-014` ; production figée
