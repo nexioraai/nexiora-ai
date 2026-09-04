@@ -1,0 +1,1012 @@
+{
+  "airSchemaVersion": "1.7.1",
+  "projectId": "prj_toilettage_canin",
+  "app": {
+    "name": "Salon Toilettage Canin",
+    "slug": "salon-toilettage-canin",
+    "description": [
+      {
+        "locale": "fr",
+        "text": "Application du salon de toilettage pour chiens : fiches animaux avec photo, prise de rendez-vous, rappels de vaccination et historique des visites. Paiement sur place uniquement."
+      }
+    ],
+    "locales": {
+      "userLanguage": "fr",
+      "appLocales": [
+        "fr"
+      ],
+      "defaultAppLocale": "fr",
+      "contentLocales": [
+        "fr"
+      ],
+      "rtlSupported": false
+    }
+  },
+  "navigation": {
+    "entryScreenId": "scr_accueil",
+    "primary": {
+      "destinations": [
+        {
+          "routeId": "nav_accueil",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Accueil"
+            }
+          ],
+          "order": 0
+        },
+        {
+          "routeId": "nav_animaux",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Mes chiens"
+            }
+          ],
+          "order": 1
+        },
+        {
+          "routeId": "nav_rendez_vous",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Rendez-vous"
+            }
+          ],
+          "order": 2
+        },
+        {
+          "routeId": "nav_vaccinations",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Vaccins"
+            }
+          ],
+          "order": 3
+        },
+        {
+          "routeId": "nav_compte",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Compte"
+            }
+          ],
+          "order": 4
+        }
+      ]
+    },
+    "routes": [
+      {
+        "id": "nav_accueil",
+        "screenId": "scr_accueil",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Accueil"
+          }
+        ]
+      },
+      {
+        "id": "nav_animaux",
+        "screenId": "scr_animaux",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Mes chiens"
+          }
+        ]
+      },
+      {
+        "id": "nav_rendez_vous",
+        "screenId": "scr_rendez_vous",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Rendez-vous"
+          }
+        ]
+      },
+      {
+        "id": "nav_vaccinations",
+        "screenId": "scr_vaccinations",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Vaccins"
+          }
+        ]
+      },
+      {
+        "id": "nav_compte",
+        "screenId": "scr_compte",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Mon compte"
+          }
+        ]
+      },
+      {
+        "id": "nav_animal_detail",
+        "screenId": "scr_animal_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Fiche du chien"
+          }
+        ]
+      },
+      {
+        "id": "nav_animal_nouveau",
+        "screenId": "scr_animal_nouveau",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Ajouter un chien"
+          }
+        ]
+      },
+      {
+        "id": "nav_prestations",
+        "screenId": "scr_prestations",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Prestations"
+          }
+        ]
+      },
+      {
+        "id": "nav_prestation_detail",
+        "screenId": "scr_prestation_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Détail de la prestation"
+          }
+        ]
+      },
+      {
+        "id": "nav_rdv_nouveau",
+        "screenId": "scr_rdv_nouveau",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Prendre rendez-vous"
+          }
+        ]
+      },
+      {
+        "id": "nav_rdv_detail",
+        "screenId": "scr_rdv_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Détail du rendez-vous"
+          }
+        ]
+      },
+      {
+        "id": "nav_rdv_confirmation",
+        "screenId": "scr_rdv_confirmation",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Rendez-vous enregistré"
+          }
+        ]
+      },
+      {
+        "id": "nav_vaccination_nouvelle",
+        "screenId": "scr_vaccination_nouvelle",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Ajouter un vaccin"
+          }
+        ]
+      },
+      {
+        "id": "nav_visite_detail",
+        "screenId": "scr_visite_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Détail de la visite"
+          }
+        ]
+      }
+    ]
+  },
+  "design": {
+    "theme": "toilettage_doux"
+  },
+  "network": {
+    "policy": "deny_by_default",
+    "allowedDomains": [
+      "api.salontoilettagecanin.app"
+    ]
+  },
+  "native": {
+    "minIosVersion": "15.0",
+    "minAndroidSdk": 26
+  },
+  "compliance": {
+    "commerceClass": "none",
+    "accountDeletionRequired": true,
+    "dataCollected": [
+      "contact_info",
+      "identifiers",
+      "user_content",
+      "usage_data"
+    ]
+  },
+  "entities": [
+    {
+      "id": "ent_proprietaire",
+      "name": "proprietaire",
+      "fields": [
+        {
+          "id": "fld_proprio_nom",
+          "name": "nom_complet",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_proprio_email",
+          "name": "email",
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        {
+          "id": "fld_proprio_telephone",
+          "name": "telephone",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_proprio_adresse",
+          "name": "adresse",
+          "type": "string",
+          "required": false
+        },
+        {
+          "id": "fld_proprio_rappels_actifs",
+          "name": "rappels_actifs",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "id": "fld_proprio_date_inscription",
+          "name": "date_inscription",
+          "type": "date",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "ent_animal",
+      "name": "animal",
+      "fields": [
+        {
+          "id": "fld_animal_nom",
+          "name": "nom",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_animal_photo",
+          "name": "photo",
+          "type": "asset",
+          "required": false
+        },
+        {
+          "id": "fld_animal_race",
+          "name": "race",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_animal_taille",
+          "name": "taille",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "petit",
+            "moyen",
+            "grand",
+            "tres_grand"
+          ]
+        },
+        {
+          "id": "fld_animal_type_poil",
+          "name": "type_poil",
+          "type": "enum",
+          "required": false,
+          "enumValues": [
+            "court",
+            "mi_long",
+            "long",
+            "frise",
+            "dur"
+          ]
+        },
+        {
+          "id": "fld_animal_date_naissance",
+          "name": "date_naissance",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "fld_animal_poids",
+          "name": "poids_kg",
+          "type": "decimal",
+          "required": false
+        },
+        {
+          "id": "fld_animal_caractere",
+          "name": "caractere",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "fld_animal_statut_vaccin",
+          "name": "statut_vaccin",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "a_jour",
+            "rappel_proche",
+            "expire",
+            "inconnu"
+          ]
+        },
+        {
+          "id": "fld_animal_prochain_rappel",
+          "name": "prochain_rappel",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "fld_animal_proprietaire",
+          "name": "proprietaire",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_proprietaire",
+          "referenceDisplayFieldId": "fld_proprio_nom"
+        }
+      ]
+    },
+    {
+      "id": "ent_prestation",
+      "name": "prestation",
+      "fields": [
+        {
+          "id": "fld_prestation_nom",
+          "name": "nom",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_prestation_photo",
+          "name": "photo",
+          "type": "asset",
+          "required": false
+        },
+        {
+          "id": "fld_prestation_description",
+          "name": "description",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "fld_prestation_categorie",
+          "name": "categorie",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "bain",
+            "tonte",
+            "coupe_ciseaux",
+            "soin",
+            "forfait_complet"
+          ]
+        },
+        {
+          "id": "fld_prestation_prix",
+          "name": "prix_eur",
+          "type": "decimal",
+          "required": true
+        },
+        {
+          "id": "fld_prestation_duree",
+          "name": "duree_minutes",
+          "type": "number",
+          "required": true
+        },
+        {
+          "id": "fld_prestation_taille_adaptee",
+          "name": "taille_adaptee",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "petit",
+            "moyen",
+            "grand",
+            "tres_grand",
+            "toutes_tailles"
+          ]
+        },
+        {
+          "id": "fld_prestation_disponible",
+          "name": "disponible",
+          "type": "boolean",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ent_rendez_vous",
+      "name": "rendez_vous",
+      "fields": [
+        {
+          "id": "fld_rdv_reference",
+          "name": "reference",
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        {
+          "id": "fld_rdv_animal",
+          "name": "animal",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_animal",
+          "referenceDisplayFieldId": "fld_animal_nom"
+        },
+        {
+          "id": "fld_rdv_prestation",
+          "name": "prestation",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_prestation",
+          "referenceDisplayFieldId": "fld_prestation_nom"
+        },
+        {
+          "id": "fld_rdv_date",
+          "name": "date_heure",
+          "type": "datetime",
+          "required": true
+        },
+        {
+          "id": "fld_rdv_statut",
+          "name": "statut",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "demande",
+            "confirme",
+            "honore",
+            "annule"
+          ]
+        },
+        {
+          "id": "fld_rdv_montant_estime",
+          "name": "montant_estime_eur",
+          "type": "decimal",
+          "required": false
+        },
+        {
+          "id": "fld_rdv_paiement",
+          "name": "mode_paiement",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "sur_place"
+          ]
+        },
+        {
+          "id": "fld_rdv_notes",
+          "name": "notes",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "fld_rdv_toiletteur",
+          "name": "toiletteur",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "ent_vaccination",
+      "name": "vaccination",
+      "fields": [
+        {
+          "id": "fld_vaccin_animal",
+          "name": "animal",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_animal",
+          "referenceDisplayFieldId": "fld_animal_nom"
+        },
+        {
+          "id": "fld_vaccin_type",
+          "name": "type_vaccin",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "rage",
+            "chpl",
+            "toux_du_chenil",
+            "leptospirose",
+            "piroplasmose"
+          ]
+        },
+        {
+          "id": "fld_vaccin_date_injection",
+          "name": "date_injection",
+          "type": "date",
+          "required": true
+        },
+        {
+          "id": "fld_vaccin_date_rappel",
+          "name": "date_rappel",
+          "type": "date",
+          "required": true
+        },
+        {
+          "id": "fld_vaccin_statut",
+          "name": "statut",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "a_jour",
+            "rappel_proche",
+            "expire"
+          ]
+        },
+        {
+          "id": "fld_vaccin_veterinaire",
+          "name": "veterinaire",
+          "type": "string",
+          "required": false
+        },
+        {
+          "id": "fld_vaccin_remarques",
+          "name": "remarques",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "ent_visite",
+      "name": "visite",
+      "fields": [
+        {
+          "id": "fld_visite_animal",
+          "name": "animal",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_animal",
+          "referenceDisplayFieldId": "fld_animal_nom"
+        },
+        {
+          "id": "fld_visite_prestation",
+          "name": "prestation",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_prestation",
+          "referenceDisplayFieldId": "fld_prestation_nom"
+        },
+        {
+          "id": "fld_visite_date",
+          "name": "date_visite",
+          "type": "date",
+          "required": true
+        },
+        {
+          "id": "fld_visite_photo_apres",
+          "name": "photo_apres",
+          "type": "asset",
+          "required": false
+        },
+        {
+          "id": "fld_visite_montant_paye",
+          "name": "montant_paye_eur",
+          "type": "decimal",
+          "required": true
+        },
+        {
+          "id": "fld_visite_mode_paiement",
+          "name": "mode_paiement",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "especes_sur_place",
+            "carte_sur_place",
+            "cheque_sur_place"
+          ]
+        },
+        {
+          "id": "fld_visite_toiletteur",
+          "name": "toiletteur",
+          "type": "string",
+          "required": false
+        },
+        {
+          "id": "fld_visite_compte_rendu",
+          "name": "compte_rendu",
+          "type": "text",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel_proprietaire_animaux",
+      "fromEntityId": "ent_proprietaire",
+      "toEntityId": "ent_animal",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_animal_rendez_vous",
+      "fromEntityId": "ent_animal",
+      "toEntityId": "ent_rendez_vous",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_animal_vaccinations",
+      "fromEntityId": "ent_animal",
+      "toEntityId": "ent_vaccination",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_animal_visites",
+      "fromEntityId": "ent_animal",
+      "toEntityId": "ent_visite",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_prestation_rendez_vous",
+      "fromEntityId": "ent_prestation",
+      "toEntityId": "ent_rendez_vous",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_prestation_visites",
+      "fromEntityId": "ent_prestation",
+      "toEntityId": "ent_visite",
+      "kind": "one_to_many"
+    }
+  ],
+  "datasets": [
+    {
+      "id": "data_proprietaires",
+      "entityId": "ent_proprietaire",
+      "contentHash": "4f1c9a2be7d3084516aa7cbb90e2d5f731a6c48e0bd925f37c14ae60d8b3f902",
+      "rowCount": 3,
+      "sourceKind": "seed"
+    },
+    {
+      "id": "data_animaux",
+      "entityId": "ent_animal",
+      "contentHash": "a83b7e14cd2f6905ba4713c8ef50d2699107acbd34e5f8102d6cb7a49e03f5d1",
+      "rowCount": 6,
+      "sourceKind": "seed"
+    },
+    {
+      "id": "data_prestations",
+      "entityId": "ent_prestation",
+      "contentHash": "c07d5e93af41b26085d3fa719c6e208b47d1953ce8ba0f6247d3ab19e5c04781",
+      "rowCount": 8,
+      "sourceKind": "seed"
+    },
+    {
+      "id": "data_rendez_vous",
+      "entityId": "ent_rendez_vous",
+      "contentHash": "1de6047b9c3a582f0ba47d19e6c85302fa7b4901d5e3c68b27af04915de3b6c2",
+      "rowCount": 7,
+      "sourceKind": "seed"
+    },
+    {
+      "id": "data_vaccinations",
+      "entityId": "ent_vaccination",
+      "contentHash": "9b402fd75e18c3a604df19b7c2650a83e4d71f905cba238607d94ae1f3b05c68",
+      "rowCount": 9,
+      "sourceKind": "seed"
+    },
+    {
+      "id": "data_visites",
+      "entityId": "ent_visite",
+      "contentHash": "73ea15c8092b4d6f1ac37b590de248a16fc90bd3527e4a081bd69c3f0a715e42",
+      "rowCount": 12,
+      "sourceKind": "seed"
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule_animal_identite",
+      "description": "Une fiche chien exige un nom, une race, une taille et un propriétaire rattaché.",
+      "kind": "validation",
+      "entityId": "ent_animal",
+      "assertions": [
+        {
+          "fieldId": "fld_animal_nom",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_animal_race",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_animal_taille",
+          "operator": "in",
+          "value": [
+            "petit",
+            "moyen",
+            "grand",
+            "tres_grand"
+          ]
+        },
+        {
+          "fieldId": "fld_animal_proprietaire",
+          "operator": "required"
+        }
+      ]
+    },
+    {
+      "id": "rule_animal_poids_positif",
+      "description": "Le poids saisi pour un chien doit être strictement supérieur à zéro.",
+      "kind": "validation",
+      "entityId": "ent_animal",
+      "assertions": [
+        {
+          "fieldId": "fld_animal_poids",
+          "operator": "gt",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "rule_proprietaire_contact",
+      "description": "Le propriétaire doit fournir un nom, un téléphone et un email valide pour être joignable.",
+      "kind": "validation",
+      "entityId": "ent_proprietaire",
+      "assertions": [
+        {
+          "fieldId": "fld_proprio_nom",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_proprio_telephone",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_proprio_email",
+          "operator": "matches",
+          "value": "^[^@\\s]+@[^@\\s]+\\.[a-z]{2,}$"
+        }
+      ]
+    },
+    {
+      "id": "rule_prestation_tarif",
+      "description": "Une prestation doit porter un nom, un tarif strictement positif et une durée d'au moins 15 minutes.",
+      "kind": "validation",
+      "entityId": "ent_prestation",
+      "assertions": [
+        {
+          "fieldId": "fld_prestation_nom",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_prestation_prix",
+          "operator": "gt",
+          "value": 0
+        },
+        {
+          "fieldId": "fld_prestation_duree",
+          "operator": "gte",
+          "value": 15
+        }
+      ]
+    },
+    {
+      "id": "rule_rdv_complet",
+      "description": "Un rendez-vous exige un chien, une prestation, une date et un statut connu.",
+      "kind": "validation",
+      "entityId": "ent_rendez_vous",
+      "assertions": [
+        {
+          "fieldId": "fld_rdv_animal",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_rdv_prestation",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_rdv_date",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_rdv_statut",
+          "operator": "in",
+          "value": [
+            "demande",
+            "confirme",
+            "honore",
+            "annule"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rule_rdv_paiement_sur_place",
+      "description": "Le règlement se fait exclusivement sur place : aucun autre mode de paiement n'est accepté à la réservation.",
+      "kind": "validation",
+      "entityId": "ent_rendez_vous",
+      "assertions": [
+        {
+          "fieldId": "fld_rdv_paiement",
+          "operator": "eq",
+          "value": "sur_place"
+        }
+      ]
+    },
+    {
+      "id": "rule_vaccination_complete",
+      "description": "Une vaccination exige le chien concerné, le type de vaccin, la date d'injection et la date de rappel.",
+      "kind": "validation",
+      "entityId": "ent_vaccination",
+      "assertions": [
+        {
+          "fieldId": "fld_vaccin_animal",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_vaccin_type",
+          "operator": "in",
+          "value": [
+            "rage",
+            "chpl",
+            "toux_du_chenil",
+            "leptospirose",
+            "piroplasmose"
+          ]
+        },
+        {
+          "fieldId": "fld_vaccin_date_injection",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_vaccin_date_rappel",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_vaccin_statut",
+          "operator": "in",
+          "value": [
+            "a_jour",
+            "rappel_proche",
+            "expire"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rule_visite_paiement",
+      "description": "Une visite d'historique enregistre un montant non négatif et un mode de règlement encaissé sur place.",
+      "kind": "validation",
+      "entityId": "ent_visite",
+      "assertions": [
+        {
+          "fieldId": "fld_visite_date",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_visite_montant_paye",
+          "operator": "gte",
+          "value": 0
+        },
+        {
+          "fieldId": "fld_visite_mode_paiement",
+          "operator": "in",
+          "value": [
+            "especes_sur_place",
+            "carte_sur_place",
+            "cheque_sur_place"
+          ]
+        }
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "id": "slot_rappel_vaccination",
+      "description": "Calcule, à partir des vaccinations enregistrées, un résumé des rappels de vaccination à venir ou dépassés (nombre de chiens concernés et échéance la plus proche) à afficher en tête de l'écran des vaccins.",
+      "inputs": [
+        {
+          "name": "vaccinations",
+          "type": "json"
+        },
+        {
+          "name": "animaux",
+          "type": "json"
+        },
+        {
+          "name": "fenetreJours",
+          "type": "number"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "resumeRappels",
+          "type": "string"
+        },
+        {
+          "name": "detailRappels",
+          "type": "string"
+        }
+      ],
+      "allowedImports": []
+    },
+    {
+      "id": "slot_prochain_creneau",
+      "description": "Analyse les rendez-vous existants et les durées de prestation pour proposer un texte indiquant le prochain créneau libre du salon.",
+      "inputs": [
+        {
+          "name": "rendezVous",
+          "type": "json"
+        },
+        {
+          "name": "prestations",
+          "type": "json"
+        },
+        {
+          "name": "dureeCreneau",
+          "type": "number"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prochainCreneau",
+          "type": "string"
+        }
+      ],
+      "allowedImports": []
+    },
+    {
+      "id": "slot_synthese_visites",
+      "description": "Synthétise l'historique des visites d'un chien : nombre de passages, dernière visite et total réglé sur place.",
+      "inputs": [
+        {
+          "name": "visites",
+          "type": "json"
+        },
+        {
+          "name": "devise",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "syntheseHistorique",
+          "type": "string"
+        },
+        {
+          "name": "totalRegle",
+          "type": "string"
+        }
+      ],
+      "allowedImports": []
+    }
+  ]
+}
