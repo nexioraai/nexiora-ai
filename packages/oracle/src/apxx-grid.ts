@@ -18,6 +18,10 @@ import type { ProjectAir } from "@deribfy/air-schema";
 // (`envelope-truth.test.ts`). C'est ce qu'exige la dimension C, et non le
 // texte du composant émis.
 import { EXECUTION_ENVELOPE_V1 } from "@deribfy/execution-contract";
+// Parseur DEJA employe par la politique AST de `@deribfy/slots` (que
+// `level1.ts` importe) : aucune dependance nouvelle n'entre au projet.
+// V1 de `D-135` en a besoin — voir `listeBornee`.
+import ts from "typescript";
 import { evaluateAntiTemplate, type DomainSample } from "./anti-template.ts";
 
 export type DimensionKey = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H";
@@ -32,7 +36,16 @@ export interface DimensionVerdict {
 }
 
 export interface ApxxReport {
-  /** Vrai si A..G sont toutes conformes (H relève de la Phase 10). */
+  /**
+   * Vrai si A..G sont toutes conformes (H relève de la Phase 10).
+   *
+   * `D-135` (2026-09-04) — **nécessairement `false` aujourd'hui** : `A` et
+   * `G` exigent une preuve d'appareil que cet instrument ne produit pas,
+   * et sont donc au mieux `non_determinee`. Ce n'est pas un défaut du
+   * produit : c'est l'absence d'un canal de preuve (volet V3, non engagé).
+   * Le calcul est laissé INCHANGÉ — le rendre vrai autrement serait
+   * exactement le faux vert que `D-048` proscrit.
+   */
   readonly passed: boolean;
   readonly dimensions: readonly DimensionVerdict[];
 }
@@ -168,6 +181,101 @@ export function wcagFailures(themeSource: string): { pairs: number; failures: re
   return { pairs, failures };
 }
 
+/** Conteneur qui BORNE la hauteur, et liste virtualisée qu'il doit borner. */
+const SECTION_TAG = "Section";
+const VIRTUALIZED_TAG = "FlatList";
+
+const jsxTagName = (node: ts.JsxElement | ts.JsxSelfClosingElement): string =>
+  (ts.isJsxElement(node) ? node.openingElement.tagName : node.tagName).getText();
+
+/**
+ * `fill` RÉELLEMENT posée sur l'élément. STRICT par choix : seuls `fill` et
+ * `fill={true}` concluent. `fill={false}`, `fill={expr}` et un spread
+ * `{...props}` ne concluent pas — élargir pour obtenir du vert serait
+ * exactement ce que V1 supprime.
+ */
+const porteFill = (open: ts.JsxOpeningElement): boolean =>
+  open.attributes.properties.some((p) => {
+    if (!ts.isJsxAttribute(p)) return false;
+    if (p.name.getText() !== "fill") return false;
+    if (p.initializer === undefined) return true;
+    return (
+      ts.isJsxExpression(p.initializer) &&
+      p.initializer.expression?.kind === ts.SyntaxKind.TrueKeyword
+    );
+  });
+
+const contientBalise = (node: ts.Node, tag: string): boolean => {
+  let trouve = false;
+  const visiter = (n: ts.Node): void => {
+    if (trouve) return;
+    if ((ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n)) && jsxTagName(n) === tag) {
+      trouve = true;
+      return;
+    }
+    ts.forEachChild(n, visiter);
+  };
+  ts.forEachChild(node, visiter);
+  return trouve;
+};
+
+/**
+ * BORNAGE DE LA LISTE VIRTUALISÉE — mesure STRUCTURELLE (V1 de `D-135`).
+ *
+ * L'instrument testait `blocks.includes("fill")` : une recherche de
+ * sous-chaîne. `D-135` l'a FALSIFIÉ sur l'artefact réel — retirer la prop
+ * `fill` du JSX en laissant le commentaire qui la décrit laissait le verdict
+ * au vert. Autrement dit : réintroduire `DET-025` (parent non borné, 12ᵉ ligne
+ * inatteignable sur Galaxy A17, `empty_state` hors écran) ne déclenchait rien,
+ * et ce verrou avait déjà laissé passer ce défaut pendant DEUX phases.
+ *
+ * La mesure porte désormais sur l'ARBRE SYNTAXIQUE. Un commentaire est de la
+ * trivia : il ne peut, PAR CONSTRUCTION, jamais être un attribut JSX — le faux
+ * positif par commentaire devient impossible, il n'est pas seulement improbable.
+ *
+ * La propriété vérifiée est celle que `DET-025` nomme : la liste virtualisée a
+ * un parent BORNÉ. Il ne suffit donc pas qu'un `fill` existe quelque part —
+ * il faut une `<Section fill>` qui CONTIENT la `<FlatList>`.
+ *
+ * Ceci reste une propriété STRUCTURELLE. Elle ne dit RIEN de la virtualisation
+ * effective à l'exécution, qui exige l'appareil (`DET-006`, volet V3).
+ */
+function listeBornee(blocks: string): { readonly borne: boolean; readonly detail: string } {
+  if (blocks.trim() === "") return { borne: false, detail: "composant de blocs absent de l'artefact" };
+  const source = ts.createSourceFile(
+    "components.tsx",
+    blocks,
+    ts.ScriptTarget.Latest,
+    /* setParentNodes */ true,
+    ts.ScriptKind.TSX,
+  );
+  // Drapeau porté par un objet, et non par un `let` : il est affecté depuis
+  // `visiter`, appelée INDIRECTEMENT par `ts.forEachChild`. L'analyse de flux
+  // de TypeScript ne suit pas cet appel et tiendrait la valeur pour toujours
+  // `false`. Le narrowing d'une PROPRIÉTÉ étant invalidé par tout appel de
+  // fonction, la lecture post-parcours redevient honnête. Aucune règle de
+  // détection n'est modifiée : mêmes nœuds, mêmes conditions.
+  const vu = { borne: false, sectionsFill: 0 };
+  const visiter = (n: ts.Node): void => {
+    if (ts.isJsxElement(n) && jsxTagName(n) === SECTION_TAG && porteFill(n.openingElement)) {
+      vu.sectionsFill += 1;
+      if (contientBalise(n, VIRTUALIZED_TAG)) vu.borne = true;
+    }
+    ts.forEachChild(n, visiter);
+  };
+  ts.forEachChild(source, visiter);
+  if (vu.borne) {
+    return { borne: true, detail: `<${SECTION_TAG} fill> encadrant une <${VIRTUALIZED_TAG}> (vérifié sur l'AST)` };
+  }
+  return {
+    borne: false,
+    detail:
+      vu.sectionsFill > 0
+        ? `${String(vu.sectionsFill)} <${SECTION_TAG} fill> mais AUCUNE n'encadre de <${VIRTUALIZED_TAG}>`
+        : `aucune <${SECTION_TAG} fill> dans l'arbre syntaxique`,
+  };
+}
+
 /**
  * Évalue la grille A++ sur un projet COMPILÉ. Fonction PURE.
  * `air` sert aux dimensions dont la conformité dépend de la structure
@@ -189,14 +297,34 @@ export function evaluateApxxGrid(
   const blocks = files.get("lib/blocks/components.tsx") ?? "";
 
   // --- A : ergonomie physique (cibles tactiles).
+  //     V2 de `D-135` (2026-09-04) — CETTE DIMENSION N'EST PLUS DÉCLARÉE
+  //     CONFORME. La grille (ROADMAP § EXIGENCE PRODUIT TRANSVERSE) exige une
+  //     « géométrie MESURÉE SUR APPAREIL RÉEL » ; cet instrument ne lit que du
+  //     source. Il ne couvre d'ailleurs qu'UNE des trois clauses du critère —
+  //     la taille des cibles : les « zones sûres » et « aucune cible sous une
+  //     barre système » vivent dans `screens/*.tsx` (`useSafeAreaInsets`), une
+  //     famille de fichiers que cette dimension n'ouvre jamais. `DET-001`
+  //     (safe area) et `DET-016` (clavier) ont tous deux été trouvés SUR
+  //     APPAREIL, jamais ici.
+  //
+  //     La mesure statique n'est PAS supprimée — la perdre ferait perdre du
+  //     pouvoir de détection. Elle est requalifiée pour ce qu'elle est :
+  //     - pré-condition EN ÉCHEC ⇒ `non_conforme` — un défaut démontré reste
+  //       un défaut, aucun appareil n'est requis pour le savoir ;
+  //     - pré-condition TENUE ⇒ `non_determinee` — jamais `conforme` : la
+  //       preuve exigée est absente (règle de notation `D-039`).
   const tap = /"tapTarget":\s*(\d+)/.exec(theme);
   const tapValue = tap === null ? 0 : Number.parseInt(tap[1] ?? "0", 10);
   const surfaces = [...styles.matchAll(/minHeight:\s*theme\.size\.tapTarget/g)].length;
+  const preconditionA = tapValue >= MIN_TAP_TARGET && surfaces >= 3;
+  const mesureA = `tapTarget=${String(tapValue)} (min ${String(MIN_TAP_TARGET)}), ${String(surfaces)} surface(s) contrainte(s)`;
   dimensions.push({
     dimension: "A",
     titre: "ergonomie physique",
-    state: tapValue >= MIN_TAP_TARGET && surfaces >= 3 ? "conforme" : "non_conforme",
-    detail: `tapTarget=${String(tapValue)} (min ${String(MIN_TAP_TARGET)}), ${String(surfaces)} surface(s) contrainte(s)`,
+    state: preconditionA ? "non_determinee" : "non_conforme",
+    detail: preconditionA
+      ? `NON DÉTERMINÉE (D-135) — la grille exige une géométrie mesurée sur appareil réel, preuve absente de cet instrument. Pré-conditions statiques TENUES : ${mesureA}. NON MESURÉ : zones sûres, cibles sous une barre système, géométrie rendue.`
+      : `PRÉ-CONDITION STATIQUE EN ÉCHEC : ${mesureA}`,
   });
 
   // --- B : contraste WCAG 2.2 AA, thèmes clair ET sombre.
@@ -321,19 +449,29 @@ export function evaluateApxxGrid(
   });
 
   // --- G : virtualisation — aucune liste dans un défileur de même axe.
+  //     V1 de `D-135` : le bornage n'est plus cherché par `blocks.includes("fill")`
+  //     — sous-chaîne qu'un COMMENTAIRE satisfaisait (falsification exécutée) —
+  //     mais vérifié sur l'ARBRE SYNTAXIQUE : voir `listeBornee`.
+  //     V2 de `D-135` : le résultat ne conclut plus à la conformité. La grille
+  //     exige une « MESURE SUR APPAREIL » ; or jank, virtualisation ACTIVE et
+  //     retour visuel ne sont pas des propriétés du texte source. Même
+  //     requalification que pour `A` : échec ⇒ `non_conforme` (défaut démontré,
+  //     c'est exactement `DET-025`), succès ⇒ `non_determinee`, jamais `conforme`.
   const listScreens = air.screens.filter((s) => s.blocks.some((b) => b.blockType === "list"));
   const wrapped = listScreens
     .filter((s) => (files.get(`screens/${s.id}.tsx`) ?? "").includes("ScrollView"))
     .map((s) => s.id);
-  const bounded = blocks.includes("fill");
+  const bornage = listeBornee(blocks);
+  const preconditionG = wrapped.length === 0 && bornage.borne;
   dimensions.push({
     dimension: "G",
     titre: "fluidité perçue / virtualisation",
-    state: wrapped.length === 0 && bounded ? "conforme" : "non_conforme",
-    detail:
-      wrapped.length === 0
-        ? `${String(listScreens.length)} écran(s) à liste, 0 encapsulé dans un ScrollView, parent borné=${String(bounded)}`
-        : `écrans à liste encapsulés : ${wrapped.join(", ")}`,
+    state: preconditionG ? "non_determinee" : "non_conforme",
+    detail: preconditionG
+      ? `NON DÉTERMINÉE (D-135) — la grille exige une mesure sur appareil, preuve absente de cet instrument. Pré-conditions structurelles TENUES : ${String(listScreens.length)} écran(s) à liste, 0 encapsulé dans un ScrollView, ${bornage.detail}. NON MESURÉ : jank au défilement, virtualisation ACTIVE sur liste longue, retour visuel.`
+      : wrapped.length > 0
+        ? `PRÉ-CONDITION EN ÉCHEC — écrans à liste encapsulés dans un ScrollView : ${wrapped.join(", ")}`
+        : `PRÉ-CONDITION EN ÉCHEC — ${bornage.detail}`,
   });
 
   // --- H : variété anti-template (§22) — mesurable dès 2 domaines.

@@ -120,8 +120,18 @@ describe("grille A++ — instrument déterministe", () => {
     // `detail_header` — qui n'en avaient AUCUN moyen. Chacun a été OBSERVÉ au
     // rendu, contrôle négatif inclus (`etats-atteints.obs.tsx`), AVANT d'entrer
     // dans l'enveloppe. Aucune ligne de la grille n'a été touchée.
+    // ÉDITION CONSCIENTE (2026-09-04, D-135) : A et G passent à
+    // `non_determinee`. Ce n'est ni le produit ni les critères qui bougent —
+    // c'est l'INSTRUMENT qui cesse de conclure à une conformité qu'il n'a
+    // jamais prouvée. La grille exige pour A une « géométrie mesurée sur
+    // appareil réel » et pour G une « mesure sur appareil » ; cet instrument
+    // ne lit que du source. A ne couvrait d'ailleurs qu'UNE des trois clauses
+    // de son critère (la taille des cibles), et la moitié « bornage » de G
+    // était satisfaite par un COMMENTAIRE — falsification exécutée dans D-135.
+    // Ce n'est PAS `non_conforme` : aucun défaut n'est démontré, c'est la
+    // PREUVE qui manque. Le canal de preuve appareil (V3) n'est pas engagé.
     expect([...signatures]).toEqual([
-      "A:conforme|B:conforme|C:conforme|D:conforme|E:conforme|F:conforme|G:conforme|H:non_determinee",
+      "A:non_determinee|B:conforme|C:conforme|D:conforme|E:conforme|F:conforme|G:non_determinee|H:non_determinee",
     ]);
   });
 
@@ -158,7 +168,13 @@ describe("grille A++ — instrument déterministe", () => {
     // trois états rendus atteignables, chacun observé au rendu avec contrôle
     // négatif. **H reste `non_determinee` sur un document seul** : A++ complet
     // exige la mesure cross-domain, qui n'est pas de ce test.
-    expect(report.passed).toBe(true);
+    // ÉDITION CONSCIENTE (2026-09-04, D-135) : `passed` redevient `false`, et
+    // le RESTERA tant qu'aucun canal de preuve appareil n'existe. A et G ne
+    // peuvent plus valoir `conforme` : la grille exige pour elles une mesure
+    // physique que cet instrument ne produit pas. Aucune dimension n'est pour
+    // autant `non_conforme` — A++ n'est pas RÉFUTÉ, il n'est pas ÉTABLI.
+    expect(report.passed).toBe(false);
+    expect(report.dimensions.filter((d) => d.state === "non_conforme")).toEqual([]);
   });
 
   it("comparateur de non-régression : détecte une dégradation, pas une amélioration", () => {
