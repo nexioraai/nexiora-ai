@@ -25,7 +25,14 @@ describe("GATE RACINE — les applications émises se MONTENT vraiment", () => {
     expect(existsSync(RACINE), "lancer d'abord `npm run gate:app-compile`").toBe(true);
     const apps = readdirSync(RACINE).sort();
     // 26 depuis la campagne v3 (D-081) : le corpus gelé ET le corpus généré.
-    expect(apps.length, "les applications des deux corpus").toBe(26);
+    // ÉDITION CONSCIENTE (2026-09-04) : 27 depuis l'entrée de `bus-intercites`
+    // au corpus v3 (intention créée par arbitrage D-126, run accepté D-127).
+    // Le cliquet reste EXACT — il continue d'exiger un nombre précis, donc
+    // toute app ajoutée ou perdue sans décision le fait échouer. Sa réparation
+    // n'assouplit rien : elle le RÉARME. Mesuré le 2026-09-04 : cette
+    // assertion précède la boucle de montage, donc tant qu'elle échouait
+    // AUCUN écran n'était monté — la gate ne prouvait plus rien.
+    expect(apps.length, "les applications des deux corpus").toBe(27);
 
     let ecrans = 0;
     let identites = 0;
