@@ -877,6 +877,71 @@ const TARIFS = {
   sortie: PRIX.out,
 };
 const summary = [];
+
+// ── MODE RÉPARATION SEULE (2026-09-04) — `--reparer <artefact> <slug>`.
+//
+// LACUNE COMBLÉE, mesurée : il n'existait aucun moyen de reprendre un document
+// déjà émis. Un run interrompu — par le plafond, par une erreur — obligeait à
+// tout régénérer depuis zéro, soit 7 appels payés une seconde fois pour
+// corriger ce qui ne tenait qu'en 1 à 3. Le lot 7 en a fait les frais.
+//
+// Ce mode ne réémet RIEN : il charge un artefact existant, le valide, et
+// n'appelle le modèle QUE sur les sections que les diagnostics désignent, par
+// la MÊME fonction que la campagne (`repairSectionsAvecPartiel`) — aucune
+// duplication de prompt, donc aucune divergence possible entre les deux
+// chemins. Le plafond `BUDGET_USD` mord à l'identique, avant chaque appel.
+// Le corpus n'est écrit que si le document devient VALIDE.
+if (process.argv[2] === "--reparer") {
+  const chemin = process.argv[3];
+  const slug = process.argv[4];
+  if (chemin === undefined || slug === undefined) {
+    console.error("usage : node emit-v3.mjs --reparer <artefact.air.json> <slug>");
+    process.exit(1);
+  }
+  const intention = INTENTIONS.find((i) => i.slug === slug);
+  if (intention === undefined) {
+    console.error(`slug inconnu : ${slug}`);
+    process.exit(1);
+  }
+  const document = JSON.parse(readFileSync(chemin, "utf8"));
+  const { diagnostics } = validateLocal(document);
+  console.log(`  ${diagnostics.length} diagnostic(s) · sections : ${JSON.stringify(repairScope.sectionsAReemettre(diagnostics))}`);
+  if (diagnostics.length === 0) {
+    console.log("  déjà valide — aucun appel émis, 0 $");
+    process.exit(0);
+  }
+  const usage = [];
+  const refusals = { count: 0 };
+  let resultat;
+  try {
+    resultat = await repairSectionsAvecPartiel(
+      document,
+      diagnostics,
+      `DEMANDE DU CLIENT :\n${intention.text}`,
+      slug,
+      usage,
+      refusals,
+    );
+  } catch (e) {
+    console.error(`  🔴 INTERROMPU — ${String(e.message ?? e).slice(0, 200)}`);
+    console.log(`  dépensé ~$${etatDepense.depense.toFixed(4)} · ${usage.length} appel(s)`);
+    process.exit(1);
+  }
+  const apres = validateLocal(resultat.repaired);
+  const fichier = ecrireArtefact(slug, "repare", resultat.repaired);
+  console.log(`  artefact : ${fichier}`);
+  console.log(`  diagnostics ${diagnostics.length} -> ${apres.diagnostics.length}`);
+  console.log(`  coût ~$${etatDepense.depense.toFixed(4)} · ${usage.length} appel(s)`);
+  if (apres.air !== null && apres.diagnostics.length === 0) {
+    writeFileSync(join(CORPUS_DIR, `${slug}.air.json`), JSON.stringify(resultat.repaired, null, 2) + "\n");
+    console.log(`  🟢 VALIDE — versé au corpus`);
+  } else {
+    console.log(`  🔴 encore invalide — corpus NON écrit`);
+    for (const d of apres.diagnostics.slice(0, 5)) console.log(`     ${d.code} · ${d.path}`);
+  }
+  process.exit(apres.diagnostics.length === 0 ? 0 : 1);
+}
+
 for (const intention of INTENTIONS.slice(start, end)) {
   if (etatDepense.depense >= PLAFOND_USD) {
     console.log(
