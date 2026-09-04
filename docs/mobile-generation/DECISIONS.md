@@ -6852,3 +6852,126 @@ bascule ne déplace aucun verdict corpus (mesuré).
 - HORS PÉRIMÈTRE tenu : ni push, ni WebSocket/SSE, ni E4/E5, ni générations
   avion/bus, ni retouche des dettes historiques (`gate:fidelite` 15/5, ⚠️
   26/27, dettes P10B, visuels).
+
+
+## D-133 — BASCULE MONOREPO EN PRODUCTION, ENDPOINT E3.3 EN LIGNE, DEUX ARTEFACTS APPAREIL — 2026-09-03/04
+
+**Arbitrages propriétaire successifs** (mêmes journées) : ouverture du chantier
+APPAREIL & FIL RÉEL → option ③ (endpoint statique sur domaine possédé) →
+lot préparatoire figé → canal B (Git) → cutover monorepo → merges → 2 builds.
+Aucune correction opportuniste ; chaque étape scellée sur preuve.
+
+### Le blocage découvert, et pourquoi il fallait le lever
+
+Servir l'endpoint E3.3 a révélé que **`main` n'était plus déployable** : le
+projet Vercel `nexiora-ai` porte `rootDirectory: apps/web` (risque CONSIGNÉ
+de `D-014`), alors que `main` gardait l'application Next à la RACINE. La
+production tournait donc sur un déploiement figé du 2026-08-27
+(`41dcd2c`). Le cutover n'était pas un détour : c'était le plan `D-014`,
+exécuté proprement au lieu d'être subi.
+
+### Ce qui a été fait, avec ses preuves
+
+- **PR #45 — cutover** : branche `release/monorepo-cutover` depuis
+  `feat/mobile-generation@42a449b` (previews Vercel READY prouvées) + merge
+  d'`origin/main@41dcd2c`. **20 conflits résolus SUR PREUVE** : 17
+  relocalisations (copies racine byte-identiques aux fichiers déjà sous
+  `apps/web/` — vérifié un par un), 14 add/add identiques, `prompts.ts`
+  (0 ligne de diff), `marketing_site_id_step1.sql` → version main (diff
+  100 % commentaires), `step2.sql` → version lignée (seule à consigner
+  « EXÉCUTÉ le 2026-08-27 »), `KNOWN_ISSUES.md` → version lignée
+  (sur-ensemble strict, apport main hors conflits = 0 ligne). **53/55
+  fichiers des 14 commits de main conservés byte-identiques** ; les 2 écarts
+  sont exactement les 2 résolutions justifiées. Commit `866e08b`, mergé en
+  `8dee11a`.
+- **PR #44 — endpoint** : `apps/web/public/air/v1/entities/ent_depart/rows`,
+  **un seul fichier**, re-basé sur le nouveau main (`195109f`), mergé en
+  **`4e56538` = `main` courant**. Production Vercel **READY · PROMOTED**,
+  alias `www.deribfy.com` + `deribfy.com`, 23 crons enregistrés
+  (= 23 entrées de `vercel.json`), 30 variables d'environnement.
+- **Preuve fil réel côté serveur** : `GET
+  https://www.deribfy.com/air/v1/entities/ent_depart/rows` → **HTTP/2 200,
+  0 redirection, 0,17 s**, corps **byte-identique** à la fixture du lot figé
+  `48f590c` — **SHA-256 `3eea2c2e75a1c236d26d89ea8c5a8b3b834c7eb3ffbcb816ee045d7bc2c030e7`**,
+  chaîne de custody intacte de `48f590c` → `44e550e` → `6f6cf73` → `195109f`.
+  5 lignes (Bouaké, Korhogo, San-Pédro, Man, Yamoussoukro), forme
+  `EntityInstance[]`. L'état « après modification » (preuve de polling)
+  reste **NON publié**.
+- **Sauvegarde de la campagne** : `fix/xss-jsonld@44e550e` poussée — les
+  **155 commits** `D-104`→`D-132` ne vivent plus sur un seul disque.
+- **Artefacts appareil**, tous deux construits depuis le **même commit
+  `44e550e7e76fead1f5e3dfb181f2dbc8a972f695`** (hash capturé par EAS) :
+  **Android #1 `c96c4359-71b6-40a3-9724-8af2a3459917`** (FINISHED, APK,
+  expire le 17/09) · **iOS #2 `7f332c5b-2390-4834-a84f-a856dedfaa0d`**
+  (FINISHED, IPA ad hoc, expire le 18/09). Profil `preview`, distribution
+  INTERNAL, SDK 57, `1.0.0`/`1`, bundles `com.deribfy.preview.bus_intercites`
+  et `com.deribfy.preview.bus-intercites`. Credentials iOS : certificat de
+  distribution et provisioning profile **RÉUTILISÉS** (aucun créé, aucun
+  révoqué) ; l'iPhone `00008140-001A550C010B001C` est dans le profil ad hoc —
+  **le blocage historique `DET-012` (port USB mort) ne s'applique plus** :
+  installation par QR.
+
+### Deux rouges rencontrés, aucun corrigé — attribution démontrée
+
+- **CodeQL sur PR #45** : 7 alertes (3 HIGH). **AUCUNE introduite** —
+  théorème vérifié sur les réfs : `git diff 42a449b 866e08b` = **0 ligne
+  JS/TS** (1 commentaire SQL). Causes : première analyse de `packages/` et
+  `docs/elite-protocol/` (absents de main) + relocalisation `src/ →
+  apps/web/src/` faisant paraître « nouveau » du code de main
+  **byte-identique** (blob `3868bb36` prouvé sur DesignUploader). Détails :
+  `DesignUploader.tsx:78` = faux positif (sink = URL `blob:` générée par le
+  navigateur, SVG inerte dans `<img>`) · `provider.ts:100` = biais modulo
+  réel mais négligeable (≈ 0,1 bit sur ≈ 143) · `provider-substitution.test.ts:109`
+  = faux positif franc (cliquet NÉGATIF exigeant l'ABSENCE de la chaîne).
+  **1 MEDIUM reste non identifiée** — attribution au cutover exclue par le
+  diff nul, nature exacte NON DÉTERMINÉE.
+- **CI de `fix/xss-jsonld`** : ROUGE sur `app_rendu` (épingle 26 alors que
+  27 apps compilent) et `app_fidelite` (15 documents = 12 v2 gelés sans
+  intention + 3 différés `D-125` ; 5 motifs). **Gouvernance, pas défaut** :
+  états mesurés et arbitrés dont la liste bloquante de la CI (écrite avant
+  ces arbitrages) n'a jamais été amendée. **Aucune correction appliquée.**
+
+### Réserve d'environnement — le fil réel n'est PAS encore prouvé
+
+`www.deribfy.com` est **intercepté et bloqué** par le pare-feu FortiGate du
+réseau où se trouvent les appareils : certificat contrefait émis par
+`O=Fortinet, CN=FG200FT924902840` au lieu de l'autorité réelle, page
+`Web Filter Violation` (FortiGuard) en HTTP 403. DNS sain (CNAME
+`…vercel-dns-017.com`, IP Vercel, identique via 1.1.1.1 et 8.8.8.8) ; sites
+tiers non affectés sur la même connexion. **Le site et son certificat sont
+corrects** — l'anomalie est 100 % locale au réseau. `curl -k` refusé
+délibérément : il aurait fait passer la page du pare-feu pour une réponse du
+serveur. **Contrôle réseau = FAIL / NON DÉMONTRÉ.**
+
+## P-012 — OBSERVATIONS UX/UI SUR APPLICATION ÉMISE (EN ATTENTE — CONSIGNÉ, AUCUNE CORRECTION) — 2026-09-04
+
+> Relevées par le propriétaire sur l'IPA iOS installé. **Aucune correction
+> n'est engagée** : la doctrine `D-018` impose la mesure avant la correction,
+> et la session `A1→A11` n'a pas eu lieu. Rattachement : **EXIGENCE PRODUIT
+> TRANSVERSE PREMIUM / ELITE 2027 A++ (`D-039`)**, dimensions **A**
+> (ergonomie physique), **E** (typographie), **G** (fluidité) — qui ne
+> deviennent mesurables qu'en session appareil. **Aucune phase nouvelle.**
+
+⚠️ **Deux observations sont CONTAMINÉES par le réseau** : « Départs
+indisponibles » / « Impossible de récupérer les prochains départs » sont la
+conséquence du blocage FortiGate, **pas un défaut produit** — c'est même le
+comportement correct d'E3.3 (l'état d'erreur dit la vérité). Les corriger
+corrigerait un fantôme.
+
+| # | Observation | Cause DÉMONTRÉE | Origine | Classe |
+|---|---|---|---|---|
+| 1 | Accueil pas assez premium | non mesurée | grille A++ | 🟠 mesurer en A1→A11 |
+| 2 | « ‹ Mes billets » en haut à gauche | la barre principale appelle `navigation.navigate()` sur un **native-stack** : chaque destination EMPILE, iOS affiche le titre précédent comme libellé de retour | 🔴 MOTEUR (`primary-nav.tsx` + `emitNavigation`, D-086) | 🔴 après mesure |
+| 3 | Titre dupliqué nav/contenu (départs, billets, compte) | le DOCUMENT déclare titre de route ET bloc `header` au libellé identique ; le moteur rend fidèlement les deux. Contre-preuve : l'Accueil ne duplique pas | 🔵 GÉNÉRATEUR (règle de prompt absente) | 🟠 arbitrage campagne |
+| 4 | État vide « Mes billets » sans CTA | `empty_state` **supporte déjà** `actionId`+`actionLabel` (appariement obligatoire, registre gelé) ; le document ne les utilise pas | 🟢 capacité EXISTANTE non utilisée | 🟠 avec le parcours |
+| 5 | Séparateurs / centrage « Mes billets » | **NON DÉMONTRÉ** (aucune capture ni mesure) | — | ⚪ mesurer |
+| 6 | « Supprimer mon compte » toujours visible | `visibleWhen` (`kind: "entity_rows"`, `D-044` / AIR 1.1.0) **existe et est rendu** ; le document ne l'utilise pas sur ce bouton | 🟢 capacité EXISTANTE non utilisée | 🟠 |
+| 7 | Modèle d'états utilisateur (visiteur → compte → authentifié) | **AUCUN fait `auth`/session dans l'enveloppe** ; capabilities déclarées jamais exécutées (`capabilitiesEmitCode: false`) | 🔴 CAPACITÉ ABSENTE | 🟡 arbitrage type D-128 |
+| 8 | « Enregistrer mes informations » (wording) | `submitLabel` écrit par le générateur | 🔵 GÉNÉRATEUR | 🟠 lié au point 7 |
+| 9 | Parcours de réservation (recherche → options → suite) | non exprimable : filtres E1 **sur l'écran de la liste**, pas d'écran de recherche transmettant des paramètres, pas de saisie de dates, pas de disponibilité | 🔴 CAPACITÉ ABSENTE | 🟡 arbitrage type D-128 |
+| 10 | Référence externe « Tree » | **image non reçue** — aucune comparaison visuelle prouvée | — | ⚪ |
+
+**Séquence proposée, non engagée** : ① réseau propre → `A1→A11` (ligne de
+base, dimensions A/E/G) → ② lot de corrections MOTEUR gaté A++ (navigation
+empilée en tête) → ③ arbitrage des règles de génération → ④ arbitrage de la
+capacité « parcours + états utilisateur ». **Chaque étape exige un GO.**

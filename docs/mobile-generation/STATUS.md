@@ -1,7 +1,35 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-02 (21)** (**📱 CHANTIER APPAREIL & FIL RÉEL — LOT PRÉPARATOIRE
+> **2026-09-04 (22)** (**🚀 PRODUCTION MIGRÉE · ENDPOINT E3.3 EN LIGNE · DEUX
+> ARTEFACTS APPAREIL — `D-133`. SESSION PHYSIQUE `A1→A11` : NON COMMENCÉE.**
+> Découverte en servant l'endpoint : `main` n'était plus déployable (projet
+> Vercel `rootDirectory: apps/web`, risque consigné `D-014` ; production figée
+> au 2026-08-27). Cutover exécuté : **PR #45** (`866e08b` → merge `8dee11a`,
+> 20 conflits résolus sur preuve, 53/55 fichiers de main byte-identiques) puis
+> **PR #44** (endpoint, `195109f` → merge **`4e56538` = `main` courant**),
+> production **READY · PROMOTED**, 23 crons, site 200. **Fil réel côté
+> serveur PROUVÉ** : `GET https://www.deribfy.com/air/v1/entities/ent_depart/rows`
+> → **200, 0 redirection**, byte-identique à la fixture, **SHA-256
+> `3eea2c2e75a1…`**, 5 lignes. **Campagne sauvegardée** :
+> `fix/xss-jsonld@44e550e` poussée (155 commits `D-104`→`D-132`). **Builds
+> EAS depuis le même `44e550e`** : Android #1 `c96c4359-…` FINISHED (APK, exp.
+> 17/09) · iOS #2 `7f332c5b-…` FINISHED (IPA ad hoc, exp. 18/09 ; credentials
+> RÉUTILISÉS, iPhone `00008140-…` dans le profil — `DET-012` contourné par QR).
+> 🔴 **CONTRÔLE RÉSEAU = FAIL / NON DÉMONTRÉ** : `www.deribfy.com` intercepté
+> et bloqué par un FortiGate (certificat `O=Fortinet CN=FG200FT924902840`,
+> page FortiGuard 403) sur le réseau des appareils — site et certificat
+> RÉELS corrects, anomalie 100 % locale ; `curl -k` refusé délibérément.
+> **`A1→A11` NON COMMENCÉE, aucune observation physique produite** ; iPhone
+> disponible, **Galaxy A17 inaccessible (bagages)**. Observations UX
+> consignées SANS correction (`P-012`, rattachées à la grille A++ `D-039`) —
+> dont 2 contaminées par le blocage réseau. CodeQL PR #45 : 7 alertes,
+> **aucune introduite** (diff JS/TS nul prouvé), 1 MEDIUM non identifiée. CI
+> `fix/xss-jsonld` rouge : `app_rendu` (épingle 26 vs 27) + `app_fidelite`
+> (15/5) — **gouvernance connue, NON corrigée**. Aucun code, aucun
+> comportement, aucune UX modifiés dans ce lot.)
+>
+> *Entrée précédente —* **2026-09-02 (21)** (**📱 CHANTIER APPAREIL & FIL RÉEL — LOT PRÉPARATOIRE
 > PRÊT, NON COMMITTÉ, 0 $** : arbitrage propriétaire — option ③ endpoint
 > statique sur domaine possédé (`www.deribfy.com`, metadataBase canonique
 > d'apps/web, gravé en UNE constante remplaçable) + quota EAS 1-2 builds
