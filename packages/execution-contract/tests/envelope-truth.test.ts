@@ -606,3 +606,37 @@ describe("le prompt énonce la cohérence du dispatch (D-105)", () => {
     expect(PROMPT_GENERATEUR).toContain("EXIGE UN BLOC ACTIONNABLE");
   });
 });
+
+
+describe("véracité de l'enveloppe — groupement de liste", () => {
+  // AJOUT DU 2026-09-04. Un fait qui vaut `false` doit se prouver par une
+  // ABSENCE mesurée, jamais par une affirmation. Le groupement est cherché aux
+  // trois endroits où il pourrait vivre — s'il apparaît un jour, ce test tombe
+  // AVANT que l'enveloppe ne mente.
+  it("le pipeline de liste ne groupe pas : portée, recherche, filtres, tri, borne — et rien d'autre", () => {
+    const pipeline = read("compiler/runtime/list-pipeline.ts");
+    for (const interdit of ["groupBy", "grouper", "sections", "SectionList", "renderSectionHeader"]) {
+      expect(pipeline, interdit).not.toContain(interdit);
+    }
+    expect(EXECUTION_ENVELOPE_V1.listGrouping).toBe(false);
+  });
+
+  it("le runtime rend une liste PLATE — aucune section", () => {
+    for (const interdit of ["SectionList", "renderSectionHeader", "sections={"]) {
+      expect(RUNTIME, interdit).not.toContain(interdit);
+    }
+  });
+
+  it("le registre de blocs GELÉ ne déclare aucune prop de groupement", () => {
+    const registre = read("blocks/src/definitions.ts");
+    for (const interdit of ["groupBy", "groupFieldId", "sectionFieldId"]) {
+      expect(registre, interdit).not.toContain(interdit);
+    }
+  });
+
+  it("CONTRÔLE NÉGATIF — le cliquet VOIT un groupement s'il apparaît", () => {
+    // Sans ceci, une assertion d'absence pourrait passer pour toujours vraie.
+    const mutant = read("compiler/runtime/list-pipeline.ts") + "\nconst groupBy = () => [];\n";
+    expect(mutant).toContain("groupBy");
+  });
+});

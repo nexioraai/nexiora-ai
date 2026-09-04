@@ -83,6 +83,10 @@ const LIMITES: readonly string[] = [
 /** Faits booléens de l'enveloppe qu'un motif peut citer, par leur nom exact. */
 const FAITS_BOOLEENS = [
   "capabilitiesEmitCode",
+  // AJOUT 2026-09-04 : sans ce fait, une inexprimabilité RÉELLE (agenda par
+  // jour) n'était démontrable par aucun motif — le document restait rouge sans
+  // recours. Voir `envelope.ts`.
+  "listGrouping",
   "slotsInvoked",
   "rulesEnforced",
   "relationTraversal",

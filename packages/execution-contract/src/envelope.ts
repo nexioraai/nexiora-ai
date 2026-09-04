@@ -54,6 +54,8 @@ export interface ExecutionEnvelope {
   readonly reachableBlockStates: Readonly<Record<string, readonly string[]>>;
   /** Une capability déclarée produit-elle du code/des dépendances ? */
   readonly capabilitiesEmitCode: boolean;
+  /** Le bloc `list` peut-il GROUPER ses lignes (sections, agenda par jour) ? */
+  readonly listGrouping: boolean;
   /** Un Code Slot déclaré est-il INVOQUÉ par l'application générée ? */
   readonly slotsInvoked: boolean;
   /** Les `air.rules` sont-elles appliquées quelque part ? */
@@ -165,6 +167,24 @@ export const EXECUTION_ENVELOPE_V1: ExecutionEnvelope = {
   // Corollaire : l'empreinte native est INVARIANTE aux capabilities — le
   // critère de sortie de la Phase 11 est aujourd'hui infalsifiable.
   capabilitiesEmitCode: false,
+
+  // AJOUT DU 2026-09-04 — lacune NOMMÉE, découverte en qualifiant les motifs
+  // réfutés de `D-125`. Un besoin de PRÉSENTATION GROUPÉE — afficher les
+  // lignes rassemblées par journée, à la manière d'un agenda — est RÉELLEMENT
+  // inexprimable, mais aucun fait de l'enveloppe ne permettait de le
+  // DÉMONTRER : un document ne pouvait donc écrire aucun motif valide, et son
+  // `F4` restait rouge quoi qu'il produise. Une inexprimabilité qu'on ne peut
+  // pas citer est une lacune de l'enveloppe, pas un défaut du document.
+  //
+  // Mesuré à trois niveaux, et cliqueté par `envelope-truth` :
+  //  - `list-pipeline.ts` enchaîne portée → recherche → filtres → tri → borne,
+  //    et RIEN d'autre : aucun regroupement ;
+  //  - le bloc liste rend une `FlatList` PLATE — ni `SectionList`, ni
+  //    `sections`, ni `renderSectionHeader` ;
+  //  - le registre de blocs gelé ne déclare AUCUNE prop de groupement.
+  //
+  // Ce fait ne rend rien conforme : il rend une impossibilité DÉMONTRABLE.
+  listGrouping: false,
 
   // DET-018 : la Phase 9 émet les modules de slots et un registre TYPÉ,
   // mais aucune convention de liaison n'existe dans le schéma gelé — l'app
