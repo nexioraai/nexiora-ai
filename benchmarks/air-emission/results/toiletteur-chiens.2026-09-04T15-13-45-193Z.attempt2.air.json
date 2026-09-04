@@ -1,0 +1,4006 @@
+{
+  "airSchemaVersion": "1.7.1",
+  "projectId": "prj_salon_toilettage_canin",
+  "app": {
+    "name": "Pattes Douces — Toilettage",
+    "slug": "pattes-douces-toilettage",
+    "description": [
+      {
+        "locale": "fr",
+        "text": "Application du salon de toilettage canin Pattes Douces : fiche détaillée de chaque chien avec photo, prise de rendez-vous, rappels de vaccination et historique des visites. Le paiement se règle sur place au salon."
+      }
+    ],
+    "locales": {
+      "userLanguage": "fr",
+      "appLocales": [
+        "fr"
+      ],
+      "defaultAppLocale": "fr",
+      "contentLocales": [
+        "fr"
+      ],
+      "rtlSupported": false
+    }
+  },
+  "navigation": {
+    "entryScreenId": "scr_accueil",
+    "primary": {
+      "destinations": [
+        {
+          "routeId": "nav_accueil",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Accueil"
+            }
+          ],
+          "order": 0
+        },
+        {
+          "routeId": "nav_animaux",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Mes chiens"
+            }
+          ],
+          "order": 1
+        },
+        {
+          "routeId": "nav_rendezvous",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Rendez-vous"
+            }
+          ],
+          "order": 2
+        },
+        {
+          "routeId": "nav_vaccinations",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Vaccins"
+            }
+          ],
+          "order": 3
+        },
+        {
+          "routeId": "nav_compte",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Compte"
+            }
+          ],
+          "order": 4
+        }
+      ]
+    },
+    "routes": [
+      {
+        "id": "nav_accueil",
+        "screenId": "scr_accueil",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Accueil"
+          }
+        ]
+      },
+      {
+        "id": "nav_animaux",
+        "screenId": "scr_animaux",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Mes chiens"
+          }
+        ]
+      },
+      {
+        "id": "nav_animal_detail",
+        "screenId": "scr_animal_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Fiche du chien"
+          }
+        ]
+      },
+      {
+        "id": "nav_animal_nouveau",
+        "screenId": "scr_animal_nouveau",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Ajouter un chien"
+          }
+        ]
+      },
+      {
+        "id": "nav_rendezvous",
+        "screenId": "scr_rendezvous",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Rendez-vous"
+          }
+        ]
+      },
+      {
+        "id": "nav_rdv_nouveau",
+        "screenId": "scr_rdv_nouveau",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Prendre rendez-vous"
+          }
+        ]
+      },
+      {
+        "id": "nav_rdv_detail",
+        "screenId": "scr_rdv_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Détail du rendez-vous"
+          }
+        ]
+      },
+      {
+        "id": "nav_prestations",
+        "screenId": "scr_prestations",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Prestations"
+          }
+        ]
+      },
+      {
+        "id": "nav_vaccinations",
+        "screenId": "scr_vaccinations",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Rappels de vaccination"
+          }
+        ]
+      },
+      {
+        "id": "nav_vaccination_detail",
+        "screenId": "scr_vaccination_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Détail du vaccin"
+          }
+        ]
+      },
+      {
+        "id": "nav_visite_detail",
+        "screenId": "scr_visite_detail",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Détail de la visite"
+          }
+        ]
+      },
+      {
+        "id": "nav_compte",
+        "screenId": "scr_compte",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Mon compte"
+          }
+        ]
+      }
+    ]
+  },
+  "design": {
+    "theme": "toilettage_pastel"
+  },
+  "network": {
+    "policy": "deny_by_default",
+    "allowedDomains": [
+      "api.pattesdouces.app"
+    ]
+  },
+  "native": {
+    "minIosVersion": "15.0",
+    "minAndroidSdk": 24
+  },
+  "compliance": {
+    "commerceClass": "none",
+    "accountDeletionRequired": true,
+    "dataCollected": [
+      "contact_info",
+      "identifiers",
+      "user_content",
+      "usage_data"
+    ]
+  },
+  "entities": [
+    {
+      "id": "ent_client",
+      "name": "client",
+      "fields": [
+        {
+          "id": "fld_client_nom",
+          "name": "nom_complet",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_client_email",
+          "name": "email",
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        {
+          "id": "fld_client_telephone",
+          "name": "telephone",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_client_adresse",
+          "name": "adresse",
+          "type": "string",
+          "required": false
+        },
+        {
+          "id": "fld_client_ville",
+          "name": "ville",
+          "type": "string",
+          "required": false
+        },
+        {
+          "id": "fld_client_rappels_actifs",
+          "name": "rappels_actifs",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "id": "fld_client_date_inscription",
+          "name": "date_inscription",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "fld_client_notes",
+          "name": "notes_salon",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "ent_chien",
+      "name": "chien",
+      "fields": [
+        {
+          "id": "fld_chien_nom",
+          "name": "nom",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_chien_photo",
+          "name": "photo",
+          "type": "asset",
+          "required": false
+        },
+        {
+          "id": "fld_chien_race",
+          "name": "race",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_chien_date_naissance",
+          "name": "date_naissance",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "fld_chien_sexe",
+          "name": "sexe",
+          "type": "enum",
+          "required": false,
+          "enumValues": [
+            "Mâle",
+            "Femelle"
+          ]
+        },
+        {
+          "id": "fld_chien_taille",
+          "name": "taille",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "Très petit",
+            "Petit",
+            "Moyen",
+            "Grand",
+            "Très grand"
+          ]
+        },
+        {
+          "id": "fld_chien_pelage",
+          "name": "type_pelage",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "Court",
+            "Mi-long",
+            "Long",
+            "Bouclé",
+            "Dur",
+            "Double"
+          ]
+        },
+        {
+          "id": "fld_chien_poids",
+          "name": "poids_kg",
+          "type": "decimal",
+          "required": false
+        },
+        {
+          "id": "fld_chien_caractere",
+          "name": "caractere",
+          "type": "enum",
+          "required": false,
+          "enumValues": [
+            "Calme",
+            "Joueur",
+            "Craintif",
+            "Nerveux",
+            "Agressif au séchage"
+          ]
+        },
+        {
+          "id": "fld_chien_notes",
+          "name": "notes_toilettage",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "fld_chien_proprietaire",
+          "name": "proprietaire",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_client",
+          "referenceDisplayFieldId": "fld_client_nom"
+        },
+        {
+          "id": "fld_chien_actif",
+          "name": "actif",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "id": "fld_chien_derniere_visite",
+          "name": "derniere_visite",
+          "type": "date",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "ent_prestation",
+      "name": "prestation",
+      "fields": [
+        {
+          "id": "fld_prestation_nom",
+          "name": "nom",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_prestation_photo",
+          "name": "photo",
+          "type": "asset",
+          "required": false
+        },
+        {
+          "id": "fld_prestation_description",
+          "name": "description",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "fld_prestation_categorie",
+          "name": "categorie",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "Bain",
+            "Tonte",
+            "Coupe ciseaux",
+            "Soins",
+            "Forfait complet"
+          ]
+        },
+        {
+          "id": "fld_prestation_prix",
+          "name": "prix_indicatif",
+          "type": "decimal",
+          "required": true
+        },
+        {
+          "id": "fld_prestation_duree",
+          "name": "duree_minutes",
+          "type": "number",
+          "required": true
+        },
+        {
+          "id": "fld_prestation_taille_conseillee",
+          "name": "taille_conseillee",
+          "type": "enum",
+          "required": false,
+          "enumValues": [
+            "Toutes tailles",
+            "Très petit",
+            "Petit",
+            "Moyen",
+            "Grand",
+            "Très grand"
+          ]
+        },
+        {
+          "id": "fld_prestation_disponible",
+          "name": "disponible",
+          "type": "boolean",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ent_rendezvous",
+      "name": "rendezvous",
+      "fields": [
+        {
+          "id": "fld_rdv_reference",
+          "name": "reference",
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        {
+          "id": "fld_rdv_chien",
+          "name": "chien",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_chien",
+          "referenceDisplayFieldId": "fld_chien_nom"
+        },
+        {
+          "id": "fld_rdv_prestation",
+          "name": "prestation",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_prestation",
+          "referenceDisplayFieldId": "fld_prestation_nom"
+        },
+        {
+          "id": "fld_rdv_date",
+          "name": "date_heure",
+          "type": "datetime",
+          "required": true
+        },
+        {
+          "id": "fld_rdv_statut",
+          "name": "statut",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "Demandé",
+            "Confirmé",
+            "Terminé",
+            "Annulé"
+          ]
+        },
+        {
+          "id": "fld_rdv_toiletteur",
+          "name": "toiletteur",
+          "type": "string",
+          "required": false
+        },
+        {
+          "id": "fld_rdv_prix_estime",
+          "name": "prix_estime",
+          "type": "decimal",
+          "required": false
+        },
+        {
+          "id": "fld_rdv_mode_paiement",
+          "name": "mode_paiement",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "Espèces sur place",
+            "Carte sur place",
+            "Chèque sur place"
+          ]
+        },
+        {
+          "id": "fld_rdv_demandes",
+          "name": "demandes_particulieres",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "fld_rdv_cree_le",
+          "name": "cree_le",
+          "type": "datetime",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "ent_vaccination",
+      "name": "vaccination",
+      "fields": [
+        {
+          "id": "fld_vac_libelle",
+          "name": "libelle",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_vac_chien",
+          "name": "chien",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_chien",
+          "referenceDisplayFieldId": "fld_chien_nom"
+        },
+        {
+          "id": "fld_vac_type",
+          "name": "type_vaccin",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "Rage",
+            "CHPPi (maladies de base)",
+            "Toux du chenil",
+            "Leishmaniose",
+            "Piroplasmose"
+          ]
+        },
+        {
+          "id": "fld_vac_carnet",
+          "name": "photo_carnet",
+          "type": "asset",
+          "required": false
+        },
+        {
+          "id": "fld_vac_date_injection",
+          "name": "date_injection",
+          "type": "date",
+          "required": true
+        },
+        {
+          "id": "fld_vac_date_rappel",
+          "name": "date_rappel",
+          "type": "date",
+          "required": true
+        },
+        {
+          "id": "fld_vac_statut",
+          "name": "statut",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "À jour",
+            "Rappel proche",
+            "Expiré"
+          ]
+        },
+        {
+          "id": "fld_vac_veterinaire",
+          "name": "veterinaire",
+          "type": "string",
+          "required": false
+        },
+        {
+          "id": "fld_vac_notes",
+          "name": "notes",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "ent_visite",
+      "name": "visite",
+      "fields": [
+        {
+          "id": "fld_visite_libelle",
+          "name": "libelle",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "fld_visite_chien",
+          "name": "chien",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_chien",
+          "referenceDisplayFieldId": "fld_chien_nom"
+        },
+        {
+          "id": "fld_visite_prestation",
+          "name": "prestation",
+          "type": "reference",
+          "required": true,
+          "referencesEntityId": "ent_prestation",
+          "referenceDisplayFieldId": "fld_prestation_nom"
+        },
+        {
+          "id": "fld_visite_photo",
+          "name": "photo_apres_toilettage",
+          "type": "asset",
+          "required": false
+        },
+        {
+          "id": "fld_visite_date",
+          "name": "date_visite",
+          "type": "date",
+          "required": true
+        },
+        {
+          "id": "fld_visite_toiletteur",
+          "name": "toiletteur",
+          "type": "string",
+          "required": false
+        },
+        {
+          "id": "fld_visite_montant",
+          "name": "montant_regle",
+          "type": "decimal",
+          "required": true
+        },
+        {
+          "id": "fld_visite_mode_paiement",
+          "name": "mode_paiement",
+          "type": "enum",
+          "required": true,
+          "enumValues": [
+            "Espèces sur place",
+            "Carte sur place",
+            "Chèque sur place"
+          ]
+        },
+        {
+          "id": "fld_visite_paiement_recu",
+          "name": "paiement_recu",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "id": "fld_visite_compte_rendu",
+          "name": "compte_rendu",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "fld_visite_prochaine",
+          "name": "prochaine_visite_conseillee",
+          "type": "date",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel_client_chiens",
+      "fromEntityId": "ent_client",
+      "toEntityId": "ent_chien",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_chien_rendezvous",
+      "fromEntityId": "ent_chien",
+      "toEntityId": "ent_rendezvous",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_prestation_rendezvous",
+      "fromEntityId": "ent_prestation",
+      "toEntityId": "ent_rendezvous",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_chien_vaccinations",
+      "fromEntityId": "ent_chien",
+      "toEntityId": "ent_vaccination",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_chien_visites",
+      "fromEntityId": "ent_chien",
+      "toEntityId": "ent_visite",
+      "kind": "one_to_many"
+    },
+    {
+      "id": "rel_prestation_visites",
+      "fromEntityId": "ent_prestation",
+      "toEntityId": "ent_visite",
+      "kind": "one_to_many"
+    }
+  ],
+  "datasets": [
+    {
+      "id": "data_clients",
+      "entityId": "ent_client",
+      "contentHash": "3f9a1c7d5b2e84f60a9c31d7e5b48af26c0d193e7a4b8f5c2d6e10a3b7c94f82",
+      "rowCount": 12,
+      "sourceKind": "seed"
+    },
+    {
+      "id": "data_chiens",
+      "entityId": "ent_chien",
+      "contentHash": "a71c4e93b820d5f6e14a7c9308bd2f5e6a3c79184be05d2f7c81a396e4b0d5c7",
+      "rowCount": 18,
+      "sourceKind": "seed"
+    },
+    {
+      "id": "data_prestations",
+      "entityId": "ent_prestation",
+      "contentHash": "5d0b83e29a17c46f8b21d95e037ca4b6f8e2019d3c7a5b4e6f9012a8d3c7b5e4",
+      "rowCount": 9,
+      "sourceKind": "seed"
+    },
+    {
+      "id": "data_rendezvous",
+      "entityId": "ent_rendezvous",
+      "contentHash": "c48f21a95d3b07e6f1a82c94d5b306e7a19c48f2b5d70e6a3c91d48b2f5a07e6",
+      "rowCount": 24,
+      "sourceKind": "seed"
+    },
+    {
+      "id": "data_vaccinations",
+      "entityId": "ent_vaccination",
+      "contentHash": "9e137b5a2c48d06f3a95c17e4b820d6f5a3c9e18b47d02f6a95c31e78b4d0a26",
+      "rowCount": 21,
+      "sourceKind": "seed"
+    },
+    {
+      "id": "data_visites",
+      "entityId": "ent_visite",
+      "contentHash": "6b2d90f4a83c15e7d0b94a26f38c51e70a4d92b6f85c13e0a7d46b29f0c85e13",
+      "rowCount": 37,
+      "sourceKind": "seed"
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule_chien_fiche_complete",
+      "description": "La fiche d'un chien exige un nom, une race, une taille, un type de pelage et un propriétaire identifié.",
+      "kind": "validation",
+      "entityId": "ent_chien",
+      "assertions": [
+        {
+          "fieldId": "fld_chien_nom",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_chien_race",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_chien_taille",
+          "operator": "in",
+          "value": [
+            "Très petit",
+            "Petit",
+            "Moyen",
+            "Grand",
+            "Très grand"
+          ]
+        },
+        {
+          "fieldId": "fld_chien_pelage",
+          "operator": "in",
+          "value": [
+            "Court",
+            "Mi-long",
+            "Long",
+            "Bouclé",
+            "Dur",
+            "Double"
+          ]
+        },
+        {
+          "fieldId": "fld_chien_proprietaire",
+          "operator": "required"
+        }
+      ]
+    },
+    {
+      "id": "rule_client_contact_valide",
+      "description": "Un client doit fournir un nom, un e-mail valide et un numéro de téléphone joignable.",
+      "kind": "validation",
+      "entityId": "ent_client",
+      "assertions": [
+        {
+          "fieldId": "fld_client_nom",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_client_email",
+          "operator": "matches",
+          "value": "^[^@\\s]+@[^@\\s]+\\.[a-z]{2,}$"
+        },
+        {
+          "fieldId": "fld_client_telephone",
+          "operator": "matches",
+          "value": "^(\\+33|0)[1-9]([ .-]?[0-9]{2}){4}$"
+        }
+      ]
+    },
+    {
+      "id": "rule_rdv_complet",
+      "description": "Une prise de rendez-vous exige un chien, une prestation, une date et un statut valides.",
+      "kind": "validation",
+      "entityId": "ent_rendezvous",
+      "assertions": [
+        {
+          "fieldId": "fld_rdv_chien",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_rdv_prestation",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_rdv_date",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_rdv_statut",
+          "operator": "in",
+          "value": [
+            "Demandé",
+            "Confirmé",
+            "Terminé",
+            "Annulé"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rule_rdv_paiement_sur_place",
+      "description": "Le règlement s'effectue exclusivement sur place au salon : aucun paiement en ligne n'est accepté.",
+      "kind": "validation",
+      "entityId": "ent_rendezvous",
+      "assertions": [
+        {
+          "fieldId": "fld_rdv_mode_paiement",
+          "operator": "in",
+          "value": [
+            "Espèces sur place",
+            "Carte sur place",
+            "Chèque sur place"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rule_rdv_modification_interdite",
+      "description": "Un rendez-vous déjà terminé ne peut plus être modifié ni annulé depuis l'application.",
+      "kind": "authorization",
+      "entityId": "ent_rendezvous",
+      "assertions": [
+        {
+          "fieldId": "fld_rdv_statut",
+          "operator": "neq",
+          "value": "Terminé"
+        }
+      ]
+    },
+    {
+      "id": "rule_vaccination_rappel",
+      "description": "Un rappel de vaccination exige un chien, un type de vaccin, une date d'injection et une date de rappel.",
+      "kind": "validation",
+      "entityId": "ent_vaccination",
+      "assertions": [
+        {
+          "fieldId": "fld_vac_chien",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_vac_type",
+          "operator": "in",
+          "value": [
+            "Rage",
+            "CHPPi (maladies de base)",
+            "Toux du chenil",
+            "Leishmaniose",
+            "Piroplasmose"
+          ]
+        },
+        {
+          "fieldId": "fld_vac_date_injection",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_vac_date_rappel",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_vac_statut",
+          "operator": "in",
+          "value": [
+            "À jour",
+            "Rappel proche",
+            "Expiré"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rule_visite_historique",
+      "description": "Une visite enregistrée dans l'historique porte une date, un chien, une prestation et un montant réglé positif.",
+      "kind": "validation",
+      "entityId": "ent_visite",
+      "assertions": [
+        {
+          "fieldId": "fld_visite_chien",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_visite_prestation",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_visite_date",
+          "operator": "required"
+        },
+        {
+          "fieldId": "fld_visite_montant",
+          "operator": "gte",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "rule_prestation_publiable",
+      "description": "Une prestation affichée au catalogue doit être disponible, avoir un prix indicatif positif et une durée d'au moins 15 minutes.",
+      "kind": "validation",
+      "entityId": "ent_prestation",
+      "assertions": [
+        {
+          "fieldId": "fld_prestation_disponible",
+          "operator": "eq",
+          "value": true
+        },
+        {
+          "fieldId": "fld_prestation_prix",
+          "operator": "gt",
+          "value": 0
+        },
+        {
+          "fieldId": "fld_prestation_duree",
+          "operator": "gte",
+          "value": 15
+        }
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "id": "slot_rappels_vaccination",
+      "description": "Analyse les vaccinations enregistrées et produit un message de rappel lisible (vaccins expirés ou dont le rappel arrive dans les 30 jours) ainsi que le nombre de rappels à traiter.",
+      "inputs": [
+        {
+          "name": "vaccinations",
+          "type": "json"
+        },
+        {
+          "name": "joursAvantRappel",
+          "type": "number"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "messageRappel",
+          "type": "string"
+        },
+        {
+          "name": "nombreRappelsProches",
+          "type": "number"
+        }
+      ],
+      "allowedImports": []
+    },
+    {
+      "id": "slot_estimation_tarif",
+      "description": "Calcule un tarif indicatif de toilettage à partir de la taille et du type de pelage du chien croisés avec la prestation choisie, et renvoie un libellé explicatif.",
+      "inputs": [
+        {
+          "name": "chiens",
+          "type": "json"
+        },
+        {
+          "name": "prestations",
+          "type": "json"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "libelleTarif",
+          "type": "string"
+        },
+        {
+          "name": "tarifEstime",
+          "type": "decimal"
+        }
+      ],
+      "allowedImports": []
+    },
+    {
+      "id": "slot_resume_historique",
+      "description": "Résume l'historique des visites d'un chien : nombre de passages, date de la dernière visite et prestation la plus fréquente.",
+      "inputs": [
+        {
+          "name": "visites",
+          "type": "json"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "resumeVisites",
+          "type": "string"
+        },
+        {
+          "name": "derniereVisite",
+          "type": "string"
+        }
+      ],
+      "allowedImports": []
+    },
+    {
+      "id": "slot_prochain_creneau",
+      "description": "Détermine, à partir des rendez-vous déjà planifiés et de la durée des prestations, le prochain créneau libre du salon et le formate en texte.",
+      "inputs": [
+        {
+          "name": "rendezvous",
+          "type": "json"
+        },
+        {
+          "name": "prestations",
+          "type": "json"
+        },
+        {
+          "name": "heuresOuverture",
+          "type": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prochainCreneau",
+          "type": "string"
+        }
+      ],
+      "allowedImports": []
+    }
+  ],
+  "screens": [
+    {
+      "id": "scr_accueil",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Accueil"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_accueil_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Pattes Douces — Toilettage canin"
+            },
+            {
+              "key": "subtitle",
+              "value": "Fiches de vos chiens, rendez-vous et rappels de vaccination. Règlement sur place au salon."
+            }
+          ]
+        },
+        {
+          "id": "blk_accueil_rappels",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Rappels de vaccination"
+            },
+            {
+              "key": "subtitle",
+              "value": "Analyse des rappels en cours…"
+            }
+          ]
+        },
+        {
+          "id": "blk_accueil_creneau",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Prochain créneau disponible"
+            },
+            {
+              "key": "subtitle",
+              "value": "Recherche du prochain créneau libre au salon…"
+            }
+          ]
+        },
+        {
+          "id": "blk_accueil_rdv_liste",
+          "blockType": "list",
+          "entityId": "ent_rendezvous",
+          "props": [
+            {
+              "key": "title",
+              "value": "Vos prochains rendez-vous"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_rdv_chien"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_rdv_prestation"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_rdv_date"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_rdv_statut"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_rdv_date"
+            },
+            {
+              "key": "sortDirection",
+              "value": "asc"
+            },
+            {
+              "key": "filterFieldId",
+              "value": "fld_rdv_statut"
+            },
+            {
+              "key": "filterOperator",
+              "value": "neq"
+            },
+            {
+              "key": "filterValue",
+              "value": "Annulé"
+            },
+            {
+              "key": "pageSize",
+              "value": 5
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun rendez-vous prévu"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Prenez rendez-vous pour le prochain toilettage de votre chien."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de vos rendez-vous…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Rendez-vous indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Impossible d'afficher vos rendez-vous pour le moment. Réessayez dans un instant."
+            }
+          ]
+        },
+        {
+          "id": "blk_accueil_cta_rdv",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Prendre rendez-vous"
+            },
+            {
+              "key": "actionId",
+              "value": "act_accueil_prendre_rdv"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        },
+        {
+          "id": "blk_accueil_cta_prestations",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Voir les prestations du salon"
+            },
+            {
+              "key": "actionId",
+              "value": "act_accueil_voir_prestations"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_animaux",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Mes chiens"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_animaux_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes chiens"
+            },
+            {
+              "key": "subtitle",
+              "value": "Chaque fiche réunit la photo, le pelage, le caractère et les consignes de toilettage."
+            }
+          ]
+        },
+        {
+          "id": "blk_animaux_liste",
+          "blockType": "list",
+          "entityId": "ent_chien",
+          "props": [
+            {
+              "key": "title",
+              "value": "Fiches enregistrées"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_chien_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_chien_race"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_chien_derniere_visite"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_chien_taille"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_chien_photo"
+            },
+            {
+              "key": "searchFieldId",
+              "value": "fld_chien_nom"
+            },
+            {
+              "key": "searchPlaceholder",
+              "value": "Rechercher un chien par son nom"
+            },
+            {
+              "key": "userFilterFieldIds",
+              "value": [
+                "fld_chien_race",
+                "fld_chien_taille",
+                "fld_chien_pelage"
+              ]
+            },
+            {
+              "key": "userFilterOperators",
+              "value": [
+                "contains",
+                "eq",
+                "eq"
+              ]
+            },
+            {
+              "key": "userFilterInputTypes",
+              "value": [
+                "text",
+                "choice",
+                "choice"
+              ]
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_chien_nom"
+            },
+            {
+              "key": "sortDirection",
+              "value": "asc"
+            },
+            {
+              "key": "pageSize",
+              "value": 20
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun chien enregistré"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Créez la fiche de votre chien pour préparer son toilettage."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement des fiches…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Fiches indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Les fiches de vos chiens n'ont pas pu être chargées."
+            }
+          ]
+        },
+        {
+          "id": "blk_animaux_vide",
+          "blockType": "empty_state",
+          "visibleWhen": {
+            "kind": "entity_empty",
+            "entityId": "ent_chien"
+          },
+          "props": [
+            {
+              "key": "title",
+              "value": "Votre premier compagnon"
+            },
+            {
+              "key": "message",
+              "value": "Ajoutez la fiche de votre chien avec sa photo, sa race et ses consignes de toilettage."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Ajouter un chien"
+            },
+            {
+              "key": "actionId",
+              "value": "act_animaux_vide_ajouter"
+            }
+          ]
+        },
+        {
+          "id": "blk_animaux_cta_ajouter",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Ajouter un chien"
+            },
+            {
+              "key": "actionId",
+              "value": "act_animaux_ajouter"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_animal_detail",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Fiche du chien"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_animal_entete",
+          "blockType": "detail_header",
+          "entityId": "ent_chien",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_chien_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_chien_race"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_chien_poids"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_chien_taille",
+                "fld_chien_pelage",
+                "fld_chien_caractere"
+              ]
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_chien_photo"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de la fiche…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Fiche indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Cette fiche n'a pas pu être chargée."
+            }
+          ]
+        },
+        {
+          "id": "blk_animal_resume",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Résumé des passages au salon"
+            },
+            {
+              "key": "subtitle",
+              "value": "Calcul du résumé des visites…"
+            }
+          ]
+        },
+        {
+          "id": "blk_animal_visites",
+          "blockType": "list",
+          "entityId": "ent_visite",
+          "props": [
+            {
+              "key": "title",
+              "value": "Historique des visites"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_visite_libelle"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_visite_prestation"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_visite_montant"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_visite_mode_paiement"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_visite_photo"
+            },
+            {
+              "key": "scopeFieldId",
+              "value": "fld_visite_chien"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_visite_date"
+            },
+            {
+              "key": "sortDirection",
+              "value": "desc"
+            },
+            {
+              "key": "pageSize",
+              "value": 10
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune visite enregistrée"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "L'historique se remplira après le premier toilettage."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de l'historique…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Historique indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Les visites de ce chien n'ont pas pu être chargées."
+            }
+          ]
+        },
+        {
+          "id": "blk_animal_vaccins",
+          "blockType": "list",
+          "entityId": "ent_vaccination",
+          "props": [
+            {
+              "key": "title",
+              "value": "Vaccinations et rappels"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_vac_libelle"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_vac_type"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_vac_date_rappel"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_vac_statut"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_vac_carnet"
+            },
+            {
+              "key": "scopeFieldId",
+              "value": "fld_vac_chien"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_vac_date_rappel"
+            },
+            {
+              "key": "sortDirection",
+              "value": "asc"
+            },
+            {
+              "key": "pageSize",
+              "value": 10
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun vaccin renseigné"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Ajoutez les vaccins de votre chien pour recevoir les rappels."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement des vaccins…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Vaccins indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Les vaccinations de ce chien n'ont pas pu être chargées."
+            }
+          ]
+        },
+        {
+          "id": "blk_animal_form_maj",
+          "blockType": "form",
+          "entityId": "ent_chien",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mettre à jour la fiche"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_chien_photo",
+                "fld_chien_poids",
+                "fld_chien_caractere",
+                "fld_chien_pelage",
+                "fld_chien_notes",
+                "fld_chien_derniere_visite",
+                "fld_chien_actif"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Enregistrer les modifications"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du formulaire…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Modification impossible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "La fiche n'a pas pu être mise à jour."
+            }
+          ]
+        },
+        {
+          "id": "blk_animal_cta_rdv",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Prendre rendez-vous pour ce chien"
+            },
+            {
+              "key": "actionId",
+              "value": "act_animal_prendre_rdv"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_animal_nouveau",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Ajouter un chien"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_animal_nouveau_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Nouvelle fiche"
+            },
+            {
+              "key": "subtitle",
+              "value": "Photo, race, pelage et consignes : tout ce dont le toiletteur a besoin."
+            }
+          ]
+        },
+        {
+          "id": "blk_animal_nouveau_form",
+          "blockType": "form",
+          "entityId": "ent_chien",
+          "props": [
+            {
+              "key": "title",
+              "value": "Fiche du chien"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_chien_nom",
+                "fld_chien_photo",
+                "fld_chien_race",
+                "fld_chien_date_naissance",
+                "fld_chien_sexe",
+                "fld_chien_taille",
+                "fld_chien_pelage",
+                "fld_chien_poids",
+                "fld_chien_caractere",
+                "fld_chien_notes",
+                "fld_chien_proprietaire",
+                "fld_chien_actif"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Enregistrer la fiche"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Préparation du formulaire…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Enregistrement impossible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "La fiche n'a pas pu être enregistrée. Vérifiez les champs obligatoires."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_rendezvous",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Rendez-vous"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_rdv_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Vos rendez-vous"
+            },
+            {
+              "key": "subtitle",
+              "value": "Demandés, confirmés, terminés ou annulés. Le règlement se fait sur place au salon."
+            }
+          ]
+        },
+        {
+          "id": "blk_rdv_liste",
+          "blockType": "list",
+          "entityId": "ent_rendezvous",
+          "props": [
+            {
+              "key": "title",
+              "value": "Tous les rendez-vous"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_rdv_chien"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_rdv_prestation"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_rdv_date"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_rdv_statut"
+            },
+            {
+              "key": "userFilterFieldIds",
+              "value": [
+                "fld_rdv_statut",
+                "fld_rdv_toiletteur"
+              ]
+            },
+            {
+              "key": "userFilterOperators",
+              "value": [
+                "eq",
+                "contains"
+              ]
+            },
+            {
+              "key": "userFilterInputTypes",
+              "value": [
+                "choice",
+                "text"
+              ]
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_rdv_date"
+            },
+            {
+              "key": "sortDirection",
+              "value": "desc"
+            },
+            {
+              "key": "pageSize",
+              "value": 20
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun rendez-vous"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Vos demandes de rendez-vous apparaîtront ici."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement des rendez-vous…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Rendez-vous indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "La liste des rendez-vous n'a pas pu être chargée."
+            }
+          ]
+        },
+        {
+          "id": "blk_rdv_vide",
+          "blockType": "empty_state",
+          "visibleWhen": {
+            "kind": "entity_empty",
+            "entityId": "ent_rendezvous"
+          },
+          "props": [
+            {
+              "key": "title",
+              "value": "Pas encore de rendez-vous"
+            },
+            {
+              "key": "message",
+              "value": "Choisissez une prestation et un créneau pour le prochain toilettage."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Prendre rendez-vous"
+            },
+            {
+              "key": "actionId",
+              "value": "act_rdv_vide_nouveau"
+            }
+          ]
+        },
+        {
+          "id": "blk_rdv_cta_nouveau",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Prendre un nouveau rendez-vous"
+            },
+            {
+              "key": "actionId",
+              "value": "act_rdv_liste_nouveau"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_rdv_nouveau",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Prendre rendez-vous"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_rdv_nouveau_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Prendre rendez-vous"
+            },
+            {
+              "key": "subtitle",
+              "value": "Le paiement s'effectue uniquement sur place, le jour du toilettage."
+            }
+          ]
+        },
+        {
+          "id": "blk_rdv_nouveau_tarif",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Estimation tarifaire"
+            },
+            {
+              "key": "subtitle",
+              "value": "Calcul du tarif indicatif selon la taille et le pelage…"
+            }
+          ]
+        },
+        {
+          "id": "blk_rdv_nouveau_prestations",
+          "blockType": "list",
+          "entityId": "ent_prestation",
+          "props": [
+            {
+              "key": "title",
+              "value": "Prestations disponibles"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_prestation_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_prestation_categorie"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_prestation_prix"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_prestation_duree"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_prestation_photo"
+            },
+            {
+              "key": "filterFieldId",
+              "value": "fld_prestation_disponible"
+            },
+            {
+              "key": "filterOperator",
+              "value": "eq"
+            },
+            {
+              "key": "filterValue",
+              "value": "true"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_prestation_prix"
+            },
+            {
+              "key": "sortDirection",
+              "value": "asc"
+            },
+            {
+              "key": "pageSize",
+              "value": 6
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucune prestation disponible"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Le catalogue du salon est momentanément vide."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement des prestations…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Prestations indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Le catalogue n'a pas pu être chargé."
+            }
+          ]
+        },
+        {
+          "id": "blk_rdv_nouveau_form",
+          "blockType": "form",
+          "entityId": "ent_rendezvous",
+          "props": [
+            {
+              "key": "title",
+              "value": "Votre demande"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_rdv_reference",
+                "fld_rdv_chien",
+                "fld_rdv_prestation",
+                "fld_rdv_date",
+                "fld_rdv_statut",
+                "fld_rdv_toiletteur",
+                "fld_rdv_mode_paiement",
+                "fld_rdv_demandes"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Confirmer la demande de rendez-vous"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Préparation du formulaire…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Demande impossible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Votre demande n'a pas pu être enregistrée. Vérifiez le chien, la prestation et la date."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_rdv_detail",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Détail du rendez-vous"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_rdv_detail_entete",
+          "blockType": "detail_header",
+          "entityId": "ent_rendezvous",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_rdv_chien"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_rdv_prestation"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_rdv_date"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_rdv_statut",
+                "fld_rdv_mode_paiement"
+              ]
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du rendez-vous…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Rendez-vous indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Ce rendez-vous n'a pas pu être chargé."
+            }
+          ]
+        },
+        {
+          "id": "blk_rdv_detail_paiement",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Règlement sur place"
+            },
+            {
+              "key": "subtitle",
+              "value": "Espèces, carte ou chèque au salon, à la fin du toilettage. Aucun paiement en ligne."
+            }
+          ]
+        },
+        {
+          "id": "blk_rdv_detail_form",
+          "blockType": "form",
+          "entityId": "ent_rendezvous",
+          "props": [
+            {
+              "key": "title",
+              "value": "Modifier le rendez-vous"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_rdv_date",
+                "fld_rdv_prestation",
+                "fld_rdv_toiletteur",
+                "fld_rdv_mode_paiement",
+                "fld_rdv_demandes"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Enregistrer les modifications"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du formulaire…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Modification impossible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Un rendez-vous terminé ne peut plus être modifié."
+            }
+          ]
+        },
+        {
+          "id": "blk_rdv_detail_cta_annuler",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Annuler ce rendez-vous"
+            },
+            {
+              "key": "actionId",
+              "value": "act_rdv_annuler"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_prestations",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Prestations"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_prestations_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Prestations du salon"
+            },
+            {
+              "key": "subtitle",
+              "value": "Bains, tontes, coupes ciseaux et forfaits complets. Prix indicatifs, réglés sur place."
+            }
+          ]
+        },
+        {
+          "id": "blk_prestations_liste",
+          "blockType": "list",
+          "entityId": "ent_prestation",
+          "props": [
+            {
+              "key": "title",
+              "value": "Catalogue"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_prestation_nom"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_prestation_description"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_prestation_prix"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_prestation_categorie"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_prestation_photo"
+            },
+            {
+              "key": "searchFieldId",
+              "value": "fld_prestation_nom"
+            },
+            {
+              "key": "searchPlaceholder",
+              "value": "Rechercher une prestation (bain, tonte, forfait…)"
+            },
+            {
+              "key": "userFilterFieldIds",
+              "value": [
+                "fld_prestation_categorie",
+                "fld_prestation_taille_conseillee",
+                "fld_prestation_nom"
+              ]
+            },
+            {
+              "key": "userFilterOperators",
+              "value": [
+                "eq",
+                "eq",
+                "contains"
+              ]
+            },
+            {
+              "key": "userFilterInputTypes",
+              "value": [
+                "choice",
+                "choice",
+                "text"
+              ]
+            },
+            {
+              "key": "filterFieldId",
+              "value": "fld_prestation_disponible"
+            },
+            {
+              "key": "filterOperator",
+              "value": "eq"
+            },
+            {
+              "key": "filterValue",
+              "value": "true"
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_prestation_prix"
+            },
+            {
+              "key": "sortDirection",
+              "value": "asc"
+            },
+            {
+              "key": "pageSize",
+              "value": 20
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Catalogue vide"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Aucune prestation n'est proposée pour le moment."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du catalogue…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Catalogue indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Les prestations n'ont pas pu être chargées."
+            }
+          ]
+        },
+        {
+          "id": "blk_prestations_cta_rdv",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Réserver une prestation"
+            },
+            {
+              "key": "actionId",
+              "value": "act_prestations_prendre_rdv"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_vaccinations",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Rappels de vaccination"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_vaccinations_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Vaccins et rappels"
+            },
+            {
+              "key": "subtitle",
+              "value": "Le salon exige un carnet à jour : suivez ici les dates de rappel de chaque chien."
+            }
+          ]
+        },
+        {
+          "id": "blk_vaccinations_liste",
+          "blockType": "list",
+          "entityId": "ent_vaccination",
+          "props": [
+            {
+              "key": "title",
+              "value": "Vaccinations enregistrées"
+            },
+            {
+              "key": "titleFieldId",
+              "value": "fld_vac_libelle"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_vac_chien"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_vac_date_rappel"
+            },
+            {
+              "key": "badgeFieldId",
+              "value": "fld_vac_statut"
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_vac_carnet"
+            },
+            {
+              "key": "searchFieldId",
+              "value": "fld_vac_libelle"
+            },
+            {
+              "key": "searchPlaceholder",
+              "value": "Rechercher un vaccin"
+            },
+            {
+              "key": "userFilterFieldIds",
+              "value": [
+                "fld_vac_statut",
+                "fld_vac_type"
+              ]
+            },
+            {
+              "key": "userFilterOperators",
+              "value": [
+                "eq",
+                "eq"
+              ]
+            },
+            {
+              "key": "userFilterInputTypes",
+              "value": [
+                "choice",
+                "choice"
+              ]
+            },
+            {
+              "key": "sortFieldId",
+              "value": "fld_vac_date_rappel"
+            },
+            {
+              "key": "sortDirection",
+              "value": "asc"
+            },
+            {
+              "key": "pageSize",
+              "value": 20
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Aucun vaccin enregistré"
+            },
+            {
+              "key": "emptyMessage",
+              "value": "Ajoutez un vaccin pour suivre sa date de rappel."
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement des vaccinations…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Vaccinations indisponibles"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Les rappels de vaccination n'ont pas pu être chargés."
+            }
+          ]
+        },
+        {
+          "id": "blk_vaccinations_vide",
+          "blockType": "empty_state",
+          "visibleWhen": {
+            "kind": "entity_empty",
+            "entityId": "ent_vaccination"
+          },
+          "props": [
+            {
+              "key": "title",
+              "value": "Carnet vide"
+            },
+            {
+              "key": "message",
+              "value": "Renseignez ci-dessous le premier vaccin de votre chien pour activer les rappels."
+            }
+          ]
+        },
+        {
+          "id": "blk_vaccinations_form",
+          "blockType": "form",
+          "entityId": "ent_vaccination",
+          "props": [
+            {
+              "key": "title",
+              "value": "Ajouter un vaccin"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_vac_libelle",
+                "fld_vac_chien",
+                "fld_vac_type",
+                "fld_vac_carnet",
+                "fld_vac_date_injection",
+                "fld_vac_date_rappel",
+                "fld_vac_statut",
+                "fld_vac_veterinaire",
+                "fld_vac_notes"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Enregistrer le vaccin"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Préparation du formulaire…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Enregistrement impossible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Le vaccin n'a pas pu être enregistré. Vérifiez les dates d'injection et de rappel."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_vaccination_detail",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Détail du vaccin"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_vaccination_entete",
+          "blockType": "detail_header",
+          "entityId": "ent_vaccination",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_vac_libelle"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_vac_chien"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_vac_date_rappel"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_vac_statut",
+                "fld_vac_type"
+              ]
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_vac_carnet"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du vaccin…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Vaccin indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Ce rappel de vaccination n'a pas pu être chargé."
+            }
+          ]
+        },
+        {
+          "id": "blk_vaccination_info",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Pourquoi ce rappel ?"
+            },
+            {
+              "key": "subtitle",
+              "value": "Un carnet à jour est demandé à chaque passage au salon, pour la sécurité de tous les chiens."
+            }
+          ]
+        },
+        {
+          "id": "blk_vaccination_form_maj",
+          "blockType": "form",
+          "entityId": "ent_vaccination",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mettre à jour le rappel"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_vac_carnet",
+                "fld_vac_date_injection",
+                "fld_vac_date_rappel",
+                "fld_vac_statut",
+                "fld_vac_veterinaire",
+                "fld_vac_notes"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Enregistrer le rappel"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement du formulaire…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Mise à jour impossible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Le rappel n'a pas pu être mis à jour."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_visite_detail",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Détail de la visite"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_visite_entete",
+          "blockType": "detail_header",
+          "entityId": "ent_visite",
+          "props": [
+            {
+              "key": "titleFieldId",
+              "value": "fld_visite_libelle"
+            },
+            {
+              "key": "subtitleFieldId",
+              "value": "fld_visite_prestation"
+            },
+            {
+              "key": "trailingFieldId",
+              "value": "fld_visite_montant"
+            },
+            {
+              "key": "badgeFieldIds",
+              "value": [
+                "fld_visite_mode_paiement",
+                "fld_visite_date"
+              ]
+            },
+            {
+              "key": "imageFieldId",
+              "value": "fld_visite_photo"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de la visite…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Visite indisponible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Cette visite n'a pas pu être chargée."
+            }
+          ]
+        },
+        {
+          "id": "blk_visite_info",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Compte rendu du toilettage"
+            },
+            {
+              "key": "subtitle",
+              "value": "Montant réglé sur place au salon, avec la prochaine visite conseillée par le toiletteur."
+            }
+          ]
+        },
+        {
+          "id": "blk_visite_cta_rdv",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Reprendre rendez-vous"
+            },
+            {
+              "key": "actionId",
+              "value": "act_visite_reprendre_rdv"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_compte",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Mon compte"
+        }
+      ],
+      "blocks": [
+        {
+          "id": "blk_compte_header",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mon compte"
+            },
+            {
+              "key": "subtitle",
+              "value": "Vos coordonnées, vos préférences de rappel et la suppression de votre compte."
+            }
+          ]
+        },
+        {
+          "id": "blk_compte_form",
+          "blockType": "form",
+          "entityId": "ent_client",
+          "props": [
+            {
+              "key": "title",
+              "value": "Mes coordonnées"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_client_nom",
+                "fld_client_email",
+                "fld_client_telephone",
+                "fld_client_adresse",
+                "fld_client_ville",
+                "fld_client_rappels_actifs",
+                "fld_client_notes"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Enregistrer mes informations"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Chargement de vos informations…"
+            },
+            {
+              "key": "errorTitle",
+              "value": "Enregistrement impossible"
+            },
+            {
+              "key": "errorMessage",
+              "value": "Vérifiez votre e-mail et votre numéro de téléphone."
+            }
+          ]
+        },
+        {
+          "id": "blk_compte_paiement",
+          "blockType": "header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Paiement"
+            },
+            {
+              "key": "subtitle",
+              "value": "Le salon encaisse uniquement sur place : espèces, carte ou chèque à la fin du toilettage."
+            }
+          ]
+        },
+        {
+          "id": "blk_compte_cta_supprimer",
+          "blockType": "button",
+          "props": [
+            {
+              "key": "label",
+              "value": "Supprimer mon compte"
+            },
+            {
+              "key": "actionId",
+              "value": "act_compte_supprimer"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "act_accueil_prendre_rdv",
+      "name": "Ouvrir la prise de rendez-vous depuis l'accueil",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_accueil_cta_rdv"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_rdv_nouveau"
+      }
+    },
+    {
+      "id": "act_accueil_voir_prestations",
+      "name": "Ouvrir le catalogue des prestations depuis l'accueil",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_accueil_cta_prestations"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_prestations"
+      }
+    },
+    {
+      "id": "act_accueil_rdv_ouvrir_detail",
+      "name": "Ouvrir le détail d'un rendez-vous depuis l'accueil",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_accueil_rdv_liste"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_rdv_detail"
+      }
+    },
+    {
+      "id": "act_accueil_rappels_vaccination",
+      "name": "Calculer le message de rappel de vaccination à l'ouverture de l'accueil",
+      "trigger": {
+        "kind": "lifecycle",
+        "event": "screen_open",
+        "screenId": "scr_accueil"
+      },
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_rappels_vaccination",
+        "binding": {
+          "inputs": [
+            {
+              "port": "vaccinations",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_vaccination"
+              }
+            },
+            {
+              "port": "joursAvantRappel",
+              "source": {
+                "kind": "literal",
+                "value": 30
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "port": "messageRappel",
+              "blockId": "blk_accueil_rappels",
+              "prop": "subtitle"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "act_accueil_prochain_creneau",
+      "name": "Calculer le prochain créneau libre du salon",
+      "trigger": {
+        "kind": "lifecycle",
+        "event": "screen_open",
+        "screenId": "scr_accueil"
+      },
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_prochain_creneau",
+        "binding": {
+          "inputs": [
+            {
+              "port": "rendezvous",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_rendezvous"
+              }
+            },
+            {
+              "port": "prestations",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_prestation"
+              }
+            },
+            {
+              "port": "heuresOuverture",
+              "source": {
+                "kind": "literal",
+                "value": "Mardi-Samedi 9h00-18h30"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "port": "prochainCreneau",
+              "blockId": "blk_accueil_creneau",
+              "prop": "subtitle"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "act_animaux_ouvrir_fiche",
+      "name": "Ouvrir la fiche d'un chien depuis la liste",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_animaux_liste"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_animal_detail"
+      }
+    },
+    {
+      "id": "act_animaux_ajouter",
+      "name": "Ouvrir le formulaire d'ajout d'un chien",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_animaux_cta_ajouter"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_animal_nouveau"
+      }
+    },
+    {
+      "id": "act_animaux_vide_ajouter",
+      "name": "Ajouter un premier chien depuis l'état vide",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_animaux_vide"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_animal_nouveau"
+      }
+    },
+    {
+      "id": "act_animal_nouveau_enregistrer",
+      "name": "Enregistrer la nouvelle fiche de chien",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_animal_nouveau_form"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_chien",
+        "operation": "create",
+        "thenScreenId": "scr_animaux"
+      }
+    },
+    {
+      "id": "act_animal_maj_enregistrer",
+      "name": "Enregistrer les modifications de la fiche du chien",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_animal_form_maj"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_chien",
+        "operation": "update",
+        "thenScreenId": "scr_animal_detail"
+      }
+    },
+    {
+      "id": "act_animal_resume_visites",
+      "name": "Résumer l'historique des visites du chien",
+      "trigger": {
+        "kind": "lifecycle",
+        "event": "screen_open",
+        "screenId": "scr_animal_detail"
+      },
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_resume_historique",
+        "binding": {
+          "inputs": [
+            {
+              "port": "visites",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_visite"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "port": "resumeVisites",
+              "blockId": "blk_animal_resume",
+              "prop": "subtitle"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "act_animal_ouvrir_visite",
+      "name": "Ouvrir le détail d'une visite depuis l'historique du chien",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_animal_visites"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_visite_detail"
+      }
+    },
+    {
+      "id": "act_animal_ouvrir_vaccin",
+      "name": "Ouvrir le détail d'un vaccin depuis la fiche du chien",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_animal_vaccins"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_vaccination_detail"
+      }
+    },
+    {
+      "id": "act_animal_prendre_rdv",
+      "name": "Prendre rendez-vous pour ce chien",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_animal_cta_rdv"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_rdv_nouveau"
+      }
+    },
+    {
+      "id": "act_rdv_ouvrir_detail",
+      "name": "Ouvrir le détail d'un rendez-vous depuis la liste",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_rdv_liste"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_rdv_detail"
+      }
+    },
+    {
+      "id": "act_rdv_liste_nouveau",
+      "name": "Ouvrir la prise de rendez-vous depuis la liste",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_rdv_cta_nouveau"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_rdv_nouveau"
+      }
+    },
+    {
+      "id": "act_rdv_vide_nouveau",
+      "name": "Prendre un premier rendez-vous depuis l'état vide",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_rdv_vide"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_rdv_nouveau"
+      }
+    },
+    {
+      "id": "act_rdv_nouveau_estimation",
+      "name": "Estimer le tarif indicatif du toilettage",
+      "trigger": {
+        "kind": "lifecycle",
+        "event": "screen_open",
+        "screenId": "scr_rdv_nouveau"
+      },
+      "effect": {
+        "kind": "slot",
+        "slotId": "slot_estimation_tarif",
+        "binding": {
+          "inputs": [
+            {
+              "port": "chiens",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_chien"
+              }
+            },
+            {
+              "port": "prestations",
+              "source": {
+                "kind": "entity_rows",
+                "entityId": "ent_prestation"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "port": "libelleTarif",
+              "blockId": "blk_rdv_nouveau_tarif",
+              "prop": "subtitle"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "act_rdv_nouveau_choisir_prestation",
+      "name": "Choisir une prestation depuis la liste de la prise de rendez-vous",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_rdv_nouveau_prestations"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_rdv_nouveau"
+      }
+    },
+    {
+      "id": "act_rdv_nouveau_enregistrer",
+      "name": "Enregistrer la demande de rendez-vous",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_rdv_nouveau_form"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_rendezvous",
+        "operation": "create",
+        "thenScreenId": "scr_rendezvous"
+      }
+    },
+    {
+      "id": "act_rdv_detail_modifier",
+      "name": "Enregistrer les modifications du rendez-vous",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_rdv_detail_form"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_rendezvous",
+        "operation": "update",
+        "thenScreenId": "scr_rendezvous"
+      }
+    },
+    {
+      "id": "act_rdv_annuler",
+      "name": "Annuler le rendez-vous",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_rdv_detail_cta_annuler"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_rendezvous",
+        "operation": "update",
+        "thenScreenId": "scr_rendezvous"
+      }
+    },
+    {
+      "id": "act_prestations_prendre_rdv",
+      "name": "Réserver une prestation",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_prestations_cta_rdv"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_rdv_nouveau"
+      }
+    },
+    {
+      "id": "act_prestations_ouvrir_rdv",
+      "name": "Réserver la prestation pressée dans le catalogue",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_prestations_liste"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_rdv_nouveau"
+      }
+    },
+    {
+      "id": "act_vaccinations_ouvrir_detail",
+      "name": "Ouvrir le détail d'un rappel de vaccination",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_vaccinations_liste"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_vaccination_detail"
+      }
+    },
+    {
+      "id": "act_vaccination_enregistrer",
+      "name": "Enregistrer un nouveau vaccin",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_vaccinations_form"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_vaccination",
+        "operation": "create",
+        "thenScreenId": "scr_vaccinations"
+      }
+    },
+    {
+      "id": "act_vaccination_maj_enregistrer",
+      "name": "Mettre à jour le rappel de vaccination",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_vaccination_form_maj"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_vaccination",
+        "operation": "update",
+        "thenScreenId": "scr_vaccinations"
+      }
+    },
+    {
+      "id": "act_visite_reprendre_rdv",
+      "name": "Reprendre rendez-vous après une visite",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_visite_cta_rdv"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_rdv_nouveau"
+      }
+    },
+    {
+      "id": "act_compte_enregistrer",
+      "name": "Enregistrer mes coordonnées",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_compte_form"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_client",
+        "operation": "update",
+        "thenScreenId": "scr_compte"
+      }
+    },
+    {
+      "id": "act_compte_supprimer",
+      "name": "Supprimer mon compte",
+      "trigger": {
+        "kind": "ui",
+        "blockId": "blk_compte_cta_supprimer"
+      },
+      "effect": {
+        "kind": "mutation",
+        "entityId": "ent_client",
+        "operation": "delete",
+        "thenScreenId": "scr_accueil"
+      }
+    }
+  ],
+  "capabilities": [
+    {
+      "capability": "auth",
+      "config": [
+        {
+          "key": "providers",
+          "value": [
+            "email_password"
+          ]
+        },
+        {
+          "key": "accountDeletionEnabled",
+          "value": true
+        },
+        {
+          "key": "defaultLocale",
+          "value": "fr"
+        }
+      ]
+    },
+    {
+      "capability": "camera",
+      "config": [
+        {
+          "key": "usage",
+          "value": "photo_fiche_chien"
+        },
+        {
+          "key": "videoEnabled",
+          "value": false
+        }
+      ]
+    },
+    {
+      "capability": "media_upload",
+      "config": [
+        {
+          "key": "mediaTypes",
+          "value": [
+            "image"
+          ]
+        },
+        {
+          "key": "maxFileSizeMb",
+          "value": 8
+        },
+        {
+          "key": "usage",
+          "value": "photo_chien_carnet_vaccination"
+        }
+      ]
+    },
+    {
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "usage",
+          "value": "rappels_vaccination_et_rendezvous"
+        },
+        {
+          "key": "scheduledLocalReminders",
+          "value": true
+        }
+      ]
+    },
+    {
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "cachedEntities",
+          "value": [
+            "ent_chien",
+            "ent_vaccination",
+            "ent_visite",
+            "ent_rendezvous"
+          ]
+        },
+        {
+          "key": "maxCacheMb",
+          "value": 50
+        }
+      ]
+    }
+  ],
+  "permissions": [
+    {
+      "platform": "ios",
+      "permission": "NSCameraUsageDescription",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "L'appareil photo sert à photographier votre chien pour sa fiche de toilettage et à prendre en photo son carnet de vaccination."
+        }
+      ],
+      "requiredByCapability": "camera"
+    },
+    {
+      "platform": "ios",
+      "permission": "NSMicrophoneUsageDescription",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "Le microphone n'est sollicité que par le module de prise de vue de l'appareil ; aucun son n'est enregistré par le salon."
+        }
+      ],
+      "requiredByCapability": "camera"
+    },
+    {
+      "platform": "android",
+      "permission": "android.permission.CAMERA",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "L'appareil photo sert à photographier votre chien pour sa fiche de toilettage et à prendre en photo son carnet de vaccination."
+        }
+      ],
+      "requiredByCapability": "camera"
+    },
+    {
+      "platform": "android",
+      "permission": "android.permission.RECORD_AUDIO",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "Le microphone n'est sollicité que par le module de prise de vue de l'appareil ; aucun son n'est enregistré par le salon."
+        }
+      ],
+      "requiredByCapability": "camera"
+    },
+    {
+      "platform": "ios",
+      "permission": "NSPhotoLibraryUsageDescription",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "L'accès à vos photos permet de choisir une image existante de votre chien ou de son carnet de vaccination pour l'ajouter à sa fiche."
+        }
+      ],
+      "requiredByCapability": "media_upload"
+    },
+    {
+      "platform": "android",
+      "permission": "android.permission.READ_MEDIA_IMAGES",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "L'accès à vos photos permet de choisir une image existante de votre chien ou de son carnet de vaccination pour l'ajouter à sa fiche."
+        }
+      ],
+      "requiredByCapability": "media_upload"
+    },
+    {
+      "platform": "android",
+      "permission": "android.permission.POST_NOTIFICATIONS",
+      "reason": [
+        {
+          "locale": "fr",
+          "text": "Les notifications servent à vous rappeler les rappels de vaccination de votre chien et vos rendez-vous de toilettage au salon."
+        }
+      ],
+      "requiredByCapability": "push_notifications"
+    }
+  ],
+  "integrations": [
+    {
+      "id": "intg_api_pattesdouces",
+      "providerClass": "rest_api",
+      "config": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.pattesdouces.app"
+        },
+        {
+          "key": "domain",
+          "value": "api.pattesdouces.app"
+        },
+        {
+          "key": "authMode",
+          "value": "bearer_token_runtime"
+        },
+        {
+          "key": "timeoutSeconds",
+          "value": 20
+        },
+        {
+          "key": "retryCount",
+          "value": 2
+        },
+        {
+          "key": "defaultLocale",
+          "value": "fr"
+        },
+        {
+          "key": "resources",
+          "value": [
+            "clients",
+            "chiens",
+            "prestations",
+            "rendezvous",
+            "vaccinations",
+            "visites"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "intg_auth_clients",
+      "providerClass": "managed_auth",
+      "capability": "auth",
+      "config": [
+        {
+          "key": "domain",
+          "value": "api.pattesdouces.app"
+        },
+        {
+          "key": "providers",
+          "value": [
+            "email_password"
+          ]
+        },
+        {
+          "key": "accountDeletionEndpoint",
+          "value": "/v1/compte/suppression"
+        },
+        {
+          "key": "sessionDurationDays",
+          "value": 30
+        },
+        {
+          "key": "locale",
+          "value": "fr"
+        }
+      ]
+    },
+    {
+      "id": "intg_rappels_push",
+      "providerClass": "push_service",
+      "capability": "push_notifications",
+      "config": [
+        {
+          "key": "domain",
+          "value": "api.pattesdouces.app"
+        },
+        {
+          "key": "registrationEndpoint",
+          "value": "/v1/notifications/appareils"
+        },
+        {
+          "key": "scheduledLocalReminders",
+          "value": true
+        },
+        {
+          "key": "reminderTopics",
+          "value": [
+            "rappel_vaccination",
+            "rappel_rendezvous"
+          ]
+        },
+        {
+          "key": "defaultLeadDays",
+          "value": 30
+        },
+        {
+          "key": "locale",
+          "value": "fr"
+        }
+      ]
+    },
+    {
+      "id": "intg_medias_fiches",
+      "providerClass": "media_storage",
+      "capability": "media_upload",
+      "config": [
+        {
+          "key": "domain",
+          "value": "api.pattesdouces.app"
+        },
+        {
+          "key": "uploadEndpoint",
+          "value": "/v1/medias"
+        },
+        {
+          "key": "acceptedMimeTypes",
+          "value": [
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+          ]
+        },
+        {
+          "key": "maxFileSizeMb",
+          "value": 8
+        },
+        {
+          "key": "thumbnailWidthPx",
+          "value": 320
+        }
+      ]
+    },
+    {
+      "id": "intg_cache_hors_ligne",
+      "providerClass": "local_store",
+      "capability": "offline_storage",
+      "config": [
+        {
+          "key": "cachedEntities",
+          "value": [
+            "ent_chien",
+            "ent_vaccination",
+            "ent_visite",
+            "ent_rendezvous"
+          ]
+        },
+        {
+          "key": "maxCacheMb",
+          "value": 50
+        },
+        {
+          "key": "evictionPolicy",
+          "value": "lru"
+        },
+        {
+          "key": "staleAfterHours",
+          "value": 72
+        }
+      ]
+    }
+  ],
+  "expectedTests": [
+    {
+      "id": "test_animaux_recherche_nom",
+      "description": "Sur l'écran scr_animaux, saisir « Ma » dans le champ de recherche de la liste blk_animaux_liste ne laisse que les fiches dont fld_chien_nom contient « Ma » : le filtrage est réel.",
+      "kind": "deterministic",
+      "targetId": "scr_animaux"
+    },
+    {
+      "id": "test_animaux_filtres_utilisateur",
+      "description": "Sur scr_animaux, les trois filtres utilisateur de blk_animaux_liste (race, taille, type de pelage) se combinent en conjonction ; une valeur vide laisse le filtre inactif.",
+      "kind": "deterministic",
+      "targetId": "scr_animaux"
+    },
+    {
+      "id": "test_animaux_photo_vignette",
+      "description": "Sur scr_animaux, chaque ligne de blk_animaux_liste affiche la vignette du champ fld_chien_photo à gauche du nom et de la race.",
+      "kind": "deterministic",
+      "targetId": "scr_animaux"
+    },
+    {
+      "id": "test_animaux_etat_vide",
+      "description": "Sur scr_animaux, lorsqu'aucun chien n'est enregistré, blk_animaux_vide s'affiche avec son action « Ajouter un chien » ; il reste masqué dès qu'une fiche existe.",
+      "kind": "deterministic",
+      "targetId": "scr_animaux"
+    },
+    {
+      "id": "test_animaux_ligne_ouvre_fiche",
+      "description": "Appuyer sur une ligne de la liste des chiens ouvre scr_animal_detail avec la fiche du chien pressé, et non la première de la liste.",
+      "kind": "e2e",
+      "targetId": "act_animaux_ouvrir_fiche"
+    },
+    {
+      "id": "test_animal_detail_photo_et_badges",
+      "description": "Sur scr_animal_detail, l'en-tête blk_animal_entete affiche la photo du chien, son nom, sa race, son poids et les badges taille, pelage et caractère.",
+      "kind": "deterministic",
+      "targetId": "scr_animal_detail"
+    },
+    {
+      "id": "test_animal_nouveau_enregistrement",
+      "description": "Soumettre le formulaire de nouvelle fiche crée une instance de ent_chien puis redirige vers scr_animaux, où la fiche apparaît dans la liste.",
+      "kind": "e2e",
+      "targetId": "act_animal_nouveau_enregistrer"
+    },
+    {
+      "id": "test_animal_fiche_regle_complete",
+      "description": "La création d'une instance de ent_chien sans nom, sans race, sans taille, sans pelage ou sans propriétaire est refusée avant écriture par rule_chien_fiche_complete.",
+      "kind": "deterministic",
+      "targetId": "ent_chien"
+    },
+    {
+      "id": "test_animal_maj_enregistrement",
+      "description": "Modifier la photo, le poids, le caractère ou les consignes depuis la fiche met à jour l'instance de ent_chien et revient sur scr_animal_detail.",
+      "kind": "e2e",
+      "targetId": "act_animal_maj_enregistrer"
+    },
+    {
+      "id": "test_historique_visites_scope",
+      "description": "Sur scr_animal_detail, l'historique blk_animal_visites ne contient que les visites dont fld_visite_chien pointe vers le chien courant, triées de la plus récente à la plus ancienne.",
+      "kind": "deterministic",
+      "targetId": "scr_animal_detail"
+    },
+    {
+      "id": "test_historique_ligne_ouvre_visite",
+      "description": "Appuyer sur une ligne de l'historique des visites ouvre scr_visite_detail sur la visite pressée, avec sa photo après toilettage et son montant réglé.",
+      "kind": "e2e",
+      "targetId": "act_animal_ouvrir_visite"
+    },
+    {
+      "id": "test_animal_vaccins_scope",
+      "description": "Sur scr_animal_detail, la liste blk_animal_vaccins est bornée à l'animal courant via fld_vac_chien et triée par date de rappel croissante.",
+      "kind": "deterministic",
+      "targetId": "scr_animal_detail"
+    },
+    {
+      "id": "test_resume_historique_slot",
+      "description": "À l'ouverture de scr_animal_detail, l'action act_animal_resume_visites invoque slot_resume_historique avec les visites et sa sortie resumeVisites alimente le sous-titre de blk_animal_resume.",
+      "kind": "deterministic",
+      "targetId": "act_animal_resume_visites"
+    },
+    {
+      "id": "test_rdv_creation",
+      "description": "Soumettre le formulaire de prise de rendez-vous crée une instance de ent_rendezvous puis redirige vers scr_rendezvous, où la demande apparaît.",
+      "kind": "e2e",
+      "targetId": "act_rdv_nouveau_enregistrer"
+    },
+    {
+      "id": "test_rdv_regle_complet",
+      "description": "Une instance de ent_rendezvous sans chien, sans prestation, sans date ou avec un statut hors liste est rejetée par rule_rdv_complet avant toute écriture.",
+      "kind": "deterministic",
+      "targetId": "ent_rendezvous"
+    },
+    {
+      "id": "test_rdv_paiement_sur_place",
+      "description": "Sur ent_rendezvous, seuls les modes « Espèces sur place », « Carte sur place » et « Chèque sur place » sont acceptés par rule_rdv_paiement_sur_place : aucun règlement en ligne n'est enregistrable.",
+      "kind": "deterministic",
+      "targetId": "ent_rendezvous"
+    },
+    {
+      "id": "test_rdv_termine_non_modifiable",
+      "description": "Une instance de ent_rendezvous au statut « Terminé » ne peut être ni modifiée ni annulée : rule_rdv_modification_interdite bloque la mutation.",
+      "kind": "deterministic",
+      "targetId": "ent_rendezvous"
+    },
+    {
+      "id": "test_rdv_ligne_ouvre_detail",
+      "description": "Appuyer sur une ligne de la liste des rendez-vous ouvre scr_rdv_detail sur le rendez-vous pressé.",
+      "kind": "e2e",
+      "targetId": "act_rdv_ouvrir_detail"
+    },
+    {
+      "id": "test_rdv_detail_modification",
+      "description": "Modifier la date, la prestation ou le mode de règlement depuis le détail met à jour le rendez-vous puis revient sur scr_rendezvous.",
+      "kind": "e2e",
+      "targetId": "act_rdv_detail_modifier"
+    },
+    {
+      "id": "test_rdv_annulation",
+      "description": "Le bouton « Annuler ce rendez-vous » exécute bien act_rdv_annuler (mutation update) et non une simple navigation.",
+      "kind": "e2e",
+      "targetId": "act_rdv_annuler"
+    },
+    {
+      "id": "test_rdv_estimation_tarif_slot",
+      "description": "À l'ouverture de scr_rdv_nouveau, l'action act_rdv_nouveau_estimation invoque slot_estimation_tarif avec les chiens et les prestations ; sa sortie libelleTarif alimente le sous-titre de blk_rdv_nouveau_tarif.",
+      "kind": "deterministic",
+      "targetId": "act_rdv_nouveau_estimation"
+    },
+    {
+      "id": "test_prestations_recherche_et_filtres",
+      "description": "Sur scr_prestations, la liste blk_prestations_liste filtre réellement sur le nom saisi et combine les filtres catégorie, taille conseillée et nom, en n'affichant que les prestations disponibles.",
+      "kind": "deterministic",
+      "targetId": "scr_prestations"
+    },
+    {
+      "id": "test_prestations_photos",
+      "description": "Sur scr_prestations, chaque prestation affiche sa photo en vignette, son prix indicatif à droite et sa catégorie en badge.",
+      "kind": "deterministic",
+      "targetId": "scr_prestations"
+    },
+    {
+      "id": "test_vaccination_creation",
+      "description": "Enregistrer un vaccin depuis l'écran des rappels crée une instance de ent_vaccination puis rafraîchit scr_vaccinations avec la nouvelle date de rappel.",
+      "kind": "e2e",
+      "targetId": "act_vaccination_enregistrer"
+    },
+    {
+      "id": "test_vaccination_regle_rappel",
+      "description": "Une instance de ent_vaccination sans chien, sans type valide, sans date d'injection ou sans date de rappel est refusée par rule_vaccination_rappel.",
+      "kind": "deterministic",
+      "targetId": "ent_vaccination"
+    },
+    {
+      "id": "test_vaccination_ligne_ouvre_detail",
+      "description": "Appuyer sur une ligne de la liste des vaccinations ouvre scr_vaccination_detail sur le rappel pressé, avec la photo du carnet.",
+      "kind": "e2e",
+      "targetId": "act_vaccinations_ouvrir_detail"
+    },
+    {
+      "id": "test_vaccination_maj",
+      "description": "Mettre à jour une date de rappel depuis le détail du vaccin écrit la modification et revient sur scr_vaccinations.",
+      "kind": "e2e",
+      "targetId": "act_vaccination_maj_enregistrer"
+    },
+    {
+      "id": "test_accueil_rappels_slot",
+      "description": "À l'ouverture de l'accueil, l'action act_accueil_rappels_vaccination invoque slot_rappels_vaccination avec les vaccinations et un seuil de 30 jours ; sa sortie messageRappel alimente le sous-titre de blk_accueil_rappels.",
+      "kind": "deterministic",
+      "targetId": "act_accueil_rappels_vaccination"
+    },
+    {
+      "id": "test_accueil_prochain_creneau_slot",
+      "description": "À l'ouverture de l'accueil, l'action act_accueil_prochain_creneau invoque slot_prochain_creneau avec rendez-vous, prestations et horaires d'ouverture ; sa sortie prochainCreneau s'affiche dans blk_accueil_creneau.",
+      "kind": "deterministic",
+      "targetId": "act_accueil_prochain_creneau"
+    },
+    {
+      "id": "test_accueil_prochains_rdv",
+      "description": "Sur scr_accueil, la liste blk_accueil_rdv_liste affiche au plus 5 rendez-vous non annulés, triés par date croissante, chaque ligne ouvrant son détail.",
+      "kind": "deterministic",
+      "targetId": "scr_accueil"
+    },
+    {
+      "id": "test_navigation_principale_persistante",
+      "description": "La barre persistante affiche les cinq destinations Accueil, Mes chiens, Rendez-vous, Vaccins et Compte dans cet ordre, sur chaque écran, en partant de scr_accueil.",
+      "kind": "e2e",
+      "targetId": "scr_accueil"
+    },
+    {
+      "id": "test_compte_enregistrement",
+      "description": "Enregistrer ses coordonnées met à jour l'instance de ent_client ; un e-mail ou un téléphone invalide est refusé par rule_client_contact_valide.",
+      "kind": "e2e",
+      "targetId": "act_compte_enregistrer"
+    },
+    {
+      "id": "test_compte_suppression",
+      "description": "Le bouton « Supprimer mon compte » exécute la suppression de l'instance de ent_client et renvoie vers scr_accueil.",
+      "kind": "e2e",
+      "targetId": "act_compte_supprimer"
+    },
+    {
+      "id": "test_contrat_api_backend",
+      "description": "Contrat de l'API du salon (intg_api_pattesdouces) : les ressources chiens, rendezvous, vaccinations et visites répondent sur api.pattesdouces.app avec les champs attendus par ent_chien, sans secret embarqué dans la configuration.",
+      "kind": "contract",
+      "targetId": "ent_chien"
+    },
+    {
+      "id": "test_contrat_medias",
+      "description": "Contrat du stockage de médias (intg_medias_fiches) : l'envoi d'une image JPEG/PNG/WebP de moins de 8 Mo retourne une référence exploitable par fld_chien_photo de ent_chien et par fld_vac_carnet.",
+      "kind": "contract",
+      "targetId": "ent_chien"
+    },
+    {
+      "id": "test_contrat_auth",
+      "description": "Contrat d'authentification (intg_auth_clients) : connexion par e-mail et mot de passe d'un ent_client, et disponibilité de l'endpoint de suppression de compte exigé par la conformité.",
+      "kind": "contract",
+      "targetId": "ent_client"
+    },
+    {
+      "id": "test_besoin_non_rendable_notification_rappel",
+      "description": "Le besoin d'envoyer une notification de rappel de vaccination sur ent_vaccination n'est pas rendable : le moteur n'exécute pas encore les effets capability (capabilitiesEmitCode: false). Les rappels restent visibles à l'écran via la liste des vaccins et le slot de rappels, mais aucune notification n'est émise.",
+      "kind": "deterministic",
+      "targetId": "ent_vaccination"
+    }
+  ],
+  "intent": {
+    "request": "Mon salon de toilettage pour chiens veut une app : fiche de chaque animal avec photo, prise de rendez-vous, rappel de vaccination, historique des visites. Paiement sur place uniquement. En français.",
+    "requestLocale": "fr",
+    "needs": [
+      {
+        "id": "need_fiche_animal",
+        "statement": "Disposer d'une fiche pour chaque animal (chien) du salon, consultable et modifiable.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "ent_chien",
+            "scr_animaux",
+            "blk_animaux_liste",
+            "scr_animal_detail",
+            "blk_animal_entete",
+            "blk_animal_form_maj",
+            "scr_animal_nouveau",
+            "blk_animal_nouveau_form",
+            "act_animaux_ouvrir_fiche",
+            "act_animal_nouveau_enregistrer",
+            "act_animal_maj_enregistrer",
+            "data_chiens"
+          ]
+        }
+      },
+      {
+        "id": "need_photo_animal",
+        "statement": "Chaque fiche d'animal porte une photo du chien, visible dans l'application.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "fld_chien_photo",
+            "blk_animaux_liste",
+            "blk_animal_entete",
+            "blk_animal_nouveau_form",
+            "blk_animal_form_maj"
+          ]
+        }
+      },
+      {
+        "id": "need_prise_rendezvous",
+        "statement": "Permettre la prise de rendez-vous de toilettage.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "ent_rendezvous",
+            "scr_rdv_nouveau",
+            "blk_rdv_nouveau_form",
+            "act_rdv_nouveau_enregistrer",
+            "rule_rdv_complet",
+            "scr_rendezvous",
+            "blk_rdv_liste",
+            "blk_rdv_cta_nouveau",
+            "act_rdv_liste_nouveau",
+            "blk_accueil_cta_rdv",
+            "act_accueil_prendre_rdv",
+            "data_rendezvous"
+          ]
+        }
+      },
+      {
+        "id": "need_suivi_rendezvous",
+        "statement": "Consulter, modifier ou annuler les rendez-vous pris auprès du salon.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "scr_rendezvous",
+            "blk_rdv_liste",
+            "act_rdv_ouvrir_detail",
+            "scr_rdv_detail",
+            "blk_rdv_detail_entete",
+            "blk_rdv_detail_form",
+            "act_rdv_detail_modifier",
+            "blk_rdv_detail_cta_annuler",
+            "act_rdv_annuler",
+            "rule_rdv_modification_interdite",
+            "blk_accueil_rdv_liste"
+          ]
+        }
+      },
+      {
+        "id": "need_suivi_vaccination",
+        "statement": "Suivre les vaccinations de chaque chien et voir les dates de rappel à venir ou dépassées.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "ent_vaccination",
+            "scr_vaccinations",
+            "blk_vaccinations_liste",
+            "blk_vaccinations_form",
+            "act_vaccination_enregistrer",
+            "scr_vaccination_detail",
+            "blk_vaccination_entete",
+            "blk_vaccination_form_maj",
+            "act_vaccination_maj_enregistrer",
+            "act_vaccinations_ouvrir_detail",
+            "blk_animal_vaccins",
+            "blk_accueil_rappels",
+            "act_accueil_rappels_vaccination",
+            "slot_rappels_vaccination",
+            "rule_vaccination_rappel",
+            "data_vaccinations"
+          ]
+        }
+      },
+      {
+        "id": "need_notification_rappel_vaccination",
+        "statement": "Alerter activement le client (notification) lorsque le rappel de vaccination de son chien approche ou est dépassé.",
+        "resolution": {
+          "kind": "unexpressible",
+          "reason": "le moteur n'exécute pas encore les effets capability (capabilitiesEmitCode: false) : la capability push_notifications est déclarée dans le document, mais aucune notification n'est réellement émise par l'application compilée. Le rappel reste seulement affiché à l'écran."
+        }
+      },
+      {
+        "id": "need_historique_visites",
+        "statement": "Conserver et consulter l'historique des visites de toilettage de chaque chien.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "ent_visite",
+            "blk_animal_visites",
+            "act_animal_ouvrir_visite",
+            "scr_visite_detail",
+            "blk_visite_entete",
+            "blk_visite_info",
+            "blk_animal_resume",
+            "act_animal_resume_visites",
+            "slot_resume_historique",
+            "rule_visite_historique",
+            "data_visites"
+          ]
+        }
+      },
+      {
+        "id": "need_paiement_sur_place",
+        "statement": "Le paiement s'effectue sur place uniquement : aucun règlement en ligne dans l'application.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "fld_rdv_mode_paiement",
+            "fld_visite_mode_paiement",
+            "rule_rdv_paiement_sur_place",
+            "blk_rdv_nouveau_form",
+            "blk_rdv_detail_entete",
+            "blk_rdv_detail_paiement",
+            "blk_visite_entete",
+            "blk_compte_paiement"
+          ]
+        }
+      },
+      {
+        "id": "need_catalogue_prestations",
+        "statement": "Présenter les prestations de toilettage du salon (bain, tonte, coupe, forfaits) que le client choisit lors de la prise de rendez-vous.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "ent_prestation",
+            "scr_prestations",
+            "blk_prestations_liste",
+            "blk_prestations_cta_rdv",
+            "act_prestations_prendre_rdv",
+            "blk_rdv_nouveau_prestations",
+            "fld_prestation_photo",
+            "data_prestations"
+          ]
+        }
+      },
+      {
+        "id": "need_application_en_francais",
+        "statement": "L'application est intégralement en français.",
+        "resolution": {
+          "kind": "satisfied",
+          "nodeIds": [
+            "blk_accueil_header",
+            "blk_animaux_header",
+            "blk_rdv_nouveau_header",
+            "blk_vaccinations_header",
+            "blk_compte_header",
+            "blk_prestations_header",
+            "blk_animaux_liste",
+            "blk_rdv_nouveau_form"
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -105,7 +105,22 @@ const MODEL = "claude-opus-5";
 // La réponse était TRONQUÉE. Les sept règles ajoutées demandent bien plus de
 // JSON qu'avant — intention avec un besoin par écran, liaison de chaque slot,
 // titres d'état sur chaque bloc lié — et 8000 jetons ne suffisaient plus.
-const MAX_TOKENS = 16000;
+// PORTÉ À 24000 (2026-09-04) — mesuré sur l'échec de la veille, pas supposé :
+// la section `ecrans` de `toiletteur-chiens` a atteint EXACTEMENT le plafond de
+// 16000 jetons, après avoir ouvert 8 écrans et en pleine écriture du 8e (le
+// dernier fragment conservé s'arrête sur un `sortFieldId`). La cause est
+// structurelle et attendue : `emit-v3` a levé le plafond de DIMENSIONNEMENT du
+// prompt (règle 10 — dimensionner sur le besoin), et l'émission partielle le
+// confirme, 6 entités produites contre 3 au document d'origine. Un document
+// plus riche déborde une sortie calibrée pour l'ancien format. Même classe que
+// D-078 (8000 → 16000), un cran plus loin.
+//
+// 24000 = +50 % sur la mesure, soit ~12 écrans complets là où 16000 en tenait
+// 7,5. Valeur choisie MINIMALE-SÛRE, pas confortable : le pire cas par appel
+// passe de 0,467 $ à 0,667 $, et 7 sections doivent tenir sous le plafond dur
+// de la tentative. Monter plus haut réduirait le nombre d'appels que le garde
+// budgétaire autorise avant de mordre.
+const MAX_TOKENS = 24000;
 // DÉLAI ET REPRISES (D-080) — la campagne a perdu deux domaines sur
 // « Request timed out » : le SDK abandonne à 10 minutes par défaut, et les
 // sections lourdes (actions avec liaisons, écrans avec titres d'état) les
