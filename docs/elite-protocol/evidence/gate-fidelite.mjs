@@ -152,7 +152,16 @@ for (const [nom, brut] of documents) {
   const refutes = f4.verdicts.filter((v) => v.state === "motif_refute").length;
   motifsRefutes += refutes;
   if (!f1.passed) f1KO++;
-  if (!f4.passed) f4KO++;
+  // B (arbitrage 2026-09-04) — F4 mesure « tout besoin EXPRIMÉ est satisfait
+  // ou déclaré inexprimable » : un artefact gelé antérieur à 1.2.0, que ce
+  // fichier reconnaît déjà « légitimement dépourvu » d'intention (l. 134-135
+  // ci-dessus, où il est EXCLU de `sansIntention`), n'exprime aucun besoin et
+  // ne peut donc en perdre aucun. Le compter en échec F4 était une
+  // CONTRADICTION INTERNE de cette gate — le même fichier excusait puis
+  // sanctionnait le même fait —, pas une exigence de la ROADMAP.
+  // F1 RESTE INCHANGÉ sur ces mêmes documents (l. 154) : leurs promesses
+  // mortes sont RÉELLES, mesurées, et demeurent un échec bloquant.
+  if (!f4.passed && !horsContrat) f4KO++;
   console.log(
     `  ${nom.padEnd(27)} ${colonneIntention} ` +
       `${f1.passed ? "🟢" : "🔴"} ${`${f1.vivantes}/${f1.declared} vivantes`.padEnd(18)}` +
