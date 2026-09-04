@@ -42,7 +42,9 @@ describe("V1 — le bornage de la liste est vérifié STRUCTURELLEMENT", () => {
     expect(source).toContain("<Section title={title} testID={testID} fill>");
     const g = dim(files, "G");
     expect(g?.detail).toContain("<Section fill> encadrant une <FlatList>");
-    expect(g?.detail).toContain("Pré-conditions structurelles TENUES");
+    // ÉDITION CONSCIENTE (V3) : le libellé provient désormais du lecteur de
+    // preuve appareil. Casse suivie ; l'ÉTAT attendu est inchangé.
+    expect(g?.detail).toContain("pré-conditions structurelles TENUES");
   });
 
   it("② FALSIFICATION D-135 : prop `fill` retirée, COMMENTAIRE conservé → NON détecté", () => {

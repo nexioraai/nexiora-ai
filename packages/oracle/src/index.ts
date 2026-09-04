@@ -21,4 +21,6 @@ export {
 } from "./anti-template.ts";
 export type { AntiTemplateReport, DomainSample } from "./anti-template.ts";
 export { generateMaestroFlows } from "./e2e-flows.ts";
+export { lirePreuveAppareil, PREUVE_APPAREIL_SCHEMA, CIBLE_TACTILE_MIN_DP, LIGNES_MIN_POUR_VIRTUALISATION, FENETRE_RENDU_EN_ECRANS } from "./preuve-appareil.ts";
+export type { PreuveAppareil, CaptureAppareil, NoeudHierarchie, LecturePreuve, VerdictMesure } from "./preuve-appareil.ts";
 export type { GeneratedFlows } from "./e2e-flows.ts";

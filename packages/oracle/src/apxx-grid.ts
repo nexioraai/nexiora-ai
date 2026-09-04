@@ -23,6 +23,10 @@ import { EXECUTION_ENVELOPE_V1 } from "@deribfy/execution-contract";
 // V1 de `D-135` en a besoin — voir `listeBornee`.
 import ts from "typescript";
 import { evaluateAntiTemplate, type DomainSample } from "./anti-template.ts";
+// V3 de `D-135` : canal de preuve APPAREIL. La grille ne fabrique aucune
+// preuve — elle consomme celle qu'une session physique a produite, ou
+// constate son absence.
+import { lirePreuveAppareil, type PreuveAppareil } from "./preuve-appareil.ts";
 
 export type DimensionKey = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H";
 export type DimensionState = "conforme" | "non_conforme" | "non_determinee";
@@ -290,7 +294,17 @@ export function evaluateApxxGrid(
    * par défaut (D-039-R1).
    */
   crossDomain: readonly DomainSample[] = [],
+  /**
+   * Preuve APPAREIL (V3 de `D-135`). Même patron que `crossDomain` : absente ⇒
+   * `A` et `G` restent NON DÉTERMINÉES — jamais conformes par défaut. Une
+   * preuve présente mais irrecevable (schéma inconnu, densité ou insets
+   * manquants, hiérarchie absente, rattachement au build faux) est REFUSÉE et
+   * ne dégrade jamais silencieusement vers `conforme` : elle vaut
+   * `non_determinee`, motif nommé. Seule une mesure recevable peut conclure.
+   */
+  preuveAppareil?: PreuveAppareil,
 ): ApxxReport {
+  const appareil = lirePreuveAppareil(preuveAppareil, air);
   const dimensions: DimensionVerdict[] = [];
   const theme = files.get("lib/tokens/theme.generated.ts") ?? "";
   const styles = files.get("lib/primitives/styles.ts") ?? "";
@@ -321,9 +335,12 @@ export function evaluateApxxGrid(
   dimensions.push({
     dimension: "A",
     titre: "ergonomie physique",
-    state: preconditionA ? "non_determinee" : "non_conforme",
+    // V3 : la pré-condition statique en échec reste un défaut DÉMONTRÉ et
+    // court-circuite tout — aucun appareil n'est requis pour le savoir. Sinon,
+    // et seulement sinon, la mesure appareil décide.
+    state: preconditionA ? appareil.a.state : "non_conforme",
     detail: preconditionA
-      ? `NON DÉTERMINÉE (D-135) — la grille exige une géométrie mesurée sur appareil réel, preuve absente de cet instrument. Pré-conditions statiques TENUES : ${mesureA}. NON MESURÉ : zones sûres, cibles sous une barre système, géométrie rendue.`
+      ? `${appareil.a.detail} · pré-conditions statiques TENUES : ${mesureA}`
       : `PRÉ-CONDITION STATIQUE EN ÉCHEC : ${mesureA}`,
   });
 
@@ -466,9 +483,12 @@ export function evaluateApxxGrid(
   dimensions.push({
     dimension: "G",
     titre: "fluidité perçue / virtualisation",
-    state: preconditionG ? "non_determinee" : "non_conforme",
+    // V3 : même règle qu'en A. Rappel du contrat du lecteur — la preuve A13
+    // peut RÉFUTER G (signature `DET-025`) mais jamais l'établir, la clause
+    // « défilement sans jank » restant hors du minimum V3.
+    state: preconditionG ? appareil.g.state : "non_conforme",
     detail: preconditionG
-      ? `NON DÉTERMINÉE (D-135) — la grille exige une mesure sur appareil, preuve absente de cet instrument. Pré-conditions structurelles TENUES : ${String(listScreens.length)} écran(s) à liste, 0 encapsulé dans un ScrollView, ${bornage.detail}. NON MESURÉ : jank au défilement, virtualisation ACTIVE sur liste longue, retour visuel.`
+      ? `${appareil.g.detail} · pré-conditions structurelles TENUES : ${String(listScreens.length)} écran(s) à liste, 0 encapsulé dans un ScrollView, ${bornage.detail}`
       : wrapped.length > 0
         ? `PRÉ-CONDITION EN ÉCHEC — écrans à liste encapsulés dans un ScrollView : ${wrapped.join(", ")}`
         : `PRÉ-CONDITION EN ÉCHEC — ${bornage.detail}`,
