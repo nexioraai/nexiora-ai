@@ -7044,3 +7044,153 @@ bloquerait plus un push de chantier — elle resterait visible dans les logs et
 bloquante à la PR vers `main`, mais dépendrait d'une lecture humaine
 entre-temps. Garde-fous : nom d'étape explicite, signalement systématique dans
 la Gate, condition de retour au blocage écrite ici, revue à chaque STATUS.
+
+## D-135 — A ET G NE SONT PAS PROUVÉES : L'INSTRUMENT NE PRODUIT PAS LA NATURE DE PREUVE QUE LA GRILLE EXIGE — 2026-09-04
+
+**Arbitrage de PREUVE, pas de critère.** La grille A++ n'est ni amendée, ni
+assouplie, ni durcie : elle était déjà correcte. Ce qui est tranché ici, c'est
+le **statut de la preuve** produite par `evaluateApxxGrid` pour les dimensions
+**A** et **G** — et la conclusion est que cette preuve **n'est pas celle que la
+grille demande**. Aucune ligne de code n'est modifiée par cette décision.
+
+### ① Ce que la grille EXIGE — texte normatif, inchangé
+
+`ROADMAP.md` § **EXIGENCE PRODUIT TRANSVERSE**, colonne « Nature de la preuve » :
+
+| Dim. | Critère de conformité (les 3 clauses) | Nature de preuve EXIGÉE |
+|---|---|---|
+| **A** | ① zones sûres respectées · ② aucune cible sous une barre système · ③ cibles tactiles ≥ 44 pt (iOS) / 48 dp (Android) | **« Géométrie mesurée sur appareil réel »** |
+| **G** | ① défilement sans jank · ② virtualisation active sur listes longues · ③ retour visuel sur chaque action | **« Mesure sur appareil »** |
+
+Ces deux lignes sont les seules de la grille dont la preuve est **définie comme
+physique**. B (ratio calculé), C (contrat + tests), D (analyse statique), E
+(rendu au harnais), F (rejeu RTL) et H (scorecard cross-domain) désignent des
+preuves que l'outillage hors ligne produit réellement.
+
+### ② Ce que l'instrument MESURE — code réel, lu ligne à ligne
+
+`packages/oracle/src/apxx-grid.ts` n'ouvre, pour A et G, que **trois fichiers
+de l'artefact émis** (l. 187-189) : `lib/tokens/theme.generated.ts`,
+`lib/primitives/styles.ts`, `lib/blocks/components.tsx`.
+
+**A** (l. 190-199) — `FACT` : une regex extrait `"tapTarget": N` du thème, une
+seconde compte les occurrences de `minHeight: theme.size.tapTarget` dans la
+feuille de style ; verdict `conforme` si `N ≥ 48` **et** `occurrences ≥ 3`.
+Mesuré sur l'artefact du slice 1 : `tapTarget = 48`, **exactement 3** surfaces
+(`button`, `field`, `row`) — du code réel, vérifié, **la clause ③ est donc
+authentiquement mesurée**, et le compte est **au seuil, sans marge**.
+`FACT` — **les clauses ① et ② ne sont regardées par aucune ligne de
+l'instrument.** Le mécanisme de zones sûres de l'artefact vit dans
+`screens/*.tsx` (`useSafeAreaInsets`, présent sur **4 écrans sur 4** du slice 1)
+— une famille de fichiers que la dimension A **n'ouvre jamais**.
+`CONCLUSION` — A mesure **une clause sur trois**.
+
+**G** (l. 322-337) — `FACT` : `wrapped` = écrans porteurs d'un bloc `list` dont
+le source contient `ScrollView` ; `bounded` = **`blocks.includes("fill")`**,
+c'est-à-dire une **recherche de sous-chaîne brute** dans le texte du composant
+émis. Verdict `conforme` si `wrapped` est vide **et** `bounded` est vrai.
+`FACT` — aucune des trois clauses de G (jank, virtualisation active, retour
+visuel) n'est une propriété du texte source : ce sont des comportements
+d'exécution. Ce que l'instrument teste est une **pré-condition** de la clause ②,
+pas la clause elle-même.
+
+### ③ FALSIFICATION EXÉCUTÉE — le verdict G survit au retrait du bornage
+
+Épreuve conduite hors du dépôt, sur une **copie** de l'artefact émis réel
+(`slices/restaurant/app/lib/blocks/components.tsx`), en évaluant l'**expression
+exacte** de l'instrument. Aucun fichier du dépôt touché, aucun runner exécuté.
+
+| Variante | `bounded` | Lecture |
+|---|---|---|
+| artefact réel | `true` | référence |
+| **prop `fill` RETIRÉE du JSX**, commentaire laissé | **`true`** | 🔴 le bornage **n'existe plus** et l'instrument **ne le voit pas** |
+| prop **et** commentaire retirés | `false` | il faut supprimer un **commentaire** pour que la gate morde |
+
+`FACT` — la seule occurrence de `fill` restante en variante 2 est la ligne 65 :
+`// \`fill\` (DET-006) : la section BORNE la hauteur de la liste virtualisée.`
+`CONCLUSION` — **la moitié « bornage » du verdict G est satisfaite par un
+COMMENTAIRE.** Retirer le bornage réel, c'est-à-dire **réintroduire `DET-025`
+mot pour mot**, laisse la dimension G au vert.
+
+### ④ Le faux vert n'est pas une hypothèse : il s'est déjà produit
+
+`FACT` — `DET-025` (observé sur **Galaxy A17 physique**, reproduit sur
+émulateur) : la primitive `Section` **n'appliquait pas** `fill` ; géométrie
+mesurée — FlatList jusqu'à `y = 2400` (bas d'écran exact), 11ᵉ ligne coupée,
+**12ᵉ inatteignable**, bloc `empty_state` **entièrement hors écran**. La fiche
+énonce elle-même la cause instrumentale : *« Le verrou DET-006 ne verifiait que
+l'ABSENCE de ScrollView, jamais le BORNAGE — d'ou deux phases sans detection »*,
+et ajoute que **le flow E2E généré ne l'a pas vu non plus**. Son statut se
+termine par : *« Preuve d'execution sur appareil : EN ATTENTE d'un nouveau
+build »*.
+`FACT` — même schéma sur A : `DET-001` (safe area du bas, dernier bloc rendu
+sous la barre gestuelle, `[0,2213]→[1080,2340]`) et `DET-016` (clavier masquant
+le champ actif, 13 écrans sur 47) ont **tous deux** été trouvés **sur appareil
+physique**, jamais par l'outillage hors ligne. `DET-016` porte encore la mention
+*« Conformité suspendue à l'observation appareil »*.
+`CONCLUSION` — sur les deux dimensions dont la grille exige une preuve physique,
+**trois défauts réels ont été trouvés par l'appareil et zéro par l'instrument**.
+
+### ⑤ Ce qui est démontré, ce qui ne l'est pas
+
+| Proposition | Statut |
+|---|---|
+| Le thème déclare `tapTarget = 48` et 3 surfaces l'appliquent | 🟢 **DÉMONTRÉ** (statique, vrai) |
+| Aucun écran à liste n'est encapsulé dans un `ScrollView` | 🟢 **DÉMONTRÉ** (statique, vrai) |
+| Le composant de liste **porte** le bornage `fill` | 🟠 **SEULEMENT STATIQUE** — et satisfait par un commentaire (③) |
+| Les cibles rendues mesurent ≥ 48 dp **sur appareil** | ⚪ **NON DÉTERMINÉ** — exige la mesure physique |
+| Aucune cible sous une barre système ; zones sûres tenues | ⚪ **NON DÉTERMINÉ** — hors du champ de l'instrument |
+| La virtualisation est **active** sur liste longue ; défilement sans jank ; retour visuel | ⚪ **NON DÉTERMINÉ** — propriétés d'exécution |
+
+### ⑥ DÉCISION
+
+1. **`A` et `G` sont `non_determinee`** au sens de la règle de notation de
+   `D-039` — *« une dimension non mesurable se déclare non déterminée, jamais
+   conforme par défaut »*. Elles le restent **tant qu'aucune observation sur
+   appareil n'existe**. Elles ne sont **pas** déclarées `non_conforme` : rien ne
+   démontre un défaut aujourd'hui — c'est la **preuve** qui manque, pas la
+   qualité.
+2. **`A++` n'est pas établi.** `B`, `C`, `D`, `E`, `F`, `H` demeurent mesurées
+   par un outillage dont la nature de preuve correspond à la grille.
+3. **La grille n'est pas modifiée.** Elle avait raison ; c'est l'instrument qui
+   ne la sert pas entièrement. Aucun critère n'est réécrit, aucun seuil déplacé.
+4. **`D-060` est conservée et datée.** Elle reste vraie de ce qu'elle mesurait
+   (la dimension `C`, sur preuve au rendu) ; sa conclusion « 8/8 » ne l'est plus.
+   Ce n'est pas une réfutation de `D-060` : c'est la découverte que deux
+   dimensions n'avaient jamais été prouvées, ni par elle ni avant elle.
+5. ⚠️ **Un rejeu de la grille affichera mécaniquement `A:conforme G:conforme`.
+   Cette sortie n'est admissible comme preuve ni de A, ni de G.** Toute
+   inscription qui s'en prévaudrait serait un faux vert au sens de `D-048`.
+6. **Aucune correction d'instrument n'est engagée** — voir ⑦, qui décrit le
+   minimum nécessaire **sans l'implémenter**.
+
+### ⑦ Minimum technique nécessaire — DÉCRIT, NON IMPLÉMENTÉ, GO SÉPARÉ REQUIS
+
+Distinction non négociable, reprise de `D-052` : **l'instrument de MESURE peut
+être corrigé ; le critère de CONFORMITÉ ne se touche pas.** Les trois volets
+ci-dessous ne rendent A et G conformes en rien — ils rendent leur
+**non-conformité détectable** et leur conformité **prouvable**.
+
+| Volet | Objet | Nature | Ce qu'il ne fait PAS |
+|---|---|---|---|
+| **V1 — honnêteté du verdict statique** | Remplacer `blocks.includes("fill")` par une vérification **structurelle** du bornage sur le JSX (prop réellement appliquée), insensible aux commentaires ; contre-épreuve obligatoire = la mutation ③ doit faire **tomber** le verdict | **Outillage** — `D-039` le classe **NON REPORTABLE** (la mesure est possible au périmètre, l'instrument manque) | Ne rend pas G conforme : supprime seulement un **faux vert** |
+| **V2 — état honnête pour A et G** | Tant qu'aucune preuve appareil n'est versée, l'instrument doit rendre `non_determinee` pour A et G au lieu de `conforme`, avec le motif nommé — au lieu de laisser croire à une mesure qu'il n'a pas faite | **Outillage** — non reportable | Ne dégrade aucun critère ; supprime une affirmation non fondée |
+| **V3 — canal de preuve appareil** | Définir le format par lequel une observation `A1→A11` alimente la grille (géométrie des cibles, insets, capture de scroll long) et **la source de vérité** de cette preuve | **Objet** — dépend de la session physique, donc **reportable avec phase nommée** | N'invente aucune conformité par défaut |
+
+`INFÉRENCE` — les deux causes de non-mesure de la § Règle de périmètre
+coexistent ici, comme pour `DET-028` : **V1 et V2 relèvent de l'outillage et ne
+sont pas reportables** ; **V3 relève de l'objet** et se rattache à la session
+appareil `A1→A11`. Les traiter ensemble serait les confondre.
+
+**Aucun de ces volets n'est engagé par `D-135`.** Chacun exige un GO distinct,
+et V1 comme V2 touchent `packages/oracle/src/apxx-grid.ts` — fichier **inchangé
+à ce jour**.
+
+### ⑧ Ce que cette décision NE ferme PAS
+
+`DET-006` reste 🔴 ouverte, `DET-016` reste suspendue à l'observation appareil,
+`RN-07` et `RN-08` restent ouverts, le critère 7 de la Phase 10 reste ouvert, et
+la session `A1→A11` **n'a pas commencé**. `D-135` ne clôt aucune phase, ne
+produit aucun scorecard, et ne modifie aucun artefact historique : le scorecard
+du **2026-08-29** reste byte-identique, `apxx-grid.ts` et `run-scorecard.mjs`
+restent inchangés.

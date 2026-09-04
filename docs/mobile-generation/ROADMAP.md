@@ -311,6 +311,25 @@ elles peut toujours être compilé et livré.
 > (28 faux positifs) et `FORM_SANS_ACTION` (7 formulaires muets démasqués).
 > Détail : `STATUS.md`, § « INSTRUMENTS RÉPARÉS ».
 
+> ### ⬆️ MISE À JOUR 2026-09-04 — FAITS POSTÉRIEURS CONSIGNÉS (`D-133`, `D-134`) · AUCUNE PHASE MODIFIÉE
+>
+> Inscription minimale de deux décisions déjà versionnées, dont la ROADMAP ne portait aucune trace.
+> **Aucun critère de sortie, aucun état de phase, aucun ordre de phase n'est modifié par cette entrée.**
+>
+> **`D-133` (2026-09-03/04)** — bascule monorepo en production (`main` = `4e56538`), **endpoint E3.3 en
+> ligne** (fil réel côté serveur PROUVÉ : 200, 0 redirection, byte-identique à la fixture, SHA-256
+> `3eea2c2e75a1…`) et **2 artefacts appareil** construits depuis `44e550e` : Android `c96c4359-…` (APK,
+> exp. 17/09) · iOS `7f332c5b-…` (IPA ad hoc, exp. 18/09). **Conséquence pour `RN-07`/`RN-08`** : le
+> prérequis « compte/CLI EAS » est levé, mais **les 2 artefacts portent l'app-fixture `bus-intercites`
+> du chantier `validation-appareil`, pas le slice 2** — `RN-07` et le critère 7 de la Phase 10 restent
+> OUVERTS. La session `A1→A11` **n'a pas commencé** (réseau intercepté par un FortiGate).
+>
+> **`D-134` (2026-09-04)** — **politique de blocage CI uniquement.** `app_fidelite` s'exécute
+> intégralement, publie tout, et son `exit 1` est **inchangé** ; elle reste **bloquante sur `main` et sur
+> toute PR**, non bloquante sur les push de branches de chantier. **La conformité n'est pas modifiée :**
+> **la fidélité demeure NON TENUE.** Retour au blocage : régénération des 3 documents v3 différés
+> (`D-125`) ET décision propriétaire sur les 12 documents v2 gelés.
+
 > ### ⬆️ MISE À JOUR 2026-09-02 (4) — PHASE 10B CLOSE PAR ARBITRAGE (`D-125`) · PROGRAMME TRANSVERSAL E1→E3.3 SCELLÉ
 >
 > **Clôture propriétaire `D-125`** : gate au standard tenue sur **9/12 documents
@@ -1100,8 +1119,8 @@ conditions sont satisfaites. Une condition partiellement satisfaite vaut
 | **RN-04** | versionner `docs/elite-protocol/` (P3) | Git | RN-01→06 | 🧑→🤖 | 🟢 **FAIT 2026-08-31** — `2f00c00`, 88 fichiers suivis, aucun push. *La dépendance déclarée à `RN-01` s'est révélée non fondée (`D-106`).* |
 | **RN-05** | corriger l'entrée « dimension H » | ROADMAP Phase 10 | — | 🤖 | 🟢 **FAIT 2026-08-30** — 2 entrées corrigées |
 | **RN-06** | contradiction « vide » vs 17 cas-tueurs | `README.md` · `GATE_KILLER_TESTS.md` | — | 🤖 | 🟢 **FAIT 2026-08-30** — 4 mentions périmées rectifiées |
-| **RN-07** | validation physique du slice 2 | Phase 10 · `STATUS.md` | 🛑 C-5 | 🧑 | app installée et exercée sur appareil |
-| **RN-08** | `DET-006` virtualisation (dim. G) | `STATUS.md` | RN-07 | 🧑 | virtualisation effective observée |
+| **RN-07** | validation physique du slice 2 | Phase 10 · `STATUS.md` | 🛑 C-5 | 🧑 | app installée et exercée sur appareil — *(précisé le 2026-09-04 : le prérequis « compte/CLI EAS » est **levé** — compte opérationnel, `npx eas` authentifié, 2 builds FINISHED (`D-133`) ; **mais ces artefacts portent l'app-fixture `bus-intercites`, pas le slice 2**. `RN-07` reste OUVERT et son blocage résiduel est l'**installation sur appareil**.)* |
+| **RN-08** | `DET-006` virtualisation (dim. G) | `STATUS.md` | RN-07 | 🧑 | virtualisation effective **observée sur appareil** — *(précisé le 2026-09-04 : `apxx-grid.ts` déclare la dimension G `conforme` sur une preuve **statique** (absence de `ScrollView` englobant + parent borné), alors que la grille ci-dessus exige une « mesure sur appareil ». **Cette conformité d'instrument ne clôt pas `RN-08`** ; `DET-006` reste ouverte. Arbitrage : **`D-135`** — falsification exécutée, le verdict `G` survit au retrait réel du bornage.)* |
 
 ### 🟠 NÉCESSAIRE AVANT REPRISE
 
@@ -1136,6 +1155,7 @@ conditions sont satisfaites. Une condition partiellement satisfaite vaut
 | **S-8** | = RN-02 | 🤖 | 🟢 **2026-08-30** — D006→D014 |
 | **S-9** | `STATUS.md` ne porte ni D-046, ni § CADRE, ni E-01→E-20 | 🤖 | 🟢 **2026-08-30** |
 | **S-10** | = RN-05 | 🤖 | 🟢 **2026-08-30** |
+| **S-11** | **`main` documentaire ↔ lignée de campagne** — le centre de contrôle `docs/mobile-generation/` n'existe à jour que sur `fix/xss-jsonld` ; `main` (`4e56538`) est muet sur `D-104`→`D-134`. **Delta non mesuré, sens de convergence non arbitré.** Fiche : `STATUS.md` **`DET-029`** | 🧑 | ⬜ **OUVERT** — inscrit le 2026-09-04, **non traité** (toucher `main` exige un arbitrage) |
 
 ## JOURNAL D'EXÉCUTION — tenu à jour à chaque étape
 
@@ -1180,7 +1200,7 @@ résiduel de `gate:fidelite`** —
 `F1 = 12`, `F4 = 21`, 15 motifs réfutés — pour établir si ce rouge est
 **structurellement attendu** (les 12 documents v2 gelés sont en `1.0.0` et n'ont
 aucune intention) ou s'il constitue un **travail restant de la Phase 10B** sur les
-9 documents v3. **Audit hors ligne, aucune dépense.**
+9 documents v3. **Audit hors ligne, aucune dépense.** *(Chiffres rectifiés le 2026-09-04, mesure rejouée : **`F1 = 12` · `F4 = 3` · 5 motifs réfutés** — `F4 = 21` puis 15 relevaient d'une **erreur de MESURE** de `gate-fidelite.mjs`, corrigée en une ligne par `0351b6b` (les artefacts gelés sans intention étaient excusés l. 134-135 puis sanctionnés l. 155). `F1` est INTOUCHÉ. Les 3 `F4` restants sont les 3 documents v3 différés par `D-125`. **La fidélité reste NON TENUE ; `exit 1` est inchangé.**)*
 
 *Exécutée le 2026-09-01* : la génération `coach-fitness` (`D-109`). **Toute nouvelle
 génération exige une autorisation explicite distincte** — aucune dépense sans elle.
