@@ -143,13 +143,27 @@ describe("rafraîchissement — la nouveauté ne se prétend pas", () => {
     expect(adaptateur.journal().filter((e) => e.endsWith("nouvelles")).length).toBe(2);
   });
 
-  it("🟢 10 · loading OBSERVABLE pendant le transport en vol", async () => {
+  it("🟢 10 · DET-033 : en vol, loading OBSERVABLE seulement sans lignes servies", async () => {
+    // Magasin VIDE : le premier remplissage montre le chargement — état réel.
+    const vide = creerMagasin({ ent_a: [] });
+    let libererVide: ((r: ReponseTransport) => void) | undefined;
+    const transportVide: Transport = () => new Promise((res) => { libererVide = res; });
+    const aVide = creerAdaptateurReseau({ magasin: vide, cibles: [CIBLE], domainesAutorises: DOMAINES, transport: transportVide });
+    const volVide = aVide.demarrer();
+    expect(vide.status("ent_a")).toBe("loading"); // pendant le vol
+    libererVide?.(ok([L("r1", "arrivée")]));
+    await volVide;
+    expect(vide.status("ent_a")).toBe("ready");
+
+    // Magasin SERVI : la revalidation est SILENCIEUSE — l'instantané affiché
+    // reste la vérité, aucun clignotement pendant le vol (jugé sur appareil :
+    // le passage périodique par « Chargement… » démontait la saisie).
     const magasin = creerMagasin(SEED);
     let liberer: ((r: ReponseTransport) => void) | undefined;
     const transport: Transport = () => new Promise((res) => { liberer = res; });
     const adaptateur = creerAdaptateurReseau({ magasin, cibles: [CIBLE], domainesAutorises: DOMAINES, transport });
     const enCours = adaptateur.demarrer();
-    expect(magasin.status("ent_a")).toBe("loading"); // pendant le vol
+    expect(magasin.status("ent_a")).toBe("ready"); // pas de clignotement
     expect(magasin.listInstances("ent_a").length).toBe(1); // la graine reste servie
     liberer?.(ok([L("r1", "arrivée")]));
     await enCours;

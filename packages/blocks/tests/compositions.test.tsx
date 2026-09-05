@@ -247,9 +247,10 @@ describe("DET-025 — la liste virtualisée reçoit un parent BORNÉ", () => {
     expect(liste).toBeGreaterThan(0);
   });
 
-  it("un bloc liste en état vide reste NON borné (aucun effet de bord)", () => {
-    // L'état vide rend un StateView, pas la liste : le bornage ne doit pas
-    // s'y appliquer par inadvertance.
+  it("DET-033 — l'état vide rend DANS la boîte bornée, sans démonter les contrôles", () => {
+    // Avant : l'état vide remplaçait le BLOC entier (recherche comprise) —
+    // le champ disparaissait sous les doigts. Désormais la Section `fill`
+    // reste constante et l'état ne vit que dans la zone de contenu.
     const r = render(
       <ListBlock testID="liste" items={[]} state={{ kind: "empty", title: "vide" }} />,
     );

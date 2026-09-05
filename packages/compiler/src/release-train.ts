@@ -112,7 +112,12 @@ export const RELEASE_TRAIN_V1 = {
   // Ré-scellé 2026-09-05 (DET-032) : les chips de filtre affichent le libellé
   // déclaré (`optionLabels`) et cessent de montrer des codes machine. Un seul
   // prop optionnel ajouté au contrat ; aucun état, aucun bloc retiré.
-  "834be27ea0b919bec4415f48f36d4a0e80c3d3bd3cba9482ae7e8ab3b0130e46",
+  // Ré-scellé 2026-09-05 (DET-033, jugement propriétaire) : dans ListBlock,
+  // les états (chargement/vide/erreur) ne remplacent plus le bloc entier —
+  // recherche et filtres restent MONTÉS (l'état vide démontait le champ en
+  // pleine frappe) et vivent en EN-TÊTE de la FlatList : une seule surface
+  // de défilement. Composition interne seulement — contrats INCHANGÉS.
+  "40375344e14cc7ffed0c3becd79c82cfd3ea86a39dac2f22814ba2a78d490395",
   capabilityRegistryVersion: "1.0.0",
   capabilitySourcesHash:
     "6c28599246abde6e7010704f23f273aafe50d17c5483133709c9065f2777346c",

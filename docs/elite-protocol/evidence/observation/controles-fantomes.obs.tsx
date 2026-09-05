@@ -104,12 +104,24 @@ describe("GATE RACINE — aucun contrôle fantôme", () => {
           navReset();
           const avantE = ecrits.length;
           const avantC = capAppels.length;
+          // DET-033 : l'effet OBSERVABLE inclut le RENDU. Un chip de filtre
+          // change la liste sous les yeux de l'utilisateur sans naviguer ni
+          // écrire — le déclarer fantôme était un défaut de la SONDE, pas du
+          // contrôle. Le critère devient : navigation, écriture, capability,
+          // OU changement du rendu. Un contrôle qui ne produit RIEN de tout
+          // cela reste un fantôme.
+          const avantR = JSON.stringify(r!.toJSON());
           act(() => {
             const b = r!.root.findAll((x) => typeof (x.props as { onPress?: unknown }).onPress === "function");
             (b[i]?.props as { onPress: () => void } | undefined)?.onPress();
           });
           vus += 1;
-          if (navJournal.length > 0 || ecrits.length > avantE || capAppels.length > avantC) actifs += 1;
+          if (
+            navJournal.length > 0 ||
+            ecrits.length > avantE ||
+            capAppels.length > avantC ||
+            JSON.stringify(r!.toJSON()) !== avantR
+          ) actifs += 1;
           else {
             const b = r!.root.findAll((x) => typeof (x.props as { onPress?: unknown }).onPress === "function");
             const id = (b[i]?.props as { testID?: string } | undefined)?.testID ?? "?";

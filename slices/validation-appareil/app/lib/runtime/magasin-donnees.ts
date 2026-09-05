@@ -117,6 +117,14 @@ export function creerMagasin(
     appliquerChargement: (entityId) => {
       const e = etat(entityId);
       if (e.status === "loading") return;
+      // DET-033 (jugement propriétaire sur SM-A175F) : une revalidation en
+      // ARRIÈRE-PLAN ne remplace pas des données affichées par un état de
+      // chargement. Le polling repassait chaque écran par « Chargement… »
+      // toutes les 30 s — l'UI clignotait, et le champ de recherche était
+      // démonté en pleine frappe. Tant que des lignes existent, l'instantané
+      // servi reste la vérité (l'erreur, elle, continue de se DIRE — D-060) ;
+      // le chargement VISIBLE reste réservé au tout premier remplissage.
+      if (e.rows.length > 0) return;
       e.status = "loading";
       notifier(e);
     },

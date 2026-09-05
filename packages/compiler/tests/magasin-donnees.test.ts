@@ -16,12 +16,19 @@ const instrumente = (seed: Parameters<typeof creerMagasin>[0]) => {
 };
 
 describe("A/B — loading → v1 → v2 : chaque transition RÉELLE est observée", () => {
-  it("🔴 loading est un état réel : servi, notifié, lignes conservées", () => {
-    const { m, notifications } = instrumente({ ent_depart: V1 });
-    m.appliquerChargement("ent_depart");
-    expect(m.status("ent_depart")).toBe("loading");
-    expect(m.listInstances("ent_depart")).toHaveLength(1); // les lignes restent servies
-    expect(notifications).toHaveLength(1);
+  it("🔴 loading VISIBLE seulement au premier remplissage ; silencieux ensuite (DET-033)", () => {
+    // Sans lignes : le chargement est un état réel — servi et notifié.
+    const vide = instrumente({ ent_depart: [] });
+    vide.m.appliquerChargement("ent_depart");
+    expect(vide.m.status("ent_depart")).toBe("loading");
+    expect(vide.notifications).toHaveLength(1);
+    // Avec des lignes : la revalidation est SILENCIEUSE — l'instantané affiché
+    // reste la vérité, aucune notification, aucun démontage d'UI en frappe.
+    const plein = instrumente({ ent_depart: V1 });
+    plein.m.appliquerChargement("ent_depart");
+    expect(plein.m.status("ent_depart")).toBe("ready");
+    expect(plein.m.listInstances("ent_depart")).toHaveLength(1);
+    expect(plein.notifications).toHaveLength(0);
   });
 
   it("🔴 v1 → v2 : les lignes CHANGENT sur place, la version avance", () => {
@@ -85,7 +92,9 @@ describe("F — déterminisme : même séquence ⇒ mêmes états, sans horloge"
   };
   it("🔴 deux exécutions ⇒ traces STRICTEMENT identiques", () => {
     expect(derouler()).toBe(derouler());
-    expect(derouler()).toBe("1:loading:1|2:ready:2|3:error:2|4:error:3");
+    // DET-033 : le chargement sur des lignes existantes est un no-op — la
+    // trace ne porte plus de transition loading, et reste déterministe.
+    expect(derouler()).toBe("1:ready:2|2:error:2|3:error:3");
   });
 });
 

@@ -160,7 +160,10 @@ export function TextField({
   const s = useStyles();
   return (
     <View style={s.fieldWrap} testID={testID}>
-      <Text style={s.fieldLabel}>{label}</Text>
+      {/* DET-033 : un libellé VIDE ne rend rien — un champ compact (recherche)
+          porte son sens par `placeholder` + `accessibilityLabel`, sans ligne
+          fantôme au-dessus. Contrat inchangé. */}
+      {label === "" ? null : <Text style={s.fieldLabel}>{label}</Text>}
       <View style={s.fieldRow}>
         <TextInput
           style={[s.input, error !== undefined && s.inputError]}

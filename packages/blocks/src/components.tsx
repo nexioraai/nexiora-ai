@@ -44,36 +44,39 @@ export function ListBlock({
   onItemPress,
   testID,
 }: ListBlockProps) {
-  if (state.kind === "loading") {
-    return <StateView state="loading" title={state.title} testID={testID} />;
-  }
-  if (state.kind === "empty") {
-    return (
-      <StateView state="empty" title={state.title} message={state.message} testID={testID} />
-    );
-  }
-  if (state.kind === "error") {
-    return (
+  // DET-033 (jugement propriétaire sur appareil) : les états ne remplacent
+  // plus le BLOC ENTIER — ils ne remplacent que la ZONE DE CONTENU. Avant,
+  // une saisie sans correspondance faisait rendre l'état vide À LA PLACE du
+  // champ de recherche : le champ disparaissait sous les doigts, clavier
+  // fermé. Recherche et filtres restent MONTÉS quel que soit l'état, et
+  // vivent DANS la liste (en-tête défilant) : une seule surface de
+  // défilement, plus deux régions étanches.
+  const etatContenu =
+    state.kind === "loading" ? (
+      <StateView state="loading" title={state.title} />
+    ) : state.kind === "empty" ? (
+      <StateView state="empty" title={state.title} message={state.message} />
+    ) : state.kind === "error" ? (
       <StateView
         state="error"
         title={state.title}
         message={state.message}
         actionLabel={state.retryLabel}
         onAction={state.onRetry}
-        testID={testID}
       />
-    );
-  }
-  return (
-    // `fill` (DET-006) : la section BORNE la hauteur de la liste virtualisée.
-    // Sans parent borné, la FlatList rend tous ses éléments. L'intention est
-    // DÉCLARÉE ici ; le style reste entièrement porté par les primitives —
-    // la contrainte « aucun StyleSheet, aucun style en dur » est préservée.
-    <Section title={title} testID={testID} fill>
+    ) : null;
+  // Contrôles TOUJOURS montés (élément stable : l'identité du TextField
+  // survit aux rendus — le focus et le clavier survivent avec elle).
+  const controles = (
+    <>
       {search === undefined ? null : (
         <TextField
           testID={`${testID ?? "list"}-search`}
-          label={search.placeholder ?? ""}
+          // DET-033 : champ compact — le sens passe par `placeholder`, la
+          // ligne de libellé disparaît, l'accessibilité garde son nom.
+          label=""
+          accessibilityLabel={search.placeholder}
+          placeholder={search.placeholder}
           value={search.value}
           onChangeText={search.onChange}
         />
@@ -106,6 +109,14 @@ export function ListBlock({
           </Section>
         ),
       )}
+    </>
+  );
+  return (
+    // `fill` (DET-006) : la section BORNE la hauteur de la liste virtualisée.
+    // Sans parent borné, la FlatList rend tous ses éléments. L'intention est
+    // DÉCLARÉE ici ; le style reste entièrement porté par les primitives —
+    // la contrainte « aucun StyleSheet, aucun style en dur » est préservée.
+    <Section title={title} testID={testID} fill>
       <FlatList
         // DET-016 (D-039, dimension A étendue) : ajustement natif aux insets
         // du clavier. Propriété VÉRIFIÉE sur RN 0.86.3 — déclarée dans
@@ -115,9 +126,14 @@ export function ListBlock({
         // `keyboardShouldPersistTaps` évite qu'un appui sur un contrôle
         // pendant l'édition soit absorbé par la fermeture du clavier.
         // Ce sont des PROPRIÉTÉS structurelles, jamais des styles.
+        // DET-033 : recherche et filtres vivent EN-TÊTE DE LISTE — une seule
+        // surface de défilement — et l'état (chargement/vide/erreur) ne
+        // remplace que la zone de contenu, via ListEmptyComponent.
         automaticallyAdjustKeyboardInsets
         keyboardShouldPersistTaps="handled"
-        data={items}
+        ListHeaderComponent={controles}
+        ListEmptyComponent={etatContenu}
+        data={state.kind === "ready" ? items : []}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <ListRow

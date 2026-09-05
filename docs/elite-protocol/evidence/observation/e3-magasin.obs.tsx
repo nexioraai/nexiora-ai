@@ -51,9 +51,14 @@ describe("E3.1 — l'écran émis VIT au rythme du magasin", () => {
     // v1 : la ligne seed est rendue.
     expect(rendu(r)).toContain("Bouaké");
 
-    // A. LOADING est un état réellement rendu (titre du DOCUMENT, F3).
+    // A. DET-033 — une revalidation sur des lignes EXISTANTES est silencieuse :
+    // l'écran continue de servir la vérité affichée, aucun « Chargement… » ne
+    // vient démonter l'UI (c'est ce clignotement 30 s qui interrompait la
+    // frappe sur appareil réel). Le chargement VISIBLE reste réservé au
+    // premier remplissage — vérifié plus bas sur magasin vide.
     act(() => magasin.appliquerChargement("ent_depart"));
-    expect(rendu(r)).toContain("Chargement des départs…");
+    expect(rendu(r)).toContain("Bouaké");
+    expect(rendu(r)).not.toContain("Chargement des départs…");
 
     // B. v1 → v2 : les lignes changent SUR PLACE — aucune navigation.
     act(() =>
@@ -101,6 +106,29 @@ describe("E3.1 — l'écran émis VIT au rythme du magasin", () => {
     expect(enErreur).not.toContain("Korhogo"); // le rendu n'affiche PAS les lignes comme fraîches
     expect(magasin.listInstances("ent_depart").length).toBeGreaterThan(0); // snapshot conservé
 
+    r?.unmount();
+  });
+
+  it("DET-033 — magasin VIDE : le premier remplissage, lui, rend bien « Chargement… »", async () => {
+    expect(existsSync(APP), "lancer d'abord `npm run gate:app-compile`").toBe(true);
+    const { DataRoot } = await import(APP + "lib/runtime/data-provider.tsx");
+    const { FormStateRoot } = await import(APP + "lib/runtime/form-state.tsx");
+    const { creerMagasin } = await import(APP + "lib/runtime/magasin-donnees.ts");
+    const Ecran = (await import(APP + "screens/scr_departs.tsx")).default;
+
+    const magasin = creerMagasin({ ent_depart: [] });
+    let r: ReactTestRenderer | undefined;
+    act(() => {
+      r = create(
+        createElement(
+          DataRoot as never,
+          { provider: magasin } as never,
+          createElement(FormStateRoot as never, null as never, createElement(Ecran as never)),
+        ) as never,
+      );
+    });
+    act(() => magasin.appliquerChargement("ent_depart"));
+    expect(rendu(r)).toContain("Chargement des départs…");
     r?.unmount();
   });
 });
