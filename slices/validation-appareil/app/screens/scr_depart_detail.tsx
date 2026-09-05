@@ -25,7 +25,6 @@ export default function ScrDepartDetailScreen({ route }: AirScreenProps) {
     <ScreenShell testID="scr_depart_detail" title={screenData.title}>
       <View style={{ flex: 1, paddingBottom: insets.bottom }}>
         <AirDetailHeader screen={screenData} blockId="blk_depart_detail_header" itemId={route?.params?.itemId} />
-        <AirList screen={screenData} blockId="blk_depart_detail_infos" itemId={route?.params?.itemId} />
         <AirButton screen={screenData} blockId="blk_depart_detail_reserver" />
         <AirList screen={screenData} blockId="blk_detail_billets_scopes" itemId={route?.params?.itemId} />
       </View>

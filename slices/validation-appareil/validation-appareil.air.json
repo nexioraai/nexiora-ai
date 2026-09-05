@@ -84,18 +84,6 @@
         "kind": "navigate",
         "screenId": "scr_depart_detail"
       },
-      "id": "act_depart_detail_autre_depart",
-      "name": "Ouvrir un autre départ proposé",
-      "trigger": {
-        "blockId": "blk_depart_detail_infos",
-        "kind": "ui"
-      }
-    },
-    {
-      "effect": {
-        "kind": "navigate",
-        "screenId": "scr_depart_detail"
-      },
       "id": "act_departs_ouvrir_depart",
       "name": "Ouvrir le détail d'un départ depuis la liste des départs",
       "trigger": {
@@ -1877,7 +1865,7 @@
             },
             {
               "key": "subtitleFieldId",
-              "value": "fld_depart_heure"
+              "value": "fld_depart_date"
             },
             {
               "key": "trailingFieldId",
@@ -1887,8 +1875,9 @@
               "key": "badgeFieldIds",
               "value": [
                 "fld_depart_statut",
-                "fld_depart_places",
-                "fld_depart_quai"
+                "fld_depart_duree",
+                "fld_depart_quai",
+                "fld_depart_places"
               ]
             },
             {
@@ -1906,65 +1895,6 @@
             {
               "key": "errorMessage",
               "value": "Les informations de ce départ n'ont pas pu être chargées."
-            }
-          ]
-        },
-        {
-          "blockType": "list",
-          "entityId": "ent_depart",
-          "id": "blk_depart_detail_infos",
-          "props": [
-            {
-              "key": "title",
-              "value": "Autres départs vers la même période"
-            },
-            {
-              "key": "titleFieldId",
-              "value": "fld_depart_destination"
-            },
-            {
-              "key": "subtitleFieldId",
-              "value": "fld_depart_heure_arrivee"
-            },
-            {
-              "key": "trailingFieldId",
-              "value": "fld_depart_duree"
-            },
-            {
-              "key": "badgeFieldId",
-              "value": "fld_depart_statut"
-            },
-            {
-              "key": "imageFieldId",
-              "value": "fld_depart_photo"
-            },
-            {
-              "key": "sortFieldId",
-              "value": "fld_depart_date"
-            },
-            {
-              "key": "sortDirection",
-              "value": "asc"
-            },
-            {
-              "key": "pageSize",
-              "value": 4
-            },
-            {
-              "key": "loadingTitle",
-              "value": "Chargement des trajets…"
-            },
-            {
-              "key": "errorTitle",
-              "value": "Trajets indisponibles"
-            },
-            {
-              "key": "emptyTitle",
-              "value": "Aucun autre trajet"
-            },
-            {
-              "key": "emptyMessage",
-              "value": "Aucun autre départ n'est proposé pour cette destination."
             }
           ]
         },
