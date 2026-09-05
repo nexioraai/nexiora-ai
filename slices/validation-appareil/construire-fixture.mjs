@@ -13,6 +13,14 @@
 export const DOMAINE = "www.deribfy.com";
 export const REFRESH_SECONDS = 30;
 
+// ⛔ DET-031 — GÉNÉRATEUR DÉSYNCHRONISÉ DE LA REFONTE (2026-09-05).
+// Ce script reconstruit le document depuis corpus-v3/bus-intercites.air.json,
+// qui NE CONTIENT PAS les phases 1-3 de la refonte UX : l'exécuter ÉCRASE
+// validation-appareil.air.json avec l'état d'avant-refonte. Démontré deux
+// fois (airHash 812b93fd… détruit le 2026-09-05 matin ; rejoué le même jour
+// après-midi, restauré par git). NE PAS L'EXÉCUTER avant qu'il soit rebasé
+// sur le document de la refonte. Les corrections produit se font DANS
+// validation-appareil.air.json, puis se reportent ici.
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -21,14 +29,19 @@ const R = join(ICI, "..", "..") + "/";
 
 const brut = JSON.parse(readFileSync(R + "packages/golden-corpus/corpus-v3/bus-intercites.air.json", "utf8"));
 
-// E1 — filtres pilotés sur la liste des départs : 1 filtre littéral existant
-// (statut ≠ annule) + 2 pilotés = 3 au total (plafond du contrat D-129).
+// E1 — filtre piloté sur la liste des départs : 1 filtre littéral existant
+// (statut ≠ annule) + 1 piloté (statut, chips). DET-031 (jugement
+// propriétaire, 2026-09-05) : le filtre TEXTE sur la destination est RETIRÉ —
+// il doublonnait la recherche (même champ, même opérateur `contains`) et
+// découpait l'écran en tranches. Il n'existait que pour exercer le type
+// d'entrée `text` du contrat E1 : besoin de CAMPAGNE, pas de produit ; cette
+// couverture reste tenue par les tests du pipeline (list-pipeline).
 const departs = brut.screens.find((s) => s.id === "scr_departs");
 const liste = departs.blocks.find((b) => b.blockType === "list");
 liste.props.push(
-  { key: "userFilterFieldIds", value: ["fld_depart_statut", "fld_depart_destination"] },
-  { key: "userFilterOperators", value: ["eq", "contains"] },
-  { key: "userFilterInputTypes", value: ["choice", "text"] },
+  { key: "userFilterFieldIds", value: ["fld_depart_statut"] },
+  { key: "userFilterOperators", value: ["eq"] },
+  { key: "userFilterInputTypes", value: ["choice"] },
 );
 
 // E2 — liste des billets SCOPÉE au départ courant, AJOUTÉE (additif : rien

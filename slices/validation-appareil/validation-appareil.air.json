@@ -1544,22 +1544,19 @@
             {
               "key": "userFilterFieldIds",
               "value": [
-                "fld_depart_statut",
-                "fld_depart_destination"
+                "fld_depart_statut"
               ]
             },
             {
               "key": "userFilterOperators",
               "value": [
-                "eq",
-                "contains"
+                "eq"
               ]
             },
             {
               "key": "userFilterInputTypes",
               "value": [
-                "choice",
-                "text"
+                "choice"
               ]
             }
           ]
