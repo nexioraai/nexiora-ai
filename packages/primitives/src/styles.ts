@@ -76,6 +76,24 @@ const makeSheet = (c: Palette) =>
       borderColor: c.primary,
     },
     buttonDisabled: { opacity: theme.opacity.disabled },
+    // — chip (1.5.0, DET-034) : la CIBLE garde tapTarget, le VISUEL est un
+    // badge. La discrétion est dans le rendu, jamais dans la zone de toucher.
+    // Style de BASE du chip (jamais empilé sur `button` : rien à écraser,
+    // donc aucune valeur en dur — l'instrument E le vérifie).
+    buttonChip: {
+      minHeight: theme.size.tapTarget,
+      justifyContent: "center",
+      alignItems: "flex-start",
+    },
+    buttonChipVisuel: {
+      backgroundColor: c.badgeBg,
+      borderRadius: theme.radius.sm,
+      paddingHorizontal: theme.space.sm,
+      paddingVertical: theme.space.xxs,
+    },
+    buttonChipVisuelActif: { backgroundColor: c.primary },
+    buttonChipText: { color: c.primaryText, fontWeight: theme.fontWeight.semibold, fontSize: theme.font.label },
+    buttonChipTextActif: { color: c.onPrimary },
     buttonText: { color: c.onPrimary, fontWeight: theme.fontWeight.semibold, fontSize: theme.font.body },
     buttonGhostText: { color: c.primaryText },
     // — TextField —

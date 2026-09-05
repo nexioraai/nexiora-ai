@@ -38,7 +38,10 @@ import {
 // 1.4.0 (DET-032) — `optionLabels` OPTIONNEL sur les filtres à choix : les
 // libellés d'affichage déclarés par le document (AIR 1.10.0) atteignent les
 // chips sans toucher valeurs, filtrage ni testID. Strictement additif.
-export const BLOCK_REGISTRY_VERSION = "1.4.0";
+// 1.5.0 (DET-034) — les options d'un filtre à choix deviennent des CHIPS :
+// `kind: "chip"` + `selected` sur la primitive bouton (additifs). Visuel de
+// badge, cible tactile intacte, état sélectionné exposé à l'accessibilité.
+export const BLOCK_REGISTRY_VERSION = "1.5.0";
 
 // Motifs d'identités stables — IDENTIQUES à @deribfy/air-schema (ids.ts) ;
 // redéclarés structurellement (patron AirCapabilitySlice : pas de couplage

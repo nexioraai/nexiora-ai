@@ -65,7 +65,20 @@ export interface AppButtonProps extends A11yProps {
    * qu'aucun étage au-dessus ne puisse le contourner.
    */
   onPress?: () => void;
-  kind?: "primary" | "ghost";
+  /**
+   * `chip` (1.5.0, DET-034) — un FILTRE, pas une action : visuel de badge
+   * (le langage compact existant du système), cible tactile INTACTE à
+   * `tapTarget` — le pressable garde sa pleine hauteur autour d'un visuel
+   * compact. Jugé sur appareil : deux gros boutons pleine hauteur donnaient
+   * aux filtres plus d'importance qu'à la recherche.
+   */
+  kind?: "primary" | "ghost" | "chip";
+  /**
+   * État SÉLECTIONNÉ (1.5.0) — porté par `accessibilityState.selected`, comme
+   * la navigation. Ferme l'observation consignée le 2026-09-05 : un chip de
+   * filtre actif n'exposait aucun état à l'accessibilité.
+   */
+  selected?: boolean;
   disabled?: boolean;
   loading?: boolean;
 }

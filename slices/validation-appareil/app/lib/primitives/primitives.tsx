@@ -122,6 +122,7 @@ export function AppButton({
   label,
   onPress,
   kind = "primary",
+  selected,
   disabled = false,
   loading = false,
   testID,
@@ -129,19 +130,32 @@ export function AppButton({
 }: AppButtonProps) {
   const s = useStyles();
   const ghost = kind === "ghost";
+  const chip = kind === "chip";
   const inactive = disabled || loading;
   return (
     <Pressable
-      style={[s.button, ghost && s.buttonGhost, inactive && s.buttonDisabled]}
+      style={[chip ? s.buttonChip : s.button, ghost && s.buttonGhost, inactive && s.buttonDisabled]}
       onPress={inactive ? undefined : onPress}
       disabled={inactive}
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
-      accessibilityState={{ disabled: inactive, busy: loading }}
+      accessibilityState={{
+        disabled: inactive,
+        busy: loading,
+        // 1.5.0 (DET-034) : l'état sélectionné se DIT — comme la navigation.
+        ...(selected === undefined ? {} : { selected }),
+      }}
     >
       {loading && <ActivityIndicator size="small" />}
-      <Text style={[s.buttonText, ghost && s.buttonGhostText]}>{label}</Text>
+      {chip ? (
+        // La CIBLE (Pressable) garde tapTarget ; le VISUEL est un badge.
+        <View style={[s.buttonChipVisuel, selected === true && s.buttonChipVisuelActif]}>
+          <Text style={[s.buttonChipText, selected === true && s.buttonChipTextActif]}>{label}</Text>
+        </View>
+      ) : (
+        <Text style={[s.buttonText, ghost && s.buttonGhostText]}>{label}</Text>
+      )}
     </Pressable>
   );
 }

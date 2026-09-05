@@ -53,7 +53,11 @@ export const RELEASE_TRAIN_V1 = {
   // ÉDITION CONSCIENTE (2026-09-05, DET-032) : registre 1.4.0 — un seul prop
   // ADDITIF, `optionLabels` sur les filtres à choix. Valeurs, filtrage et
   // testID inchangés ; un appelant 1.3.0 est inchangé.
-  blockRegistryVersion: "1.4.0",
+  // ÉDITION CONSCIENTE (2026-09-05, DET-034) : registre 1.5.0 — chips de
+  // filtre : `kind: "chip"` + `selected` sur la primitive bouton, additifs.
+  // Visuel de badge, cible tactile INTACTE (tapTarget), état sélectionné
+  // exposé à l'accessibilité.
+  blockRegistryVersion: "1.5.0",
   // Ré-scellé le 2026-08-29 (DET-006 / D-039) : `ListBlock` DÉCLARE désormais
   // `fill` sur sa Section, afin que la liste virtualisée reçoive un parent
   // BORNÉ. Cause démontrée : imbriquée dans un ScrollView de même axe, une
@@ -117,7 +121,10 @@ export const RELEASE_TRAIN_V1 = {
   // recherche et filtres restent MONTÉS (l'état vide démontait le champ en
   // pleine frappe) et vivent en EN-TÊTE de la FlatList : une seule surface
   // de défilement. Composition interne seulement — contrats INCHANGÉS.
-  "40375344e14cc7ffed0c3becd79c82cfd3ea86a39dac2f22814ba2a78d490395",
+  // Ré-scellé 2026-09-05 (DET-034) : les options d'un filtre à choix rendent
+  // des CHIPS (`kind: "chip"`, `selected`) et la rangée perd son titre
+  // visible — le nom du filtre reste porté par l'accessibilité du groupe.
+  "b3834ff08571bdaa09ca908033fa57e6bb19624d98d756f604c526a6f44fd2e4",
   capabilityRegistryVersion: "1.0.0",
   capabilitySourcesHash:
     "6c28599246abde6e7010704f23f273aafe50d17c5483133709c9065f2777346c",

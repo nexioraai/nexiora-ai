@@ -145,9 +145,11 @@ describe("V2 — A et G ne concluent JAMAIS à la conformité", () => {
     // Le panneau de navigation a gagné un état ACTIF (`primaryNavItemActive`),
     // et cet état porte lui aussi `minHeight: theme.size.tapTarget`. Une
     // surface contrainte de PLUS : la dimension A y gagne, elle n'y perd rien.
-    // Surfaces mesurées : button · input · primaryNavItem · primaryNavItemActive
-    // · row · imageHeader.
-    expect(a?.detail).toContain("6 surface(s) contrainte(s)");
+    // Surfaces mesurées : button · input · primaryNavItem · primaryNavContainer
+    // · row · imageHeader — puis `buttonChip` (DET-034) : le chip de filtre
+    // garde `tapTarget` par construction, et l'instrument le VOIT — 7ᵉ surface
+    // contrainte, pas une exemption.
+    expect(a?.detail).toContain("7 surface(s) contrainte(s)");
     expect(a?.detail).toContain("NON MESURÉ : zones sûres");
     expect(g?.detail).toContain("0 encapsulé dans un ScrollView");
     expect(g?.detail).toContain("NON MESURÉ : jank au défilement");

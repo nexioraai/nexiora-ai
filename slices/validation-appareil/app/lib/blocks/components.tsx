@@ -92,7 +92,15 @@ export function ListBlock({
             onChangeText={f.onChange}
           />
         ) : (
-          <Section key={`${testID ?? "list"}-filter-${String(i)}`} title={f.label} inline>
+          // DET-034 : un filtre n'est pas une action — les options sont des
+          // CHIPS (visuel de badge, cible tactile intacte), la rangée perd son
+          // titre VISIBLE (la hiérarchie revient à la recherche) mais garde son
+          // nom pour l'accessibilité, et l'état sélectionné se dit.
+          <Section
+            key={`${testID ?? "list"}-filter-${String(i)}`}
+            accessibilityLabel={f.label}
+            inline
+          >
             {(f.options ?? []).map((option) => (
               <AppButton
                 key={option}
@@ -100,7 +108,8 @@ export function ListBlock({
                 // DET-032 : le libellé peut différer de la VALEUR — le testID,
                 // le filtrage et onChange restent sur l'option brute.
                 label={f.optionLabels?.[option] ?? option}
-                kind={f.value === option ? "primary" : "ghost"}
+                kind="chip"
+                selected={f.value === option}
                 onPress={() => {
                   f.onChange(f.value === option ? "" : option);
                 }}

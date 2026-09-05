@@ -48,7 +48,9 @@ describe("cliquets du registre de blocs", () => {
     // DET-032 : quatrième montée additive — `optionLabels` OPTIONNEL sur les
     // filtres à choix (libellés d'affichage AIR 1.10.0). Valeurs, filtrage et
     // testID inchangés ; un appelant 1.3.0 est inchangé.
-    expect(BLOCK_REGISTRY_VERSION).toBe("1.4.0");
+    // DET-034 : cinquième montée additive — chips de filtre (`kind: "chip"`,
+    // `selected` sur la primitive). Un appelant 1.4.0 est inchangé.
+    expect(BLOCK_REGISTRY_VERSION).toBe("1.5.0");
     expect(BLOCKS.map((b) => b.id)).toEqual(V1_BLOCK_IDS);
   });
 
