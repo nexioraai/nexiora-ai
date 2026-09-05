@@ -1,0 +1,22 @@
+# GÉNÉRÉ DEPUIS L'AIR — rejeu RTL (rtlSupported=false).
+appId: com.deribfy.preview.bus_intercites
+---
+- launchApp:
+    arguments:
+      forceRTL: true
+- assertVisible:
+    id: "scr_accueil"
+- assertVisible:
+    id: "blk_accueil_liste_departs-row-ent_depart_row_1"
+- scrollUntilVisible:
+    element:
+      id: "blk_accueil_liste_departs"
+    timeout: 60000
+    speed: 70
+- tapOn:
+    id: "blk_accueil_liste_departs"
+- assertVisible:
+    id: "scr_depart_detail"
+- back
+- assertVisible:
+    id: "scr_accueil"
