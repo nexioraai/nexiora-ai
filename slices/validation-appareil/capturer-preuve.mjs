@@ -72,13 +72,29 @@ export function parseTaille(sortie) {
  * même bord, et sous-estimer un inset ferait passer une cible masquée pour
  * une cible visible.
  */
+/** Seuls les DÉCORS PERMANENTS bornent la zone sûre. Voir `parseInsets`. */
+const TYPES_BARRES = ["statusBars", "navigationBars"];
+
 export function parseInsets(sortie) {
+  // 🔴 DÉFAUT TROUVÉ SUR MATÉRIEL RÉEL (Galaxy A17, 2026-09-05) — la version
+  // précédente prenait le MAXIMUM sur TOUS les `mInsetsHint`, sans regarder
+  // leur type. Or `dumpsys window` en publie un pour le CLAVIER :
+  //     ime -> bottom=1008
+  // contre 135 pour la barre de navigation. Retenir 1008 aurait placé la
+  // frontière basse de la zone sûre au milieu de l'écran et déclaré presque
+  // toutes les cibles « sous la barre système » : un `non_conforme` MASSIF et
+  // FAUX sur la dimension A. Le clavier n'est pas un décor permanent — il
+  // apparaît sur saisie et disparaît ; la zone sûre se borne aux barres.
+  //
+  // On ne retient donc que `statusBars` et `navigationBars`, et le maximum
+  // par bord ENTRE ELLES : deux barres peuvent contribuer au même bord, et
+  // sous-estimer un inset ferait passer une cible masquée pour visible.
   const trouves = [...sortie.matchAll(
-    /mInsetsHint=Insets\{left=(\d+),\s*top=(\d+),\s*right=(\d+),\s*bottom=(\d+)\}/g,
-  )];
+    /mType=([a-zA-Z]+)[^}]*mInsetsHint=Insets\{left=(\d+),\s*top=(\d+),\s*right=(\d+),\s*bottom=(\d+)\}/g,
+  )].filter((m) => TYPES_BARRES.includes(m[1]));
   if (trouves.length === 0) return null;
   const max = (i) => Math.max(...trouves.map((m) => Number.parseInt(m[i], 10)));
-  return { gauchePx: max(1), hautPx: max(2), droitePx: max(3), basPx: max(4) };
+  return { gauchePx: max(2), hautPx: max(3), droitePx: max(4), basPx: max(5) };
 }
 
 // ------------------------------------------------------------------ OUTILS
@@ -122,6 +138,17 @@ if (process.argv.includes("--verifier")) {
   check("insets : maximum par bord sur 2 sources", i?.hautPx === 74 && i.basPx === 63, `haut=${i?.hautPx} bas=${i?.basPx}`);
   check("insets : bords latéraux", i?.gauchePx === 0 && i.droitePx === 0);
   check("insets : aucune source → null", parseInsets("rien") === null);
+  // ÉCHANTILLON RÉEL Galaxy A17 (2026-09-05), CLAVIER COMPRIS. Sans ce
+  // contrôle, l'inset `ime` passait pour une barre système et bornait la zone
+  // sûre à 1008 px — presque toutes les cibles auraient été déclarées masquées.
+  const A17 = `
+        InsetsSourceControl: {1 mType=ime mInsetsHint=Insets{left=0, top=0, right=0, bottom=1008}}
+        InsetsSourceControl: {2 mType=navigationBars mInsetsHint=Insets{left=0, top=0, right=0, bottom=135}}
+        InsetsSourceControl: {3 mType=statusBars mInsetsHint=Insets{left=0, top=100, right=0, bottom=0}}`;
+  const a = parseInsets(A17);
+  check("insets : le CLAVIER (ime) est EXCLU", a?.basPx === 135, `bas=${a?.basPx} (1008 = clavier, refusé)`);
+  check("insets : barre haute retenue", a?.hautPx === 100);
+  check("insets : aucune barre, seulement un clavier → null", parseInsets(`mType=ime mInsetsHint=Insets{left=0, top=0, right=0, bottom=900}`) === null);
 
   check("cible émulateur REFUSÉE (serial)", estEmulateur("emulator-5554", "Pixel 7"));
   check("cible émulateur REFUSÉE (modèle)", estEmulateur("R58N123", "sdk_gphone64_arm64"));
