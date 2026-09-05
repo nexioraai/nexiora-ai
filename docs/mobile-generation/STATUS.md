@@ -1,7 +1,38 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-05 (25)** (**📱 JOURNÉE APPAREIL RÉEL : CAMPAGNE `A1→A9` **DEUX FOIS**
+> **2026-09-05 (26)** (**🔁 DEUX CYCLES JUGEMENT→CORRECTION DANS LA MÊME JOURNÉE —
+> LE PROPRIÉTAIRE JUGE SUR MOBILE, LES RACINES TOMBENT LE JOUR MÊME.**
+> Cycle 1 (build `50236706`, APK `d40c73a8…`, AIR 1.10.0) : **DET-032** —
+> le schéma n'avait AUCUNE notion de libellé d'affichage, `statut` /
+> `a_l_heure` / `passager_nom` fuyaient jusqu'aux chips, badges et
+> formulaires. AIR **1.10.0** (`label`, `enumLabels` OPTIONNELS, migration
+> identité, 3 codes de validation testés), registre de blocs **1.4.0**
+> (`optionLabels`, strictement additif, testID/filtrage inchangés),
+> résolution de locale À L'ÉMISSION, 34 champs libellés au document.
+> Vérifié SUR L'APPAREIL : « Statut », « À l'heure », « Retardé » à l'écran,
+> sélecteurs de campagne intacts. Et **DET-004 a servi en réel** : premier
+> build SANS retouche manuelle d'`app.json`. CI rougie puis comprise :
+> l'observatoire ne connaissait pas `KeyboardAvoidingView` (stub étendu,
+> `984d1be`) ; `gate:fidelite` rouge DÉMONTRÉ PRÉEXISTANT (signature
+> identique rejouée sur l'état antérieur) et non bloquant branche (D-134).
+> Cycle 2 (jugement du propriétaire sur ce build) : « il bouge tout seul »,
+> « la recherche quitte quand je tape », « on dirait 2 pages » → **DET-033**,
+> DOUBLE RACINE DÉMONTRÉE : le polling 30 s repassait chaque écran par
+> « Chargement… » (démontage périodique de l'UI — jusqu'aux dérives de
+> pilotage de la campagne) ; et l'état vide remplaçait le BLOC ENTIER,
+> champ de recherche compris, dès qu'une saisie ne correspondait à rien.
+> Corrections À LA RACINE : revalidation SILENCIEUSE sur données servies
+> (loading visible réservé au premier remplissage, A2 préservé), états
+> scopés à la ZONE DE CONTENU, recherche/filtres MONTÉS en permanence et
+> vivant EN-TÊTE de la FlatList — une seule surface de défilement. Champ de
+> recherche compact (placeholder). Sonde des fantômes étendue au RENDU
+> (un chip qui filtre la liste EST agissant) : cliquet **174/180** mesuré,
+> 52 contrôles reclassés. Trains re-scellés consciemment ×2. **RESTE : GO
+> push + build pour juger DET-033 au doigt · A12 formelle sur build 1.10.0
+> non capturée · A10 · iOS · G · A++ NON ÉTABLI.**)
+>
+> *Entrée précédente —* **2026-09-05 (25)** (**📱 JOURNÉE APPAREIL RÉEL : CAMPAGNE `A1→A9` **DEUX FOIS**
 > `PASS` · `A = conforme` MESURÉE SUR LES DEUX BUILDS · REFONTE JUGÉE PAR LE
 > PROPRIÉTAIRE → DEUX DÉFAUTS FERMÉS LE JOUR MÊME.** Matin — session physique
 > Galaxy A17 (`SM-A175F`, Android 16) sur le build `c96c4359` : `A1→A9` 9/9
@@ -753,6 +784,8 @@ la déviation venait de la séquence conversationnelle, pas du plan.)*
 | **DET-029** | **Divergence documentaire non résorbée entre `main` et la lignée de campagne** [constatée 2026-09-04, non mesurée] : le centre de contrôle `docs/mobile-generation/` (`STATUS`/`ROADMAP`/`DECISIONS`/`CHANGELOG`) vit sur la branche de chantier `fix/xss-jsonld` et y a reçu l'intégralité de la campagne `D-104`→`D-134` ; `main` (`4e56538`) porte le cutover monorepo et la production, mais **aucune convergence documentaire n'a été instruite dans un sens ni dans l'autre**. Conséquence : `main` ne permet pas de reconstituer l'état réel du chantier, et une reprise partant de `main` planifierait sur une documentation muette. **Aucune mesure du delta n'a été faite** — ni liste de fichiers divergents, ni sens de convergence arbitré. Consigné ICI parce que l'unique trace antérieure était conversationnelle : une réinitialisation de contexte la détruisait. **Ne pas traiter la convergence sans arbitrage : elle touche `main`.** **DELTA MESURÉ le 2026-09-04** *(mesure seule, aucun traitement)* — base commune `42a449b`. **Branche → `main` : 44 commits · 233 fichiers · +134 958 / −14 527**, dont la totalité du centre de contrôle (`DECISIONS` +2528, `STATUS` +787, `ROADMAP` +193, `PROTOCOLE` +98) et les zones `slices/validation-appareil` (58 f.), `benchmarks/air-emission` (51), `docs/elite-protocol` (30), `packages/*` (~75). **`main` → branche : 18 commits, mais UN SEUL fichier au contenu réellement divergent** — `apps/web/supabase/sql/marketing_site_id_step1_add_column_backfill_and_fk.sql` (+7/−2 : un commentaire de mesure a posteriori sur les actions `ON DELETE`/`ON UPDATE` des FK). Le second fichier listé (`apps/web/public/air/v1/entities/ent_depart/rows`) est **byte-identique**. `INFÉRENCE` — la divergence est donc **quasi unilatérale** : la branche contient tout `main` à sept lignes de commentaire près, et `main` ignore l'intégralité de la campagne. La convergence utile est un sens unique branche → `main`, ce qui reste un arbitrage propriétaire NON PRIS. | Reprise 2026-09-04 (audit de checkpoint) | 🟠 moyenne (aucune régression de code ; risque de perte de continuité documentaire) | **non datée** — arbitrage propriétaire requis (sens de convergence, périmètre, moment) | 🔴 **OUVERTE** |
 | **DET-030** | **Clavier recouvrant les champs de formulaire sur Android** [jugé par le propriétaire au doigt, SM-A175F, 2026-09-05] : DET-016 confiait Android à `softwareKeyboardLayoutMode: "resize"` (manifeste) ; or la fenêtre est BORD À BORD (D-037) et Android 15+ **ignore** le redimensionnement en bord à bord — la déclaration était inerte sur l'appareil de référence, l'hypothèse scellée « Android est couvert par le manifeste » est **RÉFUTÉE sur appareil**. | Jugement propriétaire sur mobile, 2026-09-05 | 🔴 haute (saisie à l'aveugle sur les 3 formulaires) | — | 🟢 **RÉSOLUE 2026-09-05** (`e48eaed`) — mécanisme remplacé par `KeyboardAvoidingView behavior="padding"`, identique deux plateformes, zéro `Platform.OS` ; `automaticallyAdjustKeyboardInsets` retiré des écrans à ScrollView (double compensation iOS rendue impossible par le verrou 1 réécrit, désormais bidirectionnel) ; manifeste conservé pour les Android pré-bord-à-bord (hypothèse de sur-compensation consignée au verrou 3, aucun appareil ≤ 14 au parc). **Efficacité au doigt NON MESURÉE — exige le prochain build.** |
 | **DET-031** | **Générateur de fixture désynchronisé de la refonte** [démontré DEUX FOIS le 2026-09-05] : `construire-fixture.mjs` reconstruit `validation-appareil.air.json` depuis un corpus d'AVANT-refonte — l'exécuter écrase les phases 1-3. Matin : écrasement par import accidentel (build `9fa22f40` émis sur le mauvais document, annulé, garde d'exécution posée — mais la garde ne couvre que l'import). Après-midi : écrasement par **exécution volontaire** (300 lignes de dérive détectées au diff, restauration git, diff vide vérifié). Le même jour a aussi vu la fermeture racine de `DET-004` (cousine : recopie manuelle du lien de build). | Exécution du lot DET-031, 2026-09-05 | 🟠 moyenne (destruction silencieuse du document si exécuté) | rebasage du générateur sur le document de la refonte — **non planifié** | 🔴 **OUVERTE** — bannière ⛔ posée en tête du script (`1710aab`) ; les corrections produit se font DANS le document puis se reportent au générateur. |
+| **DET-032** | **Aucune notion de libellé d'affichage au schéma** [jugé par le propriétaire sur SM-A175F, 2026-09-05] : `name` (identifiant machine) et les codes d'enum (`a_l_heure`) étaient rendus tels quels aux titres de filtres, chips, badges et libellés de formulaires — un manque du CONTRAT, pas d'un écran. | Jugement propriétaire sur mobile, 2026-09-05 | 🟠 moyenne (codes machine à l'écran, « pas premium ») | — | 🟢 **RÉSOLUE 2026-09-05** (`89a17a4`) — AIR **1.10.0** (`label`/`enumLabels` optionnels, migration identité, philosophie D-064 : le document déclare, le moteur ne devine pas), registre blocs **1.4.0** (`optionLabels` additif), résolution de locale à l'émission, 34 champs libellés. **Vérifié sur l'appareil** (« Statut », « À l'heure », « Retardé ») ; testID de campagne inchangés. |
+| **DET-033** | **L'UI se démontait toute seule** [jugé par le propriétaire sur SM-A175F, 2026-09-05 ; trois symptômes : « il bouge tout seul », « la recherche quitte quand je tape », « on dirait 2 pages »] — DOUBLE RACINE DÉMONTRÉE dans le code : ① chaque cycle de polling (30 s) repassait le magasin par `loading`, remplaçant l'écran par « Chargement… » puis le remontant — clignotement périodique, saisie interrompue, et cause plausible des dérives de pilotage de la campagne (taps sur géométrie recomposée, `scr_reservation` transitoire inexpliqué) ; ② l'état vide remplaçait le BLOC LISTE ENTIER, champ de recherche compris, dès qu'une saisie ne correspondait à aucune ligne. | Jugement propriétaire sur mobile, 2026-09-05 | 🔴 haute (saisie inutilisable, UI instable) | — | 🟢 **RÉSOLUE 2026-09-05** (`3ad3247`) — revalidation SILENCIEUSE sur données servies (loading visible réservé au premier remplissage — A2 préservé, vérifié sur magasin vide) ; états scopés à la zone de contenu, contrôles montés en permanence, recherche/filtres en EN-TÊTE de FlatList (une seule surface) ; sonde des fantômes étendue au rendu (cliquet 174/180, 52 contrôles reclassés). **Efficacité au doigt NON MESURÉE — exige un build.** |
 
 **Règle de tenue** (recommandation acceptée) : toute dette découverte est
 inscrite ici **immédiatement**, avec origine, gravité et **phase
