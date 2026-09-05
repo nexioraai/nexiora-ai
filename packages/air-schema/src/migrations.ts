@@ -110,6 +110,21 @@ export const AIR_MIGRATIONS: readonly AirMigration[] = [
       "fail-closed), jamais transformé en silence.",
     migrate: (document) => document,
   },
+  {
+    from: "1.7.1",
+    to: "1.8.0",
+    description:
+      "AIR 1.8.0 (phase 3, refonte UX) : ajout du champ OPTIONNEL " +
+      "`navigation.primary.destinations[].icon` — énumération FERMÉE de " +
+      "glyphes que le moteur sait dessiner, embarqués, sans accès réseau. " +
+      "Migration IDENTITÉ : aucune icône n'est inventée pour un document qui " +
+      "n'en déclare pas. Choisir l'icône d'un onglet à sa place reviendrait à " +
+      "décider de son identité visuelle — exactement ce que la migration de " +
+      "`navigation.primary` (1.6.0) avait déjà refusé. Un document sans " +
+      "`icon` se rend donc EXACTEMENT comme avant, ce que le cliquet de " +
+      "compatibilité ascendante vérifie au lieu de le déclarer.",
+    migrate: (document) => document,
+  },
 ];
 
 export class AirMigrationError extends Error {

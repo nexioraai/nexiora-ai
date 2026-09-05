@@ -21,7 +21,7 @@ import {
 // 1.7.1 (E3.3, D-131) : provenance APLANIE (sourceKind/sourceIntegrationId/
 //   sourceDomain/sourceRefreshSeconds) — l'union 1.7.0 dépassait la limite
 //   réelle de grammaire de l'API (classe D-078) ; sémantique inchangée.
-export const AIR_SCHEMA_VERSION = "1.7.1";
+export const AIR_SCHEMA_VERSION = "1.8.0";
 
 export const semverSchema = z.string().regex(/^\d+\.\d+\.\d+$/);
 export const sha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
@@ -153,6 +153,35 @@ const primaryNavigationSchema = z.strictObject({
         label: localizedTextSchema,
         /** Position dans la barre, à partir de 0. Unique, contiguë. */
         order: z.number().int().min(0).max(4),
+        /**
+         * ICÔNE D'ONGLET (1.8.0) — OPTIONNELLE et FERMÉE.
+         *
+         * Fermée parce qu'une icône doit être RENDABLE : le moteur doit savoir
+         * dessiner ce que le document nomme. Un nom libre, ou une URL, ferait
+         * revenir la classe de défaut que `D-088` a corrigée — un document qui
+         * promet ce que le moteur ne rend pas. Chaque valeur est associée à un
+         * glyphe embarqué, sans aucun accès réseau : le cliquet zéro-réseau du
+         * chemin de compilation reste tenu.
+         *
+         * Optionnelle parce qu'un document 1.7.1 n'en porte pas et que la
+         * migration n'en INVENTE aucune : choisir l'icône d'un onglet à la
+         * place du document serait décider de son identité visuelle.
+         */
+        icon: z
+          .enum([
+            "accueil",
+            "recherche",
+            "liste",
+            "billet",
+            "panier",
+            "calendrier",
+            "carte",
+            "compte",
+            "favoris",
+            "message",
+            "reglages",
+          ])
+          .optional(),
       }),
     )
     .min(3)

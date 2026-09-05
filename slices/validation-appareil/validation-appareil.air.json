@@ -234,7 +234,7 @@
       }
     }
   ],
-  "airSchemaVersion": "1.6.0",
+  "airSchemaVersion": "1.8.0",
   "app": {
     "description": [
       {
@@ -1051,7 +1051,8 @@
             }
           ],
           "order": 0,
-          "routeId": "nav_accueil"
+          "routeId": "nav_accueil",
+          "icon": "accueil"
         },
         {
           "label": [
@@ -1061,7 +1062,8 @@
             }
           ],
           "order": 1,
-          "routeId": "nav_departs"
+          "routeId": "nav_departs",
+          "icon": "recherche"
         },
         {
           "label": [
@@ -1071,7 +1073,8 @@
             }
           ],
           "order": 2,
-          "routeId": "nav_billets"
+          "routeId": "nav_billets",
+          "icon": "billet"
         },
         {
           "label": [
@@ -1081,7 +1084,8 @@
             }
           ],
           "order": 3,
-          "routeId": "nav_compte"
+          "routeId": "nav_compte",
+          "icon": "compte"
         }
       ]
     },

@@ -512,6 +512,11 @@ function emitNavData(air: ProjectAir, locale: string): string {
               screenId: assertId(route.screenId, "navigation.primary"),
               label: resolveLocalized(d.label, locale, `navigation.primary.${d.routeId}`),
               order: d.order,
+              // 1.8.0 — projection EXPLICITE, comme les autres champs : la
+              // destination n'est pas recopiée en bloc. Absente du document,
+              // la clé reste absente de l'artefact et le runtime ne dessine
+              // rien — aucun glyphe par défaut n'est inventé.
+              ...(d.icon === undefined ? {} : { icon: d.icon }),
             };
           });
   const nav = {

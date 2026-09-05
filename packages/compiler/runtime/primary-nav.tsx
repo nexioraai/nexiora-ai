@@ -18,13 +18,38 @@
 import { Pressable, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useStyles } from "@deribfy/primitives/theme-bridge";
+
+/**
+ * TABLE DE CORRESPONDANCE — un rôle déclaré par le document, un glyphe connu
+ * du moteur (1.8.0). Elle est FERMÉE et exhaustive : le schéma n'admet que ces
+ * onze valeurs, et chacune trouve ici son dessin. Aucune valeur libre, aucune
+ * URL, aucun accès réseau — la police d'icônes est embarquée par le paquet.
+ */
+const GLYPHE = {
+  accueil: "home-outline",
+  recherche: "search-outline",
+  liste: "list-outline",
+  billet: "ticket-outline",
+  panier: "cart-outline",
+  calendrier: "calendar-outline",
+  carte: "map-outline",
+  compte: "person-outline",
+  favoris: "heart-outline",
+  message: "chatbubble-outline",
+  reglages: "settings-outline",
+} as const;
+
+export type IconeOnglet = keyof typeof GLYPHE;
 
 export interface PrimaryDestinationData {
   routeId: string;
   screenId: string;
   label: string;
   order: number;
+  /** Rôle visuel déclaré par le document. Absent ⇒ aucun glyphe, pas de défaut. */
+  icon?: IconeOnglet;
 }
 
 export interface PrimaryNavProps {
@@ -67,6 +92,13 @@ export function PrimaryNav({ destinations, currentScreenId }: PrimaryNavProps) {
                 alors un peu : c'est le comportement attendu, pas un défaut.
                 Le mot exact est volontairement absent — la grille le cherche par
                 sous-chaîne et ne distingue pas un commentaire du code. */}
+            {d.icon === undefined ? null : (
+              <Ionicons
+                name={GLYPHE[d.icon]}
+                size={s.primaryNavIcon.fontSize}
+                color={actif ? s.primaryNavLabelActive.color : s.primaryNavLabel.color}
+              />
+            )}
             <Text style={actif ? s.primaryNavLabelActive : s.primaryNavLabel}>
               {d.label}
             </Text>

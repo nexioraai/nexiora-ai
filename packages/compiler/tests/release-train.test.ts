@@ -29,6 +29,14 @@ describe("release train v1 — pins exacts (cliquet)", () => {
 
   it("dépendances du gabarit = versions prouvées sur device au banc V4", () => {
     expect(RELEASE_TRAIN_V1.templateDependencies).toEqual({
+      // ÉDITION CONSCIENTE DU CLIQUET (2026-09-05, phase 3 de la refonte UX) —
+      // SEULE dépendance ajoutée du lot. Version EXACTE, prise dans la
+      // fourchette que le SDK 57 déclare lui-même (`bundledNativeModules` :
+      // `^15.0.2`). Sans elle il n'existe AUCUN moyen de rendre une icône : le
+      // lock pré-résolu n'en portait aucune, et un glyphe Unicode dans un
+      // `Text` n'est pas une icône. Lock régénéré et prouvé BYTE-IDENTIQUE sur
+      // deux passes, 504 -> 505 paquets ; aucune version existante ne bouge.
+      "@expo/vector-icons": "15.1.1",
       expo: "57.0.17",
       // D-029 (édition consciente du cliquet) : config native air.native
       // appliquée au prebuild — bundledNativeModules SDK 57.

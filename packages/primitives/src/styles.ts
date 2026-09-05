@@ -148,6 +148,9 @@ const makeSheet = (c: Palette) =>
       borderRadius: theme.radius.md,
       backgroundColor: c.badgeBg,
     },
+    // Taille du glyphe d'onglet — portée par un TOKEN, jamais par un nombre
+    // écrit dans le composant : la dimension D interdit toute valeur en dur.
+    primaryNavIcon: { fontSize: theme.font.heading },
     primaryNavLabel: { fontSize: theme.font.label, color: c.muted },
     primaryNavLabelActive: {
       fontSize: theme.font.label,

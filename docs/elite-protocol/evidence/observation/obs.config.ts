@@ -10,6 +10,10 @@ export default defineConfig({
       // Stubs d'HÔTE : ce sont eux qui rendent l'exécution OBSERVABLE en node.
       { find: "react-native-safe-area-context", replacement: ici("./stub-safe-area.ts") },
       { find: "@react-navigation/native", replacement: ici("./stub-navigation.ts") },
+      // 1.8.0 — le paquet d'icônes livre du JSX dans des `.js` construits, que
+      // le bundler du harnais refuse. Le stub rend un élément NOMMÉ : une
+      // observation peut vérifier quelle icône est demandée.
+      { find: /^@expo\/vector-icons(\/.*)?$/, replacement: ici("./stub-icones.ts") },
       { find: "react-native", replacement: ici("./stub-rn.ts") },
       // Une SEULE instance de react, partagée par le rendu et les composants émis.
       { find: "react-test-renderer", replacement: ici("../../../../packages/blocks/node_modules/react-test-renderer") },

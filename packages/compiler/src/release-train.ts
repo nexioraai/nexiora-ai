@@ -35,7 +35,9 @@ export const RELEASE_TRAIN_V1 = {
   // de la provenance (l'union 1.7.0 dépassait la limite réelle de grammaire
   // de l'API, sonde différentielle) ; migration identité, sémantique
   // inchangée, aucun document ne portait la forme union.
-  airSchemaVersion: "1.7.1",
+  // 1.7.1 -> 1.8.0 (phase 3) : `navigation.primary.destinations[].icon`,
+  // OPTIONNELLE et fermée. Montée MINEURE et ADDITIVE, migration identité.
+  airSchemaVersion: "1.8.0",
   // Porté à 1.1.0 le 2026-08-31 (D-060) : montée STRICTEMENT ADDITIVE du
   // registre de blocs — `form` gagne `loading`/`empty`, `detail_header` gagne un
   // état, les trois blocs à données gagnent les props de titres. Rien n'est
@@ -157,7 +159,17 @@ export const RELEASE_TRAIN_V1 = {
   // appliquer air.native (minSdk/deploymentTarget) au prebuild ; démontré
   // nécessaire : 10/12 documents exigent minAndroidSdk 26 > plancher 24.
   templateHash:
-    "1985378e905e4b86af4ac272d6eb9a39e42b66c586ee98fdecbbd95d7c92244f",
+    // Ré-scellé 2026-09-05 (phase 3, refonte UX) : le gabarit gagne
+    // `@expo/vector-icons` en 15.1.1 — version EXACTE, dans la fourchette
+    // que le SDK 57 déclare lui-même (`bundledNativeModules` : ^15.0.2).
+    // Sans elle, il n'existe AUCUN moyen de rendre une icône : le lock
+    // pré-résolu de 504 paquets n'en portait aucune, et un glyphe Unicode
+    // dans un `Text` n'est pas une icône — rendu variable selon la police
+    // système, incohérent d'une plateforme à l'autre.
+    // Lock régénéré et prouvé BYTE-IDENTIQUE sur deux passes
+    // (`88cd87c4ce954642…`), 504 -> 505 paquets. Aucune autre dépendance
+    // n'entre, aucune version existante ne bouge.
+    "6770dd86157d0b2042013baaf798f1eb0d0eb193e31453baca1fe3397acadc8d",
   templateDevDependencies: {
     "@types/react": "19.2.15",
     typescript: "5.9.3",
@@ -166,6 +178,10 @@ export const RELEASE_TRAIN_V1 = {
   // Dépendances EXACTES du gabarit (consommées en 4.2 ; la navigation est
   // le verdict S1 du banc V4 — versions installées et prouvées sur device).
   templateDependencies: {
+    // AJOUTÉE 2026-09-05 (phase 3) — seule dépendance nouvelle du lot. Version
+    // EXACTE, dans la fourchette que le SDK 57 déclare (`^15.0.2`). Elle rend
+    // la dimension ⑤ réalisable : sans elle, aucune icône n'est rendable.
+    "@expo/vector-icons": "15.1.1",
     expo: "57.0.17",
     "expo-build-properties": "57.0.15",
     "expo-status-bar": "3.0.9",
