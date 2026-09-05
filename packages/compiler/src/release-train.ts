@@ -63,6 +63,12 @@ export const RELEASE_TRAIN_V1 = {
   // TAIRE le diagnostic d'image orpheline sans rien afficher.
   // Aucune prop n'est ajoutée ni retirée : seule leur VÉRIFICATION est rétablie.
   blocksSourcesHash:
+    // Ré-scellé 2026-09-05 (phase 2, refonte UX) : les options d'un filtre à
+    // CHOIX passent d'un empilement pleine largeur à une rangée qui va à la
+    // ligne — `<Section inline>`. Le bloc ne gagne AUCUN style : il déclare un
+    // RÔLE, la primitive porte la forme, et le cliquet d'étanchéité reste
+    // vérifié. Aucun type de bloc, aucune prop, aucun état n'est ajouté ni
+    // retiré — un appelant antérieur est inchangé.
     // Ré-scellé 2026-08-31 (D-060) : montée ADDITIVE du registre en 1.1.0 —
   // `FormBlockState` gagne `loading`/`empty`, `DetailHeaderBlockProps` gagne
   // `state`, et les trois blocs consommant des données gagnent les props de
@@ -93,7 +99,7 @@ export const RELEASE_TRAIN_V1 = {
   // désormais un déclencheur `ui` visant un bloc sans gestionnaire, et
   // `controls()` dérive de la même source au lieu d'une liste recopiée.
   // Aucun bloc, aucune prop, aucun état n'est ajouté ni retiré.
-  "95528917d17b8974517aa7056e7ccdb339b9ca72df730ef69fec7cf858cdb1a4",
+  "4f9e106eb57d0b09c08fdbf4a6e7547359be7905c4765e513b15d33226a5533e",
   capabilityRegistryVersion: "1.0.0",
   capabilitySourcesHash:
     "6c28599246abde6e7010704f23f273aafe50d17c5483133709c9065f2777346c",

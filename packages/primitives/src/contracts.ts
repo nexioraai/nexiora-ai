@@ -41,7 +41,19 @@ export type ScreenShellProps = PropsWithChildren<A11yProps & { title: string }>;
 // le paquet `blocks` se contente de DÉCLARER l'intention (contrainte
 // « aucun style en dur », D-021/D-023).
 export type SectionProps = PropsWithChildren<
-  A11yProps & { title?: string; fill?: boolean }
+  A11yProps & {
+    title?: string;
+    fill?: boolean;
+    /**
+     * DISPOSITION EN LIGNE (1.3.0) — les enfants se placent côte à côte et
+     * passent à la ligne quand la largeur manque, au lieu de s'empiler sur
+     * toute la largeur. Ajoutée pour les options d'un filtre à choix : empilées
+     * verticalement, elles donnaient à un écran de consultation l'allure d'un
+     * formulaire. Le bloc choisit un RÔLE, la primitive choisit la forme —
+     * le cliquet d'étanchéité interdit tout style chez les blocs, à raison.
+     */
+    inline?: boolean;
+  }
 >;
 
 export interface AppButtonProps extends A11yProps {

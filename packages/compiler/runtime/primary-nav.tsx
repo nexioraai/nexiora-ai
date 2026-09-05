@@ -56,7 +56,7 @@ export function PrimaryNav({ destinations, currentScreenId }: PrimaryNavProps) {
             testID={`primary-nav-${d.routeId}`}
             accessibilityRole="tab"
             accessibilityState={{ selected: actif }}
-            style={s.primaryNavItem}
+            style={actif ? s.primaryNavItemActive : s.primaryNavItem}
             onPress={() => {
               (navigation.navigate as (name: string) => void)(d.screenId);
             }}

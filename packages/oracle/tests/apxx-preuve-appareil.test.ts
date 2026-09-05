@@ -141,7 +141,13 @@ describe("V2 — A et G ne concluent JAMAIS à la conformité", () => {
     // courant (mesuré : 5 vs 3, fichiers non identiques). La conclusion de
     // `D-135` est intacte — elle ne repose pas sur ce compte mais sur la
     // NATURE de la preuve — mais la marge au seuil est plus large qu'annoncé.
-    expect(a?.detail).toContain("5 surface(s) contrainte(s)");
+    // ÉDITION CONSCIENTE (2026-09-05, phase 2 de la refonte UX) : 5 → 6.
+    // Le panneau de navigation a gagné un état ACTIF (`primaryNavItemActive`),
+    // et cet état porte lui aussi `minHeight: theme.size.tapTarget`. Une
+    // surface contrainte de PLUS : la dimension A y gagne, elle n'y perd rien.
+    // Surfaces mesurées : button · input · primaryNavItem · primaryNavItemActive
+    // · row · imageHeader.
+    expect(a?.detail).toContain("6 surface(s) contrainte(s)");
     expect(a?.detail).toContain("NON MESURÉ : zones sûres");
     expect(g?.detail).toContain("0 encapsulé dans un ScrollView");
     expect(g?.detail).toContain("NON MESURÉ : jank au défilement");
