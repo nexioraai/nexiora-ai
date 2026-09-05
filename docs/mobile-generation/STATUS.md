@@ -1,7 +1,27 @@
 # STATUS — TABLEAU DE BORD DU CHANTIER MOBILE GENERATION
 
 > Mis à jour à chaque étape significative. Dernière mise à jour :
-> **2026-09-05 (26)** (**🔁 DEUX CYCLES JUGEMENT→CORRECTION DANS LA MÊME JOURNÉE —
+> **2026-09-05 (27)** (**🎯 TROISIÈME CYCLE DE JUGEMENT — deux demandes produit
+> précises, deux fermetures démontrées.** **DET-035** — « Autres départs vers
+> la même période » après sélection : cause démontrée AUX SIX QUESTIONS avant
+> toute correction (bloc `list` déclaré au DOCUMENT depuis `9294a6c`, sans
+> scope ; transmission `{itemId}` saine sur les 3 chemins d'entrée ; repli
+> `rows[0]` du moteur RÉEL mais atteint par aucun chemin actif — dette
+> latente consignée, non masquée) ; correction niveau DOCUMENT seul : bloc et
+> action retirés, détail recentré sur les champs SERVIS (sous-titre `date` —
+> `heure` n'était jamais servie, sous-titre vide mesuré ; `durée` aux
+> badges). **DET-034** — filtres trop imposants : réponse par le SYSTÈME —
+> `kind: "chip"` + `selected` sur la primitive bouton (1.5.0, additifs),
+> visuel de BADGE, cible tactile INTACTE à 48 dp, `accessibilityState.selected`
+> exposé (ferme l'observation du matin), rangée sans titre visible mais
+> nommée à l'accessibilité. L'instrument E a ATTRAPÉ mes valeurs en dur en
+> première passe (corrigées par style de base séparé) ; le cliquet A passe à
+> 7 surfaces contraintes. Trains re-scellés ×1 (b3834ff0…), registre 1.5.0.
+> Commits `09ee2d2` + `f41c80f`, NON POUSSÉS — GO attendu. **PROCHAIN
+> ARTEFACT : build EAS** pour jugement physique (chips, détail définitif) ;
+> A12 formelle toujours à re-capturer sur build courant.**)
+>
+> *Entrée précédente —* **2026-09-05 (26)** (**🔁 DEUX CYCLES JUGEMENT→CORRECTION DANS LA MÊME JOURNÉE —
 > LE PROPRIÉTAIRE JUGE SUR MOBILE, LES RACINES TOMBENT LE JOUR MÊME.**
 > Cycle 1 (build `50236706`, APK `d40c73a8…`, AIR 1.10.0) : **DET-032** —
 > le schéma n'avait AUCUNE notion de libellé d'affichage, `statut` /
@@ -786,6 +806,8 @@ la déviation venait de la séquence conversationnelle, pas du plan.)*
 | **DET-031** | **Générateur de fixture désynchronisé de la refonte** [démontré DEUX FOIS le 2026-09-05] : `construire-fixture.mjs` reconstruit `validation-appareil.air.json` depuis un corpus d'AVANT-refonte — l'exécuter écrase les phases 1-3. Matin : écrasement par import accidentel (build `9fa22f40` émis sur le mauvais document, annulé, garde d'exécution posée — mais la garde ne couvre que l'import). Après-midi : écrasement par **exécution volontaire** (300 lignes de dérive détectées au diff, restauration git, diff vide vérifié). Le même jour a aussi vu la fermeture racine de `DET-004` (cousine : recopie manuelle du lien de build). | Exécution du lot DET-031, 2026-09-05 | 🟠 moyenne (destruction silencieuse du document si exécuté) | rebasage du générateur sur le document de la refonte — **non planifié** | 🔴 **OUVERTE** — bannière ⛔ posée en tête du script (`1710aab`) ; les corrections produit se font DANS le document puis se reportent au générateur. |
 | **DET-032** | **Aucune notion de libellé d'affichage au schéma** [jugé par le propriétaire sur SM-A175F, 2026-09-05] : `name` (identifiant machine) et les codes d'enum (`a_l_heure`) étaient rendus tels quels aux titres de filtres, chips, badges et libellés de formulaires — un manque du CONTRAT, pas d'un écran. | Jugement propriétaire sur mobile, 2026-09-05 | 🟠 moyenne (codes machine à l'écran, « pas premium ») | — | 🟢 **RÉSOLUE 2026-09-05** (`89a17a4`) — AIR **1.10.0** (`label`/`enumLabels` optionnels, migration identité, philosophie D-064 : le document déclare, le moteur ne devine pas), registre blocs **1.4.0** (`optionLabels` additif), résolution de locale à l'émission, 34 champs libellés. **Vérifié sur l'appareil** (« Statut », « À l'heure », « Retardé ») ; testID de campagne inchangés. |
 | **DET-033** | **L'UI se démontait toute seule** [jugé par le propriétaire sur SM-A175F, 2026-09-05 ; trois symptômes : « il bouge tout seul », « la recherche quitte quand je tape », « on dirait 2 pages »] — DOUBLE RACINE DÉMONTRÉE dans le code : ① chaque cycle de polling (30 s) repassait le magasin par `loading`, remplaçant l'écran par « Chargement… » puis le remontant — clignotement périodique, saisie interrompue, et cause plausible des dérives de pilotage de la campagne (taps sur géométrie recomposée, `scr_reservation` transitoire inexpliqué) ; ② l'état vide remplaçait le BLOC LISTE ENTIER, champ de recherche compris, dès qu'une saisie ne correspondait à aucune ligne. | Jugement propriétaire sur mobile, 2026-09-05 | 🔴 haute (saisie inutilisable, UI instable) | — | 🟢 **RÉSOLUE 2026-09-05** (`3ad3247`) — revalidation SILENCIEUSE sur données servies (loading visible réservé au premier remplissage — A2 préservé, vérifié sur magasin vide) ; états scopés à la zone de contenu, contrôles montés en permanence, recherche/filtres en EN-TÊTE de FlatList (une seule surface) ; sonde des fantômes étendue au rendu (cliquet 174/180, 52 contrôles reclassés). **Efficacité au doigt NON MESURÉE — exige un build.** |
+| **DET-034** | **Filtres de statut visuellement dominants** [jugé par le propriétaire sur SM-A175F, 2026-09-05] : deux boutons pleine hauteur + rangée de titre donnaient aux filtres plus d'importance qu'à la recherche (action principale). | Jugement propriétaire sur mobile, 2026-09-05 | 🟡 basse (hiérarchie visuelle) | — | 🟢 **RÉSOLUE 2026-09-05** (`f41c80f`) — chips au langage du badge : `kind: "chip"` + `selected` (primitive, 1.5.0 additif), cible tactile intacte (48 dp), `accessibilityState.selected` exposé, groupe nommé à l'accessibilité. Cliquet A : 7 surfaces contraintes. **Effet visuel à juger au prochain build.** |
+| **DET-035** | **Le détail reproposait le choix** [jugé par le propriétaire, 2026-09-05] : « Autres départs vers la même période » rendue APRÈS sélection — bloc `list` d'`ent_depart` sans scope, DÉCLARÉ au document depuis la création du corpus (`9294a6c`). Transmission `{itemId}` DÉMONTRÉE saine (3 chemins, tous des lignes de liste) ; repli `rows[0]` du moteur réel mais atteint par aucun chemin actif — **dette latente consignée, non corrigée, non masquée**. | Jugement propriétaire sur mobile, 2026-09-05 | 🟠 moyenne (parcours produit contredit) | — | 🟢 **RÉSOLUE 2026-09-05** (`09ee2d2`) — niveau DOCUMENT seul : bloc + action retirés, header recentré sur les champs réellement SERVIS (sous-titre `date`, badges statut·durée·quai·places). Parcours : Départs → choix → détail centré → « Réserver ce billet ». |
 
 **Règle de tenue** (recommandation acceptée) : toute dette découverte est
 inscrite ici **immédiatement**, avec origine, gravité et **phase
