@@ -1,0 +1,4 @@
+// GÉNÉRÉ — NE PAS ÉDITER (données canoniques d'écran, D-026 Option C).
+import type { AirScreenData } from "../lib/runtime/air-runtime";
+
+export const screenData: AirScreenData = {"actions":{"act_supprimer_compte":{"entityId":"ent_voyageur","kind":"mutation","operation":"delete","thenScreenId":"scr_accueil"}},"blocks":[{"blockType":"header","id":"blk_parametres_header","props":{"subtitle":"Actions définitives sur vos données","title":"Gestion du compte"}},{"blockType":"button","id":"blk_compte_supprimer","props":{"actionId":"act_supprimer_compte","kind":"ghost","label":"Supprimer mon compte"}}],"entities":{},"rules":[{"assertions":[{"fieldId":"fld_voyageur_nom","operator":"required"},{"fieldId":"fld_voyageur_email","operator":"matches","value":"^[^@\\s]+@[^@\\s]+\\.[a-z]{2,}$"}],"entityId":"ent_voyageur"}],"screenId":"scr_parametres","title":"Paramètres","uiActionsByBlock":{"blk_compte_supprimer":"act_supprimer_compte"}};

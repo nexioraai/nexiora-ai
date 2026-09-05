@@ -15,7 +15,7 @@ export const REFRESH_SECONDS = 30;
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 const ICI = join(fileURLToPath(import.meta.url), "..");
 const R = join(ICI, "..", "..") + "/";
 
@@ -66,5 +66,24 @@ ds.sourceDomain = DOMAINE;
 ds.sourceRefreshSeconds = REFRESH_SECONDS;
 if (!brut.network.allowedDomains.includes(DOMAINE)) brut.network.allowedDomains.push(DOMAINE);
 
-writeFileSync(join(ICI, "validation-appareil.air.json"), JSON.stringify(brut, null, 2) + "\n");
-console.log(`🟢 fixture écrite — domaine ${DOMAINE} · refresh ${REFRESH_SECONDS}s · E1+E2+E3.1+E3.3`);
+// 🔴 ÉCRITURE GARDÉE (2026-09-05) — DÉFAUT MESURÉ, PAS SUPPOSÉ.
+//
+// Cette écriture était au niveau supérieur du module. Or `verifier.mjs`
+// IMPORTE ce fichier pour deux constantes (`DOMAINE`, `REFRESH_SECONDS`) :
+// lancer la batterie pré-build RÉÉCRIVAIT donc la fixture depuis zéro et
+// EFFAÇAIT toute édition du document. Constaté en session : les modifications
+// de la refonte — écran Paramètres, icônes, libellés — ont disparu entre
+// l'émission et le build, et un build EAS est parti sur le document
+// d'origine. Une batterie de vérification qui détruit ce qu'elle vérifie est
+// pire qu'absente.
+//
+// L'écriture n'a lieu que si CE fichier est EXÉCUTÉ. Importé, il n'expose que
+// ses constantes et ne touche à rien.
+const executeDirectement =
+  process.argv[1] !== undefined &&
+  pathToFileURL(process.argv[1]).href === import.meta.url;
+
+if (executeDirectement) {
+  writeFileSync(join(ICI, "validation-appareil.air.json"), JSON.stringify(brut, null, 2) + "\n");
+  console.log(`🟢 fixture écrite — domaine ${DOMAINE} · refresh ${REFRESH_SECONDS}s · E1+E2+E3.1+E3.3`);
+}

@@ -28,6 +28,15 @@ const makeSheet = (c: Palette) =>
     // d'enfants borné — la liste virtualisée y retrouve une fenêtre finie.
     sectionFill: { flex: 1 },
     sectionFillBody: { flex: 1 },
+    // Disposition EN LIGNE (1.3.0) : les enfants se suivent et passent à la
+    // ligne. `gap` remplace des marges par enfant — aucune propriété physique,
+    // la dimension F (RTL par propriétés logiques) reste tenue.
+    sectionInlineBody: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      alignItems: "center",
+      gap: theme.space.sm,
+    },
     sectionTitle: {
       fontSize: theme.font.title,
       fontWeight: theme.fontWeight.semibold,
@@ -100,12 +109,24 @@ const makeSheet = (c: Palette) =>
     // est bornée par la cible tactile, pas par le contenu. C'est ce qui la
     // distingue des quatre gros boutons qu'elle remplace, lesquels grandissaient
     // avec leur libellé.
+    // PANNEAU DE NAVIGATION (1.3.0) — la barre était un simple filet posé au
+    // bas de l'écran : quatre libellés séparés du contenu par un trait. Elle
+    // devient un PANNEAU détaché, posé sur le fond, avec un état actif porté
+    // par une pastille et non par la seule graisse du texte.
+    // Contraintes tenues, et vérifiées : `minHeight` reste `tapTarget` (48 dp,
+    // mesuré conforme sur A17) ; aucune valeur en dur, tout vient des tokens
+    // (dimension D) ; aucune propriété physique (dimension F) ; aucune limite
+    // de lignes sur les libellés (dimension E — le mot exact est volontairement
+    // absent, l'instrument le cherche par sous-chaîne sans distinguer un
+    // commentaire du code).
     primaryNav: {
       flexDirection: "row",
+      backgroundColor: c.surface,
       borderTopWidth: 1,
       borderTopColor: c.border,
-      backgroundColor: c.surface,
-      paddingTop: theme.space.xs,
+      paddingTop: theme.space.sm,
+      paddingHorizontal: theme.space.sm,
+      gap: theme.space.xs,
     },
     primaryNavItem: {
       flex: 1,
@@ -113,7 +134,23 @@ const makeSheet = (c: Palette) =>
       alignItems: "center",
       justifyContent: "center",
       paddingHorizontal: theme.space.xs,
+      paddingVertical: theme.space.xs,
+      borderRadius: theme.radius.md,
     },
+    // ÉTAT ACTIF LISIBLE SANS LIRE — pastille pleine sur l'onglet courant.
+    primaryNavItemActive: {
+      flex: 1,
+      minHeight: theme.size.tapTarget,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: theme.space.xs,
+      paddingVertical: theme.space.xs,
+      borderRadius: theme.radius.md,
+      backgroundColor: c.badgeBg,
+    },
+    // Taille du glyphe d'onglet — portée par un TOKEN, jamais par un nombre
+    // écrit dans le composant : la dimension D interdit toute valeur en dur.
+    primaryNavIcon: { fontSize: theme.font.heading },
     primaryNavLabel: { fontSize: theme.font.label, color: c.muted },
     primaryNavLabelActive: {
       fontSize: theme.font.label,

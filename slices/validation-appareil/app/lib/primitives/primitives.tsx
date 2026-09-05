@@ -61,6 +61,7 @@ export function Section({
   testID,
   accessibilityLabel,
   fill = false,
+  inline = false,
 }: SectionProps) {
   const s = useStyles();
   // DET-025 — `fill` était DÉCLARÉ par le contrat, PORTÉ par les styles,
@@ -77,7 +78,13 @@ export function Section({
       accessibilityLabel={accessibilityLabel}
     >
       {title !== undefined && <Text style={s.sectionTitle}>{title}</Text>}
-      {fill ? <View style={s.sectionFillBody}>{children}</View> : children}
+      {fill ? (
+        <View style={s.sectionFillBody}>{children}</View>
+      ) : inline ? (
+        <View style={s.sectionInlineBody}>{children}</View>
+      ) : (
+        children
+      )}
     </View>
   );
 }

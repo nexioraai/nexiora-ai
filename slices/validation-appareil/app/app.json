@@ -1,1 +1,41 @@
-{"expo":{"android":{"package":"com.deribfy.preview.bus_intercites","permissions":["android.permission.POST_NOTIFICATIONS"],"predictiveBackGestureEnabled":false,"softwareKeyboardLayoutMode":"resize"},"ios":{"bundleIdentifier":"com.deribfy.preview.bus-intercites","supportsTablet":false},"name":"Bus Intercités","newArchEnabled":true,"orientation":"portrait","plugins":[["expo-build-properties",{"android":{"minSdkVersion":24},"ios":{"deploymentTarget":"16.4"}}]],"slug":"bus-intercites","userInterfaceStyle":"light","version":"1.0.0"}}
+{
+  "expo": {
+    "android": {
+      "package": "com.deribfy.preview.bus_intercites",
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS"
+      ],
+      "predictiveBackGestureEnabled": false,
+      "softwareKeyboardLayoutMode": "resize"
+    },
+    "ios": {
+      "bundleIdentifier": "com.deribfy.preview.bus-intercites",
+      "supportsTablet": false
+    },
+    "name": "Bus Intercités",
+    "newArchEnabled": true,
+    "orientation": "portrait",
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 24
+          },
+          "ios": {
+            "deploymentTarget": "16.4"
+          }
+        }
+      ]
+    ],
+    "slug": "bus-intercites",
+    "userInterfaceStyle": "light",
+    "version": "1.0.0",
+    "owner": "deribfy-apps-team",
+    "extra": {
+      "eas": {
+        "projectId": "33c58f7a-f68f-4f18-a7f3-360d4847baf2"
+      }
+    }
+  }
+}

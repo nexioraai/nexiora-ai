@@ -89,7 +89,7 @@ export function ListBlock({
             onChangeText={f.onChange}
           />
         ) : (
-          <Section key={`${testID ?? "list"}-filter-${String(i)}`} title={f.label}>
+          <Section key={`${testID ?? "list"}-filter-${String(i)}`} title={f.label} inline>
             {(f.options ?? []).map((option) => (
               <AppButton
                 key={option}

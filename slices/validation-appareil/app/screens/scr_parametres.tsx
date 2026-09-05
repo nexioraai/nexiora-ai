@@ -13,25 +13,24 @@
 import { ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenShell } from "../lib/primitives";
-import { AirButton, AirForm, AirHeader } from "../lib/runtime/air-runtime";
+import { AirButton, AirHeader } from "../lib/runtime/air-runtime";
 import { PrimaryNav } from "../lib/runtime/primary-nav";
 import { primaryNav } from "../nav.data";
-import { screenData } from "./scr_compte.data";
+import { screenData } from "./scr_parametres.data";
 
-export default function ScrCompteScreen() {
+export default function ScrParametresScreen() {
   const insets = useSafeAreaInsets();
   return (
-    <ScreenShell testID="scr_compte" title={screenData.title}>
+    <ScreenShell testID="scr_parametres" title={screenData.title}>
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom }}
         automaticallyAdjustKeyboardInsets
         keyboardShouldPersistTaps="handled"
       >
-        <AirHeader screen={screenData} blockId="blk_compte_header" />
-        <AirForm screen={screenData} blockId="blk_compte_form" />
-        <AirButton screen={screenData} blockId="blk_compte_parametres" />
+        <AirHeader screen={screenData} blockId="blk_parametres_header" />
+        <AirButton screen={screenData} blockId="blk_compte_supprimer" />
       </ScrollView>
-      <PrimaryNav destinations={primaryNav} currentScreenId="scr_compte" />
+      <PrimaryNav destinations={primaryNav} currentScreenId="scr_parametres" />
     </ScreenShell>
   );
 }
