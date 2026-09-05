@@ -125,6 +125,20 @@ export const AIR_MIGRATIONS: readonly AirMigration[] = [
       "compatibilité ascendante vérifie au lieu de le déclarer.",
     migrate: (document) => document,
   },
+  {
+    from: "1.8.0",
+    to: "1.9.0",
+    description:
+      "AIR 1.9.0 (DET-004) : ajout du champ OPTIONNEL `app.distribution` " +
+      "(`owner`, `projectId`) — l'identité du COMPTE de build. Le document ne " +
+      "savait pas l'exprimer, si bien qu'`app.json`, réécrit intégralement à " +
+      "chaque émission, perdait la liaison au projet et qu'il fallait la " +
+      "remettre à la main. Migration IDENTITÉ : rattacher une app à un compte " +
+      "de distribution à la place de son propriétaire serait décider pour " +
+      "lui. Un document sans `distribution` émet EXACTEMENT le même " +
+      "`app.json` qu'avant.",
+    migrate: (document) => document,
+  },
 ];
 
 export class AirMigrationError extends Error {

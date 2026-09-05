@@ -234,7 +234,7 @@
       }
     }
   ],
-  "airSchemaVersion": "1.8.0",
+  "airSchemaVersion": "1.9.0",
   "app": {
     "description": [
       {
@@ -254,7 +254,11 @@
       "userLanguage": "fr"
     },
     "name": "Bus Intercités",
-    "slug": "bus-intercites"
+    "slug": "bus-intercites",
+    "distribution": {
+      "owner": "deribfy-apps-team",
+      "projectId": "33c58f7a-f68f-4f18-a7f3-360d4847baf2"
+    }
   },
   "capabilities": [
     {

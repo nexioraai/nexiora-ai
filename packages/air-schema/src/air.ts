@@ -21,7 +21,7 @@ import {
 // 1.7.1 (E3.3, D-131) : provenance APLANIE (sourceKind/sourceIntegrationId/
 //   sourceDomain/sourceRefreshSeconds) — l'union 1.7.0 dépassait la limite
 //   réelle de grammaire de l'API (classe D-078) ; sémantique inchangée.
-export const AIR_SCHEMA_VERSION = "1.8.0";
+export const AIR_SCHEMA_VERSION = "1.9.0";
 
 export const semverSchema = z.string().regex(/^\d+\.\d+\.\d+$/);
 export const sha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
@@ -76,11 +76,35 @@ const appLocalesSchema = z.strictObject({
   rtlSupported: z.boolean(),
 });
 
+/**
+ * IDENTITÉ DU COMPTE DE DISTRIBUTION (1.9.0) — `DET-004`.
+ *
+ * Défaut MESURÉ, deux fois en une session : `app.json` est réécrit
+ * INTÉGRALEMENT à chaque émission, et le gabarit n'émettait ni `owner` ni
+ * `extra.eas.projectId`. La liaison au projet de build était donc refaite À LA
+ * MAIN après chaque régénération — un écart manuel que le garde-fou de la
+ * Phase 8 interdit explicitement, et qu'on oublie. Oublié, il produit un build
+ * qui ne vise aucun projet, ou pire, le mauvais.
+ *
+ * La cause n'était pas l'émetteur : c'est que le document ne SAVAIT PAS
+ * exprimer à quel compte il appartient. Même forme que `navigation.primary`
+ * (1.6.0) et `icon` (1.8.0) — OPTIONNELLE, et la migration n'en invente
+ * aucune : rattacher une app à un compte de distribution à la place de son
+ * propriétaire serait décider pour lui.
+ */
+const appDistributionSchema = z.strictObject({
+  /** Compte propriétaire chez le fournisseur de build. */
+  owner: z.string().min(1).max(80),
+  /** Identifiant de projet chez ce fournisseur. */
+  projectId: z.string().min(1).max(80),
+});
+
 const appSchema = z.strictObject({
   name: z.string().min(1).max(80),
   slug: z.string().regex(/^[a-z0-9][a-z0-9-]{1,62}$/),
   description: localizedTextSchema.optional(),
   locales: appLocalesSchema,
+  distribution: appDistributionSchema.optional(),
 });
 
 // CONDITION DE VISIBILITÉ (AIR 1.1.0, D-044 — DET-017 volet 2).

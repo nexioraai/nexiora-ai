@@ -37,7 +37,9 @@ export const RELEASE_TRAIN_V1 = {
   // inchangée, aucun document ne portait la forme union.
   // 1.7.1 -> 1.8.0 (phase 3) : `navigation.primary.destinations[].icon`,
   // OPTIONNELLE et fermée. Montée MINEURE et ADDITIVE, migration identité.
-  airSchemaVersion: "1.8.0",
+// 1.8.0 -> 1.9.0 (DET-004) : `app.distribution` OPTIONNELLE — la liaison au
+  // projet de build cesse d'être un ajout manuel après chaque régénération.
+  airSchemaVersion: "1.9.0",
   // Porté à 1.1.0 le 2026-08-31 (D-060) : montée STRICTEMENT ADDITIVE du
   // registre de blocs — `form` gagne `loading`/`empty`, `detail_header` gagne un
   // état, les trois blocs à données gagnent les props de titres. Rien n'est

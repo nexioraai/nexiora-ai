@@ -128,6 +128,16 @@ export function emitAppJson(air: ProjectAir, train: ReleaseTrain): string {
     slug: air.app.slug,
     userInterfaceStyle: "light",
     version: "1.0.0",
+    // DET-004 — la liaison au projet de build est DÉCLARÉE par le document,
+    // plus recopiée à la main après chaque régénération. Absente, les clés
+    // restent absentes et l'`app.json` émis est identique à ce qu'il était :
+    // aucun compte n'est inventé pour un document qui n'en nomme pas.
+    ...(air.app.distribution === undefined
+      ? {}
+      : {
+          owner: air.app.distribution.owner,
+          extra: { eas: { projectId: air.app.distribution.projectId } },
+        }),
   };
   return canonicalJson({ expo }) + "\n";
 }
