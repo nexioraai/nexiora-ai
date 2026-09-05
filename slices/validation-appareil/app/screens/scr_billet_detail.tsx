@@ -10,7 +10,7 @@
 // réel. `useSafeAreaInsets` est disponible sans SafeAreaProvider ajouté :
 // NativeStackView enveloppe déjà ses écrans dans SafeAreaProviderCompat
 // [vérifié dans le paquet installé].
-import { ScrollView } from "react-native";
+import { KeyboardAvoidingView, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenShell } from "../lib/primitives";
 import { AirButton, AirDetailHeader, AirHeader, AirScreenLifecycle } from "../lib/runtime/air-runtime";
@@ -24,15 +24,16 @@ export default function ScrBilletDetailScreen({ route }: AirScreenProps) {
   return (
     <ScreenShell testID="scr_billet_detail" title={screenData.title}>
       <AirScreenLifecycle screen={screenData} />
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom }}
-        automaticallyAdjustKeyboardInsets
         keyboardShouldPersistTaps="handled"
       >
         <AirDetailHeader screen={screenData} blockId="blk_billet_detail_header" itemId={route?.params?.itemId} />
         <AirHeader screen={screenData} blockId="blk_billet_code_header" />
         <AirButton screen={screenData} blockId="blk_billet_detail_retour" />
       </ScrollView>
+      </KeyboardAvoidingView>
       <PrimaryNav destinations={primaryNav} currentScreenId="scr_billet_detail" />
     </ScreenShell>
   );

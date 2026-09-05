@@ -408,15 +408,27 @@ function emitScreen(slice: ScreenSlice, aBarre: boolean): string {
   // devenant des régions fixes. Effet secondaire favorable : les contrôles
   // post-liste restent toujours atteignables (dimension A de la grille).
   const hasList = slice.screen.blocks.some((b) => b.blockType === "list");
-  const containerImport = hasList ? "View" : "ScrollView";
+  // DET-030 (jugement propriétaire sur SM-A175F, 2026-09-05) : le clavier
+  // RECOUVRAIT les champs de formulaire sur Android. Cause démontrée par
+  // recoupement : DET-016 confiait Android à `softwareKeyboardLayoutMode:
+  // "resize"` (manifeste), or la fenêtre est BORD À BORD (D-037) et Android
+  // 15+ ignore le redimensionnement en bord à bord — la déclaration était
+  // inerte, précisément sur l'appareil de référence. Le mécanisme devient
+  // KeyboardAvoidingView `padding`, identique sur les deux plateformes
+  // (aucun Platform.OS, verrou 4) ; `automaticallyAdjustKeyboardInsets`
+  // QUITTE ces écrans — le cumul aurait compensé DEUX fois sur iOS. La
+  // FlatList du bloc list, elle, conserve son ajustement (verrou 2).
+  const containerImport = hasList ? "View" : "KeyboardAvoidingView, ScrollView";
   const containerOpen = hasList
     ? "      <View style={{ flex: 1, paddingBottom: insets.bottom }}>"
-    : "      <ScrollView\n" +
+    : '      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>\n' +
+      "      <ScrollView\n" +
       "        contentContainerStyle={{ paddingBottom: insets.bottom }}\n" +
-      "        automaticallyAdjustKeyboardInsets\n" +
       '        keyboardShouldPersistTaps="handled"\n' +
       "      >";
-  const containerClose = hasList ? "      </View>" : "      </ScrollView>";
+  const containerClose = hasList
+    ? "      </View>"
+    : "      </ScrollView>\n      </KeyboardAvoidingView>";
   const lines = [
     "// GÉNÉRÉ — NE PAS ÉDITER (code structurel d'écran : ScreenShell + blocs,",
     "// contrainte 3.4 ; les points d'insertion de Code Slots arrivent en Phase 9).",

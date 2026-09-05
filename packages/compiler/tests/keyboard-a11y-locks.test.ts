@@ -35,13 +35,20 @@ const screensOf = (c: (typeof compiled)[number]) =>
   }));
 
 describe("DET-016 — verrous clavier (7 propriétés mécaniques)", () => {
-  it("1. tout ScrollView émis porte l'ajustement clavier", () => {
+  it("1. tout ScrollView émis est ancré au clavier par KeyboardAvoidingView", () => {
+    // DET-030 : le mécanisme d'écran est KeyboardAvoidingView `padding`,
+    // identique sur les deux plateformes. Le verrou est DOUBLE : présence de
+    // l'enveloppe, et ABSENCE de l'ancien ajustement iOS sur ces écrans — le
+    // cumul aurait compensé deux fois.
     const bad: string[] = [];
     for (const c of compiled) {
       for (const { path } of screensOf(c)) {
         if (path === undefined) continue;
-        const code = String(c.out.files.get(path));
-        if (code.includes("<ScrollView") && !code.includes(KB)) bad.push(`${c.f}:${path}`);
+        const code = stripComments(String(c.out.files.get(path)));
+        if (!code.includes("<ScrollView")) continue;
+        if (!code.includes("<KeyboardAvoidingView")) bad.push(`${c.f}:${path}:enveloppe absente`);
+        if (code.includes(KB)) bad.push(`${c.f}:${path}:double compensation iOS`);
+        if (!code.includes('keyboardShouldPersistTaps="handled"')) bad.push(`${c.f}:${path}:persistTaps`);
       }
     }
     expect(bad).toEqual([]);
@@ -55,6 +62,12 @@ describe("DET-016 — verrous clavier (7 propriétés mécaniques)", () => {
   });
 
   it("3. tout manifeste Android déclare le redimensionnement clavier", () => {
+    // DET-030 : en bord à bord (Android 15+), cette déclaration est INERTE —
+    // le mécanisme actif est KeyboardAvoidingView (verrou 1). Elle est
+    // CONSERVÉE pour les Android antérieurs, où elle fonctionne encore.
+    // HYPOTHÈSE NON PROUVÉE (aucun appareil ≤ 14 au parc) : sur ces
+    // versions, redimensionnement + enveloppe cumulés sur-compenseraient
+    // sans rien masquer — dégradation, jamais champ couvert.
     const bad: string[] = [];
     for (const c of compiled) {
       const p = [...c.out.files.keys()].find((k) => k.endsWith("app.json"));
@@ -88,9 +101,9 @@ describe("DET-016 — verrous clavier (7 propriétés mécaniques)", () => {
         seen += 1;
         const code = String(c.out.files.get(path));
         const hasList = screen.blocks.some((b) => b.blockType === "list");
-        // écran sans liste : le ScrollView émis porte le mécanisme ;
-        // écran avec liste : la FlatList du bloc le porte (test 2).
-        if (!hasList && !code.includes(KB)) bad.push(`${c.f}:${screen.id}`);
+        // écran sans liste : l'enveloppe KeyboardAvoidingView porte le
+        // mécanisme (DET-030) ; écran avec liste : la FlatList (test 2).
+        if (!hasList && !code.includes("KeyboardAvoidingView")) bad.push(`${c.f}:${screen.id}`);
       }
     }
     expect(bad).toEqual([]);
