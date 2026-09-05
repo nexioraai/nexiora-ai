@@ -42,6 +42,40 @@ lecteur refusera mécaniquement de l'appliquer au document courant : le
 rattachement au build est vérifié, pas supposé. Une preuve pour 1.9.0 exige un
 nouveau build.
 
+## CAMPAGNE FONCTIONNELLE A1→A9 SUR LA REFONTE — 2026-09-05 (après-midi)
+
+Rejouée intégralement sur ce même build, chaque verdict adossé à une hiérarchie
+capturée dans `hierarchies/`. Les étapes non exécutées le disent.
+
+| # | Étape | Verdict | Observation mesurée |
+|---|---|---|---|
+| A1 | Lancement à froid | 🟢 **PASS** | `scr_accueil` : aperçu « À l'affiche » borné à **3 lignes serveur**, 4 destinations, `nav_accueil` `selected=true` |
+| A2 | Chargement réel | 🟢 **PASS** | `scr_departs` : les **5 lignes serveur** `row_1/2` (viewport) + `row_12/16` (scroll) + `row_3` (établie par A4) |
+| A3 | Contre-preuve seed | 🟢 **PASS** | aucune ligne « destination N » de la démo, sur aucune capture |
+| A4 | Filtre statut = `retarde` | 🟢 **PASS** | **San-Pédro seul** (`row_3`) |
+| A5 | Recherche « Bou » | 🟢 **PASS** | **Bouaké seul**, champ = `Bou` ; recherche vidée → placeholder et liste restaurés (A5b) |
+| A6 | Portée E2 — détail Bouaké | 🟢 **PASS** | **`billet_5` seul** (« passager_nom 5 », `paye`) ; bouton « **Réserver ce billet** » présent (demande ③) |
+| A7 | Portée E2 — détail Korhogo | 🟢 **PASS** | bloc présent, **vide, et il le dit** : « Aucun billet pour ce départ » — jamais `rows[0]`. Rejouée sur chemin propre (force-stop → nav → tap vérifié) |
+| A8 | Erreur vraie (mode avion) | 🟢 **PASS** | `airplane_mode_on=1` confirmé ; « **Départs indisponibles** · La liste des départs n'a pas pu être chargée. » · **0 ligne** |
+| A9 | Réseau rétabli | 🟢 **PASS** | les départs **reviennent seuls**, erreur disparue — zéro interaction entre le rétablissement et la capture |
+| A10 | Modification serveur | ⏸ **NON EXÉCUTÉE** | décision propriétaire en attente (redéploiement endpoint) |
+| A11 | Hors-allowlist | ⏸ **NON EXÉCUTÉE** | constat d'architecture, `n/a` au protocole |
+
+Le filtre structurel de la refonte (`neq annule`) n'exclut **rien** ici : les 5
+lignes serveur sont toutes non-annulées — 5/5 attendues, 5/5 observées.
+
+## Observations consignées, non corrigées (hors périmètre campagne)
+
+- **Chips de filtre sans état exposé** : `filter-0-retarde` actif ne porte pas
+  `selected=true` dans l'arbre d'accessibilité, contrairement à la navigation.
+- **« Autres départs » inclut le départ courant** : le détail Bouaké liste
+  Bouaké lui-même en tête de « Autres départs vers la même période ».
+- **Pilotage, pas produit** : deux taps joués sur une géométrie recomposée ont
+  dérivé la session (jusqu'à `scr_billet_detail`, et une capture transitoire
+  `scr_reservation` inexpliquée). Les étapes touchées (A5, A7) ont été
+  **rejouées sur chemin vérifié** — règle appliquée : plus aucun tap sans
+  capture fraîche immédiatement avant.
+
 ## Ce que cela ne ferme pas
 
 `G` reste **non déterminée** — aucune capture `A13`, et le verrou `pageSize`
