@@ -79,6 +79,10 @@ export interface AirFieldData {
   /** Traversée de relation (1.4.0, D-064) — vers quoi, et quoi montrer. */
   referencesEntityId?: string;
   referenceDisplayFieldId?: string;
+  /** Libellés d'affichage (AIR 1.10.0, DET-032) — RÉSOLUS par le compilateur
+      dans la langue de l'app ; absents = comportement 1.9.0 (name/valeur). */
+  label?: string;
+  enumLabels?: Readonly<Record<string, string>>;
 }
 
 export interface AirSlotInvocationData {
@@ -292,8 +296,13 @@ function useResolveField(
     const champ = screen.entities[entityId]?.fields.find((f) => f.id === fieldId);
     const cible = champ?.referencesEntityId;
     const affiche = champ?.referenceDisplayFieldId;
-    if (cible === undefined || affiche === undefined) return brut;
-    return provider.getInstance(cible, brut)?.values[affiche] ?? brut;
+    if (cible !== undefined && affiche !== undefined) {
+      return provider.getInstance(cible, brut)?.values[affiche] ?? brut;
+    }
+    // DET-032 — un code d'enum ne se montre pas : si le document a déclaré un
+    // libellé pour cette valeur, c'est LUI qui s'affiche. Données, filtrage et
+    // testID continuent de porter la valeur brute.
+    return champ?.enumLabels?.[brut] ?? brut;
   };
 }
 
@@ -598,9 +607,11 @@ export function AirList({ screen, blockId, itemId }: BlockRef & { itemId?: strin
       : itemId === undefined
         ? []
         : brutes0.filter((i) => (i.values[scopeChamp] ?? "") === itemId);
-  const nomsChamps = new Map(
-    (screen.entities[b.entityId]?.fields ?? []).map((f) => [f.id, f.name]),
-  );
+  // DET-032 : le TITRE d'un filtre est le libellé déclaré du champ — `name`
+  // (identifiant machine) ne sert que de repli 1.9.0.
+  const champsEntite = screen.entities[b.entityId]?.fields ?? [];
+  const nomsChamps = new Map(champsEntite.map((f) => [f.id, f.label ?? f.name]));
+  const enumLabelsParChamp = new Map(champsEntite.map((f) => [f.id, f.enumLabels]));
   const filtresSpec =
     champsPilotes.length === 0
       ? undefined
@@ -611,7 +622,13 @@ export function AirList({ screen, blockId, itemId }: BlockRef & { itemId?: strin
             setSaisiesFiltres((s) => ({ ...s, [i]: v })),
           inputType: (typesPilotes[i] === "choice" ? "choice" : "text") as "text" | "choice",
           ...(typesPilotes[i] === "choice"
-            ? { options: optionsDistinctes(scopees, fieldId) }
+            ? {
+                options: optionsDistinctes(scopees, fieldId),
+                // DET-032 — les chips affichent le libellé, filtrent la valeur.
+                ...(enumLabelsParChamp.get(fieldId) === undefined
+                  ? {}
+                  : { optionLabels: enumLabelsParChamp.get(fieldId) }),
+              }
             : {}),
         }));
   const pick = (fieldId: unknown, values: Readonly<Record<string, string>>) =>
@@ -675,12 +692,13 @@ export function AirForm({ screen, blockId }: BlockRef) {
     (screen.entities[b.entityId]?.fields ?? []).map((f) => [f.id, f]),
   );
   const fieldIds = Array.isArray(props.fieldIds) ? props.fieldIds : [];
-  // Lecture D-028 : l'AIR v1 ne porte pas de libellés humains de champs —
-  // le libellé rendu est `field.name` (donnée AIR), jamais un texte moteur.
+  // DET-032 (AIR 1.10.0) : le libellé rendu est celui que le document DÉCLARE
+  // (`field.label`, résolu par le compilateur) ; `field.name` reste le repli
+  // 1.9.0 — donnée AIR dans les deux cas, jamais un texte moteur (D-028/F3).
   const fields: FormFieldSpec[] = fieldIds.flatMap((fieldId) => {
     if (typeof fieldId !== "string") return [];
     const field = fieldsById.get(fieldId);
-    return field === undefined ? [] : [{ id: field.id, label: field.name }];
+    return field === undefined ? [] : [{ id: field.id, label: field.label ?? field.name }];
   });
   const submitLabel = str(props.submitLabel);
   if (submitLabel === undefined) {

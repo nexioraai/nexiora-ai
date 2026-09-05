@@ -39,7 +39,10 @@ export const RELEASE_TRAIN_V1 = {
   // OPTIONNELLE et fermée. Montée MINEURE et ADDITIVE, migration identité.
 // 1.8.0 -> 1.9.0 (DET-004) : `app.distribution` OPTIONNELLE — la liaison au
   // projet de build cesse d'être un ajout manuel après chaque régénération.
-  airSchemaVersion: "1.9.0",
+  // 1.9.0 -> 1.10.0 (DET-032) : `label` et `enumLabels` OPTIONNELS sur les
+  // champs — libellés d'AFFICHAGE déclarés par le document ; jugé sur appareil
+  // réel, les identifiants machine fuyaient jusqu'aux chips et formulaires.
+  airSchemaVersion: "1.10.0",
   // Porté à 1.1.0 le 2026-08-31 (D-060) : montée STRICTEMENT ADDITIVE du
   // registre de blocs — `form` gagne `loading`/`empty`, `detail_header` gagne un
   // état, les trois blocs à données gagnent les props de titres. Rien n'est
@@ -47,7 +50,10 @@ export const RELEASE_TRAIN_V1 = {
   // ÉDITION CONSCIENTE (2026-09-02, E1/E2 D-129) : registre 1.3.0 — props
   // ADDITIFS (filtres pilotés, portée relationnelle) ; scellé des sources
   // recalculé dans le même geste, précédents D-060/D-084.
-  blockRegistryVersion: "1.3.0",
+  // ÉDITION CONSCIENTE (2026-09-05, DET-032) : registre 1.4.0 — un seul prop
+  // ADDITIF, `optionLabels` sur les filtres à choix. Valeurs, filtrage et
+  // testID inchangés ; un appelant 1.3.0 est inchangé.
+  blockRegistryVersion: "1.4.0",
   // Ré-scellé le 2026-08-29 (DET-006 / D-039) : `ListBlock` DÉCLARE désormais
   // `fill` sur sa Section, afin que la liste virtualisée reçoive un parent
   // BORNÉ. Cause démontrée : imbriquée dans un ScrollView de même axe, une
@@ -103,7 +109,10 @@ export const RELEASE_TRAIN_V1 = {
   // désormais un déclencheur `ui` visant un bloc sans gestionnaire, et
   // `controls()` dérive de la même source au lieu d'une liste recopiée.
   // Aucun bloc, aucune prop, aucun état n'est ajouté ni retiré.
-  "4f9e106eb57d0b09c08fdbf4a6e7547359be7905c4765e513b15d33226a5533e",
+  // Ré-scellé 2026-09-05 (DET-032) : les chips de filtre affichent le libellé
+  // déclaré (`optionLabels`) et cessent de montrer des codes machine. Un seul
+  // prop optionnel ajouté au contrat ; aucun état, aucun bloc retiré.
+  "834be27ea0b919bec4415f48f36d4a0e80c3d3bd3cba9482ae7e8ab3b0130e46",
   capabilityRegistryVersion: "1.0.0",
   capabilitySourcesHash:
     "6c28599246abde6e7010704f23f273aafe50d17c5483133709c9065f2777346c",

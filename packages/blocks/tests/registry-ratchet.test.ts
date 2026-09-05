@@ -45,7 +45,10 @@ describe("cliquets du registre de blocs", () => {
   it("DÉGEL ADDITIF (D-060, D-087, D-129) : registre 1.3.0, et rien n'a été retiré", () => {
     // D-087 : seconde montée additive — `list` gagne vignette et recherche,
     // `detail_header` gagne son visuel. Rien n'est retiré, tout est optionnel.
-    expect(BLOCK_REGISTRY_VERSION).toBe("1.3.0");
+    // DET-032 : quatrième montée additive — `optionLabels` OPTIONNEL sur les
+    // filtres à choix (libellés d'affichage AIR 1.10.0). Valeurs, filtrage et
+    // testID inchangés ; un appelant 1.3.0 est inchangé.
+    expect(BLOCK_REGISTRY_VERSION).toBe("1.4.0");
     expect(BLOCKS.map((b) => b.id)).toEqual(V1_BLOCK_IDS);
   });
 

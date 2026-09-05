@@ -139,6 +139,20 @@ export const AIR_MIGRATIONS: readonly AirMigration[] = [
       "`app.json` qu'avant.",
     migrate: (document) => document,
   },
+  {
+    from: "1.9.0",
+    to: "1.10.0",
+    description:
+      "AIR 1.10.0 (DET-032) : ajout des champs OPTIONNELS `label` et " +
+      "`enumLabels` sur les champs d'entité — libellés d'AFFICHAGE déclarés " +
+      "par le document. Jugé sur appareil réel : `name` (identifiant machine) " +
+      "et les codes d'enum (`a_l_heure`) étaient rendus tels quels aux " +
+      "filtres, formulaires et badges. Migration IDENTITÉ : inventer un " +
+      "libellé — capitaliser, traduire — serait décider du texte de l'app à " +
+      "la place de son document. Un document sans libellés affiche EXACTEMENT " +
+      "ce qu'il affichait en 1.9.0.",
+    migrate: (document) => document,
+  },
 ];
 
 export class AirMigrationError extends Error {

@@ -94,7 +94,9 @@ export function ListBlock({
               <AppButton
                 key={option}
                 testID={`${testID ?? "list"}-filter-${String(i)}-${option}`}
-                label={option}
+                // DET-032 : le libellé peut différer de la VALEUR — le testID,
+                // le filtrage et onChange restent sur l'option brute.
+                label={f.optionLabels?.[option] ?? option}
                 kind={f.value === option ? "primary" : "ghost"}
                 onPress={() => {
                   f.onChange(f.value === option ? "" : option);

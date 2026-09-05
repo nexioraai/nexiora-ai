@@ -45,6 +45,12 @@ export interface ListFilterSpec {
   onChange: (v: string) => void;
   inputType: "text" | "choice";
   options?: readonly string[];
+  /**
+   * LIBELLÉS D'AFFICHAGE des options (1.4.0, DET-032) — clé = option BRUTE.
+   * L'option reste la VALEUR (filtrage, testID) ; seul le texte rendu change.
+   * Absent ou partiel : l'option brute est affichée — appelant 1.3.0 inchangé.
+   */
+  optionLabels?: Readonly<Record<string, string>>;
 }
 
 export interface ListItemData {

@@ -35,7 +35,10 @@ import {
 // props sont optionnelles. Motif : 23 champs image declares sur 12 documents,
 // RENDUS NULLE PART — le besoin du premier jour (« menu avec photos »).
 // 1.3.0 (E1/E2, D-129) — filtres pilotés + portée relationnelle, ADDITIFS.
-export const BLOCK_REGISTRY_VERSION = "1.3.0";
+// 1.4.0 (DET-032) — `optionLabels` OPTIONNEL sur les filtres à choix : les
+// libellés d'affichage déclarés par le document (AIR 1.10.0) atteignent les
+// chips sans toucher valeurs, filtrage ni testID. Strictement additif.
+export const BLOCK_REGISTRY_VERSION = "1.4.0";
 
 // Motifs d'identités stables — IDENTIQUES à @deribfy/air-schema (ids.ts) ;
 // redéclarés structurellement (patron AirCapabilitySlice : pas de couplage

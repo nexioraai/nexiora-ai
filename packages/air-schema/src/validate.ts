@@ -470,6 +470,24 @@ export function validateAir(air: ProjectAir): AirDiagnostic[] {
       if (f.type !== "enum" && f.enumValues !== undefined) {
         push("AIR_FIELD_ENUM_VALUES_UNEXPECTED", path, `enumValues sur un champ non-enum "${f.id}"`);
       }
+      // 1.10.0 (DET-032) — libellés d'affichage : mêmes exigences de locale
+      // que tout texte localisé, et cohérence stricte avec enumValues.
+      checkLocalized(f.label, `${path}.label`);
+      if (f.enumLabels !== undefined) {
+        if (f.type !== "enum") {
+          push("AIR_FIELD_ENUM_LABELS_UNEXPECTED", path, `enumLabels sur un champ non-enum "${f.id}"`);
+        }
+        for (const [valeur, texte] of Object.entries(f.enumLabels)) {
+          if (f.enumValues !== undefined && !f.enumValues.includes(valeur)) {
+            push(
+              "AIR_FIELD_ENUM_LABEL_UNKNOWN_VALUE",
+              `${path}.enumLabels`,
+              `libellé pour "${valeur}", absente de enumValues de "${f.id}"`,
+            );
+          }
+          checkLocalized(texte, `${path}.enumLabels.${valeur}`);
+        }
+      }
       if (f.type === "reference") {
         if (f.referencesEntityId === undefined) {
           push("AIR_FIELD_REFERENCE_TARGET_MISSING", path, `champ reference "${f.id}" sans cible`);

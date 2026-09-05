@@ -170,6 +170,10 @@ export const SECTIONS_CORRECTIVES: Readonly<Record<string, readonly SectionEmiss
   AIR_FIELD_DISPLAY_NOT_REFERENCE: ["donnees"],
   AIR_FIELD_ENUM_VALUES_MISSING: ["donnees"],
   AIR_FIELD_ENUM_VALUES_UNEXPECTED: ["donnees"],
+  // 1.10.0 (DET-032) — libellés d'affichage : incohérences portées par la
+  // déclaration des champs, même périmètre que les autres défauts de champ.
+  AIR_FIELD_ENUM_LABELS_UNEXPECTED: ["donnees"],
+  AIR_FIELD_ENUM_LABEL_UNKNOWN_VALUE: ["donnees"],
   AIR_FIELD_REFERENCE_TARGET_MISSING: ["donnees"],
   AIR_FIELD_REFERENCE_TARGET_UNKNOWN: ["donnees"],
   AIR_FIELD_REFERENCE_UNEXPECTED: ["donnees"],

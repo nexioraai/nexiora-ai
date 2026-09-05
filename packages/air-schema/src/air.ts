@@ -21,7 +21,7 @@ import {
 // 1.7.1 (E3.3, D-131) : provenance APLANIE (sourceKind/sourceIntegrationId/
 //   sourceDomain/sourceRefreshSeconds) — l'union 1.7.0 dépassait la limite
 //   réelle de grammaire de l'API (classe D-078) ; sémantique inchangée.
-export const AIR_SCHEMA_VERSION = "1.9.0";
+export const AIR_SCHEMA_VERSION = "1.10.0";
 
 export const semverSchema = z.string().regex(/^\d+\.\d+\.\d+$/);
 export const sha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
@@ -268,6 +268,32 @@ const fieldSchema = z.strictObject({
    * inchangé, et la migration n'invente aucune cible.
    */
   referenceDisplayFieldId: fieldIdSchema.optional(),
+  /**
+   * LIBELLÉ D'AFFICHAGE DU CHAMP (1.10.0, DET-032).
+   *
+   * `name` est un identifiant machine (`^[a-z][a-z0-9_]*$`) et c'est LUI qui
+   * était rendu : titres de filtres et libellés de formulaires affichaient
+   * `statut` ou `passager_nom`. Jugé par le propriétaire sur appareil réel
+   * (SM-A175F, 2026-09-05) : des codes machine à l'écran. Même philosophie
+   * que D-064 : deviner une capitalisation ou une traduction serait une
+   * convention, c'est-à-dire une supposition — le document DÉCLARE.
+   *
+   * OPTIONNEL : sans lui, `name` reste affiché — comportement 1.9.0 inchangé,
+   * la migration n'invente aucun libellé.
+   */
+  label: localizedTextSchema.optional(),
+  /**
+   * LIBELLÉS DES VALEURS D'ENUM (1.10.0, DET-032).
+   *
+   * Les valeurs d'enum sont des codes (`a_l_heure`) et fuyaient telles
+   * quelles jusqu'aux chips de filtre et aux badges. Clé = valeur d'enum
+   * déclarée dans `enumValues` (cohérence vérifiée par le validateur
+   * sémantique) ; valeur = texte localisé. Le FILTRAGE et les données
+   * continuent de porter le code — seul l'AFFICHAGE change.
+   *
+   * OPTIONNEL, et partiel autorisé : une valeur sans libellé s'affiche brute.
+   */
+  enumLabels: z.record(z.string().min(1), localizedTextSchema).optional(),
 });
 
 const entitySchema = z.strictObject({

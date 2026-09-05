@@ -184,6 +184,8 @@ interface ScreenSlice {
           type: string;
           referencesEntityId?: string;
           referenceDisplayFieldId?: string;
+          label?: string;
+          enumLabels?: Readonly<Record<string, string>>;
         }[];
       }
     >;
@@ -318,6 +320,22 @@ function buildScreenSlice(air: ProjectAir, screen: ProjectAir["screens"][number]
         id: f.id,
         name: f.name,
         type: f.type,
+        // LIBELLÉS D'AFFICHAGE (AIR 1.10.0, DET-032) : résolus ICI, dans la
+        // langue de l'app — le runtime reste sans notion de locale. Absents
+        // du document ⇒ absents de l'artefact, comportement 1.9.0 inchangé.
+        ...(f.label === undefined
+          ? {}
+          : { label: resolveLocalized(f.label, locale, `${entity.id}.${f.id}.label`) }),
+        ...(f.enumLabels === undefined
+          ? {}
+          : {
+              enumLabels: Object.fromEntries(
+                Object.entries(f.enumLabels).map(([valeur, texte]) => [
+                  valeur,
+                  resolveLocalized(texte, locale, `${entity.id}.${f.id}.enumLabels.${valeur}`),
+                ]),
+              ),
+            }),
         // TRAVERSÉE DE RELATION (1.4.0, D-064) : de quoi résoudre l'identifiant
         // brut en une valeur lisible, sans que le runtime ait à deviner.
         ...(f.referencesEntityId === undefined || f.referenceDisplayFieldId === undefined

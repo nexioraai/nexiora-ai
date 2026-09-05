@@ -49,6 +49,32 @@ describe("validateAir — cohérence référentielle", () => {
     expect(found).toContain("AIR_FIELD_ENUM_VALUES_UNEXPECTED");
   });
 
+  it("1.10.0 (DET-032) — accepte label et enumLabels bien formés, refuse leurs incohérences", () => {
+    // Bien formés : aucun diagnostic.
+    const ok = buildValidAir();
+    at(at(ok.entities, 0).fields, 2).label = [{ locale: "fr", text: "Catégorie" }];
+    at(at(ok.entities, 0).fields, 2).enumLabels = {
+      plat: [{ locale: "fr", text: "Plat" }],
+      boisson: [{ locale: "fr", text: "Boisson" }],
+    };
+    expect(validateAir(ok)).toEqual([]);
+
+    // enumLabels sur un champ non-enum.
+    const air = buildValidAir();
+    at(at(air.entities, 0).fields, 0).enumLabels = { x: [{ locale: "fr", text: "X" }] };
+    expect(codes(air)).toContain("AIR_FIELD_ENUM_LABELS_UNEXPECTED");
+
+    // Libellé pour une valeur absente de enumValues.
+    const air2 = buildValidAir();
+    at(at(air2.entities, 0).fields, 2).enumLabels = { fantome: [{ locale: "fr", text: "?" }] };
+    expect(codes(air2)).toContain("AIR_FIELD_ENUM_LABEL_UNKNOWN_VALUE");
+
+    // Libellé sans la locale par défaut — même exigence que tout texte localisé.
+    const air3 = buildValidAir();
+    at(at(air3.entities, 0).fields, 2).label = [{ locale: "en", text: "Category" }];
+    expect(codes(air3)).toContain("AIR_L10N_MISSING_DEFAULT");
+  });
+
   it("détecte une référence de champ sans cible ou vers une entité inconnue", () => {
     const air = buildValidAir();
     delete at(at(air.entities, 1).fields, 1).referencesEntityId;

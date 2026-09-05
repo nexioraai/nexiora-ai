@@ -234,7 +234,7 @@
       }
     }
   ],
-  "airSchemaVersion": "1.9.0",
+  "airSchemaVersion": "1.10.0",
   "app": {
     "description": [
       {
@@ -403,49 +403,97 @@
           "id": "fld_depart_ville_depart",
           "name": "ville_depart",
           "required": true,
-          "type": "string"
+          "type": "string",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Ville de départ"
+            }
+          ]
         },
         {
           "id": "fld_depart_destination",
           "name": "destination",
           "required": true,
-          "type": "string"
+          "type": "string",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Destination"
+            }
+          ]
         },
         {
           "id": "fld_depart_date",
           "name": "date_depart",
           "required": true,
-          "type": "date"
+          "type": "date",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Date de départ"
+            }
+          ]
         },
         {
           "id": "fld_depart_heure",
           "name": "heure_depart",
           "required": true,
-          "type": "string"
+          "type": "string",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Heure de départ"
+            }
+          ]
         },
         {
           "id": "fld_depart_heure_arrivee",
           "name": "heure_arrivee",
           "required": false,
-          "type": "string"
+          "type": "string",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Heure d'arrivée"
+            }
+          ]
         },
         {
           "id": "fld_depart_duree",
           "name": "duree_trajet",
           "required": false,
-          "type": "string"
+          "type": "string",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Durée du trajet"
+            }
+          ]
         },
         {
           "id": "fld_depart_prix",
           "name": "prix",
           "required": true,
-          "type": "decimal"
+          "type": "decimal",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Prix"
+            }
+          ]
         },
         {
           "id": "fld_depart_places",
           "name": "places_restantes",
           "required": true,
-          "type": "number"
+          "type": "number",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Places restantes"
+            }
+          ]
         },
         {
           "enumValues": [
@@ -456,25 +504,69 @@
           "id": "fld_depart_statut",
           "name": "statut",
           "required": true,
-          "type": "enum"
+          "type": "enum",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Statut"
+            }
+          ],
+          "enumLabels": {
+            "a_l_heure": [
+              {
+                "locale": "fr",
+                "text": "À l'heure"
+              }
+            ],
+            "retarde": [
+              {
+                "locale": "fr",
+                "text": "Retardé"
+              }
+            ],
+            "annule": [
+              {
+                "locale": "fr",
+                "text": "Annulé"
+              }
+            ]
+          }
         },
         {
           "id": "fld_depart_quai",
           "name": "quai",
           "required": false,
-          "type": "string"
+          "type": "string",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Quai"
+            }
+          ]
         },
         {
           "id": "fld_depart_photo",
           "name": "photo_destination",
           "required": false,
-          "type": "asset"
+          "type": "asset",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Photo de la destination"
+            }
+          ]
         },
         {
           "id": "fld_depart_description",
           "name": "description",
           "required": false,
-          "type": "text"
+          "type": "text",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Description"
+            }
+          ]
         }
       ],
       "id": "ent_depart",
@@ -486,32 +578,62 @@
           "id": "fld_voyageur_nom",
           "name": "nom_complet",
           "required": true,
-          "type": "string"
+          "type": "string",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Nom complet"
+            }
+          ]
         },
         {
           "id": "fld_voyageur_email",
           "name": "email",
           "required": true,
           "type": "string",
-          "unique": true
+          "unique": true,
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Adresse e-mail"
+            }
+          ]
         },
         {
           "id": "fld_voyageur_telephone",
           "name": "telephone",
           "required": false,
-          "type": "string"
+          "type": "string",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Téléphone"
+            }
+          ]
         },
         {
           "id": "fld_voyageur_ville_favorite",
           "name": "ville_favorite",
           "required": false,
-          "type": "string"
+          "type": "string",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Ville favorite"
+            }
+          ]
         },
         {
           "id": "fld_voyageur_notifications",
           "name": "notifications_actives",
           "required": false,
-          "type": "boolean"
+          "type": "boolean",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Notifications actives"
+            }
+          ]
         }
       ],
       "id": "ent_voyageur",
@@ -524,13 +646,25 @@
           "name": "reference",
           "required": true,
           "type": "string",
-          "unique": true
+          "unique": true,
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Référence"
+            }
+          ]
         },
         {
           "id": "fld_billet_passager",
           "name": "passager_nom",
           "required": true,
-          "type": "string"
+          "type": "string",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Nom du passager"
+            }
+          ]
         },
         {
           "id": "fld_billet_depart",
@@ -538,7 +672,13 @@
           "referenceDisplayFieldId": "fld_depart_destination",
           "referencesEntityId": "ent_depart",
           "required": true,
-          "type": "reference"
+          "type": "reference",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Départ"
+            }
+          ]
         },
         {
           "id": "fld_billet_voyageur",
@@ -546,13 +686,25 @@
           "referenceDisplayFieldId": "fld_voyageur_nom",
           "referencesEntityId": "ent_voyageur",
           "required": false,
-          "type": "reference"
+          "type": "reference",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Voyageur"
+            }
+          ]
         },
         {
           "id": "fld_billet_code",
           "name": "code_controleur",
           "required": true,
-          "type": "string"
+          "type": "string",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Code contrôleur"
+            }
+          ]
         },
         {
           "enumValues": [
@@ -564,31 +716,87 @@
           "id": "fld_billet_statut",
           "name": "statut",
           "required": true,
-          "type": "enum"
+          "type": "enum",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Statut"
+            }
+          ],
+          "enumLabels": {
+            "en_attente_paiement": [
+              {
+                "locale": "fr",
+                "text": "En attente de paiement"
+              }
+            ],
+            "paye": [
+              {
+                "locale": "fr",
+                "text": "Payé"
+              }
+            ],
+            "utilise": [
+              {
+                "locale": "fr",
+                "text": "Utilisé"
+              }
+            ],
+            "annule": [
+              {
+                "locale": "fr",
+                "text": "Annulé"
+              }
+            ]
+          }
         },
         {
           "id": "fld_billet_prix_total",
           "name": "prix_total",
           "required": true,
-          "type": "decimal"
+          "type": "decimal",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Prix total"
+            }
+          ]
         },
         {
           "id": "fld_billet_email",
           "name": "email_confirmation",
           "required": false,
-          "type": "string"
+          "type": "string",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "E-mail de confirmation"
+            }
+          ]
         },
         {
           "id": "fld_billet_siege",
           "name": "siege",
           "required": false,
-          "type": "string"
+          "type": "string",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Siège"
+            }
+          ]
         },
         {
           "id": "fld_billet_date_achat",
           "name": "date_achat",
           "required": false,
-          "type": "datetime"
+          "type": "datetime",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Date d'achat"
+            }
+          ]
         }
       ],
       "id": "ent_billet",
@@ -602,31 +810,61 @@
           "referenceDisplayFieldId": "fld_billet_reference",
           "referencesEntityId": "ent_billet",
           "required": true,
-          "type": "reference"
+          "type": "reference",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Billet"
+            }
+          ]
         },
         {
           "id": "fld_paiement_titulaire",
           "name": "titulaire_carte",
           "required": true,
-          "type": "string"
+          "type": "string",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Titulaire de la carte"
+            }
+          ]
         },
         {
           "id": "fld_paiement_carte_masquee",
           "name": "carte_masquee",
           "required": true,
-          "type": "string"
+          "type": "string",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Numéro de carte"
+            }
+          ]
         },
         {
           "id": "fld_paiement_expiration",
           "name": "expiration",
           "required": true,
-          "type": "string"
+          "type": "string",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Expiration (MM/AA)"
+            }
+          ]
         },
         {
           "id": "fld_paiement_montant",
           "name": "montant",
           "required": true,
-          "type": "decimal"
+          "type": "decimal",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Montant"
+            }
+          ]
         },
         {
           "enumValues": [
@@ -638,13 +876,51 @@
           "id": "fld_paiement_statut",
           "name": "statut",
           "required": true,
-          "type": "enum"
+          "type": "enum",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Statut"
+            }
+          ],
+          "enumLabels": {
+            "en_attente": [
+              {
+                "locale": "fr",
+                "text": "En attente"
+              }
+            ],
+            "autorise": [
+              {
+                "locale": "fr",
+                "text": "Autorisé"
+              }
+            ],
+            "refuse": [
+              {
+                "locale": "fr",
+                "text": "Refusé"
+              }
+            ],
+            "rembourse": [
+              {
+                "locale": "fr",
+                "text": "Remboursé"
+              }
+            ]
+          }
         },
         {
           "id": "fld_paiement_date",
           "name": "date_paiement",
           "required": false,
-          "type": "datetime"
+          "type": "datetime",
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Date de paiement"
+            }
+          ]
         }
       ],
       "id": "ent_paiement",
