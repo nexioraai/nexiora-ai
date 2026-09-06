@@ -14,7 +14,7 @@
 //
 // Aucune persistance : quitter l'app déconnecte. Prétendre le contraire
 // exigerait `offline_storage`, capability déclarée mais non implémentée.
-import type { SessionProvider } from "./session-provider";
+import type { SessionProvider } from "./session-contract";
 
 export interface SessionLocale extends SessionProvider {
   /** Établit la session locale. `false` si l'identifiant est vide. */

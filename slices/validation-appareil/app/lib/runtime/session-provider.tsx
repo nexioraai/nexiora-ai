@@ -19,14 +19,11 @@
 import { createContext, useContext } from "react";
 import type { PropsWithChildren } from "react";
 
-export interface SessionProvider {
-  /** `true` si une identité est ÉTABLIE. Jamais une supposition. */
-  estAuthentifie(): boolean;
-  /** Identifiant de l'utilisateur courant — absent tant qu'aucune identité. */
-  identifiant(): string | undefined;
-  /** Abonnement aux changements d'état — rend la fonction de désabonnement. */
-  abonner(ecouteur: () => void): () => void;
-}
+import type { SessionProvider } from "./session-contract";
+
+// Un seul contrat, deux portes : les implémentations pures l'importent depuis
+// `session-contract.ts`, les consommateurs React depuis ici.
+export type { SessionProvider };
 
 /** Défaut : ANONYME. Aucune identité n'a été établie, et rien ne le prétend. */
 export const SESSION_ANONYME: SessionProvider = {

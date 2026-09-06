@@ -37,6 +37,17 @@ describe("release train v1 — pins exacts (cliquet)", () => {
       // `Text` n'est pas une icône. Lock régénéré et prouvé BYTE-IDENTIQUE sur
       // deux passes, 504 -> 505 paquets ; aucune version existante ne bouge.
       "@expo/vector-icons": "15.1.1",
+      // ÉDITION CONSCIENTE DU CLIQUET (2026-09-05, Phase 4 — FEU VERT
+      // PROPRIÉTAIRE). `D-059` réservait cette décision au propriétaire :
+      // accueillir une implémentation de capability FAIT GRANDIR le train pour
+      // TOUTES les apps émises — `npm ci` refusant un lock qui diverge du
+      // manifeste, une dépendance conditionnelle est impossible. Coût mesuré :
+      // 504 -> 520 paquets, empreinte NATIVE inchangée (paquet pur JS, ce que
+      // le registre déclarait déjà : `impact: "none"`). Contrepartie : `auth`
+      // cesse d'être une promesse — une identité peut enfin être VÉRIFIÉE par
+      // un serveur au lieu d'être déclarée par l'appareil. Lock régénéré DEUX
+      // FOIS DEPUIS ZÉRO, byte-identique.
+      "@supabase/supabase-js": "2.58.0",
       expo: "57.0.17",
       // D-029 (édition consciente du cliquet) : config native air.native
       // appliquée au prebuild — bundledNativeModules SDK 57.

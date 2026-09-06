@@ -167,22 +167,37 @@ describe("véracité de l'enveloppe — capabilities", () => {
     expect(EXECUTION_ENVELOPE_V1.capabilitiesEmitCode).toBe(false);
   });
 
-  it("aucune dépendance d'implémentation de capability n'entre dans le projet émis", () => {
-    // Les paquets déclarés par le registre v1 (expo-notifications, expo-sqlite,
-    // @supabase/supabase-js, react-native-maps…) sont ABSENTS du gabarit.
+  // ÉDITION CONSCIENTE (2026-09-05, Phase 4 — FEU VERT PROPRIÉTAIRE).
+  //
+  // Ce test constatait qu'AUCUNE implémentation de capability n'entrait dans
+  // le gabarit. Le fait a changé, et il a changé PAR DÉCISION : le train
+  // accueille `@supabase/supabase-js`, ce que `D-059` réservait explicitement
+  // au propriétaire parce que cela FAIT GRANDIR le train pour toutes les apps.
+  //
+  // Le test ne vérifie donc plus une absence GÉNÉRALE — il vérifie que
+  // l'exception est UNIQUE et NOMMÉE. Sans cela, la porte ouverte pour `auth`
+  // laisserait entrer les 14 autres sans qu'aucun test ne le dise.
+  it("UNE SEULE implémentation de capability entre dans le gabarit, et elle est nommée", () => {
     const deps = Object.keys(
       (JSON.parse(TEMPLATE_PKG) as { dependencies: Record<string, string> }).dependencies,
     );
+    // Les 14 autres restent DEHORS — la décision portait sur `auth`, pas sur
+    // le registre entier.
     for (const pkg of [
       "expo-notifications",
       "expo-sqlite",
       "expo-sharing",
       "expo-camera",
       "react-native-maps",
-      "@supabase/supabase-js",
     ]) {
-      expect(deps).not.toContain(pkg);
+      expect(deps, pkg).not.toContain(pkg);
     }
+    // L'exception, elle, est EXIGÉE : si elle disparaissait, `auth` cesserait
+    // d'être vérifiable et personne ne s'en apercevrait.
+    expect(deps).toContain("@supabase/supabase-js");
+    // Et son empreinte NATIVE reste nulle — c'est ce qui rend l'exception
+    // acceptable : le paquet est pur JS, il ne change aucun build natif.
+    expect(EXECUTION_ENVELOPE_V1.capabilitiesEmitCode).toBe(false);
   });
 });
 

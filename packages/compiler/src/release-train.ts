@@ -196,7 +196,17 @@ export const RELEASE_TRAIN_V1 = {
     // Lock régénéré et prouvé BYTE-IDENTIQUE sur deux passes
     // (`88cd87c4ce954642…`), 504 -> 505 paquets. Aucune autre dépendance
     // n'entre, aucune version existante ne bouge.
-    "6770dd86157d0b2042013baaf798f1eb0d0eb193e31453baca1fe3397acadc8d",
+    // Ré-scellé 2026-09-05 (Phase 4, EXTENSION DU LOCK — feu vert propriétaire).
+    // Le gabarit gagne `@supabase/supabase-js` en **2.58.0**, version EXACTE
+    // comme toutes les autres. C'est la décision que `D-059` réservait au
+    // propriétaire : le train GRANDIT (504 → 520 paquets), et il grandit pour
+    // TOUTES les apps émises, parce qu'`npm ci` refuse un lock qui diverge du
+    // manifeste — une dépendance conditionnelle est donc impossible.
+    // Empreinte NATIVE inchangée : le paquet est pur JS, aucun module natif,
+    // ce que le registre de capabilities déclarait déjà (`impact: "none"`).
+    // Lock regénéré DEUX FOIS DEPUIS ZÉRO, byte-identique — la condition du
+    // scellé, vérifiée et non supposée.
+    "20ea9521b0ee38d14160c0cad6138e55211c20c898c47aeb74a3318bb2ee928d",
   templateDevDependencies: {
     "@types/react": "19.2.15",
     typescript: "5.9.3",
@@ -209,6 +219,11 @@ export const RELEASE_TRAIN_V1 = {
     // EXACTE, dans la fourchette que le SDK 57 déclare (`^15.0.2`). Elle rend
     // la dimension ⑤ réalisable : sans elle, aucune icône n'est rendable.
     "@expo/vector-icons": "15.1.1",
+    // AJOUTÉE 2026-09-05 (Phase 4, feu vert propriétaire) — la SEULE
+    // implémentation de capability qui entre dans le train. Elle rend `auth`
+    // exécutable pour de vrai : sans elle, une identité ne peut qu'être
+    // déclarée par l'appareil, jamais vérifiée par un serveur.
+    "@supabase/supabase-js": "2.58.0",
     expo: "57.0.17",
     "expo-build-properties": "57.0.15",
     "expo-status-bar": "3.0.9",

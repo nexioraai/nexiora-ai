@@ -274,7 +274,7 @@
       "effect": {
         "kind": "capability",
         "capability": "auth",
-        "method": "signIn",
+        "method": "signUp",
         "params": [
           {
             "key": "identifiantFieldId",

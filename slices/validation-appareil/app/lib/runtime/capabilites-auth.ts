@@ -22,7 +22,17 @@ export function creerCapabilitesAuth(session: SessionLocale): CapabilityProvider
         session.fermer();
         return true;
       }
-      if (call.method === "signIn") {
+      if (call.method === "signUp") {
+        // DOUBLURE FERMÉE (jugement propriétaire) : `signUp` n'était qu'un
+        // alias de `signIn` — « Créer mon compte » ouvrait une session sans
+        // rien créer, promesse morte. Sur une session LOCALE, créer et ouvrir
+        // sont indissociables (aucun serveur ne tient de registre) : le
+        // fournisseur le DIT au lieu de le masquer, et le distingue quand
+        // même par son code de trace. Sur une session VÉRIFIÉE
+        // (`session-supabase`), ce sont deux appels serveur différents.
+        console.warn("AIR_CAPABILITY_AUTH_SIGNUP_LOCAL_EQUALS_SIGNIN");
+      }
+      if (call.method === "signIn" || call.method === "signUp") {
         // Le document DÉCLARE quel champ porte l'identité (`identifiantFieldId`)
         // — deviner « le premier champ e-mail » serait une convention, donc une
         // supposition. Sans déclaration, rien n'est établi : on refuse.

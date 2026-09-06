@@ -74,6 +74,11 @@ export const EMBEDDED_SOURCES: readonly EmbeddedSourceSpec[] = [
   {
     // Phase 4 — la session : contrat, implémentation locale, et le
     // fournisseur de capabilities qui honore `auth`.
+    source: "compiler/runtime/session-contract.ts",
+    target: "lib/runtime/session-contract.ts",
+    rewrites: {},
+  },
+  {
     source: "compiler/runtime/session-provider.tsx",
     target: "lib/runtime/session-provider.tsx",
     rewrites: {},
@@ -81,6 +86,11 @@ export const EMBEDDED_SOURCES: readonly EmbeddedSourceSpec[] = [
   {
     source: "compiler/runtime/session-locale.ts",
     target: "lib/runtime/session-locale.ts",
+    rewrites: {},
+  },
+  {
+    source: "compiler/runtime/session-supabase.ts",
+    target: "lib/runtime/session-supabase.ts",
     rewrites: {},
   },
   {
