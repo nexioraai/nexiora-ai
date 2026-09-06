@@ -316,6 +316,18 @@
         "kind": "navigate",
         "screenId": "scr_connexion"
       }
+    },
+    {
+      "id": "act_inscription_vers_connexion",
+      "name": "Aller à la connexion depuis l'inscription",
+      "trigger": {
+        "blockId": "blk_inscription_vers_connexion",
+        "kind": "ui"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_connexion"
+      }
     }
   ],
   "airSchemaVersion": "1.14.0",
@@ -2068,6 +2080,10 @@
             {
               "key": "kind",
               "value": "primary"
+            },
+            {
+              "key": "icon",
+              "value": "ticket-outline"
             }
           ]
         },
@@ -2194,6 +2210,10 @@
             {
               "key": "errorMessage",
               "value": "Vérifiez le nom du passager et le départ sélectionné."
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Rien à afficher pour le moment"
             }
           ]
         }
@@ -2256,6 +2276,10 @@
             {
               "key": "errorMessage",
               "value": "Le paiement n'a pas pu être validé. Vérifiez les informations de la carte."
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Rien à afficher pour le moment"
             }
           ]
         }
@@ -2444,6 +2468,10 @@
             {
               "key": "kind",
               "value": "ghost"
+            },
+            {
+              "key": "icon",
+              "value": "arrow-back-outline"
             }
           ]
         }
@@ -2531,6 +2559,10 @@
             {
               "key": "errorMessage",
               "value": "Vos informations n'ont pas pu être enregistrées."
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Rien à afficher pour le moment"
             }
           ],
           "visibleWhen": {
@@ -2688,6 +2720,14 @@
             {
               "key": "submitLabel",
               "value": "Se connecter"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Un instant…"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Rien à afficher pour le moment"
             }
           ]
         },
@@ -2706,6 +2746,10 @@
             {
               "key": "actionId",
               "value": "act_aller_inscription"
+            },
+            {
+              "key": "icon",
+              "value": "person-outline"
             }
           ]
         }
@@ -2780,6 +2824,14 @@
             {
               "key": "submitLabel",
               "value": "Créer mon compte"
+            },
+            {
+              "key": "loadingTitle",
+              "value": "Un instant…"
+            },
+            {
+              "key": "emptyTitle",
+              "value": "Rien à afficher pour le moment"
             }
           ],
           "visibleWhen": {
@@ -2801,6 +2853,10 @@
             {
               "key": "actionId",
               "value": "act_aller_connexion"
+            },
+            {
+              "key": "icon",
+              "value": "arrow-back-outline"
             }
           ],
           "visibleWhen": {
