@@ -21,7 +21,7 @@ import {
 // 1.7.1 (E3.3, D-131) : provenance APLANIE (sourceKind/sourceIntegrationId/
 //   sourceDomain/sourceRefreshSeconds) — l'union 1.7.0 dépassait la limite
 //   réelle de grammaire de l'API (classe D-078) ; sémantique inchangée.
-export const AIR_SCHEMA_VERSION = "1.11.0";
+export const AIR_SCHEMA_VERSION = "1.12.0";
 
 export const semverSchema = z.string().regex(/^\d+\.\d+\.\d+$/);
 export const sha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
@@ -313,6 +313,23 @@ const fieldSchema = z.strictObject({
    * OPTIONNEL, et partiel autorisé : une valeur sans libellé s'affiche brute.
    */
   enumLabels: z.record(z.string().min(1), localizedTextSchema).optional(),
+  /**
+   * CHAMP SENSIBLE (1.12.0, Phase 4) — saisi, JAMAIS conservé.
+   *
+   * Fait mesuré avant cette montée : tout champ d'entité devient une COLONNE
+   * et reçoit une valeur de démo (`sql-gen`). Déclarer un mot de passe comme
+   * un champ ordinaire aurait donc créé une colonne `mot_de_passe` et l'aurait
+   * SEMÉE — précisément ce qu'aucune application ne doit faire.
+   *
+   * Les deux propriétés sont VOLONTAIREMENT COUPLÉES dans un seul drapeau :
+   * saisie masquée ET absence de persistance. Les séparer permettrait de
+   * déclarer « masqué mais stocké » — la combinaison dangereuse. Ici elle est
+   * inexprimable par construction.
+   *
+   * Le secret vit chez le fournisseur d'identité (`auth.users`), jamais dans
+   * les tables de l'app.
+   */
+  sensitive: z.boolean().optional(),
 });
 
 const entitySchema = z.strictObject({

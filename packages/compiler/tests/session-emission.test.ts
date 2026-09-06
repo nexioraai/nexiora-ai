@@ -11,15 +11,28 @@ import { migrateAirDocument } from "@deribfy/air-schema";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DOC = join(HERE, "..", "..", "..", "slices", "validation-appareil", "validation-appareil.air.json");
 
-const charger = (): Record<string, unknown> =>
-  JSON.parse(readFileSync(DOC, "utf8")) as Record<string, unknown>;
+// Le document RÉEL porte désormais son intégration d'authentification (projet
+// provisionné). Les cas de test la POSENT ou la RETIRENT explicitement : un
+// test qui dépendrait de l'état courant du document changerait de sens à
+// chaque provisionnement — il mesurerait le document, pas l'émetteur.
+interface DocumentTest extends Record<string, unknown> {
+  integrations: { id: string; [autre: string]: unknown }[];
+}
+
+const charger = (): DocumentTest => JSON.parse(readFileSync(DOC, "utf8")) as DocumentTest;
+
+const sansAuth = (): DocumentTest => {
+  const air = charger();
+  air.integrations = air.integrations.filter((i) => i.id !== "intg_auth");
+  return air;
+};
 
 const app = (air: unknown): string =>
   String(compileProject(migrateAirDocument(air)).files.get("App.tsx"));
 
 describe("émission de la session — le document décide, jamais le moteur", () => {
   it("SANS intégration d'authentification : session LOCALE, aucun client réseau", () => {
-    const code = app(charger());
+    const code = app(sansAuth());
     expect(code).toContain("creerSessionLocale");
     expect(code).toContain("creerCapabilitesAuth(");
     // Le piège : émettre un client Supabase sans savoir où le joindre.
@@ -28,7 +41,7 @@ describe("émission de la session — le document décide, jamais le moteur", ()
   });
 
   it("AVEC intégration déclarée : session VÉRIFIÉE, client construit sur le document", () => {
-    const air = charger() as { integrations: unknown[] };
+    const air = sansAuth();
     air.integrations = [
       ...air.integrations,
       {
@@ -51,7 +64,7 @@ describe("émission de la session — le document décide, jamais le moteur", ()
   });
 
   it("intégration INCOMPLÈTE (url sans clé) : on RETOMBE en local, sans rien prétendre", () => {
-    const air = charger() as { integrations: unknown[] };
+    const air = sansAuth();
     air.integrations = [
       ...air.integrations,
       {
@@ -68,5 +81,6 @@ describe("émission de la session — le document décide, jamais le moteur", ()
 
   it("déterminisme : même document, même App.tsx", () => {
     expect(app(charger())).toBe(app(charger()));
+    expect(app(sansAuth())).toBe(app(sansAuth()));
   });
 });

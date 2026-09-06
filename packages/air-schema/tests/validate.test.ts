@@ -75,6 +75,19 @@ describe("validateAir — cohérence référentielle", () => {
     expect(codes(air3)).toContain("AIR_L10N_MISSING_DEFAULT");
   });
 
+  it("1.12.0 — un champ SENSIBLE ne peut pas être affiché", () => {
+    const air = buildValidAir();
+    const champ = at(at(air.entities, 0).fields, 0);
+    champ.sensitive = true;
+    // Le test POSE lui-même l'affichage : il ne dépend d'aucun détail de la
+    // fixture, et échouerait donc pour la bonne raison.
+    const bloc = at(at(air.screens, 0).blocks, 0);
+    bloc.props = [...(bloc.props ?? []), { key: "titleFieldId", value: champ.id }];
+    expect(codes(air)).toContain("AIR_FIELD_SENSITIVE_DISPLAYED");
+    // CONTRÔLE : sans le drapeau, aucun diagnostic.
+    expect(codes(buildValidAir())).not.toContain("AIR_FIELD_SENSITIVE_DISPLAYED");
+  });
+
   it("détecte une référence de champ sans cible ou vers une entité inconnue", () => {
     const air = buildValidAir();
     delete at(at(air.entities, 1).fields, 1).referencesEntityId;

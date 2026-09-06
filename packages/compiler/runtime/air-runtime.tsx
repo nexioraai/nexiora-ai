@@ -84,6 +84,8 @@ export interface AirFieldData {
       dans la langue de l'app ; absents = comportement 1.9.0 (name/valeur). */
   label?: string;
   enumLabels?: Readonly<Record<string, string>>;
+  /** 1.12.0 — saisie MASQUÉE, valeur jamais conservée. */
+  sensitive?: boolean;
 }
 
 export interface AirSlotInvocationData {
@@ -721,7 +723,16 @@ export function AirForm({ screen, blockId }: BlockRef) {
   const fields: FormFieldSpec[] = fieldIds.flatMap((fieldId) => {
     if (typeof fieldId !== "string") return [];
     const field = fieldsById.get(fieldId);
-    return field === undefined ? [] : [{ id: field.id, label: field.label ?? field.name }];
+    if (field === undefined) return [];
+    return [
+      {
+        id: field.id,
+        label: field.label ?? field.name,
+        // 1.12.0 — un champ sensible se saisit en clair pour la personne, pas
+        // pour l'épaule d'à côté.
+        ...(field.sensitive === true ? { secure: true } : {}),
+      },
+    ];
   });
   const submitLabel = str(props.submitLabel);
   if (submitLabel === undefined) {

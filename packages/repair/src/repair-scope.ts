@@ -174,6 +174,8 @@ export const SECTIONS_CORRECTIVES: Readonly<Record<string, readonly SectionEmiss
   // déclaration des champs, même périmètre que les autres défauts de champ.
   AIR_FIELD_ENUM_LABELS_UNEXPECTED: ["donnees"],
   AIR_FIELD_ENUM_LABEL_UNKNOWN_VALUE: ["donnees"],
+  // Un champ sensible affiché se répare là où il est AFFICHÉ : dans l'écran.
+  AIR_FIELD_SENSITIVE_DISPLAYED: ["ecrans"],
   AIR_FIELD_REFERENCE_TARGET_MISSING: ["donnees"],
   AIR_FIELD_REFERENCE_TARGET_UNKNOWN: ["donnees"],
   AIR_FIELD_REFERENCE_UNEXPECTED: ["donnees"],

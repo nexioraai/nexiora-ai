@@ -260,6 +260,10 @@
           {
             "key": "identifiantFieldId",
             "value": "fld_voyageur_email"
+          },
+          {
+            "key": "motDePasseFieldId",
+            "value": "fld_voyageur_mot_de_passe"
           }
         ]
       }
@@ -279,6 +283,10 @@
           {
             "key": "identifiantFieldId",
             "value": "fld_voyageur_email"
+          },
+          {
+            "key": "motDePasseFieldId",
+            "value": "fld_voyageur_mot_de_passe"
           }
         ]
       }
@@ -297,7 +305,7 @@
       }
     }
   ],
-  "airSchemaVersion": "1.11.0",
+  "airSchemaVersion": "1.12.0",
   "app": {
     "description": [
       {
@@ -695,6 +703,19 @@
             {
               "locale": "fr",
               "text": "Notifications actives"
+            }
+          ]
+        },
+        {
+          "id": "fld_voyageur_mot_de_passe",
+          "name": "mot_de_passe",
+          "type": "string",
+          "required": false,
+          "sensitive": true,
+          "label": [
+            {
+              "locale": "fr",
+              "text": "Mot de passe"
             }
           ]
         }
@@ -1259,6 +1280,21 @@
       ],
       "id": "intg_cache_billets",
       "providerClass": "local_store"
+    },
+    {
+      "id": "intg_auth",
+      "providerClass": "auth",
+      "capability": "auth",
+      "config": [
+        {
+          "key": "url",
+          "value": "https://psxbilpmnojtlzosokzz.supabase.co"
+        },
+        {
+          "key": "anonKey",
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzeGJpbHBtbm9qdGx6b3Nva3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2NjM2OTcsImV4cCI6MjEwNDIzOTY5N30.Ea24JkCSgTHKaD613nWj0KE7nF728QP-4tocP9mn38w"
+        }
+      ]
     }
   ],
   "intent": {
@@ -1548,6 +1584,7 @@
   "network": {
     "allowedDomains": [
       "api.bus-intercites.app",
+      "psxbilpmnojtlzosokzz.supabase.co",
       "www.deribfy.com"
     ],
     "policy": "deny_by_default"
@@ -2616,7 +2653,8 @@
             {
               "key": "fieldIds",
               "value": [
-                "fld_voyageur_email"
+                "fld_voyageur_email",
+                "fld_voyageur_mot_de_passe"
               ]
             },
             {
@@ -2682,7 +2720,8 @@
               "value": [
                 "fld_voyageur_nom",
                 "fld_voyageur_email",
-                "fld_voyageur_telephone"
+                "fld_voyageur_telephone",
+                "fld_voyageur_mot_de_passe"
               ]
             },
             {

@@ -14,8 +14,9 @@ import { SlotRoot } from "./lib/runtime/slot-provider";
 import { slotRegistry } from "./slots";
 import { CapabilityRoot } from "./lib/runtime/capability-provider";
 import { SessionRoot } from "./lib/runtime/session-provider";
-import { creerCapabilitesAuth } from "./lib/runtime/capabilites-auth";
-import { creerSessionLocale } from "./lib/runtime/session-locale";
+import { creerCapabilitesAuthVerifiee } from "./lib/runtime/capabilites-auth";
+import { createClient } from "@supabase/supabase-js";
+import { creerSessionSupabase } from "./lib/runtime/session-supabase";
 import { demoData } from "./demo.data";
 import { Navigation } from "./navigation";
 
@@ -24,7 +25,7 @@ import { Navigation } from "./navigation";
 // l'état du magasin dit la vérité (loading/error).
 const provider = creerMagasin(demoData);
 const CIBLES_REMOTE = [{"datasetId":"data_departs","entityId":"ent_depart","integrationId":"intg_cache_billets","refreshSeconds":30,"url":"https://www.deribfy.com/air/v1/entities/ent_depart/rows"}] as const;
-const DOMAINES_AUTORISES = ["api.bus-intercites.app","www.deribfy.com"] as const;
+const DOMAINES_AUTORISES = ["api.bus-intercites.app","psxbilpmnojtlzosokzz.supabase.co","www.deribfy.com"] as const;
 // Transport et polling APPAREIL fournis par le runtime embarqué —
 // l'adaptateur revérifie chaque hôte contre DOMAINES_AUTORISES.
 const adaptateur = creerAdaptateurReseau({
@@ -35,11 +36,12 @@ const adaptateur = creerAdaptateurReseau({
   planificateur: planificateurIntervalle,
 });
 void adaptateur.demarrer();
-// Session LOCALE : identité DÉCLARÉE par la personne, non vérifiée
-// par un serveur — équivalent de demo.data pour l'identité. Le
-// document ne déclare aucune intégration d'authentification.
-const session = creerSessionLocale();
-const capabilities = creerCapabilitesAuth(session);
+// Session VÉRIFIÉE : le document déclare OÙ vérifier l'identité.
+// La clé anonyme est publiable par conception (protégée par RLS) —
+// c'est ce qui ship dans tout client Supabase ; aucun secret ici.
+const clientAuth = createClient("https://psxbilpmnojtlzosokzz.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzeGJpbHBtbm9qdGx6b3Nva3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2NjM2OTcsImV4cCI6MjEwNDIzOTY5N30.Ea24JkCSgTHKaD613nWj0KE7nF728QP-4tocP9mn38w");
+const session = creerSessionSupabase(clientAuth);
+const capabilities = creerCapabilitesAuthVerifiee(session);
 
 export default function App() {
   return (

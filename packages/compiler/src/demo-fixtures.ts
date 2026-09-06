@@ -62,6 +62,9 @@ export function buildDemoFixtures(air: ProjectAir): Record<string, DemoInstance[
     for (let i = 0; i < dataset.rowCount; i += 1) {
       const values: Record<string, string> = {};
       for (const field of entity.fields) {
+        // 1.12.0 — un champ SENSIBLE ne reçoit aucune valeur de démo : inventer
+        // un mot de passe de fixture, c'est en écrire un dans l'artefact.
+        if (field.sensitive === true) continue;
         values[field.id] = fixtureValue(field, offset + i, rand, {
           rowCountByEntity,
         });

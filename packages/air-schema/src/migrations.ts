@@ -167,6 +167,19 @@ export const AIR_MIGRATIONS: readonly AirMigration[] = [
       "existant devient conditionnel changerait ce que l'app montre.",
     migrate: (document) => document,
   },
+  {
+    from: "1.11.0",
+    to: "1.12.0",
+    description:
+      "AIR 1.12.0 (Phase 4) : drapeau OPTIONNEL `sensitive` sur les champs — " +
+      "saisi, JAMAIS conservé. Sans lui, un mot de passe déclaré comme champ " +
+      "ordinaire devenait une COLONNE et recevait une valeur de démo. Les " +
+      "deux propriétés (masquage, non-persistance) sont couplées dans un seul " +
+      "drapeau : « masqué mais stocké » devient inexprimable. Migration " +
+      "IDENTITÉ : aucun champ existant ne devient sensible — le décider à la " +
+      "place du document changerait ce qui est écrit en base.",
+    migrate: (document) => document,
+  },
 ];
 
 export class AirMigrationError extends Error {

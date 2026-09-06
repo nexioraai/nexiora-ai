@@ -12,6 +12,16 @@
 import type { ProjectAir, ProjectLock } from "@deribfy/air-schema";
 import { buildDemoFixtures, normalizeAir, resolveLock } from "@deribfy/compiler";
 
+/**
+ * CHAMPS PERSISTÉS (1.12.0) — un champ `sensitive` est saisi, jamais conservé :
+ * il ne devient ni colonne, ni contrainte, ni index, ni valeur semée. Filtré
+ * ICI, en un seul point : six boucles filtrant chacune de son côté auraient
+ * fini par diverger, et la divergence aurait créé une colonne de mot de passe.
+ */
+const champsPersistes = (
+  entity: ProjectAir["entities"][number],
+): ProjectAir["entities"][number]["fields"] => entity.fields.filter((f) => f.sensitive !== true);
+
 export interface GeneratedSql {
   lock: ProjectLock;
   sql: string;
@@ -96,7 +106,7 @@ export function seedOrder(air: ProjectAir, seeded: readonly string[]): readonly 
   for (const entity of air.entities) {
     if (!present.has(entity.id)) continue;
     const required = new Set<string>();
-    for (const field of entity.fields) {
+    for (const field of champsPersistes(entity)) {
       const target = field.referencesEntityId;
       if (target !== undefined && present.has(target) && target !== entity.id) required.add(target);
     }
@@ -141,7 +151,7 @@ export function generateProvisioningSql(input: unknown): GeneratedSql {
   let checkConstraints = 0;
   for (const entity of entities) {
     const cols = [`  "id" text PRIMARY KEY`];
-    for (const field of entity.fields) {
+    for (const field of champsPersistes(entity)) {
       const sqlType = SQL_TYPE[field.type];
       if (sqlType === undefined) throw new SqlGenError("SQLGEN_TYPE", field.type);
       cols.push(`  ${ident(field.id)} ${sqlType}`);
@@ -165,7 +175,7 @@ export function generateProvisioningSql(input: unknown): GeneratedSql {
     );
   };
   for (const entity of entities) {
-    for (const field of entity.fields) {
+    for (const field of champsPersistes(entity)) {
       if (field.type === "enum" && (field.enumValues ?? []).length > 0) {
         checkConstraints += 1;
         const values = (field.enumValues ?? []).map(literal).join(", ");
@@ -214,7 +224,7 @@ export function generateProvisioningSql(input: unknown): GeneratedSql {
   lines.push("", "-- ===== SECTION 3 : INDEX (colonnes FK) =====");
   let indexes = 0;
   for (const entity of entities) {
-    for (const field of entity.fields) {
+    for (const field of champsPersistes(entity)) {
       if (field.type === "reference" && field.referencesEntityId !== undefined) {
         indexes += 1;
         lines.push(
@@ -245,11 +255,11 @@ export function generateProvisioningSql(input: unknown): GeneratedSql {
     if (entity === undefined) continue;
     const rows = fixtures[entityId] ?? [];
     seedRowsByTable[entityId] = rows.length;
-    const cols = ["id", ...entity.fields.map((f) => f.id)];
+    const cols = ["id", ...champsPersistes(entity).map((f) => f.id)];
     for (const row of rows) {
       const values = [
         literal(row.id),
-        ...entity.fields.map((f) => {
+        ...champsPersistes(entity).map((f) => {
           const v = row.values[f.id] ?? "";
           return v === "" ? "NULL" : literal(v); // absence ⇒ NULL (D-032)
         }),

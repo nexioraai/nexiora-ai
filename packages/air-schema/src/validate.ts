@@ -599,6 +599,46 @@ export function validateAir(air: ProjectAir): AirDiagnostic[] {
     });
   });
 
+  // 7ter. UN CHAMP SENSIBLE NE S'AFFICHE JAMAIS (1.12.0). Il se saisit, il ne
+  // se montre pas : le pointer depuis un titre, un sous-titre, un badge, une
+  // recherche ou un tri le ferait apparaître à l'écran ou dans un journal.
+  // Fail-closed : la liste des props d'affichage est ENUMÉRÉE, pas devinée.
+  const PROPS_AFFICHAGE = [
+    "titleFieldId",
+    "subtitleFieldId",
+    "trailingFieldId",
+    "badgeFieldId",
+    "badgeFieldIds",
+    "imageFieldId",
+    "searchFieldId",
+    "sortFieldId",
+    "filterFieldId",
+    "scopeFieldId",
+    "userFilterFieldIds",
+  ];
+  const champsSensibles = new Set(
+    air.entities.flatMap((e) => e.fields.filter((f) => f.sensitive === true).map((f) => f.id)),
+  );
+  if (champsSensibles.size > 0) {
+    air.screens.forEach((screen, si) => {
+      screen.blocks.forEach((b, bi) => {
+        for (const prop of b.props ?? []) {
+          if (!PROPS_AFFICHAGE.includes(prop.key)) continue;
+          const vises = Array.isArray(prop.value) ? prop.value : [prop.value];
+          for (const v of vises) {
+            if (typeof v === "string" && champsSensibles.has(v)) {
+              push(
+                "AIR_FIELD_SENSITIVE_DISPLAYED",
+                `screens[${si}].blocks[${bi}].props.${prop.key}`,
+                `champ sensible "${v}" utilisé pour l'affichage`,
+              );
+            }
+          }
+        }
+      });
+    });
+  }
+
   // 8. Règles : entité existante, champs des assertions appartenant à
   // l'entité ciblée.
   air.rules.forEach((r, i) => {

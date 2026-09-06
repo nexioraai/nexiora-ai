@@ -46,7 +46,10 @@ export const RELEASE_TRAIN_V1 = {
   // SESSION. Avant, l'authentification était structurellement inexprimable —
   // un écran ne pouvait pas distinguer un visiteur d'un connecté, quel que
   // soit le backend derrière.
-  airSchemaVersion: "1.11.0",
+  // 1.11.0 -> 1.12.0 (Phase 4) : drapeau `sensitive` sur les champs — saisi,
+  // JAMAIS conservé. Sans lui, un mot de passe déclaré comme champ ordinaire
+  // devenait une COLONNE et recevait une valeur de démo.
+  airSchemaVersion: "1.12.0",
   // Porté à 1.1.0 le 2026-08-31 (D-060) : montée STRICTEMENT ADDITIVE du
   // registre de blocs — `form` gagne `loading`/`empty`, `detail_header` gagne un
   // état, les trois blocs à données gagnent les props de titres. Rien n'est
