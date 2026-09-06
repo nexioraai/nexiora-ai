@@ -1512,6 +1512,36 @@
             "text": "Mon billet"
           }
         ]
+      },
+      {
+        "id": "nav_parametres",
+        "screenId": "scr_parametres",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Paramètres"
+          }
+        ]
+      },
+      {
+        "id": "nav_connexion",
+        "screenId": "scr_connexion",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Connexion"
+          }
+        ]
+      },
+      {
+        "id": "nav_inscription",
+        "screenId": "scr_inscription",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Créer un compte"
+          }
+        ]
       }
     ]
   },
