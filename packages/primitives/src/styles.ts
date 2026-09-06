@@ -48,6 +48,7 @@ const makeSheet = (c: Palette) =>
     textBody: { fontSize: theme.font.body, color: c.text },
     textTitle: { fontSize: theme.font.title, fontWeight: theme.fontWeight.semibold, color: c.text },
     textHeading: { fontSize: theme.font.heading, fontWeight: theme.fontWeight.bold, color: c.text },
+    textDisplay: { fontSize: theme.font.display, fontWeight: theme.fontWeight.bold, color: c.text },
     toneMuted: { color: c.muted },
     tonePrimary: { color: c.primaryText },
     toneError: { color: c.error },

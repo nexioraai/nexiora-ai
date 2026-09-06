@@ -4,6 +4,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { navData } from "./nav.data";
 import ScrAccueilScreen from "./screens/scr_accueil";
+import ScrBienvenueScreen from "./screens/scr_bienvenue";
 import ScrBilletDetailScreen from "./screens/scr_billet_detail";
 import ScrBilletsScreen from "./screens/scr_billets";
 import ScrCompteScreen from "./screens/scr_compte";
@@ -20,9 +21,11 @@ const Stack = createNativeStackNavigator();
 export function Navigation() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="scr_accueil">
+      <Stack.Navigator initialRouteName="scr_bienvenue">
       <Stack.Screen name="scr_accueil" component={ScrAccueilScreen}
         options={{ title: navData.routes.find((x) => x.screenId === "scr_accueil")!.title }} />
+      <Stack.Screen name="scr_bienvenue" component={ScrBienvenueScreen}
+        options={{ title: navData.routes.find((x) => x.screenId === "scr_bienvenue")!.title }} />
       <Stack.Screen name="scr_billet_detail" component={ScrBilletDetailScreen}
         options={{ title: navData.routes.find((x) => x.screenId === "scr_billet_detail")!.title }} />
       <Stack.Screen name="scr_billets" component={ScrBilletsScreen}

@@ -18,6 +18,12 @@ export interface BlockA11yProps {
 export interface HeaderBlockProps extends BlockA11yProps {
   title: string;
   subtitle?: string;
+  /**
+   * ACCROCHE (1.7.0) — le titre est rendu dans la variante `display`, un cran
+   * au-dessus de `heading`. Réservé à la PREMIÈRE phrase qu'une personne lit :
+   * un écran d'accueil produit. Absent = comportement 1.6.0 inchangé.
+   */
+  accroche?: boolean;
 }
 
 /**

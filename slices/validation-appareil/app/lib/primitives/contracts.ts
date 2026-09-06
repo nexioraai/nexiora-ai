@@ -20,7 +20,11 @@ export interface A11yProps {
 }
 
 // Les 4 variantes de texte = les 4 tokens de police de la source unique.
-export type TextVariant = "label" | "body" | "title" | "heading";
+/**
+ * `display` (1.3.0) — un cran au-dessus de `heading`, pour la PREMIÈRE phrase
+ * qu'une personne lit. Additif : un appelant qui ne le nomme pas est inchangé.
+ */
+export type TextVariant = "label" | "body" | "title" | "heading" | "display";
 export type TextTone = "default" | "muted" | "primary" | "error" | "success" | "warn";
 
 export type AppTextProps = PropsWithChildren<

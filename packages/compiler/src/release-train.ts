@@ -74,7 +74,10 @@ export const RELEASE_TRAIN_V1 = {
   // actionnable (`required` sur les champs — il promettait une écriture que la
   // validation refusait ensuite EN SILENCE), et un bouton peut porter un
   // SIGNE (`icon`, vocabulaire FERMÉ, police embarquée). Strictement additifs.
-  blockRegistryVersion: "1.6.0",
+  // ÉDITION CONSCIENTE (1.7.0) : `accroche` sur l'en-tête — le titre monte
+  // d'un cran typographique (`display`), pour la PREMIÈRE phrase qu'une
+  // personne lit. Additif ; sans lui, l'en-tête est celui de 1.6.0.
+  blockRegistryVersion: "1.7.0",
   // Ré-scellé le 2026-08-29 (DET-006 / D-039) : `ListBlock` DÉCLARE désormais
   // `fill` sur sa Section, afin que la liste virtualisée reçoive un parent
   // BORNÉ. Cause démontrée : imbriquée dans un ScrollView de même axe, une
@@ -143,11 +146,15 @@ export const RELEASE_TRAIN_V1 = {
   // visible — le nom du filtre reste porté par l'accessibilité du groupe.
   // Ré-scellé (1.6.0) : `required` traverse le bloc formulaire jusqu'au
   // bouton, et `icon` entre au registre du bouton.
-  "52a3d86bd4ed4799d328f0e9641e03a8bb0464d4616857391daac4b9d802b352",
+  // Ré-scellé (1.7.0) : l'en-tête consomme la variante `display`.
+  "3c57aa63e9cec01506399885e9faecfce6d71f74627e63ef18a8405c341edcbf",
   capabilityRegistryVersion: "1.0.0",
   capabilitySourcesHash:
     "6c28599246abde6e7010704f23f273aafe50d17c5483133709c9065f2777346c",
-  designTokensVersion: "1.2.0",
+  // ÉDITION CONSCIENTE (1.3.0) : l'échelle typographique gagne `display`, un
+  // cran au-dessus de `heading`. Ajouté AVEC son consommateur réel (l'écran
+  // d'accueil produit), jamais « au cas où » — règle posée par DET-023.
+  designTokensVersion: "1.3.0",
   // Ré-scellé le 2026-08-29 (D-039/D-039-R1) : évolution des tokens en
   // 1.1.0 — correction de DEUX non-conformités A++ prouvées. Dimension B :
   // `onPrimary` passe de #FFFFFF à #16181D (blanc sur l'accent #FA5D1E =
@@ -165,7 +172,8 @@ export const RELEASE_TRAIN_V1 = {
   // Le cliquet de surface de majeure vérifie qu'aucune clé n'a disparu ni
   // changé de type — la compatibilité mineure reste donc mécanique.
   designTokensSourcesHash:
-    "4786eec85b103f893b5a45fb86ee0b7bc659c7c810ea839a98ff8897e56bd97d",
+    // Ré-scellé (tokens 1.3.0) : ajout de `font.display`.
+  "392e3bc34f834808da88bd31db5abb5f727d0af7eaa930bcc21713e1d0f36458",
 
   // Toolchain du projet généré (pins exacts démontrés — lock.toolchain).
   // Planchers RÉELS de plateforme du train (mesurés sur le prebuild du

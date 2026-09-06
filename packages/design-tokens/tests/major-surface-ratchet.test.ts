@@ -112,7 +112,11 @@ describe("cliquet de surface de majeure — compatibilité mineure MÉCANIQUE", 
     // (ils suppriment les 9 valeurs de style en dur de DET-022).
     // `primaryText` n'apparaît PAS ici : c'est un token DÉRIVÉ, calculé par
     // le codegen depuis l'accent — la source garde une seule vérité.
+    // 1.3.0 : `font.display`, un cran au-dessus de `heading`, ajouté AVEC son
+    // consommateur réel — l'accroche de l'écran d'accueil produit. La règle de
+    // DET-023 tient : aucun token « au cas où ».
     expect(added).toEqual([
+      "font.display",
       "fontWeight.bold",
       "fontWeight.semibold",
       "opacity.disabled",

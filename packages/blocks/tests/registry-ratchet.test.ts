@@ -53,7 +53,9 @@ describe("cliquets du registre de blocs", () => {
     // 1.6.0 : sixième montée additive — `required` sur les champs (le bouton
     // dérive s'il est actionnable) et `icon` sur le bouton. Un appelant 1.5.0
     // est inchangé.
-    expect(BLOCK_REGISTRY_VERSION).toBe("1.6.0");
+    // 1.7.0 : septième montée additive — `accroche` sur l'en-tête (le titre
+    // monte d'un cran typographique, pour la PREMIÈRE phrase qu'on lit).
+    expect(BLOCK_REGISTRY_VERSION).toBe("1.7.0");
     expect(BLOCKS.map((b) => b.id)).toEqual(V1_BLOCK_IDS);
   });
 

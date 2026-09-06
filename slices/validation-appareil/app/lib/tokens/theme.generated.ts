@@ -50,7 +50,8 @@ export const theme = {
     "label": 12,
     "body": 14,
     "title": 17,
-    "heading": 22
+    "heading": 22,
+    "display": 34
   },
   "fontWeight": {
     "semibold": "600",

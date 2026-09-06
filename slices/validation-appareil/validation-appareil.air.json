@@ -328,6 +328,54 @@
         "kind": "navigate",
         "screenId": "scr_connexion"
       }
+    },
+    {
+      "id": "act_bienvenue_inscription",
+      "name": "Créer un compte depuis l'accueil produit",
+      "trigger": {
+        "blockId": "blk_bienvenue_inscription",
+        "kind": "ui"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_inscription"
+      }
+    },
+    {
+      "id": "act_bienvenue_connexion",
+      "name": "Se connecter depuis l'accueil produit",
+      "trigger": {
+        "blockId": "blk_bienvenue_connexion",
+        "kind": "ui"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_connexion"
+      }
+    },
+    {
+      "id": "act_bienvenue_connexion_attente",
+      "name": "Se connecter après confirmation",
+      "trigger": {
+        "blockId": "blk_bienvenue_attente",
+        "kind": "ui"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_connexion"
+      }
+    },
+    {
+      "id": "act_bienvenue_continuer",
+      "name": "Entrer dans l'app",
+      "trigger": {
+        "blockId": "blk_bienvenue_continuer",
+        "kind": "ui"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_departs"
+      }
     }
   ],
   "airSchemaVersion": "1.14.0",
@@ -1444,7 +1492,7 @@
     "minIosVersion": "15.0"
   },
   "navigation": {
-    "entryScreenId": "scr_accueil",
+    "entryScreenId": "scr_bienvenue",
     "primary": {
       "destinations": [
         {
@@ -1601,6 +1649,16 @@
           {
             "locale": "fr",
             "text": "Créer un compte"
+          }
+        ]
+      },
+      {
+        "id": "nav_bienvenue",
+        "screenId": "scr_bienvenue",
+        "title": [
+          {
+            "locale": "fr",
+            "text": "Bienvenue"
           }
         ]
       }
@@ -1773,6 +1831,131 @@
     }
   ],
   "screens": [
+    {
+      "id": "scr_bienvenue",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Bienvenue"
+        }
+      ],
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_bienvenue_accroche",
+          "props": [
+            {
+              "key": "title",
+              "value": "Voyagez léger, réservez en trois gestes"
+            },
+            {
+              "key": "subtitle",
+              "value": "Trouvez votre départ, réservez votre place et présentez votre billet depuis votre téléphone."
+            },
+            {
+              "key": "accroche",
+              "value": true
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_bienvenue_inscription",
+          "visibleWhen": {
+            "kind": "session_anonymous"
+          },
+          "props": [
+            {
+              "key": "label",
+              "value": "Créer un compte"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            },
+            {
+              "key": "icon",
+              "value": "person-outline"
+            },
+            {
+              "key": "actionId",
+              "value": "act_bienvenue_inscription"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_bienvenue_connexion",
+          "visibleWhen": {
+            "kind": "session_anonymous"
+          },
+          "props": [
+            {
+              "key": "label",
+              "value": "J'ai déjà un compte"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            },
+            {
+              "key": "actionId",
+              "value": "act_bienvenue_connexion"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_bienvenue_continuer",
+          "visibleWhen": {
+            "kind": "session_authenticated"
+          },
+          "props": [
+            {
+              "key": "label",
+              "value": "Voir les départs"
+            },
+            {
+              "key": "kind",
+              "value": "primary"
+            },
+            {
+              "key": "icon",
+              "value": "ticket-outline"
+            },
+            {
+              "key": "actionId",
+              "value": "act_bienvenue_continuer"
+            }
+          ]
+        },
+        {
+          "blockType": "empty_state",
+          "id": "blk_bienvenue_attente",
+          "visibleWhen": {
+            "kind": "session_pending_confirmation"
+          },
+          "props": [
+            {
+              "key": "title",
+              "value": "Vérifiez votre boîte mail"
+            },
+            {
+              "key": "message",
+              "value": "Votre compte est créé. Confirmez-le depuis l'e-mail reçu, puis connectez-vous."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Me connecter"
+            },
+            {
+              "key": "actionId",
+              "value": "act_bienvenue_connexion_attente"
+            }
+          ]
+        }
+      ]
+    },
     {
       "blocks": [
         {

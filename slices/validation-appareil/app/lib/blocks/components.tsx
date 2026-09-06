@@ -26,10 +26,12 @@ import type {
   ListBlockProps,
 } from "./contracts.ts";
 
-export function HeaderBlock({ title, subtitle, testID }: HeaderBlockProps) {
+export function HeaderBlock({ title, subtitle, accroche, testID }: HeaderBlockProps) {
   return (
     <Section testID={testID}>
-      <AppText variant="heading">{title}</AppText>
+      {/* 1.7.0 — une ACCROCHE monte d'un cran typographique. Le bloc choisit
+          un RÔLE, la primitive porte la forme : aucun style ici. */}
+      <AppText variant={accroche === true ? "display" : "heading"}>{title}</AppText>
       {subtitle !== undefined && <AppText tone="muted">{subtitle}</AppText>}
     </Section>
   );

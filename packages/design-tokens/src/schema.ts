@@ -9,7 +9,9 @@
 // (vigilance consignée en D-021).
 import { z } from "zod";
 
-export const DESIGN_TOKENS_VERSION = "1.2.0";
+// 1.3.0 — l'échelle typographique gagne `display`, un cran au-dessus de
+// `heading`, avec son consommateur réel (accroche de l'écran d'accueil).
+export const DESIGN_TOKENS_VERSION = "1.3.0";
 
 const hexColor = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
 const dimension = z.number().int().positive();
@@ -59,6 +61,13 @@ export const designTokensSchema = z.strictObject({
     body: dimension,
     title: dimension,
     heading: dimension,
+    /**
+     * DISPLAY (1.3.0) — un cran AU-DESSUS de `heading`, pour la PREMIÈRE
+     * phrase qu'une personne lit. Ajouté avec son consommateur réel (l'écran
+     * d'accueil produit), jamais « au cas où » : c'est la règle que DET-023 a
+     * posée quand `elevation`/`motion` ont été écartés.
+     */
+    display: dimension,
   }),
   // DESIGN SYSTEM v2 (P-007, Phase 10) — trois groupes AJOUTÉS, chacun avec
   // un consommateur RÉEL dans les primitives ; aucun token « au cas où ».

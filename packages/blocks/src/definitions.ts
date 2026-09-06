@@ -44,7 +44,7 @@ import {
 // 1.6.0 — le bouton d'un formulaire DIT si l'action est possible (`required`
 // sur les champs), et un bouton peut porter un SIGNE (`icon`, vocabulaire
 // fermé partagé avec les onglets). Strictement additifs.
-export const BLOCK_REGISTRY_VERSION = "1.6.0";
+export const BLOCK_REGISTRY_VERSION = "1.7.0";
 
 // Motifs d'identités stables — IDENTIQUES à @deribfy/air-schema (ids.ts) ;
 // redéclarés structurellement (patron AirCapabilitySlice : pas de couplage
@@ -241,6 +241,9 @@ export const BLOCKS: readonly BlockDefinition[] = [
     propsSchema: z.strictObject({
       title: z.string().min(1),
       subtitle: z.string().min(1).optional(),
+      // 1.7.0 — ACCROCHE : le titre monte d'un cran typographique. Réservé à
+      // la première phrase qu'une personne lit ; optionnel, donc additif.
+      accroche: z.boolean().optional(),
     }),
     fieldRefProps: [],
     actionRefProps: [],

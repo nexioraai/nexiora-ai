@@ -30,6 +30,7 @@ const VARIANT_STYLE: Record<TextVariant, keyof Sheet> = {
   body: "textBody",
   title: "textTitle",
   heading: "textHeading",
+  display: "textDisplay",
 };
 
 export function ScreenShell({ children, testID, accessibilityLabel }: ScreenShellProps) {
