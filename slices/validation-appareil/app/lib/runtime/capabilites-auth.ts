@@ -9,6 +9,7 @@
 // Toute autre méthode d'`auth` est refusée et tracée, comme le défaut.
 import type { CapabilityCall, CapabilityProvider } from "./capability-provider";
 import type { SessionLocale } from "./session-locale";
+import type { SessionVerifiee } from "./session-supabase";
 
 export function creerCapabilitesAuth(session: SessionLocale): CapabilityProvider {
   return {
@@ -46,6 +47,48 @@ export function creerCapabilitesAuth(session: SessionLocale): CapabilityProvider
       }
       console.warn(`AIR_CAPABILITY_NOT_IMPLEMENTED:${call.capability}.${call.method}`);
       return false;
+    },
+  };
+}
+
+/**
+ * Variante VÉRIFIÉE — même effet AIR, serveur derrière.
+ *
+ * Deux différences que le document doit assumer : l'identité exige un MOT DE
+ * PASSE (le champ est DÉCLARÉ, jamais deviné), et les opérations sont
+ * asynchrones. `invoke` reste synchrone par contrat : il rend `true` quand
+ * l'appel a été ÉMIS, et la session notifie ses abonnés quand le serveur a
+ * répondu. Prétendre le contraire — attendre pour rendre un booléen — ferait
+ * mentir un contrat que 14 autres capabilities partagent.
+ */
+export function creerCapabilitesAuthVerifiee(session: SessionVerifiee): CapabilityProvider {
+  return {
+    invoke: (call: CapabilityCall): boolean => {
+      if (call.capability !== "auth") {
+        console.warn(`AIR_CAPABILITY_NOT_IMPLEMENTED:${call.capability}.${call.method}`);
+        return false;
+      }
+      if (call.method === "signOut") {
+        void session.fermer();
+        return true;
+      }
+      if (call.method !== "signIn" && call.method !== "signUp") {
+        console.warn(`AIR_CAPABILITY_NOT_IMPLEMENTED:${call.capability}.${call.method}`);
+        return false;
+      }
+      const champId = call.params.identifiantFieldId;
+      const champMdp = call.params.motDePasseFieldId;
+      if (typeof champId !== "string" || typeof champMdp !== "string") {
+        console.warn("AIR_CAPABILITY_AUTH_FIELDS_MISSING");
+        return false;
+      }
+      const identifiant = call.params[champId];
+      const motDePasse = call.params[champMdp];
+      if (typeof identifiant !== "string" || typeof motDePasse !== "string") return false;
+      if (identifiant.trim() === "" || motDePasse === "") return false;
+      if (call.method === "signUp") void session.creer(identifiant, motDePasse);
+      else void session.ouvrir(identifiant, motDePasse);
+      return true;
     },
   };
 }

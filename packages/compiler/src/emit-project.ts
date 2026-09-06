@@ -607,6 +607,25 @@ function emitApp(
   // prédicat de visibilité de session, ou un effet visant la capability
   // `auth`. Sans cela l'app émise reste byte-identique à 1.10.0 (additivité
   // stricte, patron D-058) — déclarer `auth` sans l'utiliser ne change rien.
+  // Session VÉRIFIÉE si le document DÉCLARE où la vérifier : une intégration
+  // d'authentification portant `url` et `anonKey`. Sans elle, la session reste
+  // LOCALE — le moteur ne devine pas un serveur d'identité, et ne prétend pas
+  // vérifier ce qu'il ne peut pas joindre.
+  const integrationAuth = air.integrations.find(
+    (i) =>
+      i.capability === "auth" &&
+      (i.config ?? []).some((c) => c.key === "url") &&
+      (i.config ?? []).some((c) => c.key === "anonKey"),
+  );
+  const configAuth =
+    integrationAuth === undefined
+      ? undefined
+      : {
+          url: String((integrationAuth.config ?? []).find((c) => c.key === "url")?.value ?? ""),
+          anonKey: String(
+            (integrationAuth.config ?? []).find((c) => c.key === "anonKey")?.value ?? "",
+          ),
+        };
   const avecSession =
     air.screens.some((s) =>
       s.blocks.some(
@@ -658,9 +677,18 @@ function emitApp(
     ...(avecSession
       ? [
           'import { CapabilityRoot } from "./lib/runtime/capability-provider";',
-          'import { creerCapabilitesAuth } from "./lib/runtime/capabilites-auth";',
-          'import { creerSessionLocale } from "./lib/runtime/session-locale";',
+          
           'import { SessionRoot } from "./lib/runtime/session-provider";',
+          ...(configAuth === undefined
+            ? [
+                'import { creerCapabilitesAuth } from "./lib/runtime/capabilites-auth";',
+                'import { creerSessionLocale } from "./lib/runtime/session-locale";',
+              ]
+            : [
+                'import { creerCapabilitesAuthVerifiee } from "./lib/runtime/capabilites-auth";',
+                'import { createClient } from "@supabase/supabase-js";',
+                'import { creerSessionSupabase } from "./lib/runtime/session-supabase";',
+              ]),
         ]
       : []),
     'import { demoData } from "./demo.data";',
@@ -687,13 +715,22 @@ function emitApp(
         ]
       : ["const provider = buildDemoProvider(demoData);"]),
     ...(avecSession
-      ? [
-          "// Session LOCALE (Phase 4) : identité DÉCLARÉE par la personne, non",
-          "// vérifiée par un serveur — équivalent de demo.data pour l'identité.",
-          "// Une session vérifiée est une autre implémentation du même contrat.",
-          "const session = creerSessionLocale();",
-          "const capabilities = creerCapabilitesAuth(session);",
-        ]
+      ? configAuth === undefined
+        ? [
+            "// Session LOCALE : identité DÉCLARÉE par la personne, non vérifiée",
+            "// par un serveur — équivalent de demo.data pour l'identité. Le",
+            "// document ne déclare aucune intégration d'authentification.",
+            "const session = creerSessionLocale();",
+            "const capabilities = creerCapabilitesAuth(session);",
+          ]
+        : [
+            "// Session VÉRIFIÉE : le document déclare OÙ vérifier l'identité.",
+            "// La clé anonyme est publiable par conception (protégée par RLS) —",
+            "// c'est ce qui ship dans tout client Supabase ; aucun secret ici.",
+            `const clientAuth = createClient(${JSON.stringify(configAuth.url)}, ${JSON.stringify(configAuth.anonKey)});`,
+            "const session = creerSessionSupabase(clientAuth);",
+            "const capabilities = creerCapabilitesAuthVerifiee(session);",
+          ]
       : []),
     ...(air.app.locales.rtlSupported
       ? [
