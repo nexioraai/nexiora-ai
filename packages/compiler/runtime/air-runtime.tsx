@@ -47,7 +47,9 @@ export interface AirEffectData {
 export type AirBlockVisibility =
   | { kind: "entity_empty" | "entity_not_empty"; entityId: string }
   /** 1.11.0 (Phase 4) — prédicat de SESSION : aucune entité interrogée. */
-  | { kind: "session_authenticated" | "session_anonymous" };
+  | {
+      kind: "session_authenticated" | "session_anonymous" | "session_pending_confirmation";
+    };
 
 export interface AirBlockInstanceData {
   id: string;
@@ -284,11 +286,14 @@ function useBlockVisible(screen: AirScreenData, blockId: string): boolean {
     () => (ecouteur: () => void) => session.abonner(ecouteur),
     [session],
   );
-  const authentifie = useSyncExternalStore(
+  // Un SEUL abonnement, un SEUL instantané : deux `useSyncExternalStore`
+  // pourraient être lus à des instants différents et se contredire.
+  const etat = useSyncExternalStore(
     abonnerSession,
-    () => session.estAuthentifie(),
-    () => session.estAuthentifie(),
+    () => (session.estAuthentifie() ? "auth" : session.enAttenteConfirmation?.() === true ? "attente" : "anon"),
+    () => (session.estAuthentifie() ? "auth" : session.enAttenteConfirmation?.() === true ? "attente" : "anon"),
   );
+  const authentifie = etat === "auth";
   const condition = block(screen, blockId).visibleWhen;
   if (condition === undefined) return true;
   // Discrimination POSITIVE sur les prédicats de DONNÉES : eux seuls portent
@@ -297,6 +302,7 @@ function useBlockVisible(screen: AirScreenData, blockId: string): boolean {
     const vide = provider.listInstances(condition.entityId).length === 0;
     return condition.kind === "entity_empty" ? vide : !vide;
   }
+  if (condition.kind === "session_pending_confirmation") return etat === "attente";
   return condition.kind === "session_authenticated" ? authentifie : !authentifie;
 }
 

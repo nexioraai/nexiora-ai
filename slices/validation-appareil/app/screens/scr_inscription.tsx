@@ -13,7 +13,7 @@
 import { KeyboardAvoidingView, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenShell } from "../lib/primitives";
-import { AirButton, AirForm, AirHeader } from "../lib/runtime/air-runtime";
+import { AirButton, AirEmptyState, AirForm, AirHeader } from "../lib/runtime/air-runtime";
 import { PrimaryNav } from "../lib/runtime/primary-nav";
 import { primaryNav } from "../nav.data";
 import type { AirScreenProps } from "../lib/runtime/air-runtime";
@@ -29,6 +29,7 @@ export default function ScrInscriptionScreen({ route }: AirScreenProps) {
         keyboardShouldPersistTaps="handled"
       >
         <AirHeader screen={screenData} blockId="blk_inscription_header" />
+        <AirEmptyState screen={screenData} blockId="blk_inscription_attente" />
         <AirForm screen={screenData} blockId="blk_inscription_form" itemId={route?.params?.itemId} />
         <AirButton screen={screenData} blockId="blk_inscription_vers_connexion" />
       </ScrollView>

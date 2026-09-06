@@ -84,6 +84,38 @@ describe("session vérifiée — l'identité vient du SERVEUR, jamais de l'appar
     expect(appels).toContain("signIn:a@b.fr");
   });
 
+  it("🔴 signUp SANS session : l'état est « en attente », jamais « anonyme »", async () => {
+    // Le défaut mesuré sur appareil : une inscription RÉUSSIE retombait sur
+    // « anonyme », donc rien ne bougeait à l'écran et le parcours ressemblait
+    // à une panne. Ce test interdit ce retour en arrière.
+    const { c } = client({ signUp: { data: { session: null }, error: null } });
+    const s = creerSessionSupabase(c);
+    expect(s.enAttenteConfirmation()).toBe(false);
+    expect(await s.creer("neuf@b.fr", "motdepasse")).toBe(true);
+    expect(s.estAuthentifie()).toBe(false);
+    expect(s.enAttenteConfirmation(), "créé sans session ⇒ EN ATTENTE").toBe(true);
+  });
+
+  it("🔴 signUp REFUSÉ : aucune attente déclarée non plus", async () => {
+    const { c } = client({ signUp: { data: { session: null }, error: { message: "exists" } } });
+    const s = creerSessionSupabase(c);
+    expect(await s.creer("a@b.fr", "x")).toBe(false);
+    expect(s.enAttenteConfirmation(), "un échec n'est pas une attente").toBe(false);
+  });
+
+  it("🟢 la connexion LÈVE l'attente — la confirmation a eu lieu", async () => {
+    const { c } = client({
+      signUp: { data: { session: null }, error: null },
+      signIn: { data: { session: SESSION }, error: null },
+    });
+    const s = creerSessionSupabase(c);
+    await s.creer("neuf@b.fr", "motdepasse");
+    expect(s.enAttenteConfirmation()).toBe(true);
+    await s.ouvrir("neuf@b.fr", "motdepasse");
+    expect(s.estAuthentifie()).toBe(true);
+    expect(s.enAttenteConfirmation()).toBe(false);
+  });
+
   it("🟢 signUp et signIn sont des opérations DISTINCTES", async () => {
     const { c, appels } = client({ signUp: { data: { session: SESSION }, error: null } });
     const s = creerSessionSupabase(c);

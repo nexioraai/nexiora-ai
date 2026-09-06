@@ -191,6 +191,17 @@ export const AIR_MIGRATIONS: readonly AirMigration[] = [
       "Migration IDENTITÉ : sans déclaration, le comportement reste `route`.",
     migrate: (document) => document,
   },
+  {
+    from: "1.13.0",
+    to: "1.14.0",
+    description:
+      "AIR 1.14.0 : prédicat `session_pending_confirmation`. Mesuré sur " +
+      "appareil : une inscription RÉUSSIE mais en attente de confirmation " +
+      "retombait sur « anonyme » — rien ne bougeait, et le parcours " +
+      "ressemblait à une panne alors que le compte était créé et l'e-mail " +
+      "envoyé. Migration IDENTITÉ : aucun document existant ne l'utilise.",
+    migrate: (document) => document,
+  },
 ];
 
 export class AirMigrationError extends Error {

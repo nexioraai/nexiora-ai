@@ -304,9 +304,21 @@
         "capability": "auth",
         "method": "signOut"
       }
+    },
+    {
+      "id": "act_attente_vers_connexion",
+      "name": "Revenir à la connexion après confirmation",
+      "trigger": {
+        "blockId": "blk_inscription_attente",
+        "kind": "ui"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_connexion"
+      }
     }
   ],
-  "airSchemaVersion": "1.13.0",
+  "airSchemaVersion": "1.14.0",
   "app": {
     "description": [
       {
@@ -2708,6 +2720,31 @@
           ]
         },
         {
+          "blockType": "empty_state",
+          "id": "blk_inscription_attente",
+          "visibleWhen": {
+            "kind": "session_pending_confirmation"
+          },
+          "props": [
+            {
+              "key": "title",
+              "value": "Vérifiez votre boîte mail"
+            },
+            {
+              "key": "message",
+              "value": "Votre compte est créé. Ouvrez l'e-mail de Bus Intercités et cliquez sur le lien de confirmation, puis revenez vous connecter."
+            },
+            {
+              "key": "actionLabel",
+              "value": "J'ai confirmé, me connecter"
+            },
+            {
+              "key": "actionId",
+              "value": "act_attente_vers_connexion"
+            }
+          ]
+        },
+        {
           "blockType": "form",
           "id": "blk_inscription_form",
           "entityId": "ent_voyageur",
@@ -2729,7 +2766,10 @@
               "key": "submitLabel",
               "value": "Créer mon compte"
             }
-          ]
+          ],
+          "visibleWhen": {
+            "kind": "session_anonymous"
+          }
         },
         {
           "blockType": "button",
@@ -2747,7 +2787,10 @@
               "key": "actionId",
               "value": "act_aller_connexion"
             }
-          ]
+          ],
+          "visibleWhen": {
+            "kind": "session_anonymous"
+          }
         }
       ]
     }

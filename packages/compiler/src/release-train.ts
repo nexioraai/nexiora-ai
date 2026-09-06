@@ -52,7 +52,10 @@ export const RELEASE_TRAIN_V1 = {
   // 1.12.0 -> 1.13.0 (volet 1) : `instanceFrom` sur l'effet mutation — `route`
   // ou `session`. Avant, `update` exigeait un identifiant de ligne que rien ne
   // fournissait : 65 contrôles pressables et INERTES, mesurés.
-  airSchemaVersion: "1.13.0",
+  // 1.13.0 -> 1.14.0 : prédicat `session_pending_confirmation`. Mesuré sur
+  // appareil : une inscription RÉUSSIE retombait sur « anonyme », rien ne
+  // bougeait, et le parcours ressemblait à une panne.
+  airSchemaVersion: "1.14.0",
   // Porté à 1.1.0 le 2026-08-31 (D-060) : montée STRICTEMENT ADDITIVE du
   // registre de blocs — `form` gagne `loading`/`empty`, `detail_header` gagne un
   // état, les trois blocs à données gagnent les props de titres. Rien n'est

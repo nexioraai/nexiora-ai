@@ -21,7 +21,7 @@ import {
 // 1.7.1 (E3.3, D-131) : provenance APLANIE (sourceKind/sourceIntegrationId/
 //   sourceDomain/sourceRefreshSeconds) — l'union 1.7.0 dépassait la limite
 //   réelle de grammaire de l'API (classe D-078) ; sémantique inchangée.
-export const AIR_SCHEMA_VERSION = "1.13.0";
+export const AIR_SCHEMA_VERSION = "1.14.0";
 
 export const semverSchema = z.string().regex(/^\d+\.\d+\.\d+$/);
 export const sha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
@@ -139,7 +139,20 @@ const blockVisibilitySchema = z.discriminatedUnion("kind", [
    * FERMÉE comme les deux premiers prédicats — deux valeurs, pas un langage.
    */
   z.strictObject({
-    kind: z.enum(["session_authenticated", "session_anonymous"]),
+    kind: z.enum([
+      "session_authenticated",
+      "session_anonymous",
+      /**
+       * EN ATTENTE DE CONFIRMATION (1.14.0) — le compte est créé, la session
+       * ne l'est pas : le serveur attend un clic dans un e-mail.
+       *
+       * Fait mesuré sur appareil : sans ce troisième état, une inscription
+       * RÉUSSIE retombait sur « anonyme » — rien ne bougeait à l'écran et le
+       * parcours ressemblait à une panne. L'app ne pouvait pas dire ce
+       * qu'elle savait.
+       */
+      "session_pending_confirmation",
+    ]),
   }),
 ]);
 

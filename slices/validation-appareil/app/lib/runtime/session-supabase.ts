@@ -39,12 +39,16 @@ export interface SessionVerifiee extends SessionProvider {
 
 export function creerSessionSupabase(client: ClientAuth): SessionVerifiee {
   let identite: string | undefined;
+  // 1.14.0 — compte créé, session non ouverte : le serveur attend un clic.
+  let attenteConfirmation = false;
   const ecouteurs = new Set<() => void>();
   const notifier = (): void => {
     for (const e of ecouteurs) e();
   };
   const appliquer = (session: { user: { id: string } } | null): void => {
     const suivant = session?.user.id;
+    // Une session ÉTABLIE lève l'attente : la confirmation a eu lieu.
+    if (suivant !== undefined && attenteConfirmation) attenteConfirmation = false;
     if (suivant === identite) return;
     identite = suivant;
     notifier();
@@ -60,6 +64,7 @@ export function creerSessionSupabase(client: ClientAuth): SessionVerifiee {
   return {
     estAuthentifie: () => identite !== undefined,
     identifiant: () => identite,
+    enAttenteConfirmation: () => attenteConfirmation,
     abonner: (ecouteur) => {
       ecouteurs.add(ecouteur);
       return () => {
@@ -84,10 +89,17 @@ export function creerSessionSupabase(client: ClientAuth): SessionVerifiee {
         return false;
       }
       appliquer(r.data.session);
+      // Créé SANS session = confirmation hors-bande attendue. On le DIT, au
+      // lieu de retomber sur « anonyme » — indiscernable d'un échec.
+      if (r.data.session === null) {
+        attenteConfirmation = true;
+        notifier();
+      }
       return true;
     },
     fermer: async () => {
       await client.auth.signOut();
+      attenteConfirmation = false;
       appliquer(null);
     },
   };
