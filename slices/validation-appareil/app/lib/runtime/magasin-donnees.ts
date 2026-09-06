@@ -39,6 +39,8 @@ export interface MagasinDonnees {
   create(entityId: string, values: Readonly<Record<string, string>>): boolean;
   update(entityId: string, instanceId: string, values: Readonly<Record<string, string>>): boolean;
   remove(entityId: string, instanceId: string): boolean;
+  /** 1.13.0 — écriture à identifiant IMPOSÉ (création ou mise à jour). */
+  upsert(entityId: string, instanceId: string, values: Readonly<Record<string, string>>): boolean;
   abonner(ecouteur: () => void): () => void;
   versionGlobale(): number;
   versionEntite(entityId: string): number;
@@ -95,6 +97,19 @@ export function creerMagasin(
       const i = e.rows.findIndex((r) => r.id === instanceId);
       if (i < 0) return false;
       e.rows = e.rows.map((r, j) => (j === i ? { id: r.id, values: { ...r.values, ...values } } : r));
+      notifier(e);
+      return true;
+    },
+    upsert: (entityId, instanceId, values) => {
+      const e = etat(entityId);
+      const i = e.rows.findIndex((r) => r.id === instanceId);
+      if (i >= 0) {
+        e.rows = e.rows.map((r, j) =>
+          j === i ? { id: r.id, values: { ...r.values, ...values } } : r,
+        );
+      } else {
+        e.rows = [...e.rows, { id: instanceId, values: { ...values } }];
+      }
       notifier(e);
       return true;
     },

@@ -51,6 +51,14 @@ export interface DataProvider {
   create?(entityId: string, values: Readonly<Record<string, string>>): boolean;
   update?(entityId: string, instanceId: string, values: Readonly<Record<string, string>>): boolean;
   remove?(entityId: string, instanceId: string): boolean;
+  /**
+   * ÉCRITURE À IDENTIFIANT IMPOSÉ (1.13.0) — crée la ligne si elle n'existe
+   * pas, la met à jour sinon. Nécessaire pour la ligne de la PERSONNE
+   * CONNECTÉE : au tout premier enregistrement elle n'existe pas encore, et
+   * un `update` seul échouerait en silence. `create` ne convient pas — il
+   * fabrique son propre identifiant, alors qu'ici l'identité l'impose.
+   */
+  upsert?(entityId: string, instanceId: string, values: Readonly<Record<string, string>>): boolean;
 }
 
 export const EMPTY_DATA_PROVIDER: DataProvider = {

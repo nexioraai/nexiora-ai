@@ -16,9 +16,10 @@ import { ScreenShell } from "../lib/primitives";
 import { AirButton, AirEmptyState, AirForm, AirHeader } from "../lib/runtime/air-runtime";
 import { PrimaryNav } from "../lib/runtime/primary-nav";
 import { primaryNav } from "../nav.data";
+import type { AirScreenProps } from "../lib/runtime/air-runtime";
 import { screenData } from "./scr_compte.data";
 
-export default function ScrCompteScreen() {
+export default function ScrCompteScreen({ route }: AirScreenProps) {
   const insets = useSafeAreaInsets();
   return (
     <ScreenShell testID="scr_compte" title={screenData.title}>
@@ -29,7 +30,7 @@ export default function ScrCompteScreen() {
       >
         <AirHeader screen={screenData} blockId="blk_compte_header" />
         <AirEmptyState screen={screenData} blockId="blk_compte_visiteur" />
-        <AirForm screen={screenData} blockId="blk_compte_form" />
+        <AirForm screen={screenData} blockId="blk_compte_form" itemId={route?.params?.itemId} />
         <AirButton screen={screenData} blockId="blk_compte_parametres" />
         <AirButton screen={screenData} blockId="blk_compte_deconnexion" />
       </ScrollView>

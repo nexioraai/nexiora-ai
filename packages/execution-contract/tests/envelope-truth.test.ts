@@ -110,6 +110,12 @@ describe("véracité de l'enveloppe — opérations de données", () => {
       "remove",
       "status",
       "update",
+      // ÉDITION CONSCIENTE (volet 1) : `upsert` — écriture à identifiant
+      // IMPOSÉ. Nécessaire pour la ligne de la PERSONNE CONNECTÉE : au premier
+      // enregistrement elle n'existe pas, et `update` seul échouait EN SILENCE.
+      // `create` ne convient pas : il fabrique son propre identifiant, alors
+      // qu'ici l'identité l'impose. (Liste TRIÉE : d'où cette position.)
+      "upsert",
     ]);
     expect([...EXECUTION_ENVELOPE_V1.dataOperations].sort()).toEqual([
       "create",

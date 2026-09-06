@@ -17,6 +17,7 @@ import { SessionRoot } from "./lib/runtime/session-provider";
 import { creerCapabilitesAuthVerifiee } from "./lib/runtime/capabilites-auth";
 import { createClient } from "@supabase/supabase-js";
 import { creerSessionSupabase } from "./lib/runtime/session-supabase";
+import { creerMagasinEcrivain } from "./lib/runtime/ecriture-supabase";
 import { demoData } from "./demo.data";
 import { Navigation } from "./navigation";
 
@@ -42,13 +43,22 @@ void adaptateur.demarrer();
 const clientAuth = createClient("https://psxbilpmnojtlzosokzz.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzeGJpbHBtbm9qdGx6b3Nva3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2NjM2OTcsImV4cCI6MjEwNDIzOTY5N30.Ea24JkCSgTHKaD613nWj0KE7nF728QP-4tocP9mn38w");
 const session = creerSessionSupabase(clientAuth);
 const capabilities = creerCapabilitesAuthVerifiee(session);
+const CHAMPS_SENSIBLES = ["fld_voyageur_mot_de_passe"] as const;
+const providerEcrivain = creerMagasinEcrivain({
+  magasin: provider,
+  port: {
+    ecrire: (table, ligne) => clientAuth.from(table).upsert(ligne),
+    supprimer: (table, id) => clientAuth.from(table).delete().eq("id", id),
+  },
+  champsSensibles: CHAMPS_SENSIBLES,
+});
 
 export default function App() {
   return (
     <ThemeRoot>
       <SessionRoot provider={session}>
       <CapabilityRoot provider={capabilities}>
-      <DataRoot provider={provider}>
+      <DataRoot provider={providerEcrivain}>
         <SlotRoot registry={slotRegistry}>
           <FormStateRoot>
             <Navigation />

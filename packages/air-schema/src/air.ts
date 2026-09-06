@@ -21,7 +21,7 @@ import {
 // 1.7.1 (E3.3, D-131) : provenance APLANIE (sourceKind/sourceIntegrationId/
 //   sourceDomain/sourceRefreshSeconds) — l'union 1.7.0 dépassait la limite
 //   réelle de grammaire de l'API (classe D-078) ; sémantique inchangée.
-export const AIR_SCHEMA_VERSION = "1.12.0";
+export const AIR_SCHEMA_VERSION = "1.13.0";
 
 export const semverSchema = z.string().regex(/^\d+\.\d+\.\d+$/);
 export const sha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
@@ -490,6 +490,22 @@ const actionEffectSchema = z.discriminatedUnion("kind", [
     kind: z.literal("mutation"),
     entityId: entityIdSchema,
     operation: z.enum(["create", "update", "delete"]),
+    /**
+     * D'OÙ VIENT L'INSTANCE À ÉCRIRE (1.13.0, VOLET 1).
+     *
+     * `route` (défaut) — la ligne ouverte : l'écran de détail la transporte.
+     * `session` — la ligne de la PERSONNE CONNECTÉE. Un écran de profil n'a
+     * pas d'`itemId` : son instance est l'identité, pas une navigation.
+     *
+     * Fait mesuré avant cette montée : `update` exigeait un `saisie.id` que
+     * RIEN ne fournissait — 65 contrôles sur 27 applications étaient donc
+     * pressables et inertes, sans le dire. « Enregistrer mes informations » en
+     * faisait partie.
+     *
+     * `session` sans identité établie = aucune écriture. On n'écrit jamais la
+     * ligne de quelqu'un d'autre parce qu'on ne sait pas qui on est.
+     */
+    instanceFrom: z.enum(["route", "session"]).optional(),
     /**
      * ÉCRAN SUIVANT (1.5.0, D-070) — où aller UNE FOIS l'écriture faite.
      *

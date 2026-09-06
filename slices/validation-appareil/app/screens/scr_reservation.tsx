@@ -16,9 +16,10 @@ import { ScreenShell } from "../lib/primitives";
 import { AirForm, AirHeader } from "../lib/runtime/air-runtime";
 import { PrimaryNav } from "../lib/runtime/primary-nav";
 import { primaryNav } from "../nav.data";
+import type { AirScreenProps } from "../lib/runtime/air-runtime";
 import { screenData } from "./scr_reservation.data";
 
-export default function ScrReservationScreen() {
+export default function ScrReservationScreen({ route }: AirScreenProps) {
   const insets = useSafeAreaInsets();
   return (
     <ScreenShell testID="scr_reservation" title={screenData.title}>
@@ -28,7 +29,7 @@ export default function ScrReservationScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <AirHeader screen={screenData} blockId="blk_reservation_header" />
-        <AirForm screen={screenData} blockId="blk_reservation_form" />
+        <AirForm screen={screenData} blockId="blk_reservation_form" itemId={route?.params?.itemId} />
       </ScrollView>
       </KeyboardAvoidingView>
       <PrimaryNav destinations={primaryNav} currentScreenId="scr_reservation" />

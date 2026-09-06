@@ -96,7 +96,8 @@
         "entityId": "ent_voyageur",
         "kind": "mutation",
         "operation": "update",
-        "thenScreenId": "scr_compte"
+        "thenScreenId": "scr_compte",
+        "instanceFrom": "session"
       },
       "id": "act_enregistrer_compte",
       "name": "Enregistrer mes informations de voyageur",
@@ -305,7 +306,7 @@
       }
     }
   ],
-  "airSchemaVersion": "1.12.0",
+  "airSchemaVersion": "1.13.0",
   "app": {
     "description": [
       {

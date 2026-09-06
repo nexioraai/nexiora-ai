@@ -180,6 +180,17 @@ export const AIR_MIGRATIONS: readonly AirMigration[] = [
       "place du document changerait ce qui est écrit en base.",
     migrate: (document) => document,
   },
+  {
+    from: "1.12.0",
+    to: "1.13.0",
+    description:
+      "AIR 1.13.0 (volet 1) : `instanceFrom` OPTIONNEL sur l'effet mutation — " +
+      "`route` (défaut, la ligne ouverte) ou `session` (la ligne de la " +
+      "personne connectée). Avant, `update` exigeait un identifiant de ligne " +
+      "que rien ne fournissait : 65 contrôles pressables et INERTES, mesurés. " +
+      "Migration IDENTITÉ : sans déclaration, le comportement reste `route`.",
+    migrate: (document) => document,
+  },
 ];
 
 export class AirMigrationError extends Error {

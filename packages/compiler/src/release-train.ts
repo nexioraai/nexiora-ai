@@ -49,7 +49,10 @@ export const RELEASE_TRAIN_V1 = {
   // 1.11.0 -> 1.12.0 (Phase 4) : drapeau `sensitive` sur les champs — saisi,
   // JAMAIS conservé. Sans lui, un mot de passe déclaré comme champ ordinaire
   // devenait une COLONNE et recevait une valeur de démo.
-  airSchemaVersion: "1.12.0",
+  // 1.12.0 -> 1.13.0 (volet 1) : `instanceFrom` sur l'effet mutation — `route`
+  // ou `session`. Avant, `update` exigeait un identifiant de ligne que rien ne
+  // fournissait : 65 contrôles pressables et INERTES, mesurés.
+  airSchemaVersion: "1.13.0",
   // Porté à 1.1.0 le 2026-08-31 (D-060) : montée STRICTEMENT ADDITIVE du
   // registre de blocs — `form` gagne `loading`/`empty`, `detail_header` gagne un
   // état, les trois blocs à données gagnent les props de titres. Rien n'est

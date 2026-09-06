@@ -36,6 +36,8 @@ export interface AirEffectData {
   operation?: string;
   /** Écran atteint UNE FOIS l'écriture réussie (1.5.0, D-070). */
   thenScreenId?: string;
+  /** 1.13.0 — `route` (défaut) ou `session` : d'où vient la ligne à écrire. */
+  instanceFrom?: string;
   /** Effet `capability` (D-059) — transporté pour être INVOQUÉ, plus ignoré. */
   capability?: string;
   method?: string;
@@ -344,6 +346,10 @@ function useDispatch(screen: AirScreenData) {
   // formulaire. Sans cette lecture, l'écriture partait vide et la règle de
   // validation la refusait — en silence.
   const saisies = useAllFormValues();
+  // 1.13.0 — l'identité courante, pour les mutations dont l'instance EST la
+  // personne connectée. Lue inconditionnellement : un hook ne se place pas
+  // derrière une condition.
+  const identiteSession = useSessionProvider().identifiant();
   return useMemo(
     () => (actionId: string | undefined, values?: Readonly<Record<string, string>>) => {
       if (actionId === undefined) return;
@@ -380,8 +386,19 @@ function useDispatch(screen: AirScreenData) {
         let ecrit = false;
         if (effect.operation === "create") ecrit = data.create?.(cible, saisie) ?? false;
         else if (effect.operation === "update") {
-          const id = saisie.id;
-          if (id !== undefined) ecrit = data.update?.(cible, id, saisie) ?? false;
+          // 1.13.0 — l'instance vient de la SESSION ou de la route. Sans
+          // identité établie, on n'écrit RIEN : écrire « quelque part » serait
+          // écrire la ligne de quelqu'un d'autre.
+          const id = effect.instanceFrom === "session" ? identiteSession : saisie.id;
+          if (id !== undefined) {
+            // UPSERT quand l'instance est la SESSION : au premier
+            // enregistrement, la ligne n'existe pas encore — un `update` seul
+            // échouerait en silence, exactement le défaut qu'on corrige.
+            const misAJour = data.update?.(cible, id, saisie) ?? false;
+            ecrit =
+              misAJour ||
+              (effect.instanceFrom === "session" && data.upsert?.(cible, id, saisie) === true);
+          }
         } else if (effect.operation === "delete") {
           const id = saisie.id;
           if (id !== undefined) ecrit = data.remove?.(cible, id) ?? false;
@@ -701,7 +718,7 @@ export function AirList({ screen, blockId, itemId }: BlockRef & { itemId?: strin
   );
 }
 
-export function AirForm({ screen, blockId }: BlockRef) {
+export function AirForm({ screen, blockId, itemId }: BlockRef & { itemId?: string }) {
   const visible = useBlockVisible(screen, blockId);
   const b = block(screen, blockId);
   // Props SURCHARGÉES par les sorties des slots liés (1.3.0, D-058).
@@ -749,7 +766,10 @@ export function AirForm({ screen, blockId }: BlockRef) {
       submitLabel={submitLabel}
       // D-061 : les valeurs SAISIES accompagnent l'action — sans elles, une
       // création écrirait un enregistrement vide.
-      onSubmit={() => dispatch(actionId, values)}
+      // VOLET 1 — l'instance COURANTE accompagne la saisie : sans elle, une
+      // mutation `update` n'avait aucune ligne à modifier. `id` n'est pas un
+      // champ du formulaire : il vient de la ROUTE, pas d'une saisie.
+      onSubmit={() => dispatch(actionId, itemId === undefined ? values : { ...values, id: itemId })}
       // États du registre 1.1.0 (D-060) : `loading` et `error` deviennent
       // atteignables dès que la source les rapporte ET que le titre est déclaré.
       // `empty` pour un formulaire = AUCUN champ à saisir. État réel, pas une

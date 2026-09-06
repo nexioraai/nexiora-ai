@@ -16,9 +16,10 @@ import { ScreenShell } from "../lib/primitives";
 import { AirButton, AirForm, AirHeader } from "../lib/runtime/air-runtime";
 import { PrimaryNav } from "../lib/runtime/primary-nav";
 import { primaryNav } from "../nav.data";
+import type { AirScreenProps } from "../lib/runtime/air-runtime";
 import { screenData } from "./scr_connexion.data";
 
-export default function ScrConnexionScreen() {
+export default function ScrConnexionScreen({ route }: AirScreenProps) {
   const insets = useSafeAreaInsets();
   return (
     <ScreenShell testID="scr_connexion" title={screenData.title}>
@@ -28,7 +29,7 @@ export default function ScrConnexionScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <AirHeader screen={screenData} blockId="blk_connexion_header" />
-        <AirForm screen={screenData} blockId="blk_connexion_form" />
+        <AirForm screen={screenData} blockId="blk_connexion_form" itemId={route?.params?.itemId} />
         <AirButton screen={screenData} blockId="blk_connexion_vers_inscription" />
       </ScrollView>
       </KeyboardAvoidingView>

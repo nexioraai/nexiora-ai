@@ -163,6 +163,7 @@ interface ScreenSlice {
         entityId?: string;
         operation?: string;
         thenScreenId?: string;
+        instanceFrom?: string;
       }
     >;
     uiActionsByBlock: Record<string, string>;
@@ -256,6 +257,11 @@ function buildScreenSlice(air: ProjectAir, screen: ProjectAir["screens"][number]
         ...(action.effect.thenScreenId === undefined
           ? {}
           : { thenScreenId: action.effect.thenScreenId }),
+        // 1.13.0 — d'où vient l'instance à écrire (route par défaut). Nous
+        // sommes déjà dans la branche `mutation` : le tester serait redondant.
+        ...(action.effect.instanceFrom === undefined
+          ? {}
+          : { instanceFrom: action.effect.instanceFrom }),
       };
     } else if (action.effect.kind === "capability") {
       // D-059 : la capability, sa méthode et ses paramètres sont TRANSPORTÉS
@@ -419,8 +425,12 @@ function emitScreen(slice: ScreenSlice, aBarre: boolean): string {
   ].sort(byCodeUnit);
   // E2 (D-129) — les listes reçoivent aussi l'instance courante : une liste
   // scopée sans elle est VIDE (jamais rows[0]), le pipeline pur en décide.
+  // VOLET 1 — le FORMULAIRE aussi reçoit l'instance courante. Sans elle, une
+  // mutation `update` n'avait aucun identifiant de ligne : `data.update` était
+  // appelée avec `undefined`, donc jamais appelée, et le bouton ne faisait
+  // RIEN — sans le dire. Dette mesurée : 65 contrôles sur 27 applications.
   const usesRoute = slice.screen.blocks.some(
-    (b) => b.blockType === "detail_header" || b.blockType === "list",
+    (b) => b.blockType === "detail_header" || b.blockType === "list" || b.blockType === "form",
   );
   // DET-006 (D-039) : un écran porteur d'un bloc `list` N'EST PLUS enveloppé
   // dans un ScrollView. Cause démontrée : une FlatList imbriquée dans un
@@ -490,7 +500,7 @@ function emitScreen(slice: ScreenSlice, aBarre: boolean): string {
     ...slice.screen.blocks.map((b) => {
       const wrapper = WRAPPER_BY_BLOCK_TYPE[b.blockType] ?? "";
       const itemId =
-        b.blockType === "detail_header" || b.blockType === "list"
+        b.blockType === "detail_header" || b.blockType === "list" || b.blockType === "form"
           ? " itemId={route?.params?.itemId}"
           : "";
       return `        <${wrapper} screen={screenData} blockId="${assertId(b.id, screenId)}"${itemId} />`;
@@ -629,6 +639,10 @@ function emitApp(
             (integrationAuth.config ?? []).find((c) => c.key === "anonKey")?.value ?? "",
           ),
         };
+  // Champs SENSIBLES du document : ils ne partent jamais vers le backend.
+  const champsSensibles = air.entities
+    .flatMap((e) => e.fields.filter((f) => f.sensitive === true).map((f) => f.id))
+    .sort(byCodeUnit);
   const avecSession =
     air.screens.some((s) =>
       s.blocks.some(
@@ -691,6 +705,7 @@ function emitApp(
                 'import { creerCapabilitesAuthVerifiee } from "./lib/runtime/capabilites-auth";',
                 'import { createClient } from "@supabase/supabase-js";',
                 'import { creerSessionSupabase } from "./lib/runtime/session-supabase";',
+                ...(avecRemote ? ['import { creerMagasinEcrivain } from "./lib/runtime/ecriture-supabase";'] : []),
               ]),
         ]
       : []),
@@ -733,6 +748,21 @@ function emitApp(
             `const clientAuth = createClient(${JSON.stringify(configAuth.url)}, ${JSON.stringify(configAuth.anonKey)});`,
             "const session = creerSessionSupabase(clientAuth);",
             "const capabilities = creerCapabilitesAuthVerifiee(session);",
+            // VOLET 3 : l'écriture atteint la base. Le magasin est DÉCORÉ —
+            // l'instantané local ne bouge que si le serveur a accepté.
+            ...(avecRemote
+              ? [
+                  `const CHAMPS_SENSIBLES = ${canonicalJson(champsSensibles)} as const;`,
+                  "const providerEcrivain = creerMagasinEcrivain({",
+                  "  magasin: provider,",
+                  "  port: {",
+                  "    ecrire: (table, ligne) => clientAuth.from(table).upsert(ligne),",
+                  '    supprimer: (table, id) => clientAuth.from(table).delete().eq("id", id),',
+                  "  },",
+                  "  champsSensibles: CHAMPS_SENSIBLES,",
+                  "});",
+                ]
+              : []),
           ]
       : []),
     ...(air.app.locales.rtlSupported
@@ -752,7 +782,9 @@ function emitApp(
           "      <CapabilityRoot provider={capabilities}>",
         ]
       : []),
-    "      <DataRoot provider={provider}>",
+    ...(avecSession && configAuth !== undefined && avecRemote
+      ? ["      <DataRoot provider={providerEcrivain}>"]
+      : ["      <DataRoot provider={provider}>"]),
     ...(avecSlots
       ? [
           "        <SlotRoot registry={slotRegistry}>",

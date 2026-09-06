@@ -16,9 +16,10 @@ import { ScreenShell } from "../lib/primitives";
 import { AirForm, AirHeader } from "../lib/runtime/air-runtime";
 import { PrimaryNav } from "../lib/runtime/primary-nav";
 import { primaryNav } from "../nav.data";
+import type { AirScreenProps } from "../lib/runtime/air-runtime";
 import { screenData } from "./scr_paiement.data";
 
-export default function ScrPaiementScreen() {
+export default function ScrPaiementScreen({ route }: AirScreenProps) {
   const insets = useSafeAreaInsets();
   return (
     <ScreenShell testID="scr_paiement" title={screenData.title}>
@@ -28,7 +29,7 @@ export default function ScrPaiementScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <AirHeader screen={screenData} blockId="blk_paiement_header" />
-        <AirForm screen={screenData} blockId="blk_paiement_form" />
+        <AirForm screen={screenData} blockId="blk_paiement_form" itemId={route?.params?.itemId} />
       </ScrollView>
       </KeyboardAvoidingView>
       <PrimaryNav destinations={primaryNav} currentScreenId="scr_paiement" />

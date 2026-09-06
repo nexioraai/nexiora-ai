@@ -16,9 +16,10 @@ import { ScreenShell } from "../lib/primitives";
 import { AirButton, AirForm, AirHeader } from "../lib/runtime/air-runtime";
 import { PrimaryNav } from "../lib/runtime/primary-nav";
 import { primaryNav } from "../nav.data";
+import type { AirScreenProps } from "../lib/runtime/air-runtime";
 import { screenData } from "./scr_inscription.data";
 
-export default function ScrInscriptionScreen() {
+export default function ScrInscriptionScreen({ route }: AirScreenProps) {
   const insets = useSafeAreaInsets();
   return (
     <ScreenShell testID="scr_inscription" title={screenData.title}>
@@ -28,7 +29,7 @@ export default function ScrInscriptionScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <AirHeader screen={screenData} blockId="blk_inscription_header" />
-        <AirForm screen={screenData} blockId="blk_inscription_form" />
+        <AirForm screen={screenData} blockId="blk_inscription_form" itemId={route?.params?.itemId} />
         <AirButton screen={screenData} blockId="blk_inscription_vers_connexion" />
       </ScrollView>
       </KeyboardAvoidingView>
