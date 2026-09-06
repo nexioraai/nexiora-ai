@@ -32,6 +32,8 @@ export interface ClientAuth {
 }
 
 export interface SessionVerifiee extends SessionProvider {
+  /** Cette implémentation le fournit TOUJOURS — l'attente y est un état réel. */
+  enAttenteConfirmation(): boolean;
   ouvrir(email: string, motDePasse: string): Promise<boolean>;
   creer(email: string, motDePasse: string): Promise<boolean>;
   fermer(): Promise<void>;

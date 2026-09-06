@@ -95,6 +95,10 @@ const makeSheet = (c: Palette) =>
     buttonChipText: { color: c.primaryText, fontWeight: theme.fontWeight.semibold, fontSize: theme.font.label },
     buttonChipTextActif: { color: c.onPrimary },
     buttonText: { color: c.onPrimary, fontWeight: theme.fontWeight.semibold, fontSize: theme.font.body },
+    // 1.6.0 — le signe s'aligne au texte, il ne le remplace pas.
+    // Propriété LOGIQUE (`marginEnd`), pas physique : le cliquet RTL l'exige,
+    // et il a raison — en arabe le signe doit passer à droite tout seul.
+    buttonIcon: { fontSize: theme.font.body, marginEnd: theme.space.sm },
     buttonGhostText: { color: c.primaryText },
     // — TextField —
     fieldWrap: { marginBottom: theme.space.md },

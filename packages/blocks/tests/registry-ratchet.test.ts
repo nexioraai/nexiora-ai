@@ -50,7 +50,10 @@ describe("cliquets du registre de blocs", () => {
     // testID inchangés ; un appelant 1.3.0 est inchangé.
     // DET-034 : cinquième montée additive — chips de filtre (`kind: "chip"`,
     // `selected` sur la primitive). Un appelant 1.4.0 est inchangé.
-    expect(BLOCK_REGISTRY_VERSION).toBe("1.5.0");
+    // 1.6.0 : sixième montée additive — `required` sur les champs (le bouton
+    // dérive s'il est actionnable) et `icon` sur le bouton. Un appelant 1.5.0
+    // est inchangé.
+    expect(BLOCK_REGISTRY_VERSION).toBe("1.6.0");
     expect(BLOCKS.map((b) => b.id)).toEqual(V1_BLOCK_IDS);
   });
 

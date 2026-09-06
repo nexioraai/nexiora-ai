@@ -216,9 +216,14 @@ export function FormBlock({
           {errorMessage}
         </AppText>
       )}
+      {/* 1.6.0 — le bouton DIT si l'action est possible. Un champ obligatoire
+          vide rendait le bouton actif : il promettait une écriture que la
+          validation refusait ensuite EN SILENCE. La couleur porte désormais
+          l'information, et `accessibilityState.disabled` la dit aussi. */}
       <AppButton
         label={submitLabel}
         onPress={onSubmit}
+        disabled={fields.some((f) => f.required === true && (values[f.id] ?? "").trim() === "")}
         loading={state === "submitting"}
         testID={`${testID ?? "form"}-submit`}
       />
@@ -226,8 +231,8 @@ export function FormBlock({
   );
 }
 
-export function ButtonBlock({ label, kind, onPress, testID }: ButtonBlockProps) {
-  return <AppButton label={label} kind={kind} onPress={onPress} testID={testID} />;
+export function ButtonBlock({ label, icon, kind, onPress, testID }: ButtonBlockProps) {
+  return <AppButton label={label} icon={icon} kind={kind} onPress={onPress} testID={testID} />;
 }
 
 export function EmptyStateBlock({

@@ -41,7 +41,10 @@ import {
 // 1.5.0 (DET-034) — les options d'un filtre à choix deviennent des CHIPS :
 // `kind: "chip"` + `selected` sur la primitive bouton (additifs). Visuel de
 // badge, cible tactile intacte, état sélectionné exposé à l'accessibilité.
-export const BLOCK_REGISTRY_VERSION = "1.5.0";
+// 1.6.0 — le bouton d'un formulaire DIT si l'action est possible (`required`
+// sur les champs), et un bouton peut porter un SIGNE (`icon`, vocabulaire
+// fermé partagé avec les onglets). Strictement additifs.
+export const BLOCK_REGISTRY_VERSION = "1.6.0";
 
 // Motifs d'identités stables — IDENTIQUES à @deribfy/air-schema (ids.ts) ;
 // redéclarés structurellement (patron AirCapabilitySlice : pas de couplage
@@ -95,6 +98,23 @@ export const BLOCKS: readonly BlockDefinition[] = [
     // AIR ↔ app (l'AIR est la source de vérité, non-négociable 1).
     propsSchema: z.strictObject({
       label: z.string().min(1),
+      // 1.6.0 — SIGNE du bouton. Vocabulaire FERMÉ : le moteur ne promet que
+      // des glyphes qu'il sait dessiner, et la police est EMBARQUÉE (aucun
+      // accès réseau). Un nom libre ferait revenir la classe de défaut que
+      // `D-088` a corrigée : un document qui promet ce que le moteur ne rend
+      // pas. Optionnel — sans lui, le bouton reste celui de 1.5.0.
+      icon: z
+        .enum([
+          "settings-outline",
+          "log-out-outline",
+          "trash-outline",
+          "person-outline",
+          "ticket-outline",
+          "card-outline",
+          "checkmark-outline",
+          "arrow-back-outline",
+        ])
+        .optional(),
       kind: z.enum(["primary", "ghost"]).optional(),
       actionId: actionRef,
     }),

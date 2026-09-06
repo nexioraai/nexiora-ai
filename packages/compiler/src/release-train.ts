@@ -70,7 +70,11 @@ export const RELEASE_TRAIN_V1 = {
   // filtre : `kind: "chip"` + `selected` sur la primitive bouton, additifs.
   // Visuel de badge, cible tactile INTACTE (tapTarget), état sélectionné
   // exposé à l'accessibilité.
-  blockRegistryVersion: "1.5.0",
+  // ÉDITION CONSCIENTE (1.6.0) : le bouton d'un formulaire DIT s'il est
+  // actionnable (`required` sur les champs — il promettait une écriture que la
+  // validation refusait ensuite EN SILENCE), et un bouton peut porter un
+  // SIGNE (`icon`, vocabulaire FERMÉ, police embarquée). Strictement additifs.
+  blockRegistryVersion: "1.6.0",
   // Ré-scellé le 2026-08-29 (DET-006 / D-039) : `ListBlock` DÉCLARE désormais
   // `fill` sur sa Section, afin que la liste virtualisée reçoive un parent
   // BORNÉ. Cause démontrée : imbriquée dans un ScrollView de même axe, une
@@ -137,7 +141,9 @@ export const RELEASE_TRAIN_V1 = {
   // Ré-scellé 2026-09-05 (DET-034) : les options d'un filtre à choix rendent
   // des CHIPS (`kind: "chip"`, `selected`) et la rangée perd son titre
   // visible — le nom du filtre reste porté par l'accessibilité du groupe.
-  "b3834ff08571bdaa09ca908033fa57e6bb19624d98d756f604c526a6f44fd2e4",
+  // Ré-scellé (1.6.0) : `required` traverse le bloc formulaire jusqu'au
+  // bouton, et `icon` entre au registre du bouton.
+  "52a3d86bd4ed4799d328f0e9641e03a8bb0464d4616857391daac4b9d802b352",
   capabilityRegistryVersion: "1.0.0",
   capabilitySourcesHash:
     "6c28599246abde6e7010704f23f273aafe50d17c5483133709c9065f2777346c",

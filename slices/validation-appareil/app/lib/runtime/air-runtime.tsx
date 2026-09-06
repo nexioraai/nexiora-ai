@@ -90,6 +90,8 @@ export interface AirFieldData {
   enumLabels?: Readonly<Record<string, string>>;
   /** 1.12.0 — saisie MASQUÉE, valeur jamais conservée. */
   sensitive?: boolean;
+  /** 1.6.0 du registre — champ OBLIGATOIRE : le bouton d'envoi en dérive. */
+  required?: boolean;
 }
 
 export interface AirSlotInvocationData {
@@ -502,6 +504,7 @@ export function AirButton({ screen, blockId }: BlockRef) {
     <ButtonBlock
       testID={b.id}
       label={label}
+      icon={str(props.icon)}
       kind={kind}
       onPress={inerte ? undefined : () => dispatch(actionId)}
     />
@@ -751,6 +754,9 @@ export function AirForm({ screen, blockId, itemId }: BlockRef & { itemId?: strin
       {
         id: field.id,
         label: field.label ?? field.name,
+        // 1.6.0 — le caractère OBLIGATOIRE vient du document : le bloc en
+        // dérive si l'action est possible, il ne le devine pas.
+        required: field.required,
         // 1.12.0 — un champ sensible se saisit en clair pour la personne, pas
         // pour l'épaule d'à côté.
         ...(field.sensitive === true ? { secure: true } : {}),

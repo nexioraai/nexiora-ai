@@ -4,6 +4,10 @@
 // harnais 3.4. Les rôles a11y sont posés ici (C2) ; les contrats n'exposent
 // que testID/accessibilityLabel.
 import { ActivityIndicator, Image, Pressable, Text, TextInput, View } from "react-native";
+// 1.6.0 — SIGNE des boutons. Même paquet, même vocabulaire fermé et même
+// police EMBARQUÉE que les onglets : aucun accès réseau, et le moteur ne
+// promet que des glyphes qu'il sait dessiner.
+import Ionicons from "@expo/vector-icons/Ionicons";
 import type {
   AppImageProps,
   AppButtonProps,
@@ -120,6 +124,7 @@ export function AppText({
 
 export function AppButton({
   label,
+  icon,
   onPress,
   kind = "primary",
   selected,
@@ -154,7 +159,15 @@ export function AppButton({
           <Text style={[s.buttonChipText, selected === true && s.buttonChipTextActif]}>{label}</Text>
         </View>
       ) : (
-        <Text style={[s.buttonText, ghost && s.buttonGhostText]}>{label}</Text>
+        <>
+          {icon === undefined ? null : (
+            <Ionicons
+              name={icon as never}
+              style={[s.buttonIcon, ghost ? s.buttonGhostText : s.buttonText]}
+            />
+          )}
+          <Text style={[s.buttonText, ghost && s.buttonGhostText]}>{label}</Text>
+        </>
       )}
     </Pressable>
   );

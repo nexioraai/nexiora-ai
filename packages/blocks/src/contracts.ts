@@ -98,6 +98,12 @@ export interface FormFieldSpec {
   label: string;
   placeholder?: string;
   secure?: boolean;
+  /**
+   * CHAMP OBLIGATOIRE (1.6.0) — le bloc en dérive si l'action est POSSIBLE.
+   * Sans lui, le bouton d'envoi était toujours actif : il promettait une
+   * action que la validation refusait ensuite en silence.
+   */
+  required?: boolean;
 }
 
 // REGISTRE 1.1.0 (D-060) : `loading` et `empty` entrent dans l'union.
@@ -131,6 +137,13 @@ export interface FormBlockProps extends BlockA11yProps {
 
 export interface ButtonBlockProps extends BlockA11yProps {
   label: string;
+  /**
+   * SIGNE DU BOUTON (1.6.0) — même vocabulaire FERMÉ que les onglets : le
+   * moteur doit savoir DESSINER ce que le document nomme, un nom libre
+   * ferait revenir la classe de défaut « promettre ce qu'on ne rend pas ».
+   * Absent = bouton purement textuel, comportement 1.5.0 inchangé.
+   */
+  icon?: string;
   kind?: "primary" | "ghost";
   /**
    * OPTIONNEL depuis 1.1.0 (D-084) — même patron que `onItemPress` du bloc

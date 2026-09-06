@@ -117,10 +117,17 @@ describe("Phase 4 — la session change RÉELLEMENT l'écran", () => {
     // C. CONNECTÉ — l'écran a basculé, sans navigation ni remontage.
     const connecte = textes(r);
     expect(connecte).toContain("Mes informations");
-    expect(connecte).toContain("Se déconnecter");
     expect(connecte).not.toContain("Vous n'êtes pas connecté");
+    // ÉDITION CONSCIENTE (registre 1.6.0) : « Se déconnecter » a REJOINT les
+    // Paramètres — tout ce qui agit sur le compte lui-même vit au même
+    // endroit. L'écran Compte n'expose plus que le profil et le chemin vers
+    // les paramètres ; l'assertion suit le produit, elle ne le fige pas.
+    expect(connecte).not.toContain("Se déconnecter");
+    expect(connecte).toContain("Paramètres du compte");
 
-    // D. RETOUR EN ARRIÈRE — signOut ramène l'invitation.
+    // D. RETOUR EN ARRIÈRE — signOut ramène l'invitation. L'effet reste
+    // observable ici même si le BOUTON vit désormais ailleurs : c'est la
+    // capability qu'on éprouve, pas l'emplacement du contrôle.
     act(() => {
       capabilities.invoke({ capability: "auth", method: "signOut", params: {} });
     });

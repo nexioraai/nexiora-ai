@@ -32,7 +32,6 @@ export default function ScrCompteScreen({ route }: AirScreenProps) {
         <AirEmptyState screen={screenData} blockId="blk_compte_visiteur" />
         <AirForm screen={screenData} blockId="blk_compte_form" itemId={route?.params?.itemId} />
         <AirButton screen={screenData} blockId="blk_compte_parametres" />
-        <AirButton screen={screenData} blockId="blk_compte_deconnexion" />
       </ScrollView>
       </KeyboardAvoidingView>
       <PrimaryNav destinations={primaryNav} currentScreenId="scr_compte" />

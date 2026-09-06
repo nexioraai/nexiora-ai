@@ -2,7 +2,7 @@
   "name": "@deribfy/primitives",
   "version": "0.1.0",
   "private": true,
-  "description": "Primitives contractuelles du design system (ROADMAP Phase 3.2) — contrats sans aucun type de bibliothèque de styling (§22, prouvé 6/6 au banc P-003), implémentation StyleSheet + tokens (D-021)",
+  "description": "Primitives contractuelles du design system (ROADMAP Phase 3.2) \u2014 contrats sans aucun type de biblioth\u00e8que de styling (\u00a722, prouv\u00e9 6/6 au banc P-003), impl\u00e9mentation StyleSheet + tokens (D-021)",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -17,9 +17,11 @@
   },
   "peerDependencies": {
     "react": "^19.0.0",
-    "react-native": ">=0.81.0"
+    "react-native": ">=0.81.0",
+    "@expo/vector-icons": "^15.0.0"
   },
   "devDependencies": {
+    "@expo/vector-icons": "15.1.1",
     "@types/node": "^20",
     "@types/react": "~19.2.2",
     "@types/react-test-renderer": "^19.1.0",

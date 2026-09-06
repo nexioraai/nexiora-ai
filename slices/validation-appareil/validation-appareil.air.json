@@ -723,7 +723,7 @@
           "id": "fld_voyageur_mot_de_passe",
           "name": "mot_de_passe",
           "type": "string",
-          "required": false,
+          "required": true,
           "sensitive": true,
           "label": [
             {
@@ -2552,32 +2552,15 @@
             {
               "key": "kind",
               "value": "ghost"
+            },
+            {
+              "key": "icon",
+              "value": "settings-outline"
             }
           ],
           "visibleWhen": {
             "kind": "session_authenticated"
           }
-        },
-        {
-          "blockType": "button",
-          "id": "blk_compte_deconnexion",
-          "visibleWhen": {
-            "kind": "session_authenticated"
-          },
-          "props": [
-            {
-              "key": "label",
-              "value": "Se déconnecter"
-            },
-            {
-              "key": "kind",
-              "value": "ghost"
-            },
-            {
-              "key": "actionId",
-              "value": "act_deconnexion"
-            }
-          ]
         }
       ],
       "id": "scr_compte",
@@ -2606,6 +2589,31 @@
         },
         {
           "blockType": "button",
+          "id": "blk_compte_deconnexion",
+          "visibleWhen": {
+            "kind": "session_authenticated"
+          },
+          "props": [
+            {
+              "key": "label",
+              "value": "Se déconnecter"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            },
+            {
+              "key": "actionId",
+              "value": "act_deconnexion"
+            },
+            {
+              "key": "icon",
+              "value": "log-out-outline"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
           "id": "blk_compte_supprimer",
           "props": [
             {
@@ -2619,8 +2627,15 @@
             {
               "key": "kind",
               "value": "ghost"
+            },
+            {
+              "key": "icon",
+              "value": "trash-outline"
             }
-          ]
+          ],
+          "visibleWhen": {
+            "kind": "session_authenticated"
+          }
         }
       ],
       "id": "scr_parametres",

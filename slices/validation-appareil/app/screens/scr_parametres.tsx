@@ -28,6 +28,7 @@ export default function ScrParametresScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <AirHeader screen={screenData} blockId="blk_parametres_header" />
+        <AirButton screen={screenData} blockId="blk_compte_deconnexion" />
         <AirButton screen={screenData} blockId="blk_compte_supprimer" />
       </ScrollView>
       </KeyboardAvoidingView>

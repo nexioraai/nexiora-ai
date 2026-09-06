@@ -15,6 +15,11 @@ export default defineConfig({
       "react-native": fileURLToPath(
         new URL("./tests/stubs/react-native.ts", import.meta.url),
       ),
+      // 1.6.0 — le SIGNE des boutons vient du paquet d'icônes, qui livre du
+      // JSX dans des `.js` construits : inobservable en node sans stub.
+      "@expo/vector-icons/Ionicons": fileURLToPath(
+        new URL("./tests/stubs/vector-icons.ts", import.meta.url),
+      ),
     },
   },
 });

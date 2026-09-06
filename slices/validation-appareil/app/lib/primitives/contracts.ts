@@ -72,6 +72,11 @@ export interface AppButtonProps extends A11yProps {
    * compact. Jugé sur appareil : deux gros boutons pleine hauteur donnaient
    * aux filtres plus d'importance qu'à la recherche.
    */
+  /**
+   * SIGNE (1.6.0) — nom de glyphe du vocabulaire FERMÉ partagé avec les
+   * onglets. Absent = bouton purement textuel, comportement 1.5.0 inchangé.
+   */
+  icon?: string;
   kind?: "primary" | "ghost" | "chip";
   /**
    * État SÉLECTIONNÉ (1.5.0) — porté par `accessibilityState.selected`, comme
