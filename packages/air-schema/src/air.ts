@@ -21,7 +21,7 @@ import {
 // 1.7.1 (E3.3, D-131) : provenance APLANIE (sourceKind/sourceIntegrationId/
 //   sourceDomain/sourceRefreshSeconds) — l'union 1.7.0 dépassait la limite
 //   réelle de grammaire de l'API (classe D-078) ; sémantique inchangée.
-export const AIR_SCHEMA_VERSION = "1.10.0";
+export const AIR_SCHEMA_VERSION = "1.11.0";
 
 export const semverSchema = z.string().regex(/^\d+\.\d+\.\d+$/);
 export const sha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
@@ -119,10 +119,29 @@ const appSchema = z.strictObject({
 // seulement, adossés à la notion que le registre manipule déjà — le bloc
 // `list` dérive son état de `items.length === 0`. Étendre ce vocabulaire
 // sera une évolution consciente, pas une improvisation d'un LLM.
-const blockVisibilitySchema = z.strictObject({
-  kind: z.enum(["entity_empty", "entity_not_empty"]),
-  entityId: entityIdSchema,
-});
+const blockVisibilitySchema = z.discriminatedUnion("kind", [
+  z.strictObject({
+    kind: z.enum(["entity_empty", "entity_not_empty"]),
+    entityId: entityIdSchema,
+  }),
+  /**
+   * VISIBILITÉ SELON LA SESSION (1.11.0, Phase 4) — le seul prédicat qui
+   * n'interroge pas les DONNÉES mais l'ÉTAT DE SESSION.
+   *
+   * Fait mesuré avant cette montée : `visibleWhen` ne connaissait que
+   * `entity_empty`/`entity_not_empty`. Un écran de compte ne pouvait donc PAS
+   * montrer « connexion » à un visiteur et « mon profil » à un utilisateur
+   * connecté — l'authentification était structurellement inexprimable, quelle
+   * que soit l'implémentation derrière. `authorization` dans `air.rules` le
+   * concédait déjà : « elles supposent une identité, que le moteur n'a pas ».
+   *
+   * Aucun `entityId` : la session n'est pas une entité du document. Forme
+   * FERMÉE comme les deux premiers prédicats — deux valeurs, pas un langage.
+   */
+  z.strictObject({
+    kind: z.enum(["session_authenticated", "session_anonymous"]),
+  }),
+]);
 
 const blockInstanceSchema = z.strictObject({
   id: blockIdSchema,

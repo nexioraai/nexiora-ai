@@ -153,6 +153,20 @@ export const AIR_MIGRATIONS: readonly AirMigration[] = [
       "ce qu'il affichait en 1.9.0.",
     migrate: (document) => document,
   },
+  {
+    from: "1.10.0",
+    to: "1.11.0",
+    description:
+      "AIR 1.11.0 (Phase 4) : `visibleWhen` accepte deux prédicats de SESSION " +
+      "— `session_authenticated` / `session_anonymous`. Avant, seuls les " +
+      "prédicats de données existaient : un écran ne pouvait pas montrer " +
+      "« connexion » à un visiteur et « mon profil » à un connecté, et " +
+      "l'authentification était donc inexprimable quel que soit le backend. " +
+      "Migration IDENTITÉ : un document 1.10.0 ne porte aucun prédicat de " +
+      "session, et la migration n'en INVENTE aucun — décider qu'un bloc " +
+      "existant devient conditionnel changerait ce que l'app montre.",
+    migrate: (document) => document,
+  },
 ];
 
 export class AirMigrationError extends Error {

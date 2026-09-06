@@ -72,6 +72,23 @@ export const EMBEDDED_SOURCES: readonly EmbeddedSourceSpec[] = [
     rewrites: {},
   },
   {
+    // Phase 4 — la session : contrat, implémentation locale, et le
+    // fournisseur de capabilities qui honore `auth`.
+    source: "compiler/runtime/session-provider.tsx",
+    target: "lib/runtime/session-provider.tsx",
+    rewrites: {},
+  },
+  {
+    source: "compiler/runtime/session-locale.ts",
+    target: "lib/runtime/session-locale.ts",
+    rewrites: {},
+  },
+  {
+    source: "compiler/runtime/capabilites-auth.ts",
+    target: "lib/runtime/capabilites-auth.ts",
+    rewrites: {},
+  },
+  {
     source: "compiler/runtime/capability-provider.tsx",
     target: "lib/runtime/capability-provider.tsx",
     rewrites: {},

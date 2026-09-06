@@ -13,28 +13,26 @@
 import { KeyboardAvoidingView, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenShell } from "../lib/primitives";
-import { AirButton, AirEmptyState, AirForm, AirHeader } from "../lib/runtime/air-runtime";
+import { AirButton, AirForm, AirHeader } from "../lib/runtime/air-runtime";
 import { PrimaryNav } from "../lib/runtime/primary-nav";
 import { primaryNav } from "../nav.data";
-import { screenData } from "./scr_compte.data";
+import { screenData } from "./scr_connexion.data";
 
-export default function ScrCompteScreen() {
+export default function ScrConnexionScreen() {
   const insets = useSafeAreaInsets();
   return (
-    <ScreenShell testID="scr_compte" title={screenData.title}>
+    <ScreenShell testID="scr_connexion" title={screenData.title}>
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom }}
         keyboardShouldPersistTaps="handled"
       >
-        <AirHeader screen={screenData} blockId="blk_compte_header" />
-        <AirEmptyState screen={screenData} blockId="blk_compte_visiteur" />
-        <AirForm screen={screenData} blockId="blk_compte_form" />
-        <AirButton screen={screenData} blockId="blk_compte_parametres" />
-        <AirButton screen={screenData} blockId="blk_compte_deconnexion" />
+        <AirHeader screen={screenData} blockId="blk_connexion_header" />
+        <AirForm screen={screenData} blockId="blk_connexion_form" />
+        <AirButton screen={screenData} blockId="blk_connexion_vers_inscription" />
       </ScrollView>
       </KeyboardAvoidingView>
-      <PrimaryNav destinations={primaryNav} currentScreenId="scr_compte" />
+      <PrimaryNav destinations={primaryNav} currentScreenId="scr_connexion" />
     </ScreenShell>
   );
 }

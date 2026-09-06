@@ -148,7 +148,8 @@ interface ScreenSlice {
       id: string;
       blockType: string;
       entityId?: string;
-      visibleWhen?: { kind: string; entityId: string };
+      // 1.11.0 — les prédicats de SESSION ne portent pas d'entité.
+      visibleWhen?: { kind: string; entityId?: string };
       props: Record<string, unknown>;
     }[];
     actions: Record<
@@ -602,6 +603,18 @@ function emitApp(
   ciblesRemote: readonly CibleRemoteResolue[] = [],
 ): string {
   const avecRemote = ciblesRemote.length > 0;
+  // Phase 4 — la SESSION n'est émise que si le document s'en sert : un
+  // prédicat de visibilité de session, ou un effet visant la capability
+  // `auth`. Sans cela l'app émise reste byte-identique à 1.10.0 (additivité
+  // stricte, patron D-058) — déclarer `auth` sans l'utiliser ne change rien.
+  const avecSession =
+    air.screens.some((s) =>
+      s.blocks.some(
+        (b) =>
+          b.visibleWhen?.kind === "session_authenticated" ||
+          b.visibleWhen?.kind === "session_anonymous",
+      ),
+    ) || air.actions.some((a) => a.effect.kind === "capability" && a.effect.capability === "auth");
   return [
     "// GÉNÉRÉ — NE PAS ÉDITER (racine d'app : thème + données + navigation).",
     "// S7 (D-026) : tokens scellés 1.0.0, design.theme transporté sans effet.",
@@ -642,6 +655,14 @@ function emitApp(
           'import { slotRegistry } from "./slots";',
         ]
       : []),
+    ...(avecSession
+      ? [
+          'import { CapabilityRoot } from "./lib/runtime/capability-provider";',
+          'import { creerCapabilitesAuth } from "./lib/runtime/capabilites-auth";',
+          'import { creerSessionLocale } from "./lib/runtime/session-locale";',
+          'import { SessionRoot } from "./lib/runtime/session-provider";',
+        ]
+      : []),
     'import { demoData } from "./demo.data";',
     'import { Navigation } from "./navigation";',
     "",
@@ -665,6 +686,15 @@ function emitApp(
           "void adaptateur.demarrer();",
         ]
       : ["const provider = buildDemoProvider(demoData);"]),
+    ...(avecSession
+      ? [
+          "// Session LOCALE (Phase 4) : identité DÉCLARÉE par la personne, non",
+          "// vérifiée par un serveur — équivalent de demo.data pour l'identité.",
+          "// Une session vérifiée est une autre implémentation du même contrat.",
+          "const session = creerSessionLocale();",
+          "const capabilities = creerCapabilitesAuth(session);",
+        ]
+      : []),
     ...(air.app.locales.rtlSupported
       ? [
           "",
@@ -676,6 +706,12 @@ function emitApp(
     "export default function App() {",
     "  return (",
     "    <ThemeRoot>",
+    ...(avecSession
+      ? [
+          "      <SessionRoot provider={session}>",
+          "      <CapabilityRoot provider={capabilities}>",
+        ]
+      : []),
     "      <DataRoot provider={provider}>",
     ...(avecSlots
       ? [
@@ -687,6 +723,7 @@ function emitApp(
         ]
       : ["        <FormStateRoot>", "          <Navigation />", "        </FormStateRoot>"]),
     "      </DataRoot>",
+    ...(avecSession ? ["      </CapabilityRoot>", "      </SessionRoot>"] : []),
     "    </ThemeRoot>",
     "  );",
     "}",

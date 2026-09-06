@@ -584,12 +584,17 @@ export function validateAir(air: ProjectAir): AirDiagnostic[] {
     screen.blocks.forEach((block, bi) => {
       const condition = block.visibleWhen;
       if (condition === undefined) return;
-      if (!entityById.has(condition.entityId)) {
-        push(
-          "AIR_BLOCK_VISIBILITY_ENTITY_UNKNOWN",
-          `screens[${si}].blocks[${bi}].visibleWhen.entityId`,
-          `entité "${condition.entityId}" introuvable`,
-        );
+      // 1.11.0 — seuls les prédicats de DONNÉES désignent une entité ; ceux de
+      // SESSION n'en portent aucune, il n'y a rien à résoudre. Discrimination
+      // POSITIVE : elle restreint le type au membre qui porte `entityId`.
+      if (condition.kind === "entity_empty" || condition.kind === "entity_not_empty") {
+        if (!entityById.has(condition.entityId)) {
+          push(
+            "AIR_BLOCK_VISIBILITY_ENTITY_UNKNOWN",
+            `screens[${si}].blocks[${bi}].visibleWhen.entityId`,
+            `entité "${condition.entityId}" introuvable`,
+          );
+        }
       }
     });
   });

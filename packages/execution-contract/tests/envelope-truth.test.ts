@@ -640,3 +640,74 @@ describe("véracité de l'enveloppe — groupement de liste", () => {
     expect(mutant).toContain("groupBy");
   });
 });
+
+// ══════════════════════════════════════════════════════════════════════════
+// SESSION ÉTABLISSABLE (Phase 4) — le fait le plus facile à sur-déclarer :
+// « l'app a l'authentification ». Ce cliquet exige les TROIS maillons, chacun
+// à sa place, plus la limite honnête de l'implémentation fournie.
+// ══════════════════════════════════════════════════════════════════════════
+describe("sessionEtablissable — les trois maillons, et la limite dite", () => {
+  it("1. le SCHÉMA porte les deux prédicats de session", () => {
+    const schema = read("air-schema/src/air.ts");
+    expect(schema).toContain("session_authenticated");
+    expect(schema).toContain("session_anonymous");
+    expect(EXECUTION_ENVELOPE_V1.sessionEtablissable).toBe(true);
+  });
+
+  it("2. le RUNTIME dérive la visibilité de la session, pas des données", () => {
+    // Les prédicats de session ne doivent PAS passer par le provider de
+    // données : c'est ce raccourci qui rendrait le fait faux en silence.
+    expect(RUNTIME).toContain("useSessionProvider");
+    expect(RUNTIME).toContain('condition.kind === "session_authenticated"');
+    const contrat = read("compiler/runtime/session-provider.tsx");
+    expect(contrat).toContain("estAuthentifie");
+    // Le DÉFAUT ne ment pas : sans fournisseur, la session est anonyme.
+    expect(contrat).toContain("estAuthentifie: () => false");
+  });
+
+  it("3. l'effet `capability` visant `auth` est HONORÉ, et lui seul", () => {
+    const auth = read("compiler/runtime/capabilites-auth.ts");
+    expect(auth).toContain("session.ouvrir");
+    expect(auth).toContain("session.fermer");
+    // Toute autre capability est refusée — le fournisseur ne devient pas un
+    // fourre-tout qui prétendrait implémenter ce qu'il n'implémente pas.
+    expect(auth).toContain('call.capability !== "auth"');
+    expect(auth).toContain("AIR_CAPABILITY_NOT_IMPLEMENTED");
+    // Et la saisie atteint réellement l'appel : sans elle, `signIn` partirait
+    // sans identité — l'effet s'exécuterait sans rien pouvoir établir.
+    expect(RUNTIME).toContain("...(values ?? saisies)");
+  });
+
+  it("4. LA LIMITE EST DITE — identité déclarée, jamais vérifiée", () => {
+    const locale = read("compiler/runtime/session-locale.ts");
+    // COMMENTAIRES RETIRÉS : ce fichier EXPLIQUE ce qu'il n'est pas (« pas
+    // Supabase, pas de vérification »). Chercher ces mots dans le texte brut
+    // ferait échouer la sonde sur sa propre honnêteté — leçon déjà consignée
+    // dans les verrous clavier.
+    const code = locale
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "")
+      .toLowerCase();
+    // Aucun réseau : cette implémentation ne prétend pas vérifier une identité.
+    for (const interdit of ["fetch(", "supabase", "http"]) {
+      expect(code, interdit).not.toContain(interdit);
+    }
+    // Une identité VIDE est refusée — on n'invente pas un utilisateur.
+    expect(locale).toContain('if (propre === "") return false;');
+    // Les autorisations restent hors de portée : une identité non vérifiée
+    // ne peut pas fonder une autorisation.
+    expect(read("execution-contract/src/envelope.ts")).toContain(
+      "Les règles `authorization` restent NON appliquées",
+    );
+  });
+
+  it("CONTRÔLE NÉGATIF — le cliquet VOIT une session muette", () => {
+    // Un fournisseur qui répondrait « connecté » sans rien établir est le
+    // faux vert exact que ce paquet existe pour empêcher.
+    const mutant = read("compiler/runtime/session-provider.tsx").replace(
+      "estAuthentifie: () => false",
+      "estAuthentifie: () => true",
+    );
+    expect(mutant).not.toContain("estAuthentifie: () => false");
+  });
+});

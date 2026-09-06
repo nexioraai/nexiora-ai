@@ -8,7 +8,7 @@
 // Effets d'actions en v1 compilateur : `navigate` est câblé ; les effets
 // `capability`/`mutation`/`slot` sont des non-opérations STRUCTURÉES
 // (implémentations : Phases 5+/9 — lecture consignée D-028).
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 // E1/E2 (D-129) — la vérité des lignes visibles vit dans un module PUR.
 import { lignesVisibles, optionsDistinctes } from "./list-pipeline";
 import type { FiltreEffectif, OperateurFiltre } from "./list-pipeline";
@@ -25,6 +25,7 @@ import type { FormFieldSpec, ListItemData } from "../blocks/contracts";
 import { useDataProvider } from "./data-provider";
 import { useSlotRegistry } from "./slot-provider";
 import { useCapabilityProvider } from "./capability-provider";
+import { useSessionProvider } from "./session-provider";
 import { useAllFormValues, useFormValues } from "./form-state";
 
 export interface AirEffectData {
@@ -41,10 +42,10 @@ export interface AirEffectData {
   params?: Readonly<Record<string, unknown>>;
 }
 
-export interface AirBlockVisibility {
-  kind: "entity_empty" | "entity_not_empty";
-  entityId: string;
-}
+export type AirBlockVisibility =
+  | { kind: "entity_empty" | "entity_not_empty"; entityId: string }
+  /** 1.11.0 (Phase 4) — prédicat de SESSION : aucune entité interrogée. */
+  | { kind: "session_authenticated" | "session_anonymous" };
 
 export interface AirBlockInstanceData {
   id: string;
@@ -272,10 +273,27 @@ function useDataStatus(entityId: string | undefined): "loading" | "ready" | "err
  */
 function useBlockVisible(screen: AirScreenData, blockId: string): boolean {
   const provider = useDataProvider();
+  // 1.11.0 — la session est lue INCONDITIONNELLEMENT : un hook ne se place pas
+  // derrière une condition. Sans fournisseur, elle répond ANONYME.
+  const session = useSessionProvider();
+  const abonnerSession = useMemo(
+    () => (ecouteur: () => void) => session.abonner(ecouteur),
+    [session],
+  );
+  const authentifie = useSyncExternalStore(
+    abonnerSession,
+    () => session.estAuthentifie(),
+    () => session.estAuthentifie(),
+  );
   const condition = block(screen, blockId).visibleWhen;
   if (condition === undefined) return true;
-  const vide = provider.listInstances(condition.entityId).length === 0;
-  return condition.kind === "entity_empty" ? vide : !vide;
+  // Discrimination POSITIVE sur les prédicats de DONNÉES : eux seuls portent
+  // une entité. Exclure les autres ne suffit pas à restreindre le type.
+  if (condition.kind === "entity_empty" || condition.kind === "entity_not_empty") {
+    const vide = provider.listInstances(condition.entityId).length === 0;
+    return condition.kind === "entity_empty" ? vide : !vide;
+  }
+  return condition.kind === "session_authenticated" ? authentifie : !authentifie;
 }
 
 /**
@@ -336,10 +354,15 @@ function useDispatch(screen: AirScreenData) {
       // fournisseur, qui répond s'il l'a honoré. Sans implémentation fournie,
       // le défaut REFUSE ET TRACE — il ne prétend jamais avoir agi.
       if (effect?.kind === "capability" && effect.capability !== undefined) {
+        // Phase 4 : les valeurs SAISIES accompagnent l'appel, exactement comme
+        // pour les mutations (D-061/D-083). Sans elles, une connexion partirait
+        // sans identité — l'effet s'exécuterait, et ne pourrait rien établir.
+        // Les params DÉCLARÉS restent prioritaires : ils sont la configuration
+        // du document, la saisie est la donnée de l'instant.
         capabilities.invoke({
           capability: effect.capability,
           method: effect.method ?? "",
-          params: effect.params ?? {},
+          params: { ...(values ?? saisies), ...(effect.params ?? {}) },
         });
         return;
       }

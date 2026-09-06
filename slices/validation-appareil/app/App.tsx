@@ -12,6 +12,10 @@ import {
 } from "./lib/runtime/source-reseau";
 import { SlotRoot } from "./lib/runtime/slot-provider";
 import { slotRegistry } from "./slots";
+import { CapabilityRoot } from "./lib/runtime/capability-provider";
+import { creerCapabilitesAuth } from "./lib/runtime/capabilites-auth";
+import { creerSessionLocale } from "./lib/runtime/session-locale";
+import { SessionRoot } from "./lib/runtime/session-provider";
 import { demoData } from "./demo.data";
 import { Navigation } from "./navigation";
 
@@ -31,10 +35,17 @@ const adaptateur = creerAdaptateurReseau({
   planificateur: planificateurIntervalle,
 });
 void adaptateur.demarrer();
+// Session LOCALE (Phase 4) : identité DÉCLARÉE par la personne, non
+// vérifiée par un serveur — équivalent de demo.data pour l'identité.
+// Une session vérifiée est une autre implémentation du même contrat.
+const session = creerSessionLocale();
+const capabilities = creerCapabilitesAuth(session);
 
 export default function App() {
   return (
     <ThemeRoot>
+      <SessionRoot provider={session}>
+      <CapabilityRoot provider={capabilities}>
       <DataRoot provider={provider}>
         <SlotRoot registry={slotRegistry}>
           <FormStateRoot>
@@ -42,6 +53,8 @@ export default function App() {
           </FormStateRoot>
         </SlotRoot>
       </DataRoot>
+      </CapabilityRoot>
+      </SessionRoot>
     </ThemeRoot>
   );
 }

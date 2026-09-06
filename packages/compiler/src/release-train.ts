@@ -42,7 +42,11 @@ export const RELEASE_TRAIN_V1 = {
   // 1.9.0 -> 1.10.0 (DET-032) : `label` et `enumLabels` OPTIONNELS sur les
   // champs — libellés d'AFFICHAGE déclarés par le document ; jugé sur appareil
   // réel, les identifiants machine fuyaient jusqu'aux chips et formulaires.
-  airSchemaVersion: "1.10.0",
+  // 1.10.0 -> 1.11.0 (Phase 4) : `visibleWhen` accepte deux prédicats de
+  // SESSION. Avant, l'authentification était structurellement inexprimable —
+  // un écran ne pouvait pas distinguer un visiteur d'un connecté, quel que
+  // soit le backend derrière.
+  airSchemaVersion: "1.11.0",
   // Porté à 1.1.0 le 2026-08-31 (D-060) : montée STRICTEMENT ADDITIVE du
   // registre de blocs — `form` gagne `loading`/`empty`, `detail_header` gagne un
   // état, les trois blocs à données gagnent les props de titres. Rien n'est

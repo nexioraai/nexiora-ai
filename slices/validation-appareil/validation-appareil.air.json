@@ -220,9 +220,84 @@
         "blockId": "blk_billet_detail_retour",
         "kind": "ui"
       }
+    },
+    {
+      "id": "act_aller_connexion",
+      "name": "Aller à la connexion",
+      "trigger": {
+        "blockId": "blk_compte_visiteur",
+        "kind": "ui"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_connexion"
+      }
+    },
+    {
+      "id": "act_aller_inscription",
+      "name": "Aller à l'inscription",
+      "trigger": {
+        "blockId": "blk_connexion_vers_inscription",
+        "kind": "ui"
+      },
+      "effect": {
+        "kind": "navigate",
+        "screenId": "scr_inscription"
+      }
+    },
+    {
+      "id": "act_connexion",
+      "name": "Établir la session",
+      "trigger": {
+        "blockId": "blk_connexion_form",
+        "kind": "ui"
+      },
+      "effect": {
+        "kind": "capability",
+        "capability": "auth",
+        "method": "signIn",
+        "params": [
+          {
+            "key": "identifiantFieldId",
+            "value": "fld_voyageur_email"
+          }
+        ]
+      }
+    },
+    {
+      "id": "act_inscription",
+      "name": "Créer le compte et ouvrir la session",
+      "trigger": {
+        "blockId": "blk_inscription_form",
+        "kind": "ui"
+      },
+      "effect": {
+        "kind": "capability",
+        "capability": "auth",
+        "method": "signIn",
+        "params": [
+          {
+            "key": "identifiantFieldId",
+            "value": "fld_voyageur_email"
+          }
+        ]
+      }
+    },
+    {
+      "id": "act_deconnexion",
+      "name": "Fermer la session",
+      "trigger": {
+        "blockId": "blk_compte_deconnexion",
+        "kind": "ui"
+      },
+      "effect": {
+        "kind": "capability",
+        "capability": "auth",
+        "method": "signOut"
+      }
     }
   ],
-  "airSchemaVersion": "1.10.0",
+  "airSchemaVersion": "1.11.0",
   "app": {
     "description": [
       {
@@ -2317,6 +2392,31 @@
           ]
         },
         {
+          "blockType": "empty_state",
+          "id": "blk_compte_visiteur",
+          "visibleWhen": {
+            "kind": "session_anonymous"
+          },
+          "props": [
+            {
+              "key": "title",
+              "value": "Vous n'êtes pas connecté"
+            },
+            {
+              "key": "message",
+              "value": "Connectez-vous pour retrouver vos billets et vos informations."
+            },
+            {
+              "key": "actionLabel",
+              "value": "Se connecter"
+            },
+            {
+              "key": "actionId",
+              "value": "act_aller_connexion"
+            }
+          ]
+        },
+        {
           "blockType": "form",
           "entityId": "ent_voyageur",
           "id": "blk_compte_form",
@@ -2351,7 +2451,10 @@
               "key": "errorMessage",
               "value": "Vos informations n'ont pas pu être enregistrées."
             }
-          ]
+          ],
+          "visibleWhen": {
+            "kind": "session_authenticated"
+          }
         },
         {
           "blockType": "button",
@@ -2368,6 +2471,30 @@
             {
               "key": "kind",
               "value": "ghost"
+            }
+          ],
+          "visibleWhen": {
+            "kind": "session_authenticated"
+          }
+        },
+        {
+          "blockType": "button",
+          "id": "blk_compte_deconnexion",
+          "visibleWhen": {
+            "kind": "session_authenticated"
+          },
+          "props": [
+            {
+              "key": "label",
+              "value": "Se déconnecter"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            },
+            {
+              "key": "actionId",
+              "value": "act_deconnexion"
             }
           ]
         }
@@ -2420,6 +2547,136 @@
         {
           "locale": "fr",
           "text": "Paramètres"
+        }
+      ]
+    },
+    {
+      "id": "scr_connexion",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Connexion"
+        }
+      ],
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_connexion_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Bon retour"
+            },
+            {
+              "key": "subtitle",
+              "value": "Connectez-vous pour retrouver vos billets."
+            }
+          ]
+        },
+        {
+          "blockType": "form",
+          "id": "blk_connexion_form",
+          "entityId": "ent_voyageur",
+          "props": [
+            {
+              "key": "title",
+              "value": "Vos identifiants"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_voyageur_email"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Se connecter"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_connexion_vers_inscription",
+          "props": [
+            {
+              "key": "label",
+              "value": "Créer un compte"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            },
+            {
+              "key": "actionId",
+              "value": "act_aller_inscription"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scr_inscription",
+      "title": [
+        {
+          "locale": "fr",
+          "text": "Créer un compte"
+        }
+      ],
+      "blocks": [
+        {
+          "blockType": "header",
+          "id": "blk_inscription_header",
+          "props": [
+            {
+              "key": "title",
+              "value": "Bienvenue"
+            },
+            {
+              "key": "subtitle",
+              "value": "Quelques informations et vous voyagez."
+            }
+          ]
+        },
+        {
+          "blockType": "form",
+          "id": "blk_inscription_form",
+          "entityId": "ent_voyageur",
+          "props": [
+            {
+              "key": "title",
+              "value": "Vos informations"
+            },
+            {
+              "key": "fieldIds",
+              "value": [
+                "fld_voyageur_nom",
+                "fld_voyageur_email",
+                "fld_voyageur_telephone"
+              ]
+            },
+            {
+              "key": "submitLabel",
+              "value": "Créer mon compte"
+            }
+          ]
+        },
+        {
+          "blockType": "button",
+          "id": "blk_inscription_vers_connexion",
+          "props": [
+            {
+              "key": "label",
+              "value": "J'ai déjà un compte"
+            },
+            {
+              "key": "kind",
+              "value": "ghost"
+            },
+            {
+              "key": "actionId",
+              "value": "act_aller_connexion"
+            }
+          ]
         }
       ]
     }

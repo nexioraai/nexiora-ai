@@ -54,6 +54,8 @@ export interface ExecutionEnvelope {
   readonly reachableBlockStates: Readonly<Record<string, readonly string[]>>;
   /** Une capability déclarée produit-elle du code/des dépendances ? */
   readonly capabilitiesEmitCode: boolean;
+  /** L'app peut-elle distinguer visiteur/connecté ET établir l'identité ? */
+  readonly sessionEtablissable: boolean;
   /** Le bloc `list` peut-il GROUPER ses lignes (sections, agenda par jour) ? */
   readonly listGrouping: boolean;
   /** Un Code Slot déclaré est-il INVOQUÉ par l'application générée ? */
@@ -166,7 +168,36 @@ export const EXECUTION_ENVELOPE_V1: ExecutionEnvelope = {
   // à un AIR change 0 fichier du projet émis ; `package.json` reste identique.
   // Corollaire : l'empreinte native est INVARIANTE aux capabilities — le
   // critère de sortie de la Phase 11 est aujourd'hui infalsifiable.
+  //
+  // TOUJOURS FAUX AU 2026-09-05, ET LA NUANCE COMPTE (Phase 4) : DÉCLARER une
+  // capability continue de ne rien émettre — `auth` déclarée et INUTILISÉE
+  // laisse l'artefact byte-identique. Ce qui déclenche l'émission de la
+  // session, c'est son USAGE par le document (prédicat `session_*` ou effet
+  // visant `auth`), jamais sa présence au registre. Le fait mesuré ci-dessus
+  // reste donc vrai au mot près, et `capability` reste HORS de `effects` :
+  // les 14 autres capabilities n'exécutent toujours rien, et les y déclarer
+  // ferait basculer en « vivantes » des promesses qui restent mortes.
   capabilitiesEmitCode: false,
+
+  // SESSION ÉTABLISSABLE (Phase 4) — l'app générée peut-elle distinguer un
+  // visiteur d'un utilisateur connecté, ET établir cette identité ?
+  //
+  // FAUX jusqu'au 2026-09-05 : `visibleWhen` ne connaissait que des prédicats
+  // de DONNÉES, et `rulesEnforced` concédait déjà que les règles
+  // `authorization` « supposent une identité, que le moteur n'a pas ».
+  //
+  // VRAI depuis : AIR 1.11.0 porte `session_authenticated`/`session_anonymous`,
+  // le runtime porte le contrat `SessionProvider`, et l'effet `capability`
+  // visant `auth.signIn`/`auth.signOut` est HONORÉ — mesuré au rendu.
+  //
+  // 🔴 CE QUE CE FAIT NE DIT PAS : l'identité est DÉCLARÉE par la personne et
+  // tenue en mémoire (`session-locale.ts`), jamais VÉRIFIÉE par un serveur, et
+  // elle ne survit pas à la fermeture de l'app. Une session vérifiée (Supabase
+  // email/OTP, registre `auth`) est une autre implémentation du MÊME contrat ;
+  // elle exige d'étendre le lock EMBARQUÉ du moteur — décision propriétaire
+  // (D-059). Les règles `authorization` restent NON appliquées : une identité
+  // non vérifiée ne peut pas fonder une autorisation.
+  sessionEtablissable: true,
 
   // AJOUT DU 2026-09-04 — lacune NOMMÉE, découverte en qualifiant les motifs
   // réfutés de `D-125`. Un besoin de PRÉSENTATION GROUPÉE — afficher les
