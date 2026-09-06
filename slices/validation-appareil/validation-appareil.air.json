@@ -2093,6 +2093,7 @@
               "value": [
                 "fld_billet_passager",
                 "fld_billet_depart",
+                "fld_billet_code",
                 "fld_billet_email",
                 "fld_billet_siege",
                 "fld_billet_prix_total"
