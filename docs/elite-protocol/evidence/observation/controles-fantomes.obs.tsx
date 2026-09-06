@@ -30,7 +30,14 @@ import {
 const RACINE = join(tmpdir(), "deribfy-gate-compile") + "/";
 
 describe("GATE RACINE — aucun contrôle fantôme", () => {
-  it("chaque contrôle pressé produit un effet OBSERVABLE", async () => {
+  // BUDGET DE TEMPS EXPLICITE — cette observation n'est pas un test unitaire :
+  // elle monte 27 applications, presse LES ~2000 contrôles un par un et
+  // compare l'arbre rendu à chaque pression. Le défaut de 5 s de Vitest a été
+  // dépassé en CI (runner plus lent que la machine de développement), et un
+  // dépassement de budget n'est PAS un verdict de conformité : il masquait le
+  // vrai résultat derrière un timeout. Le budget est donc DIT, généreusement,
+  // et le coût a été divisé par deux dans le même geste (empreinte reportée).
+  it("chaque contrôle pressé produit un effet OBSERVABLE", { timeout: 120_000 }, async () => {
     expect(existsSync(RACINE), "lancer d'abord `npm run gate:app-compile`").toBe(true);
     const apps = readdirSync(RACINE).sort();
     let total = 0;
@@ -100,6 +107,13 @@ describe("GATE RACINE — aucun contrôle fantôme", () => {
         }
         // Presser UN par UN, et mesurer l'effet de CHAQUE pression.
         const n = r!.root.findAll((x) => typeof (x.props as { onPress?: unknown }).onPress === "function").length;
+        // DET-033 : l'empreinte de rendu est REPORTÉE d'une pression à la
+        // suivante — l'arbre d'après la pression i-1 EST celui d'avant la
+        // pression i (rien d'autre ne s'exécute entre les deux). Une seule
+        // sérialisation par contrôle au lieu de deux, sémantique identique.
+        // Mesuré : la double sérialisation a fait dépasser le budget de 5 s
+        // en CI dès que les chips ont grossi l'arbre.
+        let empreinte = JSON.stringify(r!.toJSON());
         for (let i = 0; i < n; i += 1) {
           navReset();
           const avantE = ecrits.length;
@@ -110,17 +124,18 @@ describe("GATE RACINE — aucun contrôle fantôme", () => {
           // contrôle. Le critère devient : navigation, écriture, capability,
           // OU changement du rendu. Un contrôle qui ne produit RIEN de tout
           // cela reste un fantôme.
-          const avantR = JSON.stringify(r!.toJSON());
+          const avantR = empreinte;
           act(() => {
             const b = r!.root.findAll((x) => typeof (x.props as { onPress?: unknown }).onPress === "function");
             (b[i]?.props as { onPress: () => void } | undefined)?.onPress();
           });
           vus += 1;
+          empreinte = JSON.stringify(r!.toJSON());
           if (
             navJournal.length > 0 ||
             ecrits.length > avantE ||
             capAppels.length > avantC ||
-            JSON.stringify(r!.toJSON()) !== avantR
+            empreinte !== avantR
           ) actifs += 1;
           else {
             const b = r!.root.findAll((x) => typeof (x.props as { onPress?: unknown }).onPress === "function");

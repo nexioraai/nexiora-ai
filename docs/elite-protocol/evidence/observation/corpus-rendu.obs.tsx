@@ -21,7 +21,12 @@ const RACINE = join(tmpdir(), "deribfy-gate-compile") + "/";
 const ID = /^(ent_|scr_|act_|fld_|blk_|slot_|data_|rule_|need_|nav_)/;
 
 describe("GATE RACINE — les applications émises se MONTENT vraiment", () => {
-  it("chaque écran de chaque application rend, sans exception ni fuite", async () => {
+  // BUDGET DE TEMPS EXPLICITE — même raison que `controles-fantomes` : cette
+  // observation monte TOUS les écrans des 27 applications. Elle courait à
+  // 3,4 s sur un défaut de 5 s ; son voisin a effectivement basculé en CI
+  // (runner plus lent). Un dépassement de budget masquerait le verdict
+  // derrière un timeout — le budget se DIT, il ne se subit pas.
+  it("chaque écran de chaque application rend, sans exception ni fuite", { timeout: 120_000 }, async () => {
     expect(existsSync(RACINE), "lancer d'abord `npm run gate:app-compile`").toBe(true);
     const apps = readdirSync(RACINE).sort();
     // 26 depuis la campagne v3 (D-081) : le corpus gelé ET le corpus généré.
